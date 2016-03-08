@@ -7,6 +7,7 @@ import ix.ginas.models.v1.Substance;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @MappedSuperclass
@@ -28,28 +30,23 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 	public GinasReferenceContainer recordReference;
     
    
-    @JsonSerialize(using = ReferenceListSerializer.class)
+    @JsonSerialize(using = ReferenceSetSerializer.class)
     public Set<Keyword> getReferences(){
     	if(recordReference!=null){
     		return recordReference.getReferences();
     	}
-    	return new HashSet<Keyword>();
+    	return new LinkedHashSet<Keyword>();
     }
-    
+
     @JsonProperty("references")    
-    public void setReferences(Collection<String> references){
-    	ObjectMapper om = new ObjectMapper();
-    	Map mm = new HashMap();
-    	mm.put("references", references);
-    	mm.put("entityType", this.getClass().getName());
-    	JsonNode jsn=om.valueToTree(mm);
-    	try {
-    		recordReference= om.treeToValue(jsn, GinasReferenceContainer.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-    	return;
-    }
+    @JsonDeserialize(using = ReferenceSetDeserializer.class)
+	@Override
+	public void setReferences(Set<Keyword> references) {
+    	if(this.recordReference==null){
+    		this.recordReference=new GinasReferenceContainer(this);
+    	}
+    	this.recordReference.setReferences(references);
+	}
     
     public GinasCommonSubData () {
     }
@@ -71,6 +68,7 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 		));
 		
 	}
+	
 	public void addReference(Reference r){
 		addReference(r.getOrGenerateUUID().toString());
 	}
@@ -83,4 +81,5 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 		ObjectMapper om = new ObjectMapper();
 		return om.valueToTree(this).toString();
 	}
+
 }

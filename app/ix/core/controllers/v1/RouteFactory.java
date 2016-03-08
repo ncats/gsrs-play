@@ -44,33 +44,44 @@ import play.mvc.Result;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
-	static final public Model.Finder<Long, Namespace> resFinder = 
-        new Model.Finder(Long.class, Namespace.class);
-    static final public Model.Finder<Long, Acl> aclFinder = 
-        new Model.Finder(Long.class, Acl.class);
-    static final public Model.Finder<Long, Principal> palFinder =
-        new Model.Finder(Long.class, Principal.class);
+	static public Model.Finder<Long, Namespace> resFinder;
+    static public Model.Finder<Long, Acl> aclFinder;
+    static public Model.Finder<Long, Principal> palFinder;
 
-    static final ConcurrentMap<String, Class> _registry = 
-        new ConcurrentHashMap<String, Class>();
+    static final ConcurrentMap<String, Class> _registry = new ConcurrentHashMap<String, Class>();
     static final Set<String> _uuid = new TreeSet<String>();
     
     private static NamedResourceFilter resourceFilter=null;
     
     static{
+
+        init();
     	
-    	String resproc= Play.application().configuration().getString("ix.core.resourcefilter",null);
-    	
-    	if(resproc!=null){
-    		Class processorCls;
-			try {
-				processorCls = Class.forName(resproc);
-				resourceFilter=(NamedResourceFilter) processorCls.newInstance();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-    	}
-    	
+    }
+
+    public static void init() {
+        String resproc= Play.application().configuration().getString("ix.core.resourcefilter",null);
+
+        if(resproc!=null){
+            Class processorCls;
+            try {
+                processorCls = Class.forName(resproc);
+                resourceFilter=(NamedResourceFilter) processorCls.newInstance();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        resFinder =
+                new Model.Finder(Long.class, Namespace.class);
+
+        aclFinder =
+                new Model.Finder(Long.class, Acl.class);
+
+        palFinder =
+                new Model.Finder(Long.class, Principal.class);
+
+
     }
 
     public static <T  extends EntityFactory> void register 
@@ -377,7 +388,8 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
+    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateEntity (String context) {
         try {
             Method m = getMethod (context, "updateEntity");
@@ -392,6 +404,8 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateUUID (String context, String id, String field) {
         try {
             Method m = getMethod (context, "update", UUID.class, String.class);
@@ -436,7 +450,7 @@ public class RouteFactory extends Controller {
     
     
     public static Result profile(){
-    	UserProfile p=UserFetcher.getActingUserProfile();
+    	UserProfile p=UserFetcher.getActingUserProfile(false);
     	if(p!=null){
     		ObjectMapper om=new ObjectMapper();
         	return ok(om.valueToTree(p));	
@@ -445,7 +459,7 @@ public class RouteFactory extends Controller {
     }
     
     public static Result profileResetKey(){
-    	UserProfile p=UserFetcher.getActingUserProfile();
+    	UserProfile p=UserFetcher.getActingUserProfile(false);
     	if(p!=null){
     		p.regenerateKey();
     		p.save();

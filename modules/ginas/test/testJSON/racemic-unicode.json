@@ -1,0 +1,261 @@
+{
+	"structure": {
+		"references": ["6ec0e9dd-eb59-4f65-bf37-fb0a5d69bdf7", "34cdccf8-7a3c-4374-bde4-302245147ade"],
+		"molfile": "\n  Symyx   01071617492D 1   1.00000     0.00000     0\n\n  5  5  0     0  0            999 V2000\n    3.0369   -2.0221    0.0000 O   0  0  0  0  0  0           0  0  0\n    3.6785   -2.3888    0.0000 C   0  0  3  0  0  0           0  0  0\n    4.3160   -2.7597    0.0000 C   0  0  0  0  0  0           0  0  0\n    4.9577   -2.3888    0.0000 Cl  0  0  0  0  0  0           0  0  0\n    3.0369   -2.7680    0.0000 C   0  0  0  0  0  0           0  0  0\n  2  1  1  0     0  0\n  2  3  1  0     0  0\n  4  3  1  0     0  0\n  5  2  1  0     0  0\n  5  1  1  0     0  0\nM  END\n",
+		"stereochemistry": "RACEMIC",
+		"opticalActivity": "( + / - )",
+		"atropisomerism": "No",
+		"stereoComments": "",
+		"stereoCenters": 1,
+		"definedStereo": 0,
+		"ezCenters": 0,
+		"charge": 0,
+		"hash": "4S5VRDF63DDB",
+		"formula": "C3H5ClO",
+		"mwt": "92.524"
+	},
+	"moieties": [{
+		"count": 1,
+		"molfile": "08OOR508C0\n  Marvin  01151614132D          \n\n  5  5  0  0  0  0            999 V2000\n    3.3803   -2.2508    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    4.0945   -2.6590    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.8041   -3.0718    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.5184   -2.6590    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3803   -3.0810    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  0  0  0  0\n  2  3  1  0  0  0  0\n  4  3  1  0  0  0  0\n  5  2  1  0  0  0  0\n  5  1  1  0  0  0  0\nM  END\n",
+		"stereochemistry": "RACEMIC",
+		"opticalActivity": "( + / - )",
+		"atropisomerism": "No",
+		"stereoComments": "",
+		"stereoCenters": 1,
+		"definedStereo": 0,
+		"ezCenters": 0,
+		"charge": 0,
+		"hash": "4S5VRDF63DDB",
+		"formula": "C3H5ClO",
+		"mwt": "92.524"
+	}],
+	"approvalID": "08OOR508C0",
+	"status": "approved",
+	"approvedBy": "FDA_SRS",
+	"approved": 1452889392286,
+	"substanceClass": "chemical",
+	"names": [{
+		"name": "1-CHLORO-2,3-EPOXYPROPANE",
+		"type": "sys",
+		"displayName": false,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["7cfd07e1-5700-49ee-b9c1-a4db8c53e3fb"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "(±)-1-CHLORO-2,3-EPOXYPROPANE",
+		"type": "sys",
+		"displayName": false,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["71fa09b3-9601-4207-830a-15ddcbc4c3de"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "(CHLOROMETHYL)ETHYLENE OXIDE",
+		"type": "sys",
+		"displayName": false,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["d374b821-af11-4b10-b96c-9e1fb14022a8"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "OXIRANE, (CHLOROMETHYL)-",
+		"type": "sys",
+		"displayName": false,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["d374b821-af11-4b10-b96c-9e1fb14022a8"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "(RS)-3-CHLORO-1,2-EPOXYPROPANE",
+		"type": "sys",
+		"displayName": false,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["d374b821-af11-4b10-b96c-9e1fb14022a8"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "EPICHLOROHYDRIN",
+		"type": "cn",
+		"displayName": true,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["6ec6108a-14d1-4190-8661-18603e49fd69", "25e6892b-1d13-48de-9afc-499263c1e443", "182b97a0-5040-48f0-9455-a7ab47cff6fd", "b5ced4a4-ae19-4b9b-a2cc-a13d49ee2e37", "cd9b4a91-e397-4096-a226-809d0207d479", "c78e7fa3-fc74-4749-b220-8e15c3a5f5f3", "c6a6ec10-d0c4-4d80-930b-800e95ae6a5a"],
+		"preferred": true,
+		"access": []
+	}, {
+		"name": "EPICHLORHYDRINE",
+		"type": "cn",
+		"displayName": false,
+		"domains": [],
+		"languages": ["en"],
+		"references": ["fff2035c-bf48-4ddd-b8ce-7c63b4ea8efc", "4a9194d2-f7b0-4274-8181-e13334f50133"],
+		"preferred": false,
+		"access": []
+	}],
+	"codes": [{
+		"code": "106-89-8",
+		"codeSystem": "CAS",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"url": "http://chem.sis.nlm.nih.gov/chemidplus/direct.jsp?regno\u003d106-89-8\u0026result\u003dadvanced",
+		"type": "PRIMARY",
+		"access": []
+	}, {
+		"code": "C44381",
+		"codeSystem": "NCI_THESAURUS",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"url": "https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary\u003dNCI_Thesaurus\u0026version\u003d15.09d\u0026ns\u003dNCI_Thesaurus\u0026code\u003dC44381",
+		"type": "PRIMARY",
+		"access": []
+	}, {
+		"code": "D004811",
+		"codeSystem": "MESH",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"url": "http://www.ncbi.nlm.nih.gov/mesh/68004811",
+		"type": "PRIMARY",
+		"access": []
+	}, {
+		"code": "EPICHLOROHYDRIN",
+		"codeSystem": "WIKIPEDIA",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"url": "http://en.wikipedia.org/wiki/Epichlorohydrin",
+		"type": "PRIMARY",
+		"access": []
+	}, {
+		"code": "21 CFR 176.170",
+		"codeSystem": "CFR",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"url": "http://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfcfr/CFRSearch.cfm?fr\u003d176.170",
+		"type": "PRIMARY",
+		"comments": "PART 176 -- INDIRECT FOOD ADDITIVES: PAPER AND PAPERBOARD COMPONENTS | Subpart B--Substances for Use Only as Components of Paper and Paperboard | Sec. 176.170 Components of paper and paperboard in contact with aqueous and fatty foods.  ",
+		"access": []
+	}, {
+		"code": "600503",
+		"codeSystem": "EPA PESTICIDE CODE",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"url": "http://iaspub.epa.gov/apex/pesticides/f?p\u003dCHEMICALSEARCH:3:0::NO:21,3,31,7,12,25:P3_XCHEMICAL_ID:206",
+		"type": "PRIMARY",
+		"comments": "EPA PESTICIDE |CONVENTIONAL CHEMICAL",
+		"access": []
+	}, {
+		"code": "203-439-8",
+		"codeSystem": "ECHA (EC/EINECS)",
+		"references": ["2ca47ffb-6f5c-4193-8e54-0784a2a31239"],
+		"type": "PRIMARY",
+		"access": []
+	}],
+	"relationships": [],
+	"references": [{
+		"uuid": "7cfd07e1-5700-49ee-b9c1-a4db8c53e3fb",
+		"citation": "WIKIPEDIA:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "71fa09b3-9601-4207-830a-15ddcbc4c3de",
+		"citation": "FDA_SRS:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "d374b821-af11-4b10-b96c-9e1fb14022a8",
+		"citation": "http://environmentalchemistry.com/yogi/chemicals/cn/Epichlorohydrin.html:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"url": "http://environmentalchemistry.com/yogi/chemicals/cn/Epichlorohydrin.html",
+		"access": []
+	}, {
+		"uuid": "c6a6ec10-d0c4-4d80-930b-800e95ae6a5a",
+		"citation": "CHEMID:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "c78e7fa3-fc74-4749-b220-8e15c3a5f5f3",
+		"citation": "MARTINDALE 2011:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "b5ced4a4-ae19-4b9b-a2cc-a13d49ee2e37",
+		"citation": "MERCK INDEX:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "cd9b4a91-e397-4096-a226-809d0207d479",
+		"citation": "HSDB:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "4a9194d2-f7b0-4274-8181-e13334f50133",
+		"citation": "WHO-DD:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "2ca47ffb-6f5c-4193-8e54-0784a2a31239",
+		"citation": "SRS CODE IMPORT:",
+		"docType": "SRS",
+		"publicDomain": true,
+		"documentDate": "2016-01-15T15:23:12.000-0500",
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "34cdccf8-7a3c-4374-bde4-302245147ade",
+		"citation": "SRS import [08OOR508C0]:\u003cCREATED_BY\u003e\u003c/CREATED_BY\u003e\u003cCREATED_DATE\u003enull\u003c/CREATED_DATE\u003e",
+		"docType": "SRS",
+		"publicDomain": true,
+		"documentDate": "2016-01-15T15:23:12.000-0500",
+		"tags": ["NOMEN"],
+		"url": "http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno\u003d08OOR508C0",
+		"access": []
+	}, {
+		"uuid": "6ec0e9dd-eb59-4f65-bf37-fb0a5d69bdf7",
+		"citation": "merck index",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"citation": "EPICHLOROHYDRIN [MART.]",
+		"publicDomain": true,
+		"docType": "SRS_LOCATOR",
+		"uuid": "6ec6108a-14d1-4190-8661-18603e49fd69"
+	}, {
+		"citation": "EPICHLOROHYDRIN [MI]",
+		"publicDomain": true,
+		"docType": "SRS_LOCATOR",
+		"uuid": "182b97a0-5040-48f0-9455-a7ab47cff6fd"
+	}, {
+		"citation": "EPICHLOROHYDRIN [HSDB]",
+		"publicDomain": true,
+		"docType": "SRS_LOCATOR",
+		"uuid": "25e6892b-1d13-48de-9afc-499263c1e443"
+	}, {
+		"citation": "EPICHLORHYDRINE [WHO-DD]",
+		"publicDomain": true,
+		"docType": "SRS_LOCATOR",
+		"uuid": "fff2035c-bf48-4ddd-b8ce-7c63b4ea8efc"
+	}],
+	"properties": [],
+	"notes": [],
+	"tags": ["MI", "WHO-DD", "HSDB", "MART."],
+	"uuid": "02d81c15-fb7e-4099-b2e4-a2d09b768bfb",
+	"access": [],
+	"lastEditedBy": "FDA_SRS"
+}

@@ -57,7 +57,6 @@ public class GinasLoad extends App {
 			.getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
 	public static boolean ALLOW_LOAD = Play.application().configuration()
 			.getBoolean("ix.ginas.allowloading", true);
-
 	public static boolean ALLOW_REBUILD = Play.application().configuration()
 			.getBoolean("ix.ginas.allowindexrebuild", true);
 
@@ -140,21 +139,14 @@ public class GinasLoad extends App {
 			switch (type) {
 			case "JSON":
 				Logger.info("JOS =" + type);
-				if (!GinasLoad.OLD_LOAD) {
+				
 					String id = ginasRecordProcessorPlugin
 							.submit(payload,
 									ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
 									ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
 					return redirect(ix.ginas.controllers.routes.GinasLoad
 							.monitorProcess(id));
-					// return ok("Running job " + id + " payload is " +
-					// payload.name + " also " + payload.id);
-				} else {
-					// Old way
-					return GinasLegacyUtils.processDump(ix.utils.Util
-							.getUncompressedInputStreamRecursive(payloadPlugin
-									.getPayloadAsStream(payload)), false);
-				}
+				
 			case "SD":
 				Logger.info("SD =" + type);
 
@@ -251,7 +243,7 @@ public class GinasLoad extends App {
 	}
 
 	public static Result monitorProcess(String processID) {
-		if (!GinasLoad.OLD_LOAD) {
+		
 			String msg = "";
 			ProcessingJob job = ProcessingJobFactory.getJob(processID);
 			if (job != null) {
@@ -261,17 +253,7 @@ public class GinasLoad extends App {
 			}
 			msg += "\n\n refresh page for status";
 			return ok("Processing job:" + processID + "\n\n" + msg);
-		} else {
-			// OLD WAY:
-			GinasLegacyUtils.Process p = GinasLegacyUtils.processes
-					.get(processID);
-			if (p == null) {
-				return _internalServerError(new IllegalArgumentException(
-						"Process \"" + processID + "\" does not exist."));
-			} else {
-				return ok(p.statusMessage());
-			}
-		}
+		
 	}
 
 	public static Result jobs(final String q, final int rows, final int page)
@@ -439,7 +421,7 @@ public class GinasLoad extends App {
 				if (sub instanceof ChemicalSubstance) {
 
 					((ChemicalSubstance) sub)
-							.setStructure(((ChemicalSubstance) sub).structure);
+							.structure = (((ChemicalSubstance) sub).structure);
 					List<Moiety> mlist = new ArrayList<Moiety>();
 					for (Moiety m : ((ChemicalSubstance) sub).moieties) {
 						try {
@@ -454,7 +436,7 @@ public class GinasLoad extends App {
 				for (Relationship m : sub.relationships) {
 					try {
 						// I don't know why this is necessary
-						m.setRelatedSubstance(m.relatedSubstance);
+						m.relatedSubstance =m.relatedSubstance;
 						m.save();
 					} catch (Exception e) {
 						m.relatedSubstance.update();

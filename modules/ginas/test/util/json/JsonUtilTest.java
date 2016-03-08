@@ -275,7 +275,7 @@ public class JsonUtilTest {
 
 
 
-            assertChangesEqual(expected, changes);
+            assertEquals(expected, changes);
         }
     }
 

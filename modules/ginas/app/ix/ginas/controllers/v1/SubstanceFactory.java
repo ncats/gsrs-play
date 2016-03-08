@@ -5,8 +5,11 @@ import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.controllers.v1.RouteFactory;
+import ix.core.models.Edit;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
@@ -48,7 +51,11 @@ import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.Expression;
+import com.avaje.ebean.Query;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
@@ -65,6 +72,58 @@ public class SubstanceFactory extends EntityFactory {
 		if (id == null)
 			return null;
 		return getSubstance(UUID.fromString(id));
+	}
+	
+	public static Expression andAll(Expression... e){
+		Expression retExpr=e[0];
+		
+		for(Expression expr:e){
+			retExpr=com.avaje.ebean.Expr.and(retExpr, expr);
+		}
+		return retExpr;
+	}
+	
+	public static Substance getSubstanceVersion(String id, String version) {
+		if (id == null)
+			return null;
+		//System.out.println("Looking for history, this is likely broken");
+		List<Edit> edits = new ArrayList<Edit>();
+    	Class oclass=null;
+    	
+        for (Class<?> c : Substance.getAllClasses()) {
+        	Query q=EditFactory.finder.where
+                    (andAll(
+                    		Expr.eq("refid", id.toString()),
+                            Expr.eq("kind", c.getName()),
+                            Expr.eq("version", version),
+                            Expr.isNull("path"))
+                     );
+        	List<Edit> tmpedits = q.findList();
+            if(tmpedits!=null && !tmpedits.isEmpty()){
+            	//System.out.println("OK, I found some");
+            	edits.addAll(tmpedits);
+            	oclass=c;
+            	break;
+            }
+        }
+        
+        if(edits.size()>1){
+        	Logger.error("more than one edit with version:" + version);
+        }else{
+	        if (!edits.isEmpty()) {
+	            EntityMapper em=getEntityMapper();
+	            try{
+	            	Substance s = (Substance)em.readValue(edits.get(0).oldValue,oclass);
+	            	return s;
+	            }catch(Exception e){
+	            	e.printStackTrace();
+	            }
+	        }
+        }
+
+        return null;
+		
+		
 	}
 
 	public static Substance getSubstance(UUID uuid) {
@@ -302,7 +361,7 @@ public class SubstanceFactory extends EntityFactory {
 	 */
 	public static class SubstanceFilter extends EntityFilter {
 
-		UserProfile profile = UserFetcher.getActingUserProfile();
+		UserProfile profile = UserFetcher.getActingUserProfile(true);
 		Principal user = profile != null ? profile.user : null;
 		boolean hasAdmin = false;
 		List<Group> groups=null;
@@ -454,6 +513,9 @@ public class SubstanceFactory extends EntityFactory {
 
 		UserProfile up = getUserProfile();
 		Principal user = null;
+		if(s.status==Substance.STATUS_APPROVED){
+			throw new IllegalStateException("Cannot approve an approved substance");
+		}
 		if (up == null || up.user == null) {
 			throw new IllegalStateException("Must be logged in user to approve substance");
 		}

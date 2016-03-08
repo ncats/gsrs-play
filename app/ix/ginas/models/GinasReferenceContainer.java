@@ -1,6 +1,7 @@
 package ix.ginas.models;
 
 import ix.core.models.Keyword;
+import play.db.ebean.Model;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -22,8 +23,8 @@ public class GinasReferenceContainer {
     public Long id;
 	
 	@ManyToMany(cascade = CascadeType.PERSIST)
-    @JsonSerialize(using=ReferenceListSerializer.class)    
-	@JsonDeserialize(using=ReferenceListDeserializer.class)
+    @JsonSerialize(using=ReferenceSetSerializer.class)    
+	@JsonDeserialize(using=ReferenceSetDeserializer.class)
     public Set<Keyword> references = new LinkedHashSet<Keyword>();
     public String entityType;
 

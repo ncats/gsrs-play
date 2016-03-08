@@ -14,10 +14,10 @@
 <!--                <div class="col-md-2">
                     <text-input ng-model="property.propertyType" field="propertyType" ></text-input>
                 </div>-->
-                <div class="col-md-1">
-                    <form-selector referenceobj= "property" divid="propertyForm" type = "amount"></form-selector>
+                <div class="col-md-2">
+                    <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount"></form-selector>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "parameter"></form-selector>
                 </div>
                 <div class="col-md-1">
@@ -43,14 +43,14 @@
                 <div class="col-md-2">
                     <text-view-edit obj = "obj.name" field="display" cv = "PROPERTY_NAME" max="1"></text-view-edit>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
                 </div>
 <!--                <div class="col-md-2">
                     <text-view-edit obj = "obj" field="propertyType" ></text-view-edit>
                 </div>-->
-                <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="propertyForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                <div class="col-md-2">
+                    <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-2">
                     <form-selector referenceobj= "obj" formname="propertyForm" type = "parameter" divid={{obj.$$hashKey}} mode="edit"></form-selector>

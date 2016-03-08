@@ -13,8 +13,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-public class ReferenceListSerializer extends JsonSerializer<Set<Keyword>> {
-    public ReferenceListSerializer () {}
+public class ReferenceSetSerializer extends JsonSerializer<Set<Keyword>> {
+    public ReferenceSetSerializer () {}
 
     public void serialize (Set<Keyword> list, JsonGenerator jgen,
                            SerializerProvider provider)

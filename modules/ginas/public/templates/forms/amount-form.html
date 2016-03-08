@@ -7,33 +7,33 @@
         <form class="form-horizontal" name="amountForm" id="addAmountForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <dropdown-select ng-model="amount.type" field="type" cv="AMOUNT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="referenceobj[field].type" field="type" cv="AMOUNT_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="amount.average" field="average"></text-input>
+                    <text-input ng-model="referenceobj[field].average" field="average"></text-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="amount.low" field="low"></text-input>
+                    <text-input ng-model="referenceobj[field].low" field="low"></text-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="amount.high" field="high"></text-input>
+                    <text-input ng-model="referenceobj[field].high" field="high"></text-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="amount.lowLimit" field="lowLimit"></text-input>
+                    <text-input ng-model="referenceobj[field].lowLimit" field="lowLimit"></text-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="amount.highLimit" field="highLimit"></text-input>
+                    <text-input ng-model="referenceobj[field].highLimit" field="highLimit"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="amount.units" field="units" cv="AMOUNT_UNIT"></dropdown-select>
+                    <dropdown-select ng-model="referenceobj[field].units" field="units" cv="AMOUNT_UNIT"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <text-input ng-model="amount.nonNumericValue" field="nonNumericValue"></text-input>
+                    <text-input ng-model="referenceobj[field].nonNumericValue" field="nonNumericValue"></text-input>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-2 pull-right">
-                    <a ng-click="amount=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="referenceobj[field]=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
                     <a ng-click="validate(); $parent.toggle()"><i class="fa fa-check fa-2x success"></i></a>
                 </div>
             </div>

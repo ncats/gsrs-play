@@ -27,9 +27,7 @@ public class SiteContainer extends GinasCommonSubData{
 	@Lob
 	@JsonIgnore
 	String sitesJSON;	
-	
 	long siteCount;
-	
 	String siteType;
 	
 	public SiteContainer(String type){

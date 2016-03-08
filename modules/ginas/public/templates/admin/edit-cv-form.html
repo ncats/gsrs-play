@@ -1,73 +1,56 @@
 <div class="row info">
-<button class="btn btn-primary label-offset det">
+    <button class="btn btn-primary label-offset det">
         Edit CV
     </button>
     <span><i class="fa fa-question-circle fa-lg"></i></span>
-
     <div class="col-md-12">
-        <form class="form-horizontal" name="cvEditForm" role="form" novalidate>
+        <ng-form name="termForm" id = "addDomainForm" novalidate>
             <div class="row form-row">
-                <div class="col-md-3">
-                        <dropdown-select ng-model ="vocab" field="domain" cv = "CV_DOMAIN"></dropdown-select>
-                    </div>
-<!--                    <text-input ng-model="cv.domain" field="domain" name="domain" id="domain" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>-->
-                <br>
-                <a ng-click="getValues()" aria-label="Create" uib-tooltip="Create Domain"><i
-                        class="fa fa-check fa-2x success"></i></a>
-
-            </div>
-<!--            <div class="row form-row" ng-if="create">
-
-                <div class="col-md-3">
-                    <text-input ng-model="vt.value" field="value" name="value" id="value" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="vt.display" field="display" name="display" id="display" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="vt.description" field="description" name="description" id="description"
-                                form="cvEditForm" validate="true"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="vt.origin" field="origin" name="origin" id="origin" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>
-            </div>
-            Coming Soon
-            <submit-buttons submit="vt" form="cvEditForm" path="cvs"></submit-buttons>-->
-        </form>
-
-        <div ng-repeat="obj in values" ng-if="create">
-            <div class="row">
-<hr>
-               <div class="col-md-1">
-                   <i class = "fa fa-times fa-2x danger" ng-click = "deleteCV(obj);" uib-tooltip="Delete Term from database"></i>
+                <div class="col-md-2">
+                    <text-input ng-model="cv.domain" field="domain" name ="domain"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <text-view-edit obj="obj" field="value"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="display"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="description"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="origin"></text-view-edit>
+                    <multi-select ng-model="cv.fields" field="fields" label = "Form Fields" CV="CV_DOMAIN"></multi-select>
                 </div>
                 <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="hidden" label="Hidden"></check-box-view-edit>
+                    <check-box ng-model="cv.hidden" field="hidden" ></check-box>
                 </div>
-<div class  = "col-md-2">
-    <label>Save to Database</label><br>
-    <i class = "fa fa-floppy-o fa-2x success" ng-click = "updateCV();" uib-tooltip="Update Term to database"></i>
-</div>
+                <div class="col-md-2">
+                    <label>Add Terms</label><br>
+                    <i class = "fa  fa-plus fa-2x success" ng-click = "showTerms(cv, 'termForm');" uib-tooltip="Add Terms"></i>
+
+                </div>
+                <div class  = "col-md-1 pull-right">
+                    <label>Save</label><br>
+                    <i class = "fa fa-floppy-o fa-2x success" ng-click = "addDomain(cv);" uib-tooltip="Add cv to database"></i>
                 </div>
             </div>
+            <div class=termForm></div>
+        </ng-form>
+        <div ng-repeat="obj in domains">
+        <div class = "row">
+            <hr>
+            <div class="col-md-3">
+                <text-view-edit obj="obj" field="domain"></text-view-edit>
+            </div>
+            <div class="col-md-3">
+                <multi-view-edit obj="obj" field="fields" label = "Form Fields" CV="CV_DOMAIN"></multi-view-edit>
+            </div>
+            <div class="col-md-1">
+                <check-box-view-edit obj = "obj" field="editable"></check-box-view-edit>
+            </div>
+            <div class="col-md-2">
+                 <label>Terms ({{obj.terms.length}})</label><br>
+                <i class = "fa  fa-list-ul fa-2x success" ng-click = "showTerms(obj);" uib-tooltip="View Terms"></i>
+
+            </div>
+            <div class  = "col-md-1 pull-right">
+                <label>Save</label><br>
+                <i class = "fa fa-floppy-o fa-2x success" ng-click = "updateCV(obj);" uib-tooltip="Update Domain in database"></i>
+            </div>
+</div>
+            <br>
             <div class={{obj.$$hashKey}}></div>
         </div>
     </div>
+</div>

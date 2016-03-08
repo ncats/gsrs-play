@@ -10,7 +10,7 @@
                     <text-input ng-model="ref.citation" field="citation"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="ref.docType" field="docType" label ="Document Type" cv="DOCUMENT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="ref.docType" field="docType" label ="Source Type" cv="DOCUMENT_TYPE"></dropdown-select>
                 </div>
 <!--                <div class="col-md-2">
                     <date-picker ng-model="ref.documentDate" field="documentDate"></date-picker>
@@ -32,11 +32,11 @@
                 <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                 <div class="col-md-6">
                     <label id="upload-label">Upload a Document</label><br>
-                    <file-field ng-show="!ref.uploadedFile && !uploadFile" ng-model="uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                    <file-field ng-show="!ref.uploadedFile && !$$uploadFile" ng-model="$$uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
                     <br>
-                    {{uploadFile.name}}
+                    {{$$uploadFile.name}}
                     <br>
-                    <button ng-hide ="ref.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();" aria-labelledby="upload-label"><span class="sr-only">Upload File</span><i class="fa fa-upload"></i></button>
+                    <button ng-hide ="ref.uploadedFile || !$$uploadFile" class ="btn btn-default" ng-click ="submitFile();" aria-labelledby="upload-label"><span class="sr-only">Upload File</span><i class="fa fa-upload"></i></button>
                     <button ng-show ="ref.uploadedFile" class ="btn btn-success" disabled aria-labelledby="upload-label"><span class="sr-only">File Uploaded</span>
                         <i class="fa fa-check"></i></button>
                 </div>
@@ -53,7 +53,8 @@
 
         </form>
 
-        <div class="row" ng-repeat="reference in parent.references">
+        <div ng-repeat="reference in parent.references">
+            <div class="row">
             <hr>
             <div class="col-md-1">
                 <a ng-click="deleteObj(parent, reference); deleteReference(reference);"><i class="fa fa-times fa-2x danger"></i></a>
@@ -62,7 +63,7 @@
                 <text-view-edit obj="reference" field="citation"></text-view-edit>
             </div>
             <div class="col-md-2">
-                <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE" label="Document Type"></dropdown-view-edit>
+                <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE" label="Source Type"></dropdown-view-edit>
             </div>
 <!--            <div class="col-md-1">
                 <date-picker-view-edit obj="reference" field="documentDate" label ="Date Accessed"></date-picker-view-edit>
@@ -76,14 +77,29 @@
             <div class="col-md-1">
                 <check-box-view-edit ng-model="reference.publicDomain" field="publicDomain" label="Public Domain"></check-box-view-edit>
             </div>
-            <div ng-if="reference.uploadedFile" class="col-md-1">
-                <a ng-href = {{reference.uploadedFile}}><i class ="fa fa-file-text fa-2x success"></i></a>
+            <div  class="col-md-1">
+                <label for="uploader">Document</label><br>
+                <a ng-href = {{reference.uploadedFile}} target = "_blank" ng-if="reference.uploadedFile">
+                    <i class ="fa fa-file-text fa-stack-2x success"></i>
+                </a>
+                <i class="fa fa-upload fa-2x success"  ng-show="!reference.uploadedFile" ng-click = "uploadDoc=!uploadDoc" id="uploader" ></i>
             </div>
             <div class="col-md-1 pull-right">
                 <form-selector referenceobj="reference" parent="parent" formname="refOnlyForm" type="access"
                                divid={{obj.$$hashKey}}></form-selector>
             </div>
         </div>
+        <div class ="row form-row" >
+            <div class="col-md-6"  ng-hide ="!uploadDoc">
+                <label for="upload">Upload a Document</label><br>
+                <file-field ng-show="!reference.uploadedFile && !reference.$$uploadFile" ng-model="reference.$$uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                <br>
+                {{reference.$$uploadFile.name}}
+                <br>
+                <button ng-hide ="reference.uploadedFile || !reference.$$uploadFile" class ="btn btn-default" ng-click ="submitFile(reference);"><i class="fa fa-upload"></i></button>
+            </div>
+        </div>
         <div class={{obj.$$hashKey}}></div>
     </div>
 </div>
+    </div>

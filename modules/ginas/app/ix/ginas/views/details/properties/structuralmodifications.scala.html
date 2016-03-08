@@ -34,7 +34,7 @@
           <td>@m.residueModified</td>
           <td>@m.extent<br>
           @if(m.extentAmount != null){
-            <amount value=@m.extentAmount.toJson()></amount>
+            <amount value="@GinasApp.getAsJson(m.extentAmount)"></amount>
           }
           </td>
           <td>@m.molecularFragment.refPname</td>

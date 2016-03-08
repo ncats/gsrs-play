@@ -15,7 +15,7 @@
                     <text-input ng-model="reference.citation" field="citation"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="reference.docType" field="docType" label="Document Type"
+                    <dropdown-select ng-model="reference.docType" field="docType" label="Source Type"
                                      cv="DOCUMENT_TYPE"></dropdown-select>
                 </div>
 <!--                <div class="col-md-2">
@@ -38,11 +38,11 @@
                 <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                     <div class="col-md-6">
                         <label for="upload">Upload a Document</label><br>
-                        <file-field ng-show="!reference.uploadedFile && !uploadFile" ng-model="uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                        <file-field ng-show="!reference.uploadedFile && !$$uploadFile" ng-model="$$uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
                         <br>
-                        {{uploadFile.name}}
+                        {{$$uploadFile.name}}
                         <br>
-                        <button ng-hide ="reference.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();"><i class="fa fa-upload"></i></button>
+                        <button ng-hide ="reference.uploadedFile || !$$uploadFile" class ="btn btn-default" ng-click ="submitFile();"><i class="fa fa-upload"></i></button>
                         <button ng-show ="reference.uploadedFile" class ="btn btn-success" disabled><i class="fa fa-check"></i></button>
                     </div>
                 </ng-form>
@@ -67,7 +67,7 @@
                     <text-view-edit obj="obj" field="citation"></text-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-view-edit obj="obj" field="docType" cv="DOCUMENT_TYPE" label="Document Type"></dropdown-view-edit>
+                    <dropdown-view-edit obj="obj" field="docType" cv="DOCUMENT_TYPE" label="Source Type"></dropdown-view-edit>
                 </div>
 <!--                <div class="col-md-1">
                     <date-picker-view-edit obj="reference" field="documentDate" label ="Date Accessed"></date-picker-view-edit>
@@ -79,15 +79,29 @@
                     <text-view-edit obj="obj" field="url"></text-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <check-box-view-edit ng-model="obj.publicDomain" field="publicDomain" label="Public Domain"></check-box-view-edit>
+                    <check-box-view-edit obj="obj" field="publicDomain" label="Public Domain"></check-box-view-edit>
                 </div>
-                <div ng-if="obj.uploadedFile" class="col-md-1">
-                    <a ng-href = {{obj.uploadedFile}}><i class ="fa fa-file-text fa-2x success"></i></a>
+                <div  class="col-md-1">
+                    <label for="uploader">Document</label><br>
+                    <a ng-href = {{obj.uploadedFile}} ng-if="obj.uploadedFile">
+                        <i class ="fa fa-file-text fa-stack-2x success"></i>
+                        </a>
+                    <i class="fa fa-upload fa-2x success"  ng-show="!obj.uploadedFile" ng-click = "uploadDoc=!uploadDoc" id="uploader" ></i>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" formname="refForm" type="access"
                                    divid={{reference.$$hashKey}}></form-selector>
                 </div>
+            </div>
+            <div class ="row form-row" >
+                    <div class="col-md-6"  ng-hide ="obj.uploadedFile || !uploadDoc">
+                        <label for="upload">Upload a Document</label><br>
+                        <file-field ng-show="!obj.uploadedFile && !obj.$$uploadFile" ng-model="obj.$$uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                        <br>
+                        {{obj.$$uploadFile.name}}
+                        <br>
+                        <button ng-hide ="obj.uploadedFile || !obj.$$uploadFile" class ="btn btn-default" ng-click ="submitFile(obj);"><i class="fa fa-upload"></i></button>
+                    </div>
             </div>
             <div class={{obj.$$hashKey}}></div>
         </div>

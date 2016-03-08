@@ -30,6 +30,11 @@
                     substance.substanceClass = substanceClass;
                     substance.protein = {};
                     substance.protein.subunits = [];
+                    substance.protein.glycosylation={
+                     'CGlycosylationSites':[],
+                     'NGlycosylationSites':[],
+                     'OGlycosylationSites':[]
+                    };
                     break;
                 case "structurallyDiverse":
                     substance.substanceClass = substanceClass;
@@ -749,6 +754,7 @@
         $scope.submitpaster = function (input) {
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
+
             $scope.substance = $scope.toFormSubstance(sub);
             if ($scope.substance.substanceClass === 'chemical') {
                 molChanger.setMol($scope.substance.structure.molfile);
@@ -887,7 +893,7 @@
             },
             link: function (scope, element, attrs) {
                 scope.display = function () {
-                    if (!_.isUndefined(scope.value)) {
+                    if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
                         var addedunits = false;
                         var unittext = "";
@@ -1165,7 +1171,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning" id="access-directive"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><i class="fa fa-lock fa-2x warning" id="access-directive"></i><span ng-repeat = "access in value"><br>{{access.display || access}}</span></div>'
         };
     });
 
@@ -1177,7 +1183,10 @@
             scope: {
                 parameters: '='
             },
-            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.amount"></amount></div>'
+            link: function(scope){
+                console.log(scope);
+            },
+            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.value"></amount></div>'
         };
     });
 
@@ -1436,8 +1445,6 @@
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
-                    /* scope.obj.sequence = _.filter(scope.obj.sequence, ['valid', true]);
-                     console.log(temp);*/
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {

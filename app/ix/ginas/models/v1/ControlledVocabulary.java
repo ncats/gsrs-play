@@ -1,7 +1,15 @@
 package ix.ginas.models.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.models.Indexable;
 import ix.core.models.IxModel;
+import ix.core.models.Keyword;
+import ix.ginas.models.KeywordListDeserializer;
+import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,20 +21,28 @@ import javax.persistence.*;
 @Table(name="ix_ginas_controlled_vocab")
 public class ControlledVocabulary extends IxModel{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 5455592961232451608L;
+
+	@JsonIgnore
+	public Long getId(){
+		return this.id;
+	};
 
 	@Column(unique=true)
 	@Indexable(name="Domain", facet=true)
 	public String domain;
 
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JsonSerialize(using=KeywordListSerializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.class)
+    public List<Keyword> fields = new ArrayList<Keyword>();
+
+	public boolean editable = true;
+
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_cv_terms")
     //@JsonView(BeanViews.Full.class)
 	public List<VocabularyTerm> terms;
-
 
 	public VocabularyTerm getTermWithValue(String val){
 		for(VocabularyTerm vt:this.terms){

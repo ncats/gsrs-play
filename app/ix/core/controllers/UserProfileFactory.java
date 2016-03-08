@@ -16,9 +16,16 @@ type=UserProfile.class,
 description="Resource for handling user profiles")
 */
 public class UserProfileFactory extends EntityFactory {
-	static final public Model.Finder<Long, UserProfile> finder =
-            new Model.Finder(Long.class, UserProfile.class);
-	
+	static public Model.Finder<Long, UserProfile> finder;
+
+	static{
+		init();
+	}
+
+	public static void init(){
+		finder =
+				new Model.Finder(Long.class, UserProfile.class);
+	}
 	
 	public static UserProfile getUserProfileForPrincipal(Principal p){
 		UserProfile profile = finder.where().eq("user.username", p.username).findUnique();
@@ -77,7 +84,15 @@ public class UserProfileFactory extends EntityFactory {
                     g.saveManyToManyAssociations("members");
                 }else {
                     g.members.add(newUser);
-                    g.save();
+                    try {
+						g.save();
+					}catch(Throwable t){
+                        for(Principal p : g.members){
+                            System.out.println(p.username + " id = " + p.id);
+                        }
+
+                        throw t;
+					}
                 }
             }
             prof.save();

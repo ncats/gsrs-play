@@ -42,6 +42,8 @@ public class ChangesBuilder {
         map.put(change.getKey(), change);
         return this;
     }
+    
+    
     public ChangesBuilder added(String key, String value){
     	return change(Change.add(key, value));
     }
@@ -57,8 +59,12 @@ public class ChangesBuilder {
        // String[] path = key.split("/");
         JsonNode currentBefore= null;
         JsonNode currentAfter=null;
+        String key2=key;
         switch(type){
-            case ADDED: currentAfter=after; break;
+            case ADDED: 
+            	currentAfter=after; 
+            	key2=JsonUtil.normalizePath("add", key, before);
+            	break;
             case REMOVED: currentBefore = before; break;
             case REPLACED:
                 currentAfter = after;
@@ -70,9 +76,9 @@ public class ChangesBuilder {
                 throw new IllegalStateException("unknown type "+type);
 
         }
-
+        
         map.put(key,new Change(key,getNodeFromPath(currentBefore, key),
-                getNodeFromPath(currentAfter, key),
+                				   getNodeFromPath(currentAfter, key2),
                 type));
 
         return this;
@@ -89,22 +95,7 @@ public class ChangesBuilder {
             return null;
         }
 
-        return node.asText();
-       /*
-        //paths start with leading '/' so skip that?
-        for (int i = 1; i < path.length; i++) {
-            String fieldName = path[i];
-            Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
-            if (m.matches()) {
-                //array ref
-                current = current.get(Integer.parseInt(fieldName));
-            } else {
-                current = current.get(path[i]);
-            }
-        }
-
-        return current.asText();
-        */
+        return JsonUtil.toString(node);
     }
 
     public Changes build(){

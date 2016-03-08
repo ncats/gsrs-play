@@ -53,6 +53,7 @@ import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
+import ix.core.chem.EnantiomerGenerator;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
 import ix.core.search.SearchOptions;
@@ -622,6 +623,21 @@ public class App extends Authentication {
         StringBuilder sb = new StringBuilder ();
         for (int i = 0; i < size; ++i)
             sb.append(alpha[rand.nextInt(alpha.length)]);
+        return sb.toString();
+    }
+    
+    public static String hashvar (int size, Object o) {
+        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+                        'l','m','n','o','p','q','r','s','t','u','v',
+                        'x','y','z'};
+        
+        StringBuilder sb = new StringBuilder ();
+        int ohash=o.hashCode();
+        for (int i = 0; i < size; ++i){
+                int p=Math.abs((ohash%alpha.length));
+            sb.append(alpha[p]);
+            ohash+=(ohash+"").toString().hashCode();
+        }
         return sb.toString();
     }
     
@@ -1727,6 +1743,41 @@ public class App extends Authentication {
         return ok(node);
     }
 
+    public static Structure[] enantiomers (Structure struc) {
+        final List<Structure> isomers = new ArrayList<Structure>();
+        EnantiomerGenerator eg = new EnantiomerGenerator (struc);
+        eg.generate(new EnantiomerGenerator.Callback() {
+                public void generated (Structure isomer) {
+                    isomers.add(isomer);
+                }
+            });
+        return isomers.toArray(new Structure[0]);
+    }
+
+    public static Result enantiomer (final String id) {
+        final String key = "enantiomer/"+id;
+        try {
+            Structure[] strucs = getOrElse (key, new Callable<Structure[]> () {
+                    public Structure[] call () throws Exception {
+                        Structure struc = StructureFactory.getStructure(id);
+                        if (struc != null) {
+                            return enantiomers (struc);
+                        }
+                        return null;
+                    }
+                });
+            if (strucs != null) {
+                ObjectMapper mapper = EntityFactory.getEntityMapper();
+                return ok (mapper.valueToTree(strucs));
+            }
+            return notFound ("Can't located structure "+id);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError ("Can't generate enantiomer for "+id);
+        }
+    }
+            
     public static String getSequence (String id) {
         return getSequence (id, 0);
     }

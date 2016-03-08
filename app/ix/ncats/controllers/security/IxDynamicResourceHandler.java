@@ -18,18 +18,24 @@ import java.util.Map;
 
 
 public class IxDynamicResourceHandler implements DynamicResourceHandler {
-    private static final Map<String, DynamicResourceHandler> HANDLERS = new HashMap<String, DynamicResourceHandler>();
+    private static Map<String, DynamicResourceHandler> HANDLERS;
 
     static {
+       init();
+    }
+
+    public static void init(){
+        HANDLERS = new HashMap<String, DynamicResourceHandler>();
+
         HANDLERS.put("isAdmin",
                 new AbstractDynamicResourceHandler() {
                     public boolean isAllowed(final String name,
                                              final String meta,
                                              final DeadboltHandler deadboltHandler,
                                              final Http.Context context) {
-                    	
-                    	if(Play.application().configuration().getBoolean("ix.admin", false))return true;
-                    	
+
+                        if(Play.application().configuration().getBoolean("ix.admin", false))return true;
+
                         Subject subject = deadboltHandler.getSubject(context);
                         boolean allowed=false;
                         DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
@@ -41,15 +47,20 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                     }
                 });
         HANDLERS.put("canApprove",
-        		new SimpleRoleDynamicResourceHandler(
-        				Role.Updater,
-        				Role.SuperUpdate
-        				));
+                new SimpleRoleDynamicResourceHandler(
+                        Role.Updater,
+                        Role.SuperUpdate
+                ));
         HANDLERS.put("canRegister",
                 new SimpleRoleDynamicResourceHandler(
-                		Role.DataEntry,
-                		Role.SuperDataEntry
-                		));
+                        Role.DataEntry,
+                        Role.SuperDataEntry
+                ));
+        HANDLERS.put("canUpdate",
+                new SimpleRoleDynamicResourceHandler(
+                        Role.Updater,
+                        Role.SuperUpdate
+                ));
     }
     
     public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{

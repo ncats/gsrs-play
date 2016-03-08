@@ -212,7 +212,8 @@
             scope: {
                 amount: '=',
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                field: '='
             },
             templateUrl: baseurl + "assets/templates/forms/amount-form.html"
         };
@@ -499,7 +500,41 @@
         };
     });
 
-    ginasForms.directive('editCvForm', function (CVFields) {
+    ginasForms.directive('cvTermsForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            /*scope: {
+                terms: '=',
+                domain: '='
+            },*/
+            templateUrl: baseurl + "assets/templates/admin/cv-terms.html",
+            link: function(scope){
+                console.log(scope);
+
+               /* scope.deleteCV = function(obj){
+                    var r = confirm("Are you sure you want to delete this CV?");
+                    if (r == true) {
+                        console.log(obj);
+                        console.log(scope.terms);
+                        console.log(scope.terms.indexOf(obj));
+                        var terms = scope.terms.splice(scope.terms.indexOf(obj), 1);
+                        CVFields.updateCV(obj);
+                    }
+                };
+
+                scope.updateCV = function(obj){
+                    var r = confirm("Are you sure you want to update this CV?");
+                    if (r == true) {
+                        CVFields.updateCV(obj);
+                    }
+                };*/
+            }
+        };
+    });
+
+
+    ginasForms.directive('editCvForm', function ($templateRequest, CVFields, toggler) {
         return {
             restrict: 'E',
             replace: true,
@@ -508,10 +543,19 @@
             },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
+                console.log(scope);
+                CVFields.all().then(function (response){
+                    console.log(response);
+                    scope.domains = response.data.content;
+                });
+
+                scope.stage = true;
+
+
                 scope.getValues = function () {
                     console.log(scope);
                     CVFields.getCV(scope.vocab.display).then(function (data) {
-                        scope.values = data.data.content[0].terms;
+                        scope.terms = data.data.content[0].terms;
                         scope.domain = data.data.content[0];
                     });
                     scope.create = true;
@@ -521,19 +565,62 @@
                     var r = confirm("Are you sure you want to delete this CV?");
                     if (r == true) {
                         console.log(obj);
-                        console.log(scope.values);
-                        console.log(scope.values.indexOf(obj));
-                        var terms = scope.values.splice(scope.values.indexOf(obj), 1);
+                        console.log(scope.terms);
+                        console.log(scope.terms.indexOf(obj));
+                        var terms = scope.terms.splice(scope.terms.indexOf(obj), 1);
                         CVFields.updateCV(scope.domain);
                     }
                 };
 
-                scope.updateCV = function(){
-                    var r = confirm("Are you sure you want to update this CV?");
-                    if (r == true) {
+                scope.addCV = function(term){
+                        console.log(term);
+                        scope.terms.push(term);
                         CVFields.updateCV(scope.domain);
+                    scope.term={};
+                };
+
+                scope.addDomain = function(cv){
+                        console.log(cv);
+                    console.log(scope);
+                       // scope.domains.push(cv);
+                        CVFields.updateCV(cv);
+                    scope.cv={};
+                };
+
+                scope.updateCV = function(obj){
+                 var r = confirm("Are you sure you want to update this CV?");
+                    if (r == true) {
+                        if(obj){
+                            _.forEach(obj.fields, function(value, key) {
+                                if(!value.value){
+                                    obj.fields[key] = value.display;
+                                }else {
+                                    obj.fields[key] = value.value;
+                                }
+                            });
+                            console.log(obj);
+                            CVFields.updateCV(obj);
+                        }else {
+                            CVFields.updateCV(scope.domain);
+                        }
                     }
+                };
+
+                scope.showTerms= function(obj, divid){
+                    console.log(obj);
+                    scope.terms = obj.terms;
+                    scope.domain = obj;
+                    if(!divid){
+                        var divid = obj.$$hashKey;
+                    }
+                    var formHolder = '<cv-terms-form domain = domain terms = terms ></cv-terms-form>';
+                    var url = baseurl + "assets/templates/admin/cv-terms.html";
+                     //   toggler.toggle(scope, obj.$$hashKey, formHolder);
+                    toggler.show(scope, divid, url);
+
+
                 }
+
             }
         };
     });
@@ -567,13 +654,17 @@
 
                 switch (scope.type) {
                     case "amount":
+                        console.log(scope);
+                        if(!scope.field){
+                            scope.field = 'amount';
+                        }
                             $templateRequest(baseurl + "assets/templates/selectors/amount-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
 
                             });
-                        formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
+                        formHolder = '<amount-form referenceobj = referenceobj parent = parent field=field amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
                         scope.formtype = attrs.formtype;
@@ -1408,24 +1499,34 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
-
-                scope.submitFile = function () {
+                scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();
-                    //  fd.append('file', scope.uploadFile);
-                    fd.append('file-name', scope.uploadFile);
-                    fd.append('file-type', scope.uploadFile.type);
+                    if(obj){
+                        scope.$$uploadFile = obj.$$uploadFile;
+                    }
+                    //  fd.append('file', scope.$$uploadFile);
+                    fd.append('file-name', scope.$$uploadFile);
+                    fd.append('file-type', scope.$$uploadFile.type);
                     //send the file / data to your server
                     $http.post(baseurl + 'upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        _.set(scope.reference, 'uploadedFile', data.url);
+                        if(obj){
+                            _.set(obj, 'uploadedFile', data.url);
+                            _.set(scope, 'uploadDoc', false);
+                            delete obj.$$uploadFile;
+                        }else {
+                            _.set(scope.reference, 'uploadedFile', data.url);
+                        }
                     }).error(function (err) {
                     });
+                    _.set(scope, 'uploadDoc', false);
+                    delete scope.$$uploadFile;
                 };
 
-                scope.validate = function () {
+                    scope.validate = function () {
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
@@ -1465,21 +1566,31 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
             link: function (scope, element, attrs) {
-                scope.submitFile = function () {
+
+                scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();
-                    //  fd.append('file', scope.uploadFile);
-                    fd.append('file-name', scope.uploadFile);
-                    fd.append('file-type', scope.uploadFile.type);
+                    if(obj){
+                        scope.$$uploadFile = obj.$$uploadFile;
+                    }
+                    fd.append('file-name', scope.$$uploadFile);
+                    fd.append('file-type', scope.$$uploadFile.type);
                     //send the file / data to your server
                     $http.post(baseurl + 'upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        _.set(scope.ref, 'uploadedFile', data.url);
+                        if(obj){
+                            _.set(obj, 'uploadedFile', data.url);
+                            _.set(scope, 'uploadDoc', false);
+                            delete obj.$$uploadFile;
+                        }else {
+                            _.set(scope.reference, 'uploadedFile', data.url);
+                        }
                     }).error(function (err) {
-                        console.log(err);
                     });
+                    _.set(scope, 'uploadDoc', false);
+                    delete scope.$$uploadFile;
                 };
 
 
@@ -1674,7 +1785,8 @@ console.log(scope);
             scope: {
                 obj: '=submit',
                 form: '=form',
-                path: '@path'
+                path: '@path',
+                name:'@submit'
             },
             templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function (scope, element, attrs) {

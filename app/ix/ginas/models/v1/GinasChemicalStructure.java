@@ -1,9 +1,10 @@
 package ix.ginas.models.v1;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,11 +32,14 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.GinasReferenceContainer;
+import ix.ginas.models.GroupListDeserializer;
 import ix.ginas.models.GroupListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.ReferenceListSerializer;
+import ix.ginas.models.ReferenceSetDeserializer;
+import ix.ginas.models.ReferenceSetSerializer;
 
 @Entity
 @DiscriminatorValue("GSRS")
@@ -92,19 +96,24 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	public GinasReferenceContainer recordReference;
 
 	@JsonProperty("access")
-	public void setAccess(Collection<String> access) {
-		ObjectMapper om = new ObjectMapper();
-		Map mm = new HashMap();
-		mm.put("access", access);
-		mm.put("entityType", this.getClass().getName());
-		JsonNode jsn = om.valueToTree(mm);
-		try {
-			recordAccess = om.treeToValue(jsn, GinasAccessContainer.class);
+    @JsonDeserialize(using = GroupListDeserializer.class)
+    public void setAccess(Set<Group> access){
+    	List<String> accessGroups=new ArrayList<String>();
+    	for(Group g: access){
+    		accessGroups.add(g.name);
+    	}
+    	
+    	ObjectMapper om = new ObjectMapper();
+    	Map mm = new HashMap();
+    	mm.put("access", accessGroups);
+    	mm.put("entityType", this.getClass().getName());
+    	JsonNode jsn=om.valueToTree(mm);
+    	try {
+			recordAccess= om.treeToValue(jsn, GinasAccessContainer.class);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		return;
-	}
+    }
 
 	public void addRestrictGroup(Group p){
 		if(this.recordAccess==null){
@@ -118,36 +127,34 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 
 
 
-	@JsonSerialize(using = GroupListSerializer.class)
-	public Set<Group> getAccess() {
-		if (recordAccess != null) {
-			return recordAccess.access;
-		}
-		return null;
-	}
+	
+	@JsonProperty("access")
+    @JsonSerialize(using = GroupListSerializer.class)
+    public Set<Group> getAccess(){
+    	if(recordAccess!=null){
+    		return recordAccess.access;
+    	}
+    	return new LinkedHashSet<Group>();
+    }
 
-	@JsonSerialize(using = ReferenceListSerializer.class)
+	
+	
+	@JsonSerialize(using = ReferenceSetSerializer.class)
 	public Set<Keyword> getReferences() {
 		if (recordReference != null) {
 			return recordReference.getReferences();
 		}
-		return null;
+		return new LinkedHashSet<Keyword>();
 	}
-
-	@JsonProperty("references")
-	public void setReferences(Collection<String> references) {
-		ObjectMapper om = new ObjectMapper();
-		Map mm = new HashMap();
-		mm.put("references", references);
-		mm.put("entityType", this.getClass().getName());
-		JsonNode jsn = om.valueToTree(mm);
-		
-		try {
-			recordReference = om.treeToValue(jsn, GinasReferenceContainer.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-		return;
+	
+	@JsonProperty("references")    
+    @JsonDeserialize(using = ReferenceSetDeserializer.class)
+	@Override
+	public void setReferences(Set<Keyword> references) {
+    	if(this.recordReference==null){
+    		this.recordReference=new GinasReferenceContainer(this);
+    	}
+    	this.recordReference.setReferences(references);
 	}
 
 	public Set<Group> getAccessGroups() {
@@ -158,7 +165,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
 		}
-		this.recordReference.getReferences().add(new Keyword("REFERENCE",
+		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE,
 				refUUID
 		));
 	}

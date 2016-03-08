@@ -1,71 +1,84 @@
 package ix.core.controllers;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
-import java.util.regex.*;
-import java.util.concurrent.*;
-import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.OptimisticLockException;
 
-import ix.core.models.*;
-import ix.core.models.Principal;
-import play.libs.Json;
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.FutureRowCount;
+import com.avaje.ebean.Query;
+import com.avaje.ebean.Transaction;
+import com.avaje.ebean.annotation.Transactional;
+import com.avaje.ebean.bean.EntityBean;
+import com.avaje.ebean.bean.EntityBeanIntercept;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonpatch.diff.JsonDiff;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.Version;
-import com.avaje.ebean.*;
-import com.avaje.ebean.annotation.Transactional;
-import com.avaje.ebean.event.BeanPersistListener;
-import com.avaje.ebean.bean.*;
 
-import ix.core.UserFetcher;
 import ix.core.ValidationMessage;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.BeanViews;
+import ix.core.models.DataVersion;
+import ix.core.models.ETag;
+import ix.core.models.Edit;
+import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Principal;
-import ix.core.search.TextIndexer;
+import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.ginas.models.KeywordListDeserializer;
+import ix.core.search.TextIndexer;
 import ix.ginas.models.v1.Substance;
-import ix.ncats.controllers.security.IxDeadboltHandler;
-import ix.utils.Util;
 import ix.utils.Global;
+import ix.utils.Util;
+import ix.utils.pojopatch.PojoDiff;
+import ix.utils.pojopatch.PojoPatch;
+import play.Logger;
+import play.Play;
+import play.db.ebean.Model;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.Results;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
@@ -269,20 +282,38 @@ public class EntityFactory extends Controller {
         List<Edit> edits = new ArrayList<Edit>();
         ObjectMapper mapper = getEntityMapper ();
         final public Edit edit;
-            
+        
+        
+        
         public EditHistory (String payload) throws Exception {
             edit = new Edit ();
             edit.path = null; 
             edit.newValue = payload;
            
         }
+        
 
         public void add (Edit e) { edits.add(e); }
         public List<Edit> edits () { return edits; }
-        public void attach (Object ebean) {
+        public void attach (Object ebean, final Callable callback) {
             if (ebean instanceof EntityBean) {
                 ((EntityBean)ebean)._ebean_intercept()
-                    .addPropertyChangeListener(this);
+                    .addPropertyChangeListener(new PropertyChangeListener(){
+
+						@Override
+						public void propertyChange(PropertyChangeEvent evt) {
+							//System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
+							EditHistory.this.propertyChange(evt);
+							try {
+								callback.call();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+                    	
+                    	
+                    });
+                
             }
             else {
                 throw new IllegalArgumentException
@@ -316,6 +347,7 @@ public class EntityFactory extends Controller {
                 edit.oldValue = mapper.writeValueAsString(e.getOldValue());
                 edit.newValue = mapper.writeValueAsString(e.getNewValue());
                 edits.add(edit);
+                
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -906,21 +938,23 @@ public class EntityFactory extends Controller {
                     }
                 });
             
+            
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
             if(validator!=null){
 	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
 	            if(!validator.validate(inst,validationMessages)){
-	            	return validationResponse(false, validationMessages);
+	            	return badRequest(validationResponse(false, validationMessages));
 	            }
             }
             
             inst.save();
-	        
-
-            return created (mapper.toJson(inst));
+            
+            Status s=created (mapper.toJson(inst));
+            return s;
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
+        	Logger.error("Problem creating record", ex);
             return internalServerError (ex.getMessage());
         }
     }
@@ -985,19 +1019,19 @@ public class EntityFactory extends Controller {
             	valid=false;
             }
             if(rept==RESPONSE_TYPE.FULL){
-            	return validationResponse(valid, validationMessages,mapper.valueToTree(inst));
+            	return ok(validationResponse(valid, validationMessages,mapper.valueToTree(inst)));
             }else{
-            	return validationResponse(valid, validationMessages);
+            	return ok(validationResponse(valid, validationMessages));
             }
         } catch (Exception ex) {
             return internalServerError(ex.getMessage());
         }
     }
     
-    protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages){
+    protected static JsonNode validationResponse(boolean valid, List<ValidationMessage> validationMessages){
     	return validationResponse(valid, validationMessages,null);
     }
-    protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages, JsonNode jsnode){
+    protected static JsonNode validationResponse(boolean valid, List<ValidationMessage> validationMessages, JsonNode jsnode){
     	ObjectMapper mapper = new ObjectMapper();
     	Map wrapper = new HashMap();
         wrapper.put("valid", valid);
@@ -1005,7 +1039,11 @@ public class EntityFactory extends Controller {
         	wrapper.put("object", jsnode);
         }
         wrapper.put("messages", validationMessages);
-        return ok(mapper.valueToTree(wrapper));
+        if(valid){
+        	return mapper.valueToTree(wrapper);
+        }else{
+        	return mapper.valueToTree(wrapper);
+        }
     }
 
     protected static <K,T extends Model> 
@@ -1141,7 +1179,7 @@ public class EntityFactory extends Controller {
                 final T inst = mapper.treeToValue(value, type);
                 List<ValidationMessage> validationMessages = new ArrayList<ValidationMessage>();
                 if(!validator.validate(inst,validationMessages)){
-	            	return validationResponse(false, validationMessages);
+	            	return badRequest(validationResponse(false, validationMessages));
 	            }
                 try {
                     Method m=EntityFactory.getIdSettingMethodForBean(inst);
@@ -1467,6 +1505,8 @@ public class EntityFactory extends Controller {
     protected static Result updateEntity (JsonNode json, Class<?> type) {
         return updateEntity (json, type, null);
     }
+    
+   
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
@@ -1479,50 +1519,72 @@ public class EntityFactory extends Controller {
         try {       
             Object newValue = mapper.treeToValue(json, type);
             if(validator!=null){
-	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
+	            List<ValidationMessage> validationMessages= 
+	            		(List<ValidationMessage>) validator.getValidationMessageContainer();
 	            if(!validator.validate(newValue,validationMessages)){
-	            	return validationResponse(false, validationMessages);
+	            	return badRequest(validationResponse(false, validationMessages));
 	            }
             }
 
-            FetchedValue previousValContainer=getCurrentValue(newValue);
-            String oldJSON=mapper.toJson(previousValContainer.value);
+            FetchedValue oldValueContainer=getCurrentValue(newValue);
+            String oldVersion=EntityFactory.getVersionForBeanAsString(oldValueContainer.value);
+            
+            if(oldValueContainer.value==null){
+            	throw new IllegalStateException("Cannot update a non-existing record");
+            }
+            
+            String oldJSON=mapper.toJson(oldValueContainer.value);
             
             EditHistory eh = new EditHistory (json.toString());
             
-            
             //this saves and everything
-            EntityPersistAdapter.storeEditForUpdate(previousValContainer.getValueClass(), previousValContainer.id, eh.edit);
-            newValue = instrument (eh, newValue, json);
+            EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
+            
+            //Get the difference as a patch
+            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
+            
+            //Apply the changes, grabbing every change along the way
+            Stack changeStack=patch.apply(oldValueContainer.value);
+        	
+            
+        	while(!changeStack.isEmpty()){
+        		Object v=changeStack.pop();
+        		if(v instanceof ForceUpdatableModel){
+            		((ForceUpdatableModel)v).forceUpdate();
+            	}else if(v instanceof Model){
+            		((Model)v).update();
+            	}
+        	}
+        	
+        	//The old value is now the new value
+        	newValue = oldValueContainer.value;
+        	
+        	
             String newJSON=mapper.toJson(newValue);
             
+            //granular parts not working yet
             if (newValue != null) {
-            	//for now, we won't use this form of edithistory
-            	if(true){
-	                Object id = getId (newValue);
+            	    Object id = getId (newValue);
 	                eh.edit.refid = id != null ? id.toString() : null;
 	                eh.edit.kind = newValue.getClass().getName();
 	                eh.edit.oldValue=oldJSON;
 	                eh.edit.newValue=newJSON;
+	                eh.edit.version=oldVersion;
 	                eh.edit.save();
 	                for (Edit e : eh.edits()) {
 	                    e.batch = eh.edit.id.toString();
 	                    e.save();
 	                }
 	                Logger.debug("** New edit history "+eh.edit.id);
-            	}
-            	
-            	
-               
             }
-            //Should this really be here?
+            //Should this be here?
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	Logger.error("Error updating record", ex);
             return internalServerError (ex.getMessage());
         }
         finally {
@@ -1585,7 +1647,29 @@ public class EntityFactory extends Controller {
         }
         return id;
     }
+    public static Object getVersion (Object entity) throws Exception {
+        Field f = getVersionField (entity);
+        Object version = null;
+        if (f != null) {
+            version = f.get(entity);
+            if (version == null) { // now try bean method
+                try {
+                    Method m = entity.getClass().getMethod
+                        ("get"+getBeanName (f.getName()));
+                    version = m.invoke(entity, new Object[0]);
+                }
+                catch (NoSuchMethodException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        return version;
+    }
 
+    public static Field getVersionField (Object entity) throws Exception {
+        List<Field> fields = getFields (entity, DataVersion.class);
+        return fields.isEmpty() ? null : fields.iterator().next();
+    }
     public static Field getIdField (Object entity) throws Exception {
         List<Field> fields = getFields (entity, Id.class);
         return fields.isEmpty() ? null : fields.iterator().next();
@@ -1597,10 +1681,13 @@ public class EntityFactory extends Controller {
     
     static boolean isValid (Field f) {
         int mods = f.getModifiers();
+        JsonProperty jp;
+        
         return (!Modifier.isStatic(mods)
                 && !Modifier.isFinal(mods)
                 && !Modifier.isTransient(mods)
-                && f.getAnnotation(JsonIgnore.class) == null
+                //&& f.getAnnotation(JsonIgnore.class) == null
+                && f.getAnnotation(DataVersion.class) == null
                 && f.getAnnotation(Id.class) == null);
     }
 
@@ -1610,6 +1697,7 @@ public class EntityFactory extends Controller {
      */
     static Object setValue (Object instance, Field field, Object value)
         throws Exception {
+    	//System.out.println("Setting field:" + field.getName());
         Logger.debug("** setValue: field "+field.getName()+"["
                      +instance.getClass().getName()+"] value="+value);
         
@@ -1672,6 +1760,11 @@ public class EntityFactory extends Controller {
                      +" context="+ebi.getPersistenceContext());
     }
 
+    
+    public static class Instrumented{
+    	Object newObject;
+    	boolean changed=false;
+    }
     /**
      * Ok, this method seems overly complicated. What it's doing is recursively
      * going through and saving each property. That sounds fine, but it causes a 
@@ -1718,9 +1811,10 @@ public class EntityFactory extends Controller {
      * @return
      * @throws Exception
      */
-    protected static Object instrument
-    (EditHistory eh, Object value, JsonNode json) throws Exception {
+    protected static Instrumented instrument
+    (EditHistory eh, Object value, JsonNode json, String path) throws Exception {
     	FetchedValue fv=getCurrentValue(value);
+    	
     	Class cls;
     	Object xval;
     	Object id;
@@ -1728,6 +1822,8 @@ public class EntityFactory extends Controller {
 	    cls=fv.getValueClass();
 	    id=fv.id;
 	    xval=fv.value;
+	    final Instrumented retInst= new Instrumented();
+	    
 	    
 	    /*
 	    if(xval!=null){
@@ -1746,7 +1842,13 @@ public class EntityFactory extends Controller {
     
     
     if (xval == null) {
+    	if(!(value instanceof Model)){
+    		retInst.newObject=value;
+    		return retInst;
+    	}
+    	System.out.println("Saving new:" + path);
     	((Model)value).save();
+    	
         id = getId (value);
         Logger.debug("<<< " + id);
         
@@ -1754,30 +1856,51 @@ public class EntityFactory extends Controller {
         ObjectMapper mapper = new ObjectMapper ();
         e.newValue = mapper.writeValueAsString(value);
         eh.add(e);
-        return value;
+        retInst.newObject=value;
+        
+        //retInst.changed=true;
+        return retInst;
     }else{
     	
     }
 
-    eh.attach(xval);
+    
+    
+    eh.attach(xval, new Callable(){
+
+		@Override
+		public Object call() throws Exception {
+			
+			//retInst.changed=true;
+			return null;
+		}
+    	
+    });
 
     // now sync up val and value
     Map<Field, Object> values = new HashMap<Field, Object>();
     for (Field f : cls.getFields()) {
         JsonProperty prop = f.getAnnotation(JsonProperty.class);
-        JsonNode node = json.get(prop != null ? prop.value() : f.getName());
+        JsonNode node = null;
+        if(json!=null){
+        	node=json.get(prop != null ? prop.value() : f.getName());
+        }
 
         Class type = f.getType();       
         Logger.debug("field \""+f.getName()+"\"["+type
                      +"] valid="+isValid(f)
                      +" node="+node);            
-        if (!isValid (f) || node == null)
+        if (!isValid (f) 
+        		//|| node == null
+        		)
             continue;
         
         Object v = f.get(value);
         if (v != null) {
             if (type.getAnnotation(Entity.class) != null) {
-                setValue (xval, f, instrument (eh, v, node));
+            	Instrumented sinst=instrument (eh, v, node,path+ "/" + f.getName());
+                retInst.changed|=sinst.changed;
+                setValue (xval, f, sinst.newObject);
             }
             else if (type.isArray()) {
                 Class<?> t = type.getComponentType();
@@ -1791,8 +1914,10 @@ public class EntityFactory extends Controller {
                         Object vals = Array.newInstance(t, len);
                         for (int i = 0; i < len; ++i) {
                             Object xv = Array.get(v, i);
+                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
+                            retInst.changed|=sinst.changed;
                             Array.set(vals, i,
-                                      instrument (eh, xv, node.get(i)));
+                                      sinst.newObject);
                         }
                         setValue (xval, f, vals);
                     }
@@ -1821,7 +1946,9 @@ public class EntityFactory extends Controller {
                              it.hasNext(); ++i) {
                             Object xv = it.next();
                             Logger.debug(i+": "+xv+" <=> "+node.get(i));
-                            xv = instrument (eh, xv, node.get(i));
+                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
+                            retInst.changed|=sinst.changed;
+                            xv = sinst.newObject;
                             xcol.add(xv);
                         }
                     }
@@ -1835,11 +1962,32 @@ public class EntityFactory extends Controller {
             }
         }
     }
-    ((Model)xval).update();
+    
+    if(false || xval instanceof ForceUpdatableModel){
+    	
+    	
+    	boolean applied=((ForceUpdatableModel)xval).tryUpdate();
+    	if(!applied && retInst.changed){
+    		((ForceUpdatableModel)xval).forceUpdate();
+    		applied=true;
+    	}else{
+    		
+    	}
+    	retInst.changed|=applied;
+    	
+    }else{
+    	if(xval instanceof Model){
+    		((Model)xval).update();
+    	}
+    }
+    
+    
+    
+    
     Logger.debug("<<< "+id);
     eh.detach(xval);
-    
-    return xval;
+    retInst.newObject=xval;
+    return retInst;
 }
     public static class FetchedValue{
     	public Object value;
@@ -2117,6 +2265,9 @@ public class EntityFactory extends Controller {
                 Logger.debug("Ignore field '"+jf.getKey()+"'");
             }
             catch (NoSuchMethodException ex) {
+            	System.out.println("No such method '"
+                        +set+"("+type+")' for class "
+                        +bean.getClass());
                 Logger.error("No such method '"
                              +set+"("+type+")' for class "
                              +bean.getClass());
@@ -2143,9 +2294,7 @@ public class EntityFactory extends Controller {
 	    }
 	    try {
 	        Object id = EntityFactory.getId(entity);
-	        if (id != null) {
-	            return id;
-	        }
+	        if (id != null) return id;
 	    }
 	    catch (Exception ex) {
 	        Logger.trace("Unable to fetch ID for "+entity, ex);
@@ -2184,10 +2333,14 @@ public class EntityFactory extends Controller {
 	    if(id!=null)return id.toString();
 	    return null;
 	}
-
-	public static String setIdForBean(Object entity){
-	    Object id=getIdForBean(entity);
-	    if(id!=null)return id.toString();
+	
+	public static String getVersionForBeanAsString(Object entity){
+		try{
+		    Object version=getVersion(entity);
+		    if(version!=null)return version.toString();
+		}catch(Exception e){
+			Logger.warn(e.getMessage());
+		}
 	    return null;
 	}
 

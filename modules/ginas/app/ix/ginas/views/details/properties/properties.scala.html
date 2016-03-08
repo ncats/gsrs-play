@@ -19,20 +19,24 @@
         </thead>
         @for(n <- properties) {
             <tr>
-                <td>@n.getName</td>
-                <td>@GinasApp.getCV.getDisplay("NAME_TYPE", {n.`getType`})</td>
-                <td>@GinasApp.getCV.getDisplay("Property_TYPE", {n.getPropertyType})</td>
-
-                <td>@n.getValue.toString()
-                </td>
-
-
-                <td>@if(n.isDefining == true) {
+                <td class="url">@n.getName</td>
+                <td>@GinasApp.getCV.getDisplay("NAME_TYPE", n.getType())</td>
+                <td>@GinasApp.getCV.getDisplay("Property_TYPE", n.getPropertyType)</td>
+                <td><amount value="@GinasApp.getAsJson(n.getValue())"></amount></td>
+                @if(n.isDefining == true) {
+                    <td>
                     <i class="fa fa-check fa-2x success"></i>
-                } else {}</td>
-                <td>PARAMETERS</td>
-@*                @referencetable(n.getReferences(), n.uuid.toString(), 7)
-            </tr>*@
+                    </td>
+                } else {<td></td>}
+                @if(n.getParameters().size > 0) {
+                    <td>
+                    @for(pr <- n.getParameters()) {
+                            @pr.getName() <br>
+                            @pr.getType()<br>
+                        <amount value="@GinasApp.getAsJson(pr.getValue())"></amount>
+                    }
+                    </td>
+                }else{<td></td>}
         @if(n.getReferences.size > 0){
             <td>
                 <referencesmanager indices substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
@@ -40,7 +44,8 @@
             </tr>
             <tr><td class = "'@n.getUuid'" colspan = "7"></td></tr>
         }else{
-            <td>none</td></tr>
+            <td>0</td>
+                </tr>
         }
         }
     </table>

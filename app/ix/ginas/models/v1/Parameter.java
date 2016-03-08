@@ -16,18 +16,44 @@ import ix.ginas.models.GinasCommonSubData;
 public class Parameter extends GinasCommonSubData {
     @JSONEntity(title = "Parameter Name", isRequired = true)
     @Column(nullable=false)
-    public String name;
+    private String name;
     
     @JSONEntity(title = "Parameter Type", values = "JSONConstants.ENUM_PROPERTY_TYPE", isRequired = true)
-    public String type;
-    
+    private String type;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     @JSONEntity(title = "Parameter Value")
     @OneToOne(cascade=CascadeType.ALL)
-    public Amount value;
+    private Amount value;
 
     public Parameter () {}
-    
-    public String toString(){
-    	return name + "," + type + "," + value.toString();
+
+    public String getName() {
+        return name;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Amount getValue() {
+        return value;
+    }
+
+    public void setValue(Amount value) {
+        this.value = value;
+    }
+
+
+    
+/*    public String toString(){
+    	return name + "," + type + "," + value.toString();
+    }*/
 }
