@@ -1,16 +1,19 @@
 package ix.utils;
 
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLDecoder;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.security.*;
 
 import play.Logger;
 import play.Play;
@@ -203,15 +206,16 @@ public class Util {
     }
     
     
-    public static File getFile(String file, String path) throws Exception{
+    public static InputStream getFile(String file, String path) throws Exception{
     	if(path==null)path="";
     	if(!Play.isProd()){
-    		return Play.application().getFile(path + file);
+    		return new FileInputStream(Play.application().getFile(path + file));
     	}else{
-    		return new File(Play.application().resource(path + file).toURI());	
+    		return Play.application().resource(path + file).openStream();	
     	}
     }
-    public static File getFile(String file) throws Exception{
+    
+    public static InputStream getFile(String file) throws Exception{
     	return getFile(file,null);
     }
 }
