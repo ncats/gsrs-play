@@ -5,8 +5,10 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.security.*;
 
@@ -198,5 +200,18 @@ public class Util {
     }
     public static long getTimeResolutionMS(){
     	return TIME_RESOLUTION_MS;
+    }
+    
+    
+    public static File getFile(String file, String path) throws Exception{
+    	if(path==null)path="";
+    	if(!Play.isProd()){
+    		return Play.application().getFile(path + file);
+    	}else{
+    		return new File(Play.application().resource(path + file).toURI());	
+    	}
+    }
+    public static File getFile(String file) throws Exception{
+    	return getFile(file,null);
     }
 }

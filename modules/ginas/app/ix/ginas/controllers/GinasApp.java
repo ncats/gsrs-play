@@ -86,6 +86,7 @@ import play.mvc.Result;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 import chemaxon.struc.MolAtom;
+import controllers.Assets;
 import ix.seqaln.SequenceIndexer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -1519,7 +1520,14 @@ public class GinasApp extends App {
 	        	placeholderFile="polymer.svg";
 	        }
     	}
-    	return ok(Play.application().getFile("public/images/" + placeholderFile));
+    	
+    	//Assets.at("public/images/",placeholderFile,true).apply();
+    	try{
+    		return ok(Util.getFile(placeholderFile, "public/images/"));
+    	}catch(Exception e){
+    		return _internalServerError(e);
+    	}
+    	
     }
     
     /**

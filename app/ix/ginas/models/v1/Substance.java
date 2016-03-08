@@ -723,4 +723,16 @@ public class Substance extends GinasCommonData {
 		
 	}
 	
+	
+	public int hashCode(){
+		return (this.getUuid() + this.version).hashCode();
+	}
+	public boolean equals(Object o){
+		if(o == null)return false;
+		if(!(o instanceof Substance))return false;
+		
+		String thisID= (this.getUuid() + this.version);
+		String thatID= (((Substance)o).getUuid() + ((Substance)o).version);
+		return thisID.equals(thatID);
+	}
 }
