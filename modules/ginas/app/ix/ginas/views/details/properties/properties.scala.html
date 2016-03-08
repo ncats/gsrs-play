@@ -20,18 +20,20 @@
         @for(n <- properties) {
             <tr>
                 <td class="url">@n.getName</td>
-                <td>@GinasApp.getCV.getDisplay("NAME_TYPE", {n.`getType`})</td>
-                <td>@GinasApp.getCV.getDisplay("Property_TYPE", {n.getPropertyType})</td>
+                <td>@GinasApp.getCV.getDisplay("NAME_TYPE", n.getType())</td>
+                <td>@GinasApp.getCV.getDisplay("Property_TYPE", n.getPropertyType)</td>
                 <td><amount value="@GinasApp.getAsJson(n.getValue())"></amount></td>
-                <td>@if(n.isDefining == true) {
+                @if(n.isDefining == true) {
+                    <td>
                     <i class="fa fa-check fa-2x success"></i>
+                    </td>
                 } else {<td></td>}
                 @if(n.getParameters().size > 0) {
                     <td>
                     @for(pr <- n.getParameters()) {
-                            @pr.name <br>
-                            @pr.`type`<br>
-                        <amount value="@GinasApp.getAsJson(pr.value)"></amount>
+                            @pr.getName() <br>
+                            @pr.getType()<br>
+                        <amount value="@GinasApp.getAsJson(pr.getValue())"></amount>
                     }
                     </td>
                 }else{<td></td>}
@@ -42,7 +44,7 @@
             </tr>
             <tr><td class = "'@n.getUuid'" colspan = "7"></td></tr>
         }else{
-            <td>none</td>
+            <td>0</td>
                 </tr>
         }
         }
