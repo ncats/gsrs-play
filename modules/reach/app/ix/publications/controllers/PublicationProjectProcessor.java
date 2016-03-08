@@ -95,7 +95,7 @@ public class PublicationProjectProcessor extends Controller {
                 new Model.Finder(Long.class, Namespace.class);
 
         progFinder =
-                new Model.Finder(Long.class, Program.class)
+            new Model.Finder(Long.class, Program.class);
 
         eutils =
                 Play.application().plugin(EutilsPlugin.class);
@@ -1059,8 +1059,12 @@ public class PublicationProjectProcessor extends Controller {
                 firstname = "(bill william)";
             else if ("gene".equalsIgnoreCase(firstname)
                      || "eugen".equalsIgnoreCase(firstname)
-                     || "eugene".equalsIgnoreCase(firstname))
+                     || "eugene".equalsIgnoreCase(firstname)) {
                 firstname = "(gene eugen eugene)";
+                if ("buehler".equalsIgnoreCase(lastname)
+                    || "beuhler".equalsIgnoreCase(lastname)) 
+                    lastname = "(buehler beuhler)";
+            }
             else if ("henrike".equalsIgnoreCase(firstname))
                 lastname = "(veith nelson)";
             else if ("Wichterman".equalsIgnoreCase(lastname)

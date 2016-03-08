@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var MoietyPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -15,7 +15,8 @@ var ProteinWizardPage = function () {
 //count is currently text(integer), but will need to be changed to be an amount
     this.formElements = {
         formName: 'moietyForm',
-        buttonID: 'moieties',
+        formObj: '',
+        buttonId: 'moieties',
         fields: [{
             binding: 'obj.id',
             type: 'binding'

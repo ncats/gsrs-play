@@ -87,6 +87,25 @@ var WizardCommonElements = function () {
         //});
     };
 
+    this.testMultiEditInput = function (model) {
+        console.log("multi-edit model: " +model);
+        // console.log("multi-select buttonId: " + buttonId );
+        var elementId = model.split(".")[1];
+        console.log("elementId: " + elementId);
+        //  this.clickById(buttonId);
+        element(by.id(elementId)).click();
+        //element(by.model(model)).click().then(function(){
+        var elem = browser.findElement(by.model(model));
+        //  element(by.model(model)).all(by.css('.suggestion-list')).each(function (element, index) {
+        elem.getText().then(function (text) {
+            var items = text.split(' ');
+            console.log(items.length);
+            expect(items.length).toBeGreaterThan(0);
+        });
+        //  });
+        //});
+    };
+
     this.testCheckBoxInput = function (model) {
         console.log("checkbox: " + model);
         var elementId = model.split(".")[1];
@@ -99,6 +118,15 @@ var WizardCommonElements = function () {
         }
         expect(chekBox.isSelected()).toBe(false);
     };
+
+    this.testRadioButton = function(model){
+        console.log("radio: " + model);
+        element.all(by.model(model)).get(1).click();
+        element.all(by.model(model)).get(0).click();
+        element(by.model(model)).getAttribute('aria-checked').then(function(value) {
+            expect(value).toBe('true');
+        });
+    }
 
     this.testBinding = function(model){
        expect(element(by.exactBinding(model)).isPresent()).toBe(true);
@@ -138,8 +166,14 @@ var WizardCommonElements = function () {
                 case "multi-select":
                     this.testMultiSelectInput(model);
                     break;
+                case "multi-edit":
+                    this.testMultiEditInput(model);
+                    break;
                 case "check-box":
                     this.testCheckBoxInput( model);
+                    break;
+                case "radio":
+                    this.testRadioButton(model);
                     break;
                 case "binding":
                     console.log(model);

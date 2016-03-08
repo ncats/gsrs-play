@@ -2,6 +2,6 @@ package ix.utils.pojopatch;
 
 import java.util.Stack;
 
-public interface PojoPatch{
-	public Stack apply(Object old) throws Exception;
+public interface PojoPatch<T>{
+	Stack apply(T old) throws Exception;
 }

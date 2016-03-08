@@ -421,7 +421,7 @@ public class GinasLoad extends App {
 				if (sub instanceof ChemicalSubstance) {
 
 					((ChemicalSubstance) sub)
-							.setStructure(((ChemicalSubstance) sub).structure);
+							.structure = (((ChemicalSubstance) sub).structure);
 					List<Moiety> mlist = new ArrayList<Moiety>();
 					for (Moiety m : ((ChemicalSubstance) sub).moieties) {
 						try {
@@ -436,7 +436,7 @@ public class GinasLoad extends App {
 				for (Relationship m : sub.relationships) {
 					try {
 						// I don't know why this is necessary
-						m.setRelatedSubstance(m.relatedSubstance);
+						m.relatedSubstance =m.relatedSubstance;
 						m.save();
 					} catch (Exception e) {
 						m.relatedSubstance.update();

@@ -69,10 +69,10 @@ import ix.core.controllers.EntityFactory.EntityMapper;
 
 public class PojoDiff {
 	
-	public static class JsonObjectPatch implements PojoPatch{
+	public static class JsonObjectPatch<T> implements PojoPatch<T>{
 		private JsonPatch jp;
 		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
-		public Stack apply(Object old) throws Exception{
+		public Stack apply(T old) throws Exception{
 			return applyPatch(old,jp);
 		}
 	}
@@ -98,7 +98,7 @@ public class PojoDiff {
 	}
 	
 	
-	public static PojoPatch getDiff(Object oldValue, Object newValue){
+	public static <T> PojoPatch getDiff(T oldValue, T newValue){
 		return new LazyObjectPatch(oldValue,newValue);
 	}
 	
@@ -107,12 +107,12 @@ public class PojoDiff {
 	}
 	
 	
-	private static Stack applyPatch(Object oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
+	private static <T> Stack applyPatch(T oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
 		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 		JsonNode oldNode=mapper.valueToTree(oldValue);
 		JsonNode newNode=jp.apply(oldNode);
-		//jp.
-		Object newValue = mapper.treeToValue(newNode,oldValue.getClass());
+		//cat to T should be safe...
+		T newValue =  (T) mapper.treeToValue(newNode,oldValue.getClass());
 		return applyChanges(oldValue,newValue,null);
 	}
 	private static JsonNode getJsonDiff(Object oldValue, Object newValue){
@@ -125,7 +125,7 @@ public class PojoDiff {
 	    			);
 	}
 	
-	private static Stack applyChanges(Object oldValue, Object newValue, JsonNode jsonpatch){
+	private static <T> Stack applyChanges(T oldValue, T newValue, JsonNode jsonpatch){
 			LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
 			if(jsonpatch==null){
 				ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
