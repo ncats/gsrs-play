@@ -3,29 +3,49 @@ package app.ix.utils.pojopatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.models.Author;
+import ix.core.models.Keyword;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
+import ix.ginas.models.v1.Reference;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Created by katzelda on 3/7/16.
  */
-public class TestPojoDiff {
+public class PojoDiffTest {
 
+    private List<UUID> uuids = new ArrayList<>();
+    private int uuidIndex=0;
     ObjectMapper mapper = new ObjectMapper();
 
+    private UUID getNextUUID(){
+        if(uuidIndex > uuids.size()){
+            UUID uuid = UUID.randomUUID();
+            uuids.add(uuid);
+            uuidIndex++;
+            return uuid;
+        }
+        return uuids.get(uuidIndex++);
+    }
+
+    private String getUUID(int index){
+        if(index == uuids.size()){
+            UUID uuid = UUID.randomUUID();
+            uuids.add(uuid);
+            return uuid.toString();
+        }
+        return uuids.get(index).toString();
+    }
     @Test
     public void sameObjectShouldNotHaveChanges() throws Exception {
         //we'll use Author since that's simple and it's an entity
+    System.out.println("TEST POJO DIFF");
 
         Author old = new Author();
 
@@ -192,5 +212,111 @@ public class TestPojoDiff {
 
         assertTrue(prop.getParameters().isEmpty());
 
+        JsonMatches(update, prop);
+
     }
+
+    @Test
+    public void addToSet() throws Exception{
+        Property old = new Property();
+
+        old.addReference(getUUID(0));
+
+        Property newProp = new Property();
+
+        newProp.addReference(getUUID(0));
+        newProp.addReference(getUUID(1));
+
+        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+
+        patch.apply(old);
+
+        JsonMatches(newProp, old);
+
+    }
+
+    @Test
+    public void addToSetThatHasMultiple() throws Exception{
+        Property old = new Property();
+
+        old.addReference(getUUID(0));
+        old.addReference(getUUID(1));
+
+        Property newProp = new Property();
+
+        newProp.addReference(getUUID(0));
+        newProp.addReference(getUUID(1));
+        newProp.addReference(getUUID(2));
+
+
+        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+
+        patch.apply(old);
+
+        JsonMatches(newProp, old);
+
+    }
+
+    @Test
+    public void removeFromSet() throws Exception{
+        Property old = new Property();
+
+        old.addReference(getUUID(0));
+        old.addReference(getUUID(1));
+
+        Property newProp = new Property();
+
+        newProp.addReference(getUUID(1));
+
+
+        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+
+        patch.apply(old);
+
+        JsonMatches(newProp, old);
+
+    }
+
+    @Test
+    public void elementsInSetReordered() throws Exception{
+        Property old = new Property();
+
+        old.addReference(getUUID(0));
+        old.addReference(getUUID(1));
+
+        Property newProp = new Property();
+
+        newProp.addReference(getUUID(1));
+        newProp.addReference(getUUID(0));
+
+
+        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+
+        patch.apply(old);
+
+        JsonMatches(newProp, old);
+
+    }
+
+    @Test
+    public void removeMultipleFromSet() throws Exception{
+        Property old = new Property();
+
+        old.addReference(getUUID(0));
+        old.addReference(getUUID(1));
+        old.addReference(getUUID(2));
+
+        Property newProp = new Property();
+
+        newProp.addReference(getUUID(1));
+
+
+        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+
+        patch.apply(old);
+
+        JsonMatches(newProp, old);
+
+    }
+
 }
