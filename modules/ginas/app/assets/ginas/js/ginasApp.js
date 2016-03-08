@@ -706,7 +706,7 @@
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
             var keyid = sub.uuid.substr(0, 8);
-            location.href = baseurl + "substance/" + keyid + "/approve";
+          //  location.href = baseurl + "substance/" + keyid + "/approve";
         };
 
         $scope.getSiteResidue = function (subunits, site) {
@@ -1135,19 +1135,28 @@
             replace: true,
             scope: {
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                field: '='
             },
             link: function (scope, element, attrs) {
                 if (!_.isUndefined(scope.referenceobj)) {
                     if (_.has(scope.referenceobj, 'sites')) {
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
-
                     } else {
-                        scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
+                        if(scope.field) {
+                            console.log("setting: "+ scope.field);
+                            console.log("reference obj: ");
+                            console.log(scope.referenceobj);
+
+                            scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
+                            console.log(scope);
+                        }else{
+                            scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
+                        }
                     }
                 }
             },
-            template: '<div><div><span>{{referenceobj.$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
+            template: '<div><div><span>{{referenceobj.$$displayString || referenceobj[field].$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
         };
     });
 
@@ -1182,9 +1191,6 @@
             replace: true,
             scope: {
                 parameters: '='
-            },
-            link: function(scope){
-                console.log(scope);
             },
             template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.value"></amount></div>'
         };

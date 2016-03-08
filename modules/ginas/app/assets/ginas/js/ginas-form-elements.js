@@ -138,6 +138,7 @@
                      'Content-Type': 'application/json'
                      }
                      }).success(function(data){
+
                    //  alert('update was performed.');
                      });
                 });
