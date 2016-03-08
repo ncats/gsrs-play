@@ -450,7 +450,7 @@ public class RouteFactory extends Controller {
     
     
     public static Result profile(){
-    	UserProfile p=UserFetcher.getActingUserProfile();
+    	UserProfile p=UserFetcher.getActingUserProfile(false);
     	if(p!=null){
     		ObjectMapper om=new ObjectMapper();
         	return ok(om.valueToTree(p));	
@@ -459,7 +459,7 @@ public class RouteFactory extends Controller {
     }
     
     public static Result profileResetKey(){
-    	UserProfile p=UserFetcher.getActingUserProfile();
+    	UserProfile p=UserFetcher.getActingUserProfile(false);
     	if(p!=null){
     		p.regenerateKey();
     		p.save();

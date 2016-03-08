@@ -1,11 +1,8 @@
 package ix.ginas.models.v1;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +32,7 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.GinasReferenceContainer;
 import ix.ginas.models.GroupListDeserializer;
 import ix.ginas.models.GroupListSerializer;
@@ -167,7 +165,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
 		}
-		this.recordReference.references.add(new Keyword("REFERENCE",
+		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE,
 				refUUID
 		));
 	}

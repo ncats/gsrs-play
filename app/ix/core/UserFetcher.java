@@ -8,10 +8,10 @@ import ix.ncats.controllers.auth.Authentication;
 
 public class UserFetcher {
 	
-	private static final String DEFAULT_USERNAME = "AUTO_IMPORTER";
+	private static final String DEFAULT_USERNAME = "GUEST";
     private static ThreadLocal<Principal> localUser = new ThreadLocal<Principal>();
     
-	public static Principal getActingUser(){
+	public static Principal getActingUser(boolean allowGuest){
 		try {
 			Principal p = Authentication.getUser();
 		    if(p!=null)
@@ -21,13 +21,19 @@ public class UserFetcher {
 		}
 		Principal p=localUser.get();
 		if(p!=null)return p;
-		return PrincipalFactory.registerIfAbsent(new Principal(DEFAULT_USERNAME,null));
+		
+		if(allowGuest)
+			return PrincipalFactory.registerIfAbsent(new Principal(DEFAULT_USERNAME,null));
+		return null;
+	}
+	public static Principal getActingUser(){
+		return getActingUser(true);
 	}
 	public static void setLocalThreadUser(Principal p){
 		localUser.set(p);
 	}
-	public static UserProfile getActingUserProfile(){
-		Principal p= getActingUser();
+	public static UserProfile getActingUserProfile(boolean allowGuest){
+		Principal p= getActingUser(allowGuest);
 		if(p!=null){
 			return UserProfileFactory.getUserProfileForPrincipal(p);
 		}

@@ -944,7 +944,7 @@ public class EntityFactory extends Controller {
             if(validator!=null){
 	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
 	            if(!validator.validate(inst,validationMessages)){
-	            	return validationResponse(false, validationMessages);
+	            	return badRequest(validationResponse(false, validationMessages));
 	            }
             }
             
@@ -1019,19 +1019,19 @@ public class EntityFactory extends Controller {
             	valid=false;
             }
             if(rept==RESPONSE_TYPE.FULL){
-            	return validationResponse(valid, validationMessages,mapper.valueToTree(inst));
+            	return ok(validationResponse(valid, validationMessages,mapper.valueToTree(inst)));
             }else{
-            	return validationResponse(valid, validationMessages);
+            	return ok(validationResponse(valid, validationMessages));
             }
         } catch (Exception ex) {
             return internalServerError(ex.getMessage());
         }
     }
     
-    protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages){
+    protected static JsonNode validationResponse(boolean valid, List<ValidationMessage> validationMessages){
     	return validationResponse(valid, validationMessages,null);
     }
-    protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages, JsonNode jsnode){
+    protected static JsonNode validationResponse(boolean valid, List<ValidationMessage> validationMessages, JsonNode jsnode){
     	ObjectMapper mapper = new ObjectMapper();
     	Map wrapper = new HashMap();
         wrapper.put("valid", valid);
@@ -1039,7 +1039,11 @@ public class EntityFactory extends Controller {
         	wrapper.put("object", jsnode);
         }
         wrapper.put("messages", validationMessages);
-        return ok(mapper.valueToTree(wrapper));
+        if(valid){
+        	return mapper.valueToTree(wrapper);
+        }else{
+        	return mapper.valueToTree(wrapper);
+        }
     }
 
     protected static <K,T extends Model> 
@@ -1175,7 +1179,7 @@ public class EntityFactory extends Controller {
                 final T inst = mapper.treeToValue(value, type);
                 List<ValidationMessage> validationMessages = new ArrayList<ValidationMessage>();
                 if(!validator.validate(inst,validationMessages)){
-	            	return validationResponse(false, validationMessages);
+	            	return badRequest(validationResponse(false, validationMessages));
 	            }
                 try {
                     Method m=EntityFactory.getIdSettingMethodForBean(inst);
@@ -1518,7 +1522,7 @@ public class EntityFactory extends Controller {
 	            List<ValidationMessage> validationMessages= 
 	            		(List<ValidationMessage>) validator.getValidationMessageContainer();
 	            if(!validator.validate(newValue,validationMessages)){
-	            	return validationResponse(false, validationMessages);
+	            	return badRequest(validationResponse(false, validationMessages));
 	            }
             }
 

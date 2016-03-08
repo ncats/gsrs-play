@@ -361,7 +361,7 @@ public class SubstanceFactory extends EntityFactory {
 	 */
 	public static class SubstanceFilter extends EntityFilter {
 
-		UserProfile profile = UserFetcher.getActingUserProfile();
+		UserProfile profile = UserFetcher.getActingUserProfile(true);
 		Principal user = profile != null ? profile.user : null;
 		boolean hasAdmin = false;
 		List<Group> groups=null;

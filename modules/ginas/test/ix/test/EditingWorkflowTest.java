@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * TODO: 
  * [done] add references (add/remove) check
  * [done] add checks for access control of edits for non-logged in users
- * add names (add/remove) check
+ * [done] add names (add/remove) check
  * add codes (add/remove) check
  * add other editor changing something
  * add chemical access (add/remove) check
@@ -85,11 +86,39 @@ public class EditingWorkflowTest {
                    	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	submitSubstance(entered);
-                   	testRenameLocal(uuid);
+                   	renameLocal(uuid);
 
                }
            });
    	}
+    
+    @Test
+   	public void testUnicodeProblem() {
+    	final File resource=new File("test/testJSON/racemic-unicode.json");
+    	
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	JsonNode fetched=ts.fetchSubstanceJSON(uuid);
+                   	String lookingfor="(±)-1-CHLORO-2,3-EPOXYPROPANE";
+                   	
+                   	Set<String> names= new HashSet<String>();
+                   	
+                   	for(JsonNode name: fetched.at("/names")){
+                   		//System.out.println("The name:" + name.at("/name"));
+                   		names.add(name.at("/name").asText());
+                   	}
+                   assertTrue("Special unicode names should still be found after round trip",names.contains(lookingfor));
+
+               }
+           });
+   	}
+    
+
+    
     
     @Test
    	public void testChangeProteinRemote() {
@@ -99,15 +128,14 @@ public class EditingWorkflowTest {
                    	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	submitSubstance(entered);
-                   	testRenameLocal(uuid);
-                   	JsonNode edited=testRenameServer(uuid);
+                   	renameLocal(uuid);
+                   	JsonNode edited=renameServer(uuid);
 
                }
            });
    	}
     
     @Test
-    @Ignore("Never finished writing this")
    	public void testAddNameRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
@@ -115,8 +143,21 @@ public class EditingWorkflowTest {
                    	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	submitSubstance(entered);
-                   	testAddNameServer(uuid);
+                   	addNameServer(uuid);
                    	//JsonNode edited=testRenameServer(uuid);
+               }
+           });
+   	}
+    @Test
+   	public void testAddRemoveNameRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	addNameServer(uuid);
+                   	removeNameServer(uuid);
                }
            });
    	}
@@ -131,9 +172,9 @@ public class EditingWorkflowTest {
                    	String uuid=entered.get("uuid").asText();              	
                    	
                    	submitSubstance(entered);
-                   	testRenameLocal(uuid);
-                   	JsonNode edited=testRenameServer(uuid);
-   					testMostRecentEditHistory(uuid,edited);
+                   	renameLocal(uuid);
+                   	JsonNode edited=renameServer(uuid);
+   					mostRecentEditHistory(uuid,edited);
 
                }
            });
@@ -149,10 +190,10 @@ public class EditingWorkflowTest {
                    	String uuid=entered.get("uuid").asText();              	
                    	
                    	submitSubstance(entered);
-                   	testRenameLocal(uuid);
-                   	JsonNode edited=testRenameServer(uuid);
-   					testMostRecentEditHistory(uuid,edited);
-   					edited=testRemoveLastDisulfide(uuid);
+                   	renameLocal(uuid);
+                   	JsonNode edited=renameServer(uuid);
+   					mostRecentEditHistory(uuid,edited);
+   					edited=removeLastDisulfide(uuid);
 
                }
            });
@@ -169,11 +210,11 @@ public class EditingWorkflowTest {
                    	String uuid=entered.get("uuid").asText();              	
                    	
                    	submitSubstance(entered);
-                   	testRenameLocal(uuid);
-                   	JsonNode edited=testRenameServer(uuid);
-   					testMostRecentEditHistory(uuid,edited);
-   					edited=testRemoveLastDisulfide(uuid);
-   					testMostRecentEditHistory(uuid,edited);
+                   	renameLocal(uuid);
+                   	JsonNode edited=renameServer(uuid);
+   					mostRecentEditHistory(uuid,edited);
+   					edited=removeLastDisulfide(uuid);
+   					mostRecentEditHistory(uuid,edited);
 
                }
            });
@@ -190,7 +231,7 @@ public class EditingWorkflowTest {
                    	String uuid=entered.get("uuid").asText();              	
                    	
                    	submitSubstance(entered);
-   					testIterativeRemovalOfDisulfides(uuid);
+   					iterativeRemovalOfDisulfides(uuid);
                }
            });
    	}
@@ -235,7 +276,7 @@ public class EditingWorkflowTest {
                    	
                    	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();              	
-                   	testAddAccessGroupThenRegister(entered);
+                   	addAccessGroupThenRegister(entered);
                }
            });
    	}
@@ -302,16 +343,16 @@ public class EditingWorkflowTest {
                    	String uuid=entered.get("uuid").asText();              	
                    	
                    	submitSubstance(entered);
-                   	JsonNode edited=testRenameServer(uuid);
-   					testMostRecentEditHistory(uuid,edited);
-   					testRetrieveHistoryView(uuid,"1");
+                   	JsonNode edited=renameServer(uuid);
+   					mostRecentEditHistory(uuid,edited);
+   					retrieveHistoryView(uuid,"1");
 
                }
            });
    	}
 
     
-    public void testRetrieveHistoryView(String uuid, String version){
+    public void retrieveHistoryView(String uuid, String version){
     	String newHTML=ts.fetchSubstanceUI(uuid);
     	String oldHTML=ts.fetchSubstanceVersionUI(uuid,version);
 
@@ -347,7 +388,7 @@ public class EditingWorkflowTest {
     	
     }
     
-    public void testRenameLocal(String uuid){
+    public void renameLocal(String uuid){
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
 
     	String oldName="TRANSFERRIN ALDIFITOX S EPIMER";
@@ -367,7 +408,7 @@ public class EditingWorkflowTest {
 		assertEquals(expectedChangesDirect, changes);
     }
     
-    public void testMostRecentEditHistory(String uuid, JsonNode oldRecordExpected){
+    public void mostRecentEditHistory(String uuid, JsonNode oldRecordExpected){
     		JsonNode newRecordFetched = ts.fetchSubstanceJSON(uuid);
     		int oversion=Integer.parseInt(newRecordFetched.at("/version").textValue());
     		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid,""+(oversion-1));
@@ -393,7 +434,7 @@ public class EditingWorkflowTest {
     		assertEquals(1,changecount);
     		
     }
-    public JsonNode testRenameServer(String uuid){
+    public JsonNode renameServer(String uuid){
     	
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
 
@@ -420,7 +461,7 @@ public class EditingWorkflowTest {
 		return fetched;
     }
     
-    public JsonNode testAddNameServer(String uuid){
+    public JsonNode addNameServer(String uuid){
     	
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
 
@@ -430,6 +471,8 @@ public class EditingWorkflowTest {
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched)
     			.copy("/names/-","/names/0")
     			.set("/names/1/name", newName)
+    			.remove("/names/1/uuid")
+    			.remove("/names/1/displayName")
     			.build();
     	
 		ts.updateSubstanceJSON(updated);
@@ -442,11 +485,28 @@ public class EditingWorkflowTest {
 								.replace("/version")
 								.replace("/lastEdited")
 								.replace("/names/1/lastEdited")
+								.replace("/names/1/_self")
+								.added("/names/1/uuid")
 								
 								.build();
 		
 		assertEquals(expectedChanges, changes);
+		
 		return fetched;
+    }
+    public JsonNode removeNameServer(String uuid){
+    	
+		JsonNode updateFetched = ts.fetchSubstanceJSON(uuid);
+		ts.updateSubstanceJSON(new JsonUtil.JsonNodeBuilder(updateFetched)
+				.remove("/names/1")
+				.build()
+				);
+		JsonNode afterRemove=ts.fetchSubstanceJSON(uuid);
+		
+		assertTrue("After removing name, should have (1) name, found (" + afterRemove.at("/names").size() + ")",
+				afterRemove.at("/names").size() == 1);
+		
+		return updateFetched;
     }
     
     public JsonNode testAddAccessGroupServer(String uuid){
@@ -498,7 +558,7 @@ public class EditingWorkflowTest {
 		return fetched;
     }
     
-    public JsonNode testAddAccessGroupThenRegister(JsonNode fetched){
+    public JsonNode addAccessGroupThenRegister(JsonNode fetched){
     	
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/access/-", "testGROUP").build();
 		//ts.updateSubstanceJSON(updated);
@@ -528,15 +588,16 @@ public class EditingWorkflowTest {
     }
     
     
-	public void testIterativeRemovalOfDisulfides(String uuid){
-		while (testRemoveLastDisulfide(uuid)!=null);
+	public void iterativeRemovalOfDisulfides(String uuid){
+		while (removeLastDisulfide(uuid)!=null);
 	}
 	
+	
 	/*
-	 * This will work, but really shouldn't. The fact that it works means that metadata is not being properly updated.
+	 * This works now.
 	 * 
 	 */
-	public JsonNode testRemoveLastDisulfide(String uuid){
+	public JsonNode removeLastDisulfide(String uuid){
 		JsonNode updatedReturned = ts.fetchSubstanceJSON(uuid);
 		JsonNode disulfs=updatedReturned.at("/protein/disulfideLinks");
 		//System.out.println("Site shorthand is:" + updatedReturnedb.at("/protein/disulfideLinks/1/sitesShorthand"));
@@ -563,19 +624,13 @@ public class EditingWorkflowTest {
     	
     	ChangesBuilder changeBuilder=new ChangesBuilder(updated2, updatedReturnedb)
 		.replace("/version")
-		.replace("/lastEdited");
-    	
-    	//This should be set to true to make the REAL test run.
-    	//It's hardcoded at false now to stop the test from failing
-    	//if(EVERYTHING_WILL_BE_OK){
-    		changeBuilder=changeBuilder.replace("/protein/lastEdited");
-    	//}
+		.replace("/lastEdited")
+    	.replace("/protein/lastEdited");
     	
     	assertEquals(
     			changeBuilder.build()
 				
 				, changes2);
-    	//System.out.println("Removed " + i);
     	return updatedReturned;
 	}
 }
