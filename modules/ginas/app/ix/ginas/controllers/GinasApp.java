@@ -86,6 +86,7 @@ import play.mvc.Result;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 import chemaxon.struc.MolAtom;
+import controllers.Assets;
 import ix.seqaln.SequenceIndexer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -234,12 +235,7 @@ public class GinasApp extends App {
     }
 
     public static CV getCV() {
-    	if (!ControlledVocabularyFactory.isloaded()) {
-    		ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
-    	}
-    	CV cv = new CV();
-        Logger.debug("CV loaded: size=" + cv.size());
-        return cv;
+        return new CV();
     }
 
     
@@ -487,7 +483,6 @@ public class GinasApp extends App {
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
                 getSearchResult (Substance.class, q, total);
-            // if(true)throw new IllegalStateException("one two");
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
@@ -534,25 +529,11 @@ public class GinasApp extends App {
         if (result.count() > 0) {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging(rows, page, result.count());
-            /*
-            for (int i = (page - 1) * rows, j = 0; j < rows
-                     && i < result.size(); ++j, ++i) {
-                substances.add((Substance) result.get(i));
-            }
-            */
             result.copyTo(substances, (page-1)*rows, rows);
         }
         long starttime = System.currentTimeMillis();
                 
-                
-//                      ObjectMapper om = new ObjectMapper();
-//                      om.valueToTree(substances);
-//                      int k=0;
-//                      for(Substance s:substances){
-//                              for(Name n:s.getAllNames()){
-//                                      k+=n.name.hashCode();
-//                              }
-//                      }
+               
                 
         String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
                 
@@ -1467,11 +1448,7 @@ public class GinasApp extends App {
         String terms = CV.getCV(field);
         return ok(terms);
     }
-/*
-    public static Result getCVField(String field) {
-        String terms = CV.getCV(field);
-        return ok(terms);
-    }*/
+
 
     /**
      * Renders a chemical structure from structure ID
@@ -1480,11 +1457,12 @@ public class GinasApp extends App {
      * @param id
      * @param format
      * @param size
-     * @param atomMap
+     * @param context
      * @return
      */
     public static Result structure (final String id,
-                                    final String format, final int size,
+                                    final String format, 
+                                    final int size,
                                     final String context) {
         //Logger.debug("Fetching structure");
         String atomMap = "";
@@ -1511,10 +1489,45 @@ public class GinasApp extends App {
             if(s instanceof ChemicalSubstance){
                 String sid1= ((ChemicalSubstance) s).structure.id.toString();
                 return App.structure(sid1, format, size, atomMap);
+            }else{
+            	return placeHolderImage(s);
             }
         }
         return r1;
         
+    }
+    
+    public static Result placeHolderImage(Substance s){
+    	String placeholderFile="polymer.svg";
+    	if(s!=null){
+	    	switch (s.substanceClass) {
+	        case chemical:
+	        	placeholderFile="chemical.svg";break;
+	        case protein:
+	        	placeholderFile="protein.svg";break;
+	        case mixture:
+	        	placeholderFile="mixture.svg";break;
+	        case polymer:
+	        	placeholderFile="polymer.svg";break;
+	        case structurallyDiverse:
+	        	placeholderFile="structurally-diverse.svg";break;
+	        case concept:
+	        	placeholderFile="concept.svg";break;
+	        case nucleicAcid:
+	        	placeholderFile="nucleic-acid.svg";break;
+	        case specifiedSubstanceG1:
+	        default:
+	        	placeholderFile="polymer.svg";
+	        }
+    	}
+    	
+    	//Assets.at("public/images/",placeholderFile,true).apply();
+    	try{
+    		return ok(Util.getFile(placeholderFile, "public/images/"));
+    	}catch(Exception e){
+    		return _internalServerError(e);
+    	}
+    	
     }
     
     /**
@@ -1688,6 +1701,9 @@ public class GinasApp extends App {
     		
     	}
     }
+    
+    
+    
 
     public static String getAsJson(Object o){
     	ObjectMapper om = new ObjectMapper();

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -90,6 +91,34 @@ public class EditingWorkflowTest {
                }
            });
    	}
+    
+    @Test
+   	public void testUnicodeProblem() {
+    	final File resource=new File("test/testJSON/racemic-unicode.json");
+    	
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	JsonNode fetched=ts.fetchSubstanceJSON(uuid);
+                   	String lookingfor="(±)-1-CHLORO-2,3-EPOXYPROPANE";
+                   	
+                   	Set<String> names= new HashSet<String>();
+                   	
+                   	for(JsonNode name: fetched.at("/names")){
+                   		//System.out.println("The name:" + name.at("/name"));
+                   		names.add(name.at("/name").asText());
+                   	}
+                   assertTrue("Special unicode names should still be found after round trip",names.contains(lookingfor));
+
+               }
+           });
+   	}
+    
+
+    
     
     @Test
    	public void testChangeProteinRemote() {
