@@ -1183,7 +1183,10 @@
             scope: {
                 parameters: '='
             },
-            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.amount"></amount></div>'
+            link: function(scope){
+                console.log(scope);
+            },
+            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.value"></amount></div>'
         };
     });
 
