@@ -1498,6 +1498,27 @@ public class GinasApp extends App {
     
     public static Result placeHolderImage(Substance s){
     	String placeholderFile="polymer.svg";
+    	if(s!=null){
+	    	switch (s.substanceClass) {
+	        case chemical:
+	        	placeholderFile="chemical.svg";break;
+	        case protein:
+	        	placeholderFile="protein.svg";break;
+	        case mixture:
+	        	placeholderFile="mixture.svg";break;
+	        case polymer:
+	        	placeholderFile="polymer.svg";break;
+	        case structurallyDiverse:
+	        	placeholderFile="structurally-diverse.svg";break;
+	        case concept:
+	        	placeholderFile="concept.svg";break;
+	        case nucleicAcid:
+	        	placeholderFile="nucleic-acid.svg";break;
+	        case specifiedSubstanceG1:
+	        default:
+	        	placeholderFile="polymer.svg";
+	        }
+    	}
     	return ok(Play.application().getFile("public/images/" + placeholderFile));
     }
     
