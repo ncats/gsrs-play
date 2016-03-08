@@ -45,7 +45,6 @@ public class PojoDiffTest {
     @Test
     public void sameObjectShouldNotHaveChanges() throws Exception {
         //we'll use Author since that's simple and it's an entity
-    System.out.println("TEST POJO DIFF");
 
         Author old = new Author();
 
@@ -124,7 +123,7 @@ public class PojoDiffTest {
 
         List<Parameter> updatedParams = new ArrayList<>();
         Parameter p1 = new Parameter();
-        p1.name = "foo";
+        p1.setName( "foo");
         updatedParams.add(p1);
 
         Property update = new Property();
@@ -146,10 +145,10 @@ public class PojoDiffTest {
 
         List<Parameter> originalParams = new ArrayList<>();
         Parameter p1 = new Parameter();
-        p1.name = "foo";
+        p1.setName("foo");
 
         Parameter p2 = new Parameter();
-        p2.name = "bar";
+        p2.setName( "bar");
 
         originalParams.add(p1);
         originalParams.add(p2);
@@ -177,7 +176,7 @@ public class PojoDiffTest {
         //and deletes the 2nd instead of the simplier deleting the first
         //so just make sure the only element in the list has the correct name
         //can't do reference check
-        assertEquals(p2.name, updatedParams.get(0).name);
+        assertEquals(p2.getName(), updatedParams.get(0).getName());
 
 
         JsonMatches(update, prop);
@@ -189,10 +188,10 @@ public class PojoDiffTest {
 
         List<Parameter> originalParams = new ArrayList<>();
         Parameter p1 = new Parameter();
-        p1.name = "foo";
+        p1.setName("foo");
 
         Parameter p2 = new Parameter();
-        p2.name = "bar";
+        p2.setName("bar");
 
         originalParams.add(p1);
         originalParams.add(p2);

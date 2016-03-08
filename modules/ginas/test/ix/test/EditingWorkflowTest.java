@@ -380,8 +380,6 @@ public class EditingWorkflowTest {
 //    	}
     	int distance=StringUtils.getLevenshteinDistance(oldHTML, newHTML);
 
-        System.out.println("LEV DISTANCE = " + distance);
-
     	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (0)",distance>0);
     	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (0)",inNewButNotOld.size()>0);
     	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (0)",inOldButNotNew.size()>0);
