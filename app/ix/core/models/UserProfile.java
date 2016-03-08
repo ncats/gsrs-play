@@ -13,6 +13,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Column;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,17 +43,18 @@ public class UserProfile extends IxModel implements Subject {
     
     
     //private key to be used in authentication
-    //This is not a public/private 
+    //This is not a public/private
+    @Column(name="apikey")
     private String key;
     
     //Not sure if this should be shown here?
     public String getKey(){
-    	
-    	return key;
+        
+        return key;
     }
     
     public void regenerateKey(){
-    	key=Util.generateRandomString(20);
+        key=Util.generateRandomString(20);
     }
     
     @ManyToMany(cascade=CascadeType.ALL)
@@ -66,34 +68,34 @@ public class UserProfile extends IxModel implements Subject {
     }
 
     public List<Role> getRoles(){
-    	List<Role> rolekinds=new ArrayList<Role>();
-    	if(this.rolesJSON!=null){
-    		try{
-	    		ObjectMapper om = new ObjectMapper();
-	    		List l=om.readValue(rolesJSON, List.class);
-	    		for(Object o:l){
-	    			try{
-	    				rolekinds.add(Role.valueOf(o.toString()));
-	    			}catch(Exception e){
-	    				e.printStackTrace();
-	    			}
-	    		}
-    		}catch(Exception e){
-    			
-    		}
-    		
-    	}
+        List<Role> rolekinds=new ArrayList<Role>();
+        if(this.rolesJSON!=null){
+                try{
+                        ObjectMapper om = new ObjectMapper();
+                        List l=om.readValue(rolesJSON, List.class);
+                        for(Object o:l){
+                                try{
+                                        rolekinds.add(Role.valueOf(o.toString()));
+                                }catch(Exception e){
+                                        e.printStackTrace();
+                                }
+                        }
+                }catch(Exception e){
+                        
+                }
+                
+        }
         return rolekinds;
     }
     public void setRoles(List<Role> rolekinds){
-    	ObjectMapper om = new ObjectMapper();
-    	rolesJSON=om.valueToTree(rolekinds).toString();
+        ObjectMapper om = new ObjectMapper();
+        rolesJSON=om.valueToTree(rolekinds).toString();
     }
     
     public void addRole(Role role){
-    	List<Role> roles=getRoles();
-    	roles.add(role);
-    	setRoles(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
+        List<Role> roles=getRoles();
+        roles.add(role);
+        setRoles(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
     }
     
     
@@ -117,36 +119,36 @@ public class UserProfile extends IxModel implements Subject {
     }
     
     public String getComputedToken(){
-    	String date=""+Util.getCanonicalCacheTimeStamp();
-    	return Util.sha1(date+this.user.username + this.key);
+        String date=""+Util.getCanonicalCacheTimeStamp();
+        return Util.sha1(date+this.user.username + this.key);
     }
     
     public Long getTokenTimeToExpireMS(){
-    	long date=(Util.getCanonicalCacheTimeStamp()+1)*Util.getTimeResolutionMS();
-    	return (date-System.currentTimeMillis());
+        long date=(Util.getCanonicalCacheTimeStamp()+1)*Util.getTimeResolutionMS();
+        return (date-System.currentTimeMillis());
     }
     
     private String getPreviousComputedToken(){
-    	String date=""+(Util.getCanonicalCacheTimeStamp()-1);
-    	return Util.sha1(date+this.user.username + this.key);
+        String date=""+(Util.getCanonicalCacheTimeStamp()-1);
+        return Util.sha1(date+this.user.username + this.key);
     }
     
     public boolean acceptKey(String key){
-    	if(key.equals(this.key))return true;
-    	return false;
+        if(key.equals(this.key))return true;
+        return false;
     }
-	public boolean acceptToken(String token) {
-		if(this.getComputedToken().equals(token))return true;
-		if(this.getPreviousComputedToken().equals(token))return true;
-		return false;
-	}
-	public boolean acceptPassword(String password){
-		if(this.hashp==null||this.salt==null)return false;
-		return this.hashp.equals(Util.encrypt(password, this.salt));
-	}
+        public boolean acceptToken(String token) {
+                if(this.getComputedToken().equals(token))return true;
+                if(this.getPreviousComputedToken().equals(token))return true;
+                return false;
+        }
+        public boolean acceptPassword(String password){
+                if(this.hashp==null||this.salt==null)return false;
+                return this.hashp.equals(Util.encrypt(password, this.salt));
+        }
     
-	public void setPassword(String password){
-		this.salt = AdminFactory.generateSalt();
-		this.hashp = Util.encrypt(password, this.salt);
-	}
+        public void setPassword(String password){
+                this.salt = AdminFactory.generateSalt();
+                this.hashp = Util.encrypt(password, this.salt);
+        }
 }
