@@ -38,8 +38,6 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 childScope = scope.$new();
-                console.log(childScope);
-                console.log(scope);
                 var compiledDirective = $compile(newForm);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
@@ -1107,6 +1105,19 @@ console.log(scope);
             return temp;
         };
 
+        this.getCount= function(display){
+            var temp = [];
+            var count=0;
+            _.forEach(display, function (arr) {
+                _.forEach(arr, function (subunit) {
+                    count += subunit.length;
+                });
+            });
+            console.log(count);
+            return count;
+        };
+
+
         this.getAllSitesWithout = function (type, display) {
             var temp = [];
             _.forEach(display, function (arr) {
@@ -1167,7 +1178,7 @@ console.log(scope);
                 }
 
                 scope.getAllSites = function () {
-                    return siteAdder.getAll('sugar', scope.parent.$$subunitDisplay).length + siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
+                    return siteAdder.getCount(scope.parent.$$subunitDisplay);
                 };
 
                 scope.applyAll = function () {
@@ -1213,7 +1224,7 @@ console.log(scope);
                 }
 
                 scope.getAllSites = function () {
-                    return siteAdder.getAll('linkage', scope.parent.$$subunitDisplay).length + siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                   return siteAdder.getCount(scope.parent.$$subunitDisplay);
                 };
 
                 scope.applyAll = function () {
@@ -1222,12 +1233,9 @@ console.log(scope);
                 };
 
                 scope.validate = function () {
-                    console.log(scope);
-                    console.log(scope.linkage.sites);
                     _.forEach(scope.linkage.sites.sites, function (site) {
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
                     });
-                    console.log(scope);
                     scope.parent.nucleicAcid.linkages.push(scope.linkage);
                     scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                     scope.linkage = {};
@@ -1684,7 +1692,7 @@ console.log(scope);
             restrict: 'E',
             replace: true,
             scope: {
-                referenceobj: '=',
+               referenceobj: '=',
                 parent: '=',
                 mode: '=',
                 formtype: '=',
@@ -1742,18 +1750,29 @@ console.log(scope);
                 };
 
                 scope.makeSiteList = function () {
-                    if(scope.field){
+                    if(scope.field==='sites'){
                         console.log(scope);
-                        console.log(siteList.siteList(scope.referenceobj[scope.field].$$displayString));
-                        _.set(scope.referenceobj[scope.field], 'sites', siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+                        console.log(siteList.siteList(scope.referenceobj.$$displayString));
+                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj.$$displayString));
+                        if(scope.referenceobj.sitesShorthand) {
+                            scope.referenceobj.sitesShorthand = scope.referenceobj.$$displayString;
+                        }
                        // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
-                        console.log(scope);
+                       console.log(scope);
 
                     }else {
-                        scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$$displayString);
+                        console.log("glycosylation");
+                        console.log(scope);
+                        console.log(scope.referenceobj);
+                        var temp= angular.copy(scope.referenceobj[scope.field].$$displayString);
+                      //  _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+                        scope.referenceobj[scope.field].$$displayString = temp;
+                        console.log(scope);
+                    //    scope.referenceobj = siteList.siteList(scope.referenceobj.$$displayString);
+                   //     _.set(scope.referenceobj, '$$displayString', temp);
                     }
 /*
-                    _.set(scope.referenceobj, 'sites', siteList.siteList(scope.referenceobj.$$displayString));
 */
                 };
 

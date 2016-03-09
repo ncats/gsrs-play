@@ -2,7 +2,7 @@
     <label for={{type}} class="text-capitalize">{{referenceobj.field || label || 'Sites'}}</label>
     <a ng-show="referenceobj.$$displayString || referenceobj[field].$$displayString" ng-click="toggle();" role="button"><site-view referenceobj= referenceobj field =field parent = parent></site-view></a>
     <div class="text-center">
-        <a ng-hide="referenceobj.$$displayString || referenceobj[field].$$displayString" ng-click="toggle()" role="button" aria-label="Add Sites" uib-tooltip="Add {{referenceobj[field] || 'Sites'}}" id="{{name}}-{{type}}"><i
+        <a ng-hide="referenceobj.$$displayString || referenceobj[field].$$displayString" ng-click="toggle()" role="button" aria-label="Add Sites" uib-tooltip="Add {{field || 'Sites'}}" id="{{name}}-{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>
             <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
     </div>

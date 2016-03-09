@@ -60,7 +60,6 @@
             <polymer-sru-form parent=substance></polymer-sru-form>
         }
         case "nucleicAcid" => {
-           <div>Nucleic Acid not implemented yet, still in development</div>
            <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.nucleicAcid.subunits.length>0">
@@ -106,7 +105,7 @@
             </div>
         </div>
             <h1 ng-if ="substanceEqual" >{{substancesEqual}}</h1>
-            <pre>Substance Form valid = {{ substanceForm.$valid | json }}</pre>
+@*            <pre>Substance Form valid = {{ substanceForm.$valid | json }}</pre>*@
             <div class = "row" ng-repeat="err in errorsArray">
             <div class="col-md-12">
                 <div class="alert {{err.class}} alert-dismissible" role="alert">
@@ -131,8 +130,10 @@
 	<button class="btn btn-primary" ng-show="!raw" ng-click="angular.toJson(submitSubstance); raw=true" >Show Raw</button>
         <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
         <json-formatter ng-show="!raw" json=submitSubstanceView open="666"></json-formatter>
-	<pre ng-show="raw">{{rawSubstance}}</pre>
+	<pre ng-show="raw==true">{{left | json }}</pre>
+@*
 	<pre ng-show="raw">{{subTest}}</pre>
+*@
     </div>
     <div ng-hide="diff==true">
     <div class="row info">

@@ -14,7 +14,6 @@ GET         /chemicals                  ix.ginas.controllers.GinasApp.chemicals(
 GET         /proteins                   ix.ginas.controllers.GinasApp.proteins(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
 GET         /sequence                   ix.ginas.controllers.GinasFactory.sequence(id: String ?= null)
 POST        /sequence			        ix.ginas.controllers.GinasApp.sequenceSearch
-GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
 POST        /upload                     ix.ginas.controllers.GinasLoad.uploadFile

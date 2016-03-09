@@ -73,10 +73,6 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.structuresearch.render());
         }
 
-        public static Result report() {
-                return ok(ix.ginas.views.html.report.render());
-        }
-
         public static Result wizard(String kind) {
                 Logger.info(kind);
                 return ok(ix.ginas.views.html.wizard.render(kind,"{}"));
