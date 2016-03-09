@@ -6,10 +6,12 @@ import static play.test.Helpers.running;
 import static play.test.Helpers.stop;
 import static play.test.Helpers.testServer;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import com.typesafe.config.ConfigFactory;
@@ -95,6 +97,9 @@ public class GinasTestServer extends ExternalResource{
 	 
 	 
     private static long timeout= 10000L;
+
+    private UserSession defaultSession = new UserSession();
+
     private TestServer ts;
     private int port;
 
@@ -123,30 +128,26 @@ public class GinasTestServer extends ExternalResource{
        this.port = port;
        
     }
-    
-    public GinasTestServer(int port, AUTH_TYPE atype){
-    	this(port);
-    	this.setAuthenticationType(atype);
-    }
 
-    public void loginFakeUser1(){
-    	login(FAKE_USER_1,FAKE_PASSWORD_1);
+
+    public UserSession loginFakeUser1(){
+    	return login(FAKE_USER_1,FAKE_PASSWORD_1);
     }
-    public void loginFakeUser2(){
-    	login(FAKE_USER_2,FAKE_PASSWORD_2);
+    public UserSession loginFakeUser2(){
+    	return login(FAKE_USER_2,FAKE_PASSWORD_2);
     }
 
     //logs in user, also sets default authentication type
     //if previously set to NONE
-    public void login(String username, String password){
+    public UserSession login(String username, String password){
         
     	ensureSetupUsers();
-        loggedIn=true;
-        this.username=username;
-        this.password=password;
-        if(this.authType==AUTH_TYPE.NONE){
-        	this.authType=AUTH_TYPE.USERNAME_PASSWORD;
-        }
+        return new UserSession(username, password);
+    }
+
+    public UserSession login(String username, String password, AUTH_TYPE type){
+        ensureSetupUsers();
+        return new UserSession(username, password, type);
     }
 
     public void logout(){
@@ -181,93 +182,53 @@ public class GinasTestServer extends ExternalResource{
 
     }
     
-    public void setAuthenticationType(AUTH_TYPE atype){
-    	this.authType=atype;
-    }
-    
-    public GinasTestServer withTokenAuth(){
-    	this.setAuthenticationType(AUTH_TYPE.TOKEN);
-    	return this;
-    }
-    public GinasTestServer withKeyAuth(){
-    	this.setAuthenticationType(AUTH_TYPE.USERNAME_KEY);
-    	return this;
-    }
-    public GinasTestServer withPasswordAuth(){
-    	this.setAuthenticationType(AUTH_TYPE.USERNAME_PASSWORD);
-    	return this;
-    }
+
     
     public WSRequestHolder  url(String url){
-    	WSRequestHolder ws = WS.url(url);
-	    	switch(authType){
-			case TOKEN:
-				refreshTokenIfNeccesarry();
-				ws.setHeader("auth-token", this.token);
-				break;
-			case USERNAME_KEY:
-				refreshTokenIfNeccesarry();
-				ws.setHeader("auth-username", this.username);
-		    	ws.setHeader("auth-key", this.key);
-				break;
-			case USERNAME_PASSWORD:
-				ws.setHeader("auth-username", this.username);
-		    	ws.setHeader("auth-password", this.password);
-				break;
-			default:
-				break;
-	    	}
-        return ws;
+    	return defaultSession.url(url);
     }
     
     public WSResponse validateSubstance(JsonNode js){
-    	WSResponse wsResponse1 = this.url(API_URL_VALIDATE).post(js).get(timeout);
-    	return wsResponse1;
+        return defaultSession.validateSubstance(js);
         
     	
     }
     
     public WSResponse submitSubstance(JsonNode js){
-    	WSResponse wsResponse1 = this.url(API_URL_SUBMIT).post(js).get(timeout);
-    	return wsResponse1;
+        return defaultSession.submitSubstance(js);
         
     }
     
     
     
     public WSResponse fetchSubstance(String uuid){
-    	WSResponse wsResponse1 = this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
-    	return wsResponse1;
+    	return this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     }
     public WSResponse fetchSubstanceHistory(String uuid, int version){
-    	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid))
+    	return this.url(API_URL_HISTORY.replace("$UUID$", uuid))
     			.setQueryParameter("filter","path=null AND version=\'" + version + "\'")
     			.get().get(timeout);
-    	return wsResponse1;
     }
     
     public WSResponse updateSubstance(JsonNode js){
-    	WSResponse wsResponse1 = this.url(API_URL_UPDATE).put(js).get(timeout);
-    	return wsResponse1;
+    	return this.url(API_URL_UPDATE).put(js).get(timeout);
     }
     
     //Failure methods
     
-    public WSResponse fetchSubstanceFail(String uuid){
+    private WSResponse fetchSubstanceFail(String uuid){
     	return ensureFailure(fetchSubstance(uuid));
     }
-    public WSResponse updateSubstanceFail(JsonNode updated) {
+    private WSResponse updateSubstanceFail(JsonNode updated) {
 		return ensureFailure(updateSubstance(updated));
 	}
-    public WSResponse submitSubstanceFail(JsonNode js) {
+    private WSResponse submitSubstanceFail(JsonNode js) {
 		return ensureFailure(submitSubstance(js));
 	}
     public WSResponse approveSubstanceFail(String uuid) {
-    	return ensureFailure(approveSubstance(uuid));
+    	return defaultSession.approveSubstanceFail(uuid);
 	}
-    public WSResponse whoamiFail() {
-    	return ensureFailure(whoami());
-	}
+
     
     //JSON methods
 
@@ -295,10 +256,12 @@ public class GinasTestServer extends ExternalResource{
         return new JsonHistoryResult(edit, oldv, newv);
     }
 
-
-
+    public JsonNode urlJSON(String url){
+        return ensureExctractJSON(url(url).get().get(timeout));
+    }
+    /*
     public JsonNode fetchSubstanceJSON(String uuid){
-    	return ensureExctractJSON(fetchSubstance(uuid));
+    	return defaultSession.fetchSubstanceJSON(uuid);
     }
     public JsonNode submitSubstanceJSON(JsonNode js){
     	return ensureExctractJSON(submitSubstance(js));
@@ -312,27 +275,27 @@ public class GinasTestServer extends ExternalResource{
 	public JsonNode updateSubstanceJSON(JsonNode updated) {
 		return ensureExctractJSON(updateSubstance(updated));
 	}
-	public JsonNode urlJSON(String url){
-		return ensureExctractJSON(url(url).get().get(timeout));
-	}
+
 	public JsonNode whoamiJSON(){
 		return ensureExctractJSON(whoami());
     }
-	public JsonNode vocabulariesJSON(){
-		return ensureExctractJSON(vocabularies());
-	}
+
 	
 	
-	public WSResponse vocabularies(){
-		WSResponse wsResponse1 = this.url(API_CV_LIST).get().get(timeout);
-    	return wsResponse1;
-	}
+
 	
 	
 	//UI (HTML) methods
 	public String fetchSubstanceUI(String id){
 		return urlString(UI_URL_SUBSTANCE.replace("$ID$", id));
 	}
+	*/
+    private WSResponse vocabularies(){
+        return this.url(API_CV_LIST).get().get(timeout);
+    }
+    public JsonNode vocabulariesJSON(){
+        return ensureExctractJSON(vocabularies());
+    }
 
 	public String fetchSubstanceVersionUI(String id, int version){
 		return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", Integer.toString(version)));
@@ -346,14 +309,12 @@ public class GinasTestServer extends ExternalResource{
     
     
     
-    public WSResponse approveSubstance(String uuid){
-    	WSResponse wsResponse1 = this.url(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
-    	return wsResponse1;
+    private WSResponse approveSubstance(String uuid){
+    	return this.url(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
     }
     
-    public WSResponse whoami(){
-    	WSResponse wsResponse1 = this.url(API_URL_WHOAMI).get().get(timeout);
-    	return wsResponse1;
+    private WSResponse whoami(){
+    	return this.url(API_URL_WHOAMI).get().get(timeout);
     }
     
     public void ensureSetupUsers(){
@@ -499,6 +460,257 @@ public class GinasTestServer extends ExternalResource{
             return newValue;
         }
     }
-	
+
+
+    public static class UserSession implements Closeable {
+        private boolean loggedIn;
+        private String username;
+        private String password;
+        private String key;
+        private String token;
+        private long deadtime=0;
+
+        private AUTH_TYPE authType=AUTH_TYPE.NONE;
+
+        public UserSession(){
+            //null values for defaults
+        }
+        public UserSession(String username, String password){
+            this(username, password, AUTH_TYPE.USERNAME_PASSWORD);
+        }
+        public UserSession(String username, String password, AUTH_TYPE type){
+            Objects.requireNonNull(username);
+            Objects.requireNonNull(password);
+            Objects.requireNonNull(type);
+
+            loggedIn=true;
+            this.username=username;
+            this.password=password;
+            this.authType=type;
+
+        }
+        private void setAuthenticationType(AUTH_TYPE atype){
+            this.authType=atype;
+        }
+
+        public UserSession withTokenAuth(){
+            this.setAuthenticationType(AUTH_TYPE.TOKEN);
+            return this;
+        }
+        public UserSession withKeyAuth(){
+            this.setAuthenticationType(AUTH_TYPE.USERNAME_KEY);
+            return this;
+        }
+        public UserSession withPasswordAuth(){
+            this.setAuthenticationType(AUTH_TYPE.USERNAME_PASSWORD);
+            return this;
+        }
+
+
+        public void logout(){
+            //TODO actually log out
+            loggedIn = false;
+
+            this.username=null;
+            this.password=null;
+            this.key=null;
+            this.token=null;
+            this.deadtime=0;
+        }
+
+        public WSRequestHolder  url(String url){
+            WSRequestHolder ws = WS.url(url);
+            switch(authType){
+                case TOKEN:
+                    refreshTokenIfNeccesarry();
+                    ws.setHeader("auth-token", this.token);
+                    break;
+                case USERNAME_KEY:
+                    refreshTokenIfNeccesarry();
+                    ws.setHeader("auth-username", this.username);
+                    ws.setHeader("auth-key", this.key);
+                    break;
+                case USERNAME_PASSWORD:
+                    ws.setHeader("auth-username", this.username);
+                    ws.setHeader("auth-password", this.password);
+                    break;
+                default:
+                    break;
+            }
+            return ws;
+        }
+
+        private void refreshTokenIfNeccesarry(){
+            if(System.currentTimeMillis()>this.deadtime){
+                refreshAuthInfoByUserNamePassword();
+            }
+        }
+
+
+        private void refreshAuthInfoByUserNamePassword(){
+            WSRequestHolder  ws = WS.url(API_URL_USERFETCH);
+            ws.setHeader("auth-username", this.username);
+            ws.setHeader("auth-password", this.password);
+            WSResponse wsr=ws.get().get(timeout);
+            JsonNode userinfo=wsr.asJson();
+            token=userinfo.get("computedToken").asText();
+            key=userinfo.get("key").asText();
+            deadtime=System.currentTimeMillis()+userinfo.get("tokenTimeToExpireMS").asLong();
+
+
+        }
+
+        @Override
+        public void close() throws IOException {
+           logout();
+        }
+
+
+        public WSResponse validateSubstance(JsonNode js){
+            return this.url(API_URL_VALIDATE).post(js).get(timeout);
+
+
+        }
+
+        public WSResponse submitSubstance(JsonNode js){
+            return this.url(API_URL_SUBMIT).post(js).get(timeout);
+
+        }
+
+
+
+        public WSResponse fetchSubstance(String uuid){
+            return this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
+        }
+        public WSResponse fetchSubstanceHistory(String uuid, int version){
+            return this.url(API_URL_HISTORY.replace("$UUID$", uuid))
+                    .setQueryParameter("filter","path=null AND version=\'" + version + "\'")
+                    .get().get(timeout);
+        }
+
+        public WSResponse updateSubstance(JsonNode js){
+            return this.url(API_URL_UPDATE).put(js).get(timeout);
+        }
+
+
+        /**
+         * Get the summary JSON which contains the oldValue and newValue URLs
+         * for this version change.
+         * @param uuid the UUID of the substance to fetch.
+         *
+         * @param version the version to of the substance to fetch.
+         * @return the JsonNode , should not be null.
+         */
+        public JsonNode fetchSubstanceHistoryJSON(String uuid, int version){
+            return ensureExctractJSON(fetchSubstanceHistory(uuid, version));
+        }
+
+        public JsonHistoryResult fetchSubstanceJSON(String uuid, int version){
+            JsonNode edits = fetchSubstanceHistoryJSON(uuid,version);
+            //should only have 1 edit...so this should be safe
+            JsonNode edit = edits.iterator().next();
+            JsonNode oldv= urlJSON(edit.get("oldValue").asText());
+            JsonNode newv= urlJSON(edit.get("newValue").asText());
+
+
+
+            return new JsonHistoryResult(edit, oldv, newv);
+        }
+
+
+
+        public JsonNode fetchSubstanceJSON(String uuid){
+            return ensureExctractJSON(fetchSubstance(uuid));
+        }
+        public JsonNode submitSubstanceJSON(JsonNode js){
+            return ensureExctractJSON(submitSubstance(js));
+        }
+        public JsonNode validateSubstanceJSON(JsonNode js) {
+            return ensureExctractJSON(validateSubstance(js));
+        }
+        public JsonNode approveSubstanceJSON(String uuid){
+            return ensureExctractJSON(approveSubstance(uuid));
+        }
+        public JsonNode updateSubstanceJSON(JsonNode updated) {
+            return ensureExctractJSON(updateSubstance(updated));
+        }
+        public JsonNode urlJSON(String url){
+            return ensureExctractJSON(url(url).get().get(timeout));
+        }
+        public JsonNode whoamiJSON(){
+            return ensureExctractJSON(whoami());
+        }
+        public JsonNode vocabulariesJSON(){
+            return ensureExctractJSON(vocabularies());
+        }
+
+
+        private WSResponse vocabularies(){
+            return this.url(API_CV_LIST).get().get(timeout);
+        }
+
+        private JsonNode ensureExctractJSON(WSResponse wsResponse1){
+            assertTrue(wsResponse1!=null);
+            int status2 = wsResponse1.getStatus();
+            if(status2>300){
+                System.out.println("That's an error!");
+                System.out.println(wsResponse1.getBody());
+            }
+            assertTrue(status2 == 200 || status2 == 201);
+            JsonNode returned = wsResponse1.asJson();
+            assertTrue(returned!=null);
+            return returned;
+        }
+
+        private WSResponse ensureFailure(WSResponse wsResponse1){
+            assertTrue(wsResponse1!=null);
+            int status2 = wsResponse1.getStatus();
+            assertTrue("Expected failure code, got:" + status2, status2 != 200 && status2 != 201);
+            return wsResponse1;
+        }
+
+        private WSResponse approveSubstance(String uuid){
+            return this.url(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
+        }
+
+        private WSResponse whoami(){
+            return this.url(API_URL_WHOAMI).get().get(timeout);
+        }
+
+        public String whoamiUsername(){
+            return whoamiJSON().get("identifier").asText();
+        }
+
+        public WSResponse fetchSubstanceFail(String uuid){
+            return ensureFailure(fetchSubstance(uuid));
+        }
+        public WSResponse updateSubstanceFail(JsonNode updated) {
+            return ensureFailure(updateSubstance(updated));
+        }
+        public WSResponse submitSubstanceFail(JsonNode js) {
+            return ensureFailure(submitSubstance(js));
+        }
+        public WSResponse approveSubstanceFail(String uuid) {
+            return ensureFailure(approveSubstance(uuid));
+        }
+
+        public WSResponse whoamiFail() {
+            return ensureFailure(whoami());
+        }
+
+        public String fetchSubstanceUI(String id){
+            return urlString(UI_URL_SUBSTANCE.replace("$ID$", id));
+        }
+
+        public String fetchSubstanceVersionUI(String id, int version){
+            return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", Integer.toString(version)));
+        }
+
+        public String urlString(String url){
+            WSResponse wsResponse1 = this.url(url).get().get(timeout);
+            assertThat(wsResponse1.getStatus()).isEqualTo(OK);
+            return wsResponse1.getBody();
+        }
+    }
 
 }

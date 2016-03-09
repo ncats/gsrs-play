@@ -1,6 +1,5 @@
 package ix.test;
-import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,7 +18,7 @@ public class IntegrationTest {
     	ts.run(new GinasTestServer.ServerWorker(){
 			public void doWork() throws Exception {
 				JsonNode substances = ts.urlJSON("http://localhost:9001/ginas/app/api/v1/substances");
-                assertThat(!substances.isNull()).isEqualTo(true);
+                assertTrue(!substances.isNull());
 			}
     	});
     }
@@ -38,11 +37,11 @@ public class IntegrationTest {
     public void testFakeUserLoginPassword(){
     	ts.run(new GinasTestServer.ServerWorker(){
 			public void doWork() throws Exception {
-				ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-            	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.USERNAME_PASSWORD);
-            	
-        		JsonNode profile=ts.whoamiJSON();
-            	assertThat(profile.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
+                try(GinasTestServer.UserSession session = ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1)) {
+                    session.withPasswordAuth();
+
+                    assertEquals(GinasTestServer.FAKE_USER_1, session.whoamiUsername());
+                }
 			}
     	});
     }
@@ -51,12 +50,11 @@ public class IntegrationTest {
     public void testFakeUserLoginKey(){
     	ts.run(new GinasTestServer.ServerWorker(){
 			public void doWork() throws Exception {
-				ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-            	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.USERNAME_KEY);
-            	
-            	JsonNode profile = ts.whoamiJSON();
-            	assertThat(profile.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
-            	
+				try(GinasTestServer.UserSession session = ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1)) {
+                    session.withKeyAuth();
+
+                    assertEquals(GinasTestServer.FAKE_USER_1, session.whoamiUsername());
+                }
 			}
     	});
     }
@@ -66,11 +64,11 @@ public class IntegrationTest {
     public void testFakeUserLoginToken(){
     	ts.run(new GinasTestServer.ServerWorker(){
 			public void doWork() throws Exception {
-				ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-            	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
-            	
-            	JsonNode profile = ts.whoamiJSON();
-            	assertThat(profile.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
+				try(GinasTestServer.UserSession session = ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1)) {
+					session.withTokenAuth();
+
+                    assertEquals(GinasTestServer.FAKE_USER_1, session.whoamiUsername());
+				}
 			}
     	});
     	
@@ -80,9 +78,10 @@ public class IntegrationTest {
     public void testFakeUserLoginNone(){
     	ts.run(new GinasTestServer.ServerWorker(){
 			public void doWork() throws Exception {
-				ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-            	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.NONE);
-            	ts.whoamiFail();
+                try(GinasTestServer.UserSession session = ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1,
+                        GinasTestServer.AUTH_TYPE.NONE)) {
+                    session.whoamiFail();
+                }
 			}
     	});
     	
