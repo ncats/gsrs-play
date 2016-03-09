@@ -313,10 +313,6 @@ public class GinasLoad extends App {
 
 	}
 
-	public static Result testSubmit() {
-		return ok(ix.ginas.views.html.test.testsubmit.render());
-	}
-
 	public static Result validateSubstance() {
 		String mappingsjson = extractSubstanceJSON();
 		Substance sub = null;

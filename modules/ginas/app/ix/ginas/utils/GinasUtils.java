@@ -491,7 +491,7 @@ public class GinasUtils {
 		public static List<ValidationMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub)
 				throws Exception {
 			
-			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(prc);
+			DefaultSubstanceValidator dsv = DefaultSubstanceValidator.NEW_SUBSTANCE_VALIDATOR(prc);
 			List<ValidationMessage> valid = new ArrayList<ValidationMessage>(); 
 		    
 			dsv.validate(sub,valid);

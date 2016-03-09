@@ -1506,7 +1506,7 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, null);
     }
     
-   
+    
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,

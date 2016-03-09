@@ -620,8 +620,9 @@
 
             sub = angular.toJson($scope.fromFormSubstance(sub));
             $scope.errorsArray = [];
-            $http.post(baseurl + 'register/validate', sub).success(function (response) {
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
                 var arr = [];
+                var response=responseTotal.messages;
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
                         arr.push(response[i]);
@@ -633,8 +634,6 @@
                         response[i].class = "alert-info";
                     if (response[i].messageType == "SUCCESS")
                         response[i].class = "alert-success";
-
-
                 }
 
                 $scope.errorsArray = arr;

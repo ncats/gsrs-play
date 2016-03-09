@@ -11,9 +11,28 @@ import ix.ginas.utils.GinasProcessingStrategy;
 
 public class DefaultSubstanceValidator implements Validator<Substance>{
 	GinasProcessingStrategy _strategy;
+	private static enum METHOD_TYPE{
+		CREATE,
+		UPDATE,
+		APPROVE
+	}
+	METHOD_TYPE method=null;
+	
+	public DefaultSubstanceValidator(GinasProcessingStrategy strategy, METHOD_TYPE method){
+		_strategy=strategy;
+		this.method=method;
+	}
 	
 	public DefaultSubstanceValidator(GinasProcessingStrategy strategy){
 		_strategy=strategy;
+	}
+	
+	public static DefaultSubstanceValidator NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy strategy){
+		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.CREATE);
+	}
+	
+	public static DefaultSubstanceValidator UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy strategy){
+		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.UPDATE);
 	}
 	
 	@Override
