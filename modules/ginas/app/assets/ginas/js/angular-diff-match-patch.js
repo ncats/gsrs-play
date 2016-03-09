@@ -6,7 +6,9 @@
 /* global DIFF_INSERT, DIFF_DELETE, DIFF_EQUAL, diff_match_patch */
 /// <reference path="typings/tsd.d.ts" />
 angular.module('diff-match-patch', [])
-    .factory('dmp', function() {
+    .factory('dmp', ['$window', function($window) {
+
+        var diff_match_patch = $window.diff_match_patch;
 
         var displayType = {
             INSDEL: 0,
@@ -58,7 +60,7 @@ angular.module('diff-match-patch', [])
             }
 
             if (isEmptyObject(tagOptions) && isEmptyObject(attrs)) {
-                return "";
+                return '';
             }
 
             for (var k in attrs) {
@@ -158,7 +160,7 @@ angular.module('diff-match-patch', [])
             createProcessingDiffHtml: function(left, right, options) {
                 if (assertArgumentsIsStrings(left, right)) {
                     var dmp = new diff_match_patch();
-                    var diffs = dmp.diff_main(right, left);
+                    var diffs = dmp.diff_main(left, right);
                     //dmp.Diff_EditCost = 4;
                     dmp.diff_cleanupEfficiency(diffs);
                     return createHtmlFromDiffs(diffs, displayType.INSDEL, options);
@@ -190,7 +192,7 @@ angular.module('diff-match-patch', [])
                 }
             }
         };
-    })
+    }])
     .directive('diff', ['$compile', 'dmp', function factory($compile, dmp) {
         var ddo = {
             scope: {
