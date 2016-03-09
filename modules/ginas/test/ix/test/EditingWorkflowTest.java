@@ -9,11 +9,14 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+import util.json.ChangeFilters;
 import util.json.Changes;
 import util.json.ChangesBuilder;
 import util.json.JsonUtil;
@@ -345,14 +348,84 @@ public class EditingWorkflowTest {
                    	submitSubstance(entered);
                    	JsonNode edited=renameServer(uuid);
    					mostRecentEditHistory(uuid,edited);
-   					retrieveHistoryView(uuid,"1");
+   					retrieveHistoryView(uuid,1);
 
                }
            });
    	}
 
+    @Test
+    public void revertChangeShouldMakeNewVersionWithOldValues() {
+        ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                ts.loginFakeUser1();
+
+                JsonNode entered= parseJsonFile(resource);
+                String uuid=entered.get("uuid").asText();
+
+                submitSubstance(entered);
+                String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+                String newName = "foo";
+                JsonNode oldNode= renameServer(uuid,newName );
+
+                mostRecentEditHistory(uuid,oldNode);
+
+                assertEquals(newName, ts.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
+
+                renameServer(uuid,oldName );
+                 assertEquals(oldName, ts.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
+
+                JsonNode originalNode = ts.fetchSubstanceJSON(uuid,1).getOldValue();
+
+                JsonNode v2Node = ts.fetchSubstanceJSON(uuid,2).getOldValue();
+
+                assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());
+                assertEquals("v2 name", newName, v2Node.at("/names/0/name").asText());
+
+                JsonNode currentNode = ts.fetchSubstanceJSON(uuid);
+                assertEquals("current name", oldName, currentNode.at("/names/0/name").asText());
+
+
+            }
+        });
+    }
+
+    @Test
+    public void historyNewValueShouldBeOldValueOfNextVersion() {
+        ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                ts.loginFakeUser1();
+
+                JsonNode entered= parseJsonFile(resource);
+                String uuid=entered.get("uuid").asText();
+
+                submitSubstance(entered);
+                String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+                String newName = "foo";
+                JsonNode oldNode= renameServer(uuid,newName );
+
+
+                GinasTestServer.JsonHistoryResult jsonHistoryResult = ts.fetchSubstanceJSON(uuid, 1);
+                JsonNode originalNode = jsonHistoryResult.getNewValue();
+
+                assertEquals("v1 new value", jsonHistoryResult.getNewValue(), ts.fetchSubstanceJSON(uuid));
+                renameServer(uuid,oldName );
+
+
+                JsonNode v2Node = ts.fetchSubstanceJSON(uuid,2).getOldValue();
+
+                assertEquals("v2", originalNode, v2Node);
+
+
+            }
+        });
+    }
+
+    private static String unquote(String s){
+        return StringEscapeUtils.unescapeCsv(s);
+    }
     
-    public void retrieveHistoryView(String uuid, String version){
+    public void retrieveHistoryView(String uuid, int version){
     	String newHTML=ts.fetchSubstanceUI(uuid);
     	String oldHTML=ts.fetchSubstanceVersionUI(uuid,version);
 
@@ -385,32 +458,34 @@ public class EditingWorkflowTest {
     	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (0)",inOldButNotNew.size()>0);
     	
     }
-    
-    public void renameLocal(String uuid){
-    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+    private void renameLocal(String uuid, String oldName, String newName){
+        JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+        JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
 
-    	String oldName="TRANSFERRIN ALDIFITOX S EPIMER";
-    	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
+        Changes changes = JsonUtil.computeChanges(fetched, updated);
+        Changes expectedChanges = new ChangesBuilder()
+                .replaced("/names/0/name", oldName, newName)
+                .build();
+        Changes expectedChangesDirect = new ChangesBuilder(fetched,updated)
+                .replace("/names/0/name")
+                .build();
+
+        assertEquals(expectedChanges, changes);
+        assertEquals(expectedChangesDirect, changes);
+    }
+    private void renameLocal(String uuid){
+
+        renameLocal(uuid,"TRANSFERRIN ALDIFITOX S EPIMER", "TRANSFERRIN ALDIFITOX S EPIMER CHANGED");
     
-    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
-			
-    	Changes changes = JsonUtil.computeChanges(fetched, updated);
-		Changes expectedChanges = new ChangesBuilder()
-										.replaced("/names/0/name", oldName, newName)
-										.build();
-		Changes expectedChangesDirect = new ChangesBuilder(fetched,updated)
-										.replace("/names/0/name")
-										.build();
-			
-		assertEquals(expectedChanges, changes);
-		assertEquals(expectedChangesDirect, changes);
+
     }
     
     public void mostRecentEditHistory(String uuid, JsonNode oldRecordExpected){
     		JsonNode newRecordFetched = ts.fetchSubstanceJSON(uuid);
     		int oversion=Integer.parseInt(newRecordFetched.at("/version").textValue());
-    		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid,""+(oversion-1));
-    		int changecount=0;
+    		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid,oversion-1);
+
+        int changecount=0;
     		for(JsonNode edit: edits){
     			//Ok, I'm just going to look at the null-path edits
     			//there should be 1
@@ -433,11 +508,13 @@ public class EditingWorkflowTest {
     		
     }
     public JsonNode renameServer(String uuid){
+        return renameServer(uuid, "TRANSFERRIN ALDIFITOX S EPIMER CHANGED");
+    }
+    public JsonNode renameServer(String uuid, String newName){
     	
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
 
     	String oldVersion=fetched.at("/version").asText();
-    	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
     
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
 		ts.updateSubstanceJSON(updated);
