@@ -1,15 +1,18 @@
 package ix.ginas.utils.validation;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import ix.core.AbstractValidator;
+import ix.core.UserFetcher;
 import ix.core.ValidationMessage;
-import ix.core.Validator;
+import ix.core.ValidationResponse;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingStrategy;
 
-public class DefaultSubstanceValidator implements Validator<Substance>{
+public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	GinasProcessingStrategy _strategy;
 	private static enum METHOD_TYPE{
 		CREATE,
@@ -17,6 +20,10 @@ public class DefaultSubstanceValidator implements Validator<Substance>{
 		APPROVE
 	}
 	METHOD_TYPE method=null;
+	
+	private UserProfile getCurrentUser(){
+		return UserFetcher.getActingUserProfile(true);
+	}
 	
 	public DefaultSubstanceValidator(GinasProcessingStrategy strategy, METHOD_TYPE method){
 		_strategy=strategy;
@@ -36,23 +43,77 @@ public class DefaultSubstanceValidator implements Validator<Substance>{
 	}
 	
 	@Override
-	public boolean validate(Substance s, List<ValidationMessage> validation) {
-		List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(s, _strategy);			
+	public ValidationResponse<Substance> validate(Substance objnew, Substance objold) {
+		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
+		vr.setInvalid();
+		List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(objnew, _strategy);			
 		
-		if(validation!=null && vlad!=null){
-			for(ValidationMessage gpm:vlad){
-				validation.add(gpm);
+		UserProfile up=getCurrentUser();
+		if(up==null){
+			up=UserProfile.GUEST();
+		}
+		
+		if(objold!=null){
+			if( objnew.getAccess().isEmpty() &&
+			   !objold.getAccess().isEmpty()
+					){
+				if(
+					   !(   up.hasRole(Role.Admin) ||
+							up.hasRole(Role.SuperUpdate)
+						)
+				  ){
+					vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can make a substance public"));
+				}
+			}
+			
+			if(objold.getApprovalID()!=null){
+				if(!objold.getApprovalID().equals(objnew.getApprovalID())){
+					//Can't change approvalID!!! (unless admin)
+					if(up.hasRole(Role.Admin)){
+						vlad.add(GinasProcessingMessage
+								.WARNING_MESSAGE(
+										"The approvalID for the record has changed. Was ('" +
+										objold.getApprovalID() +
+										"') but now is ('" + 
+										objnew.getApprovalID() +
+										"'). This is strongly discouraged.")
+								);
+					}else{
+						vlad.add(GinasProcessingMessage
+								.ERROR_MESSAGE(
+										"The approvalID for the record has changed. Was ('" +
+										objold.getApprovalID() +
+										"') but now is ('" + 
+										objnew.getApprovalID() +
+										"'). This is not allowed, except by an admin.")
+								);
+					}
+					
+				}
+			}
+			
+		}else{
+			if (objnew.getAccess().isEmpty()) {
+				if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperDataEntry))) {
+					vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superDataEntry users can make a substance public"));
+				}
 			}
 		}
-		boolean allow=_strategy.handleMessages(s, vlad);
-		_strategy.addWarnings(s, vlad);
-		return allow;
+		
+		if(vlad!=null){
+			for(ValidationMessage gpm:vlad){
+				vr.addValidationMessage(gpm);
+			}
+		}
+		
+		if(_strategy.handleMessages(objnew, vlad)){
+			vr.setValid();
+		}
+		_strategy.addWarnings(objnew, vlad);
+		return vr;
 	}
-
 	
-	@Override
-	public List<? extends ValidationMessage> getValidationMessageContainer() {
-		return new ArrayList<GinasProcessingMessage>();
-	}
+	
+
 	
 }

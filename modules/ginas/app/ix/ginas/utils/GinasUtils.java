@@ -19,6 +19,7 @@ import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.ValidationMessage;
+import ix.core.ValidationResponse;
 import ix.core.chem.Chem;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
@@ -488,14 +489,11 @@ public class GinasUtils {
 			return sub;
 		}
 
-		public static List<ValidationMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub)
+		public static ValidationResponse prepareSubstance(GinasProcessingStrategy prc, Substance sub)
 				throws Exception {
 			
 			DefaultSubstanceValidator dsv = DefaultSubstanceValidator.NEW_SUBSTANCE_VALIDATOR(prc);
-			List<ValidationMessage> valid = new ArrayList<ValidationMessage>(); 
-		    
-			dsv.validate(sub,valid);
-			return valid;
+			return dsv.validate(sub);
 		}
 
 		public abstract String getName(K theRecord);

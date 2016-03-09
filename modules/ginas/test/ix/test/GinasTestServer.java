@@ -90,8 +90,11 @@ public class GinasTestServer extends ExternalResource{
      
 	 public static final String FAKE_USER_1="fakeuser1";
 	 public static final String FAKE_USER_2="fakeuser2";
+	 public static final String FAKE_USER_3="fakeuser3";
+	 
 	 public static final String FAKE_PASSWORD_1="madeup1";
 	 public static final String FAKE_PASSWORD_2="madeup2";
+	 public static final String FAKE_PASSWORD_3="madeup3";
 	 
 	 
     private static long timeout= 10000L;
@@ -136,6 +139,9 @@ public class GinasTestServer extends ExternalResource{
     	login(FAKE_USER_2,FAKE_PASSWORD_2);
     }
 
+	public void loginFakeUser3() {
+		login(FAKE_USER_3,FAKE_PASSWORD_3);
+	}
     //logs in user, also sets default authentication type
     //if previously set to NONE
     public void login(String username, String password){
@@ -449,6 +455,7 @@ public class GinasTestServer extends ExternalResource{
         }
         stop(ts);
     }
+
 
 	
 

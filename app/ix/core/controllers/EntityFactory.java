@@ -55,7 +55,9 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.DefaultValidator;
 import ix.core.ValidationMessage;
+import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.BeanViews;
@@ -217,6 +219,11 @@ public class EntityFactory extends Controller {
         public static EntityMapper FULL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Full.class);
         }
+
+		public static EntityMapper COMPACT_ENTITY_MAPPER() {
+			return new EntityMapper(BeanViews.Compact.class);
+		}
+		
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             _serializationConfig = getSerializationConfig();
@@ -942,10 +949,11 @@ public class EntityFactory extends Controller {
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
             if(validator!=null){
-	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
-	            if(!validator.validate(inst,validationMessages)){
-	            	return badRequest(validationResponse(false, validationMessages));
-	            }
+		            ValidationResponse vr=validator.validate(inst);
+		            
+	            	if(!vr.isValid()){
+		            	return badRequest(validationResponse(vr));
+		            }
             }
             
             inst.save();
@@ -1011,39 +1019,27 @@ public class EntityFactory extends Controller {
             
             T inst = mapper.treeToValue(node, type);
             
-            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
-            boolean valid=false;
-            if(validator.validate(inst,validationMessages)){
-            	valid=true;
-            }else{
-            	valid=false;
-            }
+            ValidationResponse vr=validator.validate(inst);
+            
             if(rept==RESPONSE_TYPE.FULL){
-            	return ok(validationResponse(valid, validationMessages,mapper.valueToTree(inst)));
+            	return ok(validationResponse(vr,true));
             }else{
-            	return ok(validationResponse(valid, validationMessages));
+            	return ok(validationResponse(vr,false));
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
+        	ex.printStackTrace();
             return internalServerError(ex.getMessage());
         }
     }
-    
-    protected static JsonNode validationResponse(boolean valid, List<ValidationMessage> validationMessages){
-    	return validationResponse(valid, validationMessages,null);
+    protected static JsonNode validationResponse(ValidationResponse vr){
+    	return validationResponse(vr,false);
     }
-    protected static JsonNode validationResponse(boolean valid, List<ValidationMessage> validationMessages, JsonNode jsnode){
-    	ObjectMapper mapper = new ObjectMapper();
-    	Map wrapper = new HashMap();
-        wrapper.put("valid", valid);
-        if(jsnode!=null){
-        	wrapper.put("object", jsnode);
-        }
-        wrapper.put("messages", validationMessages);
-        if(valid){
-        	return mapper.valueToTree(wrapper);
-        }else{
-        	return mapper.valueToTree(wrapper);
-        }
+    protected static JsonNode validationResponse(ValidationResponse vr, boolean full){
+    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
+    	if(full){
+    		mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
+    	}
+    	return mapper.valueToTree(vr);
     }
 
     protected static <K,T extends Model> 
@@ -1177,9 +1173,9 @@ public class EntityFactory extends Controller {
             if (paths.length == 1 
                 && (paths[0].equals("_") || paths[0].equals("*"))) {
                 final T inst = mapper.treeToValue(value, type);
-                List<ValidationMessage> validationMessages = new ArrayList<ValidationMessage>();
-                if(!validator.validate(inst,validationMessages)){
-	            	return badRequest(validationResponse(false, validationMessages));
+                ValidationResponse vr=validator.validate(inst);
+                if(!vr.isValid()){
+	            	return badRequest(validationResponse(vr,false));
 	            }
                 try {
                     Method m=EntityFactory.getIdSettingMethodForBean(inst);
@@ -1500,10 +1496,10 @@ public class EntityFactory extends Controller {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
         JsonNode json = request().body().asJson();
-        return updateEntity (json, type, null);
+        return updateEntity (json, type, new DefaultValidator());
     }
     protected static Result updateEntity (JsonNode json, Class<?> type) {
-        return updateEntity (json, type, null);
+        return updateEntity (json, type, new DefaultValidator());
     }
     
     
@@ -1518,23 +1514,22 @@ public class EntityFactory extends Controller {
         Transaction tx = Ebean.beginTransaction();
         try {       
             Object newValue = mapper.treeToValue(json, type);
-            if(validator!=null){
-	            List<ValidationMessage> validationMessages= 
-	            		(List<ValidationMessage>) validator.getValidationMessageContainer();
-	            if(!validator.validate(newValue,validationMessages)){
-	            	return badRequest(validationResponse(false, validationMessages));
-	            }
-            }
 
+            //Fetch old value
             FetchedValue oldValueContainer=getCurrentValue(newValue);
             String oldVersion=EntityFactory.getVersionForBeanAsString(oldValueContainer.value);
-            
+
             if(oldValueContainer.value==null){
             	throw new IllegalStateException("Cannot update a non-existing record");
             }
-            
             String oldJSON=mapper.toJson(oldValueContainer.value);
             
+            //validate new value
+            ValidationResponse vr=validator.validate(newValue,oldValueContainer.value);
+	        if(!vr.isValid()){
+	            return badRequest(validationResponse(vr,false));
+	        }
+
             EditHistory eh = new EditHistory (json.toString());
             
             //this saves and everything

@@ -107,6 +107,8 @@ public class PojoDiff {
 	}
 	
 	
+	
+	
 	private static <T> Stack applyPatch(T oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
 		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 		JsonNode oldNode=mapper.valueToTree(oldValue);
@@ -115,10 +117,9 @@ public class PojoDiff {
 		T newValue =  (T) mapper.treeToValue(newNode,oldValue.getClass());
 		return applyChanges(oldValue,newValue,null);
 	}
-	private static JsonNode getJsonDiff(Object oldValue, Object newValue){
-		
+	
+	public static JsonNode getJsonDiff(Object oldValue, Object newValue){
 			ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
-			
 			return JsonDiff.asJson(
 	    			mapper.valueToTree(oldValue),
 	    			mapper.valueToTree(newValue)

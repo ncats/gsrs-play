@@ -25,6 +25,14 @@ public enum Role implements be.objectify.deadbolt.core.models.Role {
             return vals;
         }
         
+        public static List<Role> roles(Role... roles ){
+        	List<Role> rolelist= new ArrayList<Role>();
+        	for(Role r:roles){
+        		rolelist.add(r);
+        	}
+        	return rolelist;
+        }
+        
         
 
 }

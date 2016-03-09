@@ -136,6 +136,36 @@ public class EditingWorkflowTest {
    	}
     
     @Test
+   	public void testSubmitPublicRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser3();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	
+                   	String uuid=entered.get("uuid").asText();     
+                   	
+                   	System.out.println("This should fail first");
+                   	ts.submitSubstanceFail(entered);
+                   	
+                   	JsonNode updated=new JsonUtil
+                   			.JsonNodeBuilder(entered)
+                   			.add("/access/-", "testGROUP")
+                   			.build();
+                   	System.out.println("This should work");
+                   	updated=ts.submitSubstanceJSON(updated);
+                   	
+                   	updated=new JsonUtil
+                   			.JsonNodeBuilder(updated)
+                   			.remove("/access/0")
+                   			.build();
+                   	System.out.println("This should fail");
+                   	ts.updateSubstanceFail(updated);
+                   	System.out.println("It did");
+               }
+           });
+   	}
+    
+    @Test
    	public void testAddNameRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {

@@ -10,7 +10,6 @@ import java.util.List;
 import play.Logger;
 
 public class GinasProcessingMessage implements ValidationMessage{
-	public enum MESSAGE_TYPE{WARNING, ERROR, INFO, SUCCESS};
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
 	
 	public MESSAGE_TYPE messageType=MESSAGE_TYPE.INFO;
@@ -81,5 +80,15 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public GinasProcessingMessage addLink(Link l){
 		this.links.add(l);
 		return this;
+	}
+
+	@Override
+	public String getMessage() {
+		return message;
+	}
+
+	@Override
+	public MESSAGE_TYPE getMessageType() {
+		return this.messageType;
 	}
 }
