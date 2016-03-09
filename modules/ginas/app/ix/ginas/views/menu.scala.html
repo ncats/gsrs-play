@@ -56,6 +56,7 @@
                 </ul>
                 @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
                     <h6>Logged in as: @ix.ncats.controllers.auth.Authentication.getUser().username</h6>
+                    <h6>Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()</h6>
                 }
             </div>
         </div>
