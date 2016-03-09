@@ -352,14 +352,13 @@ public class GinasApp extends App {
         
         return badRequest ("Invalid \"sequence\" parameter specified!");
     }
-    //@Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-	
+
     @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result admin () {
         return ok (ix.ginas.views.html.admin.admin.render());
     }
     
-  // @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+   @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
         //System.out.println("Test");
@@ -561,20 +560,24 @@ public class GinasApp extends App {
     		 return _getSubstanceResult(slist);
     	}
     }
-    public static final GetResult<Substance> SubstanceVersionResult =
+
+    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
+    /* public static final GetResult<Substance> SubstanceVersionResult =
             new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
                 public Result getResult(List<Substance> substances) throws Exception {
                     return _getSubstanceResult(substances);
                 }
-            };
+            };*/
+
+
     public static final GetResult<Substance> SubstanceResult =
             new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
                 public Result getResult(List<Substance> substances) throws Exception {
                     return _getSubstanceResult(substances);
                 }
             };
-        
-    
+
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getSubstanceResult(List<Substance> substances)
         throws Exception {
         // force it to show only one since it's possible that the provided
@@ -637,11 +640,13 @@ public class GinasApp extends App {
     public static Result substance(String name) {
         return SubstanceResult.get(name);
     }
-    public static Result substanceVersion(String name, String version) {
+
+     public static Result substanceVersion(String name, String version) {
         return new SubstanceVersionFetcher(version).get(name);
     }
 
-    public static Result chemicals(final String q, final int rows,
+    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
+    /*public static Result chemicals(final String q, final int rows,
                                    final int page) {
         String type = request().getQueryString("type");
         Logger.debug("Chemicals: rows=" + rows + " page=" + page);
@@ -674,7 +679,7 @@ public class GinasApp extends App {
         } catch (Exception ex) {
             return _internalServerError(ex);
         }
-    }
+    }*/
 
     static Result createChemicalResult(TextIndexer.SearchResult result,
                                        int rows, int page) {
@@ -697,7 +702,8 @@ public class GinasApp extends App {
 
     }
 
-    static Result _chemicals(final String q, final int rows, final int page)
+    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
+    /*static Result _chemicals(final String q, final int rows, final int page)
         throws Exception {
         final int total = SubstanceFactory.finder.findRowCount();
         final String key = "chemicals/" + Util.sha1(request());
@@ -742,7 +748,7 @@ public class GinasApp extends App {
                     }
                 });
         }
-    }
+    }*/
 
     public static Result similarity(final String query, final double threshold,
                                     int rows, int page) {
@@ -802,6 +808,7 @@ public class GinasApp extends App {
             }
         };
 
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getChemicalResult(List<Substance> chemicals)
         throws Exception {
         // force it to show only one since it's possible that the provided
@@ -977,8 +984,8 @@ public class GinasApp extends App {
 
         // ******************* PROTEINS
         // *************************************************//*
-
-    public static Result proteins(final String q, final int rows, final int page) {
+    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
+  /*  public static Result proteins(final String q, final int rows, final int page) {
         try {
             final String key = "proteins/" + Util.sha1(request());
             return getOrElse(key, new Callable<Result>() {
@@ -990,9 +997,10 @@ public class GinasApp extends App {
         } catch (Exception ex) {
             return _internalServerError(ex);
         }
-    }
+    }*/
 
-    static Result _proteins(String q, int rows, int page) throws Exception {
+    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
+   /* static Result _proteins(String q, int rows, int page) throws Exception {
         String type = request().getQueryString("type");
         Logger.debug("Proteins: rows=" + rows + " page=" + page);
         if (type != null
@@ -1060,7 +1068,7 @@ public class GinasApp extends App {
                       (page, rows, total, pages, decorate(facets),
                        proteins, null, null));
         }
-    }
+    }*/
 
     static final GetResult<Substance> ProteinResult =
         new GetResult<Substance>(
@@ -1069,7 +1077,7 @@ public class GinasApp extends App {
                 return _getProteinResult(proteins);
             }
         };
-    
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getProteinResult(List<Substance> proteins) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
@@ -1109,7 +1117,6 @@ public class GinasApp extends App {
     /**
      * return the canonical/default chemical id
      */
-    
     public static String siteCheck(Protein prot, int subunit, int index) {
         String desc = prot.getSiteModificationIfExists(subunit, index);
         if (desc == null)
@@ -1425,6 +1432,7 @@ public class GinasApp extends App {
         return resolved;
     }
 
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static public Result relationships(String uuid) {
         List<Relationship> rels = resolveRelationships(uuid);
         ObjectMapper mapper = new ObjectMapper();
@@ -1444,6 +1452,7 @@ public class GinasApp extends App {
         return comp;
     }
 
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result getCVField(String field) {
         String terms = CV.getCV(field);
         return ok(terms);
@@ -1460,6 +1469,7 @@ public class GinasApp extends App {
      * @param context
      * @return
      */
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structure (final String id,
                                     final String format, 
                                     final int size,
@@ -1539,6 +1549,7 @@ public class GinasApp extends App {
      * @param context
      * @return
      */
+    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structureExport (final String id,
                                     final String format, final String context) {
         List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
@@ -1665,6 +1676,8 @@ public class GinasApp extends App {
 		return ret;
 	}
     public static String updateKey =null;
+
+    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updateIndex(String key){
     	if(!GinasLoad.ALLOW_REBUILD){
     		return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");

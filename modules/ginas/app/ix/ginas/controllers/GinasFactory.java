@@ -32,6 +32,7 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.index.render());
         }
 
+        @Dynamic(value = "canRegister", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result register() {
                 return ok(ix.ginas.views.html.register.render());
         }
@@ -63,6 +64,7 @@ public class GinasFactory extends EntityFactory {
             return null;
         }
 
+        @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result sequence(String id) {
                 return ok(ix.ginas.views.html.sequence.render(id));
         }
@@ -71,15 +73,18 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.structuresearch.render());
         }
 
+        @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result report() {
                 return ok(ix.ginas.views.html.report.render());
         }
 
+        @Dynamic(value = "canRegister", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result wizard(String kind) {
                 Logger.info(kind);
                 return ok(ix.ginas.views.html.wizard.render(kind,"{}"));
         }
 
+    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result edit(String substanceId) {
                 List<Substance> substances = GinasApp.resolve(SubstanceFactory.finder,
                                 substanceId);
@@ -119,7 +124,7 @@ public class GinasFactory extends EntityFactory {
                 return finder.where().eq("username", user).findUnique();
         }
 
-        public static Principal registerIfAbsent(String user) {
+         public static Principal registerIfAbsent(String user) {
                 Principal p = byUsername(user);
                 if (p == null) {
                         p = new Principal();
