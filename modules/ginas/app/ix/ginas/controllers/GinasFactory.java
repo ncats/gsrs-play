@@ -10,6 +10,7 @@ import ix.core.models.Principal;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -32,6 +33,7 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.index.render());
         }
 
+        @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result register() {
                 return ok(ix.ginas.views.html.register.render());
         }

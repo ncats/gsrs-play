@@ -69,8 +69,10 @@ public class SubstanceValidateFailTest extends WithApplication {
 
     @Test
     public void testAPIValidateSubstance() {
-    	ts.run(new Callable<Void>() {
-            public Void call() throws IOException {
+    	ts.run(new GinasTestServer.ServerWorker() {
+            @Override
+            public void doWork() throws Exception {
+
                 try (InputStream is = new FileInputStream(resource)) {
                     JsonNode js = new ObjectMapper().readTree(is);
                     Logger.info("Running: " + resource);
@@ -80,7 +82,7 @@ public class SubstanceValidateFailTest extends WithApplication {
                     assertFalse(jsonNode1.isNull());
                     assertFalse(jsonNode1.get("valid").asBoolean());
 
-                    return null;
+
                 }
             }
 

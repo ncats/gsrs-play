@@ -18,7 +18,12 @@ import java.util.Map;
 
 
 public class IxDynamicResourceHandler implements DynamicResourceHandler {
-    private static Map<String, DynamicResourceHandler> HANDLERS;
+    public static final String CAN_UPDATE = "canUpdate";
+    public static final String CAN_REGISTER = "canRegister";
+    public static final String CAN_APPROVE = "canApprove";
+    public static final String IS_ADMIN = "isAdmin";
+    
+	private static Map<String, DynamicResourceHandler> HANDLERS;
 
     static {
        init();
@@ -27,7 +32,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
     public static void init(){
         HANDLERS = new HashMap<String, DynamicResourceHandler>();
 
-        HANDLERS.put("isAdmin",
+        HANDLERS.put(IS_ADMIN,
                 new AbstractDynamicResourceHandler() {
                     public boolean isAllowed(final String name,
                                              final String meta,
@@ -46,17 +51,17 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                         return allowed;
                     }
                 });
-        HANDLERS.put("canApprove",
+        HANDLERS.put(CAN_APPROVE,
                 new SimpleRoleDynamicResourceHandler(
                         Role.Updater,
                         Role.SuperUpdate
                 ));
-        HANDLERS.put("canRegister",
+        HANDLERS.put(CAN_REGISTER,
                 new SimpleRoleDynamicResourceHandler(
                         Role.DataEntry,
                         Role.SuperDataEntry
                 ));
-        HANDLERS.put("canUpdate",
+        HANDLERS.put(CAN_UPDATE,
                 new SimpleRoleDynamicResourceHandler(
                         Role.Updater,
                         Role.SuperUpdate

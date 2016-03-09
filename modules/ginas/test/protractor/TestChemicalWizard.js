@@ -1,32 +1,3 @@
-/*describe('wizard chemical', function() {
-    beforeEach(function() {
-        browser.get('http://localhost:9000/ginas/app/wizard?kind=chemical');
-    });
-
-    it('should have a title', function() {
-        expect(browser.getTitle()).toEqual('Register');
-    });
-
-    it('should click names', function(){
-        element(by.id('names')).click();
-        element(by.model('name.type')).click();
-        expect(element(by.model('name.type')).$('option:checked').getText()).toEqual('Type...');
-
-        element(by.model('name.type')).all(by.id('type')).each(function(element, index) {
-            element.getText().then(function (text) {
-                var items = text.split('\n');
-                console.log( items[5]);
-                expect(items.length).toBe(7);
-                expect(items[0]).toBe('Type...');
-                expect(items[5]).toBe('Systematic Name');
-            });
-        });
-
-
-    });
-
-});*/
-
 var ChemicalWizardPage = function() {
 
     this.getPage = function () {
@@ -47,6 +18,7 @@ describe('Chemical names form test' , function(){
     for (var i = 0; i < forms.formElements.length; i++) {
         var elementType = forms.formElements[i].type;
         var model = forms.formElements[i].model;
+    }
 
 });
 

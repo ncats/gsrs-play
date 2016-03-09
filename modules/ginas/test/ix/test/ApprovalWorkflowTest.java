@@ -31,9 +31,9 @@ public class ApprovalWorkflowTest {
 	@Test
 	public void testApprovalRoundTrip() {
 		final File resource=new File("test/testJSON/toapprove.json");
-		ts.run(new Runnable() {
-            public void run() {
-                try {
+		ts.run(new GinasTestServer.ServerWorker() {
+            @Override
+            public void doWork() throws Exception {
                 	ts.loginFakeUser1();
                 	
                 	InputStream is=new FileInputStream(resource);
@@ -77,10 +77,7 @@ public class ApprovalWorkflowTest {
                     }
                     
                     
-                } catch (Exception e1) {
-                	e1.printStackTrace();
-                    throw new IllegalStateException(e1);
-                }
+
             }
         });
 
@@ -89,9 +86,10 @@ public class ApprovalWorkflowTest {
 	@Test
 	public void testFailNonLoggedApprover() {
 		final File resource=new File("test/testJSON/toapprove.json");
-		ts.run(new Runnable() {
-            public void run() {
-                try {
+		ts.run(new GinasTestServer.ServerWorker() {
+            @Override
+            public void doWork() throws Exception {
+
                 	ts.loginFakeUser1();
                 	
                 	InputStream is=new FileInputStream(resource);
@@ -105,11 +103,7 @@ public class ApprovalWorkflowTest {
                     ts.logout();
                     ts.approveSubstanceFail(uuid);
                     
-                    
-                } catch (Exception e1) {
-                	e1.printStackTrace();
-                    throw new IllegalStateException(e1);
-                }
+
             }
         });
 
@@ -118,9 +112,10 @@ public class ApprovalWorkflowTest {
 	@Test
 	public void testFailDoubeApproved() {
 		final File resource=new File("test/testJSON/toapprove.json");
-		ts.run(new Runnable() {
-            public void run() {
-                try {
+		ts.run(new GinasTestServer.ServerWorker() {
+            @Override
+            public void doWork() throws Exception {
+
                 	ts.loginFakeUser1();
                 	
                 	InputStream is=new FileInputStream(resource);
@@ -144,12 +139,7 @@ public class ApprovalWorkflowTest {
                     String approvalID2=before.get("approvalID").asText();
                     
                     assertEquals(approvalID1,approvalID2);
-                    
-                    
-                } catch (Exception e1) {
-                	e1.printStackTrace();
-                    throw new IllegalStateException(e1);
-                }
+
             }
         });
 

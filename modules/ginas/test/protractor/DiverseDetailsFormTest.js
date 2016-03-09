@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var DiverseDetailsPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -14,7 +14,7 @@ var ProteinWizardPage = function () {
                 ///this form operates a little strangely, because the fields can only be set once, they aren't added to an array...
     this.formElements = {
         formName: 'diverseDetailsForm',
-        buttonID:'Details',
+        buttonId:'Details',
         fields: [{
             model: 'structurallyDiverse.infraSpecificType',
             type: 'dropdown-view-edit'

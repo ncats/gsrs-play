@@ -35,7 +35,7 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
     	if(recordReference!=null){
     		return recordReference.getReferences();
     	}
-    	return new HashSet<Keyword>();
+    	return new LinkedHashSet<Keyword>();
     }
 
     @JsonProperty("references")    
