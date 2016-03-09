@@ -366,25 +366,15 @@
             if (formSub.substanceClass === 'protein') {
                 if (_.has(formSub.protein, 'disulfideLinks')) {
                     _.forEach(formSub.protein.disulfideLinks, function (value, key) {
-                        console.log(_.toArray(value.sites));
-                        //object   protein
-                        //array    disulfideLinks
-                        //object   disulfideLink
-                        //array    sites
-                        //object   site
                         var disulfideLink = {};
                         var sites = _.toArray(value.sites);
-                        console.log(sites);
                         disulfideLink.sites = sites;
-                        //_.set(formSub.protein.disulfideLinks[key], 'disulfideLink', _.toArray(value.sites));
                         formSub.protein.disulfideLinks[key] = disulfideLink;
                     });
                 }
                 if (_.has(formSub.protein, 'otherLinks')) {
                     _.forEach(formSub.protein.otherLinks, function (value, key) {
                         formSub.protein.otherLinks[key] = value.sites;
-                        console.log(key);
-                        console.log(value);
                     });
                 }
             }
@@ -422,18 +412,15 @@
                             if (_.isObject(value)) {
                                 $scope.expandCV(value, newpath);
                             } else {
-                                CVFields.getDomain(newpath).then(function (data) {
-                                    if (!_.isUndefined(data) && data !== 'substanceClass') {
-                                        var domain = data;
-                                        CVFields.getCV(domain).then(function (data) {
-                                            var cv = data.data.content[0].terms;
+                                CVFields.getByField(newpath).then(function (response) {
+                                    if (response.data.count > 0) {
+                                            var cv = response.data.content[0].terms;
                                             var newcv = _.find(cv, ['value', value]);
                                             if (_.isUndefined(newcv)) {
                                                 newcv = {};
                                                 _.set(newcv, 'display', value + ' (not in CV)');
                                             }
                                             sub[field][key] = newcv;
-                                        });
                                     }
                                 });
                             }
@@ -446,18 +433,15 @@
                     }
                 } else {
                     if (!_.isNull(sub[field])) {
-                        CVFields.getDomain(newpath).then(function (data) {
-                            if (!_.isUndefined(data) && data !== 'SUBSTANCE_CLASS') {
-                                var domain = data;
-                                CVFields.getCV(domain).then(function (data) {
-                                    var cv = data.data.content[0].terms;
+                        CVFields.getByField(newpath).then(function (response) {
+                            if (response.data.content.length > 0) {
+                                    var cv = response.data.content[0].terms;
                                     var newcv = _.find(cv, ['value', sub[field]]);
                                     if (_.isUndefined(newcv)) {
                                         newcv = {};
                                         _.set(newcv, 'display', sub[field] + ' (not in CV)');
                                     }
                                     sub[field] = newcv;
-                                });
                             }
                         });
                     }
@@ -1139,17 +1123,12 @@
                 field: '='
             },
             link: function (scope, element, attrs) {
-                if (!_.isUndefined(scope.referenceobj)) {
+                if (!_.isUndefined(scope.referenceobj) && !_.isEmpty(scope.referenceobj)) {
                     if (_.has(scope.referenceobj, 'sites')) {
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if(scope.field) {
-                            console.log("setting: "+ scope.field);
-                            console.log("reference obj: ");
-                            console.log(scope.referenceobj);
-
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
-                            console.log(scope);
                         }else{
                             scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
                         }

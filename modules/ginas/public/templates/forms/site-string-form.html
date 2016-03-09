@@ -8,7 +8,7 @@
         <form class="form-horizontal" name="siteStringForm" id="addSiteStringForm" role="form" novalidate>
         <label for="{{field}}" class="text-capitalize">{{referenceobj.field || 'Sites'}}</label>
         <textarea type="text" class="form-control" ng-blur="makeSiteList()" ng-change="makeSiteList()"
-                  ng-model="referenceobj.$$displayString" name="{{field}}" title="{{field}}"
+                  ng-model="referenceobj[field].$$displayString" name="{{field}}" title="{{field}}"
                   id="{{field}}" placeholder="{{field}}"></textarea>
             </form>
     </div>

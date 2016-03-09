@@ -654,7 +654,6 @@
 
                 switch (scope.type) {
                     case "amount":
-                        console.log(scope);
                         if(!scope.field){
                             scope.field = 'amount';
                         }
@@ -776,6 +775,11 @@
             },
             templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
             link: function (scope, element, attrs) {
+                _.forEach(scope.parent.protein.glycosylation, function(value){
+                    if(_.isArray(value) && value.length>0){
+                        scope.iscollapsed=false;
+                        }
+                });
             }
         };
     });
@@ -1172,7 +1176,7 @@ console.log(scope);
                 };
 
                 scope.validate = function () {
-                    _.forEach(scope.sugar.sites, function (site) {
+                    _.forEach(scope.sugar.sites.sites, function (site) {
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
                     });
                     scope.parent.nucleicAcid.sugars.push(scope.sugar);
@@ -1218,9 +1222,12 @@ console.log(scope);
                 };
 
                 scope.validate = function () {
-                    _.forEach(scope.linkage.sites, function (site) {
+                    console.log(scope);
+                    console.log(scope.linkage.sites);
+                    _.forEach(scope.linkage.sites.sites, function (site) {
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
                     });
+                    console.log(scope);
                     scope.parent.nucleicAcid.linkages.push(scope.linkage);
                     scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                     scope.linkage = {};
@@ -1421,6 +1428,14 @@ console.log(scope);
             replace: true,
             scope: {
                 parent: '='
+            },
+            link: function(scope){
+                var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
+                _.forEach(fields, function(field){
+                   if(!_.isNull(scope.parent.protein[field])){
+                       scope.iscollapsed=false;
+                   }
+                });
             },
             templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
         };
@@ -1673,9 +1688,11 @@ console.log(scope);
                 parent: '=',
                 mode: '=',
                 formtype: '=',
-                residueregex: '='
+                residueregex: '=',
+                field: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 var template;
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
@@ -1726,8 +1743,11 @@ console.log(scope);
 
                 scope.makeSiteList = function () {
                     if(scope.field){
-                        _.set(scope.referenceobj[field], 'sites', siteList.siteList(scope.referenceobj.$$displayString));
+                        console.log(scope);
+                        console.log(siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+                        _.set(scope.referenceobj[scope.field], 'sites', siteList.siteList(scope.referenceobj[scope.field].$$displayString));
                        // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
+                        console.log(scope);
 
                     }else {
                         scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$$displayString);

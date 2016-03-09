@@ -23,7 +23,7 @@
            <mixture-component-select-form parent = substance></mixture-component-select-form>
         }
         case "protein" => {
-            <protein-details-form></protein-details-form>
+            <protein-details-form parent = substance></protein-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance  ng-cloak></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
