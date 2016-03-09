@@ -37,16 +37,16 @@ exports.config = {
                //'NameFormTest.js' //passes
               //'CodeFormTest.js'//passes
             // ,'NoteFormTest.js' passes
-            'RelationshipFormTest.js'
+            //'RelationshipFormTest.js'
             //,   'PropertyFormTest.js'
             //,  'ReferenceFormOnlyFormTest.js'
         ],
         modifications: [
-            'AgentModificationFormTest.js'
-          , 'StructuralModificationFormTest.js'
-           , 'PhysicalModificationFormTest.js'
+         //   'AgentModificationFormTest.js'
+          //, 'StructuralModificationFormTest.js'
+          // , 'PhysicalModificationFormTest.js'
         ],
-        chemical: [ 'StructureFormTest.js'
+        chemical: [ //'StructureFormTest.js'
                     //,'MoietyFormTest.js'
         ],
         protein: [ //'ProteinDetailsFormTest.js'
@@ -55,7 +55,7 @@ exports.config = {
         ],
         structurallyDiverse: [ //'DiverseDetailsFormTest.js'
                     //,'DiverseOrganismFormTest.js'
-                    'DiverseSourceFormTest.js'
+                   // 'DiverseSourceFormTest.js'
                     //,'DiverseTypeFormTest.js'
         ],
         polymer: [ 'PolymerClassificationFormTest.js'
@@ -71,7 +71,10 @@ exports.config = {
         ],
         g1ss: [ 'StructureFormTest.js'
                     ,'MoietyFormTest.js'
+        ],
+        accessControl:  ['UserAccessControlTests.js'
         ]
+
     },
 
     jasmineNodeOpts: {

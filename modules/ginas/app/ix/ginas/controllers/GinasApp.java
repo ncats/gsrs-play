@@ -47,6 +47,7 @@ import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Global;
 import ix.utils.Util;
 
@@ -353,12 +354,12 @@ public class GinasApp extends App {
         return badRequest ("Invalid \"sequence\" parameter specified!");
     }
 
-    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result admin () {
         return ok (ix.ginas.views.html.admin.admin.render());
     }
     
-   @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+   @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
         //System.out.println("Test");
@@ -577,7 +578,7 @@ public class GinasApp extends App {
                 }
             };
 
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getSubstanceResult(List<Substance> substances)
         throws Exception {
         // force it to show only one since it's possible that the provided
@@ -808,7 +809,7 @@ public class GinasApp extends App {
             }
         };
 
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getChemicalResult(List<Substance> chemicals)
         throws Exception {
         // force it to show only one since it's possible that the provided
@@ -1077,7 +1078,7 @@ public class GinasApp extends App {
                 return _getProteinResult(proteins);
             }
         };
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getProteinResult(List<Substance> proteins) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
@@ -1432,7 +1433,7 @@ public class GinasApp extends App {
         return resolved;
     }
 
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static public Result relationships(String uuid) {
         List<Relationship> rels = resolveRelationships(uuid);
         ObjectMapper mapper = new ObjectMapper();
@@ -1452,7 +1453,7 @@ public class GinasApp extends App {
         return comp;
     }
 
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result getCVField(String field) {
         String terms = CV.getCV(field);
         return ok(terms);
@@ -1469,7 +1470,7 @@ public class GinasApp extends App {
      * @param context
      * @return
      */
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structure (final String id,
                                     final String format, 
                                     final int size,
@@ -1552,7 +1553,7 @@ public class GinasApp extends App {
      * @param context
      * @return
      */
-    @Dynamic(value = "canSearch", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structureExport (final String id,
                                     final String format, final String context) {
         List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
@@ -1680,7 +1681,7 @@ public class GinasApp extends App {
 	}
     public static String updateKey =null;
 
-    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updateIndex(String key){
     	if(!GinasLoad.ALLOW_REBUILD){
     		return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
