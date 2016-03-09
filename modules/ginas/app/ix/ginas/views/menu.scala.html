@@ -54,7 +54,9 @@
                         Logout</button></a></li>
                 }
                 </ul>
-                <h6>Logged in as: @ix.ncats.controllers.auth.Authentication.getUser().username</h6>
+                @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
+                    <h6>Logged in as: @ix.ncats.controllers.auth.Authentication.getUser().username</h6>
+                }
             </div>
         </div>
         <div class="hidden-sm hidden-md hidden-lg">

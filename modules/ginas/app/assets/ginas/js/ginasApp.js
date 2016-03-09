@@ -298,7 +298,7 @@
             $anchorScroll();
         };
         $scope.viewToggle = function () {
-            $scope.submitSubstanceView = $scope.fromFormSubstance( angular.toJson(angular.copy($scope.substance)));
+            $scope.submitSubstanceView = $scope.fromFormSubstance(angular.copy($scope.substance));
         };
 
         $scope.toggleGrid = function () {
