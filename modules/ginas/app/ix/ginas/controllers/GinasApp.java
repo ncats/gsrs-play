@@ -1533,7 +1533,10 @@ public class GinasApp extends App {
     	
     	//Assets.at("public/images/",placeholderFile,true).apply();
     	try{
-    		return ok(Util.getFile(placeholderFile, "public/images/"));
+    		
+    		InputStream is=Util.getFile(placeholderFile, "public/images/");
+    		response().setContentType("image/svg+xml");
+    		return ok(is);
     	}catch(Exception e){
     		return _internalServerError(e);
     	}
