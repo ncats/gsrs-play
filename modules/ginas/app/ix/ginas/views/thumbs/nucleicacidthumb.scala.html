@@ -14,8 +14,13 @@
         </div>
         <div class="panel-body struc-img">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(nuc))"  target="_self">
-                <img src="@routes.Assets.at("ginas/images/nucleic-acid.svg")" alt ="Nucleic Acid" aria-label="Nucleic Acid" class="img-responsive" id="" />
+                <img src="@routes.Assets.at("ginas/images/nucleic-acid.svg")" alt ="Nucleic Acid" aria-label="Nucleic Acid" class="struc-thumb img-responsive" id="" />
             </a>
+            <div class = "row stereo">
+                <div class = "col-md-10">
+                    <span class="label label-primary label-offset">Nucleic Acid</span>
+                </div>
+            </div>
         </div>
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@nuc.getName()">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(nuc))"  target="_self">

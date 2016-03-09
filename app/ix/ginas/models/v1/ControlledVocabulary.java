@@ -23,7 +23,7 @@ public class ControlledVocabulary extends IxModel{
 
 	private static final long serialVersionUID = 5455592961232451608L;
 
-	@JsonIgnore
+	//@JsonIgnore
 	public Long getId(){
 		return this.id;
 	};
@@ -35,7 +35,8 @@ public class ControlledVocabulary extends IxModel{
     @ManyToMany(cascade=CascadeType.ALL)
     @JsonSerialize(using=KeywordListSerializer.class)
     @JsonDeserialize(using=KeywordListDeserializer.class)
-    public List<Keyword> fields = new ArrayList<Keyword>();
+	@Indexable(name="Field")
+	public List<Keyword> fields = new ArrayList<Keyword>();
 
 	public boolean editable = true;
 

@@ -74,11 +74,10 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.structuresearch.render());
         }
 
-        @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-        public static Result report() {
+       @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	    public static Result report() {
                 return ok(ix.ginas.views.html.report.render());
         }
-
         @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result wizard(String kind) {
                 Logger.info(kind);

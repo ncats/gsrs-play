@@ -239,7 +239,7 @@ public class GinasTestServer extends ExternalResource{
     	WSResponse wsResponse1 = this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     	return wsResponse1;
     }
-    public WSResponse fetchSubstanceHistory(String uuid, String version){
+    public WSResponse fetchSubstanceHistory(String uuid, int version){
     	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid))
     			.setQueryParameter("filter","path=null AND version=\'" + version + "\'")
     			.get().get(timeout);
@@ -270,9 +270,33 @@ public class GinasTestServer extends ExternalResource{
 	}
     
     //JSON methods
-    public JsonNode fetchSubstanceHistoryJSON(String uuid, String version){
+
+    /**
+     * Get the summary JSON which contains the oldValue and newValue URLs
+     * for this version change.
+     * @param uuid the UUID of the substance to fetch.
+     *
+     * @param version the version to of the substance to fetch.
+     * @return the JsonNode , should not be null.
+     */
+    public JsonNode fetchSubstanceHistoryJSON(String uuid, int version){
     	return ensureExctractJSON(fetchSubstanceHistory(uuid, version));
     }
+
+    public JsonHistoryResult fetchSubstanceJSON(String uuid, int version){
+        JsonNode edits = fetchSubstanceHistoryJSON(uuid,version);
+        //should only have 1 edit...so this should be safe
+        JsonNode edit = edits.iterator().next();
+        JsonNode oldv= urlJSON(edit.get("oldValue").asText());
+        JsonNode newv= urlJSON(edit.get("newValue").asText());
+
+
+
+        return new JsonHistoryResult(edit, oldv, newv);
+    }
+
+
+
     public JsonNode fetchSubstanceJSON(String uuid){
     	return ensureExctractJSON(fetchSubstance(uuid));
     }
@@ -310,8 +334,8 @@ public class GinasTestServer extends ExternalResource{
 		return urlString(UI_URL_SUBSTANCE.replace("$ID$", id));
 	}
 
-	public String fetchSubstanceVersionUI(String id, String version){
-		return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", version));
+	public String fetchSubstanceVersionUI(String id, int version){
+		return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", Integer.toString(version)));
 	}
 	
 	public String urlString(String url){
@@ -452,6 +476,29 @@ public class GinasTestServer extends ExternalResource{
 
 	
 
+    public static class JsonHistoryResult{
+        private final JsonNode historyNode;
+
+        private final JsonNode oldValue, newValue;
+
+        public JsonHistoryResult(JsonNode historyNode, JsonNode oldValue, JsonNode newValue) {
+            this.historyNode = historyNode;
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+        }
+
+        public JsonNode getHistoryNode() {
+            return historyNode;
+        }
+
+        public JsonNode getOldValue() {
+            return oldValue;
+        }
+
+        public JsonNode getNewValue() {
+            return newValue;
+        }
+    }
 	
 
 }

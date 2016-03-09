@@ -40,7 +40,7 @@
                         <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button" target="_self"><button class="btn btn-default">
                             Load Data</button></a></li>
                     }*@
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">Admin</a></li>
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self"><button class="btn btn-default">Admin</button></a></li>
                 }
                
                 
@@ -48,10 +48,16 @@
                     <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">
                         Login</button></a></li>
                 }{
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="login-button" target="_self"><button class="btn btn-default">
+                    <li>
+
+                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="login-button" target="_self"><button class="btn btn-default">
                         Logout</button></a></li>
                 }
                 </ul>
+                @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
+                    <h6>Logged in as: @ix.ncats.controllers.auth.Authentication.getUser().username</h6>
+                    <h6>Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()</h6>
+                }
             </div>
         </div>
         <div class="hidden-sm hidden-md hidden-lg">
