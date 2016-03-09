@@ -1054,3 +1054,6 @@ del{
     white-space: pre;
 }
 
+.diff{
+    white-space: normal;
+}
