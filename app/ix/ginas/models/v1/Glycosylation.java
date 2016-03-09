@@ -25,7 +25,7 @@ import ix.ginas.models.utils.JSONEntity;
 @Table(name="ix_ginas_glycosylation")
 @JSONEntity(name = "glycosylation", title = "Glycosylation", isFinal = true)
 public class Glycosylation extends GinasCommonSubData {
-    
+
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
     @JoinTable(
@@ -33,6 +33,8 @@ public class Glycosylation extends GinasCommonSubData {
                 @JoinColumn(name="c_glycosylation_sites_uuid")
         )
     SiteContainer _CGlycosylationSiteContainer;
+
+    @JsonProperty("CGlycosylationSites")
     public List<Site> getCGlycosylationSites(){
     	if(_CGlycosylationSiteContainer!=null){
     		return _CGlycosylationSiteContainer.getSites();
@@ -54,6 +56,8 @@ public class Glycosylation extends GinasCommonSubData {
                 @JoinColumn(name="n_glycosylation_sites_uuid")
         )
     SiteContainer _NGlycosylationSiteContainer;
+
+    @JsonProperty("NGlycosylationSites")
     public List<Site> getNGlycosylationSites(){
     	if(_NGlycosylationSiteContainer!=null){
     		return _NGlycosylationSiteContainer.getSites();
@@ -77,6 +81,8 @@ public class Glycosylation extends GinasCommonSubData {
                 @JoinColumn(name="o_glycosylation_sites_uuid")
         )
     SiteContainer _OGlycosylationSiteContainer;
+
+    @JsonProperty("OGlycosylationSites")
     public List<Site> getOGlycosylationSites(){
     	if(_OGlycosylationSiteContainer!=null){
     		return _OGlycosylationSiteContainer.getSites();

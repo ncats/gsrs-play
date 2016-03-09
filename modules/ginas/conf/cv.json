@@ -20357,7 +20357,8 @@
       }
     ],
     "fields": [
-      "protein.sequenceType"
+      "protein.sequenceType",
+      "nucleicAcid.sequenceType"
     ],
     "_namespace": null
   },

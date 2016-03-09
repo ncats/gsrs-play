@@ -6,7 +6,7 @@
                 {{tag.display}}</a>
         </span>
     <tags-input ng-show="obj[field]._editing || !obj[field] || obj[field].length == 0" custom-class="form-control" title="{{field}}" placeholder="{{label || field}}"
-                name="{{field}}"
+                name="{{field}}" id="{{field}}"
                 ng-model=obj[field] ng-blur="editing(obj[field]);" display-property="display" key-property="value" max-tags={{max}}>
                 <!--addFromAutocompleteOnly="true"-->
 

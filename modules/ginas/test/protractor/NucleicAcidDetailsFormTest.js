@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var NuclicAcidClassificationPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=nucleicAcid');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -14,20 +14,28 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'naDetailsForm',
-        buttonID: 'nucleicAcidClassification',
+        formObj: '',
+        buttonId: 'nucleicAcidClassification',
         fields: [{
             model: 'parent.nucleicAcid.nucleicAcidType',
-            type: 'dropdown-view-edit'
+            type: 'dropdown-edit'
         }, {
             model: 'parent.nucleicAcid.nucleicAcidSubType',
-            type: 'dropdown-view-edit'
+            type: 'dropdown-edit'
         }, {
             model: 'parent.nucleicAcid.sequenceOrigin',
-            type: 'dropdown-view-edit'
+            type: 'dropdown-edit'
         }, {
             model: 'parent.nucleicAcid.sequenceType',
-            type: 'dropdown-view-edit'
-        }, {
+            type: 'dropdown-edit'
+        }]
+    }
+
+    this.subForms = {
+        formName: 'naDetailsForm',
+        formObj: '',
+        buttonId: 'nucleicAcidClassification',
+        fields: [{
             model: 'parent.nucleicAcid.access',
             type: 'form-selector'
         }, {
