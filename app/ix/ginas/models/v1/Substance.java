@@ -467,13 +467,7 @@ public class Substance extends GinasCommonData {
 
 	
 	public String getApprovalID() {
-		if (approvalID != null)
-			return approvalID;
-		SubstanceReference subRef = getParentSubstanceReference();
-		if (subRef != null) {
-			return subRef.approvalID;
-		}
-		return null;
+		return approvalID;
 	}
 	
 	

@@ -11,18 +11,24 @@ import ix.core.models.UserProfile;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingStrategy;
+import play.Play;
 
 public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	GinasProcessingStrategy _strategy;
 	private static enum METHOD_TYPE{
 		CREATE,
 		UPDATE,
-		APPROVE
+		APPROVE, 
+		BATCH
 	}
 	METHOD_TYPE method=null;
 	
 	private UserProfile getCurrentUser(){
-		return UserFetcher.getActingUserProfile(true);
+		UserProfile up= UserFetcher.getActingUserProfile(true);
+		if(up==null){
+			up=UserProfile.GUEST();
+		}
+		return up;
 	}
 	
 	public DefaultSubstanceValidator(GinasProcessingStrategy strategy, METHOD_TYPE method){
@@ -41,6 +47,9 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	public static DefaultSubstanceValidator UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy strategy){
 		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.UPDATE);
 	}
+	public static DefaultSubstanceValidator BATCH_SUBSTANCE_VALIDATOR(GinasProcessingStrategy strategy){
+		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.BATCH);
+	}
 	
 	@Override
 	public ValidationResponse<Substance> validate(Substance objnew, Substance objold) {
@@ -48,55 +57,11 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		vr.setInvalid();
 		List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(objnew, _strategy);			
 		
-		UserProfile up=getCurrentUser();
-		if(up==null){
-			up=UserProfile.GUEST();
-		}
-		
-		if(objold!=null){
-			if( objnew.getAccess().isEmpty() &&
-			   !objold.getAccess().isEmpty()
-					){
-				if(
-					   !(   up.hasRole(Role.Admin) ||
-							up.hasRole(Role.SuperUpdate)
-						)
-				  ){
-					vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can make a substance public"));
-				}
-			}
-			
-			if(objold.getApprovalID()!=null){
-				if(!objold.getApprovalID().equals(objnew.getApprovalID())){
-					//Can't change approvalID!!! (unless admin)
-					if(up.hasRole(Role.Admin)){
-						vlad.add(GinasProcessingMessage
-								.WARNING_MESSAGE(
-										"The approvalID for the record has changed. Was ('" +
-										objold.getApprovalID() +
-										"') but now is ('" + 
-										objnew.getApprovalID() +
-										"'). This is strongly discouraged.")
-								);
-					}else{
-						vlad.add(GinasProcessingMessage
-								.ERROR_MESSAGE(
-										"The approvalID for the record has changed. Was ('" +
-										objold.getApprovalID() +
-										"') but now is ('" + 
-										objnew.getApprovalID() +
-										"'). This is not allowed, except by an admin.")
-								);
-					}
-					
-				}
-			}
-			
-		}else{
-			if (objnew.getAccess().isEmpty()) {
-				if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperDataEntry))) {
-					vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superDataEntry users can make a substance public"));
-				}
+		if(this.method!=METHOD_TYPE.BATCH){
+			if(objold!=null){
+				changeSubstanceValation(objnew,objold,vlad);
+			}else{
+				addNewSubstanceValation(objnew,vlad);
 			}
 		}
 		
@@ -112,7 +77,61 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		_strategy.addWarnings(objnew, vlad);
 		return vr;
 	}
-	
+
+	// only for old
+	private void changeSubstanceValation(Substance objnew,Substance objold, List<GinasProcessingMessage> vlad) {
+		UserProfile up = getCurrentUser();
+		if( objnew.getAccess().isEmpty() &&
+				   !objold.getAccess().isEmpty()
+						){
+					if(
+						   !(   up.hasRole(Role.Admin) ||
+								up.hasRole(Role.SuperUpdate)
+							)
+					  ){
+						vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can make a substance public"));
+					}
+				}
+				
+				if(objold.approvalID!=null){
+					if(!objold.approvalID.equals(objnew.approvalID)){
+						//Can't change approvalID!!! (unless admin)
+						if(up.hasRole(Role.Admin)){
+							vlad.add(GinasProcessingMessage
+									.WARNING_MESSAGE(
+											"The approvalID for the record has changed. Was ('" +
+											objold.approvalID +
+											"') but now is ('" + 
+											objnew.approvalID +
+											"'). This is strongly discouraged.")
+									);
+						}else{
+							vlad.add(GinasProcessingMessage
+									.ERROR_MESSAGE(
+											"The approvalID for the record has changed. Was ('" +
+											objold.approvalID +
+											"') but now is ('" + 
+											objnew.approvalID +
+											"'). This is not allowed, except by an admin.")
+									);
+						}
+						
+					}
+				}
+	}
+	//only for new
+	private void addNewSubstanceValation(Substance objnew,List<GinasProcessingMessage> vlad){
+		
+		UserProfile up=getCurrentUser();
+		if (objnew.getAccess().isEmpty()) {
+			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperDataEntry))) {
+				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superDataEntry users can make a substance public"));
+			}
+		}
+		if(objnew.approvalID!=null){
+				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot give an approvalID to a new substance"));
+		}
+	}
 	
 
 	

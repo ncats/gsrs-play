@@ -542,7 +542,7 @@ public class PojoDiff {
 						
 					};
 				}else{
-					System.err.println("Setters for non-list collections are experimental");
+					//System.err.println("Setters for non-list collections are experimental");
 					final Object old=col.toArray()[c];
 					return new TypeRegistry.Setter(){
 

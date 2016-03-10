@@ -492,7 +492,7 @@ public class GinasUtils {
 		public static ValidationResponse prepareSubstance(GinasProcessingStrategy prc, Substance sub)
 				throws Exception {
 			
-			DefaultSubstanceValidator dsv = DefaultSubstanceValidator.NEW_SUBSTANCE_VALIDATOR(prc);
+			DefaultSubstanceValidator dsv = DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(prc);
 			return dsv.validate(sub);
 		}
 

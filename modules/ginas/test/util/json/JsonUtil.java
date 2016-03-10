@@ -6,7 +6,10 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,6 +26,14 @@ public class JsonUtil {
 		return jsn.toString();
 	}
 
+	 public static JsonNode parseJsonFile(File resource){
+	    	try(InputStream is=new FileInputStream(resource)){
+	        	return new ObjectMapper().readTree(is);
+	    	}catch(Throwable t){
+	    		throw new RuntimeException(t);
+	    	}
+	 }
+	
 	//public static JsonNode
 	
 	

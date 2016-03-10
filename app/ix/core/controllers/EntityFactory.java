@@ -1019,7 +1019,11 @@ public class EntityFactory extends Controller {
             
             T inst = mapper.treeToValue(node, type);
             
-            ValidationResponse vr=validator.validate(inst);
+            FetchedValue oldValueContainer=getCurrentValue(inst);
+            
+            
+            
+            ValidationResponse<T> vr=validator.validate(inst,(T)oldValueContainer.value);
             
             if(rept==RESPONSE_TYPE.FULL){
             	return ok(validationResponse(vr,true));

@@ -147,23 +147,45 @@ public class EditingWorkflowTest {
                    	
                    	String uuid=entered.get("uuid").asText();     
                    	
-                   	System.out.println("This should fail first");
                    	ts.submitSubstanceFail(entered);
                    	
                    	JsonNode updated=new JsonUtil
                    			.JsonNodeBuilder(entered)
                    			.add("/access/-", "testGROUP")
                    			.build();
-                   	System.out.println("This should work");
                    	updated=ts.submitSubstanceJSON(updated);
                    	
                    	updated=new JsonUtil
                    			.JsonNodeBuilder(updated)
                    			.remove("/access/0")
                    			.build();
-                   	System.out.println("This should fail");
                    	ts.updateSubstanceFail(updated);
-                   	System.out.println("It did");
+                   	ts.loginFakeUser2();
+                   	ts.updateSubstanceJSON(updated);
+               }
+           });
+   	}
+    //Can't submit an preapproved substance via this mechanism
+    //Also, can't change an approvalID here, unless an admin
+    //TODO: add the admin part
+    @Test
+   	public void testSubmitPreApprovedRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= JsonUtil.parseJsonFile(resource);
+                   	ts.submitSubstanceFail(entered);
+                   	entered=SubstanceJsonUtil.toUnapproved(entered);
+                   	entered=ts.submitSubstanceJSON(entered);
+                   	ts.loginFakeUser2();
+                   	entered=ts.approveSubstanceJSON(entered.at("/uuid").asText());
+                   	entered=new JsonUtil
+                   			.JsonNodeBuilder(entered)
+                   			.remove("/approvalID")
+                   			.build();
+                   	ts.updateSubstanceFail(entered);
+                   	
+                   	
                }
            });
    	}
@@ -678,11 +700,7 @@ public class EditingWorkflowTest {
 		return parseJsonFile(new File(path));
 	}
     public JsonNode parseJsonFile(File resource){
-    	try(InputStream is=new FileInputStream(resource)){
-        	return new ObjectMapper().readTree(is);
-    	}catch(Throwable t){
-    		throw new RuntimeException(t);
-    	}
+    	return SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
     }
     public void testLogin(){
     	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
