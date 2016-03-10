@@ -34,6 +34,7 @@ import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Global;
 import play.Logger;
 import play.Play;
@@ -232,6 +233,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result getUUID (String context, String uuid, String expand) {
         try {
             Method m = getMethod (context, "get", UUID.class, String.class);
@@ -261,6 +263,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result editsUUID (String context, String id) {
         try {
             Method m = getMethod (context, "edits", UUID.class);
@@ -275,7 +278,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
-    @Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approveUUID (String context, String id) {
     	try {
             Method m = getMethod (context, "approve", UUID.class);
@@ -342,7 +345,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    @Dynamic(value = "canRegister", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result create (String context) {
         try {
@@ -357,7 +360,8 @@ public class RouteFactory extends Controller {
         Logger.warn("Context {} has no method create()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
-    
+
+    @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result validate (String context) {
         try {
@@ -373,6 +377,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result update (String context, Long id, String field) {
         try {
@@ -388,7 +393,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateEntity (String context) {
         try {
@@ -404,7 +409,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateUUID (String context, String id, String field) {
         try {
@@ -488,7 +493,7 @@ public class RouteFactory extends Controller {
     }
     
     
-    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    //@Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result addFakeUsers(){
     	if(Play.isTest()){
     		List<UserProfile> ups = new ArrayList<UserProfile>();

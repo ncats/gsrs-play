@@ -65,6 +65,7 @@ public class GinasFactory extends EntityFactory {
             return null;
         }
 
+        @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result sequence(String id) {
                 return ok(ix.ginas.views.html.sequence.render(id));
         }
@@ -73,11 +74,17 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.structuresearch.render());
         }
 
+       @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	    public static Result report() {
+                return ok(ix.ginas.views.html.report.render());
+        }
+        @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result wizard(String kind) {
                 Logger.info(kind);
                 return ok(ix.ginas.views.html.wizard.render(kind,"{}"));
         }
 
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result edit(String substanceId) {
                 List<Substance> substances = GinasApp.resolve(SubstanceFactory.finder,
                                 substanceId);
@@ -95,7 +102,7 @@ public class GinasFactory extends EntityFactory {
                 }
         }
         
-        @Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+        @Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result approve(String substanceId) {
                 List<Substance> substances = SubstanceFactory.resolve(
                                 substanceId);
@@ -117,7 +124,7 @@ public class GinasFactory extends EntityFactory {
                 return finder.where().eq("username", user).findUnique();
         }
 
-        public static Principal registerIfAbsent(String user) {
+         public static Principal registerIfAbsent(String user) {
                 Principal p = byUsername(user);
                 if (p == null) {
                         p = new Principal();

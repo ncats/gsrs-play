@@ -18,12 +18,12 @@ import java.util.Map;
 
 
 public class IxDynamicResourceHandler implements DynamicResourceHandler {
-    public static final String CAN_UPDATE = "canUpdate";
-    public static final String CAN_REGISTER = "canRegister";
     public static final String CAN_APPROVE = "canApprove";
+    public static final String CAN_REGISTER = "canRegister";
+    public static final String CAN_UPDATE = "canUpdate";
+    public static final String CAN_SEARCH = "canSearch";
     public static final String IS_ADMIN = "isAdmin";
-    
-	private static Map<String, DynamicResourceHandler> HANDLERS;
+    private static Map<String, DynamicResourceHandler> HANDLERS;
 
     static {
        init();
@@ -66,6 +66,18 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                         Role.Updater,
                         Role.SuperUpdate
                 ));
+        HANDLERS.put(CAN_SEARCH,  new AbstractDynamicResourceHandler() {
+            public boolean isAllowed(final String name,
+                                     final String meta,
+                                     final DeadboltHandler deadboltHandler,
+                                     final Http.Context ctx){
+
+                return true;
+            }
+
+        });
+
+
     }
     
     public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{

@@ -25,6 +25,7 @@ import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Util;
 import ix.core.ValidationMessage;
 import ix.core.adapters.EntityPersistAdapter;
@@ -118,6 +119,7 @@ public class GinasLoad extends App {
 		}
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result load() {
 		if (!ALLOW_LOAD) {
 			return redirect(ix.ginas.controllers.routes.GinasFactory.index());
@@ -125,6 +127,7 @@ public class GinasLoad extends App {
 		return ok(ix.ginas.views.html.admin.load.render());
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadJSON() {
 		if (!ALLOW_LOAD) {
 			return badRequest("Invalid request!");
@@ -165,7 +168,9 @@ public class GinasLoad extends App {
 		}
 
 	}
-	
+
+
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result uploadFile() {
 		DynamicForm requestData = Form.form().bindFromRequest();
 		String type = requestData.get("file-type");
@@ -189,7 +194,7 @@ public class GinasLoad extends App {
 		}
 	}
 
-
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadSDF(String payloadUUID) {
 		Payload sdpayload = PayloadFactory.getPayload(UUID
 				.fromString(payloadUUID));
@@ -242,6 +247,7 @@ public class GinasLoad extends App {
 		return monitorProcess(ProcessingJobFactory.getJob(jobID));
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result monitorProcess(String processID) {
 		
 			String msg = "";
@@ -256,6 +262,7 @@ public class GinasLoad extends App {
 		
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result jobs(final String q, final int rows, final int page)
 			throws Exception {
 		final int total = Math.max(ProcessingJobFactory.getCount(), 1);
@@ -313,10 +320,12 @@ public class GinasLoad extends App {
 
 	}
 
-	public static Result testSubmit() {
+	//THIS METHOD WAS NEVER BEEN CALLED -3/9/16
+	/*public static Result testSubmit() {
 		return ok(ix.ginas.views.html.test.testsubmit.render());
-	}
+	}*/
 
+	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result validateSubstance() {
 		String mappingsjson = extractSubstanceJSON();
 		Substance sub = null;
@@ -343,6 +352,7 @@ public class GinasLoad extends App {
 		return ok(om.valueToTree(messages));
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result validateChemicalDuplicates() {
 		String mappingsjson = extractSubstanceJSON();
 		Substance sub = null;
@@ -383,6 +393,7 @@ public class GinasLoad extends App {
 		return ok(om.valueToTree(messages));
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result submitSubstance() {
 		String mappingsjson = extractSubstanceJSON();
 
