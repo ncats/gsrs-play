@@ -806,7 +806,7 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
-                    url = baseurl + "render/" + attrs.smiles;
+                    url = baseurl + "render?structure=" + attrs.smiles +"&size={{size||150}}";
                 }
                 var template = angular.element('<img ng-src=' + url + ' alt = "rendered image">');
                 element.append(template);
@@ -1077,9 +1077,6 @@
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if(scope.field) {
-                            console.log(scope);
-                            console.log(scope.field);
-                            console.log(siteList.siteString(scope.referenceobj[scope.field]));
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
                             scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
@@ -1138,6 +1135,7 @@
                 scope.bridged = false;
                 var aa = scope.acid;
                 var template;
+                console.log(aa);
                 if (aa.valid == false) {
                     template = angular.element('<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>');
                     element.html(template).show();
@@ -1309,7 +1307,10 @@
                         obj.value = aa;
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
-                            obj.name = temp.display;
+                            obj=_.pickBy(temp, _.isString);
+                            console.log(obj);
+                            obj.value = aa;
+                            //obj.name = temp.display;
                             obj.valid = true;
                             if (scope.obj.subunitIndex) {
                                 obj.subunitIndex = scope.obj.subunitIndex;
