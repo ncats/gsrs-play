@@ -806,7 +806,7 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
-                    url = baseurl + "render/" + attrs.smiles;
+                    url = baseurl + "render?structure=" + attrs.smiles +"&size={{size||150}}";
                 }
                 var template = angular.element('<img ng-src=' + url + ' alt = "rendered image">');
                 element.append(template);
