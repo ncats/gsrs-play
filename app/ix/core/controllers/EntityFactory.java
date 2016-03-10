@@ -93,8 +93,12 @@ public class EntityFactory extends Controller {
     static final Model.Finder<Long, Principal> _principalFinder = 
         new Model.Finder(Long.class, Principal.class);
 
-    static final TextIndexer _textIndexer =
+    static TextIndexer _textIndexer =
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    
+    public static void init(){
+    	_textIndexer = Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    }
 
     public static class FetchOptions {
         public int top=10;

@@ -119,6 +119,7 @@ public class JsonUtil {
 
     public static class JsonNodeBuilder{
     	final JsonNode oldJson;
+    	private boolean ignoreMissing=false;
     	public static class JsonChange{
     		public String op;
     		public String path;
@@ -164,6 +165,11 @@ public class JsonUtil {
     		this.oldJson=jt.deepCopy();
     	}
     	
+    	public JsonNodeBuilder ignoreMissing(){
+    		ignoreMissing=true;
+    		return this;
+    	}
+    	
     	public JsonNodeBuilder set(String path, String value){
     		try{
 	    		if(oldJson.at(path).isNull()){
@@ -193,9 +199,19 @@ public class JsonUtil {
     		return this;
     	}
     	public JsonNode build(){
+    		if(this.ignoreMissing){
+    			for(int i=changes.size()-1;i>=0;i--){
+    				String path=changes.get(i).path;
+	    			JsonNode has=oldJson.at(path);
+	    			if(has==null || has.isNull() || has.isMissingNode()){
+	    				changes.remove(i);
+	    			}
+    			}
+    		}
     		try {
     			//System.out.println("There are these changes, which will be turned into a patch:" + changes.size());
     			JsonPatch jp=JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes));
+    			
     			//System.out.println("THE PATCH:" + jp);
 				return jp.apply(oldJson);
 			} catch (JsonPatchException | IOException e) {

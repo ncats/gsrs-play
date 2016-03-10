@@ -236,6 +236,41 @@ public class EditingWorkflowTest {
    	}
     
     @Test
+   	public void testFacetUpdateRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
+                   	
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	int oldProteinCount=getFacetCountFor("Substance Class","protein");
+                   	assertEquals(1,oldProteinCount);
+                   	renameServer(uuid);
+                   	int newProteinCount=getFacetCountFor("Substance Class","protein");
+                   	assertEquals(1,newProteinCount);
+                   	
+               }
+           });
+   	}
+    
+    public int getFacetCountFor(String face, String label){
+    	JsonNode jsn=ts.fetchSubstancesSearchJSON();
+       	JsonNode facets=jsn.at("/facets");
+       	for(JsonNode facet:facets){
+       		String name=facet.at("/name").asText();
+       		if("Substance Class".equals(name)){
+       			for(JsonNode val:facet.at("/values")){
+       				if("protein".equals(val.at("/label").asText())){
+       					return val.at("/count").asInt();
+       				}
+       			}
+       		}
+       	}
+       	return 0;
+    }
+    
+    @Test
    	public void testChangeDisuflideProteinRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {

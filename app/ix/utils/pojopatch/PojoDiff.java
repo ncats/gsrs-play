@@ -501,7 +501,7 @@ public class PojoDiff {
 			if(o instanceof Collection){
 				int c=-1;
 				if(prop.equals("-")){
-					System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
+					//System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
 					c=((Collection)o).size()-1;
 					//throw new IllegalStateException("'-'  not yet implemented");
 				}else{
@@ -585,7 +585,7 @@ public class PojoDiff {
 						
 					};
 				}else{
-					System.err.println("Setters for non-list collections are experimental");
+					//System.err.println("Setters for non-list collections are experimental");
 					final Object old=col.toArray()[c];
 					return new TypeRegistry.Setter(){
 
@@ -646,7 +646,7 @@ public class PojoDiff {
 						
 					};
 				}else{
-					System.err.println("Setters for non-list collections are experimental");
+					//System.err.println("Setters for non-list collections are experimental");
 					//final Object old=col.toArray()[c];
 					return new TypeRegistry.Setter(){
 
