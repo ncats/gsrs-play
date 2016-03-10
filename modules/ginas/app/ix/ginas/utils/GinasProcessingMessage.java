@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import play.Logger;
+import ix.core.ValidationMessage.MESSAGE_TYPE;
 
 public class GinasProcessingMessage implements ValidationMessage{
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
