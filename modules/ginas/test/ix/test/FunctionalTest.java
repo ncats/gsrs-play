@@ -8,7 +8,6 @@ import static play.test.Helpers.fakeRequest;
 import static play.test.Helpers.route;
 import static play.test.Helpers.status;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -60,7 +59,6 @@ public class FunctionalTest extends WithApplication {
     public void testRouteLogin() {
     	 ts.run(new GinasTestServer.ServerWorker() {
              public void doWork() throws Exception {
-            	 ts.loginFakeUser1();
             	 FakeRequest request = new FakeRequest("GET", "/ginas/app/login");
                  Result result = route(request);
                  assertThat(status(result)).isEqualTo(OK);
@@ -70,35 +68,26 @@ public class FunctionalTest extends WithApplication {
             });
     }
 
-    @Ignore("waiting on login rewrite")
     @Test
     public void testRouteChemicalWizard() {
     	 ts.run(new GinasTestServer.ServerWorker() {
              public void doWork() throws Exception {
             	 ts.loginFakeUser1();
-            	 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=chemical");
-                 Result result = route(request);
-                 String content = contentAsString(result);
-                 assertThat(status(result)).isEqualTo(OK);
-                 assertThat(contentType(result)).isEqualTo("text/html");
+            	 String content = ts.urlString("http://localhost:9001/ginas/app/wizard?kind=chemical");
+             	 
                  assertThat(content).contains("Structure");
                  assertThat(content).contains("moiety-form");
                  testCommonWizardElements(content);
                 }
             });
     }
-    @Ignore("waiting on login rewrite")
     @Test
     public void testRouteProteinWizard() {
     	ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
             	 ts.loginFakeUser1();
-            	 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=protein");
-                 Result result = route(request);
-                 String content = contentAsString(result);
-                 assertThat(status(result)).isEqualTo(OK);
-                 assertThat(contentType(result)).isEqualTo("text/html");
-                 assertThat(content).contains("other-links-form");
+            	 String content = ts.urlString("http://localhost:9001/ginas/app/wizard?kind=protein");
+             	 assertThat(content).contains("other-links-form");
                  assertThat(content).contains("protein-details-form");
                  assertThat(content).contains("subunit-form");
                  assertThat(content).contains("disulfide-link-form");
@@ -110,17 +99,14 @@ public class FunctionalTest extends WithApplication {
                }
            });
     }
-    @Ignore("waiting on login rewrite")
+    
     @Test
     public void testRouteStructurallyDiverseWizard(){
     	ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
             	ts.loginFakeUser1();
-            	FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=structurallyDiverse");
-                Result result = route(request);
-                String content = contentAsString(result);
-                assertThat(status(result)).isEqualTo(OK);
-                assertThat(contentType(result)).isEqualTo("text/html");
+            	
+            	String content = ts.urlString("http://localhost:9001/ginas/app/wizard?kind=structurallyDiverse");
                 assertThat(content).contains("diverse-type-form");
                 assertThat(content).contains("diverse-source-form");
                 assertThat(content).contains("diverse-organism-form");
@@ -132,18 +118,14 @@ public class FunctionalTest extends WithApplication {
            });
     }
 
-    @Ignore("waiting on login rewrite")
+    //@Ignore("waiting on login rewrite")
     @Test
     public void testRoutePolymerWizard(){
     	ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
             	ts.loginFakeUser1();
-            	FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=polymer");
-                Result result = route(request);
-                String content = contentAsString(result);
-                assertThat(status(result)).isEqualTo(OK);
-                assertThat(contentType(result)).isEqualTo("text/html");
-                assertThat(content).contains("polymer-classification-form");
+            	String content = ts.urlString("http://localhost:9001/ginas/app/wizard?kind=polymer");
+            	assertThat(content).contains("polymer-classification-form");
                 assertThat(content).contains("polymer-monomer-form");
                 assertThat(content).contains("polymer-sru-form");
                 //assertThat(content).contains("Structural Units");
@@ -151,17 +133,12 @@ public class FunctionalTest extends WithApplication {
                }
            });
     }
-    @Ignore("waiting on login rewrite")
     @Test
     public void testRouteNucleicAcidWizard(){
     	ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
             	ts.loginFakeUser1();
-            	FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=nucleicAcid");
-                Result result = route(request);
-                String content = contentAsString(result);
-                assertThat(status(result)).isEqualTo(OK);
-                assertThat(contentType(result)).isEqualTo("text/html");
+            	String content = ts.urlString("http://localhost:9001/ginas/app/wizard?kind=nucleicAcid");
                 assertThat(content).contains("nucleic-acid-details-form");
                 assertThat(content).contains("subunit-form");
                 assertThat(content).contains("nucleic-acid-sugar-form");
@@ -171,17 +148,13 @@ public class FunctionalTest extends WithApplication {
            });
     }
 
-    @Ignore("waiting on login rewrite")
     @Test
     public void testRouteConceptWizard() {
     	ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
             	ts.loginFakeUser1();
-            	FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=concept");
-                Result result = route(request);
-                String content = contentAsString(result);
-                assertThat(status(result)).isEqualTo(OK);
-                assertThat(contentType(result)).isEqualTo("text/html");
+            	String content = ts.urlString("http://localhost:9001/ginas/app/wizard?kind=concept");
+                
                 testCommonWizardElements(content);
                }
            });
