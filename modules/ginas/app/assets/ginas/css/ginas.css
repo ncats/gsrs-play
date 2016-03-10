@@ -1057,3 +1057,9 @@ del{
 .diff{
     white-space: normal;
 }
+
+.tooltip.white .tooltip-inner {
+    background-color: white;
+    color:black;
+    font-weight: bold;
+}
