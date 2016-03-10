@@ -131,13 +131,15 @@
 
             updateCV: function(domainobj){
                 console.log(domainobj);
-                $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
+                var promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 }).success(function(data){
                     alert('update was performed.');
+                    return data;
                 });
+                return promise;
             },
 
             addCV: function(field, newcv){
