@@ -31,7 +31,7 @@
             <div class="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="nameOrgs"></delete-button>
+                  <a ng-click="deleteObj(obj, 'nameOrgs')" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="nameOrg" cv="NAME_ORG" label="Naming Organization"></dropdown-view-edit>

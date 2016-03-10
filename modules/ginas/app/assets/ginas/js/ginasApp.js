@@ -544,27 +544,23 @@
         };
 
 		$scope.dismiss = function (err){
-			/*
 			//can't dismiss errors
-			if(err.messageType!=="ERROR"){
+			//if(err.messageType!=="ERROR"){
 				_.pull($scope.errorsArray,err);
-			}
-			*/
+		//	}
 			$scope.canSubmit=$scope.noErrors();
 		};
 		$scope.canSubmit=false;
 		$scope.noErrors = function (){
-		/*
-			 for (var i=0;i<$scope.errorsArray.length;i++) {
-			 	var err=$scope.errorsArray[i];
-			 	if(err.messageType==="ERROR"){
-			 		return false;
-			 	}
-			 }
-			 return true;
-			 */
-			 return ($scope.errorsArray.length<=0);
-		}
+            var errs = _.filter($scope.errorsArray, function(err){
+                if(err.messageType==="ERROR"){
+                    return err;
+                }
+            });
+            console.log(errs);
+			 return (errs.length<=0);
+		};
+
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
 
@@ -826,7 +822,6 @@
                 ctx: '@'
             },
             link: function (scope, element, attrs) {
-                console.log(scope.size);
                 var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
                 if (!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
@@ -1839,7 +1834,10 @@
             template: '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 scope.deleteObj = function () {
+                    console.log(scope);
                     if (scope.parent) {
+                        console.log(scope.parent);
+                        console.log(attrs.path);
                         var arr = _.get(scope.parent, attrs.path);
                         arr.splice(arr.indexOf(scope.obj), 1);
                     } else {
