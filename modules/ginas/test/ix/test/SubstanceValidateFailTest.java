@@ -74,6 +74,7 @@ public class SubstanceValidateFailTest extends WithApplication {
             public void doWork() throws Exception {
 
                 try (InputStream is = new FileInputStream(resource)) {
+                    ts.loginFakeUser1();
                     JsonNode js = new ObjectMapper().readTree(is);
                     Logger.info("Running: " + resource);
                     WSResponse wsResponse1 = ts.validateSubstance(js);
@@ -81,8 +82,7 @@ public class SubstanceValidateFailTest extends WithApplication {
                     assertEquals(OK, wsResponse1.getStatus());
                     assertFalse(jsonNode1.isNull());
                     assertFalse(jsonNode1.get("valid").asBoolean());
-
-
+                    ts.logout();
                 }
             }
 
