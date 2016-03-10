@@ -57,65 +57,50 @@ public class SubstanceSubmitTest {
         }
 
         @Test
-        public void testAPIValidateSubstance() {
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                       session.withTokenAuth();
-                        try (InputStream is = new FileInputStream(resource)) {
-                            JsonNode js = new ObjectMapper().readTree(is);
-                            JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                            assertTrue(jsonNode1.get("valid").asBoolean());
+        public void testAPIValidateSubstance() throws Exception {
+            try(GinasTestServer.UserSession session = ts.loginFakeUser1();
+                InputStream is = new FileInputStream(resource)) {
+               session.withTokenAuth();
 
-                        }
-                    }
-                }
-            });
+                JsonNode js = new ObjectMapper().readTree(is);
+                JsonNode jsonNode1 = session.validateSubstanceJSON(js);
+                assertTrue(jsonNode1.get("valid").asBoolean());
+
+
+            }
         }
         @Test
-        public void testAPIValidateSubmitSubstance() {
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+        public void testAPIValidateSubmitSubstance()  throws Exception {
+            try(GinasTestServer.UserSession session = ts.loginFakeUser1();
+                InputStream is = new FileInputStream(resource)) {
+                session.withTokenAuth();
+
+                JsonNode js = new ObjectMapper().readTree(is);
+                JsonNode jsonNode1 = session.validateSubstanceJSON(js);
+                assertTrue(jsonNode1.get("valid").asBoolean());
+                JsonNode jsonNode2 = session.submitSubstanceJSON(js);
+
+            }
+        }
+        @Test
+        public void testAPIValidateSubmitFetchSubstance()   throws Exception {
+                    try(GinasTestServer.UserSession session = ts.loginFakeUser1();
+                        InputStream is = new FileInputStream(resource)) {
                         session.withTokenAuth();
-                        try (InputStream is = new FileInputStream(resource)) {
-                            JsonNode js = new ObjectMapper().readTree(is);
-                            JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                            assertTrue(jsonNode1.get("valid").asBoolean());
-                            JsonNode jsonNode2 = session.submitSubstanceJSON(js);
-                        }
+
+                        JsonNode js = new ObjectMapper().readTree(is);
+                        String uuid = js.get("uuid").asText();
+                        JsonNode jsonNode1 = session.validateSubstanceJSON(js);
+                        assertTrue(jsonNode1.get("valid").asBoolean());
+                        JsonNode jsonNode2 = session.submitSubstanceJSON(js);
+                        JsonNode jsonNode3 = session.fetchSubstanceJSON(uuid);
+                        assertFalse(jsonNode3.isNull());
+                        assertThatNonDestructive(js, jsonNode3);
+
                     }
-                }
-            });
         }
         @Test
-        public void testAPIValidateSubmitFetchSubstance() {
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                        session.withTokenAuth();
-                        try (InputStream is = new FileInputStream(resource)) {
-                            JsonNode js = new ObjectMapper().readTree(is);
-                            String uuid = js.get("uuid").asText();
-                            JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                            assertTrue(jsonNode1.get("valid").asBoolean());
-                            JsonNode jsonNode2 = session.submitSubstanceJSON(js);
-                            JsonNode jsonNode3 = session.fetchSubstanceJSON(uuid);
-                            assertFalse(jsonNode3.isNull());
-                            assertThatNonDestructive(js, jsonNode3);
-                        }
-                    }
-                }
-            });
-        }
-        @Test
-        public void testAPIValidateSubmitFetchValidateSubstance() {
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
+        public void testAPIValidateSubmitFetchValidateSubstance()  throws Exception {
                     try(GinasTestServer.UserSession session = ts.loginFakeUser1();
                         InputStream is=new FileInputStream(resource)) {
 
@@ -141,8 +126,7 @@ public class SubstanceSubmitTest {
                         JsonNode jsonNode4 = session.validateSubstanceJSON(jsonNode3);
                         assertTrue(jsonNode4.get("valid").asBoolean());
                     }
-                }
-            });
+
 
 
         }

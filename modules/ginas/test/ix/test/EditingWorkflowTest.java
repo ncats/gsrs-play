@@ -52,296 +52,221 @@ public class EditingWorkflowTest {
     
        
     @Test
-   	public void testFailUpdateNoUserProtein() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                   	GinasTestServer.UserSession session = ts.loginFakeUser1();
-                   	JsonNode entered= parseJsonFile(resource);
-                   	session.submitSubstanceJSON(entered);
+   	public void testFailUpdateNoUserProtein() throws Exception {
+        GinasTestServer.UserSession session = ts.loginFakeUser1();
+        JsonNode entered= parseJsonFile(resource);
+        session.submitSubstanceJSON(entered);
 
-                    session.logout();
+        session.logout();
 
-                   	String uuid=entered.get("uuid").asText();              	
-                   	
-                   	ts.fetchSubstance(uuid);
-                   	session.updateSubstanceFail(entered);
+        String uuid=entered.get("uuid").asText();
 
-               }
-           });
+        ts.getNotLoggedInSession().fetchSubstance(uuid);
+        session.updateSubstanceFail(entered);
    	}
     
     @Test
-   	public void testSubmitProtein() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                   	try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                        JsonNode entered = parseJsonFile(resource);
-                        session.submitSubstance(entered);
-                    }
-
-               }
-           });
+   	public void testSubmitProtein() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            session.submitSubstance(entered);
+        }
    	}
     
     
     @Test
-   	public void testChangeProteinLocal() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
-                    session.submitSubstance(entered);
-                    renameLocal(session, uuid);
-                }
-
-               }
-           });
+   	public void testChangeProteinLocal() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+            session.submitSubstance(entered);
+            renameLocal(session, uuid);
+        }
    	}
     
     @Test
-   	public void testUnicodeProblem() {
-    	final File resource=new File("test/testJSON/racemic-unicode.json");
-    	
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
-                    session.submitSubstance(entered);
-                    JsonNode fetched = session.fetchSubstanceJSON(uuid);
-                    String lookingfor = "(±)-1-CHLORO-2,3-EPOXYPROPANE";
+   	public void testUnicodeProblem() throws Exception {
+        final File resource=new File("test/testJSON/racemic-unicode.json");
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+            session.submitSubstance(entered);
+            JsonNode fetched = session.fetchSubstanceJSON(uuid);
+            String lookingfor = "(±)-1-CHLORO-2,3-EPOXYPROPANE";
 
-                    Set<String> names = new HashSet<String>();
+            Set<String> names = new HashSet<String>();
 
-                    for (JsonNode name : fetched.at("/names")) {
-                        //System.out.println("The name:" + name.at("/name"));
-                        names.add(name.at("/name").asText());
-                    }
-                    assertTrue("Special unicode names should still be found after round trip", names.contains(lookingfor));
-                }
-               }
-           });
+            for (JsonNode name : fetched.at("/names")) {
+                //System.out.println("The name:" + name.at("/name"));
+                names.add(name.at("/name").asText());
+            }
+            assertTrue("Special unicode names should still be found after round trip", names.contains(lookingfor));
+        }
    	}
     
 
     
     
     @Test
-   	public void testChangeProteinRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
-                    session.submitSubstance(entered);
-                    renameLocal(session, uuid);
-                    JsonNode edited = renameServer(session, uuid);
-                }
-               }
-           });
+   	public void testChangeProteinRemote() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+            session.submitSubstance(entered);
+            renameLocal(session, uuid);
+            JsonNode edited = renameServer(session, uuid);
+        }
    	}
     
     @Test
-   	public void testAddNameRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
-                    session.submitSubstance(entered);
-                    addNameServer(session, uuid);
-                }
-                   	//JsonNode edited=testRenameServer(uuid);
-               }
-           });
+   	public void testAddNameRemote() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+            session.submitSubstance(entered);
+            addNameServer(session, uuid);
+        }
    	}
     @Test
-   	public void testAddRemoveNameRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
-                    session.submitSubstance(entered);
-                    addNameServer(session, uuid);
-                    removeNameServer(session, uuid);
-                }
-               }
-           });
+   	public void testAddRemoveNameRemote()  throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+            session.submitSubstance(entered);
+            addNameServer(session, uuid);
+            removeNameServer(session, uuid);
+        }
    	}
     
     @Test
-   	public void testChangeHistoryProteinRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+   	public void testChangeHistoryProteinRemote() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    renameLocal(session, uuid);
-                    JsonNode edited = renameServer(session, uuid);
-                    mostRecentEditHistory(session, uuid, edited);
-                }
-
-               }
-           });
+            session.submitSubstance(entered);
+            renameLocal(session, uuid);
+            JsonNode edited = renameServer(session, uuid);
+            mostRecentEditHistory(session, uuid, edited);
+        }
    	}
     
     @Test
-   	public void testChangeDisuflideProteinRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+   	public void testChangeDisuflideProteinRemote() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    renameLocal(session, uuid);
-                    JsonNode edited = renameServer(session, uuid);
-                    mostRecentEditHistory(session, uuid, edited);
-                    edited = removeLastDisulfide(session, uuid);
-                }
-
-               }
-           });
+            session.submitSubstance(entered);
+            renameLocal(session, uuid);
+            JsonNode edited = renameServer(session, uuid);
+            mostRecentEditHistory(session, uuid, edited);
+            edited = removeLastDisulfide(session, uuid);
+        }
    	}
     
     
     @Test
-   	public void testChangeDisuflideProteinHistoryRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+   	public void testChangeDisuflideProteinHistoryRemote() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    renameLocal(session, uuid);
-                    JsonNode edited = renameServer(session, uuid);
-                    mostRecentEditHistory(session, uuid, edited);
-                    edited = removeLastDisulfide(session, uuid);
-                    mostRecentEditHistory(session, uuid, edited);
-                }
-               }
-           });
+            session.submitSubstance(entered);
+            renameLocal(session, uuid);
+            JsonNode edited = renameServer(session, uuid);
+            mostRecentEditHistory(session, uuid, edited);
+            edited = removeLastDisulfide(session, uuid);
+            mostRecentEditHistory(session, uuid, edited);
+        }
    	}
     
     //@Ignore("This test will fail, because we can't completely empty an array")
     @Test
-   	public void testRemoveAllDisuflidesProtein() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+   	public void testRemoveAllDisuflidesProtein() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    iterativeRemovalOfDisulfides(session, uuid);
-                }
-               }
-           });
+            session.submitSubstance(entered);
+            iterativeRemovalOfDisulfides(session, uuid);
+        }
    	}
     
     //@Ignore("This test will fail, because there is a non-trivial mapping from the JSON to the old substance record. The recursive strategy can't discover the right properties")
     @Test
-   	public void testAddAccessGroupToExistingProtein() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+   	public void testAddAccessGroupToExistingProtein() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
-                    JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                    String uuid = entered.get("uuid").asText();
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    testAddAccessGroupServer(session, uuid);
-                }
-               }
-           });
+            session.submitSubstance(entered);
+            testAddAccessGroupServer(session, uuid);
+        }
    	}
     
     @Test
-   	public void testAddReferenceToExistingProtein() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-               public void doWork() throws Exception {
-                   try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+   	public void testAddReferenceToExistingProtein() throws Exception {
+           try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
-                       JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                       String uuid = entered.get("uuid").asText();
+               JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+               String uuid = entered.get("uuid").asText();
 
-                       session.submitSubstance(entered);
-                       testAddReferenceNameServer(session, uuid);
-                   }
-               }
-           });
+               session.submitSubstance(entered);
+               testAddReferenceNameServer(session, uuid);
+           }
    	}
     
     //This test, however, passes. It also checks for the new access group
     @Test
-   	public void testAddAccessGroupToNewProtein() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                    String uuid = entered.get("uuid").asText();
-                    addAccessGroupThenRegister(session, entered);
-                }
-               }
-           });
+   	public void testAddAccessGroupToNewProtein() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            String uuid = entered.get("uuid").asText();
+            addAccessGroupThenRegister(session, entered);
+        }
+
    	}
     
    //This test makes sure that double submitting a substance fails
     @Test
-   	public void testFailDoubleSubmission() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                    String uuid = entered.get("uuid").asText();
+   	public void testFailDoubleSubmission() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    session.submitSubstanceFail(entered);
-                }
-
-               }
-           });
+            session.submitSubstance(entered);
+            session.submitSubstanceFail(entered);
+        }
    	}
     
     //This test makes sure that looking up a substance before registering it fails
     @Test
-   	public void testFailInvalidLookup() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                    String uuid = entered.get("uuid").asText();
-                    session.fetchSubstanceFail(uuid);
-                }
+   	public void testFailInvalidLookup() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            String uuid = entered.get("uuid").asText();
+            session.fetchSubstanceFail(uuid);
+        }
 
-               }
-           });
    	}
     
    //This test makes sure that updating a substance before registering it fails
     //@Ignore("I believe this fails now, because the PUT method allows for non-existent substances. It shouldn't")
     @Test
-   	public void testFailUpdateNewSubstance() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                    String uuid = entered.get("uuid").asText();
-                    session.updateSubstanceFail(entered);
-                    session.fetchSubstanceFail(uuid);
-                }
+   	public void testFailUpdateNewSubstance() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            String uuid = entered.get("uuid").asText();
+            session.updateSubstanceFail(entered);
+            session.fetchSubstanceFail(uuid);
+        }
 
-               }
-           });
    	}
     
     
@@ -349,87 +274,76 @@ public class EditingWorkflowTest {
     
     
     @Test
-   	public void testHistoryViews() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
-                    String uuid = entered.get("uuid").asText();
+   	public void testHistoryViews() throws Exception{
 
-                    session.submitSubstance(entered);
-                    JsonNode edited = renameServer(session, uuid);
-                    mostRecentEditHistory(session, uuid, edited);
-                    retrieveHistoryView(session, uuid, 1);
-                }
 
-               }
-           });
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            String uuid = entered.get("uuid").asText();
+
+            session.submitSubstance(entered);
+            JsonNode edited = renameServer(session, uuid);
+            mostRecentEditHistory(session, uuid, edited);
+            retrieveHistoryView(session, uuid, 1);
+        }
    	}
 
     @Test
-    public void revertChangeShouldMakeNewVersionWithOldValues() {
-        ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
+    public void revertChangeShouldMakeNewVersionWithOldValues() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
-                    String newName = "foo";
-                    JsonNode oldNode = renameServer(session, uuid, newName);
+            session.submitSubstance(entered);
+            String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+            String newName = "foo";
+            JsonNode oldNode = renameServer(session, uuid, newName);
 
-                    mostRecentEditHistory(session, uuid, oldNode);
+            mostRecentEditHistory(session, uuid, oldNode);
 
-                    assertEquals(newName, session.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
+            assertEquals(newName, session.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
 
-                    renameServer(session, uuid, oldName);
-                    assertEquals(oldName, session.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
+            renameServer(session, uuid, oldName);
+            assertEquals(oldName, session.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
 
-                    JsonNode originalNode = session.fetchSubstanceJSON(uuid, 1).getOldValue();
+            JsonNode originalNode = session.fetchSubstanceJSON(uuid, 1).getOldValue();
 
-                    JsonNode v2Node = session.fetchSubstanceJSON(uuid, 2).getOldValue();
+            JsonNode v2Node = session.fetchSubstanceJSON(uuid, 2).getOldValue();
 
-                    assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());
-                    assertEquals("v2 name", newName, v2Node.at("/names/0/name").asText());
+            assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());
+            assertEquals("v2 name", newName, v2Node.at("/names/0/name").asText());
 
-                    JsonNode currentNode = session.fetchSubstanceJSON(uuid);
-                    assertEquals("current name", oldName, currentNode.at("/names/0/name").asText());
+            JsonNode currentNode = session.fetchSubstanceJSON(uuid);
+            assertEquals("current name", oldName, currentNode.at("/names/0/name").asText());
 
-                }
-
-            }
-        });
+        }
     }
 
     @Test
-    public void historyNewValueShouldBeOldValueOfNextVersion() {
-        ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                    JsonNode entered = parseJsonFile(resource);
-                    String uuid = entered.get("uuid").asText();
+    public void historyNewValueShouldBeOldValueOfNextVersion() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
 
-                    session.submitSubstance(entered);
-                    String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
-                    String newName = "foo";
-                    JsonNode oldNode = renameServer(session, uuid, newName);
+            session.submitSubstance(entered);
+            String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+            String newName = "foo";
+            JsonNode oldNode = renameServer(session, uuid, newName);
 
 
-                    GinasTestServer.JsonHistoryResult jsonHistoryResult = session.fetchSubstanceJSON(uuid, 1);
-                    JsonNode originalNode = jsonHistoryResult.getNewValue();
+            GinasTestServer.JsonHistoryResult jsonHistoryResult = session.fetchSubstanceJSON(uuid, 1);
+            JsonNode originalNode = jsonHistoryResult.getNewValue();
 
-                    assertEquals("v1 new value", jsonHistoryResult.getNewValue(), session.fetchSubstanceJSON(uuid));
-                    renameServer(session, uuid, oldName);
+            assertEquals("v1 new value", jsonHistoryResult.getNewValue(), session.fetchSubstanceJSON(uuid));
+            renameServer(session, uuid, oldName);
 
 
-                    JsonNode v2Node = ts.fetchSubstanceJSON(uuid, 2).getOldValue();
+            JsonNode v2Node = session.fetchSubstanceJSON(uuid, 2).getOldValue();
 
-                    assertEquals("v2", originalNode, v2Node);
-                }
+            assertEquals("v2", originalNode, v2Node);
+        }
 
-            }
-        });
+
     }
 
     public void retrieveHistoryView(GinasTestServer.UserSession session, String uuid, int version){
@@ -490,14 +404,14 @@ public class EditingWorkflowTest {
     public void mostRecentEditHistory(GinasTestServer.UserSession session, String uuid, JsonNode oldRecordExpected){
     		JsonNode newRecordFetched = session.fetchSubstanceJSON(uuid);
     		int oversion=Integer.parseInt(newRecordFetched.at("/version").textValue());
-    		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid,oversion-1);
+    		JsonNode edits = session.fetchSubstanceHistoryJSON(uuid,oversion-1);
 
         int changecount=0;
     		for(JsonNode edit: edits){
     			//Ok, I'm just going to look at the null-path edits
     			//there should be 1
-    			JsonNode oldv=ts.urlJSON(edit.get("oldValue").asText());
-    			JsonNode newv=ts.urlJSON(edit.get("newValue").asText());
+    			JsonNode oldv=session.urlJSON(edit.get("oldValue").asText());
+    			JsonNode newv=session.urlJSON(edit.get("newValue").asText());
     				
     			Changes changes = JsonUtil.computeChanges(newRecordFetched, newv);
 				Changes expectedChanges = new ChangesBuilder(newRecordFetched,newv)

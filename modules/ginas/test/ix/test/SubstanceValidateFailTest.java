@@ -68,25 +68,20 @@ public class SubstanceValidateFailTest extends WithApplication {
 
 
     @Test
-    public void testAPIValidateSubstance() {
-    	ts.run(new GinasTestServer.ServerWorker() {
-            @Override
-            public void doWork() throws Exception {
+    public void testAPIValidateSubstance() throws Exception {
 
-                try (InputStream is = new FileInputStream(resource)) {
-                    JsonNode js = new ObjectMapper().readTree(is);
-                    Logger.info("Running: " + resource);
-                    WSResponse wsResponse1 = ts.validateSubstance(js);
-                    JsonNode jsonNode1 = wsResponse1.asJson();
-                    assertEquals(OK, wsResponse1.getStatus());
-                    assertFalse(jsonNode1.isNull());
-                    assertFalse(jsonNode1.get("valid").asBoolean());
+        try (InputStream is = new FileInputStream(resource);
+            GinasTestServer.UserSession notLoggedInSession = ts.getNotLoggedInSession()) {
+            JsonNode js = new ObjectMapper().readTree(is);
+            Logger.info("Running: " + resource);
+            WSResponse wsResponse1 = notLoggedInSession.validateSubstance(js);
+            JsonNode jsonNode1 = wsResponse1.asJson();
+            assertEquals(OK, wsResponse1.getStatus());
+            assertFalse(jsonNode1.isNull());
+            assertFalse(jsonNode1.get("valid").asBoolean());
 
 
-                }
-            }
-
-        });
+        }
 
     }
     
