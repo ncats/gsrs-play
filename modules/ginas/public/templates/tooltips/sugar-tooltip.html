@@ -1,1 +1,6 @@
-<span>{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}}<br> ({{acid.type}}{{acid.name}})<br><span ng-if="acid.sugar">Sugar: {{acid.sugar.display}}</span><br><span ng-if="acid.linkage">Linkage: {{acid.linkage.display}}</span></span>
+<span>{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}}<br>
+    ({{acid.type}}{{acid.display}})<br>
+        <rendered smiles={{acid.simplifiedStructure}} size="200"></rendered>
+    <span ng-if="acid.sugar">Sugar: {{acid.sugar.display}}</span><br>
+    <span ng-if="acid.linkage">Linkage: {{acid.linkage.display}}</span>
+</span>
