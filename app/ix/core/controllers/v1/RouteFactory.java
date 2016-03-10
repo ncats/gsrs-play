@@ -493,7 +493,7 @@ public class RouteFactory extends Controller {
     }
     
     
-    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    //@Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result addFakeUsers(){
     	if(Play.isTest()){
     		List<UserProfile> ups = new ArrayList<UserProfile>();

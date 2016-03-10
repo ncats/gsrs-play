@@ -22,7 +22,7 @@ describe('User Access Control Tests', function () {
         browser.get("http://localhost:9000/ginas/app/register");
         var pageBody = element(by.tagName('body')).getText();
         pageBody.then(function(result) {
-            expect(result).toContain('Not Authorized');
+            expect(["Not Authorized", "No User Present"]).toContain(result);
         });
     });
 
@@ -42,6 +42,57 @@ describe('User Access Control Tests', function () {
         expect(paswd.getAttribute('value')).toEqual('abc');
         submitButton.click();
         expect(browser.getCurrentUrl()).toMatch('/login'); //login failure
+    });
+
+    it('should check the wizard page', function() {
+        browser.ignoreSynchronization = true; //to non angular sites
+        browser.get( "http://localhost:9000/ginas/app/wizard?kind=chemical");
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get( "http://localhost:9000/ginas/app/wizard?kind=protein");
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get( 'http://localhost:9000/ginas/app/wizard?kind=structurallyDiverse');
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get( 'http://localhost:9000/ginas/app/wizard?kind=polymer');
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get( 'http://localhost:9000/ginas/app/wizard?kind=mixture');
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get('http://localhost:9000/ginas/app/wizard?kind=nucleicAcid');
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get('http://localhost:9000/ginas/app/wizard?kind=concept');
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
+
+        browser.get('http://localhost:9000/ginas/app/wizard?kind=g1ss');
+        var pageBody = element(by.tagName('body')).getText();
+        pageBody.then(function(result) {
+            expect(["Not Authorized", "No User Present"]).toContain(result);
+        });
     });
 });
 
