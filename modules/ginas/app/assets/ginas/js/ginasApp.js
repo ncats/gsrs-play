@@ -801,6 +801,7 @@
                 ctx: '@'
             },
             link: function (scope, element, attrs) {
+                console.log(scope.size);
                 var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
                 if (!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
@@ -808,7 +809,7 @@
                 if (attrs.smiles) {
                     url = baseurl + "render?structure=" + attrs.smiles +"&size={{size||150}}";
                 }
-                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image">');
+                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image" class="tooltip-img">');
                 element.append(template);
                 $compile(template)(scope);
             }
@@ -1135,7 +1136,6 @@
                 scope.bridged = false;
                 var aa = scope.acid;
                 var template;
-                console.log(aa);
                 if (aa.valid == false) {
                     template = angular.element('<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>');
                     element.html(template).show();
@@ -1147,12 +1147,14 @@
 
                 } else {
                     if (_.has(aa, 'structuralModifications')) {
+                        console.log(aa);
                         scope.acidClass = "modification";
                     } else if (_.has(aa, 'disulfide')) {
                         scope.acidClass = "disulfide";
                     } else if (_.has(aa, 'otherLinks')) {
                         scope.acidClass = "otherLinks";
                     } else if (_.has(aa, 'glycosylation')) {
+                        console.log(aa);
                         scope.acidClass = "glycosylation";
                     } else if (_.has(aa, 'sugar')) {
                         scope.acidClass = "sugar";
@@ -1308,7 +1310,6 @@
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
                             obj=_.pickBy(temp, _.isString);
-                            console.log(obj);
                             obj.value = aa;
                             //obj.name = temp.display;
                             obj.valid = true;
@@ -1554,10 +1555,12 @@
             replace: true,
             restrict: 'E',
             scope: {
-                subref: '='
+                subref: '=',
+                size:'='
             },
             link: function (scope, element) {
-                var template = angular.element('<div><rendered id = {{subref.refuuid}}></rendered><br/><code>{{subref.refPname}}</code></div>');
+                console.log(scope.size);
+                var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);
             }

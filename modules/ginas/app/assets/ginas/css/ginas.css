@@ -26,7 +26,7 @@ body, html {
     position: fixed;
     right: 0;
     left: 0;
-    z-index: 99999;
+    z-index: 999;
     background-color: #ffffff;
 }
 
@@ -1058,9 +1058,17 @@ del{
     white-space: normal;
 }
 
+.ng-isolate-scope.auto.white.fade.tooltip.in {
+    z-index: 10000;
+}
+
 .tooltip.white .tooltip-inner {
     background-color: white;
     color:black;
     font-weight: bold;
-    border: 1px solid #DDD
+    border: 1px solid #DDD;
+}
+
+img.tooltip-img.ng-scope {
+    margin-left: -7%;
 }

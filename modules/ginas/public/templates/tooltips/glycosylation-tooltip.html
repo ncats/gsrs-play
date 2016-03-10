@@ -1,1 +1,5 @@
-<span>{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}}<br> ({{acid.type}}{{acid.name}})</span>
+<span>{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}}<br>
+    ({{acid.type}}{{acid.display}})
+    <rendered smiles={{acid.simplifiedStructure}} size="200"></rendered>
+    <span><code>Glycosylation Site</code></span>
+</span>

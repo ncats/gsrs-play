@@ -598,6 +598,12 @@
                             });
                             console.log(obj);
                             CVFields.updateCV(obj);
+                            CVFields.getCV(sobj.domain).then(function (response) {
+                                console.log(response);
+                                //scope.terms = data.data.content[0].terms;
+                                //scope.domain = data.data.content[0];
+                            });
+
                         }else {
                             CVFields.updateCV(scope.domain);
                         }
