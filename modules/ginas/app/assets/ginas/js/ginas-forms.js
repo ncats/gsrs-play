@@ -907,15 +907,20 @@ console.log(scope);
                     if (_.has(scope.referenceobj, 'nameOrgs')) {
                         var temp = _.get(scope.referenceobj, 'nameOrgs');
                         temp.push(scope.org);
-                        _.set(scope.referenceobj, 'nameOrgs', temp);
+                        _.set(scope.referenceobj, 'nameOrgs',temp);
                     } else {
                         var x = [];
                         x.push(angular.copy(scope.org));
-                        _.set(scope.referenceobj, 'nameOrgs', x);
+                        _.set(scope.referenceobj, 'nameOrgs',  x);
                     }
                     scope.org = {};
                     scope.orgForm.$setPristine();
-                }
+                };
+
+            scope.deleteObj = function(obj,path){
+                    var arr = _.get(scope.referenceobj, path);
+                    arr.splice(arr.indexOf(obj), 1);
+            };
             }
         };
     });
