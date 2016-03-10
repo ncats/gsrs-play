@@ -152,7 +152,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
     @JsonSerialize(using = GroupListSerializer.class)
     public Set<Group> getAccess(){
     	if(recordAccess!=null){
-    		return recordAccess.access;
+    		return recordAccess.getAccess();
     	}
     	return new LinkedHashSet<Group>();
     }

@@ -255,8 +255,11 @@ public class SubstanceFactory extends EntityFactory {
 	public static Result create() {
 		JsonNode value = request().body().asJson();
 		Class subClass = getClassFromJson(value);
-		DefaultSubstanceValidator sv = new DefaultSubstanceValidator(
-				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().failFailed());
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator.NEW_SUBSTANCE_VALIDATOR(
+				GinasProcessingStrategy
+				.ACCEPT_APPLY_ALL_WARNINGS()
+				.markFailed()
+				);
 		return create(subClass, finder, sv);
 	}
 
@@ -315,9 +318,10 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result updateEntity() {
-		DefaultSubstanceValidator sv = new DefaultSubstanceValidator(
-				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
-
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator.UPDATE_SUBSTANCE_VALIDATOR(
+				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS()
+				);
+		
 		if (!request().method().equalsIgnoreCase("PUT")) {
 			return badRequest("Only PUT is accepted!");
 		}
@@ -333,8 +337,9 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result update(UUID uuid, String field) {
-		DefaultSubstanceValidator sv = new DefaultSubstanceValidator(
-				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator.UPDATE_SUBSTANCE_VALIDATOR(
+							GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS()
+				);
 
 		// if(true)return ok("###");
 		try {
@@ -511,7 +516,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static synchronized void approveSubstance(Substance s) {
 
-		UserProfile up = getUserProfile();
+		UserProfile up = UserFetcher.getActingUserProfile(false);
 		Principal user = null;
 		if(s.status==Substance.STATUS_APPROVED){
 			throw new IllegalStateException("Cannot approve an approved substance");

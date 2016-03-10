@@ -1,19 +1,12 @@
 package ix.core;
 
-import java.util.ArrayList;
-import java.util.List;
+public class DefaultValidator<K> extends AbstractValidator<K>{
 
-
-public class DefaultValidator implements Validator{
-
+	
 	@Override
-	public boolean validate(Object obj, List validation) {
-		return true;
+	public ValidationResponse<K> validate(K objnew, K objold) {
+		return ValidationResponse.VALID_VALIDATION_RESPONSE(objnew);
 	}
 
-	@Override
-	public List getValidationMessageContainer() {
-		return new ArrayList<ValidationMessage>();
-	}
 
 }

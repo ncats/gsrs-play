@@ -35,6 +35,10 @@ public class SearchFactory extends EntityFactory {
 
     static TextIndexer _indexer =
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    
+    public static void init(){
+    	_indexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    }
 
     public static SearchOptions parseSearchOptions
         (SearchOptions options, Map<String, String[]> queryParams) {

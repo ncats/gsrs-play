@@ -543,6 +543,28 @@
             $scope.validateSubstance(f);
         };
 
+		$scope.dismiss = function (err){
+			/*
+			//can't dismiss errors
+			if(err.messageType!=="ERROR"){
+				_.pull($scope.errorsArray,err);
+			}
+			*/
+			$scope.canSubmit=$scope.noErrors();
+		};
+		$scope.canSubmit=false;
+		$scope.noErrors = function (){
+		/*
+			 for (var i=0;i<$scope.errorsArray.length;i++) {
+			 	var err=$scope.errorsArray[i];
+			 	if(err.messageType==="ERROR"){
+			 		return false;
+			 	}
+			 }
+			 return true;
+			 */
+			 return ($scope.errorsArray.length<=0);
+		}
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
 
@@ -551,8 +573,10 @@
             sub = angular.toJson($scope.fromFormSubstance(sub));
             console.log(sub);
             $scope.errorsArray = [];
-            $http.post(baseurl + 'register/validate', sub).success(function (response) {
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
                 var arr = [];
+                console.log(responseTotal);
+                var response=responseTotal.validationMessages;
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
                         arr.push(response[i]);
@@ -564,11 +588,11 @@
                         response[i].class = "alert-info";
                     if (response[i].messageType == "SUCCESS")
                         response[i].class = "alert-success";
-
-
                 }
 
                 $scope.errorsArray = arr;
+                $scope.canSubmit=$scope.noErrors();
+                
                 callback();
             });
         };
@@ -594,6 +618,7 @@
             var sub = angular.copy($scope.substance);
             if (_.has(sub, '$$update')) {
                 sub = angular.toJson($scope.fromFormSubstance(sub));
+                console.log("TEST");
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -604,7 +629,7 @@
                 });
             } else {
                 sub = angular.toJson($scope.fromFormSubstance(sub));
-                $http.post(baseurl + 'register/submit', sub, {
+                $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }

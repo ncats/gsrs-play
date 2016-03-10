@@ -157,4 +157,11 @@ public class UserProfile extends IxModel implements Subject {
                 this.salt = AdminFactory.generateSalt();
                 this.hashp = Util.encrypt(password, this.salt);
         }
+
+		public static UserProfile GUEST() {
+			UserProfile up=new UserProfile(new Principal("GUEST"));
+			up.addRole(Role.Query);
+			
+			return up;
+		}
 }

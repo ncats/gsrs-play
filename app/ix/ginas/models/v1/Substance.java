@@ -40,6 +40,7 @@ import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
 import ix.ginas.models.TagListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
+import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.utils.Global;
 import play.Logger;
 
@@ -394,6 +395,8 @@ public class Substance extends GinasCommonData {
 	public List<Name> getAllNames() {
 		return names;
 	}
+	
+	
 
 	@PrePersist
 	@PreUpdate
@@ -464,13 +467,7 @@ public class Substance extends GinasCommonData {
 
 	
 	public String getApprovalID() {
-		if (approvalID != null)
-			return approvalID;
-		SubstanceReference subRef = getParentSubstanceReference();
-		if (subRef != null) {
-			return subRef.approvalID;
-		}
-		return null;
+		return approvalID;
 	}
 	
 	
