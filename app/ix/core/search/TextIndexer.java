@@ -596,17 +596,23 @@ public class TextIndexer {
     private BlockingQueue<SearchResultPayload> fetchQueue =
         new LinkedBlockingQueue<SearchResultPayload>();
         
-    static ConcurrentMap<File, TextIndexer> indexers = 
-        new ConcurrentHashMap<File, TextIndexer>();
+    static ConcurrentMap<File, TextIndexer> indexers;
 
-    public static TextIndexer getInstance (File baseDir) throws IOException {
+    static{
+        init();
+    }
+    public static void init(){
+        indexers = new ConcurrentHashMap<File, TextIndexer>();
+    }
+
+    public synchronized static TextIndexer getInstance (File baseDir) throws IOException {
         if (indexers.containsKey(baseDir)) 
             return indexers.get(baseDir);
 
         try {
             TextIndexer indexer = new TextIndexer (baseDir);
-            TextIndexer old = indexers.putIfAbsent(baseDir, indexer);
-            return old == null ? indexer : old;
+           indexers.put(baseDir, indexer);
+          return indexer;
         }
         catch (IOException ex) {
             return indexers.get(baseDir);
@@ -696,9 +702,15 @@ public class TextIndexer {
     }
     
     protected synchronized DirectoryReader getReader () throws IOException {
+        if(indexReader.getRefCount() <=0){
+
+            indexReader = DirectoryReader.open(indexReader.directory());
+            return indexReader;
+        }
         DirectoryReader reader = DirectoryReader.openIfChanged(indexReader);
         if (reader != null) {
-            indexReader.close();
+            indexReader.decRef();
+            //indexReader.close();
             indexReader = reader;
         }
         return indexReader;
