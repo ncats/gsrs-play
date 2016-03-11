@@ -158,8 +158,13 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
-      libraryDependencies += "org.webjars" % "lodash" % "3.10.1",
-      javacOptions ++= javaBuildOptions
+      libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
+      libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
+      libraryDependencies  += "junit" % "junit" % "4.11" % Test,
+      libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
+      javacOptions ++= javaBuildOptions,
+      javaOptions in Test += "-Dconfig.file=conf/ginas.conf",
+    cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ncats).aggregate(ncats)
 
 

@@ -209,7 +209,7 @@ public class GinasTestServer extends ExternalResource{
 
     private void deleteH2Db() throws IOException {
         Config load = ConfigFactory.load();
-        System.out.println(load.entrySet());
+        //System.out.println(load.entrySet());
         Path path = new File(load.getString("ix.home")).toPath();
         if(!path.toFile().exists()){
             return;
