@@ -566,8 +566,6 @@ public class EditingWorkflowTest {
     	
     	JsonNode fetched = session.fetchSubstanceJSON(uuid);
 
-    	String oldVersion=fetched.at("/version").asText();
-    
     	
     	NameOrg nameOrg = new NameOrg();
     	nameOrg.nameOrg=nameorg;
@@ -577,11 +575,15 @@ public class EditingWorkflowTest {
     							.build();
     	
     	
-    	System.out.println("FIrst name org is:" + updated.at("/names/0/nameOrgs/0"));
+    	//System.out.println("FIrst name org is:" + updated.at("/names/0/nameOrgs/0"));
     	session.updateSubstanceJSON(updated);
 		
 		JsonNode updateFetched = session.fetchSubstanceJSON(uuid);
-		System.out.println("Now, it's:" + updateFetched.at("/names/0/nameOrgs/0"));
+		assertEquals(
+					  updated.at("/names/0/nameOrgs/0/nameOrg").toString(),
+				updateFetched.at("/names/0/nameOrgs/0/nameOrg").toString()
+				);
+		//System.out.println("Now, it's:" + updateFetched.at("/names/0/nameOrgs/0"));
 		
 		
 		return fetched;
