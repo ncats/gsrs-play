@@ -554,6 +554,26 @@ public class TextIndexer {
             }
         }
     }
+
+    class ConfigFileDaemon implements Runnable {
+        ConfigFileDaemon () {
+        }
+
+        public void run () {
+            File file = getFacetsConfigFile ();
+            if (file.lastModified() < lastModified.get()) {
+                Logger.debug(Thread.currentThread()
+                             +": "+getClass().getName()
+                             +" writing FacetsConfig "+new Date ());
+                saveFacetsConfig (file, facetsConfig);
+            }
+            
+            file = getSorterConfigFile ();
+            if (file.lastModified() < lastModified.get()) {
+                saveSorters (file, sorters);
+            }
+        }
+    }
     
     private File baseDir;
     private File suggestDir;
@@ -569,6 +589,9 @@ public class TextIndexer {
     private AtomicLong lastModified = new AtomicLong ();
     
     private ExecutorService threadPool = Executors.newCachedThreadPool();
+    private ScheduledExecutorService scheduler =
+        Executors.newSingleThreadScheduledExecutor();
+    
     private Future[] fetchWorkers;
     private BlockingQueue<SearchResultPayload> fetchQueue =
         new LinkedBlockingQueue<SearchResultPayload>();
@@ -654,6 +677,10 @@ public class TextIndexer {
 
         this.baseDir = dir;
         setFetchWorkers (FETCH_WORKERS);
+
+        // run daemon every 5s
+        scheduler.scheduleAtFixedRate
+            (new ConfigFileDaemon (), 5, 5, TimeUnit.SECONDS);
     }
 
     public void setFetchWorkers (int n) {
@@ -1242,8 +1269,8 @@ public class TextIndexer {
     public long lastModified () { return lastModified.get(); }
 
     public void update (Object entity) throws IOException {
-    	//String idString=null;
-    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+        //String idString=null;
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return;
         }
         
@@ -1256,11 +1283,11 @@ public class TextIndexer {
             
 
             if (id != null) {
-            	
+                
                 String field = entity.getClass().getName()+".id";
                 BooleanQuery q = new BooleanQuery();
-            	q.add(new TermQuery(new Term (field, id.toString())),BooleanClause.Occur.MUST);
-            	q.add(new TermQuery(new Term (FIELD_KIND, entity.getClass().getName())),BooleanClause.Occur.MUST);
+                q.add(new TermQuery(new Term (field, id.toString())),BooleanClause.Occur.MUST);
+                q.add(new TermQuery(new Term (FIELD_KIND, entity.getClass().getName())),BooleanClause.Occur.MUST);
                 indexWriter.deleteDocuments(q);   
                 
                 if (DEBUG (2))
@@ -1423,8 +1450,8 @@ public class TextIndexer {
                         instrument (path, value, ixFields);
                         Indexable ind=f.getAnnotation(Indexable.class);
                         if(ind!=null){
-                        	
-                        	indexField (ixFields, indexable, path, value);
+                                
+                                indexField (ixFields, indexable, path, value);
                         }
                     }
                     else { // treat as string
@@ -1780,6 +1807,14 @@ public class TextIndexer {
         return node;
     }
 
+    File getFacetsConfigFile () {
+        return new File (baseDir, FACETS_CONFIG_FILE);
+    }
+
+    File getSorterConfigFile () {
+        return new File (baseDir, SORTER_CONFIG_FILE);
+    }
+    
     static void saveFacetsConfig (File file, FacetsConfig facetsConfig) {
         JsonNode node = setFacetsConfig (facetsConfig);
         ObjectMapper mapper = new ObjectMapper ();
@@ -1877,9 +1912,9 @@ public class TextIndexer {
             indexDir.close();
             taxonDir.close();
 
-            saveFacetsConfig (new File (baseDir, FACETS_CONFIG_FILE), 
-                              facetsConfig);
-            saveSorters (new File (baseDir, SORTER_CONFIG_FILE), sorters);
+            scheduler.shutdown();
+            saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
+            saveSorters (getSorterConfigFile (), sorters);
         }
         catch (Exception ex) {
             //ex.printStackTrace();
