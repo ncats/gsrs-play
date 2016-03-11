@@ -1,0 +1,18 @@
+GET        /info                                                                       ix.ncats.moldev.controllers.MoldevApp.info()
+GET        /pcstatus                                                                   ix.ncats.moldev.controllers.MoldevApp.getJobStatus()
+GET        /list                                                                       ix.ncats.moldev.controllers.MoldevApp.listPlatesAndAssays(plateName: String ?= null, settingsName: String ?= null)
+GET        /available/:plateName/:settingsName                                         ix.ncats.moldev.controllers.MoldevApp.isDataAvailable(plateName: String, settingsName: String)
+GET        /plates                                                                     ix.ncats.moldev.controllers.MoldevPlateApp.getPlates()
+GET        /plates/:id                                                                 ix.ncats.moldev.controllers.MoldevPlateApp.getPlate(id: String)
+GET        /plates/:id/images/:wavelength                                              ix.ncats.moldev.controllers.MoldevPlateApp.getPlateImages(id: String, wavelength: String, montage: String ?= "true")
+GET        /assays                                                                     ix.ncats.moldev.controllers.MoldevAssayApp.getAssays
+
+GET        /export/acumen                                                              ix.ncats.moldev.controllers.MoldevExportApp.export(format="acumen", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
+GET        /export/excel                                                               ix.ncats.moldev.controllers.MoldevExportApp.export(format="excel", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
+
+GET        /images/:plateName/$row<[0-9]+>/$col<[0-9]+>/$siteid<[0-9]+>/:waveId        ix.ncats.moldev.controllers.MoldevImageApp.getImage(plateName: String, row: Integer, col: Integer, siteid: Long, waveId: String, thumb: String ?= "false", format: String ?= "png")
+
+
+
+->         /                                                                           ix.ncats.Routes
+->         /                                                                           ix.Routes
