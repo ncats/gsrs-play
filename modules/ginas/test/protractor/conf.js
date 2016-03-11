@@ -37,33 +37,31 @@ exports.config = {
                //'NameFormTest.js' //passes
               //'CodeFormTest.js'//passes
             // ,'NoteFormTest.js' passes
-            'RelationshipFormTest.js'
+            //'RelationshipFormTest.js'
             //,   'PropertyFormTest.js'
             //,  'ReferenceFormOnlyFormTest.js'
         ],
         modifications: [
-          //  'AgentModificationFormTest.js'
+         //   'AgentModificationFormTest.js'
           //, 'StructuralModificationFormTest.js'
-            'PhysicalModificationFormTest.js'
+          // , 'PhysicalModificationFormTest.js'
         ],
-        chemical: [ 'StructureFormTest.js'
-                    ,'MoietyFormTest.js'
+        chemical: [ //'StructureFormTest.js'
+                    //,'MoietyFormTest.js'
         ],
-        protein: [ 'ProteinDetailsFormTest.js'
-                   // ,'SubunitFormTest.js'
-                  //  ,'GlycosylationFormTest.js'
+        protein: [ //'ProteinDetailsFormTest.js'
+                  //, 'SubunitFormTest.js'
+                  //, 'GlycosylationFormTest.js'
         ],
-        structurallyDiverse: [ 'DiverseDetailsFormTest.js'
-                    ,'DiverseDetailsFormTest.js'
-                    ,'DiverseOrganismFormTest.js'
-                    ,'DiverseSourceFormTest.js'
-                    ,'DiverseTypeFormTest.js'
+        structurallyDiverse: [ //'DiverseDetailsFormTest.js'
+                    //,'DiverseOrganismFormTest.js'
+                   // 'DiverseSourceFormTest.js'
+                    //,'DiverseTypeFormTest.js'
         ],
-        polymer: [ 'StructureFormTest.js'
-                    ,'MoietyFormTest.js'
+        polymer: [ 'PolymerClassificationFormTest.js'
+                    ,'PolymerMonomerFormTest.js'
         ],
-        mixture: [ 'StructureFormTest.js'
-                    ,'MoietyFormTest.js'
+        mixture: [ 'TestMixtureForm.js'
         ],
         nucleicAcid: [ 'StructureFormTest.js'
                     ,'MoietyFormTest.js'
@@ -73,7 +71,10 @@ exports.config = {
         ],
         g1ss: [ 'StructureFormTest.js'
                     ,'MoietyFormTest.js'
+        ],
+        accessControl:  ['UserAccessControlTests.js'
         ]
+
     },
 
     jasmineNodeOpts: {
@@ -119,12 +120,12 @@ exports.config = {
         var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
 
         return browser.getProcessedConfig().then(function(config) {
-            jasmine.getEnv().addReporter(new jasmineReporters.JUnitXmlReporter('protractor_output', true, true));
-            /* var capsPromise = browser.getCapabilities(); //to make the browser wait
+            jasmine.getEnv().addReporter(new jasmineReporters.JUnitXmlReporter('testtesttest', true, true));
+             var capsPromise = browser.getCapabilities(); //to make the browser wait
              capsPromise.then(function (caps) {
              jasmine.getEnv().addReporter(
              new jasmineReporters.JUnitXmlReporter('protractor_output', true, true));
-             });*/
+             });
 
             jasmine.getEnv().addReporter(
                 new Jasmine2HtmlReporter({

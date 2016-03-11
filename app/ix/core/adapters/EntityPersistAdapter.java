@@ -319,8 +319,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {
-		if (plugin != null)
+		if (plugin != null){
 			plugin.getIndexer().add(bean);
+		}
 
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {

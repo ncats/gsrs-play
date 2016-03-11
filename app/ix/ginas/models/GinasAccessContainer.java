@@ -56,6 +56,13 @@ public class GinasAccessContainer extends Model{
     public GinasAccessContainer(Object o){
 		this.entityType=o.getClass().getName();
 	}
+
+	public Set<Group> getAccess() {
+		if (access == null) {
+			return new LinkedHashSet<Group>();
+		}
+		return access;
+	}
 	
 //	@PostUpdate
 //	@PostPersist

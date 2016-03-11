@@ -38,8 +38,6 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 childScope = scope.$new();
-                console.log(childScope);
-                console.log(scope);
                 var compiledDirective = $compile(newForm);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
@@ -543,9 +541,7 @@
             },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
-                console.log(scope);
                 CVFields.all().then(function (response){
-                    console.log(response);
                     scope.domains = response.data.content;
                 });
 
@@ -555,7 +551,6 @@
                 scope.getValues = function () {
                     console.log(scope);
                     CVFields.getCV(scope.vocab.display).then(function (data) {
-                        scope.terms = data.data.content[0].terms;
                         scope.domain = data.data.content[0];
                     });
                     scope.create = true;
@@ -564,25 +559,21 @@
                 scope.deleteCV = function(obj){
                     var r = confirm("Are you sure you want to delete this CV?");
                     if (r == true) {
-                        console.log(obj);
-                        console.log(scope.terms);
-                        console.log(scope.terms.indexOf(obj));
-                        var terms = scope.terms.splice(scope.terms.indexOf(obj), 1);
+                        var terms = scope.domain.terms.splice(scope.domain.terms.indexOf(obj), 1);
                         CVFields.updateCV(scope.domain);
                     }
                 };
 
                 scope.addCV = function(term){
-                        console.log(term);
-                        scope.terms.push(term);
-                        CVFields.updateCV(scope.domain);
-                    scope.term={};
+                        scope.domain.terms.push(term);
+                        CVFields.updateCV(scope.domain).then(function(response){
+                            console.log(response);
+                        scope.domain.terms = response.data.terms;
+                            scope.term={};
+                        });
                 };
 
                 scope.addDomain = function(cv){
-                        console.log(cv);
-                    console.log(scope);
-                       // scope.domains.push(cv);
                         CVFields.updateCV(cv);
                     scope.cv={};
                 };
@@ -598,7 +589,6 @@
                                     obj.fields[key] = value.value;
                                 }
                             });
-                            console.log(obj);
                             CVFields.updateCV(obj);
                         }else {
                             CVFields.updateCV(scope.domain);
@@ -607,15 +597,12 @@
                 };
 
                 scope.showTerms= function(obj, divid){
-                    console.log(obj);
-                    scope.terms = obj.terms;
                     scope.domain = obj;
                     if(!divid){
                         var divid = obj.$$hashKey;
                     }
-                    var formHolder = '<cv-terms-form domain = domain terms = terms ></cv-terms-form>';
+                    var formHolder = '<cv-terms-form domain = domain terms = {{terms}} ></cv-terms-form>';
                     var url = baseurl + "assets/templates/admin/cv-terms.html";
-                     //   toggler.toggle(scope, obj.$$hashKey, formHolder);
                     toggler.show(scope, divid, url);
 
 
@@ -654,7 +641,6 @@
 
                 switch (scope.type) {
                     case "amount":
-                        console.log(scope);
                         if(!scope.field){
                             scope.field = 'amount';
                         }
@@ -776,6 +762,11 @@
             },
             templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
             link: function (scope, element, attrs) {
+                _.forEach(scope.parent.protein.glycosylation, function(value){
+                    if(_.isArray(value) && value.length>0){
+                        scope.iscollapsed=false;
+                        }
+                });
             }
         };
     });
@@ -916,15 +907,20 @@ console.log(scope);
                     if (_.has(scope.referenceobj, 'nameOrgs')) {
                         var temp = _.get(scope.referenceobj, 'nameOrgs');
                         temp.push(scope.org);
-                        _.set(scope.referenceobj, 'nameOrgs', temp);
+                        _.set(scope.referenceobj, 'nameOrgs',temp);
                     } else {
                         var x = [];
                         x.push(angular.copy(scope.org));
-                        _.set(scope.referenceobj, 'nameOrgs', x);
+                        _.set(scope.referenceobj, 'nameOrgs',  x);
                     }
                     scope.org = {};
                     scope.orgForm.$setPristine();
-                }
+                };
+
+            scope.deleteObj = function(obj,path){
+                    var arr = _.get(scope.referenceobj, path);
+                    arr.splice(arr.indexOf(obj), 1);
+            };
             }
         };
     });
@@ -1103,6 +1099,19 @@ console.log(scope);
             return temp;
         };
 
+        this.getCount= function(display){
+            var temp = [];
+            var count=0;
+            _.forEach(display, function (arr) {
+                _.forEach(arr, function (subunit) {
+                    count += subunit.length;
+                });
+            });
+            console.log(count);
+            return count;
+        };
+
+
         this.getAllSitesWithout = function (type, display) {
             var temp = [];
             _.forEach(display, function (arr) {
@@ -1163,7 +1172,7 @@ console.log(scope);
                 }
 
                 scope.getAllSites = function () {
-                    return siteAdder.getAll('sugar', scope.parent.$$subunitDisplay).length + siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
+                    return siteAdder.getCount(scope.parent.$$subunitDisplay);
                 };
 
                 scope.applyAll = function () {
@@ -1172,7 +1181,7 @@ console.log(scope);
                 };
 
                 scope.validate = function () {
-                    _.forEach(scope.sugar.sites, function (site) {
+                    _.forEach(scope.sugar.sites.sites, function (site) {
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
                     });
                     scope.parent.nucleicAcid.sugars.push(scope.sugar);
@@ -1209,7 +1218,7 @@ console.log(scope);
                 }
 
                 scope.getAllSites = function () {
-                    return siteAdder.getAll('linkage', scope.parent.$$subunitDisplay).length + siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                   return siteAdder.getCount(scope.parent.$$subunitDisplay);
                 };
 
                 scope.applyAll = function () {
@@ -1218,7 +1227,7 @@ console.log(scope);
                 };
 
                 scope.validate = function () {
-                    _.forEach(scope.linkage.sites, function (site) {
+                    _.forEach(scope.linkage.sites.sites, function (site) {
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
                     });
                     scope.parent.nucleicAcid.linkages.push(scope.linkage);
@@ -1421,6 +1430,14 @@ console.log(scope);
             replace: true,
             scope: {
                 parent: '='
+            },
+            link: function(scope){
+                var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
+                _.forEach(fields, function(field){
+                   if(!_.isNull(scope.parent.protein[field])){
+                       scope.iscollapsed=false;
+                   }
+                });
             },
             templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
         };
@@ -1669,13 +1686,15 @@ console.log(scope);
             restrict: 'E',
             replace: true,
             scope: {
-                referenceobj: '=',
+               referenceobj: '=',
                 parent: '=',
                 mode: '=',
                 formtype: '=',
-                residueregex: '='
+                residueregex: '=',
+                field: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 var template;
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
@@ -1725,15 +1744,29 @@ console.log(scope);
                 };
 
                 scope.makeSiteList = function () {
-                    if(scope.field){
-                        _.set(scope.referenceobj[field], 'sites', siteList.siteList(scope.referenceobj.$$displayString));
+                    if(scope.field==='sites'){
+                        console.log(scope);
+                        console.log(siteList.siteList(scope.referenceobj.$$displayString));
+                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj.$$displayString));
+                        if(scope.referenceobj.sitesShorthand) {
+                            scope.referenceobj.sitesShorthand = scope.referenceobj.$$displayString;
+                        }
                        // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
+                       console.log(scope);
 
                     }else {
-                        scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$$displayString);
+                        console.log("glycosylation");
+                        console.log(scope);
+                        console.log(scope.referenceobj);
+                        var temp= angular.copy(scope.referenceobj[scope.field].$$displayString);
+                      //  _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+                        scope.referenceobj[scope.field].$$displayString = temp;
+                        console.log(scope);
+                    //    scope.referenceobj = siteList.siteList(scope.referenceobj.$$displayString);
+                   //     _.set(scope.referenceobj, '$$displayString', temp);
                     }
 /*
-                    _.set(scope.referenceobj, 'sites', siteList.siteList(scope.referenceobj.$$displayString));
 */
                 };
 

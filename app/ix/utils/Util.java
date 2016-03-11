@@ -1,14 +1,19 @@
 package ix.utils;
 
-import java.util.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
-import java.security.*;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import play.Logger;
 import play.Play;
@@ -198,5 +203,19 @@ public class Util {
     }
     public static long getTimeResolutionMS(){
     	return TIME_RESOLUTION_MS;
+    }
+    
+    
+    public static InputStream getFile(String file, String path) throws Exception{
+    	if(path==null)path="";
+    	if(!Play.isProd()){
+    		return new FileInputStream(Play.application().getFile(path + file));
+    	}else{
+    		return Play.application().resource(path + file).openStream();	
+    	}
+    }
+    
+    public static InputStream getFile(String file) throws Exception{
+    	return getFile(file,null);
     }
 }

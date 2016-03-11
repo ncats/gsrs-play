@@ -5,14 +5,18 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+import util.json.ChangeFilters;
 import util.json.Changes;
 import util.json.ChangesBuilder;
 import util.json.JsonUtil;
@@ -92,6 +96,34 @@ public class EditingWorkflowTest {
    	}
     
     @Test
+   	public void testUnicodeProblem() {
+    	final File resource=new File("test/testJSON/racemic-unicode.json");
+    	
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	JsonNode fetched=ts.fetchSubstanceJSON(uuid);
+                   	String lookingfor="(±)-1-CHLORO-2,3-EPOXYPROPANE";
+                   	
+                   	Set<String> names= new HashSet<String>();
+                   	
+                   	for(JsonNode name: fetched.at("/names")){
+                   		//System.out.println("The name:" + name.at("/name"));
+                   		names.add(name.at("/name").asText());
+                   	}
+                   assertTrue("Special unicode names should still be found after round trip",names.contains(lookingfor));
+
+               }
+           });
+   	}
+    
+
+    
+    
+    @Test
    	public void testChangeProteinRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
@@ -102,6 +134,58 @@ public class EditingWorkflowTest {
                    	renameLocal(uuid);
                    	JsonNode edited=renameServer(uuid);
 
+               }
+           });
+   	}
+    
+    @Test
+   	public void testSubmitPublicRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser3();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	
+                   	String uuid=entered.get("uuid").asText();     
+                   	
+                   	ts.submitSubstanceFail(entered);
+                   	
+                   	JsonNode updated=new JsonUtil
+                   			.JsonNodeBuilder(entered)
+                   			.add("/access/-", "testGROUP")
+                   			.build();
+                   	updated=ts.submitSubstanceJSON(updated);
+                   	
+                   	updated=new JsonUtil
+                   			.JsonNodeBuilder(updated)
+                   			.remove("/access/0")
+                   			.build();
+                   	ts.updateSubstanceFail(updated);
+                   	ts.loginFakeUser2();
+                   	ts.updateSubstanceJSON(updated);
+               }
+           });
+   	}
+    //Can't submit an preapproved substance via this mechanism
+    //Also, can't change an approvalID here, unless an admin
+    //TODO: add the admin part
+    @Test
+   	public void testSubmitPreApprovedRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= JsonUtil.parseJsonFile(resource);
+                   	ts.submitSubstanceFail(entered);
+                   	entered=SubstanceJsonUtil.toUnapproved(entered);
+                   	entered=ts.submitSubstanceJSON(entered);
+                   	ts.loginFakeUser2();
+                   	entered=ts.approveSubstanceJSON(entered.at("/uuid").asText());
+                   	entered=new JsonUtil
+                   			.JsonNodeBuilder(entered)
+                   			.remove("/approvalID")
+                   			.build();
+                   	ts.updateSubstanceFail(entered);
+                   	
+                   	
                }
            });
    	}
@@ -150,6 +234,41 @@ public class EditingWorkflowTest {
                }
            });
    	}
+    
+    @Test
+   	public void testFacetUpdateRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
+                   	
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	int oldProteinCount=getFacetCountFor("Substance Class","protein");
+                   	assertEquals(1,oldProteinCount);
+                   	renameServer(uuid);
+                   	int newProteinCount=getFacetCountFor("Substance Class","protein");
+                   	assertEquals(1,newProteinCount);
+                   	
+               }
+           });
+   	}
+    
+    public int getFacetCountFor(String face, String label){
+    	JsonNode jsn=ts.fetchSubstancesSearchJSON();
+       	JsonNode facets=jsn.at("/facets");
+       	for(JsonNode facet:facets){
+       		String name=facet.at("/name").asText();
+       		if("Substance Class".equals(name)){
+       			for(JsonNode val:facet.at("/values")){
+       				if("protein".equals(val.at("/label").asText())){
+       					return val.at("/count").asInt();
+       				}
+       			}
+       		}
+       	}
+       	return 0;
+    }
     
     @Test
    	public void testChangeDisuflideProteinRemote() {
@@ -316,14 +435,84 @@ public class EditingWorkflowTest {
                    	submitSubstance(entered);
                    	JsonNode edited=renameServer(uuid);
    					mostRecentEditHistory(uuid,edited);
-   					retrieveHistoryView(uuid,"1");
+   					retrieveHistoryView(uuid,1);
 
                }
            });
    	}
 
+    @Test
+    public void revertChangeShouldMakeNewVersionWithOldValues() {
+        ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                ts.loginFakeUser1();
+
+                JsonNode entered= parseJsonFile(resource);
+                String uuid=entered.get("uuid").asText();
+
+                submitSubstance(entered);
+                String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+                String newName = "foo";
+                JsonNode oldNode= renameServer(uuid,newName );
+
+                mostRecentEditHistory(uuid,oldNode);
+
+                assertEquals(newName, ts.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
+
+                renameServer(uuid,oldName );
+                 assertEquals(oldName, ts.fetchSubstanceJSON(uuid).at("/names/0/name").asText());
+
+                JsonNode originalNode = ts.fetchSubstanceJSON(uuid,1).getOldValue();
+
+                JsonNode v2Node = ts.fetchSubstanceJSON(uuid,2).getOldValue();
+
+                assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());
+                assertEquals("v2 name", newName, v2Node.at("/names/0/name").asText());
+
+                JsonNode currentNode = ts.fetchSubstanceJSON(uuid);
+                assertEquals("current name", oldName, currentNode.at("/names/0/name").asText());
+
+
+            }
+        });
+    }
+
+    @Test
+    public void historyNewValueShouldBeOldValueOfNextVersion() {
+        ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                ts.loginFakeUser1();
+
+                JsonNode entered= parseJsonFile(resource);
+                String uuid=entered.get("uuid").asText();
+
+                submitSubstance(entered);
+                String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+                String newName = "foo";
+                JsonNode oldNode= renameServer(uuid,newName );
+
+
+                GinasTestServer.JsonHistoryResult jsonHistoryResult = ts.fetchSubstanceJSON(uuid, 1);
+                JsonNode originalNode = jsonHistoryResult.getNewValue();
+
+                assertEquals("v1 new value", jsonHistoryResult.getNewValue(), ts.fetchSubstanceJSON(uuid));
+                renameServer(uuid,oldName );
+
+
+                JsonNode v2Node = ts.fetchSubstanceJSON(uuid,2).getOldValue();
+
+                assertEquals("v2", originalNode, v2Node);
+
+
+            }
+        });
+    }
+
+    private static String unquote(String s){
+        return StringEscapeUtils.unescapeCsv(s);
+    }
     
-    public void retrieveHistoryView(String uuid, String version){
+    public void retrieveHistoryView(String uuid, int version){
     	String newHTML=ts.fetchSubstanceUI(uuid);
     	String oldHTML=ts.fetchSubstanceVersionUI(uuid,version);
 
@@ -351,39 +540,39 @@ public class EditingWorkflowTest {
 //    	}
     	int distance=StringUtils.getLevenshteinDistance(oldHTML, newHTML);
 
-        System.out.println("LEV DISTANCE = " + distance);
-
     	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (0)",distance>0);
     	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (0)",inNewButNotOld.size()>0);
     	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (0)",inOldButNotNew.size()>0);
     	
     }
-    
-    public void renameLocal(String uuid){
-    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+    private void renameLocal(String uuid, String oldName, String newName){
+        JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+        JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
 
-    	String oldName="TRANSFERRIN ALDIFITOX S EPIMER";
-    	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
+        Changes changes = JsonUtil.computeChanges(fetched, updated);
+        Changes expectedChanges = new ChangesBuilder()
+                .replaced("/names/0/name", oldName, newName)
+                .build();
+        Changes expectedChangesDirect = new ChangesBuilder(fetched,updated)
+                .replace("/names/0/name")
+                .build();
+
+        assertEquals(expectedChanges, changes);
+        assertEquals(expectedChangesDirect, changes);
+    }
+    private void renameLocal(String uuid){
+
+        renameLocal(uuid,"TRANSFERRIN ALDIFITOX S EPIMER", "TRANSFERRIN ALDIFITOX S EPIMER CHANGED");
     
-    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
-			
-    	Changes changes = JsonUtil.computeChanges(fetched, updated);
-		Changes expectedChanges = new ChangesBuilder()
-										.replaced("/names/0/name", oldName, newName)
-										.build();
-		Changes expectedChangesDirect = new ChangesBuilder(fetched,updated)
-										.replace("/names/0/name")
-										.build();
-			
-		assertEquals(expectedChanges, changes);
-		assertEquals(expectedChangesDirect, changes);
+
     }
     
     public void mostRecentEditHistory(String uuid, JsonNode oldRecordExpected){
     		JsonNode newRecordFetched = ts.fetchSubstanceJSON(uuid);
     		int oversion=Integer.parseInt(newRecordFetched.at("/version").textValue());
-    		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid,""+(oversion-1));
-    		int changecount=0;
+    		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid,oversion-1);
+
+        int changecount=0;
     		for(JsonNode edit: edits){
     			//Ok, I'm just going to look at the null-path edits
     			//there should be 1
@@ -406,11 +595,13 @@ public class EditingWorkflowTest {
     		
     }
     public JsonNode renameServer(String uuid){
+        return renameServer(uuid, "TRANSFERRIN ALDIFITOX S EPIMER CHANGED");
+    }
+    public JsonNode renameServer(String uuid, String newName){
     	
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
 
     	String oldVersion=fetched.at("/version").asText();
-    	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
     
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
 		ts.updateSubstanceJSON(updated);
@@ -544,11 +735,7 @@ public class EditingWorkflowTest {
 		return parseJsonFile(new File(path));
 	}
     public JsonNode parseJsonFile(File resource){
-    	try(InputStream is=new FileInputStream(resource)){
-        	return new ObjectMapper().readTree(is);
-    	}catch(Throwable t){
-    		throw new RuntimeException(t);
-    	}
+    	return SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
     }
     public void testLogin(){
     	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);

@@ -1318,8 +1318,10 @@ public class TextIndexer {
                 String field = entity.getClass().getName()+".id";
                 if (DEBUG (2))
                     Logger.debug("Deleting document "+field+"="+id+"...");
-                indexWriter.deleteDocuments
-                    (new Term (field, id.toString()));
+                BooleanQuery q = new BooleanQuery();
+            	q.add(new TermQuery(new Term (field, id.toString())),BooleanClause.Occur.MUST);
+            	q.add(new TermQuery(new Term (FIELD_KIND, entity.getClass().getName())),BooleanClause.Occur.MUST);
+                indexWriter.deleteDocuments(q); 
             }
             else {
                 Logger.warn("Entity "+cls+"'s Id field is null!");

@@ -19,7 +19,7 @@ public class IxModel extends Model {
     @JsonView(BeanViews.Full.class)
     public Namespace namespace; // namespace of dictionary, ontology, etc.
     
-    public final Date created = new Date ();
+    public Date created = new Date ();
     public Date modified;
     public boolean deprecated;
 

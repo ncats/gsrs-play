@@ -16,23 +16,35 @@
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
         var CV = {
-           getDomain: function(path){
+            getByField: function(path){
                 var ret;
-             return load().then(function(data){
-                 var terms = data.data.content[0].terms;
+/*             return load().then(function(data){
+                 var terms = data.data.content[0].terms;*/
                 var patharr = path.split('.');
                 if(patharr.length>2){
                     patharr=  _.takeRight(patharr, 2);
                 }
                 var pathString = _.join(patharr, '.');
-                     var domain = _.find(terms, function(cv) {
+               return $http.get( baseurl + "api/v1/vocabularies?filter=fields.term='" +pathString+"'",{cache:true},{
+                   headers: {
+                       'Content-Type': 'text/plain'
+                   }
+               }).success(function (data) {
+                  // console.log(data);
+                   if(data.content.length > 0) {
+                       return data;
+                   }else{
+                       return 0;
+                   }
+               });
+                    /* var domain = _.find(terms, function(cv) {
                         return cv.value == pathString;
                     });
                     if(!_.isUndefined(domain)){
                         ret = domain.display;
                     }
-                    return ret;
-                });
+                    return ret;*/
+         //       });
             },
 
             getCV: function(domain){
@@ -119,13 +131,15 @@
 
             updateCV: function(domainobj){
                 console.log(domainobj);
-                $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
+                var promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 }).success(function(data){
                     alert('update was performed.');
+                    return data;
                 });
+                return promise;
             },
 
             addCV: function(field, newcv){
@@ -138,6 +152,7 @@
                      'Content-Type': 'application/json'
                      }
                      }).success(function(data){
+
                    //  alert('update was performed.');
                      });
                 });

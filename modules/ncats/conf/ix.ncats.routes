@@ -3,7 +3,8 @@
 #
 
 # render an arbitrary value
-GET	 /render/:value	ix.ncats.controllers.App.render(value: String, size: Int ?= 150)
+GET	 /render/*value	ix.ncats.controllers.App.render(value: String, size: Int ?= 150)
+GET	 /render	ix.ncats.controllers.App.render(structure: String ?= null, size: Int ?= 150)
 #GET	/rendertest	ix.ncats.controllers.App.rendertest
 
 # return a structure in the designated format

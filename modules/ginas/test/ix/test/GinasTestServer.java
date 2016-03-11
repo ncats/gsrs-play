@@ -14,8 +14,10 @@ import java.util.concurrent.Callable;
 
 import com.typesafe.config.ConfigFactory;
 import ix.core.controllers.AdminFactory;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.ginas.utils.validation.Validation;
 import ix.ncats.controllers.auth.Authentication;
@@ -79,10 +81,13 @@ public class GinasTestServer extends ExternalResource{
 	 private static final String API_URL_APPROVE = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@approve";
 	 private static final String API_URL_UPDATE = "http://localhost:9001/ginas/app/api/v1/substances";
 	 
+	 private static final String API_URL_SUBSTANCES_SEARCH="http://localhost:9001/ginas/app/api/v1/substances/search";
+     
 	 private static final String API_URL_MAKE_FAKE_USERS="http://localhost:9001/ginas/app/api/v1/@deleteme";
      private static final String API_URL_WHOAMI="http://localhost:9001/ginas/app/api/v1/whoami";
      
      
+     private static final String UI_URL_SUBSTANCES="http://localhost:9001/ginas/app/substance";
      private static final String UI_URL_SUBSTANCE="http://localhost:9001/ginas/app/substance/$ID$";
      private static final String UI_URL_SUBSTANCE_VERSION="http://localhost:9001/ginas/app/substance/$ID$/v/$VERSION$";
      private static final String API_CV_LIST="http://localhost:9001/ginas/app/api/v1/vocabularies";
@@ -90,8 +95,11 @@ public class GinasTestServer extends ExternalResource{
      
 	 public static final String FAKE_USER_1="fakeuser1";
 	 public static final String FAKE_USER_2="fakeuser2";
+	 public static final String FAKE_USER_3="fakeuser3";
+	 
 	 public static final String FAKE_PASSWORD_1="madeup1";
 	 public static final String FAKE_PASSWORD_2="madeup2";
+	 public static final String FAKE_PASSWORD_3="madeup3";
 	 
 	 
     private static long timeout= 10000L;
@@ -136,6 +144,9 @@ public class GinasTestServer extends ExternalResource{
     	login(FAKE_USER_2,FAKE_PASSWORD_2);
     }
 
+	public void loginFakeUser3() {
+		login(FAKE_USER_3,FAKE_PASSWORD_3);
+	}
     //logs in user, also sets default authentication type
     //if previously set to NONE
     public void login(String username, String password){
@@ -239,7 +250,7 @@ public class GinasTestServer extends ExternalResource{
     	WSResponse wsResponse1 = this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     	return wsResponse1;
     }
-    public WSResponse fetchSubstanceHistory(String uuid, String version){
+    public WSResponse fetchSubstanceHistory(String uuid, int version){
     	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid))
     			.setQueryParameter("filter","path=null AND version=\'" + version + "\'")
     			.get().get(timeout);
@@ -270,9 +281,33 @@ public class GinasTestServer extends ExternalResource{
 	}
     
     //JSON methods
-    public JsonNode fetchSubstanceHistoryJSON(String uuid, String version){
+
+    /**
+     * Get the summary JSON which contains the oldValue and newValue URLs
+     * for this version change.
+     * @param uuid the UUID of the substance to fetch.
+     *
+     * @param version the version to of the substance to fetch.
+     * @return the JsonNode , should not be null.
+     */
+    public JsonNode fetchSubstanceHistoryJSON(String uuid, int version){
     	return ensureExctractJSON(fetchSubstanceHistory(uuid, version));
     }
+
+    public JsonHistoryResult fetchSubstanceJSON(String uuid, int version){
+        JsonNode edits = fetchSubstanceHistoryJSON(uuid,version);
+        //should only have 1 edit...so this should be safe
+        JsonNode edit = edits.iterator().next();
+        JsonNode oldv= urlJSON(edit.get("oldValue").asText());
+        JsonNode newv= urlJSON(edit.get("newValue").asText());
+
+
+
+        return new JsonHistoryResult(edit, oldv, newv);
+    }
+
+
+
     public JsonNode fetchSubstanceJSON(String uuid){
     	return ensureExctractJSON(fetchSubstance(uuid));
     }
@@ -297,6 +332,12 @@ public class GinasTestServer extends ExternalResource{
 	public JsonNode vocabulariesJSON(){
 		return ensureExctractJSON(vocabularies());
 	}
+	public JsonNode fetchSubstancesSearchJSON() {
+		return ensureExctractJSON(fetchSubstancesSearch());
+	}
+	public WSResponse fetchSubstancesSearch() {
+		return url(API_URL_SUBSTANCES_SEARCH).get().get(timeout);
+	}
 	
 	
 	public WSResponse vocabularies(){
@@ -310,8 +351,8 @@ public class GinasTestServer extends ExternalResource{
 		return urlString(UI_URL_SUBSTANCE.replace("$ID$", id));
 	}
 
-	public String fetchSubstanceVersionUI(String id, String version){
-		return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", version));
+	public String fetchSubstanceVersionUI(String id, int version){
+		return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", Integer.toString(version)));
 	}
 	
 	public String urlString(String url){
@@ -375,6 +416,12 @@ public class GinasTestServer extends ExternalResource{
         return wsResponse1;
     }
     
+
+	public String fetchSubstancesUI(String uuid) {
+		return urlString(this.UI_URL_SUBSTANCES);
+	}
+	
+    
     
     
     
@@ -413,6 +460,8 @@ public class GinasTestServer extends ExternalResource{
 
         UserProfileFactory.init();
         PrincipalFactory.init();
+        EntityFactory.init();
+        SearchFactory.init();
 
     }
 
@@ -450,8 +499,32 @@ public class GinasTestServer extends ExternalResource{
         stop(ts);
     }
 
-	
 
 	
+
+    public static class JsonHistoryResult{
+        private final JsonNode historyNode;
+
+        private final JsonNode oldValue, newValue;
+
+        public JsonHistoryResult(JsonNode historyNode, JsonNode oldValue, JsonNode newValue) {
+            this.historyNode = historyNode;
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+        }
+
+        public JsonNode getHistoryNode() {
+            return historyNode;
+        }
+
+        public JsonNode getOldValue() {
+            return oldValue;
+        }
+
+        public JsonNode getNewValue() {
+            return newValue;
+        }
+    }
+
 
 }

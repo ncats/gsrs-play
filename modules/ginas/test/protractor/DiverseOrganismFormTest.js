@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var DiverseOraganismPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -14,7 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'diverseDetailsForm',
-        buttonID: 'organismDetails',
+        buttonId: 'organismDetails',
         fields: [{
             model: 'structurallyDiverse.organismFamily',
             type: 'dropdown-view-edit'

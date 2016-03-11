@@ -87,6 +87,8 @@ public class UserProfile extends IxModel implements Subject {
         }
         return rolekinds;
     }
+    
+    
     public void setRoles(List<Role> rolekinds){
         ObjectMapper om = new ObjectMapper();
         rolesJSON=om.valueToTree(rolekinds).toString();
@@ -96,6 +98,10 @@ public class UserProfile extends IxModel implements Subject {
         List<Role> roles=getRoles();
         roles.add(role);
         setRoles(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
+    }
+    
+    public boolean hasRole(Role role){
+        return this.getRoles().contains(role);
     }
     
     
@@ -151,4 +157,11 @@ public class UserProfile extends IxModel implements Subject {
                 this.salt = AdminFactory.generateSalt();
                 this.hashp = Util.encrypt(password, this.salt);
         }
+
+		public static UserProfile GUEST() {
+			UserProfile up=new UserProfile(new Principal("GUEST"));
+			up.addRole(Role.Query);
+			
+			return up;
+		}
 }
