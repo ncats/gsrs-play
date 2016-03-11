@@ -39,6 +39,7 @@ import ix.ginas.utils.GinasProcessingMessage.Link;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.NucleicAcidUtils;
 import ix.ginas.utils.ProteinUtils;
+import play.Configuration;
 import play.Logger;
 import play.Play;
 import play.mvc.Call;
@@ -46,6 +47,9 @@ import play.mvc.Call;
 public class Validation {
 	
 	private static CodeSequentialGenerator seqGen=null;
+	public static CodeSequentialGenerator getCodeGenerator(){
+		return seqGen;
+	}
 
     static PayloadPlugin _payload =null;
 
@@ -54,10 +58,11 @@ public class Validation {
 	}
 
     public static void init() {
-        String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
-        String codeSystemSuffix = Play.application().configuration().getString("ix.ginas.generatedcode.suffix", null);
-        int length = Play.application().configuration().getInt("ix.ginas.generatedcode.length", 10);
-        boolean padding = Play.application().configuration().getBoolean("ix.ginas.generatedcode.padding", true);
+    	Configuration conf=Play.application().configuration();
+        String codeSystem = 		conf.getString("ix.ginas.generatedcode.codesystem", null);
+        String codeSystemSuffix = 	conf.getString("ix.ginas.generatedcode.suffix", null);
+        int length = 				conf.getInt("ix.ginas.generatedcode.length", 10);
+        boolean padding = 			conf.getBoolean("ix.ginas.generatedcode.padding", true);
         if(codeSystem!=null){
             seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
         }
@@ -171,22 +176,10 @@ public class Validation {
 		        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance class \"" +s.substanceClass + "\" is not valid" ));
 		            break;
 	        }
-	        if(seqGen!=null && s.definitionType == SubstanceDefinitionType.PRIMARY){
-		        boolean hasCode = false;
-		        for(Code c:s.codes){
-		        	if(c.codeSystem.equals(seqGen.getCodeSystem())){
-		        		hasCode=true;
-		        	}
-		        }
-		        if(!hasCode){
-		        	try{
-			        	Code c=seqGen.addCode(s);
-			        	//System.out.println("Generating new code:" + c.code);
-		        	}catch(Exception e){
-		        		e.printStackTrace();
-		        	}
-		        }
-	        }
+	        
+	        // TODO: move to some other location,
+	        // perhaps a preUpdate hook?
+	        //attempted
 	        
 	        if(GinasProcessingMessage.ALL_VALID(gpm)){
 	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));

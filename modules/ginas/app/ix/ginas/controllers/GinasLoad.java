@@ -25,6 +25,7 @@ import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Util;
 import ix.core.ValidationMessage;
 import ix.core.adapters.EntityPersistAdapter;
@@ -118,6 +119,7 @@ public class GinasLoad extends App {
 		}
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result load() {
 		if (!ALLOW_LOAD) {
 			return redirect(ix.ginas.controllers.routes.GinasFactory.index());
@@ -125,6 +127,7 @@ public class GinasLoad extends App {
 		return ok(ix.ginas.views.html.admin.load.render());
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadJSON() {
 		if (!ALLOW_LOAD) {
 			return badRequest("Invalid request!");
@@ -165,7 +168,9 @@ public class GinasLoad extends App {
 		}
 
 	}
-	
+
+
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result uploadFile() {
 		DynamicForm requestData = Form.form().bindFromRequest();
 		String type = requestData.get("file-type");
@@ -189,7 +194,7 @@ public class GinasLoad extends App {
 		}
 	}
 
-
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadSDF(String payloadUUID) {
 		Payload sdpayload = PayloadFactory.getPayload(UUID
 				.fromString(payloadUUID));
@@ -242,6 +247,7 @@ public class GinasLoad extends App {
 		return monitorProcess(ProcessingJobFactory.getJob(jobID));
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result monitorProcess(String processID) {
 		
 			String msg = "";
@@ -256,6 +262,7 @@ public class GinasLoad extends App {
 		
 	}
 
+	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result jobs(final String q, final int rows, final int page)
 			throws Exception {
 		final int total = Math.max(ProcessingJobFactory.getCount(), 1);
@@ -313,36 +320,8 @@ public class GinasLoad extends App {
 
 	}
 
-	public static Result testSubmit() {
-		return ok(ix.ginas.views.html.test.testsubmit.render());
-	}
 
-	public static Result validateSubstance() {
-		String mappingsjson = extractSubstanceJSON();
-		Substance sub = null;
-		List<ValidationMessage> messages = new ArrayList<ValidationMessage>();
-
-		try {
-			System.out.println(mappingsjson);
-			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(
-					mappingsjson);
-			
-			JsonNode jn = ex.getNextRecord();
-			sub = GinasUtils.makeSubstance(jn);
-			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL());
-			dsv.validate(sub,messages);
-//			messages.addAll(Validation.validateAndPrepare(sub,
-//					GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
-		} catch (IllegalStateException e) {
-			messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
-		} catch(Exception e){
-			messages.add(GinasProcessingMessage
-					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
-		}
-		ObjectMapper om = new ObjectMapper();
-		return ok(om.valueToTree(messages));
-	}
-
+	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result validateChemicalDuplicates() {
 		String mappingsjson = extractSubstanceJSON();
 		Substance sub = null;
@@ -383,173 +362,8 @@ public class GinasLoad extends App {
 		return ok(om.valueToTree(messages));
 	}
 
-	public static Result submitSubstance() {
-		String mappingsjson = extractSubstanceJSON();
-
-		Substance sub = null;
-
-		try {
-			System.out.println(mappingsjson);
-			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(
-					mappingsjson);
-			JsonNode jn = ex.getNextRecord();
-			GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer) ex
-					.getTransformer();
-			sub = trans.transformSubstance(jn);
-			Substance osub = (sub.getUuid() == null) ? null : SubstanceFactory
-					.getSubstance(sub.getUuid());
-
-			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(
-					GinasProcessingStrategy.ACCEPT_APPLY_ALL_MARK_FAILED()
-					);
-						
-			List<ValidationMessage> messages = new ArrayList<ValidationMessage>();
-			dsv.validate(sub,messages);
-			
-			// how, exactly, should this be updated?
-			if (osub != null) {
-				if (osub instanceof ChemicalSubstance) {
-					for (Moiety m : ((ChemicalSubstance) osub).moieties) {
-						try {
-							m.delete();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}
-
-				if (sub instanceof ChemicalSubstance) {
-
-					((ChemicalSubstance) sub)
-							.structure = (((ChemicalSubstance) sub).structure);
-					List<Moiety> mlist = new ArrayList<Moiety>();
-					for (Moiety m : ((ChemicalSubstance) sub).moieties) {
-						try {
-							m.save();
-						} catch (Exception e) {
-							m.update();
-						}
-						mlist.add(m);
-					}
-					((ChemicalSubstance) sub).moieties = mlist;
-				}
-				for (Relationship m : sub.relationships) {
-					try {
-						// I don't know why this is necessary
-						m.relatedSubstance =m.relatedSubstance;
-						m.save();
-					} catch (Exception e) {
-						m.relatedSubstance.update();
-					}
-				}
-				sub.update();
-
-			} else {
-				List<String> errors = new ArrayList<String>();
-				if (!GinasUtils.persistSubstance(sub, EntityPersistAdapter.getStructureIndexer(), errors)) {
-					throw new IllegalStateException(errors.toString());
-				}
-			}
-		} catch (Throwable e) {
-			return _internalServerError(e);
-		}
-		return redirect(ix.ginas.controllers.routes.GinasApp.substance(GinasApp
-				.getId(sub)));
-	}
-
-	public static boolean applyChanges(GinasCommonSubData gold,
-			GinasCommonSubData gnew) throws IllegalArgumentException,
-			IllegalAccessException, InvocationTargetException {
-		if (gnew == null)
-			return false;
-		if (!gold.getClass().equals(gnew.getClass())) {
-			throw new IllegalStateException("old type != new type");
-		}
-		Field[] fields = gold.getClass().getFields();
-		Method[] methods = gold.getClass().getMethods();
-		Map<String, Method> setters = new HashMap<String, Method>();
-		for (Method m : methods) {
-			if (m.getName().startsWith("set")) {
-				setters.put(m.getName().toLowerCase(), m);
-			}
-		}
-
-		for (Field f : fields) {
-			if (!java.lang.reflect.Modifier.isStatic(f.getModifiers())
-					&& !java.lang.reflect.Modifier.isFinal(f.getModifiers())) {
-				Object old = f.get(gold);
-				Object nn = f.get(gnew);
-
-				Method m = setters.get(("set" + f.getName()).toLowerCase());
-				if (m != null) {
-					m.invoke(gold, nn);
-				}
-				if (nn != null && !nn.equals(old))
-					Logger.debug("Setting " + f.getName() + " to " + nn
-							+ " now " + f.get(gold) + " from " + old);
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Recursively populates a map from a ginas object from the IDs to the
-	 * corresponding ginas objects.
-	 * 
-	 * This is used during update procedures, when an old set of objects related
-	 * to a substance must be updated with new versions of the data.
-	 * 
-	 * 
-	 * 
-	 * @param ginasObject
-	 * @param gmap
-	 * @return
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	public static Map<String, GinasCommonSubData> getEntityMap(
-			GinasCommonSubData ginasObject, Map<String, GinasCommonSubData> gmap)
-			throws IllegalArgumentException, IllegalAccessException {
-		if (gmap == null)
-			gmap = new HashMap<String, GinasCommonSubData>();
-		Field[] fields = ginasObject.getClass().getFields();
-
-		for (Field f : fields) {
-			if (!java.lang.reflect.Modifier.isStatic(f.getModifiers())
-					&& !java.lang.reflect.Modifier.isFinal(f.getModifiers())) {
-				Object o = (Object) f.get(ginasObject);
-				if (o != null && o instanceof GinasCommonSubData) {
-					gmap.put(((GinasCommonSubData) o).getOrGenerateUUID()
-							.toString(), (GinasCommonSubData) o);
-					getEntityMap((GinasCommonSubData) o, gmap);
-				}
-
-				if (o != null
-						&& Collection.class.isAssignableFrom(o.getClass())) {
-					for (Object osub : (Collection) o) {
-						if (osub != null && osub instanceof GinasCommonSubData) {
-							gmap.put(((GinasCommonSubData) osub)
-									.getOrGenerateUUID().toString(),
-									(GinasCommonSubData) osub);
-							getEntityMap((GinasCommonSubData) osub, gmap);
-						}
-					}
-				}
-			}
-		}
-
-		return gmap;
-	}
-
 	public static String extractSubstanceJSON() {
 		String mappingsjson = null;
-		// try {
-		// System.out.println("This is what I got:" );
-		// System.out.write(request().body().asRaw().asBytes());
-		// } catch (IOException e1) {
-		// // TODO Auto-generated catch block
-		// e1.printStackTrace();
-		// }
 		try {
 			mappingsjson = request().body().asJson().toString();
 		} catch (Exception e) {

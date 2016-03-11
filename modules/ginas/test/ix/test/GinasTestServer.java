@@ -18,8 +18,10 @@ import java.util.concurrent.Callable;
 
 import com.typesafe.config.ConfigFactory;
 import ix.core.controllers.AdminFactory;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.ginas.utils.validation.Validation;
 import ix.ncats.controllers.auth.Authentication;
@@ -83,10 +85,13 @@ public class GinasTestServer extends ExternalResource{
 	 private static final String API_URL_APPROVE = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@approve";
 	 private static final String API_URL_UPDATE = "http://localhost:9001/ginas/app/api/v1/substances";
 	 
+	 private static final String API_URL_SUBSTANCES_SEARCH="http://localhost:9001/ginas/app/api/v1/substances/search";
+
 	 private static final String API_URL_MAKE_FAKE_USERS="http://localhost:9001/ginas/app/api/v1/@deleteme";
      private static final String API_URL_WHOAMI="http://localhost:9001/ginas/app/api/v1/whoami";
      
      
+     private static final String UI_URL_SUBSTANCES="http://localhost:9001/ginas/app/substance";
      private static final String UI_URL_SUBSTANCE="http://localhost:9001/ginas/app/substance/$ID$";
      private static final String UI_URL_SUBSTANCE_VERSION="http://localhost:9001/ginas/app/substance/$ID$/v/$VERSION$";
      private static final String API_CV_LIST="http://localhost:9001/ginas/app/api/v1/vocabularies";
@@ -94,9 +99,12 @@ public class GinasTestServer extends ExternalResource{
      
 	 public static final String FAKE_USER_1="fakeuser1";
 	 public static final String FAKE_USER_2="fakeuser2";
+	 public static final String FAKE_USER_3="fakeuser3";
+
 	 public static final String FAKE_PASSWORD_1="madeup1";
 	 public static final String FAKE_PASSWORD_2="madeup2";
-	 
+	 public static final String FAKE_PASSWORD_3="madeup3";
+
 	 
     private static long timeout= 10000L;
 
@@ -129,6 +137,9 @@ public class GinasTestServer extends ExternalResource{
     	return login(FAKE_USER_2,FAKE_PASSWORD_2);
     }
 
+	public void loginFakeUser3() {
+		login(FAKE_USER_3,FAKE_PASSWORD_3);
+	}
     //logs in user, also sets default authentication type
     //if previously set to NONE
     public UserSession login(String username, String password){
@@ -146,13 +157,13 @@ public class GinasTestServer extends ExternalResource{
 
 
 
-    
+
     private WSRequestHolder  url(String url){
     	return defaultSession.url(url);
     }
 
 
-    
+
     public void ensureSetupUsers(){
 			    	WSResponse wsResponse1 = url(API_URL_MAKE_FAKE_USERS).get().get(timeout);
 			    	assertThat(wsResponse1.getStatus()).isEqualTo(OK);
@@ -160,7 +171,7 @@ public class GinasTestServer extends ExternalResource{
 			    	JsonNode jsonNode1 = wsResponse1.asJson();
 			    	assertThat(jsonNode1.get(0).get("identifier").asText()).isEqualTo(GinasTestServer.FAKE_USER_1);
 			    	assertThat(jsonNode1.get(1).get("identifier").asText()).isEqualTo(GinasTestServer.FAKE_USER_2);
-            
+
     }
 
 
@@ -232,7 +243,7 @@ public class GinasTestServer extends ExternalResource{
     public UserSession getNotLoggedInSession(){
         return defaultSession;
     }
-	
+
 
     public static class JsonHistoryResult{
         private final JsonNode historyNode;

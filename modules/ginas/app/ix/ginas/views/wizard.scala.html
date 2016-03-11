@@ -3,64 +3,62 @@
 @(kind: String, json: String)
 
 
-@wizardfields(kind: String) = {
+    @wizardfields(kind: String) = {
 
-    <header-form kind = "substance.substanceClass" parent = substance></header-form>
-    <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
+        <header-form kind = "substance.substanceClass" parent = substance></header-form>
+        <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
 
 
-@kind match {
+    @kind match {
         case "chemical" => {
-
-@*
+            @*
             <div>@forms.structureform()</div>
-*@
+            *@
             <structure-form parent = substance></structure-form>
 
             <moiety-form parent = substance ng-cloak></moiety-form>
         }
         case "mixture" => {
-           <mixture-component-select-form parent = substance></mixture-component-select-form>
+            <mixture-component-select-form parent = substance></mixture-component-select-form>
         }
         case "protein" => {
             <protein-details-form parent = substance></protein-details-form>
-            <subunit-form referenceobj ="referenceobj" parent = substance  ng-cloak></subunit-form>
+            <subunit-form referenceobj ="referenceobj" parent = substance ng-cloak></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
-            <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
-            <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
-            <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
+                <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
+                <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
+                <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
             </div>
         }
         case "structurallyDiverse" => {
-           <diverse-type-form parent = substance></diverse-type-form>
+            <diverse-type-form parent = substance></diverse-type-form>
             <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
-           <diverse-source-form parent = substance></diverse-source-form>
-           <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
-            <diverse-details-form  ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-details-form>
-            <parent-form parent = substance></parent-form>
-            <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
+                <diverse-source-form parent = substance></diverse-source-form>
+                <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
+                <diverse-details-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-details-form>
+                <parent-form parent = substance></parent-form>
+                <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
             </div>
 
         }
         case "concept" => {
             <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
             <div ng-if="substance.uuid">
-            <concept-upgrade-form parent = substance></concept-upgrade-form>
+                <concept-upgrade-form parent = substance></concept-upgrade-form>
             </div>
         }
         case "polymer" => {
-           <div>Polymer not implemented yet, still in development</div>
+            <div>Polymer not implemented yet, still in development</div>
             <polymer-classification-form parent=substance></polymer-classification-form>
             <polymer-monomer-form parent=substance></polymer-monomer-form>
             <structure-form parent = substance></structure-form>
-
-@*
+            @*
             <div>@forms.polymerstructureform()</div>
-*@
+            *@
             <polymer-sru-form parent=substance></polymer-sru-form>
         }
         case "nucleicAcid" => {
-           <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
+            <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.nucleicAcid.subunits.length>0">
                 <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
@@ -70,105 +68,110 @@
         case "specifiedSubstanceG1" => {
             <ss-constituent-form parent = substance></ss-constituent-form>
         }
-        case x =>{
-            <h2>Unknown substance class: @kind</h2>    
+        case x => {
+            <h2>Unknown substance class: @kind</h2>
         }
     }
-    <div ng-if="substance.substanceClass !== 'chemical'">
-        <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
-        <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
-        <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-    </div>
-    <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
-    <relationship-form parent = substance ng-cloak></relationship-form>
-    <note-form parent = substance ng-cloak></note-form>
-    <property-form parent = substance ng-cloak></property-form>
-   <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
-}
-
-@ginas("Register", kind) {
-    @menu()
-}{
-    <div ng-cloak>
-        <form class="form-horizontal" name ="substanceForm" role ="form" novalidate>
-        @wizardfields(kind)
-
-        <div class = "row info">
-            <div class="col-md-4">
-                <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSONBtn">Show JSON</button>
-                <button class="btn btn-primary" ng-show="show" ng-click="show=false" id="hideJSONBth" >Hide JSON</button>
-                <button class="btn btn-primary" ng-click="validateSubstance(substance)" id="validateBtn">Validate</button>
-                <button class="btn btn-primary" ng-click="compare(); diff = true" id = "compareBtn">Compare</button></div>
-            <div class="col-md-2 pull-right">
-                <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">Approve</button>
-                <button class="btn btn-primary" ng-click="submitSubstanceConfirm(substance)">Submit</button>
-            </div>
+        <div ng-if="substance.substanceClass !== 'chemical'">
+            <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
+            <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
+            <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
         </div>
-            <h1 ng-if ="substanceEqual" >{{substancesEqual}}</h1>
-@*            <pre>Substance Form valid = {{ substanceForm.$valid | json }}</pre>*@
-            <div class = "row" ng-repeat="err in errorsArray">
-            <div class="col-md-12">
-                <div class="alert {{err.class}} alert-dismissible" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
-                    </button>
-                    <span><h4>{{err.messageType}}</h4>
-                        <span>{{err.message}}</span>
-                        <div ng-repeat="link in err.links">
-                            <a target = "_blank" href="{{link.href}}">{{link.text}}</a>
+        <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
+        <relationship-form parent = substance ng-cloak></relationship-form>
+        <note-form parent = substance ng-cloak></note-form>
+        <property-form parent = substance ng-cloak></property-form>
+        <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
+    }
+
+    @ginas("Register", kind) {
+        @menu()
+    } {
+        <div ng-cloak>
+            <form class="form-horizontal" name ="substanceForm" role ="form" novalidate>
+                @wizardfields(kind)
+
+                <div class = "row info">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSONBtn">
+                            Show JSON</button>
+                        <button class="btn btn-primary" ng-show="show" ng-click="show=false" id="hideJSONBth" >
+                            Hide JSON</button>
+                        <button class="btn btn-primary" ng-click="validateSubstance(substance)" id="validateBtn">
+                            Validate</button>
+                        <button class="btn btn-primary" ng-click="compare(); diff = true" id = "compareBtn">
+                            Compare</button></div>
+                    <div class="col-md-2 pull-right">
+                        <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">
+                            Approve</button>
+                        <button class="btn btn-primary" ng-click="submitSubstanceConfirm(substance)">Submit</button>
+                    </div>
+                </div>
+                <h1 ng-if ="substanceEqual" >{{substancesEqual}}</h1>
+                @* <pre>Substance Form valid = {{ substanceForm.$valid | json }}</pre>*@
+                <div class = "row" ng-repeat="err in errorsArray">
+                    <div class="col-md-12">
+                        <div class="alert {{err.class}} alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                            </button>
+                            <span><h4>{{err.messageType}}</h4>
+                                <span>{{err.message}}</span>
+                                <div ng-repeat="link in err.links">
+                                    <a target = "_blank" href="{{link.href}}">{{link.text}}</a>
+                                </div>
+                            </span>
                         </div>
-                    </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class ="row info" ng-show="show">
+            <div>
+                <span ng-show="viewStyle!=='text'">Showing JSON Object structure</span>
+                <span ng-show="viewStyle=='text'">Showing Raw JSON </span>
+            </div>
+            <button class="btn btn-primary" ng-show="!raw" ng-click="angular.toJson(submitSubstance); raw=true" >
+                Show Raw</button>
+            <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
+            <json-formatter ng-show="!raw" json=submitSubstanceView open="666"></json-formatter>
+            <pre ng-show="raw==true">{{submitSubstanceView | json }}</pre>
+            @*
+            <pre ng-show="raw">{{subTest}}</pre>
+            *@
+        </div>
+        <div ng-hide="diff==true">
+            <div class="row info">
+                <div class = "col-md-12">
+                    <textarea class="form-control" rows="10" ng-model="paste" aria-label="paste substance JSON"></textarea>
                 </div>
             </div>
-        </div>
-        </form>
-    </div>
-    <div class ="row info" ng-show="show">
-	<div>
-		<span ng-show="viewStyle!=='text'">Showing JSON Object structure</span>
-		<span ng-show="viewStyle=='text'">Showing Raw JSON </span>
-	</div>	
-	<button class="btn btn-primary" ng-show="!raw" ng-click="angular.toJson(submitSubstance); raw=true" >Show Raw</button>
-        <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
-        <json-formatter ng-show="!raw" json=submitSubstanceView open="666"></json-formatter>
-	<pre ng-show="raw==true">{{left | json }}</pre>
-@*
-	<pre ng-show="raw">{{subTest}}</pre>
-*@
-    </div>
-    <div ng-hide="diff==true">
-    <div class="row info">
-        <div class = "col-md-12">
-        <textarea class="form-control" rows="10" ng-model="paste" aria-label="paste substance JSON"></textarea>
-    </div>
-        </div>
-    <div class ="row info">
-        <button ng-click="submitpaster(paste); validate(substance)" id="pasteSubstanceBtn">paste</button>
-</div>
+            <div class ="row info">
+                <button ng-click="submitpaster(paste); validate(substance)" id="pasteSubstanceBtn">paste</button>
+            </div>
         </div>
         <div ng-if="diff==true">
             <div class ="row info">
-<div class = "col-md-6">
-    <span>from form</span>
-    <textarea class="form-control" rows="10" ng-model="left"></textarea>
+                <div class = "col-md-6">
+                    <span>from form</span>
+                    <textarea class="form-control" rows="10" ng-model="left"></textarea>
+                </div>
+                <div class = "col-md-6">
+                    <span>from api</span>
+                    <textarea class="form-control" rows="10" ng-model="right"></textarea>
+                </div>
             </div>
-            <div class = "col-md-6">
-                <span>from api</span>
-            <textarea class="form-control" rows="10" ng-model="right"></textarea>
-                    </div>
+            <div class ="row info">
+                <div class ="col-md-12">
+                    <h2>processingDiff</h2>
+                    <pre class="textdiff diff" processing-diff left-obj="left" right-obj="right"></pre>
+                </div>
             </div>
-        <div class ="row info">
-            <div class ="col-md-12">
-                <h2>processingDiff</h2>
-                <pre class="textdiff" processing-diff left-obj="left" right-obj="right"></pre>
-            </div>
-        </div>
         </div>
 
-      <script>
-        var loadjson = @Html(json);
+        <script>
+                var loadjson = @Html(json);
         </script>
-
-@*        <script type="text/ng-template" id="tag-template-script">
+        @* <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >
         <div uib-tooltip="{{data.citation}}">
         <span>{{$getDisplayText()}}</span>
@@ -176,7 +179,6 @@
         </div>
         </div>
         </script>*@
-
-<!-- @*  @fileimport() @addnamelist()*@ -->
-}
+            <!-- @* @fileimport() @addnamelist()*@ -->
+    }
 

@@ -35,7 +35,14 @@ public class UserFetcher {
 	public static UserProfile getActingUserProfile(boolean allowGuest){
 		Principal p= getActingUser(allowGuest);
 		if(p!=null){
-			return UserProfileFactory.getUserProfileForPrincipal(p);
+			UserProfile up=UserProfileFactory.getUserProfileForPrincipal(p);
+			if(up!=null){
+				return up;
+			}else{
+				//return new UserProfile();
+				
+			}
+			
 		}
 		return null;
 	}

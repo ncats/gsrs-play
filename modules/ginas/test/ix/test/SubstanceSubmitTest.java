@@ -22,6 +22,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import play.Logger;
 import play.libs.ws.WSResponse;
+import util.json.JsonUtil;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
@@ -58,11 +59,10 @@ public class SubstanceSubmitTest {
 
         @Test
         public void testAPIValidateSubstance() throws Exception {
-            try(GinasTestServer.UserSession session = ts.loginFakeUser1();
-                InputStream is = new FileInputStream(resource)) {
+            try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
                session.withTokenAuth();
 
-                JsonNode js = new ObjectMapper().readTree(is);
+                JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
                 JsonNode jsonNode1 = session.validateSubstanceJSON(js);
                 assertTrue(jsonNode1.get("valid").asBoolean());
 
@@ -71,11 +71,10 @@ public class SubstanceSubmitTest {
         }
         @Test
         public void testAPIValidateSubmitSubstance()  throws Exception {
-            try(GinasTestServer.UserSession session = ts.loginFakeUser1();
-                InputStream is = new FileInputStream(resource)) {
+            try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
                 session.withTokenAuth();
 
-                JsonNode js = new ObjectMapper().readTree(is);
+                JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
                 JsonNode jsonNode1 = session.validateSubstanceJSON(js);
                 assertTrue(jsonNode1.get("valid").asBoolean());
                 JsonNode jsonNode2 = session.submitSubstanceJSON(js);
@@ -84,11 +83,10 @@ public class SubstanceSubmitTest {
         }
         @Test
         public void testAPIValidateSubmitFetchSubstance()   throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1();
-                        InputStream is = new FileInputStream(resource)) {
+                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
                         session.withTokenAuth();
 
-                        JsonNode js = new ObjectMapper().readTree(is);
+                        JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
                         String uuid = js.get("uuid").asText();
                         JsonNode jsonNode1 = session.validateSubstanceJSON(js);
                         assertTrue(jsonNode1.get("valid").asBoolean());
@@ -101,12 +99,11 @@ public class SubstanceSubmitTest {
         }
         @Test
         public void testAPIValidateSubmitFetchValidateSubstance()  throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1();
-                        InputStream is=new FileInputStream(resource)) {
+                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
 
                         session.withTokenAuth();
 
-                        JsonNode js= new ObjectMapper().readTree(is);
+                        JsonNode js= SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
                         
                         String uuid=js.get("uuid").asText();
                         Logger.info("Running: " + resource);

@@ -119,6 +119,58 @@ public class EditingWorkflowTest {
    	}
     
     @Test
+   	public void testSubmitPublicRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser3();
+                   	JsonNode entered= parseJsonFile(resource);
+
+                   	String uuid=entered.get("uuid").asText();
+
+                   	ts.submitSubstanceFail(entered);
+
+                   	JsonNode updated=new JsonUtil
+                   			.JsonNodeBuilder(entered)
+                   			.add("/access/-", "testGROUP")
+                   			.build();
+                   	updated=ts.submitSubstanceJSON(updated);
+
+                   	updated=new JsonUtil
+                   			.JsonNodeBuilder(updated)
+                   			.remove("/access/0")
+                   			.build();
+                   	ts.updateSubstanceFail(updated);
+                   	ts.loginFakeUser2();
+                   	ts.updateSubstanceJSON(updated);
+               }
+           });
+   	}
+    //Can't submit an preapproved substance via this mechanism
+    //Also, can't change an approvalID here, unless an admin
+    //TODO: add the admin part
+    @Test
+   	public void testSubmitPreApprovedRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= JsonUtil.parseJsonFile(resource);
+                   	ts.submitSubstanceFail(entered);
+                   	entered=SubstanceJsonUtil.toUnapproved(entered);
+                   	entered=ts.submitSubstanceJSON(entered);
+                   	ts.loginFakeUser2();
+                   	entered=ts.approveSubstanceJSON(entered.at("/uuid").asText());
+                   	entered=new JsonUtil
+                   			.JsonNodeBuilder(entered)
+                   			.remove("/approvalID")
+                   			.build();
+                   	ts.updateSubstanceFail(entered);
+
+
+               }
+           });
+   	}
+
+    @Test
    	public void testAddNameRemote() throws Exception {
         try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
             JsonNode entered = parseJsonFile(resource);
@@ -152,6 +204,41 @@ public class EditingWorkflowTest {
         }
    	}
     
+    @Test
+   	public void testFacetUpdateRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
+
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();
+                   	submitSubstance(entered);
+                   	int oldProteinCount=getFacetCountFor("Substance Class","protein");
+                   	assertEquals(1,oldProteinCount);
+                   	renameServer(uuid);
+                   	int newProteinCount=getFacetCountFor("Substance Class","protein");
+                   	assertEquals(1,newProteinCount);
+
+               }
+           });
+   	}
+
+    public int getFacetCountFor(String face, String label){
+    	JsonNode jsn=ts.fetchSubstancesSearchJSON();
+       	JsonNode facets=jsn.at("/facets");
+       	for(JsonNode facet:facets){
+       		String name=facet.at("/name").asText();
+       		if("Substance Class".equals(name)){
+       			for(JsonNode val:facet.at("/values")){
+       				if("protein".equals(val.at("/label").asText())){
+       					return val.at("/count").asInt();
+       				}
+       			}
+       		}
+       	}
+       	return 0;
+    }
+
     @Test
    	public void testChangeDisuflideProteinRemote() throws Exception {
         try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
@@ -569,16 +656,12 @@ public class EditingWorkflowTest {
 		return parseJsonFile(new File(path));
 	}
     public JsonNode parseJsonFile(File resource){
-    	try(InputStream is=new FileInputStream(resource)){
-        	return new ObjectMapper().readTree(is);
-    	}catch(Throwable t){
-    		throw new RuntimeException(t);
-    	}
+    	return SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
     }
 
 
     
-    
+
 	public void iterativeRemovalOfDisulfides(GinasTestServer.UserSession session, String uuid){
 		while (removeLastDisulfide(session, uuid)!=null);
 	}

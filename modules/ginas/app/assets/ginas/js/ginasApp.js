@@ -543,6 +543,24 @@
             $scope.validateSubstance(f);
         };
 
+		$scope.dismiss = function (err){
+			//can't dismiss errors
+			//if(err.messageType!=="ERROR"){
+				_.pull($scope.errorsArray,err);
+		//	}
+			$scope.canSubmit=$scope.noErrors();
+		};
+		$scope.canSubmit=false;
+		$scope.noErrors = function (){
+            var errs = _.filter($scope.errorsArray, function(err){
+                if(err.messageType==="ERROR"){
+                    return err;
+                }
+            });
+            console.log(errs);
+			 return (errs.length<=0);
+		};
+
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
 
@@ -551,8 +569,10 @@
             sub = angular.toJson($scope.fromFormSubstance(sub));
             console.log(sub);
             $scope.errorsArray = [];
-            $http.post(baseurl + 'register/validate', sub).success(function (response) {
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
                 var arr = [];
+                console.log(responseTotal);
+                var response=responseTotal.validationMessages;
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
                         arr.push(response[i]);
@@ -564,11 +584,11 @@
                         response[i].class = "alert-info";
                     if (response[i].messageType == "SUCCESS")
                         response[i].class = "alert-success";
-
-
                 }
 
                 $scope.errorsArray = arr;
+                $scope.canSubmit=$scope.noErrors();
+                
                 callback();
             });
         };
@@ -594,6 +614,7 @@
             var sub = angular.copy($scope.substance);
             if (_.has(sub, '$$update')) {
                 sub = angular.toJson($scope.fromFormSubstance(sub));
+                console.log("TEST");
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -604,7 +625,7 @@
                 });
             } else {
                 sub = angular.toJson($scope.fromFormSubstance(sub));
-                $http.post(baseurl + 'register/submit', sub, {
+                $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -806,9 +827,9 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
-                    url = baseurl + "render/" + attrs.smiles;
+                    url = baseurl + "render?structure=" + attrs.smiles +"&size={{size||150}}";
                 }
-                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image">');
+                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image" class="tooltip-img">');
                 element.append(template);
                 $compile(template)(scope);
             }
@@ -1077,9 +1098,6 @@
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if(scope.field) {
-                            console.log(scope);
-                            console.log(scope.field);
-                            console.log(siteList.siteString(scope.referenceobj[scope.field]));
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
                             scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
@@ -1149,12 +1167,14 @@
 
                 } else {
                     if (_.has(aa, 'structuralModifications')) {
+                        console.log(aa);
                         scope.acidClass = "modification";
                     } else if (_.has(aa, 'disulfide')) {
                         scope.acidClass = "disulfide";
                     } else if (_.has(aa, 'otherLinks')) {
                         scope.acidClass = "otherLinks";
                     } else if (_.has(aa, 'glycosylation')) {
+                        console.log(aa);
                         scope.acidClass = "glycosylation";
                     } else if (_.has(aa, 'sugar')) {
                         scope.acidClass = "sugar";
@@ -1309,7 +1329,9 @@
                         obj.value = aa;
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
-                            obj.name = temp.display;
+                            obj=_.pickBy(temp, _.isString);
+                            obj.value = aa;
+                            //obj.name = temp.display;
                             obj.valid = true;
                             if (scope.obj.subunitIndex) {
                                 obj.subunitIndex = scope.obj.subunitIndex;
@@ -1553,10 +1575,12 @@
             replace: true,
             restrict: 'E',
             scope: {
-                subref: '='
+                subref: '=',
+                size:'='
             },
             link: function (scope, element) {
-                var template = angular.element('<div><rendered id = {{subref.refuuid}}></rendered><br/><code>{{subref.refPname}}</code></div>');
+                console.log(scope.size);
+                var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);
             }
@@ -1810,7 +1834,10 @@
             template: '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 scope.deleteObj = function () {
+                    console.log(scope);
                     if (scope.parent) {
+                        console.log(scope.parent);
+                        console.log(attrs.path);
                         var arr = _.get(scope.parent, attrs.path);
                         arr.splice(arr.indexOf(scope.obj), 1);
                     } else {

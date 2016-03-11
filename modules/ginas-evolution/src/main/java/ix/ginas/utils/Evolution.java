@@ -6,9 +6,6 @@ import java.util.*;
 import java.security.*;
 import java.sql.*;
 
-import play.*;
-import play.db.*;
-
 import com.avaje.ebean.*;
 import com.avaje.ebean.config.*;
 import com.avaje.ebeaninternal.server.ddl.*;
@@ -37,17 +34,24 @@ public class Evolution {
         this.source = source;
         this.md = MessageDigest.getInstance("SHA1");
         this.ddl = new File ("modules/ginas/conf/evolutions/"+source+"/1.sql");
-        
-        String postsqlfile = "conf/sql/post/ginas-oracle.sql";
+
         System.out.println("=============================");
-        String postSQL=null;
-        try{
-        	postSQL = new Scanner(new File(postsqlfile)).useDelimiter("\\Z").next();
-        	System.out.println("postSQL:" + postSQL);
-        	
+
+        String postSQL=null;    
+        try {
+            File postsqlfile = new File ("conf/sql/post/ginas-oracle.sql");
+            if (postsqlfile.exists()) {
+                postSQL = new Scanner(postsqlfile).useDelimiter("\\Z").next();
+            }
+            else {
+                postSQL = new Scanner
+                    (getClass().getResourceAsStream("ginas-oracle.sql"))
+                    .useDelimiter("\\Z").next();
+            }
         }catch(Exception e){
-        	e.printStackTrace();
+            e.printStackTrace();
         }
+        System.out.println("postSQL:" + postSQL);
         
         Config root = ConfigFactory.parseFile(new File (file));
         Config ebean = root.getConfig("ebean");
@@ -240,7 +244,7 @@ public class Evolution {
             return null;
         }
         if(postSQL!=null)
-        	ups+="\n"+postSQL;
+                ups+="\n"+postSQL;
 
         Connection con = datasource.getConnection();
         try {

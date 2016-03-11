@@ -29,6 +29,7 @@ import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 import play.test.TestServer;
 import play.test.WithApplication;
+import util.json.JsonUtil;
 import play.test.TestServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -72,7 +73,7 @@ public class SubstanceValidateFailTest extends WithApplication {
 
         try (InputStream is = new FileInputStream(resource);
             GinasTestServer.UserSession notLoggedInSession = ts.getNotLoggedInSession()) {
-            JsonNode js = new ObjectMapper().readTree(is);
+            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
             Logger.info("Running: " + resource);
             WSResponse wsResponse1 = notLoggedInSession.validateSubstance(js);
             JsonNode jsonNode1 = wsResponse1.asJson();
