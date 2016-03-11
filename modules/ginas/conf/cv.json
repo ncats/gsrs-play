@@ -5972,8 +5972,8 @@
         "origin": "JAC85A2161",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": null,
-        "simplifiedStructure": null,
+        "fragmentStructure": "Nc1ncnc2n([*])cnc12 |$;;;;;;;_R90;;;$|",
+        "simplifiedStructure": "NC1=C2NC=NC2=NC=N1",
         "_namespace": null
       },
       {
@@ -5987,8 +5987,8 @@
         "origin": "8J337D1HZY",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": null,
-        "simplifiedStructure": null,
+        "fragmentStructure": "Nc1ccn([*])c(=O)n1 |$;;;;;_R90;;;$|",
+        "simplifiedStructure": "NC1=NC(=O)NC=C1",
         "_namespace": null
       },
       {
@@ -6002,8 +6002,8 @@
         "origin": "5Z93L87A1R",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": null,
-        "simplifiedStructure": null,
+        "fragmentStructure": "Nc1nc2n([*])cnc2c(=O)[nH]1 |$;;;;;_R90;;;;;;$|",
+        "simplifiedStructure": "NC1=NC2=C(NC=N2)C(=O)N1",
         "_namespace": null
       },
       {
@@ -6017,8 +6017,8 @@
         "origin": "QR26YLT7LT",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": null,
-        "simplifiedStructure": null,
+        "fragmentStructure": "Cc1cn([*])c(=O)[nH]c1=O |$;;;;_R90;;;;;$|",
+        "simplifiedStructure": "CC1=CNC(=O)NC1=O",
         "_namespace": null
       },
       {
@@ -6032,8 +6032,8 @@
         "origin": "56HH86ZVCT",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": null,
-        "simplifiedStructure": null,
+        "fragmentStructure": "[*]n1ccc(=O)[nH]c1=O |$_R90;;;;;;;;$|",
+        "simplifiedStructure": "O=C1NC=CC(=O)N1",
         "_namespace": null
       },
       {

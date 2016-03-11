@@ -1258,6 +1258,7 @@
                     } else {
                         CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
+                            console.log(scope.residues);
                             scope.parseSubunit();
                         });
                     }
@@ -1330,6 +1331,7 @@
                         obj.value = aa;
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
+                            console.log(temp);
                             obj=_.pickBy(temp, _.isString);
                             obj.value = aa;
                             //obj.name = temp.display;
@@ -1366,8 +1368,6 @@
                                     var linksObj = {};
                                     _.set(linksObj, 'sugar', scope.parent.nucleicAcid.sugars);
                                     scope.objectParser(linksObj, obj, 'sugar');
-                               //     scope.parent.$$sugars = scope.countSites('sugar');
-                                    console.log(scope);
                                 }
                                 if (_.has(scope.parent.nucleicAcid, 'linkages')) {
                                     var linksObj = {};
