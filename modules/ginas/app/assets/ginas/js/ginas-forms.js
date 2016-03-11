@@ -1107,7 +1107,6 @@ console.log(scope);
                     count += subunit.length;
                 });
             });
-            console.log(count);
             return count;
         };
 
@@ -1116,7 +1115,9 @@ console.log(scope);
             var temp = [];
             _.forEach(display, function (arr) {
                 _.forEach(arr, function (subunit) {
+                    console.log(subunit);
                     temp = _.reject(subunit, function (su) {
+                        console.log(su[type]);
                         return su[type];
                     });
                 });
@@ -1124,6 +1125,7 @@ console.log(scope);
             if (type == 'linkage') {
                 temp = _.dropRight(temp);
             }
+            console.log(temp);
             return temp;
         };
 
@@ -1177,7 +1179,7 @@ console.log(scope);
 
                 scope.applyAll = function () {
                     siteAdder.applyAll('sugar', scope.parent, scope.sugar);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
+                //    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                 };
 
                 scope.validate = function () {
@@ -1185,7 +1187,7 @@ console.log(scope);
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
                     });
                     scope.parent.nucleicAcid.sugars.push(scope.sugar);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
+                   // scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                     scope.sugar = {};
                     scope.sugarForm.$setPristine();
                 };
@@ -1193,10 +1195,14 @@ console.log(scope);
                 scope.deleteObj = function (obj) {
                     scope.parent.nucleicAcid.sugars.splice(scope.parent.nucleicAcid.sugars.indexOf(obj), 1);
                     siteAdder.clearSites('sugar', scope.parent, obj.sites);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
+                //    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                 };
 
-                scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
+                scope.noSugars = function () {
+                    var count = scope.getAllSites();
+                    _.forEach(scope.parent.nucleicAcid.sugars,function(sugar){count -= sugar.sites.length});
+                 return  count;
+                }
             }
         };
     });
@@ -1242,7 +1248,11 @@ console.log(scope);
                     scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                 };
 
-                scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                scope.noLinkages = function () {
+                    var count = scope.getAllSites('linkage')-1;
+                    _.forEach(scope.parent.nucleicAcid.linkages,function(link){count -= link.sites.length});
+                    return  count;
+                }
             }
         };
     });
@@ -1686,7 +1696,7 @@ console.log(scope);
             restrict: 'E',
             replace: true,
             scope: {
-               referenceobj: '=',
+                referenceobj: '=',
                 parent: '=',
                 mode: '=',
                 formtype: '=',
@@ -1744,28 +1754,22 @@ console.log(scope);
                 };
 
                 scope.makeSiteList = function () {
-                    if(scope.field==='sites'){
+/*                    if(scope.field ==='sites'){
                         console.log(scope);
                         console.log(siteList.siteList(scope.referenceobj.$$displayString));
-                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj.$$displayString));
+                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj.sites.$$displayString));
                         if(scope.referenceobj.sitesShorthand) {
                             scope.referenceobj.sitesShorthand = scope.referenceobj.$$displayString;
                         }
                        // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
                        console.log(scope);
 
-                    }else {
-                        console.log("glycosylation");
-                        console.log(scope);
-                        console.log(scope.referenceobj);
+                    }else {*/
+                    console.log(scope);
                         var temp= angular.copy(scope.referenceobj[scope.field].$$displayString);
-                      //  _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
                         _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
                         scope.referenceobj[scope.field].$$displayString = temp;
-                        console.log(scope);
-                    //    scope.referenceobj = siteList.siteList(scope.referenceobj.$$displayString);
-                   //     _.set(scope.referenceobj, '$$displayString', temp);
-                    }
+     //               }
 /*
 */
                 };

@@ -1,5 +1,6 @@
 @import ix.ginas.controllers.GinasLoad
 @import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 @import play.api.Play.current
 
 <!-- BANNER AND MENU -->
@@ -38,7 +39,7 @@
                         <h6>Logged in as: @ix.ncats.controllers.auth.Authentication.getUser().username</h6>
                         <h6>Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()</h6>
                     }</li>
-                @dynamic(name ="isAdmin" , handler= new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                    @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self"><button class="btn btn-default">Admin</button></a></li>
                 }
                 @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
