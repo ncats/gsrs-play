@@ -24,6 +24,8 @@ import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.v1.RouteFactory;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
 import ix.ginas.utils.validation.Validation;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -97,6 +99,8 @@ public class GinasTestServer extends ExternalResource{
      private static final String UI_URL_SUBSTANCE_VERSION="http://localhost:9001/ginas/app/substance/$ID$/v/$VERSION$";
      private static final String API_CV_LIST="http://localhost:9001/ginas/app/api/v1/vocabularies";
      
+     private static final String FAKE_USERNAME_PREFIX="FAKE";
+     private static final String FAKE_PASSWORD_PREFIX="pa$$word";
      
 	 public static final String FAKE_USER_1="fakeuser1";
 	 public static final String FAKE_USER_2="fakeuser2";
@@ -118,11 +122,18 @@ public class GinasTestServer extends ExternalResource{
     private int port;
 
     
+    private int userCount=0;
+    
     public enum AUTH_TYPE{
     	USERNAME_PASSWORD,
     	USERNAME_KEY,
     	TOKEN,
     	NONE
+    }
+    
+    public static class User{
+    	String username;
+    	String password;
     }
 
     public GinasTestServer(int port){
@@ -156,8 +167,39 @@ public class GinasTestServer extends ExternalResource{
         sessions.add(session);
         return session;
     }
+    
+    
+    public UserSession login(User u, AUTH_TYPE type){
+        ensureSetupUsers();
+        UserSession session= new UserSession(u.username, u.password, type, port);
+        
+        
+        sessions.add(session);
+        return session;
+    }
 
+    public User createUser(String username, String password, Role ... roles){
+    	ensureSetupUsers();
+    	
+    	UserProfile up=UserProfileFactory.addActiveUser(username, password, Role.roles(roles), null);
+    	User u = new User();
+    	u.username=up.getIdentifier();
+    	u.password=password;
 
+        return u;
+    }
+    
+    public UserSession createNewUserAndLogin(Role ...roles){
+
+    	userCount++;
+    	return  login(createUser(
+    			FAKE_USERNAME_PREFIX + userCount,
+    			FAKE_PASSWORD_PREFIX + userCount, roles),
+    			AUTH_TYPE.USERNAME_PASSWORD
+    			);
+    	
+    }
+    
 
 
     private WSRequestHolder  url(String url){
@@ -306,6 +348,9 @@ public class GinasTestServer extends ExternalResource{
             this.authType=type;
             this.port = port;
 
+        }
+        public String getUserName(){
+        	return this.username;
         }
         private void setAuthenticationType(AUTH_TYPE atype){
             this.authType=atype;

@@ -1,6 +1,7 @@
 package ix.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import ix.core.models.Role;
 import ix.ginas.models.v1.NameOrg;
 
 import java.io.File;
@@ -124,6 +125,26 @@ public class EditingWorkflowTest {
            	addNameOrgServer(session,uuid,  "INN");
         }
    	}
+    
+    @Test
+   	public void testAddUsers() throws Exception {
+    	GinasTestServer.UserSession session1 = ts.createNewUserAndLogin(Role.Admin);
+    	GinasTestServer.UserSession session2 = ts.createNewUserAndLogin(Role.SuperUpdate);
+    			
+    	//System.out.println("User 1 is:" + session1.whoamiUsername());
+    	assertEquals(session1.whoamiUsername(), session1.getUserName());
+    	assertTrue(session1.whoamiJSON().at("/roles").toString().contains(Role.Admin.toString()));
+    	//System.out.println("User 2 is:" + session2.whoamiUsername());
+    	assertEquals(session2.whoamiUsername(), session2.getUserName());
+    	assertTrue(session2.whoamiJSON().at("/roles").toString().contains(Role.SuperUpdate.toString()));
+    	
+    	
+    	session1.close();
+    	session2.close();
+    	
+   	}
+    
+    
     @Test
    	public void testSubmitPublicRemote() throws Exception {
                    	try(GinasTestServer.UserSession session = ts.loginFakeUser3();
