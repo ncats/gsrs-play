@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12">
         <ng-form class="form-horizontal" name="linkageForm" id="addlinkageForm" novalidate>
-            <span>Number of unspecified linkages: {{noLinkages}}</span>
+            <span>Number of unspecified linkages: {{noLinkages()}}</span>
             <div class="row form-row">
                 <div class="col-md-2">
                     <dropdown-select ng-model="linkage.linkage" field="linkage"

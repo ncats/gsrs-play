@@ -1095,13 +1095,14 @@
             link: function (scope, element, attrs) {
                 if (!_.isUndefined(scope.referenceobj) && !_.isEmpty(scope.referenceobj)) {
                     if (_.has(scope.referenceobj, 'sites')) {
-                        scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
+                        scope.referenceobj.sites.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if(scope.field) {
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
-                            scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
+                    alert('error');
                         }
+
                     }
                 }
             },
@@ -1365,6 +1366,8 @@
                                     var linksObj = {};
                                     _.set(linksObj, 'sugar', scope.parent.nucleicAcid.sugars);
                                     scope.objectParser(linksObj, obj, 'sugar');
+                               //     scope.parent.$$sugars = scope.countSites('sugar');
+                                    console.log(scope);
                                 }
                                 if (_.has(scope.parent.nucleicAcid, 'linkages')) {
                                     var linksObj = {};
