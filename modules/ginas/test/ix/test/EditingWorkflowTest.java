@@ -1,28 +1,23 @@
 package ix.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import ix.ginas.models.v1.NameOrg;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import util.json.ChangeFilters;
 import util.json.Changes;
 import util.json.ChangesBuilder;
 import util.json.JsonUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 
@@ -67,6 +62,7 @@ public class EditingWorkflowTest {
                }
            });
    	}
+   
     
     @Test
    	public void testSubmitProtein() {
@@ -137,7 +133,20 @@ public class EditingWorkflowTest {
                }
            });
    	}
-    
+    @Test
+   	public void testAddNameOrgProtein() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+	            	ts.loginFakeUser1();
+	               	JsonNode entered= parseJsonFile(resource);
+	               	String uuid=entered.get("uuid").asText();              	
+	               	submitSubstance(entered);
+	               	//renameLocal(uuid);
+	               	addNameOrgServer(uuid,  "INN");
+
+               }
+           });
+   	}
     @Test
    	public void testSubmitPublicRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
@@ -620,6 +629,31 @@ public class EditingWorkflowTest {
 								.build();
 		
 		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
+    public JsonNode addNameOrgServer(String uuid, String nameorg){
+    	
+    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+
+    	String oldVersion=fetched.at("/version").asText();
+    
+    	
+    	NameOrg nameOrg = new NameOrg();
+    	nameOrg.nameOrg=nameorg;
+    	
+    	JsonNode updated= new JsonUtil.JsonNodeBuilder(fetched)
+    							.add("/names/0/nameOrgs/-", nameOrg)
+    							.build();
+    	
+    	
+    	System.out.println("FIrst name org is:" + updated.at("/names/0/nameOrgs/0"));
+		ts.updateSubstanceJSON(updated);
+		
+		JsonNode updateFetched = ts.fetchSubstanceJSON(uuid);
+		System.out.println("Now, it's:" + updateFetched.at("/names/0/nameOrgs/0"));
+		
+		
 		return fetched;
     }
     

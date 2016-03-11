@@ -123,9 +123,9 @@ public class JsonUtil {
     	public static class JsonChange{
     		public String op;
     		public String path;
-    		public String value;
+    		public Object value;
     		public String from;
-    		public static JsonChange set(String path, String value){
+    		public static JsonChange set(String path, Object value){
     			JsonChange jsc=new JsonChange();
     			jsc.op="replace";
     			jsc.path=path;
@@ -138,7 +138,7 @@ public class JsonUtil {
     			jsc.path=path;
     			return jsc;
     		}
-    		public static JsonChange add(String path, String value){
+    		public static JsonChange add(String path, Object value){
     			JsonChange jsc=new JsonChange();
     			jsc.op="add";
     			jsc.path=path;
@@ -170,7 +170,7 @@ public class JsonUtil {
     		return this;
     	}
     	
-    	public JsonNodeBuilder set(String path, String value){
+    	public JsonNodeBuilder set(String path, Object value){
     		try{
 	    		if(oldJson.at(path).isNull()){
 	    			changes.add(JsonChange.add(path, value));
@@ -186,7 +186,7 @@ public class JsonUtil {
     		changes.add(JsonChange.remove(path));
     		return this;
     	}
-    	public JsonNodeBuilder add(String path,String value){
+    	public JsonNodeBuilder add(String path,Object value){
     		changes.add(JsonChange.add(path,value));
     		return this;
     	}
