@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.apache.poi:poi:3.13:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.poi/poi/jars/poi-3.13.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.poi/poi/srcs/poi-3.13-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

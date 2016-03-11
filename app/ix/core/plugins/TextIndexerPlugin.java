@@ -3,6 +3,7 @@ package ix.core.plugins;
 import java.io.IOException;
 
 import play.Logger;
+import play.Play;
 import play.Plugin;
 import play.Application;
 
@@ -33,10 +34,14 @@ public class TextIndexerPlugin extends Plugin {
     }
 
     public void onStop () {
-        if (indexer != null) {
+        //We don't want to shutdown during testing
+        //because the indexes get messed up
+        //TODO find root cause of this issue
+        if (indexer != null && !Play.isTest()) {
             indexer.shutdown();
-            Logger.info("Plugin "+getClass().getName()+" stopped!");
+            Logger.info("Plugin " + getClass().getName() + " stopped!");
         }
+
         closed=true;
     }
     

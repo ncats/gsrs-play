@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:lodash:3.10.1:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/lodash/jars/lodash-3.10.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/lodash/srcs/lodash-3.10.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

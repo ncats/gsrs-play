@@ -58,82 +58,72 @@ public class SubstanceSubmitTest {
         }
 
         @Test
-        public void testAPIValidateSubstance() {
-        	final JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                    ts.loginFakeUser1();
-                    ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
-                    JsonNode jsonNode1 =ts.validateSubstanceJSON(js);
-                    assertTrue(jsonNode1.get("valid").asBoolean());
-                }
-            });
+        public void testAPIValidateSubstance() throws Exception {
+            try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+               session.withTokenAuth();
+
+                JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+                JsonNode jsonNode1 = session.validateSubstanceJSON(js);
+                assertTrue(jsonNode1.get("valid").asBoolean());
+
+
+            }
         }
         @Test
-        public void testAPIValidateSubmitSubstance() {
-        	final JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-            
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                	ts.loginFakeUser1();
-                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
-                    
-                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
-                        assertTrue(jsonNode1.get("valid").asBoolean());
-                        JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
-                }
-            });
+        public void testAPIValidateSubmitSubstance()  throws Exception {
+            try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+                session.withTokenAuth();
+
+                JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+                JsonNode jsonNode1 = session.validateSubstanceJSON(js);
+                assertTrue(jsonNode1.get("valid").asBoolean());
+                JsonNode jsonNode2 = session.submitSubstanceJSON(js);
+
+            }
         }
         @Test
-        public void testAPIValidateSubmitFetchSubstance() {
-        	final JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-            
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                	ts.loginFakeUser1();
-                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
-                        String uuid=js.get("uuid").asText();
-                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
+        public void testAPIValidateSubmitFetchSubstance()   throws Exception {
+                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+                        session.withTokenAuth();
+
+                        JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+                        String uuid = js.get("uuid").asText();
+                        JsonNode jsonNode1 = session.validateSubstanceJSON(js);
                         assertTrue(jsonNode1.get("valid").asBoolean());
-                        JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
-                        JsonNode jsonNode3= ts.fetchSubstanceJSON(uuid);
+                        JsonNode jsonNode2 = session.submitSubstanceJSON(js);
+                        JsonNode jsonNode3 = session.fetchSubstanceJSON(uuid);
                         assertFalse(jsonNode3.isNull());
-                        assertThatNonDestructive(js,jsonNode3);    
-                }
-            });
+                        assertThatNonDestructive(js, jsonNode3);
+
+                    }
         }
         @Test
-        public void testAPIValidateSubmitFetchValidateSubstance() {
-        	final JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-            
-            ts.run(new GinasTestServer.ServerWorker() {
-                @Override
-                public void doWork() throws Exception {
-                	ts.loginFakeUser1();
-                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
-                   
+        public void testAPIValidateSubmitFetchValidateSubstance()  throws Exception {
+                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+
+                        session.withTokenAuth();
+
+                        JsonNode js= SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+                        
                         String uuid=js.get("uuid").asText();
                         Logger.info("Running: " + resource);
 
-                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
+                        JsonNode jsonNode1 = session.validateSubstanceJSON(js);
                         assertTrue(jsonNode1.get("valid").asBoolean());
                         
                         //create
-                        JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
+                        JsonNode jsonNode2 = session.submitSubstanceJSON(js);
                         //fetch
-                        JsonNode jsonNode3= ts.fetchSubstanceJSON(uuid);
+                        JsonNode jsonNode3= session.fetchSubstanceJSON(uuid);
                         assertFalse(jsonNode3.isNull());
 
                         assertThatNonDestructive(js,jsonNode3);                        
                         
                         //validate
-                        JsonNode jsonNode4 = ts.validateSubstanceJSON(jsonNode3);
+                        JsonNode jsonNode4 = session.validateSubstanceJSON(jsonNode3);
                         assertTrue(jsonNode4.get("valid").asBoolean());
-                }
-            });
+                    }
+
 
 
         }
