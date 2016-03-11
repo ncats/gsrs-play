@@ -499,6 +499,7 @@ public class RouteFactory extends Controller {
     		Group g=AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
     		if(g==null){
 	    		g=new Group("fake");
+    			
 	    		
 		    	List<Role> rolekind = new ArrayList<Role>();
 		    			rolekind.add(Role.SuperUpdate);
@@ -509,8 +510,16 @@ public class RouteFactory extends Controller {
 		    	try{
 			    	UserProfile up1= UserProfileFactory.addActiveUser("fakeuser1","madeup1",rolekind,groups);
 			    	UserProfile up2= UserProfileFactory.addActiveUser("fakeuser2","madeup2",rolekind,groups);
+			    	
+			    	UserProfile up3= UserProfileFactory.addActiveUser(
+			    			"fakeuser3",
+			    			"madeup3",
+			    			Role.roles(Role.DataEntry,Role.Updater),
+			    			groups);
+			    	
 			    	ups.add(up1);
 			    	ups.add(up2);
+			    	ups.add(up3);
 		    	}catch(Exception e){
 		    		e.printStackTrace();
 		    	}

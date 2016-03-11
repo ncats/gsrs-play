@@ -1,24 +1,37 @@
 package ix.core;
 
-import java.util.List;
-
 public interface Validator<T> {
+	
+	
 	/**
 	 * Returns true if the object passes validation for submission
-	 * at the appropriate level. Warnings and other conditions can be added to the validation
-	 * messages.
+	 * or editing at the appropriate level. Warnings and other 
+	 * conditions can be added to the validation messages.
 	 * 
-	 * If the validator returns true, the last message should be a success message.
+	 * If this method returns true, the last message should be a success 
+	 * message.
 	 * 
 	 * 
-	 * @param obj
+	 * @param objnew
+	 * @param objold
+	 * @param validation
 	 * @return
 	 */
-	public boolean validate(T obj, List<ValidationMessage> validation);
+	public ValidationResponse<T> validate(T objnew, T objold);
 	
+	/**
+	 * Returns true if the object passes validation for submission.
+	 * 
+	 * This should be the same as calling 
+	 * 
+	 * validate(objnew,null,validation);
+	 * 
+	 * @param objnew
+	 * @param validation
+	 * @return
+	 */
+	public ValidationResponse<T> validate(T objnew);
 	
-	
-	public List<? extends ValidationMessage> getValidationMessageContainer();
 	
 }
 

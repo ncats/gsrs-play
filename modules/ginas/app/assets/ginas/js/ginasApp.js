@@ -543,6 +543,24 @@
             $scope.validateSubstance(f);
         };
 
+		$scope.dismiss = function (err){
+			//can't dismiss errors
+			//if(err.messageType!=="ERROR"){
+				_.pull($scope.errorsArray,err);
+		//	}
+			$scope.canSubmit=$scope.noErrors();
+		};
+		$scope.canSubmit=false;
+		$scope.noErrors = function (){
+            var errs = _.filter($scope.errorsArray, function(err){
+                if(err.messageType==="ERROR"){
+                    return err;
+                }
+            });
+            console.log(errs);
+			 return (errs.length<=0);
+		};
+
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
 
@@ -551,8 +569,10 @@
             sub = angular.toJson($scope.fromFormSubstance(sub));
             console.log(sub);
             $scope.errorsArray = [];
-            $http.post(baseurl + 'register/validate', sub).success(function (response) {
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
                 var arr = [];
+                console.log(responseTotal);
+                var response=responseTotal.validationMessages;
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
                         arr.push(response[i]);
@@ -564,11 +584,11 @@
                         response[i].class = "alert-info";
                     if (response[i].messageType == "SUCCESS")
                         response[i].class = "alert-success";
-
-
                 }
 
                 $scope.errorsArray = arr;
+                $scope.canSubmit=$scope.noErrors();
+                
                 callback();
             });
         };
@@ -594,6 +614,7 @@
             var sub = angular.copy($scope.substance);
             if (_.has(sub, '$$update')) {
                 sub = angular.toJson($scope.fromFormSubstance(sub));
+                console.log("TEST");
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -604,7 +625,7 @@
                 });
             } else {
                 sub = angular.toJson($scope.fromFormSubstance(sub));
-                $http.post(baseurl + 'register/submit', sub, {
+                $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -801,7 +822,6 @@
                 ctx: '@'
             },
             link: function (scope, element, attrs) {
-                console.log(scope.size);
                 var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
                 if (!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
@@ -1814,7 +1834,10 @@
             template: '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 scope.deleteObj = function () {
+                    console.log(scope);
                     if (scope.parent) {
+                        console.log(scope.parent);
+                        console.log(attrs.path);
                         var arr = _.get(scope.parent, attrs.path);
                         arr.splice(arr.indexOf(scope.obj), 1);
                     } else {

@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.PrePersist;
+
 import ix.core.EntityProcessor;
 import ix.core.chem.Chem;
 import ix.core.plugins.SequenceIndexerPlugin;
@@ -21,6 +23,7 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.seqaln.SequenceIndexer;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.utils.validation.Validation;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -87,8 +90,31 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 		postPersist(obj);
 	}
 	
+	public void generateCodeIfNecessary(Substance s){
+		CodeSequentialGenerator seqGen = Validation.getCodeGenerator();
+		
+		if(seqGen!=null && s.isPrimaryDefinition()){
+	        boolean hasCode = false;
+	        for(Code c:s.codes){
+	        	if(c.codeSystem.equals(seqGen.getCodeSystem())){
+	        		hasCode=true;
+	        	}
+	        }
+	        if(!hasCode){
+	        	try{
+		        	Code c=seqGen.addCode(s);
+		        	//System.out.println("Generating new code:" + c.code);
+	        	}catch(Exception e){
+	        		e.printStackTrace();
+	        	}
+	        }
+        }
+	}
 	@Override
 	public void prePersist(Substance s) {
+		
+		generateCodeIfNecessary(s);
+		
 		Logger.debug("Persisting substance:" + s);
 		if (s.isAlternativeDefinition()) {
 			
