@@ -33,11 +33,16 @@ public class SearchFactory extends EntityFactory {
     static final Model.Finder<Long, ETag> etagDb = 
         new Model.Finder(Long.class, ETag.class);
 
-    static TextIndexer _indexer =
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-    
+    static TextIndexer _indexer;
+
+    static{
+        init();
+    }
+
     public static void init(){
+        TextIndexer.init();
     	_indexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
     }
 
     public static SearchOptions parseSearchOptions

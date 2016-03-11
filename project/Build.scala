@@ -1,11 +1,8 @@
-import sbt._
-import Keys._
 import play._
+import sbt.Keys._
+import sbt._
 //import play.PlayImport._
 import play.Play.autoImport._
-import PlayKeys._
-import sbtassembly.Plugin._
-import AssemblyKeys._
 
 object ApplicationBuild extends Build {
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -17,7 +14,7 @@ object ApplicationBuild extends Build {
 
   val commonSettings = Seq(
     version := appVersion,    
-    scalaVersion := "2.10.5",
+//    scalaVersion := "2.11.7",
 //    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
 //      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
 //      "2.11.5", "2.11.6", "2.11.7"),
@@ -74,7 +71,6 @@ object ApplicationBuild extends Build {
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"be.objectify" %% "deadbolt-java" % "2.3.3"
-      , "net.sourceforge.htmlunit" % "htmlunit" % "2.14" % "test"
   )
 
   val scalaBuildOptions = Seq(
@@ -123,7 +119,7 @@ public class BuildInfo {
 
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-    libraryDependencies ++= commonDependencies,
+      libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(build,seqaln).aggregate(build,seqaln)
 
@@ -162,20 +158,23 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
-      libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
-      libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
-      libraryDependencies  += "junit" % "junit" % "4.11" % Test,
-      libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
-      javacOptions ++= javaBuildOptions,
-      javaOptions in Test += "-Dconfig.file=conf/ginas.conf",
-    cleanFiles += file("modules/ginas/ginas.ix")
+      libraryDependencies += "org.webjars" % "lodash" % "3.10.1",
+      javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
 
   val hcs = Project("hcs", file("modules/hcs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val moldev = Project("moldev", file("modules/moldev"))
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
+      libraryDependencies ++= commonDependencies,
+      libraryDependencies += "org.apache.poi" % "poi" % "3.13",
+        javacOptions ++= javaBuildOptions
+    ).dependsOn(ncats).aggregate(ncats)
 
   val srs = Project("srs", file("modules/srs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -217,16 +216,9 @@ public class BuildInfo {
   ).dependsOn(ncats).aggregate(ncats)
 
   val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
-    .settings(assemblySettings: _*)
-    .settings(
-    libraryDependencies += "org.avaje.ebeanorm" % "avaje-ebeanorm" % "3.3.4",
+    .settings(commonSettings: _*).settings(
+    libraryDependencies ++= commonDependencies,
       libraryDependencies += "com.typesafe" % "config" % "1.2.0",
-      libraryDependencies += "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-      libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive (),
-      unmanagedResources in Compile +=  file("conf/sql/post/ginas-oracle.sql"),
-      unmanagedResources in Compile +=  file("modules/ginas/conf/evolutions/default/1.sql"),
-      unmanagedJars in Compile += file("lib/ojdbc6.jar"),
-      //unmanagedSourceDirectories in Compile += file("app/ix/ginas"),
       mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
-  )
+  ).dependsOn(ginas).aggregate(ginas)
 }
