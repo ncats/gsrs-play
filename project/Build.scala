@@ -14,7 +14,7 @@ object ApplicationBuild extends Build {
 
   val commonSettings = Seq(
     version := appVersion,    
-    scalaVersion := "2.10.5",
+//    scalaVersion := "2.11.7",
 //    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
 //      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
 //      "2.11.5", "2.11.6", "2.11.7"),
@@ -45,6 +45,7 @@ object ApplicationBuild extends Build {
       ,"org.apache.lucene" % "lucene-suggest" % "4.10.0"
       ,"org.apache.lucene" % "lucene-facet" % "4.10.0"
       ,"org.apache.lucene" % "lucene-queryparser" % "4.10.0"
+      ,"com.github.fge" % "json-patch" % "1.9"
       ,"org.quartz-scheduler" % "quartz" % "2.2.1"
       ,"org.webjars" %% "webjars-play" % "2.3.0"
       ,"org.webjars" % "bootstrap" % "3.3.5"

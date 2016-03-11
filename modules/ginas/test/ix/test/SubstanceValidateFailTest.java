@@ -71,11 +71,10 @@ public class SubstanceValidateFailTest extends WithApplication {
     @Test
     public void testAPIValidateSubstance() throws Exception {
 
-        try (InputStream is = new FileInputStream(resource);
-            GinasTestServer.UserSession notLoggedInSession = ts.getNotLoggedInSession()) {
+        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
             JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
             Logger.info("Running: " + resource);
-            WSResponse wsResponse1 = notLoggedInSession.validateSubstance(js);
+            WSResponse wsResponse1 = session.validateSubstance(js);
             JsonNode jsonNode1 = wsResponse1.asJson();
             assertEquals(OK, wsResponse1.getStatus());
             assertFalse(jsonNode1.isNull());

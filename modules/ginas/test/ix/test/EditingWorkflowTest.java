@@ -119,55 +119,49 @@ public class EditingWorkflowTest {
    	}
     
     @Test
-   	public void testSubmitPublicRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                   	ts.loginFakeUser3();
-                   	JsonNode entered= parseJsonFile(resource);
+   	public void testSubmitPublicRemote() throws Exception {
+                   	try(GinasTestServer.UserSession session = ts.loginFakeUser3();
+                        GinasTestServer.UserSession session2 = ts.loginFakeUser2()) {
+                        JsonNode entered = parseJsonFile(resource);
 
-                   	String uuid=entered.get("uuid").asText();
+                        String uuid = entered.get("uuid").asText();
 
-                   	ts.submitSubstanceFail(entered);
+                        session.submitSubstanceFail(entered);
 
-                   	JsonNode updated=new JsonUtil
-                   			.JsonNodeBuilder(entered)
-                   			.add("/access/-", "testGROUP")
-                   			.build();
-                   	updated=ts.submitSubstanceJSON(updated);
+                        JsonNode updated = new JsonUtil
+                                .JsonNodeBuilder(entered)
+                                .add("/access/-", "testGROUP")
+                                .build();
+                        updated = session.submitSubstanceJSON(updated);
 
-                   	updated=new JsonUtil
-                   			.JsonNodeBuilder(updated)
-                   			.remove("/access/0")
-                   			.build();
-                   	ts.updateSubstanceFail(updated);
-                   	ts.loginFakeUser2();
-                   	ts.updateSubstanceJSON(updated);
-               }
-           });
+                        updated = new JsonUtil
+                                .JsonNodeBuilder(updated)
+                                .remove("/access/0")
+                                .build();
+                        session.updateSubstanceFail(updated);
+                        session2.updateSubstanceJSON(updated);
+                    }
    	}
     //Can't submit an preapproved substance via this mechanism
     //Also, can't change an approvalID here, unless an admin
     //TODO: add the admin part
     @Test
-   	public void testSubmitPreApprovedRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                   	ts.loginFakeUser1();
-                   	JsonNode entered= JsonUtil.parseJsonFile(resource);
-                   	ts.submitSubstanceFail(entered);
-                   	entered=SubstanceJsonUtil.toUnapproved(entered);
-                   	entered=ts.submitSubstanceJSON(entered);
-                   	ts.loginFakeUser2();
-                   	entered=ts.approveSubstanceJSON(entered.at("/uuid").asText());
-                   	entered=new JsonUtil
-                   			.JsonNodeBuilder(entered)
-                   			.remove("/approvalID")
-                   			.build();
-                   	ts.updateSubstanceFail(entered);
+   	public void testSubmitPreApprovedRemote() throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1();
+            GinasTestServer.UserSession session2 = ts.loginFakeUser2()) {
+            JsonNode entered = JsonUtil.parseJsonFile(resource);
+            session.submitSubstanceFail(entered);
+            entered = SubstanceJsonUtil.toUnapproved(entered);
+            entered = session.submitSubstanceJSON(entered);
 
+            entered = session2.approveSubstanceJSON(entered.at("/uuid").asText());
+            entered = new JsonUtil
+                    .JsonNodeBuilder(entered)
+                    .remove("/approvalID")
+                    .build();
+            session2.updateSubstanceFail(entered);
 
-               }
-           });
+        }
    	}
 
     @Test
@@ -205,26 +199,23 @@ public class EditingWorkflowTest {
    	}
     
     @Test
-   	public void testFacetUpdateRemote() {
-   		ts.run(new GinasTestServer.ServerWorker() {
-            public void doWork() throws Exception {
-                	ts.loginFakeUser1();
+   	public void testFacetUpdateRemote()  throws Exception {
+        try(GinasTestServer.UserSession session = ts.loginFakeUser1()){
 
                    	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();
-                   	submitSubstance(entered);
-                   	int oldProteinCount=getFacetCountFor("Substance Class","protein");
+                   	session.submitSubstance(entered);
+                   	int oldProteinCount=getFacetCountFor(session, "Substance Class","protein");
                    	assertEquals(1,oldProteinCount);
-                   	renameServer(uuid);
-                   	int newProteinCount=getFacetCountFor("Substance Class","protein");
+                   	renameServer(session, uuid);
+                   	int newProteinCount=getFacetCountFor(session, "Substance Class","protein");
                    	assertEquals(1,newProteinCount);
 
                }
-           });
    	}
 
-    public int getFacetCountFor(String face, String label){
-    	JsonNode jsn=ts.fetchSubstancesSearchJSON();
+    public int getFacetCountFor(GinasTestServer.UserSession session, String face, String label){
+    	JsonNode jsn=session.fetchSubstancesSearchJSON();
        	JsonNode facets=jsn.at("/facets");
        	for(JsonNode facet:facets){
        		String name=facet.at("/name").asText();

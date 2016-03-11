@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
@@ -108,7 +109,7 @@ public class GinasTestServer extends ExternalResource{
 	 
     private static long timeout= 10000L;
 
-    private UserSession defaultSession = new NotLoggedInSession();
+    private final UserSession defaultSession;
 
 
     private List<UserSession> sessions = new ArrayList<>();
@@ -126,6 +127,7 @@ public class GinasTestServer extends ExternalResource{
 
     public GinasTestServer(int port){
        this.port = port;
+        defaultSession = new NotLoggedInSession(port);
        
     }
 
@@ -137,8 +139,8 @@ public class GinasTestServer extends ExternalResource{
     	return login(FAKE_USER_2,FAKE_PASSWORD_2);
     }
 
-	public void loginFakeUser3() {
-		login(FAKE_USER_3,FAKE_PASSWORD_3);
+	public UserSession loginFakeUser3() {
+		return login(FAKE_USER_3,FAKE_PASSWORD_3);
 	}
     //logs in user, also sets default authentication type
     //if previously set to NONE
@@ -149,7 +151,7 @@ public class GinasTestServer extends ExternalResource{
 
     public UserSession login(String username, String password, AUTH_TYPE type){
         ensureSetupUsers();
-        UserSession session= new UserSession(username, password, type);
+        UserSession session= new UserSession(username, password, type, port);
 
         sessions.add(session);
         return session;
@@ -201,10 +203,14 @@ public class GinasTestServer extends ExternalResource{
         UserProfileFactory.init();
         PrincipalFactory.init();
 
+        EntityFactory.init();
+        SearchFactory.init();
     }
 
     private void deleteH2Db() throws IOException {
-        Path path = new File(ConfigFactory.load().getString("ix.home")).toPath();
+        Config load = ConfigFactory.load();
+        System.out.println(load.entrySet());
+        Path path = new File(load.getString("ix.home")).toPath();
         if(!path.toFile().exists()){
             return;
         }
@@ -278,20 +284,27 @@ public class GinasTestServer extends ExternalResource{
         private String token;
         private long deadtime=0;
 
+        private int port;
+
         private AUTH_TYPE authType=AUTH_TYPE.NONE;
 
-        public UserSession(){
+        public UserSession(int port){
             //null values for defaults
+            this.port = port;
         }
-        public UserSession(String username, String password, AUTH_TYPE type){
+        public UserSession(String username, String password, AUTH_TYPE type, int port){
             Objects.requireNonNull(username);
             Objects.requireNonNull(password);
             Objects.requireNonNull(type);
 
+            if(port <1){
+                throw new IllegalArgumentException("port can not be < 1");
+            }
             loggedIn=true;
             this.username=username;
             this.password=password;
             this.authType=type;
+            this.port = port;
 
         }
         private void setAuthenticationType(AUTH_TYPE atype){
@@ -321,6 +334,21 @@ public class GinasTestServer extends ExternalResource{
             this.key=null;
             this.token=null;
             this.deadtime=0;
+        }
+        public WSRequestHolder get(String path){
+            return url(constructUrlFor(path));
+        }
+
+        private String constructUrlFor(String path) {
+            return new StringBuilder("http://localhost:")
+                                    .append(port)
+                                    .append('/')
+                                    .append(path)
+                                    .toString();
+        }
+
+        public String getAsString(String path){
+            return urlString(constructUrlFor(path));
         }
 
         public WSRequestHolder  url(String url){
@@ -382,7 +410,12 @@ public class GinasTestServer extends ExternalResource{
 
         }
 
-
+        public JsonNode fetchSubstancesSearchJSON() {
+            return ensureExctractJSON(fetchSubstancesSearch());
+        }
+        public WSResponse fetchSubstancesSearch() {
+            return url(API_URL_SUBSTANCES_SEARCH).get().get(timeout);
+        }
 
         public WSResponse fetchSubstance(String uuid){
             return this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
@@ -524,6 +557,10 @@ public class GinasTestServer extends ExternalResource{
      * there's nothing to log out from.
      */
     private static class NotLoggedInSession extends UserSession{
+
+        public NotLoggedInSession(int port){
+            super(port);
+        }
         @Override
         public void logout() {
             //do nothing
