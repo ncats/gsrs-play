@@ -11,9 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import com.typesafe.config.Config;
@@ -24,6 +22,7 @@ import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.v1.RouteFactory;
+import ix.core.models.Group;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ginas.utils.validation.Validation;
@@ -120,8 +119,10 @@ public class GinasTestServer extends ExternalResource{
 
     private TestServer ts;
     private int port;
+    private Group fakeUserGroup;
 
-    
+    private static final List<Role> fakeUserGroupRoles = Role.roles(Role.SuperUpdate,Role.SuperDataEntry );
+
     private int userCount=0;
     
     public enum AUTH_TYPE{
@@ -132,15 +133,86 @@ public class GinasTestServer extends ExternalResource{
     }
     
     public static class User{
-    	String username;
-    	String password;
+    	private final String username;
+    	private String password;
+
+        public User(String username, String password) {
+            Objects.requireNonNull(username);
+            Objects.requireNonNull(password);
+
+            this.username = username;
+            this.password = password;
+        }
+
+
     }
 
     public GinasTestServer(int port){
        this.port = port;
         defaultSession = new NotLoggedInSession(port);
-       
+
+
     }
+
+    private void createInitialFakeUsers() {
+        fakeUserGroup= AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
+        if(fakeUserGroup ==null){
+            fakeUserGroup=new Group("fake");
+        }
+        List<Group> groups = Collections.singletonList(fakeUserGroup);
+
+        UserProfileFactory.addActiveUser(FAKE_USER_1,FAKE_PASSWORD_1,fakeUserGroupRoles,groups);
+        UserProfileFactory.addActiveUser(FAKE_USER_2,FAKE_PASSWORD_2,fakeUserGroupRoles,groups);
+
+        UserProfileFactory.addActiveUser(FAKE_USER_3,FAKE_PASSWORD_3,Role.roles(Role.DataEntry,Role.Updater),groups);
+    }
+
+
+    /*
+     //@Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result addFakeUsers(){
+    	if(Play.isTest()){
+    		List<UserProfile> ups = new ArrayList<UserProfile>();
+    		Group g=AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
+    		if(g==null){
+	    		g=new Group("fake");
+
+
+		    	List<Role> rolekind = new ArrayList<Role>();
+		    			rolekind.add(Role.SuperUpdate);
+		    			rolekind.add(Role.SuperDataEntry);
+		    	List<Group> groups = new ArrayList<Group>();
+		    			groups.add(g);
+
+		    	try{
+			    	UserProfile up1= UserProfileFactory.addActiveUser("fakeuser1","madeup1",rolekind,groups);
+			    	UserProfile up2= UserProfileFactory.addActiveUser("fakeuser2","madeup2",rolekind,groups);
+
+			    	UserProfile up3= UserProfileFactory.addActiveUser(
+			    			"fakeuser3",
+			    			"madeup3",
+			    			Role.roles(Role.DataEntry,Role.Updater),
+			    			groups);
+
+			    	ups.add(up1);
+			    	ups.add(up2);
+			    	ups.add(up3);
+		    	}catch(Exception e){
+		    		e.printStackTrace();
+		    	}
+    		}else{
+    			for(Principal p: g.members){
+    				ups.add(UserProfileFactory.getUserProfileForPrincipal(p));
+    			}
+    		}
+	    	ObjectMapper om = new ObjectMapper();
+	        //flash("success", " " + requestData.get("username") + " has been created");
+        	return ok(om.valueToTree(ups));
+    	}else{
+    		return badRequest ("Unknown Context: \"@deleteme\"");
+    	}
+    }
+     */
 
 
     public UserSession loginFakeUser1(){
@@ -161,32 +233,23 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public UserSession login(String username, String password, AUTH_TYPE type){
-        ensureSetupUsers();
         UserSession session= new UserSession(username, password, type, port);
 
         sessions.add(session);
         return session;
     }
-    
-    
+
+    public UserSession login(User u){
+        return login(u, AUTH_TYPE.USERNAME_PASSWORD);
+    }
     public UserSession login(User u, AUTH_TYPE type){
-        ensureSetupUsers();
-        UserSession session= new UserSession(u.username, u.password, type, port);
-        
-        
-        sessions.add(session);
-        return session;
+       return login(u.username, u.password, type);
     }
 
     public User createUser(String username, String password, Role ... roles){
-    	ensureSetupUsers();
     	
-    	UserProfile up=UserProfileFactory.addActiveUser(username, password, Role.roles(roles), null);
-    	User u = new User();
-    	u.username=up.getIdentifier();
-    	u.password=password;
-
-        return u;
+    	UserProfile up=UserProfileFactory.addActiveUser(username, password, Role.roles(roles), Collections.singletonList(fakeUserGroup));
+    	return new User(up.getIdentifier(), password);
     }
     
     public UserSession createNewUserAndLogin(Role ...roles){
@@ -208,16 +271,6 @@ public class GinasTestServer extends ExternalResource{
 
 
 
-    public void ensureSetupUsers(){
-			    	WSResponse wsResponse1 = url(API_URL_MAKE_FAKE_USERS).get().get(timeout);
-			    	assertThat(wsResponse1.getStatus()).isEqualTo(OK);
-			        assertThat(wsResponse1.getStatus()).isEqualTo(200);
-			    	JsonNode jsonNode1 = wsResponse1.asJson();
-			    	assertThat(jsonNode1.get(0).get("identifier").asText()).isEqualTo(GinasTestServer.FAKE_USER_1);
-			    	assertThat(jsonNode1.get(1).get("identifier").asText()).isEqualTo(GinasTestServer.FAKE_USER_2);
-
-    }
-
 
 
     @Override
@@ -230,6 +283,8 @@ public class GinasTestServer extends ExternalResource{
         ts = testServer(port);
         ts.start();
         initializeControllers();
+        //we have to wait to create the users until after Play has started.
+        createInitialFakeUsers();
     }
 
     private void initializeControllers() {
