@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -121,7 +120,8 @@ public class GinasTestServer extends ExternalResource{
     private int port;
     private Group fakeUserGroup;
 
-    private static final List<Role> fakeUserGroupRoles = Role.roles(Role.SuperUpdate,Role.SuperDataEntry );
+    private static final List<Role> superUserRoles = Role.roles(Role.SuperUpdate,Role.SuperDataEntry );
+    private static final List<Role> normalUserRoles = Role.roles(Role.DataEntry,Role.Updater );
 
     private int userCount=0;
     
@@ -145,6 +145,9 @@ public class GinasTestServer extends ExternalResource{
         }
 
 
+        public String getUserName() {
+            return username;
+        }
     }
 
     public GinasTestServer(int port){
@@ -161,10 +164,10 @@ public class GinasTestServer extends ExternalResource{
         }
         List<Group> groups = Collections.singletonList(fakeUserGroup);
 
-        UserProfileFactory.addActiveUser(FAKE_USER_1,FAKE_PASSWORD_1,fakeUserGroupRoles,groups);
-        UserProfileFactory.addActiveUser(FAKE_USER_2,FAKE_PASSWORD_2,fakeUserGroupRoles,groups);
+        UserProfileFactory.addActiveUser(FAKE_USER_1,FAKE_PASSWORD_1, superUserRoles,groups);
+        UserProfileFactory.addActiveUser(FAKE_USER_2,FAKE_PASSWORD_2, superUserRoles,groups);
 
-        UserProfileFactory.addActiveUser(FAKE_USER_3,FAKE_PASSWORD_3,Role.roles(Role.DataEntry,Role.Updater),groups);
+        UserProfileFactory.addActiveUser(FAKE_USER_3,FAKE_PASSWORD_3,normalUserRoles,groups);
     }
 
 
@@ -245,10 +248,20 @@ public class GinasTestServer extends ExternalResource{
     public UserSession login(User u, AUTH_TYPE type){
        return login(u.username, u.password, type);
     }
+    public User createSuperUser(String username, String password){
+        return createUser(username, password, superUserRoles);
+    }
+
+    public User createNormalUser(String username, String password){
+        return createUser(username, password, normalUserRoles);
+    }
 
     public User createUser(String username, String password, Role ... roles){
+        return createUser(username, password, Role.roles(roles));
+    }
+    public User createUser(String username, String password, List<Role> roles){
     	
-    	UserProfile up=UserProfileFactory.addActiveUser(username, password, Role.roles(roles), Collections.singletonList(fakeUserGroup));
+    	UserProfile up=UserProfileFactory.addActiveUser(username, password, roles, Collections.singletonList(fakeUserGroup));
     	return new User(up.getIdentifier(), password);
     }
     
@@ -425,18 +438,29 @@ public class GinasTestServer extends ExternalResource{
         }
 
 
-        public void logout(){
-            //TODO actually log out
+        public String logout(){
+            if(!loggedIn){
+                //do nothing
+                return "";
+            }
             loggedIn = false;
+
+
+           WSResponse wsResponse1 =  WS.url(constructUrlFor("ginas/app/logout"))
+                                                .get().get(timeout);
+            assertThat(wsResponse1.getStatus()).isEqualTo(OK);
+
 
             this.username=null;
             this.password=null;
             this.key=null;
             this.token=null;
             this.deadtime=0;
+
+            return wsResponse1.getBody();
         }
-        public WSRequestHolder get(String path){
-            return url(constructUrlFor(path));
+        public WSResponse get(String path){
+            return url(constructUrlFor(path)).get().get(timeout);
         }
 
         private String constructUrlFor(String path) {
@@ -453,22 +477,24 @@ public class GinasTestServer extends ExternalResource{
 
         public WSRequestHolder  url(String url){
             WSRequestHolder ws = WS.url(url);
-            switch(authType){
-                case TOKEN:
-                    refreshTokenIfNeccesarry();
-                    ws.setHeader("auth-token", this.token);
-                    break;
-                case USERNAME_KEY:
-                    refreshTokenIfNeccesarry();
-                    ws.setHeader("auth-username", this.username);
-                    ws.setHeader("auth-key", this.key);
-                    break;
-                case USERNAME_PASSWORD:
-                    ws.setHeader("auth-username", this.username);
-                    ws.setHeader("auth-password", this.password);
-                    break;
-                default:
-                    break;
+            if(loggedIn) {
+                switch (authType) {
+                    case TOKEN:
+                        refreshTokenIfNeccesarry();
+                        ws.setHeader("auth-token", this.token);
+                        break;
+                    case USERNAME_KEY:
+                        refreshTokenIfNeccesarry();
+                        ws.setHeader("auth-username", this.username);
+                        ws.setHeader("auth-key", this.key);
+                        break;
+                    case USERNAME_PASSWORD:
+                        ws.setHeader("auth-username", this.username);
+                        ws.setHeader("auth-password", this.password);
+                        break;
+                    default:
+                        break;
+                }
             }
             return ws;
         }
@@ -481,6 +507,7 @@ public class GinasTestServer extends ExternalResource{
 
 
         private void refreshAuthInfoByUserNamePassword(){
+
             WSRequestHolder  ws = WS.url(API_URL_USERFETCH);
             ws.setHeader("auth-username", this.username);
             ws.setHeader("auth-password", this.password);
@@ -491,6 +518,10 @@ public class GinasTestServer extends ExternalResource{
             deadtime=System.currentTimeMillis()+userinfo.get("tokenTimeToExpireMS").asLong();
 
 
+        }
+
+        public boolean isLoggedIn(){
+            return loggedIn;
         }
 
         @Override
@@ -662,8 +693,9 @@ public class GinasTestServer extends ExternalResource{
             super(port);
         }
         @Override
-        public void logout() {
+        public String logout() {
             //do nothing
+            return "";
         }
     }
 
