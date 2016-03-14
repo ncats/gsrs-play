@@ -1919,7 +1919,7 @@
 
 
     });*/
-    ginasApp.directive("treeView", function () {
+    ginasApp.directive("treeView", function ($compile) {
         return {
             restrict: 'E',
             replace: true,
@@ -1928,12 +1928,24 @@
             },
             link: function (scope, element, attrs) {
                 scope.codes = [];
+                var template ='<div>';
                 _.forEach(scope.text.split('|'), function(c){
                     scope.codes.push(c.split('['));
                 });
-            },
-            template: '<div><ul <ul class="list-unstyled" ng-repeat = "code in codes"><li><a href = "app/substances?q=comments:{{code[0]}}" uib-tooltip="Search ginas for {{code[0]}}" target ="_self">{{code[0]}}</a> <span ng-if="code[1]">[{{code[1]}}</span><br></li></ul></div>'
-        }
+                _.forEach(scope.codes, function(c) {
+                    template += '<ul class="tree-list"><li><a href = "app/substances?q=comments:'+c[0]+'" uib-tooltip="Search ginas for'+ c[0]+'" target ="_self">'+ c[0]+'</a>';
+                    if(c[1]){
+                    template += '<span>'+'['+ c[1]+'</span>';
+                    }
+                });
+                for(var i = 0; i< scope.codes.length; i++){
+                    template+='</li></ul>';
+                }
+                template+='</div>';
+                    element.append(angular.element(template));
+                $compile(template)(scope);
+         }
+}
     });
 
 })();
