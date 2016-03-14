@@ -1,5 +1,4 @@
 (function () {
-    var tagsInput = angular.module('ngTagsInput', []);
 
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
@@ -14,6 +13,7 @@
                 hashPrefix: '!'
             });
         });
+
 
     ginasApp.factory('Substance', function () {
         var substance = {};
@@ -288,6 +288,7 @@
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
        // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
+
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
@@ -1168,7 +1169,6 @@
 
                 } else {
                     if (_.has(aa, 'structuralModifications')) {
-                        console.log(aa);
                         scope.acidClass = "modification";
                     } else if (_.has(aa, 'disulfide')) {
                         scope.acidClass = "disulfide";
@@ -1331,7 +1331,6 @@
                         obj.value = aa;
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
-                            console.log(temp);
                             obj=_.pickBy(temp, _.isString);
                             obj.value = aa;
                             //obj.name = temp.display;
@@ -1920,6 +1919,21 @@
 
 
     });*/
-
+    ginasApp.directive("treeView", function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                text: '='
+            },
+            link: function (scope, element, attrs) {
+                scope.codes = [];
+                _.forEach(scope.text.split('|'), function(c){
+                    scope.codes.push(c.split('['));
+                });
+            },
+            template: '<div><ul <ul class="list-unstyled" ng-repeat = "code in codes"><li><a href = "app/substances?q=comments:{{code[0]}}" uib-tooltip="Search ginas for {{code[0]}}" target ="_self">{{code[0]}}</a> <span ng-if="code[1]">[{{code[1]}}</span><br></li></ul></div>'
+        }
+    });
 
 })();
