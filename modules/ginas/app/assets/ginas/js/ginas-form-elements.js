@@ -30,7 +30,6 @@
                        'Content-Type': 'text/plain'
                    }
                }).success(function (data) {
-                  // console.log(data);
                    if(data.content.length > 0) {
                        return data;
                    }else{

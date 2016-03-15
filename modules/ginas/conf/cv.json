@@ -59,9 +59,24 @@
         "filter": null,
         "hidden": false,
         "_namespace": null
+      },
+      {
+        "version": 1,
+        "created": 1457985059245,
+        "modified": 1457985059246,
+        "deprecated": false,
+        "value": "admin",
+        "display": "admin",
+        "description": null,
+        "origin": null,
+        "filter": null,
+        "hidden": false,
+        "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "ACCESS"
+    ],
     "_namespace": null
   },
   {
@@ -1686,7 +1701,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "agentModifications.agentModificationProcess"
+    ],
     "_namespace": null
   },
   {
@@ -2011,7 +2028,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "agentModifications.agentModificationType"
+    ],
     "_namespace": null
   },
   {
@@ -2376,7 +2395,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "amount.type"
+    ],
     "_namespace": null
   },
   {
@@ -2610,7 +2631,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "amount.units"
+    ],
     "_namespace": null
   },
   {
@@ -2662,7 +2685,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "moieties.atropisomerism"
+    ],
     "_namespace": null
   },
   {
@@ -2675,9 +2700,9 @@
     "editable": true,
     "terms": [
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679296,
-        "modified": 1457983679896,
+        "modified": 1457986656618,
         "deprecated": false,
         "value": "CAS",
         "display": "CAS",
@@ -2685,14 +2710,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
-        "regex": "^[0-9][0-9]*[-][0-9][0-9][-][0-9]$",
+        "systemCategory": null,
+        "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679296,
-        "modified": 1457983679897,
+        "modified": 1457986656624,
         "deprecated": false,
         "value": "NCI_THESAURUS",
         "display": "NCI_THESAURUS",
@@ -2700,14 +2725,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679296,
-        "modified": 1457983679899,
+        "modified": 1457986656627,
         "deprecated": false,
         "value": "MESH",
         "display": "MESH",
@@ -2715,14 +2740,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679900,
+        "modified": 1457986656630,
         "deprecated": false,
         "value": "WIKIPEDIA",
         "display": "WIKIPEDIA",
@@ -2730,14 +2755,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "GENERAL INSTATEATION",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679901,
+        "modified": 1457986656634,
         "deprecated": false,
         "value": "NDF-RT",
         "display": "NDF-RT",
@@ -2745,14 +2770,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679902,
+        "modified": 1457986656638,
         "deprecated": false,
         "value": "NCBI TAXONOMY",
         "display": "NCBI TAXONOMY",
@@ -2760,14 +2785,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "ORGANISM",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679903,
+        "modified": 1457986656641,
         "deprecated": false,
         "value": "WHO-VATC",
         "display": "WHO-VATC",
@@ -2775,14 +2800,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679905,
+        "modified": 1457986656645,
         "deprecated": false,
         "value": "WHO-ATC",
         "display": "WHO-ATC",
@@ -2790,14 +2815,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679906,
+        "modified": 1457986656648,
         "deprecated": false,
         "value": "ITIS",
         "display": "ITIS",
@@ -2805,14 +2830,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "ORGANISM",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679907,
+        "modified": 1457986656652,
         "deprecated": false,
         "value": "USDA PLANTS",
         "display": "USDA PLANTS",
@@ -2820,14 +2845,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "ORGANISM",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679908,
+        "modified": 1457986656656,
         "deprecated": false,
         "value": "CFR",
         "display": "CFR",
@@ -2835,14 +2860,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679909,
+        "modified": 1457986656659,
         "deprecated": false,
         "value": "JECFA EVALUATION",
         "display": "JECFA EVALUATION",
@@ -2850,14 +2875,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "FOOD ADDITIVE",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679911,
+        "modified": 1457986656663,
         "deprecated": false,
         "value": "LIVERTOX",
         "display": "LIVERTOX",
@@ -2865,14 +2890,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679912,
+        "modified": 1457986656666,
         "deprecated": false,
         "value": "EVMPD",
         "display": "EVMPD",
@@ -2880,14 +2905,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679913,
+        "modified": 1457986656670,
         "deprecated": false,
         "value": "Food Contact Substance Notif, (FCN No.)",
         "display": "Food Contact Substance Notif, (FCN No.)",
@@ -2895,14 +2920,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679914,
+        "modified": 1457986656674,
         "deprecated": false,
         "value": "WHO-ESSENTIAL MEDICINES LIST",
         "display": "WHO-ESSENTIAL MEDICINES LIST",
@@ -2910,14 +2935,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679915,
+        "modified": 1457986656677,
         "deprecated": false,
         "value": "USP-MC MONOGRAPH",
         "display": "USP-MC MONOGRAPH",
@@ -2925,14 +2950,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679917,
+        "modified": 1457986656681,
         "deprecated": false,
         "value": "USP-MC VALIDATION RPT",
         "display": "USP-MC VALIDATION RPT",
@@ -2940,14 +2965,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679918,
+        "modified": 1457986656685,
         "deprecated": false,
         "value": "EC-Scientific Committee on Consumer Safety OPINION",
         "display": "EC-Scientific Committee on Consumer Safety OPINION",
@@ -2955,14 +2980,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679919,
+        "modified": 1457986656690,
         "deprecated": false,
         "value": "NSC",
         "display": "NSC",
@@ -2970,14 +2995,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679921,
+        "modified": 1457986656693,
         "deprecated": false,
         "value": "UNIPROT",
         "display": "UNIPROT",
@@ -2985,14 +3010,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679922,
+        "modified": 1457986656704,
         "deprecated": false,
         "value": "NDFRT-PE",
         "display": "NDFRT-PE",
@@ -3000,14 +3025,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679923,
+        "modified": 1457986656708,
         "deprecated": false,
         "value": "EC",
         "display": "EC",
@@ -3015,14 +3040,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679924,
+        "modified": 1457986656711,
         "deprecated": false,
         "value": "CODEX ALIMENTARIUS (GSFA)",
         "display": "CODEX ALIMENTARIUS (GSFA)",
@@ -3030,14 +3055,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "FOOD ADDITIVE",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679925,
+        "modified": 1457986656715,
         "deprecated": false,
         "value": "EU FOOD ADDITIVES",
         "display": "EU FOOD ADDITIVES",
@@ -3045,14 +3070,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "FOOD ADDITIVE",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679927,
+        "modified": 1457986656719,
         "deprecated": false,
         "value": "JECFA MONOGRAPH",
         "display": "JECFA MONOGRAPH",
@@ -3060,14 +3085,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "FOOD ADDITIVE",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679928,
+        "modified": 1457986656723,
         "deprecated": false,
         "value": "UCSF-FDA TRANSPORTAL",
         "display": "UCSF-FDA TRANSPORTAL",
@@ -3075,14 +3100,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "PHARMCLASS",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679929,
+        "modified": 1457986656726,
         "deprecated": false,
         "value": "AIDS",
         "display": "AIDS",
@@ -3090,14 +3115,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679930,
+        "modified": 1457986656730,
         "deprecated": false,
         "value": "INS",
         "display": "INS",
@@ -3105,14 +3130,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "GENERAL INSTATEATION",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679297,
-        "modified": 1457983679931,
+        "modified": 1457986656733,
         "deprecated": false,
         "value": "AUSTRALIAN PLANT NAME INDEX",
         "display": "AUSTRALIAN PLANT NAME INDEX",
@@ -3120,14 +3145,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "ORGANISM",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679932,
+        "modified": 1457986656737,
         "deprecated": false,
         "value": "CHEBI",
         "display": "CHEBI",
@@ -3135,14 +3160,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679933,
+        "modified": 1457986656741,
         "deprecated": false,
         "value": "EINECS",
         "display": "EINECS",
@@ -3150,14 +3175,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "CHEMICAL",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679935,
+        "modified": 1457986656744,
         "deprecated": false,
         "value": "HEALTH -CANADA NHP INGREDIENT MONOGRAPH",
         "display": "HEALTH -CANADA NHP INGREDIENT MONOGRAPH",
@@ -3165,14 +3190,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679936,
+        "modified": 1457986656748,
         "deprecated": false,
         "value": "HEALTH-CANADA NHP INGREDIENT RECORD",
         "display": "HEALTH-CANADA NHP INGREDIENT RECORD",
@@ -3180,14 +3205,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "REGULATORY",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679937,
+        "modified": 1457986656752,
         "deprecated": false,
         "value": "JMPR-PESTICIDE RESIDUE",
         "display": "JMPR-PESTICIDE RESIDUE",
@@ -3195,14 +3220,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "FOOD ADDITIVE",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679938,
+        "modified": 1457986656755,
         "deprecated": false,
         "value": "PUBCHEM",
         "display": "PUBCHEM",
@@ -3210,14 +3235,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "GENERAL INSTATEATION",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679298,
-        "modified": 1457983679939,
+        "modified": 1457986656759,
         "deprecated": false,
         "value": "INN",
         "display": "INN",
@@ -3225,7 +3250,7 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "systemCategory": "GENERAL INSTATEATION",
+        "systemCategory": null,
         "regex": null,
         "_namespace": null
       },
@@ -3243,7 +3268,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "codes.codeSystem"
+    ],
     "_namespace": null
   },
   {
@@ -3438,7 +3465,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "codes.type"
+    ],
     "_namespace": null
   },
   {
@@ -3516,7 +3545,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "constituents.role"
+    ],
     "_namespace": null
   },
   {
@@ -3737,7 +3768,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.developmentalStage"
+    ],
     "_namespace": null
   },
   {
@@ -3906,7 +3939,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "references.tags"
+    ],
     "_namespace": null
   },
   {
@@ -4153,36 +4188,11 @@
         "_namespace": null
       }
     ],
-    "fields": [],
-    "_namespace": null
-  },
-  {
-    "id": 17,
-    "version": 1,
-    "created": 1457983680098,
-    "modified": 1457983680099,
-    "deprecated": false,
-    "domain": "DOMAIN",
-    "editable": true,
-    "terms": [
-      {
-        "version": 1,
-        "created": 1457983679289,
-        "modified": 1457983680098,
-        "deprecated": false,
-        "value": "VALUE_SHORT",
-        "display": "VALUE_LONG",
-        "description": "DESCRIPTION",
-        "origin": "ORIGIN",
-        "filter": null,
-        "hidden": false,
-        "_namespace": null
-      }
+    "fields": [
+      "references.docType"
     ],
-    "fields": [],
     "_namespace": null
-  },
-  {
+  },{
     "id": 18,
     "version": 1,
     "created": 1457983680104,
@@ -4218,7 +4228,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structuralModifications.extent"
+    ],
     "_namespace": null
   },
   {
@@ -5401,7 +5413,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.fractionName"
+    ],
     "_namespace": null
   },
   {
@@ -5583,7 +5597,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.fractionMaterialType"
+    ],
     "_namespace": null
   },
   {
@@ -5635,7 +5651,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "components.type"
+    ],
     "_namespace": null
   },
   {
@@ -6220,7 +6238,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "monomers.type"
+    ],
     "_namespace": null
   },
   {
@@ -6272,7 +6292,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "names.domains"
+    ],
     "_namespace": null
   },
   {
@@ -6350,7 +6372,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "nameOrgs.nameOrg"
+    ],
     "_namespace": null
   },
   {
@@ -6428,7 +6452,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "names.type"
+    ],
     "_namespace": null
   },
   {
@@ -6544,9 +6570,9 @@
     "editable": true,
     "terms": [
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680873,
+        "modified": 1457986830210,
         "deprecated": false,
         "value": "sP",
         "display": "Phosporothioate",
@@ -6554,14 +6580,14 @@
         "origin": "SP([*])([*])=O |$;;_R1;_R2;$|",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "SP([*])([*])=O |$;;_R91;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680874,
+        "modified": 1457986830215,
         "deprecated": false,
         "value": "P",
         "display": "Phosphate",
@@ -6569,14 +6595,14 @@
         "origin": "OP([*])([*])=O |$;;_R1;_R2;$|",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "OP([*])([*])=O |$;;_R91;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680875,
+        "modified": 1457986830219,
         "deprecated": false,
         "value": "bP",
         "display": "Boranophosphate",
@@ -6584,14 +6610,14 @@
         "origin": "BP([*])([*])=O |$;;_R1;_R2;$|",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "BP([*])([*])=O |$;;_R91;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680876,
+        "modified": 1457986830223,
         "deprecated": false,
         "value": "nasP",
         "display": "Sodium Phosporothioate",
@@ -6599,14 +6625,14 @@
         "origin": "[Na+].[S-]P([*])([*])=O |$;;;_R1;_R2;$|",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[Na+].[S-]P([*])([*])=O |$;;;_R91;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680877,
+        "modified": 1457986830226,
         "deprecated": false,
         "value": "ccnP",
         "display": "Phosphoryldimethylamine",
@@ -6614,14 +6640,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "P([*])(N(C)C)([*])=O |$;_R91;;;;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680878,
+        "modified": 1457986830230,
         "deprecated": false,
         "value": "pP",
         "display": "PhosphorylPIPERAZINE",
@@ -6629,12 +6655,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "P([*])(N1CCNCC1)([*])=O  |$;_R91;;;;;;;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "linkages.linkage"
+    ],
     "_namespace": null
   },
   {
@@ -6686,7 +6714,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "nucleicAcid.sequenceOrigin"
+    ],
     "_namespace": null
   },
   {
@@ -6738,7 +6768,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "nucleicAcid.nucleicAcidSubType"
+    ],
     "_namespace": null
   },
   {
@@ -6790,7 +6822,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "glycosylation.glycosylationSite"
+    ],
     "_namespace": null
   },
   {
@@ -6946,7 +6980,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "glycosylation.glycosylationType"
+    ],
     "_namespace": null
   },
   {
@@ -7037,7 +7073,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.infraSpecificType"
+    ],
     "_namespace": null
   },
   {
@@ -7401,7 +7439,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "relationships.interactionType"
+    ],
     "_namespace": null
   },
   {
@@ -7869,7 +7909,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "names.nameJurisdication"
+    ],
     "_namespace": null
   },
   {
@@ -10183,7 +10225,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "names.languages"
+    ],
     "_namespace": null
   },
   {
@@ -10287,7 +10331,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structuralModifications.locationType"
+    ],
     "_namespace": null
   },
   {
@@ -10677,9 +10723,9 @@
     "editable": true,
     "terms": [
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680902,
+        "modified": 1457986937225,
         "deprecated": false,
         "value": "LR",
         "display": "L-Ribose",
@@ -10687,14 +10733,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "O[C@@H]1[C@@H]([*])O[C@@H](CO[*])[C@@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "OC[C@@H](O)[C@@H](O)[C@@H](O)C=O",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680903,
+        "modified": 1457986937229,
         "deprecated": false,
         "value": "R",
         "display": "D-Ribose (RNA)",
@@ -10702,14 +10748,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "O[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "OC[C@@H](O)[C@@H](O)[C@@H](O)C=O",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680904,
+        "modified": 1457986937232,
         "deprecated": false,
         "value": "dR",
         "display": "Deoxyribose (DNA)",
@@ -10717,14 +10763,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@H]1O[C@@H]([*])C[C@@H]1O[*] |$_R91;;;;;;_R90;;;;_R92$|",
-        "simplifiedStructure": "OC[C@@H](O)[C@@H](O)CC=O",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680904,
+        "modified": 1457986937236,
         "deprecated": false,
         "value": "MOE",
         "display": "2'-O-Methoxyethyl ribose",
@@ -10732,14 +10778,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "COCCO[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;;;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680905,
+        "modified": 1457986937240,
         "deprecated": false,
         "value": "mph",
         "display": "morpholino",
@@ -10747,14 +10793,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@@H]1CN([*])C[C@H]([*])O1 |$_R91;;;;;;_R92;;;_R90;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680906,
+        "modified": 1457986937247,
         "deprecated": false,
         "value": "dier",
         "display": "\"5- 1,2-Dierucyl-rac-glycerol (Genzyme)\"",
@@ -10762,14 +10808,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "CCCCCCCC_C=C/CCCCCCCCCCCCOCC(CO[*])OCCCCCCCCCCCC_C=C/CCCCCCCC |$;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92;;;;;;;;;;;;;;;;;;;;;;;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680907,
+        "modified": 1457986937253,
         "deprecated": false,
         "value": "5FBC6",
         "display": "4-STATEylbenzamidehexanol (5' end)",
@@ -10777,14 +10823,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[H]C(=O)c1ccc(cc1)C(=O)NCCCCCCO[*] |$;;;;;;;;;;;;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680912,
+        "modified": 1457986937259,
         "deprecated": false,
         "value": "5FAM",
         "display": "5'-6FAM (6-carboxyfluorescein)",
@@ -10792,14 +10838,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "OC(=O)c1ccc(cc1-c1c2ccc(O)cc2oc2cc(=O)ccc12)C(=O)NCCCCCCO[*] |$;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680913,
+        "modified": 1457986937266,
         "deprecated": false,
         "value": "3SS6",
         "display": "3'-Thiol-Modifier 6 S-S from Glen Research",
@@ -10807,14 +10853,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OCCOCCCSSCCCOCCO[*] |$_R91;;;;;;;;;;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680914,
+        "modified": 1457986937273,
         "deprecated": false,
         "value": "lLR",
         "display": "\"2,'4'-locked-Ribose (alpha-L-LNA)\"",
@@ -10822,14 +10868,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@]12CO[C@H]([C@H]([*])O1)[C@H]2O[*] |$_R91;;;;;;;;_R90;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680914,
+        "modified": 1457986937280,
         "deprecated": false,
         "value": "UNA",
         "display": "2'-3'-Unlocked-ribose",
@@ -10837,14 +10883,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "OC[C@H]([*])O[C@H](CO[*])CO[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680915,
+        "modified": 1457986937286,
         "deprecated": false,
         "value": "FMOE",
         "display": "2'-O-Tris-trifluoromethoxyethyl ribose",
@@ -10852,14 +10898,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "FC(F)(F)C(OCCO[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*])(C(F)(F)F)C(F)(F)F |$;;;;;;;;;;;_R90;;;;;_R91;;;_R92;;;;;;;;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680916,
+        "modified": 1457986937292,
         "deprecated": false,
         "value": "25R",
         "display": "\"2,5-Ribose\"",
@@ -10867,14 +10913,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "O[C@@H]1[C@@H](CO[*])O[C@@H]([*])[C@@H]1O[*] |$;;;;;_R91;;;_R90;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680917,
+        "modified": 1457986937300,
         "deprecated": false,
         "value": "mR",
         "display": "2'-O-Methyl-Ribose",
@@ -10882,14 +10928,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "CO[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680918,
+        "modified": 1457986937306,
         "deprecated": false,
         "value": "aR",
         "display": "3-Amino-Ribose",
@@ -10897,14 +10943,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "O[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1N[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "N[C@@](O)([C@H](O)CO)[C@@H](O)C=O",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680919,
+        "modified": 1457986937312,
         "deprecated": false,
         "value": "4sR",
         "display": "4-Thio-Ribose",
@@ -10912,14 +10958,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "O[C@H]1[C@H]([*])S[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "OC[C@@H](S)[C@@H](O)[C@@H](O)C=O",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680920,
+        "modified": 1457986937318,
         "deprecated": false,
         "value": "FR",
         "display": "FANA",
@@ -10927,14 +10973,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "F[C@@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680921,
+        "modified": 1457986937324,
         "deprecated": false,
         "value": "5cGT",
         "display": "2-(methylamino)acetamide (GeneTools 5'-cap for PMO)",
@@ -10942,14 +10988,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "CN([*])CC(N)=O |$;;_R92;;;;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680922,
+        "modified": 1457986937328,
         "deprecated": false,
         "value": "hx",
         "display": "hexitol",
@@ -10957,14 +11003,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@H]1OC[C@@H]([*])C[C@@H]1O[*] |$_R91;;;;;;;_R90;;;;_R92$|",
-        "simplifiedStructure": "OC[C@H](O)[C@H](O)[C@H](O)[C@H](O)CO",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680922,
+        "modified": 1457986937332,
         "deprecated": false,
         "value": "aFR",
         "display": "alpha-FANA",
@@ -10972,14 +11018,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "F[C@@H]1[C@@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680923,
+        "modified": 1457986937336,
         "deprecated": false,
         "value": "eR",
         "display": "\"2'-O,4'-ethylene bridged Ribose\"",
@@ -10987,14 +11033,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@@]12CCO[C@@H]([C@H]([*])O1)[C@@H]2O[*] |$_R91;;;;;;;;;_R90;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680924,
+        "modified": 1457986937340,
         "deprecated": false,
         "value": "3FAM",
         "display": "3-FAM",
@@ -11002,14 +11048,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "Oc1ccc2c(Oc3cc(O)ccc3C22OC(=O)c3ccc(cc23)C(=O)NCCCCC(CO[*])O[*])c1 |$;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;_R91;;_R92;$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680925,
+        "modified": 1457986937344,
         "deprecated": false,
         "value": "5A6",
         "display": "6-amino-hexanol (5' end)",
@@ -11017,14 +11063,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]N([*])CCCCCCO[*] |$_R91;;_R90;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680926,
+        "modified": 1457986937347,
         "deprecated": false,
         "value": "PONA",
         "display": "2-(methylamino)ethanol (PHONA sugar)",
@@ -11032,14 +11078,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OCCN([*])C[*] |$_R91;;;;;_R90;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680927,
+        "modified": 1457986937350,
         "deprecated": false,
         "value": "RGNA",
         "display": "R Propanetriol (GNA sugar)",
@@ -11047,14 +11093,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@@H](C[*])O[*] |$_R91;;;;;_R90;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680928,
+        "modified": 1457986937354,
         "deprecated": false,
         "value": "3A6",
         "display": "6-amino-hexanol (3' end)",
@@ -11062,14 +11108,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OCCCCCCN([*])[*] |$_R91;;;;;;;;;_R92;_R90$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680929,
+        "modified": 1457986937357,
         "deprecated": false,
         "value": "am6",
         "display": "5'-6-amino-hexanol",
@@ -11077,14 +11123,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]NCCCCCCO[*] |$_R91;;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680930,
+        "modified": 1457986937361,
         "deprecated": false,
         "value": "qR",
         "display": "2-O-beta-hydroxy-ethoxy-methyl Ribose (Qiagen)",
@@ -11092,14 +11138,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "OCCOCO[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;;;;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679337,
-        "modified": 1457983680931,
+        "modified": 1457986937364,
         "deprecated": false,
         "value": "fR",
         "display": "2'-Fluoro-Ribose",
@@ -11107,14 +11153,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "F[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680908,
+        "modified": 1457986937367,
         "deprecated": false,
         "value": "LR",
         "display": "\"2,'4'-locked-Ribose\"",
@@ -11122,14 +11168,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@@]12CO[C@@H]([C@H]([*])O1)[C@@H]2O[*] |$_R91;;;;;;;;_R90;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680909,
+        "modified": 1457986937371,
         "deprecated": false,
         "value": "12ddR",
         "display": "\"1',2'-Di-Deoxy-Ribose\"",
@@ -11137,14 +11183,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@H]1OCC[C@@H]1O[*] |$_R91;;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680910,
+        "modified": 1457986937375,
         "deprecated": false,
         "value": "SGNA",
         "display": "S Propanetriol (GNA sugar)",
@@ -11152,14 +11198,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]OC[C@H](C[*])O[*] |$_R91;;;;;_R90;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       },
       {
-        "version": 1,
+        "version": 2,
         "created": 1457983679336,
-        "modified": 1457983680911,
+        "modified": 1457986937378,
         "deprecated": false,
         "value": "am12",
         "display": "5'-12-amino-dodecanol",
@@ -11167,12 +11213,14 @@
         "origin": "",
         "filter": null,
         "hidden": false,
-        "fragmentStructure": "[*]NCCCCCCCCCCCCO[*] |$_R91;;;;;;;;;;;;;;;_R92$|",
-        "simplifiedStructure": "",
+        "fragmentStructure": null,
+        "simplifiedStructure": null,
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "sugars.sugar"
+    ],
     "_namespace": null
   },
   {
@@ -11276,7 +11324,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "nucleicAcid.nucleicAcidType"
+    ],
     "_namespace": null
   },
   {
@@ -11354,7 +11404,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "moieties.opticalActivity"
+    ],
     "_namespace": null
   },
   {
@@ -11471,7 +11523,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "otherLinks.linkageType"
+    ],
     "_namespace": null
   },
   {
@@ -14630,7 +14684,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.part"
+    ],
     "_namespace": null
   },
   {
@@ -15358,7 +15414,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.partLocation"
+    ],
     "_namespace": null
   },
   {
@@ -15605,7 +15663,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "polymerClassification.polymerClass"
+    ],
     "_namespace": null
   },
   {
@@ -15670,7 +15730,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "polymerClassification.polymerGeometry"
+    ],
     "_namespace": null
   },
   {
@@ -15774,7 +15836,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "polymerClassification.sourceType"
+    ],
     "_namespace": null
   },
   {
@@ -15917,7 +15981,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "polymerClassification.polymerSubclass"
+    ],
     "_namespace": null
   },
   {
@@ -16229,7 +16295,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "properties.name"
+    ],
     "_namespace": null
   },
   {
@@ -16281,7 +16349,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "properties.type"
+    ],
     "_namespace": null
   },
   {
@@ -17620,7 +17690,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "protein.proteinSubType"
+    ],
     "_namespace": null
   },
   {
@@ -17854,7 +17926,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "protein.proteinType"
+    ],
     "_namespace": null
   },
   {
@@ -18049,7 +18123,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "relationships.qualification"
+    ],
     "_namespace": null
   },
   {
@@ -18816,7 +18892,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "relationships.type"
+    ],
     "_namespace": null
   },
   {
@@ -20077,7 +20155,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "agentModifications.agentModificationRole"
+    ],
     "_namespace": null
   },
   {
@@ -20194,7 +20274,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "protein.sequenceOrigin"
+    ],
     "_namespace": null
   },
   {
@@ -20246,7 +20328,8 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": ["protein.sequenceType",
+      "nucleicAcid.sequenceType"],
     "_namespace": null
   },
   {
@@ -20285,7 +20368,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.sourceMaterialClass"
+    ],
     "_namespace": null
   },
   {
@@ -20376,7 +20461,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.sourceMaterialState"
+    ],
     "_namespace": null
   },
   {
@@ -20935,7 +21022,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structurallyDiverse.sourceMaterialType"
+    ],
     "_namespace": null
   },
   {
@@ -21130,7 +21219,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "moieties.stereochemistry"
+    ],
     "_namespace": null
   },
   {
@@ -21273,7 +21364,9 @@
         "_namespace": null
       }
     ],
-    "fields": [],
+    "fields": [
+      "structuralModifications.structuralModificationType"
+    ],
     "_namespace": null
   },
   {

@@ -1,4 +1,5 @@
 <div>
+    {{obj[field]}}
     <label id="{{field}}-label" class="text-capitalize">{{label || field}}</label><br>
     <a ng-hide="obj[field]._editing || obj[field].display =='Other'" class="ng-hide" aria-hidden="true" ng-click="editing(obj[field]);">{{obj[field].display}}</a>
         <select ng-show="obj[field]._editing || !obj[field].display  || !obj[field].display =='Other'" class="form-control" ng-model=obj[field] ng-change="obj[field]._editing=false;"
