@@ -72,7 +72,8 @@ exports.config = {
         g1ss: [ 'StructureFormTest.js'
                     ,'MoietyFormTest.js'
         ],
-        accessControl:  ['UserAccessControlTests.js'
+        accessControl:  [//'UserAccessControlTests.js',
+                            'RegisterChemicalTest.js'
         ]
 
     },

@@ -17,7 +17,7 @@ describe('User Access Control Tests', function () {
 
     var userAccessTests = new UserAccessControlTests();
 
-    it('should contain proper body', function() {
+    it('should return proper message', function() {
         browser.ignoreSynchronization = true; //to non angular sites
         browser.get("http://localhost:9000/ginas/app/register");
         var pageBody = element(by.tagName('body')).getText();
