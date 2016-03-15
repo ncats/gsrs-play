@@ -493,46 +493,5 @@ public class RouteFactory extends Controller {
     }
     
     
-	public static Result addFakeUsers(){
-    	if(Play.isTest()){
-    		List<UserProfile> ups = new ArrayList<UserProfile>();
-    		Group g=AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
-    		if(g==null){
-	    		g=new Group("fake");
-    			
-	    		
-		    	List<Role> rolekind = new ArrayList<Role>();
-		    			rolekind.add(Role.SuperUpdate);
-		    			rolekind.add(Role.SuperDataEntry);
-		    	List<Group> groups = new ArrayList<Group>();
-		    			groups.add(g);
-		    	
-		    	try{
-			    	UserProfile up1= UserProfileFactory.addActiveUser("fakeuser1","madeup1",rolekind,groups);
-			    	UserProfile up2= UserProfileFactory.addActiveUser("fakeuser2","madeup2",rolekind,groups);
-			    	
-			    	UserProfile up3= UserProfileFactory.addActiveUser(
-			    			"fakeuser3",
-			    			"madeup3",
-			    			Role.roles(Role.DataEntry,Role.Updater),
-			    			groups);
-			    	
-			    	ups.add(up1);
-			    	ups.add(up2);
-			    	ups.add(up3);
-		    	}catch(Exception e){
-		    		e.printStackTrace();
-		    	}
-    		}else{
-    			for(Principal p: g.members){
-    				ups.add(UserProfileFactory.getUserProfileForPrincipal(p));
-    			}
-    		}
-	    	ObjectMapper om = new ObjectMapper();
-	        //flash("success", " " + requestData.get("username") + " has been created");
-        	return ok(om.valueToTree(ups));
-    	}else{
-    		return badRequest ("Unknown Context: \"@deleteme\"");
-    	}
-    }
+
 }

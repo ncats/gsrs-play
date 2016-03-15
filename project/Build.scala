@@ -1,11 +1,8 @@
-import sbt._
-import Keys._
 import play._
+import sbt.Keys._
+import sbt._
 //import play.PlayImport._
 import play.Play.autoImport._
-import PlayKeys._
-import sbtassembly.Plugin._
-import AssemblyKeys._
 
 object ApplicationBuild extends Build {
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -74,7 +71,6 @@ object ApplicationBuild extends Build {
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"be.objectify" %% "deadbolt-java" % "2.3.3"
-      , "net.sourceforge.htmlunit" % "htmlunit" % "2.14" % "test"
   )
 
   val scalaBuildOptions = Seq(
@@ -123,7 +119,7 @@ public class BuildInfo {
 
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-    libraryDependencies ++= commonDependencies,
+      libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(build,seqaln).aggregate(build,seqaln)
 
@@ -171,11 +167,19 @@ public class BuildInfo {
     cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ncats).aggregate(ncats)
 
+
   val hcs = Project("hcs", file("modules/hcs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val moldev = Project("moldev", file("modules/moldev"))
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
+      libraryDependencies ++= commonDependencies,
+      libraryDependencies += "org.apache.poi" % "poi" % "3.13",
+        javacOptions ++= javaBuildOptions
+    ).dependsOn(ncats).aggregate(ncats)
 
   val srs = Project("srs", file("modules/srs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -217,16 +221,9 @@ public class BuildInfo {
   ).dependsOn(ncats).aggregate(ncats)
 
   val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
-    .settings(assemblySettings: _*)
-    .settings(
-    libraryDependencies += "org.avaje.ebeanorm" % "avaje-ebeanorm" % "3.3.4",
+    .settings(commonSettings: _*).settings(
+    libraryDependencies ++= commonDependencies,
       libraryDependencies += "com.typesafe" % "config" % "1.2.0",
-      libraryDependencies += "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-      libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive (),
-      unmanagedResources in Compile +=  file("conf/sql/post/ginas-oracle.sql"),
-      unmanagedResources in Compile +=  file("modules/ginas/conf/evolutions/default/1.sql"),
-      unmanagedJars in Compile += file("lib/ojdbc6.jar"),
-      //unmanagedSourceDirectories in Compile += file("app/ix/ginas"),
       mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
-  )
+  ).dependsOn(ginas).aggregate(ginas)
 }

@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -230,6 +231,7 @@ public class EntityFactory extends Controller {
 		
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
+            configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
             _serializationConfig = getSerializationConfig();
             for (Class v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
@@ -545,7 +547,9 @@ public class EntityFactory extends Controller {
         }else {
             views.add(BeanViews.Compact.class);
         }
-
+        EntityMapper em=new EntityMapper (views.toArray(new Class[0]));
+        
+        
         return new EntityMapper (views.toArray(new Class[0]));
     }
 

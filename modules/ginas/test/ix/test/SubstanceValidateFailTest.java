@@ -69,19 +69,19 @@ public class SubstanceValidateFailTest extends WithApplication {
 
 
     @Test
-    public void testAPIValidateSubstance() {
-    	final JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-    	ts.run(new Callable<Void>() {
-            public Void call() throws IOException {
-            		ts.loginFakeUser1();
-                    JsonNode val=ts.validateSubstanceJSON(js);
-                    assertFalse(val.isNull());
-                    assertFalse(val.get("valid").asBoolean());
+    public void testAPIValidateSubstance() throws Exception {
 
-                    return null;
-                }
+        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            Logger.info("Running: " + resource);
+            WSResponse wsResponse1 = session.validateSubstance(js);
+            JsonNode jsonNode1 = wsResponse1.asJson();
+            assertEquals(OK, wsResponse1.getStatus());
+            assertFalse(jsonNode1.isNull());
+            assertFalse(jsonNode1.get("valid").asBoolean());
 
-        });
+
+        }
 
     }
     
