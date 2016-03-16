@@ -31,8 +31,9 @@ public class IntegrationTest {
     
     
     @Test 
-    public void testFakeUserSetup(){
-    	ts.ensureSetupUsers();
+    public void ensureSetupUsers(){
+        GinasTestServer.UserSession user = ts.loginFakeUser1();
+        assertEquals(GinasTestServer.FAKE_USER_1, user.getUserName());
 
     }
     

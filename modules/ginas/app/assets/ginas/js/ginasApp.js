@@ -1,5 +1,4 @@
 (function () {
-    var tagsInput = angular.module('ngTagsInput', []);
 
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
@@ -14,6 +13,7 @@
                 hashPrefix: '!'
             });
         });
+
 
     ginasApp.factory('Substance', function () {
         var substance = {};
@@ -288,6 +288,7 @@
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
        // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
+
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
@@ -1168,7 +1169,6 @@
 
                 } else {
                     if (_.has(aa, 'structuralModifications')) {
-                        console.log(aa);
                         scope.acidClass = "modification";
                     } else if (_.has(aa, 'disulfide')) {
                         scope.acidClass = "disulfide";
@@ -1331,7 +1331,6 @@
                         obj.value = aa;
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
-                            console.log(temp);
                             obj=_.pickBy(temp, _.isString);
                             obj.value = aa;
                             //obj.name = temp.display;
@@ -1920,6 +1919,33 @@
 
 
     });*/
-
+    ginasApp.directive("treeView", function ($compile) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                text: '='
+            },
+            link: function (scope, element, attrs) {
+                scope.codes = [];
+                var template ='<div>';
+                _.forEach(scope.text.split('|'), function(c){
+                    scope.codes.push(c.split('['));
+                });
+                _.forEach(scope.codes, function(c) {
+                    template += '<ul class="tree-list"><li><a href = "app/substances?q=comments:'+c[0]+'" uib-tooltip="Search ginas for'+ c[0]+'" target ="_self">'+ c[0]+'</a>';
+                    if(c[1]){
+                    template += '<span>'+'['+ c[1]+'</span>';
+                    }
+                });
+                for(var i = 0; i< scope.codes.length; i++){
+                    template+='</li></ul>';
+                }
+                template+='</div>';
+                    element.append(angular.element(template));
+                $compile(template)(scope);
+         }
+}
+    });
 
 })();
