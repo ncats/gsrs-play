@@ -1592,6 +1592,7 @@ public class EntityFactory extends Controller {
         }
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
+            ex.printStackTrace();
             return internalServerError (ex.getMessage());
         }
         finally {

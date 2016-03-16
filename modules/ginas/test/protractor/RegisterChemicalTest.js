@@ -59,9 +59,11 @@ describe('Register chemical test', function () {
         var pasteButton = regChemPage.clickById('pasteSubstanceBtn');
         console.log("Json file names:" + jsonFile.names.length);
 
+        expect(element(by.exactRepeater('obj in parent.names')).isPresent())
+            .toBe(true);
 
-        element.all(by.repeater('obj in parent.names')).count().then(function(len) {
-            console.log("name count:" + len);
+        element.all(by.exactRepeater('obj in parent.names')).then(function(val) {
+            console.log("name count:" + val.length());
         });
 
        // expect(names.count()).toBe(jsonFile.names.length);

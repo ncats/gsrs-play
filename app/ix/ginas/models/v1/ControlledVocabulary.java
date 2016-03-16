@@ -19,6 +19,10 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_ginas_controlled_vocab")
+@Inheritance
+@DiscriminatorValue("CTLV")
+
+
 public class ControlledVocabulary extends IxModel{
 
 	private static final long serialVersionUID = 5455592961232451608L;
@@ -32,6 +36,13 @@ public class ControlledVocabulary extends IxModel{
 	@Indexable(name="Domain", facet=true)
 	public String domain;
 
+
+	public void setTerms(List<VocabularyTerm> terms) {
+		this.terms = terms;
+	}
+
+	private String vocabularyTermType = VocabularyTerm.class.getName();
+
     @ManyToMany(cascade=CascadeType.ALL)
     @JsonSerialize(using=KeywordListSerializer.class)
     @JsonDeserialize(using=KeywordListDeserializer.class)
@@ -39,6 +50,7 @@ public class ControlledVocabulary extends IxModel{
 	public List<Keyword> fields = new ArrayList<Keyword>();
 
 	public boolean editable = true;
+
 
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_cv_terms")
@@ -54,6 +66,22 @@ public class ControlledVocabulary extends IxModel{
 			}
 		}
 		return null;
+	}
+
+	public List<? extends VocabularyTerm> getTerms() {
+		return terms;
+	}
+
+	public <T extends VocabularyTerm> void addTerms(T term) {
+		this.terms.add(term);
+	}
+
+	public void setVocabularyTermType(String vocabularyTermType) {
+		this.vocabularyTermType = vocabularyTermType;
+	}
+
+	public String getVocabularyTermType() {
+		return vocabularyTermType;
 	}
 
 

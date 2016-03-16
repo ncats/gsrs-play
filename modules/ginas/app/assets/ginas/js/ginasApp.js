@@ -437,9 +437,12 @@
         };
 
         $scope.toggleGrid = function () {
-            console.log("grid");
-            //  $scope.gridView = !$scope.gridView;
             localStorageService.set('gridView', $scope.gridView);
+        };
+
+        $scope.redirect = function(){
+        var base = $location.$$absUrl.split('/v/')[0];
+            location.href= base + "/v/" + $scope.versionNumber;
         };
 
         $scope.compare = function () {
@@ -691,10 +694,6 @@
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
-console.log($scope);
-            console.log(sub);
-            console.log(sub.$$fromFormSubstance());
-
             sub = angular.toJson($scope.fromFormSubstance(sub));
             console.log(sub);
             $scope.errorsArray = [];
