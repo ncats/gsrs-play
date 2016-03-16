@@ -13,8 +13,10 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import com.hazelcast.client.AuthenticationException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PrincipalFactory;
@@ -25,6 +27,7 @@ import ix.core.models.Group;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ginas.utils.validation.Validation;
+import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import net.sf.ehcache.CacheManager;
@@ -148,6 +151,10 @@ public class GinasTestServer extends ExternalResource{
         public String getUserName() {
             return username;
         }
+
+        public UserProfile getProfile(){
+            return Authentication.getUserProfileFromPassword(username, password);
+        }
     }
 
     public GinasTestServer(int port){
@@ -171,52 +178,6 @@ public class GinasTestServer extends ExternalResource{
     }
 
 
-    /*
-     //@Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-	public static Result addFakeUsers(){
-    	if(Play.isTest()){
-    		List<UserProfile> ups = new ArrayList<UserProfile>();
-    		Group g=AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
-    		if(g==null){
-	    		g=new Group("fake");
-
-
-		    	List<Role> rolekind = new ArrayList<Role>();
-		    			rolekind.add(Role.SuperUpdate);
-		    			rolekind.add(Role.SuperDataEntry);
-		    	List<Group> groups = new ArrayList<Group>();
-		    			groups.add(g);
-
-		    	try{
-			    	UserProfile up1= UserProfileFactory.addActiveUser("fakeuser1","madeup1",rolekind,groups);
-			    	UserProfile up2= UserProfileFactory.addActiveUser("fakeuser2","madeup2",rolekind,groups);
-
-			    	UserProfile up3= UserProfileFactory.addActiveUser(
-			    			"fakeuser3",
-			    			"madeup3",
-			    			Role.roles(Role.DataEntry,Role.Updater),
-			    			groups);
-
-			    	ups.add(up1);
-			    	ups.add(up2);
-			    	ups.add(up3);
-		    	}catch(Exception e){
-		    		e.printStackTrace();
-		    	}
-    		}else{
-    			for(Principal p: g.members){
-    				ups.add(UserProfileFactory.getUserProfileForPrincipal(p));
-    			}
-    		}
-	    	ObjectMapper om = new ObjectMapper();
-	        //flash("success", " " + requestData.get("username") + " has been created");
-        	return ok(om.valueToTree(ups));
-    	}else{
-    		return badRequest ("Unknown Context: \"@deleteme\"");
-    	}
-    }
-     */
-
 
     public UserSession loginFakeUser1(){
     	return login(FAKE_USER_1,FAKE_PASSWORD_1);
@@ -236,7 +197,7 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public UserSession login(String username, String password, AUTH_TYPE type){
-        UserSession session= new UserSession(username, password, type, port);
+        UserSession session= new UserSession(new User(username, password), type, port);
 
         sessions.add(session);
         return session;
@@ -246,7 +207,10 @@ public class GinasTestServer extends ExternalResource{
         return login(u, AUTH_TYPE.USERNAME_PASSWORD);
     }
     public UserSession login(User u, AUTH_TYPE type){
-       return login(u.username, u.password, type);
+        UserSession session= new UserSession(u, type, port);
+
+        sessions.add(session);
+        return session;
     }
     public User createSuperUser(String username, String password){
         return createUser(username, password, superUserRoles);
@@ -256,21 +220,28 @@ public class GinasTestServer extends ExternalResource{
         return createUser(username, password, normalUserRoles);
     }
 
-    public User createUser(String username, String password, Role ... roles){
-        return createUser(username, password, Role.roles(roles));
+    public User createUser(String username, String password, Role role, Role ... roles){
+        List<Role> list = new ArrayList<>();
+        list.add(role);
+        for(Role r: roles){
+            list.add(r);
+        }
+        return createUser(username, password,list);
     }
     public User createUser(String username, String password, List<Role> roles){
-    	
+    	if(roles.isEmpty()){
+            throw new IllegalArgumentException("roles can not be empty");
+        }
     	UserProfile up=UserProfileFactory.addActiveUser(username, password, roles, Collections.singletonList(fakeUserGroup));
     	return new User(up.getIdentifier(), password);
     }
     
-    public UserSession createNewUserAndLogin(Role ...roles){
+    public UserSession createNewUserAndLogin(Role role, Role ...roles){
 
     	userCount++;
     	return  login(createUser(
     			FAKE_USERNAME_PREFIX + userCount,
-    			FAKE_PASSWORD_PREFIX + userCount, roles),
+    			FAKE_PASSWORD_PREFIX + userCount, role, roles),
     			AUTH_TYPE.USERNAME_PASSWORD
     			);
     	
@@ -302,6 +273,7 @@ public class GinasTestServer extends ExternalResource{
 
     private void initializeControllers() {
 
+        App.init();
 
         Validation.init();
         AdminFactory.init();
@@ -315,6 +287,8 @@ public class GinasTestServer extends ExternalResource{
 
         EntityFactory.init();
         SearchFactory.init();
+
+        EntityPersistAdapter.init();
     }
 
     private void deleteH2Db() throws IOException {
@@ -337,6 +311,8 @@ public class GinasTestServer extends ExternalResource{
                     //if it can't delete instead of returning flag
                     //so we will know the reason why it failed.
                     Files.delete(file);
+                }else{
+                    System.out.println("found nfs file " + file.toString());
                 }
 
 
@@ -351,8 +327,9 @@ public class GinasTestServer extends ExternalResource{
             session.logout();
         }
         sessions.clear();
-
-        stop(ts);
+        //explicitly shutdown indexer to clear file locks
+        App._textIndexer.shutdown();
+        ts.stop();
     }
 
 
@@ -396,29 +373,30 @@ public class GinasTestServer extends ExternalResource{
 
         private int port;
 
+        private final User user;
+
         private AUTH_TYPE authType=AUTH_TYPE.NONE;
 
         public UserSession(int port){
             //null values for defaults
             this.port = port;
+            this.user = null;
         }
-        public UserSession(String username, String password, AUTH_TYPE type, int port){
-            Objects.requireNonNull(username);
-            Objects.requireNonNull(password);
+        public UserSession(User user, AUTH_TYPE type, int port){
+            Objects.requireNonNull(user);
             Objects.requireNonNull(type);
 
             if(port <1){
                 throw new IllegalArgumentException("port can not be < 1");
             }
             loggedIn=true;
-            this.username=username;
-            this.password=password;
+            this.user = user;
             this.authType=type;
             this.port = port;
 
         }
         public String getUserName(){
-        	return this.username;
+        	return this.user.getUserName();
         }
         private void setAuthenticationType(AUTH_TYPE atype){
             this.authType=atype;
@@ -435,6 +413,10 @@ public class GinasTestServer extends ExternalResource{
         public UserSession withPasswordAuth(){
             this.setAuthenticationType(AUTH_TYPE.USERNAME_PASSWORD);
             return this;
+        }
+
+        public User getUser(){
+            return user;
         }
 
 
@@ -696,6 +678,11 @@ public class GinasTestServer extends ExternalResource{
         public String logout() {
             //do nothing
             return "";
+        }
+
+        @Override
+        public String getUserName(){
+            return null;
         }
     }
 

@@ -111,8 +111,7 @@ public class App extends Authentication {
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static final TextIndexer _textIndexer = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    public static TextIndexer _textIndexer;
     
     
     public static final PayloadPlugin _payloader =
@@ -123,6 +122,17 @@ public class App extends Authentication {
 
     public static final PersistenceQueue _pq =
         Play.application().plugin(PersistenceQueue.class);
+
+
+
+    static{
+        init();
+    }
+
+    public static void init(){
+        _textIndexer =
+                Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    }
 
     /**
      * interface for rendering a result page
