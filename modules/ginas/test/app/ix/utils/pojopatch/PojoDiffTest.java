@@ -1,18 +1,23 @@
 package app.ix.utils.pojopatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.controllers.EntityFactory;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -33,6 +38,8 @@ public class PojoDiffTest {
         }
         return uuids.get(uuidIndex++);
     }
+    
+   
 
     private String getUUID(int index){
         if(index == uuids.size()){
@@ -42,6 +49,9 @@ public class PojoDiffTest {
         }
         return uuids.get(index).toString();
     }
+    
+    
+    
     @Test
     public void sameObjectShouldNotHaveChanges() throws Exception {
         //we'll use Author since that's simple and it's an entity
@@ -52,7 +62,7 @@ public class PojoDiffTest {
 
         PojoPatch patch = PojoDiff.getDiff(old, old);
 
-       patch.apply(old);
+        patch.apply(old);
 
         Author expected = new Author();
         expected.id = 12345L;

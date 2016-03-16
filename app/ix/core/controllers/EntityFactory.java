@@ -91,14 +91,17 @@ public class EntityFactory extends Controller {
     static final ExecutorService _threadPool = 
         Executors.newCachedThreadPool();
 
-    static final Model.Finder<Long, Principal> _principalFinder = 
-        new Model.Finder(Long.class, Principal.class);
+    static Model.Finder<Long, Principal> _principalFinder;
 
-    static TextIndexer _textIndexer =
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    static TextIndexer _textIndexer;
+    
+    static{
+    	init();
+    }
     
     public static void init(){
-    	_textIndexer = Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    	_textIndexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    	_principalFinder=new Model.Finder(Long.class, Principal.class);
     }
 
     public static class FetchOptions {

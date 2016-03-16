@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,14 +17,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.utils.Util;
+import play.Logger;
 
 
 /**
@@ -97,17 +103,144 @@ public class PojoDiff {
 		}
 	}
 	
+	public static class EnhancedObjectPatch implements PojoPatch{
+		private Object oldV;
+		private Object newV;
+		JsonNode jp;
+		public EnhancedObjectPatch(Object oldV, Object newV){
+			this.oldV=oldV;
+			this.newV=newV;
+		}
+		public Stack apply(Object old) throws Exception{
+			if(jp==null){
+				jp=getEnhancedJsonDiff(oldV,newV);
+			}
+			if(old==oldV){
+				return applyChanges(oldV,newV, jp);
+			}else{
+				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
+			}
+		}
+	}
+	
 	
 	public static <T> PojoPatch getDiff(T oldValue, T newValue){
 		return new LazyObjectPatch(oldValue,newValue);
+	}
+	
+	public static <T> PojoPatch getEnhancedDiff(T oldValue, T newValue){
+		return new EnhancedObjectPatch(oldValue,newValue);
 	}
 	
 	public static PojoPatch fromJsonPatch(JsonPatch jp) throws IOException{
 		return new JsonObjectPatch(jp);
 	}
 	
+	private static String getID(JsonNode o){
+		try{
+			if(o.isObject()){
+				JsonNode id=o.get("uuid");
+				if(id!=null && !id.isNull()){
+					return id.asText();
+				}
+				id=o.get("id");
+				if(id!=null && !id.isNull()){
+					return id.asText();
+				}
+				return null;
+			}
+		}catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		return null;
+	}
+	/**
+	 *
+	 *	Okay, it don't work. Need to reevaluate.
+	 *
+	 *	
+	 * 
+	 * 
+	 * 
+	 **/
+	
+	private static ObjectNode mappify(ObjectNode m2){
+		ObjectMapper om=new ObjectMapper();
+		Iterator<String> fields=m2.fieldNames();
+		List<String> fieldNames = new ArrayList<String>();
+		while(fields.hasNext()){
+			fieldNames.add(fields.next());
+		}
+		
+		for(String key:fieldNames){
+			JsonNode o=m2.get(key);
+			
+			//System.out.println("Value is:" + o);
+			if(o.isArray()){
+				ArrayNode arr=((ArrayNode)o);
+				
+				ObjectNode mnew=om.createObjectNode();
+				//Map mnew = new HashMap();
+				for(int i=0;i<arr.size();i++){
+					JsonNode o2=arr.get(i);
+					String id=getID(o2);
+					if(id!=null){
+						mnew.set("$" + id, o2);
+					}else{
+						mnew.set("_" + i, o2);
+					}
+					if(o2.isObject()){
+						mappify((ObjectNode)o2);
+					}
+				}
+				m2.put(key, mnew);
+			}else if(o.isObject()){
+				mappify((ObjectNode)o);
+			}
+		}
+		return m2;
+	}
 	
 	
+	private static JsonNode mappifyJson(JsonNode js1){
+		try {
+			JsonNode mapped=mappify((ObjectNode)js1);
+			return mapped;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		return js1;
+	}
+	
+	public static JsonNode getEnhancedJsonDiff(Object oldValue, Object newValue){
+		ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		JsonNode js1;
+		JsonNode js2;
+		if(oldValue instanceof JsonNode){
+			js1=(JsonNode) oldValue;
+		}else{
+			js1=mapper.valueToTree(oldValue);
+		}
+		if(newValue instanceof JsonNode){
+			js2=(JsonNode) newValue;
+		}else{
+			js2=mapper.valueToTree(newValue);
+		}
+		JsonNode diff= JsonDiff.asJson(
+				mappifyJson(js1),
+				mappifyJson(js2)
+    			);
+		for(JsonNode jsn:diff){
+			String path=jsn.at("/path").asText();
+			String op=jsn.at("/op").asText();
+			if(op.equals("replace")){
+				Object o=PojoDiff.Manipulator.getObjectAt(oldValue, path, null);
+			}
+		}
+		return diff;
+	}
 	
 	private static <T> Stack applyPatch(T oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
 		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -494,19 +627,51 @@ public class PojoDiff {
 				registries.put(cls.getName(), new TypeRegistry(cls));
 			}
 		}
+		private static int getObjectWithID(Collection c, String id){
+			int i=0;
+			for(Object o:c){
+				try {
+					Object oid=EntityFactory.getId(o);
+					if(id.equals(oid.toString())){
+						return i;
+					}
+				} catch (Exception e) {
+					
+				}
+				i++;
+			}
+			return -1;
+		}
+		private static int getCollectionPostion(Collection col, String prop){
+			int c=-1;
+			if(prop.equals("-")){
+				//System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
+				c=col.size()-1;
+				//throw new IllegalStateException("'-'  not yet implemented");
+			}else if(prop.startsWith("_")){
+				try{
+					c=Integer.parseInt(prop.substring(1));
+				}catch(Exception e){
+					
+				}
+			}else if(prop.startsWith("$")){
+				c=getObjectWithID(col,prop.substring(1));
+			}else{
+				try{
+					c=Integer.parseInt(prop);
+				}catch(Exception e){
+					
+				}
+			}
+			return c;
+		}
 		private static Object getObjectDirect(Object o, String prop){
 			addClassToRegistry(o.getClass());
 			TypeRegistry tr=registries.get(o.getClass().getName());
 			
 			if(o instanceof Collection){
-				int c=-1;
-				if(prop.equals("-")){
-					//System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
-					c=((Collection)o).size()-1;
-					//throw new IllegalStateException("'-'  not yet implemented");
-				}else{
-					c=Integer.parseInt(prop);
-				}
+				int c=getCollectionPostion((Collection)o,prop);
+				
 				if(((Collection)o).size()<=c){
 					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + ((Collection)o).size());
 				}
@@ -518,7 +683,12 @@ public class PojoDiff {
 					i++;
 				}
 			}
-			return tr.getters.get(prop).get(o);
+			TypeRegistry.Getter g= tr.getters.get(prop);
+			if(g!=null){
+				return g.get(o);
+			}else{
+				throw new IllegalArgumentException("No getter for '" + prop + "'");
+			}
 		}
 		private static TypeRegistry.Setter getSetterDirect(Object o, final String prop){
 			addClassToRegistry(o.getClass());
@@ -529,7 +699,8 @@ public class PojoDiff {
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
-				final int c=Integer.parseInt(prop);
+				
+				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 
@@ -572,7 +743,7 @@ public class PojoDiff {
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
-				final int c=Integer.parseInt(prop);
+				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 
@@ -623,13 +794,8 @@ public class PojoDiff {
 			
 			if(o instanceof Collection){
 				Collection col = (Collection)o;
-				int cind=-1;
-				if(prop.equals("-")){
-					//throw new IllegalStateException("'-'  not yet implemented");
-				}else{
-					cind=Integer.parseInt(prop);
-				}
-				final int c=cind;
+				
+				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 
@@ -690,7 +856,6 @@ public class PojoDiff {
 			String curPath = paths[1];
 			
 			String subPath=objPointer.substring(curPath.length()+1);
-			
 			
 			Object fetched=getObjectDirect(src,curPath);
 			
