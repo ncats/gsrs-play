@@ -15,7 +15,7 @@
         });
 
 
-    ginasApp.factory('Substance', function () {
+    ginasApp.factory('Substance', function (CVFields) {
         var substance = {};
         substance.$$setClass = function (subClass) {
             var substanceClass = subClass;
@@ -74,10 +74,144 @@
             return substance;
         };
 
-        substance.$$setSubstance = function (sub) {
-            substance = sub;
+       /* substance.$$pasteSubstance = function (sub) {
+            substance.$$expandCV(sub);
+            console.log(substance);
+            _.forEach(sub, function (value, key) {
+                _.set(substance, key, value);
+            });
+            console.log(sub);
+            return sub;
+        };
+
+        substance.$$fromFormSubstance = function () {
+            if (substance.q) {
+                delete substance.q;
+            }
+
+            if (substance.substanceClass === 'protein') {
+                if (_.has(substance.protein, 'disulfideLinks')) {
+                    console.log("working");
+                    _.forEach(substance.protein.disulfideLinks, function (value, key) {
+                        var disulfideLink = {};
+                        var sites = _.toArray(value.sites);
+                        disulfideLink.sites = sites;
+                        substance.protein.disulfideLinks[key] = disulfideLink;
+                    });
+                }
+                if (_.has(substance.protein, 'otherLinks')) {
+                    _.forEach(substance.protein.otherLinks, function (value, key) {
+                        substance.protein.otherLinks[key] = value.sites;
+                    });
+                }
+            }
+
+            substance = substance.$$flattenCV(substance);
+            if (_.has(substance, 'moieties')) {
+                _.forEach(substance.moieties, function (m) {
+                    m.id = UUID.newID();
+                });
+            }
+            if (_.has(substance, 'structure')) {
+                //apparently needs to be reset as well
+                substance.structure.id = UUID.newID();
+                if (substance.substanceClass === 'polymer') {
+                    _.set(substance, 'polymer.idealizedStructure', substance.structure);
+                    console.log(substance);
+                    substance = _.omit(substance, 'structure');
+                    console.log(substance);
+                }
+
+            }
             return substance;
         };
+
+        substance.$$expandCV = function (sub, path) {
+            _.forEach(_.keysIn(sub), function (field) {
+                if (path) {
+                    var newpath = path + "." + field;
+                } else {
+                    var newpath = field;
+                }
+                if (_.isObject(sub[field])) {
+                    if (_.isArray(sub[field])) {
+                        _.forEach((sub[field]), function (value, key) {
+                            if (_.isObject(value)) {
+                                substance.$$expandCV(value, newpath);
+                            } else {
+                                CVFields.getByField(newpath).then(function (response) {
+                                    if (response.data.count > 0) {
+                                        var cv = response.data.content[0].terms;
+                                        var newcv = _.find(cv, ['value', value]);
+                                        if (_.isUndefined(newcv)) {
+                                            newcv = {};
+                                            _.set(newcv, 'display', value + ' (not in CV)');
+                                        }
+                                        sub[field][key] = newcv;
+
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        if (!_.isNull(sub[field])) {
+                            substance.$$expandCV(sub[field], newpath);
+                            //});
+                        }
+                    }
+                } else {
+                    if (!_.isNull(sub[field])) {
+                        CVFields.getByField(newpath).then(function (response) {
+                            if (response.data.content.length > 0) {
+                                var cv = response.data.content[0].terms;
+                                var newcv = _.find(cv, ['value', sub[field]]);
+                                console.log(newcv);
+                                if (_.isUndefined(newcv)) {
+                                    newcv = {};
+                                    _.set(newcv, 'display', sub[field] + ' (not in CV)');
+                                }
+                                sub[field] = newcv;
+                            }
+                        });
+                    }
+                }
+            });
+            console.log("finished");
+            //return sub;
+        };
+
+        substance.$$flattenCV = function (sub) {
+            for (var v in sub) {
+                if (substance.isCV(sub[v])) {
+                    if (sub[v].value) {
+                        sub[v] = sub[v].value;
+                    } else {
+                        sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
+                        //  sub[v] = sub[v].display;
+                    }
+                } else {
+                    if (typeof sub[v] === "object") {
+                        substance.flattenCV(sub[v]);
+                    }
+                }
+            }
+            return sub;
+        };
+
+        substance.$$isCV = function (ob) {
+            if (typeof ob !== "object") return false;
+            if (ob === null) return false;
+            //   if (typeof ob.value !== "undefined") {
+            if (typeof ob.display !== "undefined") {
+                return true;
+            }
+            // }
+            return false;
+        };
+
+*/
+
+
         return substance;
     });
 
@@ -303,12 +437,16 @@
         };
 
         $scope.toggleGrid = function () {
-            console.log("grid");
-            //  $scope.gridView = !$scope.gridView;
             localStorageService.set('gridView', $scope.gridView);
         };
 
+        $scope.redirect = function(){
+        var base = $location.$$absUrl.split('/v/')[0];
+            location.href= base + "/v/" + $scope.versionNumber;
+        };
+
         $scope.compare = function () {
+            //$scope.left = angular.toJson(Substance.$$fromFormSubstance(angular.copy($scope.substance)));
             $scope.left = angular.toJson($scope.fromFormSubstance(angular.copy($scope.substance)));
             $scope.right = angular.toJson(angular.copy($window.loadjson));
             $scope.substancesEqual = angular.equals($scope.right, $scope.left);
@@ -358,11 +496,6 @@
                 delete formSub.q;
             }
 
-            ///////////this may be removable, the subref creator should make the subref within the form scope/////////////////////////////
-           /* if (formSub.subref) {
-                delete formSub.subref;
-            }
-*/
             if (formSub.substanceClass === 'protein') {
                 if (_.has(formSub.protein, 'disulfideLinks')) {
                     _.forEach(formSub.protein.disulfideLinks, function (value, key) {
@@ -545,16 +678,13 @@
         };
 
 		$scope.dismiss = function (err){
-			//can't dismiss errors
-			//if(err.messageType!=="ERROR"){
 				_.pull($scope.errorsArray,err);
-		//	}
 			$scope.canSubmit=$scope.noErrors();
 		};
 		$scope.canSubmit=false;
 		$scope.noErrors = function (){
             var errs = _.filter($scope.errorsArray, function(err){
-                if(err.messageType==="ERROR"){
+                if(err.messageType==="ERROR" || err.messageType==="WARNING" ){
                     return err;
                 }
             });
@@ -564,9 +694,6 @@
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
-
-            console.log($scope.fromFormSubstance(sub));
-
             sub = angular.toJson($scope.fromFormSubstance(sub));
             console.log(sub);
             $scope.errorsArray = [];
@@ -707,9 +834,8 @@
         };
 
         $scope.submitpaster = function (input) {
-            var sub = JSON.parse(input);
-            //  $scope.substance = sub;
-
+            console.log(input);
+//            $scope.substance = Substance.$$pasteSubstance(JSON.parse(input));
             $scope.substance = $scope.toFormSubstance(sub);
             if ($scope.substance.substanceClass === 'chemical') {
                 molChanger.setMol($scope.substance.structure.molfile);
@@ -717,6 +843,7 @@
             if ($scope.substance.substanceClass === 'polymer') {
                 molChanger.setMol($scope.substance.idealizedStructure.molfile);
             }
+            console.log($scope);
         };
 
         $scope.bugSubmit = function (bugForm) {
@@ -726,6 +853,34 @@
         $scope.setEditId = function (editid) {
             localStorageService.set('editID', editid);
         };
+
+/*        if (typeof $window.loadjson !== "undefined" &&
+            JSON.stringify($window.loadjson) !== "{}") {
+/!*            var sub = Substance.$$setClass($window.loadjson.substanceClass);
+            var sub2 = ;
+            console.log(sub);;*!/
+            console.log(Substance.$$pasteSubstance($window.loadjson));
+            $scope.substance = Substance.$$pasteSubstance($window.loadjson);
+            _.set( $scope.substance, '$$update', true);
+            console.log($scope);
+        } else {
+            //var edit = localStorageService.get('editID');
+            //console.log(edit);
+            //if (edit) {
+            //    localStorageService.remove('structureid');
+            //    substanceIDRetriever.getSubstance(edit).then(function (data) {
+            //        var sub = $scope.toFormSubstance(data);
+            //        $scope.substance = sub;
+            //
+            //      //This removes the substance, so reloading returns an empty form
+            //      //  localStorageService.remove('editID');
+            //    });
+            //
+            //} else {
+            var substanceClass = $location.$$search.kind;
+            $scope.substance = Substance.$$pasteSubstance(substanceClass);
+            console.log($scope);
+        }*/
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
@@ -751,6 +906,7 @@
             $scope.substance = Substance.$$setClass(substanceClass);
             console.log($scope);
         }
+
 
 
         /*        $scope.loadSubstances = function ($query) {
@@ -1175,7 +1331,6 @@
                     } else if (_.has(aa, 'otherLinks')) {
                         scope.acidClass = "otherLinks";
                     } else if (_.has(aa, 'glycosylation')) {
-                        console.log(aa);
                         scope.acidClass = "glycosylation";
                     } else if (_.has(aa, 'sugar')) {
                         scope.acidClass = "sugar";

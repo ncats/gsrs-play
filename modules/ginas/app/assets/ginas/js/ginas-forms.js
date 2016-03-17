@@ -347,6 +347,7 @@
 
                 scope.download = function () {
                     CVFields.all().then(function (response) {
+                        console.log(response);
                         scope.cv = response.data.content;
                         formHolder = '<save-cv-form cv = cv></save-cv-form>';
                         scope.toggleStage();
@@ -574,7 +575,13 @@
                 };
 
                 scope.addDomain = function(cv){
-                        CVFields.updateCV(cv);
+                    if(!cv.terms) {
+                        _.set(cv, 'terms', []);
+                    }
+                        CVFields.addDomain(cv).then(function(response){
+                            console.log(response);
+                            scope.domains.push(response.data);
+                        });
                     scope.cv={};
                 };
 
@@ -1710,6 +1717,7 @@ console.log(scope);
 
                 if (scope.formtype == "pair") {
                     $templateRequest(baseurl + "assets/templates/forms/site-dropdown-form.html").then(function (html) {
+                        console.log(scope);
                         template = angular.element(html);
                         element.append(template);
                         $compile(template)(scope);
@@ -1909,7 +1917,6 @@ console.log(scope);
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if (scope.parent._name) {
                     scope.formType ='Editing';
                     scope.name = scope.parent._name;

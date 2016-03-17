@@ -22,7 +22,7 @@ public class GroupProcessor implements EntityProcessor<Group>{
 			vt.display=obj.name;
 			vt.value=obj.name;
 			vt.save();
-			cvv.terms.add(vt);
+			cvv.addTerms(vt);
 			cvv.save();
 		}
 	}

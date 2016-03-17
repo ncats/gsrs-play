@@ -10,7 +10,7 @@
                                      cv="OTHER_LINKAGE_TYPE" label="Linkage Type"></dropdown-select>
                 </div>
                                 <div class="col-md-1">
-                    <form-selector referenceobj= "otherLink" parent="parent" field ="protein" divid="otherLinksForm"
+                    <form-selector referenceobj= "otherLink" parent="parent" field ="sites" divid="otherLinksForm"
                                    type="site" formtype ="pair"></form-selector>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                                         label="Linkage Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="parent" type="site" divid={{obj.$$hashKey}} formtype="pair"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="site" field="sites" divid={{obj.$$hashKey}} formtype="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
