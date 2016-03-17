@@ -9,9 +9,11 @@ import static play.test.Helpers.testServer;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.hazelcast.client.AuthenticationException;
 import com.typesafe.config.Config;
@@ -31,14 +33,17 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import net.sf.ehcache.CacheManager;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.junit.rules.ExternalResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import play.libs.ws.WS;
+import play.libs.ws.WSCookie;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 import play.test.TestServer;
+import sun.misc.BASE64Encoder;
 
 /**
  * JUnit Rule to handle starting and stopping
@@ -111,7 +116,9 @@ public class GinasTestServer extends ExternalResource{
 	 public static final String FAKE_PASSWORD_2="madeup2";
 	 public static final String FAKE_PASSWORD_3="madeup3";
 
-	 
+
+
+    private static final Pattern COOKIE_PATTERN = Pattern.compile("Set-Cookie=(.+?);");
     private static long timeout= 10000L;
 
     private final UserSession defaultSession;
@@ -197,20 +204,64 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public UserSession login(String username, String password, AUTH_TYPE type){
-        UserSession session= new UserSession(new User(username, password), type, port);
 
-        sessions.add(session);
-        return session;
+        WSRequestHolder ws = url(defaultSession.constructUrlFor("ginas/app/login"));
+        try {
+            WSResponse response = ws.setQueryParameter("username", username)
+                                    .setQueryParameter("password", password)
+                                    .setFollowRedirects(false)
+                                    .post("")
+                                    .get(1000);
+
+
+            System.out.println("login response");
+            System.out.println("status code = " + response.getStatus());
+            System.out.println(response.getAllHeaders());
+
+            WSCookie sessionCookie = response.getCookie("PLAY_SESSION");
+
+            System.out.println("session cookie name is " + sessionCookie.getName());
+            System.out.println("session cookie value is " + sessionCookie.getValue());
+
+            System.out.println("location to redirect is " +  response.getHeader("Location"));
+           // System.out.println(response.getBody());
+            //there is probably a leading slash remove it
+            String newURl = removeLeadingSlash(response.getHeader("Location"));
+
+
+            WSResponse redirectResponse = WS.url(defaultSession.constructUrlFor(newURl))
+
+                                            .setHeader("Cookie", String.format("%s=%s", sessionCookie.getName(), sessionCookie.getValue()))
+                                            .get()
+                                            .get(1000);
+
+            System.out.println("redirect response...");
+            System.out.println("status code = " + redirectResponse.getStatus());
+            System.out.println(redirectResponse.getAllHeaders());
+            System.out.println(redirectResponse.getBody());
+
+            UserSession newSession = new UserSession(new User(username, password), type, sessionCookie, port);
+
+            sessions.add(newSession);
+
+            return newSession;
+        }catch(Exception e){
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private String removeLeadingSlash(String path) {
+        if(path.charAt(0) == '/'){
+            return path.substring(1);
+        }
+        return path;
     }
 
     public UserSession login(User u){
         return login(u, AUTH_TYPE.USERNAME_PASSWORD);
     }
     public UserSession login(User u, AUTH_TYPE type){
-        UserSession session= new UserSession(u, type, port);
-
-        sessions.add(session);
-        return session;
+       return login(u.getUserName(), u.password,type);
     }
     public User createSuperUser(String username, String password){
         return createUser(username, password, superUserRoles);
@@ -371,6 +422,8 @@ public class GinasTestServer extends ExternalResource{
         private String token;
         private long deadtime=0;
 
+        private  String sessionCookie;
+
         private int port;
 
         private final User user;
@@ -382,7 +435,7 @@ public class GinasTestServer extends ExternalResource{
             this.port = port;
             this.user = null;
         }
-        public UserSession(User user, AUTH_TYPE type, int port){
+        public UserSession(User user, AUTH_TYPE type,  WSCookie sessionCookie, int port){
             Objects.requireNonNull(user);
             Objects.requireNonNull(type);
 
@@ -393,6 +446,7 @@ public class GinasTestServer extends ExternalResource{
             this.user = user;
             this.authType=type;
             this.port = port;
+            this.sessionCookie = String.format("%s=%s", sessionCookie.getName(), sessionCookie.getValue());
 
         }
         public String getUserName(){
@@ -425,12 +479,15 @@ public class GinasTestServer extends ExternalResource{
                 //do nothing
                 return "";
             }
+
             loggedIn = false;
+            System.out.println("trying to log out");
 
+           WSResponse wsResponse1 =  get("ginas/app/logout");
+            if(wsResponse1.getStatus() != OK){
+                throw new IllegalStateException("error logging out : " + wsResponse1.getStatus() + " \n" +  wsResponse1.getBody());
+            }
 
-           WSResponse wsResponse1 =  WS.url(constructUrlFor("ginas/app/logout"))
-                                                .get().get(timeout);
-            assertThat(wsResponse1.getStatus()).isEqualTo(OK);
 
 
             this.username=null;
@@ -438,6 +495,8 @@ public class GinasTestServer extends ExternalResource{
             this.key=null;
             this.token=null;
             this.deadtime=0;
+
+            sessionCookie =null;
 
             return wsResponse1.getBody();
         }
@@ -459,6 +518,10 @@ public class GinasTestServer extends ExternalResource{
 
         public WSRequestHolder  url(String url){
             WSRequestHolder ws = WS.url(url);
+
+            if(sessionCookie !=null){
+                ws.setHeader("Cookie", sessionCookie);
+            }
             if(loggedIn) {
                 switch (authType) {
                     case TOKEN:
@@ -659,7 +722,11 @@ public class GinasTestServer extends ExternalResource{
 
         public String urlString(String url){
             WSResponse wsResponse1 = this.url(url).get().get(timeout);
-            assertThat(wsResponse1.getStatus()).isEqualTo(OK);
+
+            if(wsResponse1.getStatus() != OK){
+                throw new IllegalStateException("error getting url content : " + wsResponse1.getStatus() + " \n" +  wsResponse1.getBody());
+            }
+
             return wsResponse1.getBody();
         }
     }

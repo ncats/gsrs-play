@@ -20,8 +20,7 @@ public class IxDeadboltHandler extends AbstractDeadboltHandler {
     }
 
     public Subject getSubject(final Http.Context context) {
-        UserProfile profile = Authentication.getUserProfile();
-        return profile;
+        return Authentication.getUserProfile();
 
     }
 

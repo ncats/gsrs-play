@@ -62,13 +62,27 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private TextIndexerPlugin plugin = 
             Play.application().plugin(TextIndexerPlugin.class);
     //public static SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
-    private static StructureIndexerPlugin strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
-    private static SequenceIndexerPlugin seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
+    private static StructureIndexerPlugin strucProcessPlugin;
+    private static SequenceIndexerPlugin seqProcessPlugin;
     
-    private static ConcurrentHashMap<String, String> alreadyLoaded = new ConcurrentHashMap<String,String>();
+    private static ConcurrentHashMap<String, String> alreadyLoaded;
     
-    private static ConcurrentHashMap<String, Edit> editMap = new ConcurrentHashMap<String,Edit>();
-    
+    private static ConcurrentHashMap<String, Edit> editMap;
+
+
+    static{
+        init();
+    }
+
+    public static void init(){
+        strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
+       seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
+
+        alreadyLoaded = new ConcurrentHashMap<String,String>();
+
+        editMap = new ConcurrentHashMap<String,Edit>();
+    }
+
     
     public static void storeEditForUpdate(Class c, Object id, Edit e){
     	String s1=c.getName() + ":" + id;
