@@ -16,7 +16,6 @@ import org.reflections.Reflections;
 
 import play.Logger;
 import play.db.ebean.Model;
-
 import com.avaje.ebean.Query;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,46 +28,52 @@ public class RebuildIndex  {
 	}
 	
     public static void updateLuceneIndex(String models) throws Exception{
-    	UPDATE_MESSAGE="Preprocessing ...";
-    	Collection<Class<?>> classes = getEntityClasses(models.split(","));
-        
-    	long start=System.currentTimeMillis();
-        EntityPersistAdapter.setUpdatingIndex(true);
-        for(Class<?> eclass: classes){
-        	Class idClass=Long.class;
-        	Field idf=EntityUtils.getIdFieldForClass(eclass);
-        	if(idf!=null){
-        		idClass=idf.getType();
-        	}
-        	//System.out.println(eclass + "\t" + idClass);
-        	Model.Finder finder = new Model.Finder(idClass, eclass);
-        	int page=0;
-        	int pageSize=100;
-        	int rcount=finder.findRowCount(); 
-        	while(true){
-	        	Query q=finder.query();
-	        	q.setFirstRow(pageSize*page)
-	            .setMaxRows(pageSize);
-	        	List l=q.findList();
-	        	ObjectMapper om = new ObjectMapper();
-	        	for(Object o:l){
-	        		try{
-	        			String v=om.valueToTree(o).toString();
-	        		}catch(Exception e){
-	        			e.printStackTrace();
-	        			Logger.info("Error serializing entity:" + o);
-	        		}
-	        	}
-	        	UPDATE_MESSAGE="Records Processed:" + (page+1)*pageSize + " of " + rcount +  " in " + (System.currentTimeMillis()-start) + "ms";
-	        	if(l.isEmpty() || (page+1)*pageSize > rcount)break;
-	        	page++;
-        	}
-        	page=0;
-        	pageSize=100;
-        }
-        EntityPersistAdapter.setUpdatingIndex(false);
-        UPDATE_MESSAGE="Complete.\nTotal Time:" + (System.currentTimeMillis()-start) + "ms";
-       
+		try {
+			UPDATE_MESSAGE = "Preprocessing ...";
+			Collection<Class<?>> classes = getEntityClasses(models.split(","));
+
+			long start = System.currentTimeMillis();
+			EntityPersistAdapter.setUpdatingIndex(true);
+			for (Class<?> eclass : classes) {
+
+				Class idClass = Long.class;
+				Field idf = EntityUtils.getIdFieldForClass(eclass);
+				if (idf != null) {
+					idClass = idf.getType();
+				}
+				//System.out.println(eclass + "\t" + idClass);
+				Model.Finder finder = new Model.Finder(idClass, eclass);
+				int page = 0;
+				int pageSize = 10;
+				int rcount = finder.findRowCount();
+				while (true) {
+					Query q = finder.query();
+					q.setFirstRow(pageSize * page)
+							.setMaxRows(pageSize);
+					List l = q.findList();
+					ObjectMapper om = new ObjectMapper();
+					for (Object o : l) {
+						try {
+							String v = om.valueToTree(o).toString();
+						} catch (Exception e) {
+							e.printStackTrace();
+							Logger.info("Error serializing entity:" + o);
+						}
+					}
+					UPDATE_MESSAGE = "Records Processed:" + (page + 1) * pageSize + " of " + rcount + " in " + (System.currentTimeMillis() - start) + "ms";
+					if (l.isEmpty() || (page + 1) * pageSize > rcount) break;
+					page++;
+				}
+				page = 0;
+				pageSize = 100;
+			}
+			UPDATE_MESSAGE = "Complete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
+		}catch(Exception e){
+			e.printStackTrace();
+			UPDATE_MESSAGE = e.getMessage();
+		}finally {
+			EntityPersistAdapter.setUpdatingIndex(false);
+		}
     }
     public static Set<Class<?>> getEntityClasses (String[] models) throws Exception {
         Set<Class<?>> classes = new HashSet<Class<?>>();

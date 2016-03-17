@@ -30,7 +30,6 @@
                        'Content-Type': 'text/plain'
                    }
                }).success(function (data) {
-                  // console.log(data);
                    if(data.content.length > 0) {
                        return data;
                    }else{
@@ -156,6 +155,20 @@
                    //  alert('update was performed.');
                      });
                 });
+            },
+
+            addDomain: function(cv){
+                console.log("adding domain");
+                var promise = $http.post(baseurl + 'api/v1/vocabularies', angular.toJson(cv), {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).success(function (response) {
+                    console.log(response);
+                    alert("new domain added");
+                    return response;
+                });
+                return promise;
             }
         };
         return CV;

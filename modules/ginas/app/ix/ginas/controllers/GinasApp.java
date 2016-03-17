@@ -1679,11 +1679,11 @@ public class GinasApp extends App {
 		}
 		return ret;
 	}
-    public static String updateKey =null;
+    private static String updateKey =null;
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updateIndex(String key){
-    	if(!GinasLoad.ALLOW_REBUILD){
+        if(!GinasLoad.ALLOW_REBUILD){
     		return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
     	}
     	if(updateKey==null){

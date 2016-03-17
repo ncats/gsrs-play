@@ -6,16 +6,19 @@
     <div class="col-md-12">
         <ng-form name="termForm" id = "addDomainForm" novalidate>
             <div class="row form-row">
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <text-input ng-model="cv.domain" field="domain" name ="domain"></text-input>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
+                    <text-input ng-model="cv.vocabularyTermType" field="vocabularyTermType" name ="vocabularyTermType" label ="Vocabulary Term Type"></text-input>
+                </div>
+                <div class="col-md-3">
                     <multi-select ng-model="cv.fields" field="fields" label = "Form Fields" CV="CV_DOMAIN"></multi-select>
                 </div>
                 <div class="col-md-1">
-                    <check-box ng-model="cv.hidden" field="hidden" ></check-box>
+                    <check-box ng-model="cv.editable" field="editable" ></check-box>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label>Add Terms</label><br>
                     <i class = "fa  fa-plus fa-2x success" ng-click = "showTerms(cv, 'termForm');" uib-tooltip="Add Terms"></i>
 
@@ -34,12 +37,15 @@
                 <text-view-edit obj="obj" field="domain"></text-view-edit>
             </div>
             <div class="col-md-3">
+                <text-view-edit obj="obj" field="vocabularyTermType" label ="Vocabulary Term Type"></text-view-edit>
+            </div>
+            <div class="col-md-3">
                 <multi-view-edit obj="obj" field="fields" label = "Form Fields" CV="CV_DOMAIN"></multi-view-edit>
             </div>
             <div class="col-md-1">
                 <check-box-view-edit obj = "obj" field="editable"></check-box-view-edit>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                  <label>Terms ({{obj.terms.length}})</label><br>
                 <i class = "fa  fa-list-ul fa-2x success" ng-click = "showTerms(obj);" uib-tooltip="View Terms"></i>
 

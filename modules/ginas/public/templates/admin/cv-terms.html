@@ -19,7 +19,7 @@
                     <text-input ng-model="term.origin" field="origin" name ="origin"></text-input>
                 </div>
                 <div class="col-md-1">
-                    <check-box ng-model="term.hidden" field="hidden" ></check-box>
+                    <check-box ng-model="term.hidden" field="hidden"></check-box>
                 </div>
                 <div class  = "col-md-1 pull-right">
                     <label>Save</label><br>
@@ -49,13 +49,21 @@
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="hidden" label="Hidden"></check-box-view-edit>
                 </div>
-                <div class  = "col-md-1 pull-right">
+                <div class  = "col-md-1">
                     <label>Filters</label><br>
                     <i class = "fa fa-filter fa-2x success" ng-click = "" uib-tooltip="Update Term to database"></i>
                 </div>
                 <div class  = "col-md-1 pull-right">
                     <label>Save</label><br>
                     <i class = "fa fa-floppy-o fa-2x success" ng-click = "updateCV();" uib-tooltip="Update Term to database"></i>
+                </div>
+            </div>
+            <div class = "row" ng-if="domain.vocabularyTermType=='ix.ginas.models.v1.FragmentControlledVocabulary'">
+                <div class ="col-md-4">
+                    <text-view-edit obj="obj" field="simplifiedStructure"></text-view-edit>
+                </div>
+                <div class ="col-md-4">
+                    <text-view-edit obj="obj" field="fragmentStructure"></text-view-edit>
                 </div>
             </div>
         </div>

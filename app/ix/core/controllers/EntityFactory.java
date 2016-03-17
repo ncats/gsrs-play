@@ -926,7 +926,6 @@ public class EntityFactory extends Controller {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest ("Only POST is accepted!");
         }
-
         String content = request().getHeader("Content-Type");
         if (content == null || (content.indexOf("application/json") < 0
                                 && content.indexOf("text/json") < 0)) {
@@ -967,7 +966,6 @@ public class EntityFactory extends Controller {
 		            	return badRequest(validationResponse(vr));
 		            }
             }
-            
             inst.save();
             
             Status s=created (mapper.toJson(inst));
@@ -1596,6 +1594,7 @@ public class EntityFactory extends Controller {
         }
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
+            ex.printStackTrace();
             return internalServerError (ex.getMessage());
         }
         finally {

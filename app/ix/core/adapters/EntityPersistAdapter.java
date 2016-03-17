@@ -535,11 +535,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             return;
         }
         
-        try {      
-        	makeIndexOnBean(bean);
+        try {
             if(_id!=null)
-            	alreadyLoaded.put(bean.getClass()+_id,_id);
-        } catch (IOException e) {
+                alreadyLoaded.put(bean.getClass()+_id,_id);
+            deleteIndexOnBean(bean);
+            makeIndexOnBean(bean);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

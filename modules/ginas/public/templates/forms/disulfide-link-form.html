@@ -8,7 +8,7 @@
         <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-1">
-                    <form-selector referenceobj="disulfideLink" parent="parent" field="protein"
+                    <form-selector referenceobj="disulfideLink" parent="parent" field="sites"
                                    divid="disulfideLinksForm"
                                    type="site" residueregex='C' formtype="pair"></form-selector>
                 </div>
@@ -31,7 +31,7 @@
                     <delete-button delete="obj" path="protein.disulfideLinks"></delete-button>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent=parent type="site" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent=parent type="site" field="sites" divid={{obj.$$hashKey}}
                                    mode="edit" formtype="pair"></form-selector>
                 </div>
             </div>
