@@ -575,7 +575,13 @@
                 };
 
                 scope.addDomain = function(cv){
-                        CVFields.updateCV(cv);
+                    if(!cv.terms) {
+                        _.set(cv, 'terms', []);
+                    }
+                        CVFields.addDomain(cv).then(function(response){
+                            console.log(response);
+                            scope.domains.push(response.data);
+                        });
                     scope.cv={};
                 };
 

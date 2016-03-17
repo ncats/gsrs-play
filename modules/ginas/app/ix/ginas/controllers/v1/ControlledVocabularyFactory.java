@@ -265,10 +265,33 @@ public class ControlledVocabularyFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (ControlledVocabulary.class, finder);
-    }
+		if (!request().method().equalsIgnoreCase("POST")) {
+			return badRequest ("Only POST is accepted!");
+		}
+		String content = request().getHeader("Content-Type");
+		if (content == null || (content.indexOf("application/json") < 0
+				&& content.indexOf("text/json") < 0)) {
+			return badRequest ("Mime type \""+content+"\" not supported!");
+		}
+		JsonNode json = request().body().asJson();
+		String str = json.get("vocabularyTermType").asText();
+		try {
+			Class <ControlledVocabulary> c = (Class<ControlledVocabulary>)Class.forName(str);
 
-    public static Result delete (Long uuid) {
+			return create (c, finder);
+		}catch(Exception e){
+			e.printStackTrace();
+			return internalServerError(e.getMessage());
+		}
+
+	}
+
+
+
+
+
+
+	public static Result delete (Long uuid) {
         return delete (uuid, finder);
     }
 
@@ -281,7 +304,6 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				&& content.indexOf("text/json") < 0)) {
 			return badRequest ("Mime type \""+content+"\" not supported!");
 		}
-
 		JsonNode json = request().body().asJson();
 		String str = json.get("vocabularyTermType").asText();
 		try {
