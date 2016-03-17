@@ -47,6 +47,7 @@ public class UserProfile extends IxModel implements Subject {
     @Column(name="apikey")
     private String key;
     
+    
     //Not sure if this should be shown here?
     public String getKey(){
         

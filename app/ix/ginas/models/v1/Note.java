@@ -24,14 +24,6 @@ import ix.ginas.models.*;
 @Table(name="ix_ginas_note")
 public class Note extends GinasCommonSubData {
 
-    /**
-     * ideally we should be using List<Reference> here!
-     */
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_note_reference")
-//    @JsonSerialize(using = KeywordListSerializer.class)
-//    public List<Keyword> references = new ArrayList<Keyword>();
-
     @JSONEntity(title = "Note")
     @Lob
     @Basic(fetch=FetchType.EAGER)

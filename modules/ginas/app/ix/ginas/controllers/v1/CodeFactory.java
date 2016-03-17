@@ -11,10 +11,10 @@ import play.mvc.*;
 
 import com.avaje.ebean.*;
 
-import ix.core.controllers.EntityFactory;
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
+import ix.core.controllers.EntityFactory;
 
 @NamedResource(name="codes",
                type=Code.class,

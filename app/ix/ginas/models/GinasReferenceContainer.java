@@ -49,7 +49,7 @@ public class GinasReferenceContainer {
     }
 
     public void setReferences(Set<Keyword> references) {
-        this.references = references;
+        this.references = new LinkedHashSet<Keyword>(references);
     }
 
     public String getEntityType() {

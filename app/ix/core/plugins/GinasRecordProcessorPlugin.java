@@ -192,22 +192,23 @@ public class GinasRecordProcessorPlugin extends Plugin {
             
             //Set the user for use in later persist information
             UserFetcher.setLocalThreadUser(rec.job.owner);
-            
-            try{
-                rec.job.getPersister().persist(this);
-                Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
-                System.out.println("Persisted at :" + System.currentTimeMillis());
-            }catch(Exception e){
-                e.printStackTrace();
-                applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
-                ObjectMapper om = new ObjectMapper();
-                Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
-            }
-            
-            updateJobIfNecessary(rec.job);
-            
-            //unset local user, just in case
-            UserFetcher.setLocalThreadUser(null);
+			try {
+				try {
+					rec.job.getPersister().persist(this);
+					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
+					System.out.println("Persisted at :" + System.currentTimeMillis());
+				} catch (Exception e) {
+					e.printStackTrace();
+					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
+					ObjectMapper om = new ObjectMapper();
+					Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t"
+							+ om.valueToTree(theRecord).toString().replace("\n", ""));
+				}
+				updateJobIfNecessary(rec.job);
+			} finally {
+				// unset local user, just in case
+				UserFetcher.setLocalThreadUser(null);
+			}
         }
     }
 

@@ -224,6 +224,155 @@ public class PojoDiffTest {
         JsonMatches(update, prop);
 
     }
+    @Test
+    public void switchOrderSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        newParams.add(p2);
+	        newParams.add(p1);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==2);
+	        JsonMatches(update, prop);
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
+    @Test
+    public void switchOrderIdsSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	        UUID uui1=p1.getOrGenerateUUID();
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	        UUID uui2=p2.getOrGenerateUUID();
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        newParams.add(p2);
+	        newParams.add(p1);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==2);
+	        assertEquals(update,prop);
+	        
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
+    
+    @Test
+    public void AddNewToListWithIDSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	        UUID uui1=p1.getOrGenerateUUID();
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	        UUID uui2=p2.getOrGenerateUUID();
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        Parameter p3 = new Parameter();
+	        p3.setName("foobar");
+	        p3.getOrGenerateUUID();
+	        newParams.add(p1);
+	        newParams.add(p2);
+	        newParams.add(p3);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==3);
+	        JsonMatches(update, prop);
+	        
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
+    @Test
+    public void AddNewToListWithoutIDSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	        UUID uui1=p1.getOrGenerateUUID();
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	        UUID uui2=p2.getOrGenerateUUID();
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        Parameter p3 = new Parameter();
+	        p3.setName("foobar");
+	        newParams.add(p1);
+	        newParams.add(p2);
+	        newParams.add(p3);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==3);
+	        assertEquals(update,prop);
+	        
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
 
     @Test
     public void addToSet() throws Exception{

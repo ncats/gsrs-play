@@ -16,10 +16,9 @@ import ix.ginas.utils.GinasProcessingStrategy;
 import play.*;
 import play.db.ebean.*;
 import play.mvc.*;
-
-import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
+import ix.core.controllers.EntityFactory;
 
 @NamedResource(name = "vocabularies", type = ControlledVocabulary.class, description = "Resource for handling of CV used in GInAS")
 public class ControlledVocabularyFactory extends EntityFactory {
@@ -92,9 +91,11 @@ public class ControlledVocabularyFactory extends EntityFactory {
 					JsonParser jp = f.createJsonParser(cvValue.at("/terms").toString());
 					jp.nextToken();
 					while (jp.nextToken() == JsonToken.START_OBJECT) {
-						VocabularyTerm cvt = mapper.readValue(jp, FragmentVocabularyTerm.class);
+						FragmentVocabularyTerm cvt = mapper.readValue(jp, FragmentVocabularyTerm.class);
 						vterms.add(cvt);
+						
 					}
+					
 					cv.terms=vterms;
 				}else if(codeSystemDomains.contains(domain)){
 					List<VocabularyTerm> vterms = new ArrayList<VocabularyTerm>();
