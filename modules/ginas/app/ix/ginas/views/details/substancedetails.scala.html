@@ -72,7 +72,7 @@
                     <div class="col-md-3">
                     <code class="text-uppercase">Record Status: @sub.getDisplayStatus()</code> <br>
                     <code class ="text-uppercase"> version:
-                        <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-change = "redirect()"><option ng-repeat="v in getRange(1, '@sub.version');">{{v}}</option></select>
+                        <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-model-options="{ getterSetter: true }" ng-change = "redirect()"><option ng-repeat="v in getRange(1, '@sub.version');">{{v}}</option></select>
                     </code>
                 </div>
                 <div class = "col-md-3 pull-right">
@@ -164,6 +164,7 @@
 
             @dynamic(name = "isAdmin", handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                 <div class="row info" id="refs">
+                    <button class="btn btn-primary label-offset det">References&nbsp;<span class="badge"> @sub.references.size()</span></button>
                     <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
                 </div>
             }

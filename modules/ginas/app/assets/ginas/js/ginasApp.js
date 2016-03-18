@@ -65,7 +65,7 @@
             }
             substance.references = [];
             substance.access =[{value:'protected', display: 'PROTECTED'}];
-            console.log(substance);
+//            console.log(substance);
             return substance;
         };
 
@@ -441,8 +441,13 @@
         };
 
         $scope.redirect = function(){
-        var base = $location.$$absUrl.split('/v/')[0];
-            location.href= base + "/v/" + $scope.versionNumber;
+            console.log($scope.versionNumber);
+            console.log($location);
+        var base =  $window.location.pathname.split('/v/')[0];
+           var newLocation = "/v/" + $scope.versionNumber;
+            console.log(newLocation);
+            console.log($window.location);
+            $window.location.pathname = base + newLocation;
         };
 
         $scope.compare = function () {
@@ -901,10 +906,10 @@
             //    });
             //
             //} else {
-            console.log($location);
+        //    console.log($location);
             var substanceClass = $location.$$search.kind;
             $scope.substance = Substance.$$setClass(substanceClass);
-            console.log($scope);
+//            console.log($scope);
         }
 
 
