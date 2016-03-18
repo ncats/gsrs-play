@@ -114,14 +114,11 @@ public class App extends Authentication {
     public static TextIndexer _textIndexer;
     
     
-    public static final PayloadPlugin _payloader =
-        Play.application().plugin(PayloadPlugin.class);
+    public static PayloadPlugin _payloader;
         
-    public static final IxContext _ix =
-        Play.application().plugin(IxContext.class);
+    public static IxContext _ix;
 
-    public static final PersistenceQueue _pq =
-        Play.application().plugin(PersistenceQueue.class);
+    public static PersistenceQueue _pq;
 
 
 
@@ -132,6 +129,13 @@ public class App extends Authentication {
     public static void init(){
         _textIndexer =
                 Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        _payloader =
+                Play.application().plugin(PayloadPlugin.class);
+
+       _ix =
+                Play.application().plugin(IxContext.class);
+        _pq =
+                Play.application().plugin(PersistenceQueue.class);
     }
 
     /**

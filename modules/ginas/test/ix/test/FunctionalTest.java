@@ -1,6 +1,8 @@
 package ix.test;
 
 
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -15,11 +17,11 @@ public class FunctionalTest extends WithApplication {
     
 
     @Test
-    public void testRouteGinasHome()   throws Exception {
-         try(GinasTestServer.UserSession session =  ts.loginFakeUser1()){
-             String content = session.getAsString("ginas/app");
+    public void loggedInUserHasLogout()   throws Exception {
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+             String content = session.get("ginas/app").getBody();
 
-             assertTrue(content.contains("login"));
+             assertTrue(content.contains("logout"));
 
          }
 
@@ -27,8 +29,8 @@ public class FunctionalTest extends WithApplication {
 
    @Test
     public void testRouteSubstance() throws Exception {
-       try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-           String content = session.getAsString("ginas/app/substances");
+       try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+           String content = session.get("ginas/app/substances").getBody();
 
            assertTrue(content.contains("substances"));
 
@@ -37,8 +39,8 @@ public class FunctionalTest extends WithApplication {
 
     @Test
     public void testRouteLogin() throws Exception {
-        try(GinasTestServer.UserSession session =  ts.loginFakeUser1()) {
-            String content = session.getAsString("ginas/app/login");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            String content = session.get("ginas/app/login").getBody();
 
             assertTrue(content.contains("ginas"));
         }
@@ -46,8 +48,8 @@ public class FunctionalTest extends WithApplication {
 
     @Test
     public void testRouteChemicalWizard() throws Exception {
-        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-            String content = session.getAsString("ginas/app/wizard?kind=chemical");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            String content = session.get("ginas/app/wizard?kind=chemical").getBody();
 
             assertTrue(content.contains("Structure"));
             assertTrue(content.contains("moiety-form"));
@@ -56,8 +58,9 @@ public class FunctionalTest extends WithApplication {
     }
     @Test
     public void testRouteProteinWizard() throws Exception {
-        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-            String content = session.getAsString("ginas/app/wizard?kind=protein");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            String content = session.get("ginas/app/wizard?kind=protein").getBody();
+
             assertTrue(content.contains("other-links-form"));
             assertTrue(content.contains("protein-details-form"));
             assertTrue(content.contains("subunit-form"));
@@ -72,9 +75,9 @@ public class FunctionalTest extends WithApplication {
     
     @Test
     public void testRouteStructurallyDiverseWizard() throws Exception {
-        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
-            String content = session.getAsString("ginas/app/wizard?kind=structurallyDiverse");
+            String content = session.get("ginas/app/wizard?kind=structurallyDiverse").getBody();
             assertTrue(content.contains("diverse-type-form"));
             assertTrue(content.contains("diverse-source-form"));
             assertTrue(content.contains("diverse-organism-form"));
@@ -88,8 +91,8 @@ public class FunctionalTest extends WithApplication {
     //@Ignore("waiting on login rewrite")
     @Test
     public void testRoutePolymerWizard()  throws Exception {
-        try(GinasTestServer.UserSession session =  ts.loginFakeUser1()){
-            String content = session.getAsString("ginas/app/wizard?kind=polymer");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            String content = session.get("ginas/app/wizard?kind=polymer").getBody();
             assertTrue(content.contains("polymer-classification-form"));
             assertTrue(content.contains("polymer-monomer-form"));
             assertTrue(content.contains("polymer-sru-form"));
@@ -99,8 +102,9 @@ public class FunctionalTest extends WithApplication {
     }
     @Test
     public void testRouteNucleicAcidWizard() throws Exception {
-        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-            String content = session.getAsString("ginas/app/wizard?kind=nucleicAcid");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+
+            String content = session.get("ginas/app/wizard?kind=nucleicAcid").getBody();
             assertTrue(content.contains("nucleic-acid-details-form"));
             assertTrue(content.contains("subunit-form"));
             assertTrue(content.contains("nucleic-acid-sugar-form"));
@@ -111,8 +115,8 @@ public class FunctionalTest extends WithApplication {
 
     @Test
     public void testRouteConceptWizard() throws Exception {
-        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-            String content = session.getAsString("ginas/app/wizard?kind=concept");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+            String content = session.get("ginas/app/wizard?kind=concept").getBody();
 
             testCommonWizardElements(content);
         }

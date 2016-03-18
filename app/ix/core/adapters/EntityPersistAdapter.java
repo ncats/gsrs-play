@@ -75,6 +75,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
 
     public static void init(){
+
         strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
        seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
 

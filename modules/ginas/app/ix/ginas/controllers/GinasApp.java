@@ -480,6 +480,9 @@ public class GinasApp extends App {
 
         // if there's a provided query, or there's a facet specified,
         // do a text search
+
+        System.out.println("substances search q =" + q + "  has facet = " + request().queryString().containsKey("facet"));
+
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
                 getSearchResult (Substance.class, q, total);

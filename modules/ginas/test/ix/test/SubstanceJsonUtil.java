@@ -2,10 +2,16 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 
-public class SubstanceJsonUtil {
-	
+import static org.junit.Assert.assertTrue;
+
+public final class SubstanceJsonUtil {
+
+	private SubstanceJsonUtil(){
+		//can not instantiate
+	}
 	
 	public static JsonNode toUnapproved(JsonNode substance){
 		
@@ -19,4 +25,35 @@ public class SubstanceJsonUtil {
 				.ignoreMissing()
 				.build();
 	}
+
+	public static void ensureFailure(WSResponse response){
+		int status = response.getStatus();
+		assertTrue("Expected failure code, got:" + status, status != 200 && status != 201);
+	}
+
+	public static void ensurePass(WSResponse response){
+		int status = response.getStatus();
+		assertTrue("Expected pass code, got:" + status, status == 200 || status == 201);
+	}
+
+
+	public static boolean isLiteralNull( JsonNode js){
+		return js.isNull();
+	}
+
+	public static void ensureIsValid(JsonNode js){
+		assertTrue( isValid(js));
+	}
+	public static boolean isValid(JsonNode js){
+		return js.get("valid").asBoolean();
+	}
+
+
+    public static String getApprovalStatus(JsonNode js){
+        return js.get("status").asText().toLowerCase();
+    }
+
+    public static String getApprovalId(JsonNode js){
+        return js.get("approvalID").asText();
+    }
 }

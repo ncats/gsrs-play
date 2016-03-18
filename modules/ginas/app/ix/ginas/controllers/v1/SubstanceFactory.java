@@ -60,13 +60,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
 	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.5;
-	static public final Model.Finder<UUID, Substance> finder = new Model.Finder(UUID.class, Substance.class);
+	static public Model.Finder<UUID, Substance> finder;
 
 	// Do we still need these?
-	static public final Model.Finder<UUID, ChemicalSubstance> chemfinder = new Model.Finder(UUID.class,
-			ChemicalSubstance.class);
-	static public final Model.Finder<UUID, ProteinSubstance> protfinder = new Model.Finder(UUID.class,
-			ProteinSubstance.class);
+	//Yes used in GinasApp
+	static public Model.Finder<UUID, ChemicalSubstance> chemfinder;
+	static public Model.Finder<UUID, ProteinSubstance> protfinder;
+
+	static{
+		init();
+	}
+
+	public static void init(){
+		finder = new Model.Finder(UUID.class, Substance.class);
+		chemfinder = new Model.Finder(UUID.class,
+				ChemicalSubstance.class);
+		protfinder = new Model.Finder(UUID.class,
+				ProteinSubstance.class);
+	}
+
 
 	public static Substance getSubstance(String id) {
 		if (id == null)

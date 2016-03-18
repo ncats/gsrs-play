@@ -88,17 +88,16 @@ public class EntityFactory extends Controller {
 
 	static final SecureRandom rand = new SecureRandom ();
 
-    static final ExecutorService _threadPool = 
-        Executors.newCachedThreadPool();
-
     static final Model.Finder<Long, Principal> _principalFinder = 
         new Model.Finder(Long.class, Principal.class);
 
-    static TextIndexer _textIndexer =
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-    
+    static TextIndexer _textIndexer ;
+    static{
+        init();
+    }
     public static void init(){
     	_textIndexer = Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
     }
 
     public static class FetchOptions {
