@@ -11,6 +11,7 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.plugins.IxCache;
+import ix.utils.EntityUtils;
 import ix.utils.Global;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -1153,7 +1154,7 @@ public class TextIndexer {
             return null;
 
         Class cls = entity.getClass();
-        Object id = EntityFactory.getIdForBean(entity);
+        Object id = EntityUtils.getIdForBean(entity);
         
         if (id == null) {
             Logger.warn("Entity "+entity+"["
@@ -1288,7 +1289,7 @@ public class TextIndexer {
             Logger.debug(">>> Updating "+entity+"...");
 
         try {
-            Object id = EntityFactory.getIdForBean(entity);
+            Object id = EntityUtils.getIdForBean(entity);
             
 
             if (id != null) {
@@ -1322,7 +1323,7 @@ public class TextIndexer {
         Class cls = entity.getClass();
         if (cls.isAnnotationPresent(Entity.class)) {
             Field[] fields = cls.getDeclaredFields();
-            Object id = EntityFactory.getId(entity);
+            Object id = EntityUtils.getId(entity);
             if (id != null) {
                 String field = entity.getClass().getName()+".id";
                 if (DEBUG (2))

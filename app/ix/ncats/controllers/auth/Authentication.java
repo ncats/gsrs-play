@@ -407,6 +407,7 @@ public class Authentication extends Controller {
     }
 
     public static Session getSession() {
+    	
         String id = session(SESSION);
         Session session = getCachedSession(id);
         if (session != null) {

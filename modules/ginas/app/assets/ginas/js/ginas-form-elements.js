@@ -30,7 +30,6 @@
                        'Content-Type': 'text/plain'
                    }
                }).success(function (data) {
-                  // console.log(data);
                    if(data.content.length > 0) {
                        return data;
                    }else{
@@ -131,14 +130,28 @@
 
             updateCV: function(domainobj){
                 console.log(domainobj);
-                var promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).success(function(data){
-                    alert('update was performed.');
-                    return data;
-                });
+                var url;
+                var promise;
+                if(domainobj.id) {
+                    promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }).success(function (data) {
+                        alert('update was performed.');
+                        return data;
+                    });
+                }else{
+                    promise = $http.post(baseurl + 'api/v1/vocabularies', domainobj, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }).success(function (response) {
+                        console.log(response);
+                        alert("new domain added");
+                        return response;
+                    });
+                }
                 return promise;
             },
 
@@ -156,6 +169,20 @@
                    //  alert('update was performed.');
                      });
                 });
+            },
+
+            addDomain: function(cv){
+                console.log("adding domain");
+                var promise = $http.post(baseurl + 'api/v1/vocabularies', cv, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).success(function (response) {
+                    console.log(response);
+                    alert("new domain added");
+                    return response;
+                });
+                return promise;
             }
         };
         return CV;

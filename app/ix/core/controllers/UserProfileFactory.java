@@ -100,7 +100,6 @@ public class UserProfileFactory extends EntityFactory {
         return prof;
 	}
 	
-	//@Dynamic(value = "adminUser", handlerKey = "idg")
     public static UserProfile addActiveUser(String username, String password, List rolesChecked, List groupsChecked ) {
         Principal newUser = new Principal();
         newUser.username =username;

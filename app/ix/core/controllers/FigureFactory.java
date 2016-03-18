@@ -11,6 +11,7 @@ import play.mvc.*;
 
 import ix.core.NamedResource;
 import ix.core.models.Figure;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 @NamedResource(name="figures",

@@ -86,4 +86,18 @@ public class Property extends GinasCommonSubData {
     public void setParameters(List<Parameter> parameters) {
         this.parameters = parameters;
     }
+    
+    public boolean equals(Object o){
+    	if(!super.equals(o))return false;
+    	Property p = (Property)o;
+    	if(!(p.name+"").equals(this.name+""))return false;
+    	if(p.parameters.size()!=this.parameters.size()){
+    		return false;
+    	}
+    	if(!p.parameters.containsAll(this.parameters))return false;
+    	return true;
+    		
+    	
+    }
+    
 }

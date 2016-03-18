@@ -12,20 +12,50 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import ix.core.DefaultValidator;
 import ix.ginas.utils.GinasProcessingStrategy;
 import play.*;
 import play.db.ebean.*;
 import play.mvc.*;
-
-import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
+import ix.core.controllers.EntityFactory;
 
 @NamedResource(name = "vocabularies", type = ControlledVocabulary.class, description = "Resource for handling of CV used in GInAS")
 public class ControlledVocabularyFactory extends EntityFactory {
 	static public final Model.Finder<Long, ControlledVocabulary> finder = new Model.Finder(
 			Long.class, ControlledVocabulary.class);
 
+/*	private static Class<? extends VocabularyTerm> getTermClass (String domain){
+
+
+*//*
+		if(fragmentDomains.contains(domain)){
+			return FragmentVocabularyTerm.class;
+		}else if(codeSystemDomains.contains(domain)){
+			return CodeSystemVocabularyTerm.class;
+		}else{
+			return VocabularyTerm.class;
+		}*//*
+	}*/
+
+	private static Class<? extends ControlledVocabulary> getCVClass (String domain){
+		Set<String> fragmentDomains = new HashSet<String>();
+		fragmentDomains.add("NUCLEIC_ACID_SUGAR");
+		fragmentDomains.add("NUCLEIC_ACID_LINKAGE");
+		fragmentDomains.add("NUCLEIC_ACID_BASE");
+		fragmentDomains.add("AMINO_ACID_RESIDUE");
+		Set<String> codeSystemDomains = new HashSet<String>();
+		codeSystemDomains.add("CODE_SYSTEM");
+
+		if(fragmentDomains.contains(domain)){
+			return FragmentControlledVocabulary.class;
+		}else if(codeSystemDomains.contains(domain)){
+			return CodeSystemControlledVocabulary.class;
+		}else{
+			return ControlledVocabulary.class;
+		}
+	}
 
 	public static ControlledVocabulary getControlledVocabulary(String domain) {
 		return finder.where().eq("domain", domain).findUnique();
@@ -72,42 +102,13 @@ public class ControlledVocabularyFactory extends EntityFactory {
 			}
 		});
 
-		Set<String> fragmentDomains = new HashSet<String>();
-		fragmentDomains.add("NUCLEIC_ACID_SUGAR");
-		fragmentDomains.add("NUCLEIC_ACID_LINKAGE");
-		fragmentDomains.add("NUCLEIC_ACID_BASE");
-		fragmentDomains.add("AMINO_ACID_RESIDUE");
-		Set<String> codeSystemDomains = new HashSet<String>();
-		codeSystemDomains.add("CODE_SYSTEM");
-
-
-
 		try {
 			JsonNode rawValues = mapper.readTree(is);
 			for(JsonNode cvValue: rawValues){
 				String domain=cvValue.at("/domain").asText();
-				ControlledVocabulary cv = mapper.treeToValue(cvValue, ControlledVocabulary.class);
-				if(fragmentDomains.contains(domain)){
-					List<VocabularyTerm> vterms = new ArrayList<VocabularyTerm>();
-					JsonParser jp = f.createJsonParser(cvValue.at("/terms").toString());
-					jp.nextToken();
-					while (jp.nextToken() == JsonToken.START_OBJECT) {
-						VocabularyTerm cvt = mapper.readValue(jp, FragmentVocabularyTerm.class);
-						vterms.add(cvt);
-					}
-					cv.terms=vterms;
-				}else if(codeSystemDomains.contains(domain)){
-					List<VocabularyTerm> vterms = new ArrayList<VocabularyTerm>();
-					JsonParser jp = f.createJsonParser(cvValue.at("/terms").toString());
-					jp.nextToken();
-					while (jp.nextToken() == JsonToken.START_OBJECT) {
-						VocabularyTerm cvt = mapper.readValue(jp, CodeSystemVocabularyTerm.class);
-						vterms.add(cvt);
-					}
-					cv.terms=vterms;
-				}else{
-					cv = mapper.treeToValue(cvValue, ControlledVocabulary.class);
-				}
+				String termType=cvValue.at("/vocabularyTermType").asText();
+				ControlledVocabulary cv =  (ControlledVocabulary) mapper.treeToValue(cvValue, Class.forName(termType));
+				cv.setVocabularyTermType(getCVClass(domain).getName());
 				cv.save();
 			}
 
@@ -119,13 +120,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 
 	public static void loadSeedCV(InputStream is) {
 		
-		Set<String> fragmentDomains = new HashSet<String>();
-		fragmentDomains.add("NUCLEIC_ACID_SUGAR");
-		fragmentDomains.add("NUCLEIC_ACID_LINKAGE");
-		fragmentDomains.add("NUCLEIC_ACID_BASE");
-		fragmentDomains.add("AMINO_ACID_RESIDUE");
-		Set<String> codeSystemDomains = new HashSet<String>();
-		codeSystemDomains.add("CODE_SYSTEM");
+
 		
 		
 		Map<String, List<VocabularyTerm>> map = new TreeMap<>();
@@ -133,8 +128,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		String cvsSplitBy = "\t";
 		ControlledVocabulary domains = new ControlledVocabulary();
 		domains.domain="CV_DOMAIN";
-		
-		
+
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF8"));
 			while ((line = br.readLine()) != null) {
@@ -145,9 +139,10 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				domainTerm.value = field;
 				domainTerm.display = category;
 				Logger.info("field " +field);
-				
 				VocabularyTerm cv;
-				if(fragmentDomains.contains(category)){
+				Class<? extends ControlledVocabulary> c = getCVClass(category);
+
+				if(c == FragmentControlledVocabulary.class){
 					cv= new FragmentVocabularyTerm();
 					if (cvTerm.length >= 7) {
 						((FragmentVocabularyTerm)cv).setSimplifiedStructure(cvTerm[6]);
@@ -155,7 +150,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 					if (cvTerm.length >= 8) {
 						((FragmentVocabularyTerm)cv).setFragmentStructure(cvTerm[7]);
 					}
-				}else if(codeSystemDomains.contains(category)){
+				}else if(c == CodeSystemControlledVocabulary.class){
 					cv= new CodeSystemVocabularyTerm();
 					if (cvTerm.length >= 7) {
 						((CodeSystemVocabularyTerm)cv).setSystemCategory(cvTerm[6]);
@@ -269,10 +264,33 @@ public class ControlledVocabularyFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (ControlledVocabulary.class, finder);
-    }
+		if (!request().method().equalsIgnoreCase("POST")) {
+			return badRequest ("Only POST is accepted!");
+		}
+		String content = request().getHeader("Content-Type");
+		if (content == null || (content.indexOf("application/json") < 0
+				&& content.indexOf("text/json") < 0)) {
+			return badRequest ("Mime type \""+content+"\" not supported!");
+		}
+		JsonNode json = request().body().asJson();
+		String str = json.get("vocabularyTermType").asText();
+		try {
+			Class <ControlledVocabulary> c = (Class<ControlledVocabulary>)Class.forName(str);
 
-    public static Result delete (Long uuid) {
+			return create (c, finder);
+		}catch(Exception e){
+			e.printStackTrace();
+			return internalServerError(e.getMessage());
+		}
+
+	}
+
+
+
+
+
+
+	public static Result delete (Long uuid) {
         return delete (uuid, finder);
     }
 
@@ -285,7 +303,16 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				&& content.indexOf("text/json") < 0)) {
 			return badRequest ("Mime type \""+content+"\" not supported!");
 		}
-		return updateEntity (ControlledVocabulary.class);
+		JsonNode json = request().body().asJson();
+		String str = json.get("vocabularyTermType").asText();
+		try {
+			Class<? extends ControlledVocabulary> c = (Class<? extends ControlledVocabulary>)Class.forName(str);
+			return updateEntity(json, c);
+		}catch(Exception e){
+			e.printStackTrace();
+			return internalServerError(e.getMessage());
+		}
+
 	}
 
 

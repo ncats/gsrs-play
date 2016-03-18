@@ -16,18 +16,17 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
 
+import ix.core.controllers.EntityFactory;
 import ix.core.models.ETag;
 import ix.core.models.ETagRef;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
-
 import ix.utils.Global;
 import ix.utils.Util;
 import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
-import ix.core.controllers.EntityFactory;
 
 public class SearchFactory extends EntityFactory {
     static Model.Finder<Long, ETag> etagDb;

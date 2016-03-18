@@ -3,8 +3,8 @@ package ix.ginas.utils;
 import ix.core.models.UserProfile;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
+import ix.ginas.models.v1.CodeSystemVocabularyTerm;
 import ix.ginas.models.v1.ControlledVocabulary;
-import ix.ginas.models.v1.VocabularyTerm;
 import ix.ncats.controllers.auth.Authentication;
 import ix.utils.Global;
 import play.Application;
@@ -62,17 +62,15 @@ public class GinasGlobal extends Global {
 		//	ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
 			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv.json"));
 			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
-			if(codeSystem!=null){
+			if(codeSystem!= null){
 				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
-				VocabularyTerm vt = new VocabularyTerm();
+				CodeSystemVocabularyTerm vt = new CodeSystemVocabularyTerm();
 				vt.display=codeSystem;
 				vt.value=codeSystem;
 				vt.hidden=true;
 				vt.save();
-				cvv.terms.add(vt);
+				cvv.addTerms(vt);
 				cvv.save();
-				
-				
 			}
 			if(!Play.isTest()){
 				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());

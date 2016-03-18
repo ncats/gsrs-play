@@ -68,7 +68,7 @@ public class Substance extends GinasCommonData {
 		protein, 
 		nucleicAcid, 
 		polymer, 
-		structurallyDiverse, 
+		structurallyDiverse,
 		mixture, 
 		specifiedSubstanceG1, 
 		specifiedSubstanceG2, 

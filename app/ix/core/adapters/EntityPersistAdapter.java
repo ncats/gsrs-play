@@ -32,6 +32,7 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.seqaln.SequenceIndexer;
+import ix.utils.EntityUtils;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -340,7 +341,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {
-			String _id = EntityFactory.getIdForBeanAsString(bean);
+			String _id = EntityUtils.getIdForBeanAsString(bean);
 			for(Field seq:sequenceFields){
 				String indexSequence;
 				try {
@@ -356,7 +357,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 		
 		List<Field> structureFields = getStructureIndexableField(bean);
 		if (structureFields != null && structureFields.size()>0) {
-			String _id = EntityFactory.getIdForBeanAsString(bean);
+			String _id = EntityUtils.getIdForBeanAsString(bean);
 			for(Field seq:structureFields){
 				String structure;
 				try {
@@ -372,7 +373,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 	private void deleteIndexOnBean(Object bean) throws Exception {
 		if (plugin != null)
             plugin.getIndexer().remove(bean);
-		String _id = EntityFactory.getIdForBeanAsString(bean);
+		String _id = EntityUtils.getIdForBeanAsString(bean);
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {
 			getSequenceIndexer().remove(_id);
@@ -416,7 +417,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         
                 try {
-                    Object id = EntityFactory.getId(bean);
+                    Object id = EntityUtils.getId(bean);
                     
                     if (id != null) {
                     	Edit edit=EntityPersistAdapter.popEditForUpdate(cls, id);
@@ -544,16 +545,17 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     
     public void reindex(Object bean){
-        String _id=EntityFactory.getIdForBeanAsString(bean);
+        String _id=EntityUtils.getIdForBeanAsString(bean);
         if(alreadyLoaded.containsKey(bean.getClass()+_id)){
             return;
         }
         
-        try {      
-        	makeIndexOnBean(bean);
+        try {
             if(_id!=null)
-            	alreadyLoaded.put(bean.getClass()+_id,_id);
-        } catch (IOException e) {
+                alreadyLoaded.put(bean.getClass()+_id,_id);
+            deleteIndexOnBean(bean);
+            makeIndexOnBean(bean);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

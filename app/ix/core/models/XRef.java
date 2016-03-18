@@ -10,8 +10,8 @@ import javax.persistence.*;
 
 import play.Logger;
 import play.db.ebean.Model;
-
 import ix.core.controllers.EntityFactory;
+import ix.utils.EntityUtils;
 import ix.utils.Global;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -65,7 +65,7 @@ public class XRef extends IxModel {
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
-        	Object id = EntityFactory.getId(instance);
+        	Object id = EntityUtils.getId(instance);
             if (id != null) {
                     this.refid = id.toString();
             } else {
@@ -89,7 +89,7 @@ public class XRef extends IxModel {
         if (_instance == null || force) {
             try {
                 Class cls = Class.forName(kind);
-                Field fid = EntityFactory.getIdFieldForClass(cls);
+                Field fid = EntityUtils.getIdFieldForClass(cls);
                 if (fid != null) {
                     Class type = fid.getType();
                     Model.Finder finder = new Model.Finder(type, cls);
@@ -136,7 +136,7 @@ public class XRef extends IxModel {
             Class cls = Class.forName(kind);
             Class type = instance.getClass();
             if (cls.isAssignableFrom(type) || type.isAssignableFrom(cls)) {
-                Object id=EntityFactory.getId(instance);
+                Object id=EntityUtils.getId(instance);
             	if (id != null) {
                     return refid.equals(id.toString());
                 }

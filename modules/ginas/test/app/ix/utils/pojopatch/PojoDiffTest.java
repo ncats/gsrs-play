@@ -1,18 +1,23 @@
 package app.ix.utils.pojopatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.controllers.EntityFactory;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -33,6 +38,8 @@ public class PojoDiffTest {
         }
         return uuids.get(uuidIndex++);
     }
+    
+   
 
     private String getUUID(int index){
         if(index == uuids.size()){
@@ -42,6 +49,9 @@ public class PojoDiffTest {
         }
         return uuids.get(index).toString();
     }
+    
+    
+    
     @Test
     public void sameObjectShouldNotHaveChanges() throws Exception {
         //we'll use Author since that's simple and it's an entity
@@ -52,7 +62,7 @@ public class PojoDiffTest {
 
         PojoPatch patch = PojoDiff.getDiff(old, old);
 
-       patch.apply(old);
+        patch.apply(old);
 
         Author expected = new Author();
         expected.id = 12345L;
@@ -213,6 +223,155 @@ public class PojoDiffTest {
 
         JsonMatches(update, prop);
 
+    }
+    @Test
+    public void switchOrderSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        newParams.add(p2);
+	        newParams.add(p1);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==2);
+	        JsonMatches(update, prop);
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
+    @Test
+    public void switchOrderIdsSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	        UUID uui1=p1.getOrGenerateUUID();
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	        UUID uui2=p2.getOrGenerateUUID();
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        newParams.add(p2);
+	        newParams.add(p1);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==2);
+	        assertEquals(update,prop);
+	        
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
+    
+    @Test
+    public void AddNewToListWithIDSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	        UUID uui1=p1.getOrGenerateUUID();
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	        UUID uui2=p2.getOrGenerateUUID();
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        Parameter p3 = new Parameter();
+	        p3.setName("foobar");
+	        p3.getOrGenerateUUID();
+	        newParams.add(p1);
+	        newParams.add(p2);
+	        newParams.add(p3);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==3);
+	        JsonMatches(update, prop);
+	        
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
+    }
+    @Test
+    public void AddNewToListWithoutIDSimple() throws Exception {
+    	try{
+	        List<Parameter> originalParams = new ArrayList<>();
+	        Parameter p1 = new Parameter();
+	        p1.setName("foo");
+	        UUID uui1=p1.getOrGenerateUUID();
+	
+	        Parameter p2 = new Parameter();
+	        p2.setName("bar");
+	        UUID uui2=p2.getOrGenerateUUID();
+	
+	        originalParams.add(p1);
+	        originalParams.add(p2);
+	
+	        Property prop = new Property();
+	
+	        prop.setParameters(originalParams);
+	
+	
+	        Property update = new Property();
+	
+	        List<Parameter> newParams=new ArrayList<Parameter>();
+	        Parameter p3 = new Parameter();
+	        p3.setName("foobar");
+	        newParams.add(p1);
+	        newParams.add(p2);
+	        newParams.add(p3);
+	        update.setParameters(newParams);
+	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+	        patch.apply(prop);
+	        assertTrue(prop.getParameters().size()==3);
+	        assertEquals(update,prop);
+	        
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
     }
 
     @Test
