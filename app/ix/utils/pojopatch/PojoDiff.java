@@ -4,8 +4,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,14 +20,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.utils.EntityUtils;
+import ix.utils.Util;
+import play.Logger;
 
 
 /**
@@ -97,17 +107,267 @@ public class PojoDiff {
 		}
 	}
 	
+	public static class EnhancedObjectPatch implements PojoPatch{
+		private Object oldV;
+		private Object newV;
+		JsonNode jp;
+		public EnhancedObjectPatch(Object oldV, Object newV){
+			this.oldV=oldV;
+			this.newV=newV;
+		}
+		
+		
+		public Stack apply(Object old) throws Exception{
+			if(jp==null){
+				jp=getEnhancedJsonDiff(oldV,newV);
+			}
+			if(old==oldV){
+				return applyChanges(oldV,newV, jp);
+			}else{
+				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
+			}
+		}
+	}
+	
+	private static void sortDiff(JsonNode jp){
+		List<JsonNode> diffs = new ArrayList<JsonNode>();
+		for(JsonNode diff:jp){
+			diffs.add(diff);
+		}
+		Collections.sort(diffs, new Comparator<JsonNode>(){
+			@Override
+			public int compare(JsonNode o1, JsonNode o2) {
+				String path=o1.at("/path").asText();
+				String op=o1.at("/op").asText();
+				
+				
+				return 0;
+			}
+		});
+	}
+	
 	
 	public static <T> PojoPatch getDiff(T oldValue, T newValue){
-		return new LazyObjectPatch(oldValue,newValue);
+		//return new EnhancedObjectPatch(oldValue,newValue);
+		return new EnhancedObjectPatch(oldValue,newValue);
+	}
+	
+	public static <T> PojoPatch getEnhancedDiff(T oldValue, T newValue){
+		return new EnhancedObjectPatch(oldValue,newValue);
 	}
 	
 	public static PojoPatch fromJsonPatch(JsonPatch jp) throws IOException{
 		return new JsonObjectPatch(jp);
 	}
 	
+	private static String getID(JsonNode o){
+		try{
+			if(o.isObject()){
+				JsonNode id=o.get("uuid");
+				if(id!=null && !id.isNull()){
+					return id.asText();
+				}
+				id=o.get("id");
+				if(id!=null && !id.isNull()){
+					return id.asText();
+				}
+				return null;
+			}
+		}catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		return null;
+	}
+	/**
+	 *
+	 *	Okay, it don't work. Need to reevaluate.
+	 *
+	 *	
+	 * 
+	 * 
+	 * 
+	 **/
+	
+	private static ObjectNode mappify(ObjectNode m2){
+		ObjectMapper om=new ObjectMapper();
+		Iterator<String> fields=m2.fieldNames();
+		List<String> fieldNames = new ArrayList<String>();
+		while(fields.hasNext()){
+			fieldNames.add(fields.next());
+		}
+		
+		for(String key:fieldNames){
+			JsonNode o=m2.get(key);
+			
+			//System.out.println("Value is:" + o);
+			if(o.isArray()){
+				ArrayNode arr=((ArrayNode)o);
+				
+				ObjectNode mnew=om.createObjectNode();
+				//Map mnew = new HashMap();
+				for(int i=0;i<arr.size();i++){
+					JsonNode o2=arr.get(i);
+					String id=getID(o2);
+					String ind=String.format("%05d", i);
+					if(id!=null){
+						mnew.set("$" + id + "_" + ind, o2);
+					}else{
+						mnew.set("_" + ind, o2);
+					}
+					if(o2.isObject()){
+						mappify((ObjectNode)o2);
+					}
+				}
+				m2.put(key, mnew);
+			}else if(o.isObject()){
+				mappify((ObjectNode)o);
+			}
+		}
+		return m2;
+	}
 	
 	
+	private static JsonNode mappifyJson(JsonNode js1){
+		try {
+			JsonNode mapped=mappify((ObjectNode)js1.deepCopy());
+			return mapped;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		return js1;
+	}
+	
+	public static void canonicalizeDiff(List<JsonNode> diffs){
+		Collections.sort(diffs,new Comparator<JsonNode>(){
+
+			@Override
+			public int compare(JsonNode o1, JsonNode o2) {
+				// TODO Auto-generated method stub
+				String path1=o1.at("/path").asText();
+				String op1=o1.at("/op").asText();
+				
+				
+				String path2=o2.at("/path").asText();
+				String op2=o2.at("/op").asText();
+				
+				int diff=op1.compareTo(op2);
+				if(diff!=0){
+					return diff;
+				}
+				path1.replaceAll("/_([0-9][0-9]*)", "/#$1");
+				path2.replaceAll("/_([0-9][0-9]*)", "/#$1");
+				String newpath1="";
+				String newpath2="";
+				String[] paths1=path1.split("#");
+				String[] paths2=path2.split("#");
+				for(int i=0;i<paths1.length;i++){
+					if(paths1[i].startsWith("#")){
+						int k=Integer.parseInt(paths1[i].substring(1));
+						String np=String.format("%05d", k);
+						newpath1+=np;
+					}
+				}
+				for(int i=0;i<paths2.length;i++){
+					if(paths2[i].startsWith("#")){
+						int k=Integer.parseInt(paths2[i].substring(1));
+						String np=String.format("%05d", k);
+						newpath2+=np;
+					}
+				}
+				int d=newpath1.compareTo(newpath2);
+				
+				return d;
+			}
+			
+		});
+	}
+	private static ArrayNode canonicalizeDiff(JsonNode diffs){
+		List<JsonNode> mynodes=new ArrayList<JsonNode>();
+		for(JsonNode jsn:diffs){
+			mynodes.add(jsn);
+		}
+		canonicalizeDiff(mynodes);
+		ArrayNode arr=(new ObjectMapper()).createArrayNode();
+		arr.addAll(mynodes);
+		return arr;
+	}
+	
+	public static JsonNode getEnhancedJsonDiff(Object oldValue, Object newValue){
+		ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		JsonNode js1;
+		JsonNode js2;
+		if(oldValue instanceof JsonNode){
+			js1=(JsonNode) oldValue;
+		}else{
+			js1=mapper.valueToTree(oldValue);
+		}
+		if(newValue instanceof JsonNode){
+			js2=(JsonNode) newValue;
+		}else{
+			js2=mapper.valueToTree(newValue);
+		}
+		
+		
+		
+		JsonNode diff= JsonDiff.asJson(
+				mappifyJson(js1),
+				mappifyJson(js2)
+    			);
+		List<JsonNode> reorderedDiffs= new ArrayList<JsonNode>();
+		
+		JsonNode normalDiff= JsonDiff.asJson(
+				js1,
+				js2
+    			);
+		
+		
+		JsonNode[] cdiffs= new JsonNode[normalDiff.size()];
+		HashMap<String,Integer> positions = new HashMap<String,Integer>();
+		int i=0;
+		
+		for(JsonNode jsn:normalDiff){
+			String path=jsn.at("/path").asText();
+			path=path.replaceAll("[$][^_]*[_]", "").replaceAll("/_[0]*([0-9][0-9]*)","/$1");
+			if(path.endsWith("/-")){
+				int s=js1.at(path.replaceAll("/-$", "")).size();
+				path=path.replaceAll("/-$", "/"+s+"");
+			}
+			String op=jsn.at("/op").asText();
+			
+			//System.out.println("old:" +jsn);
+			positions.put(op + path, i);
+			i++;
+			
+		}
+		int j=0;
+		for(JsonNode jsn:diff){
+			String path=jsn.at("/path").asText();
+			path=path.replaceAll("[$][^_]*[_]", "").replaceAll("/_[0]*([0-9][0-9]*)","/$1");
+			String op=jsn.at("/op").asText();
+			//System.out.println(jsn);
+			Integer pos=positions.get(op + path);
+
+			if(pos==null){
+				reorderedDiffs.add(jsn);
+			}else{
+				cdiffs[pos]=jsn;
+			}
+			
+			j++;
+		}
+		ArrayNode an=(new ObjectMapper()).createArrayNode();
+		for(JsonNode jsn:cdiffs){
+			if(jsn!=null){
+				reorderedDiffs.add(jsn);
+			}
+		}
+		canonicalizeDiff(reorderedDiffs);
+		an.addAll(reorderedDiffs);
+		return an;
+		//return normalDiff;
+	}
 	
 	private static <T> Stack applyPatch(T oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
 		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -494,19 +754,58 @@ public class PojoDiff {
 				registries.put(cls.getName(), new TypeRegistry(cls));
 			}
 		}
+		private static int getObjectWithID(Collection c, String id){
+			int i=0;
+			for(Object o:c){
+				try {
+					Object oid=EntityUtils.getId(o);
+					if(id.equals(oid.toString())){
+						return i;
+					}
+				} catch (Exception e) {
+					
+				}
+				i++;
+			}
+			return -1;
+		}
+		
+		private static int getCollectionPostion(Collection col, String prop){
+			return getCollectionPostion(col, prop,false);
+		}
+		private static int getCollectionPostion(Collection col, String prop, boolean allowpseudo){
+			int c=-1;
+			if(allowpseudo && prop.equals("-")){
+				//System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
+				
+				c=col.size()-1;
+				
+				//throw new IllegalStateException("'-'  not yet implemented");
+			}else if(prop.startsWith("_")){
+				try{
+					c=Integer.parseInt(prop.substring(1));
+				}catch(Exception e){
+					
+				}
+			}else if(prop.startsWith("$")){
+				c=getObjectWithID(col,prop.substring(1).split("_")[0]);
+			}else{
+				try{
+					c=Integer.parseInt(prop);
+				}catch(Exception e){
+					
+				}
+			}
+
+			return c;
+		}
 		private static Object getObjectDirect(Object o, String prop){
 			addClassToRegistry(o.getClass());
 			TypeRegistry tr=registries.get(o.getClass().getName());
 			
 			if(o instanceof Collection){
-				int c=-1;
-				if(prop.equals("-")){
-					//System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
-					c=((Collection)o).size()-1;
-					//throw new IllegalStateException("'-'  not yet implemented");
-				}else{
-					c=Integer.parseInt(prop);
-				}
+				final int c=getCollectionPostion((Collection)o,prop,true);
+				
 				if(((Collection)o).size()<=c){
 					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + ((Collection)o).size());
 				}
@@ -518,7 +817,12 @@ public class PojoDiff {
 					i++;
 				}
 			}
-			return tr.getters.get(prop).get(o);
+			TypeRegistry.Getter g= tr.getters.get(prop);
+			if(g!=null){
+				return g.get(o);
+			}else{
+				throw new IllegalArgumentException("No getter for '" + prop + "'");
+			}
 		}
 		private static TypeRegistry.Setter getSetterDirect(Object o, final String prop){
 			addClassToRegistry(o.getClass());
@@ -529,7 +833,8 @@ public class PojoDiff {
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
-				final int c=Integer.parseInt(prop);
+				
+				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 
@@ -572,7 +877,7 @@ public class PojoDiff {
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
-				final int c=Integer.parseInt(prop);
+				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 
@@ -623,13 +928,16 @@ public class PojoDiff {
 			
 			if(o instanceof Collection){
 				Collection col = (Collection)o;
-				int cind=-1;
-				if(prop.equals("-")){
-					//throw new IllegalStateException("'-'  not yet implemented");
-				}else{
-					cind=Integer.parseInt(prop);
+				
+				int cind=getCollectionPostion(col,prop,true);
+				
+				if(cind>=col.size()){
+					cind=col.size()-1;
 				}
+				
 				final int c=cind;
+				
+				
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 
@@ -655,13 +963,13 @@ public class PojoDiff {
 							if(c<0){
 								((Collection)instance).add(set);
 							}else{
-								List<Object> tempGuy = new ArrayList<Object>();
+								List<Object> tempGuy = new ArrayList<Object>(((Collection)instance));
 								((Collection)instance).removeAll(tempGuy);
-								for(int i=0;i<c;i++){
+								for(int i=0;i<=c;i++){
 									((Collection)instance).add(tempGuy.get(i));
 								}
 								((Collection)instance).add(set);
-								for(int i=c;i<tempGuy.size();i++){
+								for(int i=c+1;i<tempGuy.size();i++){
 									((Collection)instance).add(tempGuy.get(i));
 								}
 								
@@ -690,7 +998,6 @@ public class PojoDiff {
 			String curPath = paths[1];
 			
 			String subPath=objPointer.substring(curPath.length()+1);
-			
 			
 			Object fetched=getObjectDirect(src,curPath);
 			

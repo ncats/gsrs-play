@@ -35,6 +35,7 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.utils.EntityUtils;
 import ix.utils.Global;
 import play.Logger;
 import play.Play;
@@ -97,7 +98,7 @@ public class RouteFactory extends Controller {
         if (named != null) {
             try {
                 Class cls = named.type();
-                Field id = EntityFactory.getIdFieldForClass(cls);
+                Field id = EntityUtils.getIdFieldForClass(cls);
 
                 if (id == null) { // possible?
                     Logger.error("Fatal error: Entity "+cls.getName()

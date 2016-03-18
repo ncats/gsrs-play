@@ -280,18 +280,19 @@ public class Global extends GlobalSettings {
             throw new IllegalArgumentException ("Instance is not an Entity");
         }
 
-        String name = getResource (cls);
-        if (name == null) {
-            //Logger.warn("Class "+cls.getName()+" isn't a NamedResource!");
-            /*
-            throw new IllegalArgumentException
-                ("Class "+cls.getName()+" isn't a NamedResource!");
-            */
-            return null;
-        }
+        try{
+	        String name = getResource (cls);
+	        if (name == null) {
+	            //Logger.warn("Class "+cls.getName()+" isn't a NamedResource!");
+	            /*
+	            throw new IllegalArgumentException
+	                ("Class "+cls.getName()+" isn't a NamedResource!");
+	            */
+	            return null;
+	        }
 
-        try {
-            Object id = EntityFactory.getId(instance);
+        
+            Object id = EntityUtils.getId(instance);
             return getNamespace()+"/"+name+"("+id+")";
         }
         catch (Exception ex) {

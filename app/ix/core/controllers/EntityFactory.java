@@ -71,6 +71,7 @@ import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
 import ix.ginas.models.v1.Substance;
+import ix.utils.EntityUtils;
 import ix.utils.Global;
 import ix.utils.Util;
 import ix.utils.pojopatch.PojoDiff;
@@ -91,14 +92,17 @@ public class EntityFactory extends Controller {
     static final ExecutorService _threadPool = 
         Executors.newCachedThreadPool();
 
-    static final Model.Finder<Long, Principal> _principalFinder = 
-        new Model.Finder(Long.class, Principal.class);
+    static Model.Finder<Long, Principal> _principalFinder;
 
-    static TextIndexer _textIndexer =
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    static TextIndexer _textIndexer;
+    
+    static{
+    	init();
+    }
     
     public static void init(){
-    	_textIndexer = Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    	_textIndexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    	_principalFinder=new Model.Finder(Long.class, Principal.class);
     }
 
     public static class FetchOptions {
@@ -350,7 +354,7 @@ public class EntityFactory extends Controller {
                          +" new="+e.getNewValue());
             try {
                 Edit edit = new Edit ();
-                Object id = getId (e.getSource());
+                Object id = EntityUtils.getId (e.getSource());
                 if (id != null)
                     edit.refid = id.toString();
                 else
@@ -1144,8 +1148,8 @@ public class EntityFactory extends Controller {
                     if (m instanceof Model) {
                         try {
                             
-                            Method f = EntityFactory.getIdSettingMethodForBean(m);
-                            Object _id = EntityFactory.getIdForBean(m);
+                            Method f = EntityUtils.getIdSettingMethodForBean(m);
+                            Object _id = EntityUtils.getIdForBean(m);
                             oldObjects.put(_id, (Model) m);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -1188,7 +1192,7 @@ public class EntityFactory extends Controller {
 	            	return badRequest(validationResponse(vr,false));
 	            }
                 try {
-                    Method m=EntityFactory.getIdSettingMethodForBean(inst);
+                    Method m=EntityUtils.getIdSettingMethodForBean(inst);
                     m.invoke(inst, id);
                 }catch (Exception ex) {
                     ex.printStackTrace();
@@ -1203,8 +1207,8 @@ public class EntityFactory extends Controller {
                             if(m instanceof Model){
                                 try{
                                     
-                                    Method f=EntityFactory.getIdSettingMethodForBean(m);
-                                    Object _id=EntityFactory.getIdForBean(m);
+                                    Method f=EntityUtils.getIdSettingMethodForBean(m);
+                                    Object _id=EntityUtils.getIdForBean(m);
 
                                     //Get old model, do something with it?
                                     old=oldObjects.get(_id);
@@ -1392,7 +1396,7 @@ public class EntityFactory extends Controller {
                         if (val != null) {
                             ftype = val.getClass();
                             if (null != ftype.getAnnotation(Entity.class)) {
-                                Object tid=EntityFactory.getIdForBean(val);
+                                Object tid=EntityUtils.getIdForBean(val);
                                 if(tid!=null){
                                     tempid=tid;
                                     temptype=ftype;
@@ -1527,7 +1531,7 @@ public class EntityFactory extends Controller {
 
             //Fetch old value
             FetchedValue oldValueContainer=getCurrentValue(newValue);
-            String oldVersion=EntityFactory.getVersionForBeanAsString(oldValueContainer.value);
+            String oldVersion=EntityUtils.getVersionForBeanAsString(oldValueContainer.value);
 
             if(oldValueContainer.value==null){
             	throw new IllegalStateException("Cannot update a non-existing record");
@@ -1569,7 +1573,7 @@ public class EntityFactory extends Controller {
             
             //granular parts not working yet
             if (newValue != null) {
-            	    Object id = getId (newValue);
+            	    Object id = EntityUtils.getId (newValue);
 	                eh.edit.refid = id != null ? id.toString() : null;
 	                eh.edit.kind = newValue.getClass().getName();
 	                eh.edit.oldValue=oldJSON;
@@ -1598,92 +1602,6 @@ public class EntityFactory extends Controller {
         }
     }
 
-    private static List<Field> getFields (Object entity, Class... annotation) {
-        List<Field> fields = new ArrayList<Field>();
-        for (Field f : entity.getClass().getFields()) {
-            for (Class c : annotation) {
-                if (f.getAnnotation(c) != null) {
-                    fields.add(f);
-                    break;
-                }
-            }
-        }
-        return fields;
-    }
-    
-    private static List<Field> getFieldsForClass (Class entity, Class... annotation) {
-        List<Field> fields = new ArrayList<Field>();
-        for (Field f : entity.getFields()) {
-            for (Class c : annotation) {
-                if (f.getAnnotation(c) != null) {
-                    fields.add(f);
-                    break;
-                }
-            }
-        }
-        return fields;
-    }
-    
-    static List getAnnotatedValues (Object entity, Class... annotation)
-        throws Exception {
-        List values = new ArrayList ();
-        for (Field f : getFields (entity, annotation)) {
-            Object v = f.get(entity);
-            if (v != null)
-                values.add(v);
-        }
-        return values;
-    }
-
-    public static Object getId (Object entity) throws Exception {
-        Field f = getIdField (entity);
-        Object id = null;
-        if (f != null) {
-            id = f.get(entity);
-            if (id == null) { // now try bean method
-                try {
-                    Method m = entity.getClass().getMethod
-                        ("get"+getBeanName (f.getName()));
-                    id = m.invoke(entity, new Object[0]);
-                }
-                catch (NoSuchMethodException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-        return id;
-    }
-    public static Object getVersion (Object entity) throws Exception {
-        Field f = getVersionField (entity);
-        Object version = null;
-        if (f != null) {
-            version = f.get(entity);
-            if (version == null) { // now try bean method
-                try {
-                    Method m = entity.getClass().getMethod
-                        ("get"+getBeanName (f.getName()));
-                    version = m.invoke(entity, new Object[0]);
-                }
-                catch (NoSuchMethodException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-        return version;
-    }
-
-    public static Field getVersionField (Object entity) throws Exception {
-        List<Field> fields = getFields (entity, DataVersion.class);
-        return fields.isEmpty() ? null : fields.iterator().next();
-    }
-    public static Field getIdField (Object entity) throws Exception {
-        List<Field> fields = getFields (entity, Id.class);
-        return fields.isEmpty() ? null : fields.iterator().next();
-    }
-    public static Field getIdFieldForClass (Class entity) throws Exception {
-        List<Field> fields = getFieldsForClass (entity, Id.class);
-        return fields.isEmpty() ? null : fields.iterator().next();
-    }
     
     static boolean isValid (Field f) {
         int mods = f.getModifiers();
@@ -1855,7 +1773,7 @@ public class EntityFactory extends Controller {
     	System.out.println("Saving new:" + path);
     	((Model)value).save();
     	
-        id = getId (value);
+        id = EntityUtils.getId (value);
         Logger.debug("<<< " + id);
         
         Edit e = new Edit (value.getClass(), id);
@@ -2018,7 +1936,7 @@ public class EntityFactory extends Controller {
             throw new IllegalArgumentException
                 ("Class "+cls.getName()+" is not an entity");
 
-        Field idf = getIdField (value);
+        Field idf = EntityUtils.getIdField (value);
         if (idf == null)
             throw new IllegalArgumentException
                 ("Entity "+cls.getName()+" has no Id field!");
@@ -2032,7 +1950,7 @@ public class EntityFactory extends Controller {
         if (id == null) {
             // if this entity has no id set, then we see if there is a
             // unique column defined.. if so, we retrieve it
-            List<Field> columns = getFields (value, Column.class);
+            List<Field> columns = EntityUtils.getFields (value, Column.class);
             // now check which field has unique annotation
             for (Field f : columns) {
                 Column column = (Column)f.getAnnotation(Column.class);
@@ -2047,7 +1965,7 @@ public class EntityFactory extends Controller {
                         .findUnique();
                     
                     if (xval != null)
-                        id = getId (xval);
+                        id = EntityUtils.getId (xval);
                     
                     break;
                 }
@@ -2294,61 +2212,6 @@ public class EntityFactory extends Controller {
     }
 
 
-	public static Object getIdForBean(Object entity){
-	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
-	        return null;
-	    }
-	    try {
-	        Object id = EntityFactory.getId(entity);
-	        if (id != null) return id;
-	    }
-	    catch (Exception ex) {
-	        Logger.trace("Unable to fetch ID for "+entity, ex);
-	    }
-	    return null;
-	}
-
-	public static Field getIdFieldForBean(Object entity){
-	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
-	        return null;
-	    }
-	    try {
-	        for (Field f : entity.getClass().getFields()) {
-	            if (f.getAnnotation(Id.class) != null) {
-	                return f;
-	            }
-	        }
-	    } catch (Exception ex) {
-	        Logger.trace("Unable to update index for "+entity, ex);
-	    }
-	    return null;
-	}
-
-	public static Method getIdSettingMethodForBean(Object entity){
-	    Field f=getIdFieldForBean(entity);
-	    for(Method m:entity.getClass().getMethods()){
-	        if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
-	            return m;
-	        }
-	    }
-	    return null;
-	}
-
-	public static String getIdForBeanAsString(Object entity){
-	    Object id=getIdForBean(entity);
-	    if(id!=null)return id.toString();
-	    return null;
-	}
-	
-	public static String getVersionForBeanAsString(Object entity){
-		try{
-		    Object version=getVersion(entity);
-		    if(version!=null)return version.toString();
-		}catch(Exception e){
-			Logger.warn(e.getMessage());
-		}
-	    return null;
-	}
 
     public static abstract class EntityFilter {
         public abstract boolean accept (Object sub);

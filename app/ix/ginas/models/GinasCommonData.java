@@ -36,6 +36,7 @@ import ix.ginas.models.v1.Substance;
 import ix.utils.Global;
 import ix.utils.Util;
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 
 @MappedSuperclass
@@ -242,8 +243,9 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
                     return ref+"?view=full";
             }
             catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("Not a valid persistence Entity", ex);
+            	
+                //Logger.error("Not a valid persistence Entity", ex);
+            	
             }
         }
         return null;
@@ -296,6 +298,19 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
 	}
 	
 	
+	public boolean equals(Object o){
+		if(o==null)return false;
+		if(!(o instanceof GinasCommonData)){
+			return false;
+		}
+		GinasCommonData g=(GinasCommonData)o;
+		
+		if(!(this.uuid+"").equals(g.uuid+"")){
+			return false;
+		}
+		return true;
+		
+	}
 	
 	
 	

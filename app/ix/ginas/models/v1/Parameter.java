@@ -52,6 +52,20 @@ public class Parameter extends GinasCommonSubData {
     }
 
 
+    public boolean equals(Object o){
+
+		if(!super.equals(o))return false;
+    	if(o==null)return false;
+    	if(o instanceof Parameter){
+    		Parameter p =(Parameter)o;
+    		if(!p.name.equals(this.name)){
+    			return false;
+    		}
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
     
 /*    public String toString(){
     	return name + "," + type + "," + value.toString();

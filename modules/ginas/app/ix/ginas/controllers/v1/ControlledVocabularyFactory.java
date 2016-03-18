@@ -17,10 +17,9 @@ import ix.ginas.utils.GinasProcessingStrategy;
 import play.*;
 import play.db.ebean.*;
 import play.mvc.*;
-
-import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
+import ix.core.controllers.EntityFactory;
 
 @NamedResource(name = "vocabularies", type = ControlledVocabulary.class, description = "Resource for handling of CV used in GInAS")
 public class ControlledVocabularyFactory extends EntityFactory {

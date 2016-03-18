@@ -1,6 +1,7 @@
 package ix.ginas.utils;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
+import ix.utils.EntityUtils;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -27,7 +28,6 @@ public class RebuildIndex  {
 	}
 	
     public static void updateLuceneIndex(String models) throws Exception{
-
 		try {
 			UPDATE_MESSAGE = "Preprocessing ...";
 			Collection<Class<?>> classes = getEntityClasses(models.split(","));
@@ -37,7 +37,7 @@ public class RebuildIndex  {
 			for (Class<?> eclass : classes) {
 
 				Class idClass = Long.class;
-				Field idf = EntityFactory.getIdFieldForClass(eclass);
+				Field idf = EntityUtils.getIdFieldForClass(eclass);
 				if (idf != null) {
 					idClass = idf.getType();
 				}
