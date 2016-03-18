@@ -657,7 +657,7 @@
         return resolver;
     });
 
-ginasFormElements.directive('substanceViewer', function(){
+ginasFormElements.directive('substanceViewer', function(molChanger){
     return{
         restrict: 'E',
         scope:{
@@ -669,7 +669,7 @@ ginasFormElements.directive('substanceViewer', function(){
             console.log(scope);
             scope.select = function(selected){
                 console.log(selected);
-                _.set(scope.parent, 'structure', selected.value);
+                molChanger.setMol(selected.value.molfile);
                 scope.$parent.close();
             };
         }
@@ -766,7 +766,7 @@ ginasFormElements.directive('substanceViewer', function(){
                             element.replaceWith($compile(
                                 '<a class="btn btn-primary" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
-                                '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
+                                '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
                             )(scope));
                                 document.getElementById('download').click();

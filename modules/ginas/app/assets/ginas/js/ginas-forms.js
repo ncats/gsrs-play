@@ -249,9 +249,11 @@
                     var newSub = scope.$parent.fromFormSubstance(scope.parent);
                     console.log(scope);
                    // newSub.substanceClass = newClass;
-                    var upgradeSub = Substance.$$setSubstance(newSub);
-                    upgradeSub= Substance.$$changeClass(newClass);
-                   console.log(upgradeSub);
+                  //  var upgradeSub = Substance.$$setSubstance(newSub);
+                   // var upgradeSub= Substance.$$changeClass(newClass);
+                    var upgradeSub= scope.parent;
+                    upgradeSub.substanceClass = newClass;
+                   console.log(scope);
                     _.set(upgradeSub, 'update', true);
                     console.log(upgradeSub);
                     if (_.has(upgradeSub, 'update')) {
@@ -273,7 +275,7 @@
                             console.log("success");
                             alert("submitted!");
                             $location.path('app/substance/{{editid}}/edit');
-                            $location.replace();
+                          //  $location.replace();
                         });
                     }
 
@@ -454,8 +456,13 @@
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
+            templateUrl: function (scope) {
+                console.log(scope);
+                var url = baseurl + "assets/templates/forms/diverse-organism-form.html";
+            }
         };
+/*            templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
+        };*/
     });
 
     ginasForms.directive('diverseSourceForm', function () {
@@ -1565,6 +1572,7 @@ console.log(scope);
                 };
 
                     scope.validate = function () {
+                        console.log("ddfddddddddd");
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
@@ -1576,6 +1584,76 @@ console.log(scope);
                         scope.reference = {};
                         scope.reference.apply = true;
                         scope.refForm.$setPristine();
+                    }
+                };
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //why is the array fetched, then set?
+                scope.saveReference = function (reference, parent) {
+                    if (_.has(parent, 'references')) {
+                        var temp = _.get(parent, 'references');
+                        temp.push(reference);
+                        _.set(parent, 'references', temp);
+                    } else {
+                        var x = [];
+                        x.push(angular.copy(reference));
+                        _.set(parent, 'references', x);
+                    }
+                };
+            }
+        };
+    });
+ginasForms.directive('referenceModalForm', function ($http, UUID) {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/modals/reference-modal-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.reference={};
+                scope.submitFile = function (obj) {
+                    //create form data object
+                    var fd = new FormData();
+                    if(obj){
+                        scope.$$uploadFile = obj.$$uploadFile;
+                    }
+                    //  fd.append('file', scope.$$uploadFile);
+                    fd.append('file-name', scope.$$uploadFile);
+                    fd.append('file-type', scope.$$uploadFile.type);
+                    //send the file / data to your server
+                    $http.post(baseurl + 'upload', fd, {
+                        transformRequest: angular.identity,
+                        headers: {'Content-Type': undefined}
+                    }).success(function (data) {
+                        if(obj){
+                            _.set(obj, 'uploadedFile', data.url);
+                            _.set(scope, 'uploadDoc', false);
+                            delete obj.$$uploadFile;
+                        }else {
+                            _.set(scope.reference, 'uploadedFile', data.url);
+                        }
+                    }).error(function (err) {
+                    });
+                    _.set(scope, 'uploadDoc', false);
+                    delete scope.$$uploadFile;
+                };
+
+                    scope.validate = function () {
+                        console.log(scope);
+                    if (!_.isUndefined(scope.reference.citation)) {
+                        _.set(scope.reference, "uuid", UUID.newID());
+                        if (scope.reference.apply) {
+                            scope.saveReference(scope.reference.uuid, scope.referenceobj);
+                            scope.saveReference(angular.copy(scope.reference), scope.parent);
+                        } else {
+                            scope.saveReference(scope.reference, scope.parent);
+                        }
+                        scope.reference = {};
+                        scope.reference.apply = true;
+                      //  scope.refForm.$setPristine();
                     }
                 };
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////

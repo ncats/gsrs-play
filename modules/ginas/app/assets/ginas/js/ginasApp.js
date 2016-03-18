@@ -1849,7 +1849,9 @@
             scope: {
                 type: '=',
                 structureid: '=',
-                format: '@'
+                format: '@',
+                referenceobj:'=',
+                parent:'='
             },
             link: function (scope, element, attrs) {
                 var modalInstance;
@@ -1875,6 +1877,12 @@
                         element.append(template);
                         $compile(template)(scope);
                         templateUrl = baseurl + "assets/templates/modals/mol-export.html";
+                        break;
+                    case "reference":
+                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "open()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        templateUrl = baseurl + "assets/templates/modals/reference-modal.html";
                         break;
                 }
 
@@ -1953,6 +1961,37 @@
                     modalInstance = $uibModal.open({
                         templateUrl: templateUrl,
                         size: 'lg',
+                        scope: scope
+                    });
+                }
+            }
+        }
+    });
+
+
+ginasApp.directive('referenceModalButton', function ($compile, $templateRequest, $http, $uibModal) {
+        return {
+            /*            restrict: 'AE',
+             replace: 'true',*/
+            scope: {
+                referenceobj:'=',
+                parent:'='
+            },
+            link: function (scope, element, attrs) {
+                var modalInstance;
+                        var template = angular.element(' <a aria-label="Add References" uib-tooltip ="Add References" ng-click = "open()"><span class="sr-only">Add References</span><i class="fa fa-external-link fa-2x success"></i></a>');
+                        element.append(template);
+                        $compile(template)(scope);
+                       var  templateUrl = baseurl + "assets/templates/modals/reference-modal.html";
+
+                scope.close = function () {
+                    modalInstance.close();
+                };
+
+                scope.open = function () {
+                    modalInstance = $uibModal.open({
+                        templateUrl: templateUrl,
+                        size: 'xl',
                         scope: scope
                     });
                 }
