@@ -604,7 +604,11 @@
                 };
 
                 scope.showTerms= function(obj, divid){
+                    if(!obj.terms) {
+                        _.set(obj, 'terms', []);
+                    }
                     scope.domain = obj;
+
                     if(!divid){
                         var divid = obj.$$hashKey;
                     }
