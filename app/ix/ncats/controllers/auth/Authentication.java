@@ -255,8 +255,6 @@ public class Authentication extends Controller {
     		if(AdminFactory.validatePassword(profile, password)){
     			return profile;
     		}
-    	}else{
-    		
     	}
     	return null;
     }
@@ -299,7 +297,6 @@ public class Authentication extends Controller {
     		UserProfile profile = getUserProfile(username);
     		if(profile.acceptToken(token)){
     			return profile;
-    		}else{
     		}
     	}else{
     		System.out.println("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());

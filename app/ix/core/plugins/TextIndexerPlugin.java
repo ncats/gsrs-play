@@ -37,7 +37,8 @@ public class TextIndexerPlugin extends Plugin {
         //We don't want to shutdown during testing
         //because the indexes get messed up
         //TODO find root cause of this issue
-        if (indexer != null && !Play.isTest()) {
+       // if (indexer != null && !Play.isTest()) {
+        if (indexer != null) {
             indexer.shutdown();
             Logger.info("Plugin " + getClass().getName() + " stopped!");
         }

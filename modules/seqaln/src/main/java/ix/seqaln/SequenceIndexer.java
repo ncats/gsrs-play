@@ -51,9 +51,17 @@ public class SequenceIndexer {
     static final String CACHE_NAME = SequenceIndexer.class.getName()+".Cache";
     static final Version LUCENE_VERSION = Version.LATEST;
 
-    static CacheManager CACHE_MANAGER = CacheManager.getInstance();
-    static Ehcache CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
-    
+    static CacheManager CACHE_MANAGER;
+    static Ehcache CACHE;
+
+    static{
+        init();
+    }
+
+    public static void init(){
+        CACHE_MANAGER = CacheManager.getInstance();
+        CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+    }
     
     public static void initialize(){
     	CACHE_MANAGER = CacheManager.getInstance();

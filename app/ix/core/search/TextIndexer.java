@@ -48,10 +48,7 @@ import play.db.ebean.Model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -299,7 +296,7 @@ public class TextIndexer {
         public CharSequence getHighlight () { return highlight; }
     }
 
-    class SuggestLookup {
+    class SuggestLookup implements Closeable{
         String name;
         File dir;
         AtomicInteger dirty = new AtomicInteger ();
@@ -375,8 +372,8 @@ public class TextIndexer {
                                         1e-3*(lastRefresh - start)));
             dirty.set(0);
         }
-
-        void close () throws IOException {
+        @Override
+        public void close () throws IOException {
             lookup.close();
         }
 
@@ -1915,29 +1912,38 @@ public class TextIndexer {
             fetchQueue.put(POISON_PAYLOAD);
             
             for (SuggestLookup look : lookups.values()) {
-                look.close();
+                closeAndIgnore(look);
             }
 
-            if (indexReader != null)
-                indexReader.close();
-            if (indexWriter != null)
-                indexWriter.close();
-            if (taxonWriter != null)
-                taxonWriter.close();
-            indexDir.close();
-            taxonDir.close();
+            closeAndIgnore(indexReader);
+            closeAndIgnore(indexWriter);
+            closeAndIgnore(taxonWriter);
+
+            closeAndIgnore(indexDir);
+            closeAndIgnore(taxonDir);
 
             scheduler.shutdown();
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
             saveSorters (getSorterConfigFile (), sorters);
         }
         catch (Exception ex) {
-            //ex.printStackTrace();
+            ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
         finally {
             indexers.remove(baseDir);
             threadPool.shutdown();
+        }
+    }
+
+    private static void closeAndIgnore(Closeable closeable){
+        if(closeable ==null){
+            return;
+        }
+        try{
+            closeable.close();
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 }
