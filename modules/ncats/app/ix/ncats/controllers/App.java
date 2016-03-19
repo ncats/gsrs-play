@@ -111,18 +111,32 @@ public class App extends Authentication {
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static final TextIndexer _textIndexer = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    public static TextIndexer _textIndexer;
     
     
-    public static final PayloadPlugin _payloader =
-        Play.application().plugin(PayloadPlugin.class);
+    public static PayloadPlugin _payloader;
         
-    public static final IxContext _ix =
-        Play.application().plugin(IxContext.class);
+    public static IxContext _ix;
 
-    public static final PersistenceQueue _pq =
-        Play.application().plugin(PersistenceQueue.class);
+    public static PersistenceQueue _pq;
+
+
+
+    static{
+        init();
+    }
+
+    public static void init(){
+        _textIndexer =
+                Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        _payloader =
+                Play.application().plugin(PayloadPlugin.class);
+
+       _ix =
+                Play.application().plugin(IxContext.class);
+        _pq =
+                Play.application().plugin(PersistenceQueue.class);
+    }
 
     /**
      * interface for rendering a result page

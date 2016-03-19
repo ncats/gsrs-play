@@ -1,12 +1,12 @@
 package ix.test;
 
+import ix.test.ix.test.server.BrowserSession;
+import ix.test.ix.test.server.GinasTestServer;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import play.libs.ws.WSResponse;
 
-import ix.test.GinasTestServer.UserSession;
 import static org.junit.Assert.*;
 /**
  * Created by katzelda on 3/14/16.
@@ -20,22 +20,23 @@ public class UserSessionTest {
 
     @Before
     public void createuser(){
-        luke = ts.createUser("Luke", "TK421");
+        luke = ts.createNormalUser("Luke", "TK421");
     }
     @Test
     public void loggedInUserSeesLogoutButton() throws Exception{
-        try(UserSession session = ts.login(luke)){
-                String content = session.getAsString("ginas/app");
-                assertTrue(content.contains("Logged in as: " + luke.getUserName()));
+        try(BrowserSession session = ts.newBrowserSession(luke)){
+                WSResponse response = session.get("ginas/app/substances");
+                String content = response.getBody();
+                assertTrue(content.contains("Logged in as: " + session.getUserName()));
                 assertTrue(content.contains("/ginas/app/logout"));
         }
     }
 
     @Test
     public void logoutShouldRedirectBackToLoginScreen() throws Exception{
-        try(UserSession session = ts.login(luke)){
+        try(BrowserSession session = ts.newBrowserSession(luke)){
 
-            String content = session.logout();
+            String content = session.logout().getBody();
             assertTrue(content.contains("<title>NCATS Login</title>"));
         }
     }
@@ -44,9 +45,18 @@ public class UserSessionTest {
 
     @Test
     public void restrictedUrlRequestAfterLogoutShouldError401() throws Exception{
-        try(UserSession session = ts.login(luke)){
+        try(BrowserSession session = ts.newBrowserSession(luke)){
 
             session.logout();
+            WSResponse response = session.get("ginas/app/wizard?kind=chemical");
+            System.out.println(response.getBody());
+            assertEquals(401, response.getStatus());
+        }
+    }
+
+    @Test
+    public void restrictedUrlRequestNotLoggedInShouldError401() throws Exception{
+        try(BrowserSession session = ts.notLoggedInBrowserSession()){
             WSResponse response = session.get("ginas/app/wizard?kind=chemical");
 
             assertEquals(401, response.getStatus());
@@ -54,11 +64,16 @@ public class UserSessionTest {
     }
 
     @Test
-    public void restrictedUrlRequestNotLoggedInShouldError401() throws Exception{
-        try(UserSession session = ts.getNotLoggedInSession()){
+    public void restrictedUrl() throws Exception{
+        try(BrowserSession session = ts.newBrowserSession(luke)){
+
             WSResponse response = session.get("ginas/app/wizard?kind=chemical");
 
-            assertEquals(401, response.getStatus());
+            assertEquals(200, response.getStatus());
+
+            assertTrue(response.getBody().contains("Logged in as: " + session.getUserName()));
         }
     }
+
+
 }

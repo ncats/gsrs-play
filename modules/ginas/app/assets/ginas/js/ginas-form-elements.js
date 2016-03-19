@@ -130,14 +130,28 @@
 
             updateCV: function(domainobj){
                 console.log(domainobj);
-                var promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).success(function(data){
-                    alert('update was performed.');
-                    return data;
-                });
+                var url;
+                var promise;
+                if(domainobj.id) {
+                    promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }).success(function (data) {
+                        alert('update was performed.');
+                        return data;
+                    });
+                }else{
+                    promise = $http.post(baseurl + 'api/v1/vocabularies', domainobj, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }).success(function (response) {
+                        console.log(response);
+                        alert("new domain added");
+                        return response;
+                    });
+                }
                 return promise;
             },
 
@@ -159,7 +173,7 @@
 
             addDomain: function(cv){
                 console.log("adding domain");
-                var promise = $http.post(baseurl + 'api/v1/vocabularies', angular.toJson(cv), {
+                var promise = $http.post(baseurl + 'api/v1/vocabularies', cv, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -643,7 +657,7 @@
         return resolver;
     });
 
-ginasFormElements.directive('substanceViewer', function(){
+ginasFormElements.directive('substanceViewer', function(molChanger){
     return{
         restrict: 'E',
         scope:{
@@ -655,7 +669,7 @@ ginasFormElements.directive('substanceViewer', function(){
             console.log(scope);
             scope.select = function(selected){
                 console.log(selected);
-                _.set(scope.parent, 'structure', selected.value);
+                molChanger.setMol(selected.value.molfile);
                 scope.$parent.close();
             };
         }
@@ -752,7 +766,7 @@ ginasFormElements.directive('substanceViewer', function(){
                             element.replaceWith($compile(
                                 '<a class="btn btn-primary" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
-                                '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
+                                '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
                             )(scope));
                                 document.getElementById('download').click();

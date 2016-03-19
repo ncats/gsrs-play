@@ -6,7 +6,10 @@
         <ng-form name="nameForm" id = "addNameForm" novalidate isolate-form>
             <div class="row form-row">
                 <div class="col-md-4" >
+                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" ></text-input>
+<!--
                      <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validate="true"></text-input>
+-->
                     <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
                         <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
                         <ng-message when="required" class="help-block">parent name is required</ng-message>
@@ -29,6 +32,9 @@
                     <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
+<!--
+                    <reference-modal-button class= "pull-right padded" referenceobj= "name" parent = "parent"></reference-modal-button>
+-->
                     <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "reference" required></form-selector>
                 </div>
             </div>

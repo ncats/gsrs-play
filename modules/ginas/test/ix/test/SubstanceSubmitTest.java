@@ -2,29 +2,31 @@ package ix.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static play.mvc.Http.Status.OK;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
+import ix.test.ix.test.server.SubstanceAPI;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import play.Logger;
-import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 
-//@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+
+import static ix.test.SubstanceJsonUtil.*;
+
 @RunWith(Parameterized.class)
 public class SubstanceSubmitTest {
 
@@ -53,76 +55,85 @@ public class SubstanceSubmitTest {
         public GinasTestServer ts = new GinasTestServer(9001);
 
 
-        public SubstanceSubmitTest(File f, String dummy){
+        public SubstanceSubmitTest(File f, String onlyUsedForParameterName){
             this.resource=f;
+        }
+
+        private SubstanceAPI api;
+        private RestSession session;
+
+        @Before
+        public void login(){
+            //TODO do we need to specify token type?
+            session = ts.newRestSession(ts.getFakeUser1(), RestSession.AUTH_TYPE.TOKEN);
+
+            api = new SubstanceAPI(session);
+        }
+
+        @After
+        public void logout(){
+            session.logout();
         }
 
         @Test
         public void testAPIValidateSubstance() throws Exception {
-            try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-               session.withTokenAuth();
 
-                JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-                JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                assertTrue(jsonNode1.get("valid").asBoolean());
-
-
-            }
+            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode jsonNode1 = api.validateSubstanceJson(js);
+            assertTrue(jsonNode1.get("valid").asBoolean());
         }
         @Test
         public void testAPIValidateSubmitSubstance()  throws Exception {
-            try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                session.withTokenAuth();
 
-                JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-                JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                assertTrue(jsonNode1.get("valid").asBoolean());
-                JsonNode jsonNode2 = session.submitSubstanceJSON(js);
+            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode jsonNode1 = api.validateSubstanceJson(js);
 
-            }
+            SubstanceJsonUtil.ensureIsValid(jsonNode1);
+
+            ensurePass(api.submitSubstance(js));
         }
         @Test
         public void testAPIValidateSubmitFetchSubstance()   throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
-                        session.withTokenAuth();
 
-                        JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-                        String uuid = js.get("uuid").asText();
-                        JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                        assertTrue(jsonNode1.get("valid").asBoolean());
-                        JsonNode jsonNode2 = session.submitSubstanceJSON(js);
-                        JsonNode jsonNode3 = session.fetchSubstanceJSON(uuid);
-                        assertFalse(jsonNode3.isNull());
-                        assertThatNonDestructive(js, jsonNode3);
+            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            String uuid = js.get("uuid").asText();
+            JsonNode validationResult = api.validateSubstanceJson(js);
 
-                    }
+            SubstanceJsonUtil.ensureIsValid(validationResult);
+
+            ensurePass(api.submitSubstance(js));
+
+            JsonNode fetched = api.fetchSubstanceJson(uuid);
+
+            assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
+
+            assertThatNonDestructive(js, fetched);
+
         }
         @Test
-        public void testAPIValidateSubmitFetchValidateSubstance()  throws Exception {
-                    try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+        public void validateFetchedSubmittedSubstance()  throws Exception {
 
-                        session.withTokenAuth();
 
-                        JsonNode js= SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-                        
-                        String uuid=js.get("uuid").asText();
-                        Logger.info("Running: " + resource);
+            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
 
-                        JsonNode jsonNode1 = session.validateSubstanceJSON(js);
-                        assertTrue(jsonNode1.get("valid").asBoolean());
-                        
-                        //create
-                        JsonNode jsonNode2 = session.submitSubstanceJSON(js);
-                        //fetch
-                        JsonNode jsonNode3= session.fetchSubstanceJSON(uuid);
-                        assertFalse(jsonNode3.isNull());
+            String uuid = js.get("uuid").asText();
 
-                        assertThatNonDestructive(js,jsonNode3);                        
-                        
-                        //validate
-                        JsonNode jsonNode4 = session.validateSubstanceJSON(jsonNode3);
-                        assertTrue(jsonNode4.get("valid").asBoolean());
-                    }
+            JsonNode validationResult = api.validateSubstanceJson(js);
+
+            SubstanceJsonUtil.ensureIsValid(validationResult);
+
+
+            ensurePass(api.submitSubstance(js));
+
+            JsonNode fetched = api.fetchSubstanceJson(uuid);
+
+            assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
+
+            assertThatNonDestructive(js, fetched);
+
+            //validate
+            JsonNode fetchedValidationResult = api.validateSubstanceJson(fetched);
+            SubstanceJsonUtil.ensureIsValid(fetchedValidationResult);
 
 
 

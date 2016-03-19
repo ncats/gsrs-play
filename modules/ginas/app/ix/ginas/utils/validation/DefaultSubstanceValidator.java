@@ -81,6 +81,9 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	// only for old
 	private void changeSubstanceValation(Substance objnew,Substance objold, List<GinasProcessingMessage> vlad) {
 		UserProfile up = getCurrentUser();
+		if(!objnew.getClass().equals(objold.getClass())){
+			vlad.add(GinasProcessingMessage.WARNING_MESSAGE("Substance class should not typically be changed"));
+		}
 		if( objnew.getAccess().isEmpty() &&
 				   !objold.getAccess().isEmpty()
 						){

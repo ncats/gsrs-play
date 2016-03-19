@@ -103,4 +103,15 @@ public class ChemicalSubstance extends Substance  {
     public void setAtomMaps(int[] am){
         atomMaps=am;
     }
+    
+    @Override
+    public void delete(){
+    	super.delete();
+    	this.structure.delete();
+    	for(Moiety m: this.moieties){
+    		m.delete();
+    	}
+    }
+    
+    
 }

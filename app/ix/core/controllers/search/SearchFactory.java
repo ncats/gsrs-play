@@ -29,8 +29,7 @@ import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
 
 public class SearchFactory extends EntityFactory {
-    static final Model.Finder<Long, ETag> etagDb = 
-        new Model.Finder(Long.class, ETag.class);
+    static Model.Finder<Long, ETag> etagDb;
 
     static TextIndexer _indexer;
 
@@ -40,6 +39,7 @@ public class SearchFactory extends EntityFactory {
 
     public static void init(){
         TextIndexer.init();
+        etagDb = new Model.Finder(Long.class, ETag.class);
     	_indexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     }

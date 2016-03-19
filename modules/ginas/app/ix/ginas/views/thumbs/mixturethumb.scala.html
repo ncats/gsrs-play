@@ -12,11 +12,11 @@
         <div class="panel-heading">
 
             <p class="text-right" data-toggle="tooltip" title="Approval ID">
-                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">
                     <code> @sub.approvalID</code></a></p>
         </div>
         <div class="panel-body struc-img">
-            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">
                 <img src="@routes.Assets.at("ginas/images/mixture.svg")" alt ="Mixture" aria-label="Mixture" class="struc-thumb img-responsive" id="" />
             </a>
             <div class = "row stereo">

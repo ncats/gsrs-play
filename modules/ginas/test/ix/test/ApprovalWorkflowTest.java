@@ -2,12 +2,14 @@ package ix.test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static play.mvc.Http.Status.OK;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
+import ix.test.ix.test.server.SubstanceAPI;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -16,8 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.ginas.models.v1.Substance;
-import play.Logger;
-import play.libs.ws.WSResponse;
 
 public class ApprovalWorkflowTest {
 	
@@ -30,41 +30,41 @@ public class ApprovalWorkflowTest {
     
 	@Test
 	public void testApprovalRoundTrip() throws Exception {
-
+        String uuid;
         final File resource=new File("test/testJSON/toapprove.json");
-        try(GinasTestServer.UserSession session1 = ts.loginFakeUser1();
-            GinasTestServer.UserSession session2 = ts.loginFakeUser2();
-            InputStream is = new FileInputStream(resource)) {
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+            InputStream is = new FileInputStream(resource)){
 
 
-            JsonNode js = new ObjectMapper().readTree(is);
+                JsonNode js = new ObjectMapper().readTree(is);
 
-            String uuid = js.get("uuid").asText();
+                uuid = js.get("uuid").asText();
 
-            JsonNode jsonNode2 = session1.submitSubstanceJSON(js);
-            assertEquals(jsonNode2.get("status").asText().toLowerCase(), Substance.STATUS_PENDING);
+                SubstanceAPI api = new SubstanceAPI(session);
 
-            session1.approveSubstanceFail(uuid);
+                JsonNode jsonNode2 = api.submitSubstanceJson(js);
+                assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+
+                SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
+            }
 
 
+        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
             String approvalID;
             JsonNode before = null;
             JsonNode after = null;
 
-
+            SubstanceAPI api2 = new SubstanceAPI(session2);
             //approval, CAN approve if different user
-            {
-                before = session2.approveSubstanceJSON(uuid);
-                assertTrue("Approval ID should not be null", before.get("approvalID") != null);
-                approvalID = before.get("approvalID").asText();
-            }
+
+                before = api2.approveSubstanceJson(uuid);
+                approvalID = SubstanceJsonUtil.getApprovalId(before);
 
 
-            {
-                after = session2.fetchSubstanceJSON(uuid);
-                assertEquals(Substance.STATUS_APPROVED, after.get("status").asText().toLowerCase());
-                assertNotNull(after.get("approvalID"));
-                assertEquals(approvalID, after.get("approvalID").asText());
+
+              after = api2.fetchSubstanceJson(uuid);
+                assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+                assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
 
                 JsonNode jp = JsonDiff.asJson(before, after);
                 int changes = 0;
@@ -73,7 +73,7 @@ public class ApprovalWorkflowTest {
                     System.out.println("CHANGED:" + jschange + " old: " + before.at(jschange.get("path").asText()));
                 }
                 assertEquals(0,changes);
-            }
+
         }
 
 	}
@@ -81,19 +81,22 @@ public class ApprovalWorkflowTest {
 	@Test
 	public void testFailNonLoggedApprover() throws Exception {
         final File resource=new File("test/testJSON/toapprove.json");
-        try(GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+            InputStream is = new FileInputStream(resource)) {
 
-            InputStream is = new FileInputStream(resource);
+            SubstanceAPI api = new SubstanceAPI(session);
             JsonNode js = new ObjectMapper().readTree(is);
-            is.close();
 
             String uuid = js.get("uuid").asText();
-            JsonNode jsonNode2 = session.submitSubstanceJSON(js);
-            assertEquals(jsonNode2.get("status").asText().toLowerCase(), Substance.STATUS_PENDING);
-            session.approveSubstanceFail(uuid);
+
+            JsonNode jsonNode2 = api.submitSubstanceJson(js);
+            assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+
+            SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
+
 
             session.logout();
-            session.approveSubstanceFail(uuid);
+            SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
         }
 
 	}
@@ -101,26 +104,27 @@ public class ApprovalWorkflowTest {
 	@Test
 	public void testFailDoubeApproved()  throws Exception {
         final File resource=new File("test/testJSON/toapprove.json");
-        try(GinasTestServer.UserSession session1 = ts.loginFakeUser1();
-            GinasTestServer.UserSession session2 = ts.loginFakeUser2();
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+            RestSession session2 = ts.newRestSession(ts.getFakeUser2());
             InputStream is = new FileInputStream(resource)) {
 
             JsonNode js = new ObjectMapper().readTree(is);
-
+            SubstanceAPI api = new SubstanceAPI(session);
+            SubstanceAPI api2 = new SubstanceAPI(session2);
 
             String uuid = js.get("uuid").asText();
-            JsonNode jsonNode2 = session1.submitSubstanceJSON(js);
-            assertEquals(jsonNode2.get("status").asText().toLowerCase(), Substance.STATUS_PENDING);
+            JsonNode jsonNode2 = api.submitSubstanceJson(js);
+            assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
 
-            JsonNode before = session2.approveSubstanceJSON(uuid);
-            String approvalID1 = before.get("approvalID").asText();
+            JsonNode before = api2.approveSubstanceJson(uuid);
+            String approvalID1 = SubstanceJsonUtil.getApprovalId(before);
             assertNotNull("Approval ID should not be null", approvalID1);
 
-            session2.approveSubstanceFail(uuid);
+            SubstanceJsonUtil.ensureFailure(api2.approveSubstance(uuid));
 
-            session1.approveSubstanceFail(uuid);
-            JsonNode sub = session1.fetchSubstanceJSON(uuid);
-            String approvalID2 = before.get("approvalID").asText();
+            SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
+            JsonNode sub = api.fetchSubstanceJson(uuid);
+            String approvalID2 = SubstanceJsonUtil.getApprovalId(sub);
 
             assertEquals(approvalID1, approvalID2);
         }

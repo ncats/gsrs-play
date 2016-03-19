@@ -1554,7 +1554,7 @@ public class EntityFactory extends Controller {
             EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
             
             boolean POJOPATCH=true;
-            if(oldValueContainer.cls.equals(type)){
+            if(!oldValueContainer.cls.equals(type)){
             	POJOPATCH=false;
             }
             
@@ -1590,7 +1590,6 @@ public class EntityFactory extends Controller {
             	
             	
             	
-            	System.out.println("deleted!");
             	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
             	((Model)newValue).save();
             	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);

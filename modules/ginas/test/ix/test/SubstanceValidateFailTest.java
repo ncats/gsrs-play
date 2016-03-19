@@ -8,16 +8,11 @@ import static play.test.Helpers.testServer;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
-import org.junit.AfterClass;
-import org.junit.Before;
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
+import ix.test.ix.test.server.SubstanceAPI;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,15 +20,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import play.Logger;
-import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
-import play.test.TestServer;
 import play.test.WithApplication;
 import util.json.JsonUtil;
-import play.test.TestServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
@@ -69,16 +60,18 @@ public class SubstanceValidateFailTest extends WithApplication {
 
 
     @Test
-    public void testAPIValidateSubstance() throws Exception {
+    public void notValid() throws Exception {
 
-        try (GinasTestServer.UserSession session = ts.loginFakeUser1()) {
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
             JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-            Logger.info("Running: " + resource);
-            WSResponse wsResponse1 = session.validateSubstance(js);
+
+            WSResponse wsResponse1 = api.validateSubstance(js);
             JsonNode jsonNode1 = wsResponse1.asJson();
             assertEquals(OK, wsResponse1.getStatus());
-            assertFalse(jsonNode1.isNull());
-            assertFalse(jsonNode1.get("valid").asBoolean());
+
+            assertFalse(SubstanceJsonUtil.isLiteralNull(jsonNode1));
+            assertFalse(SubstanceJsonUtil.isValid(jsonNode1));
 
 
         }

@@ -1077,3 +1077,10 @@ ul.tree-list {
     list-style-type: none;
     padding-left: 20px;
 }
+
+@media (min-width: 992px) {
+    .modal-xl {
+        width: 1200px;
+    }
+}
+
