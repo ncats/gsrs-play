@@ -10,7 +10,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_session")
-public class Session extends Model {
+public class Session extends BaseModel {
     @Id public UUID id;
     @OneToOne(cascade=CascadeType.ALL)
     public UserProfile profile;

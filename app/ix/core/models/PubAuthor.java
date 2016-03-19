@@ -9,7 +9,7 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_pubauthor")
-public class PubAuthor extends Model {
+public class PubAuthor extends BaseModel {
     @Id
     public Long id;
 

@@ -677,10 +677,7 @@ public class Substance extends GinasCommonData {
 			
 		}
 		i++;
-		
-		//System.out.println("Updating version from:"  + version);
 		this.version=i+"";
-		//System.out.println("Updating version to:"  + version);
 	}
 	
 	@JsonIgnore
@@ -717,7 +714,11 @@ public class Substance extends GinasCommonData {
 			PolymerSubstance.class,
 			SpecifiedSubstanceGroup1Substance.class
 		};
-		
+	}
+	
+	@Override
+	public Class<?>[] fetchEquivalentClasses(){
+		return getAllClasses();
 	}
 	
 	
@@ -731,5 +732,37 @@ public class Substance extends GinasCommonData {
 		String thisID= (this.getUuid() + this.version);
 		String thatID= (((Substance)o).getUuid() + ((Substance)o).version);
 		return thisID.equals(thatID);
+	}
+	
+	@Override
+	public void delete(){
+		super.delete();
+		for(Name n:names){
+			n.delete();
+		}
+		for(Code n:codes){
+			n.delete();
+		}
+		for(Property n:properties){
+			n.delete();
+		}
+		for(Reference n:references){
+			n.delete();
+		}
+		for(Note n:notes){
+			n.delete();
+		}
+		if(this.modifications!=null){
+			for(AgentModification am:this.modifications.agentModifications){
+				am.delete();
+			}
+			for(PhysicalModification pm:this.modifications.physicalModifications){
+				pm.delete();
+			}
+			for(StructuralModification sm:this.modifications.structuralModifications){
+				sm.delete();
+			}
+			this.modifications.delete();
+		}
 	}
 }

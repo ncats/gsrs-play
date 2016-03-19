@@ -8,7 +8,7 @@ import play.db.ebean.Model;
 
 @Entity
 @Table(name="ix_core_namespace")
-public class Namespace extends Model {
+public class Namespace extends BaseModel {
     public enum Modifier {
         Public, // anyone can access this resource
             Internal, // only authenticated users have access

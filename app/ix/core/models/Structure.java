@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Inheritance
 @DiscriminatorValue("DEF")
 @Table(name = "ix_core_structure")
-public class Structure extends Model{
+public class Structure extends BaseModel{
 
     @Id
     public UUID id;

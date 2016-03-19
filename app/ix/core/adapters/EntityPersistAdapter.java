@@ -40,6 +40,9 @@ import tripod.chem.indexer.StructureIndexer;
 
 public class EntityPersistAdapter extends BeanPersistAdapter {
    
+	private static EntityPersistAdapter _instance =null;
+	
+	
 
     private Map<String, List<Hook>> preInsertCallback = 
         new HashMap<String, List<Hook>>();
@@ -70,6 +73,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     
     private static ConcurrentHashMap<String, Edit> editMap = new ConcurrentHashMap<String,Edit>();
     
+    public static EntityPersistAdapter getInstance(){
+    	return _instance;
+    }
     
     public static void storeEditForUpdate(Class c, Object id, Edit e){
     	String s1=c.getName() + ":" + id;
@@ -116,6 +122,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     			
     		}
     	}
+    	_instance=this;
     }
     
     public static interface Hook{
@@ -372,14 +379,17 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     @Override
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-        String name = bean.getClass().getName();
+        return preUpdateBeanDirect(bean);
+    }
+    
+    public boolean preUpdateBeanDirect(Object bean){
+    	String name = bean.getClass().getName();
         List<Hook> methods = preUpdateCallback.get(name);
         if (methods != null) {
             for (Hook m : methods) {
                 try {
                     m.invoke(bean);
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                     Logger.trace("Can't invoke method "
                                  +m.getName()+"["+name+"]", ex);
                     return false;
@@ -393,8 +403,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
-       
+        postUpdateBeanDirect(bean,request.getOldValues());
+    }
+    
+    public void postUpdateBeanDirect(Object bean, Object oldvalues){
+    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
+        
         Class cls = bean.getClass();
         if (Edit.class.isAssignableFrom(cls)) {
             // don't touch this class
@@ -416,8 +430,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                     	if(edit==null){
                     		 edit = new Edit (cls, id);
                     	}
-                    	edit.oldValue = mapper.toJson
-                                (request.getOldValues());
+                    	edit.oldValue = mapper.toJson(oldvalues);
                	     	edit.newValue = mapper.toJson(bean);
                         edit.save();
                         
@@ -433,7 +446,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             
         
         if (debug (2)) {
-            Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
+            Logger.debug(">> Old: "+mapper.valueToTree(oldvalues)
                          +"\n>> New: "+mapper.valueToTree(bean));
         }
 
@@ -458,7 +471,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         catch (Exception ex) {
             Logger.warn("Can't update bean index "+bean, ex);
         }
-    }
+    } 
 
     @Override
     public boolean preDelete (BeanPersistRequest<?> request) {

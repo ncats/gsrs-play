@@ -269,7 +269,7 @@
                                 $location.replace();*/
                             });
                     } else {
-                        $http.post(baseurl + 'register/submit', postSub).success(function () {
+                        $http.post(baseurl + 'api/v1/substances', postSub).success(function () {
                             console.log("success");
                             alert("submitted!");
                             $location.path('app/substance/{{editid}}/edit');
@@ -586,7 +586,8 @@
                 };
 
                 scope.updateCV = function(obj){
-                 var r = confirm("Are you sure you want to update this CV?");
+                	//TODO: Shouldn't use popup javascript here
+                	var r = confirm("Are you sure you want to update this CV?");
                     if (r == true) {
                         if(obj){
                             _.forEach(obj.fields, function(value, key) {

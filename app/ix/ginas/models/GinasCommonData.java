@@ -2,11 +2,9 @@ package ix.ginas.models;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,28 +17,23 @@ import javax.persistence.PreUpdate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.BaseModel;
 import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
-import ix.ginas.models.v1.Substance;
 import ix.utils.Global;
 import ix.utils.Util;
-import play.Logger;
-import play.Play;
-import play.db.ebean.Model;
 
 @MappedSuperclass
-public class GinasCommonData extends Model implements GinasAccessControlled,ForceUpdatableModel{
+public class GinasCommonData extends BaseModel implements GinasAccessControlled,ForceUpdatableModel{
     static public final String REFERENCE = "GInAS Reference";
     static public final String TAG = "GInAS Tag";
     
@@ -53,13 +46,13 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
     @Id
     public UUID uuid;
     public Date created=null;
-    @OneToOne(cascade=CascadeType.ALL)
+    @OneToOne()
     @Indexable(facet = true, name = "Created By")
     public Principal createdBy;
     @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
     //TP: why is this one-to-one?
-    @OneToOne(cascade=CascadeType.ALL)
+    @OneToOne()
     @Indexable(facet = true, name = "Last Edited By")
     public Principal lastEditedBy;
     

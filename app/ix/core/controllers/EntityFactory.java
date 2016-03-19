@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,10 +58,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.DefaultValidator;
-import ix.core.ValidationMessage;
 import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.models.BaseModel;
 import ix.core.models.BeanViews;
 import ix.core.models.DataVersion;
 import ix.core.models.ETag;
@@ -1533,10 +1534,13 @@ public class EntityFactory extends Controller {
             FetchedValue oldValueContainer=getCurrentValue(newValue);
             String oldVersion=EntityUtils.getVersionForBeanAsString(oldValueContainer.value);
 
+            
             if(oldValueContainer.value==null){
             	throw new IllegalStateException("Cannot update a non-existing record");
             }
+            
             String oldJSON=mapper.toJson(oldValueContainer.value);
+            
             
             //validate new value
             ValidationResponse vr=validator.validate(newValue,oldValueContainer.value);
@@ -1549,24 +1553,53 @@ public class EntityFactory extends Controller {
             //this saves and everything
             EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
             
-            //Get the difference as a patch
-            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
+            boolean POJOPATCH=true;
+            if(oldValueContainer.cls.equals(type)){
+            	POJOPATCH=false;
+            }
             
-            //Apply the changes, grabbing every change along the way
-            Stack changeStack=patch.apply(oldValueContainer.value);
-        	
             
-        	while(!changeStack.isEmpty()){
-        		Object v=changeStack.pop();
-        		if(v instanceof ForceUpdatableModel){
-            		((ForceUpdatableModel)v).forceUpdate();
-            	}else if(v instanceof Model){
-            		((Model)v).update();
-            	}
-        	}
+            if(POJOPATCH){
+	            //Get the difference as a patch
+	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
+	            
+	            //Apply the changes, grabbing every change along the way
+	            Stack changeStack=patch.apply(oldValueContainer.value);
+	        	
+	            
+	        	while(!changeStack.isEmpty()){
+	        		Object v=changeStack.pop();
+	        		if(v instanceof ForceUpdatableModel){
+	            		((ForceUpdatableModel)v).forceUpdate();
+	            	}else if(v instanceof Model){
+	            		((Model)v).update();
+	            	}
+	        	}
+	        	//The old value is now the new value
+	        	newValue = oldValueContainer.value;
+            }else{
+            	Model m=(Model)oldValueContainer.value;
+            	m.delete();
+            	
+            	// Now need to take care of bad update pieces:
+            	//	1. Version not incremented correctly (post update hooks not called) 
+            	//  2. Some metadata may be problematic
+
+            	
+            	
+            	
+            	
+            	
+            	System.out.println("deleted!");
+            	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
+            	((Model)newValue).save();
+            	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
+            	//Now explicitly call 
+            	
+            	
+            }
         	
-        	//The old value is now the new value
-        	newValue = oldValueContainer.value;
+        	
         	
         	
             String newJSON=mapper.toJson(newValue);
@@ -1595,6 +1628,7 @@ public class EntityFactory extends Controller {
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             ex.printStackTrace();
+            //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
         finally {
@@ -1936,43 +1970,62 @@ public class EntityFactory extends Controller {
             throw new IllegalArgumentException
                 ("Class "+cls.getName()+" is not an entity");
 
+        //Need to get out all super classes as well
         Field idf = EntityUtils.getIdField (value);
         if (idf == null)
             throw new IllegalArgumentException
                 ("Entity "+cls.getName()+" has no Id field!");
-        
-        Model.Finder finder = new Model.Finder
-            (idf.getType(), value.getClass());
-
         Object xval = null;
+        Object id=null;
         
-        Object id = idf.get(value);
-        if (id == null) {
-            // if this entity has no id set, then we see if there is a
-            // unique column defined.. if so, we retrieve it
-            List<Field> columns = EntityUtils.getFields (value, Column.class);
-            // now check which field has unique annotation
-            for (Field f : columns) {
-                Column column = (Column)f.getAnnotation(Column.class);
-                if (column.unique()) {
-                    Logger.debug("Field \""+f.getName()
-                                 +"\" contains unique value for class "
-                                 +value.getClass().getName());
-                    xval = finder.where()
-                        .eq(column.name().equals("")
-                            ? f.getName() : column.name(),
-                            f.get(value))
-                        .findUnique();
-                    
-                    if (xval != null)
-                        id = EntityUtils.getId (xval);
-                    
-                    break;
-                }
-            }
-        }
-        else {
-            xval = finder.byId(id);
+        LinkedHashSet<Class> possibleClasses = new LinkedHashSet<Class>();
+        possibleClasses.add(cls);
+        if(value instanceof BaseModel){
+    		Class[] classes=((BaseModel)value).fetchEquivalentClasses();
+    		for(Class c:classes){
+    			possibleClasses.add(c);
+    		}
+    	}
+        
+        for(Class c:possibleClasses){
+        	
+	        Model.Finder finder = new Model.Finder
+	            (idf.getType(), c);
+	
+	        
+	        
+	        id = idf.get(value);
+	        if (id == null) {
+	            // if this entity has no id set, then we see if there is a
+	            // unique column defined.. if so, we retrieve it
+	            List<Field> columns = EntityUtils.getFields (value, Column.class);
+	            // now check which field has unique annotation
+	            for (Field f : columns) {
+	                Column column = (Column)f.getAnnotation(Column.class);
+	                if (column.unique()) {
+	                    Logger.debug("Field \""+f.getName()
+	                                 +"\" contains unique value for class "
+	                                 +value.getClass().getName());
+	                    xval = finder.where()
+	                        .eq(column.name().equals("")
+	                            ? f.getName() : column.name(),
+	                            f.get(value))
+	                        .findUnique();
+	                    
+	                    if (xval != null)
+	                        id = EntityUtils.getId (xval);
+	                    
+	                    break;
+	                }
+	            }
+	        }
+	        else {
+	            xval = finder.byId(id);
+	        }
+	        if(xval!=null){
+	        	cls=c;
+	        	break;
+	    	}
         }
         return new FetchedValue(xval,id,cls);
     }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 @Entity
 @Table(name="ix_core_event")
-public class Event extends Model {
+public class Event extends BaseModel {
     public enum Resolution {
         CENTURIES,
         YEARS,

@@ -1,8 +1,5 @@
 package ix.ginas.models;
 
-import ix.core.models.Group;
-import play.db.ebean.Model;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -10,23 +7,21 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.PostPersist;
-import javax.persistence.PostUpdate;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.models.BaseModel;
+import ix.core.models.Group;
+
 @Entity
 @Table(name = "ix_ginas_access")
-public class GinasAccessContainer extends Model{
+public class GinasAccessContainer extends BaseModel{
 	@Id
 	public Long id;
 
-	@ManyToMany(cascade = CascadeType.PERSIST)
+	@ManyToMany(cascade = CascadeType.ALL)
 	@JsonSerialize(using = GroupListSerializer.class)
 	@JsonDeserialize(using = GroupListDeserializer.class)
 	public Set<Group> access;

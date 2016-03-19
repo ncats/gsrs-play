@@ -7,7 +7,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_investigator")
-public class Investigator extends Model {
+public class Investigator extends BaseModel {
     public enum Role {
         PI, Contact
     }

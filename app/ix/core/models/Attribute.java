@@ -9,7 +9,7 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_attribute")
-public class Attribute extends Model {
+public class Attribute extends BaseModel {
     @Id
     public Long id;
 

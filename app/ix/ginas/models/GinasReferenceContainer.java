@@ -22,7 +22,7 @@ public class GinasReferenceContainer {
 	@Id
     public Long id;
 	
-	@ManyToMany(cascade = CascadeType.PERSIST)
+	@ManyToMany(cascade = CascadeType.ALL)
     @JsonSerialize(using=ReferenceSetSerializer.class)    
 	@JsonDeserialize(using=ReferenceSetDeserializer.class)
     public Set<Keyword> references = new LinkedHashSet<Keyword>();

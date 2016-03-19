@@ -68,5 +68,14 @@ public class ProteinSubstance extends Substance {
     	}
     }
     
+    @Override
+    public void delete(){
+    	super.delete();
+    	for(Subunit su:this.protein.subunits){
+    		su.delete();
+    	}
+    	//protein.delete();
+    }
+    
     
 }

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Table(name="ix_core_filedata")
 @Inheritance
 @DiscriminatorValue("FIG")
-public class FileData extends Model {
+public class FileData extends BaseModel {
     @Id
     public UUID id; // internal id
     public String mimeType;

@@ -18,12 +18,14 @@ import play.db.ebean.Model;
 
 @Entity
 @Table(name="ix_core_payload")
-public class Payload extends Model {
+public class Payload extends BaseModel {
     @Id
     public UUID id;
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Namespace namespace;
+    
+    
     public final Date created = new Date ();
     
     @Column(length=1024)

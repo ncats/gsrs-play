@@ -8,7 +8,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_stitch")
-public class Stitch extends Model {
+public class Stitch extends BaseModel {
     @Id
     public Long id;
 

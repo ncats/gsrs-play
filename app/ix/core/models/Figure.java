@@ -12,7 +12,7 @@ import ix.utils.Global;
 @Table(name="ix_core_figure")
 @Inheritance
 @DiscriminatorValue("FIG")
-public class Figure extends Model {
+public class Figure extends BaseModel {
     @Id
     public Long id; // internal id
 

@@ -17,7 +17,7 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_edit")
-public class Edit extends Model {
+public class Edit extends BaseModel {
     @JsonIgnore
     @Id
     public UUID id; // internal random id

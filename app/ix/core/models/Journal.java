@@ -5,7 +5,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_journal")
-public class Journal extends Model {
+public class Journal extends BaseModel {
     @Id
     public Long id;
 
