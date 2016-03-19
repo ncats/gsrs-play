@@ -44,6 +44,14 @@ public class NucleicAcidSubstance extends Substance {
     		_dirtyModifications=false;
     	}
     }
+
+    @Override
+    public void delete(){
+    	super.delete();
+    	for(Subunit su:this.nucleicAcid.subunits){
+    		su.delete();
+    	}
+    }
     
 //	public NucleicAcid getNucleicAcid() {
 //		return nucleicAcid;

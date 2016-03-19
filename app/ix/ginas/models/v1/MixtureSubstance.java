@@ -27,4 +27,12 @@ public class MixtureSubstance extends Substance {
 		}
 		return sref;
 	}
+    @Override
+    public void delete(){
+    	super.delete();
+    	for(Component c:mixture.components){
+    		c.delete();
+    	}
+    	
+    }
 }

@@ -10,4 +10,10 @@ public class StructurallyDiverseSubstance extends Substance {
     public StructurallyDiverse structurallyDiverse;
 
     public StructurallyDiverseSubstance () {}
+    
+    @Override
+    public void delete(){
+    	super.delete();
+    	
+    }
 }
