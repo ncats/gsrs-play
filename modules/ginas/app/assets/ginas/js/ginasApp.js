@@ -239,7 +239,7 @@
                     var start = rmap[k] + "_" + k;
                     for (var i in amap[k]) {
                         var end = rmap[amap[k][i]] + "_" + amap[k][i];
-                        disp += start + "-" + end + ";";
+                        disp += start + "-" + end + ";\n";
                     }
                 }
             }
