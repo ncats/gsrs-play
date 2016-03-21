@@ -1,4 +1,4 @@
-package ix.test;
+package ix.test.login;
 
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
@@ -74,6 +74,48 @@ public class UserSessionTest {
             assertTrue(response.getBody().contains("Logged in as: " + session.getUserName()));
         }
     }
+
+
+    @Test
+    public void notLoggedInBrowserSessionViewSubstancesl() {
+        try (BrowserSession session = ts.notLoggedInBrowserSession()) {
+            WSResponse response = session.get("ginas/app/substances");
+
+            ensureNoLoggedInAs(response);
+        }
+    }
+
+    @Test
+    public void loggedInBrowserSessionViewSubstancesl() {
+        GinasTestServer.User user1 = ts.getFakeUser1();
+
+        try (BrowserSession session = ts.newBrowserSession(user1)) {
+            WSResponse response = session.get("ginas/app/substances");
+
+            ensureLoggedInAs(response, user1);
+        }
+    }
+    private static void ensureNoLoggedInAs(WSResponse response){
+        assertTrue("User should not be logged in",response.getBody().contains("username:null"));
+    }
+    private static void ensureLoggedInAs(WSResponse response, GinasTestServer.User user){
+        String username = user.getUserName();
+
+        String body = response.getBody();
+
+        assertTrue("User should be logged in as " + username,body.contains("username:\"" + username + "\""));
+    }
+
+   /* @Test
+    public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsers() {
+        try (BrowserSession session = ts.notLoggedInBrowserSession()) {
+            WSResponse response = session.get("ginas/app/substances");
+
+            assertTrue("User should not be logged in",response.getBody().contains("username:null"));
+        }
+
+    }
+    */
 
 
 }
