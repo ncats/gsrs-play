@@ -1830,12 +1830,11 @@ public class TextIndexer {
     static void saveFacetsConfig (File file, FacetsConfig facetsConfig) {
         JsonNode node = setFacetsConfig (facetsConfig);
         ObjectMapper mapper = new ObjectMapper ();
-        try {
-            FileOutputStream out = new FileOutputStream (file);
+        try( FileOutputStream out = new FileOutputStream(file)) {
+
             mapper.writerWithDefaultPrettyPrinter().writeValue(out, node);
-            out.close();
-        }
-        catch (IOException ex) {
+
+        }catch (IOException ex) {
             Logger.trace("Can't persist facets config!", ex);
         }
     }
@@ -1897,10 +1896,9 @@ public class TextIndexer {
         }
         conf.put("sorters", node);
 
-        try {
-            FileOutputStream fos = new FileOutputStream (file);
+        try(FileOutputStream fos = new FileOutputStream (file)) {
+
             mapper.writerWithDefaultPrettyPrinter().writeValue(fos, conf);
-            fos.close();
         }
         catch (IOException ex) {
             Logger.trace("Can't persist sorter config!", ex);
@@ -1910,7 +1908,10 @@ public class TextIndexer {
     public void shutdown () {
         try {
             fetchQueue.put(POISON_PAYLOAD);
-            
+            scheduler.shutdown();
+            saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
+            saveSorters (getSorterConfigFile (), sorters);
+
             for (SuggestLookup look : lookups.values()) {
                 closeAndIgnore(look);
             }
@@ -1922,9 +1923,7 @@ public class TextIndexer {
             closeAndIgnore(indexDir);
             closeAndIgnore(taxonDir);
 
-            scheduler.shutdown();
-            saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
-            saveSorters (getSorterConfigFile (), sorters);
+
         }
         catch (Exception ex) {
             ex.printStackTrace();
