@@ -28,6 +28,8 @@ public final class SubstanceJsonUtil {
 
 	public static void ensureFailure(WSResponse response){
 		int status = response.getStatus();
+//		System.out.println("Response is:");
+//		System.out.println(response.getBody());
 		assertTrue("Expected failure code, got:" + status, status != 200 && status != 201);
 	}
 
