@@ -23,26 +23,7 @@ import static org.fest.assertions.Assertions.assertThat;
 public class ApplicationTest  {
 
     
-    @Test
-    public void simpleCheck() {
-        int a = 1 + 1;
-        assertEquals(2, a);
-    }
-    
 
-    @Test
-    public void testString() {
-        String str = "Hello world";
-        assertFalse(str.isEmpty());
-    }
-
-    @Test
-    public void mockTest() {
-        // Create and train mock
-        List<String> mockedList = mock(List.class);
-        when(mockedList.get(0)).thenReturn("first");
-        assertEquals("first", mockedList.get(0));
-    }
 
     @Test
     public void createPrincipal() {
