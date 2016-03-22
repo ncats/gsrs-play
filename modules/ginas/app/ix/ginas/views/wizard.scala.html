@@ -1,7 +1,11 @@
 @import play.api.Play.current
+@import ix.ginas.controllers.GinasFactory.EditLock
 
-@(kind: String, json: String)
+@(kind: String, json: String, lock: EditLock)
 
+	@if(lock!=null){
+		<span style="background:red; width:100%;">This record is currently being edited by another user, may have difficulty saving changes.</span>
+	}
 
     @wizardfields(kind: String) = {
 
@@ -170,8 +174,16 @@
         </div>
 
         <script>
+	        	@if(!"{}".equals(json) && json != null) {
+	        		$(window).load(function(){
+			        	$(window).bind('beforeunload', function(){
+				                    return 'Navigating away from this page will lose all unsaved changed. Are you sure?';
+			            });
+			        }); 
+	        	} 
                 var loadjson = @Html(json);
         </script>
+        
         @* <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >
         <div uib-tooltip="{{data.citation}}">

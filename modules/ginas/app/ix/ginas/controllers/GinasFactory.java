@@ -2,11 +2,18 @@ package ix.ginas.controllers;
 
 
 import be.objectify.deadbolt.java.actions.Dynamic;
+
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.Principal;
+import ix.core.models.UserProfile;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils;
@@ -25,6 +32,48 @@ public class GinasFactory extends EntityFactory {
         public static final Model.Finder<Long, Principal> finder = new Model.Finder(
                         Long.class, Principal.class);
 
+        private static final long EXPIRE_LOCK_TIME_MS = 15*60*1000; //fifteen minutes
+        private static ConcurrentHashMap<String,EditLock> currentlyEditing;
+        
+        public static void init(){
+        	currentlyEditing =  new ConcurrentHashMap<String,EditLock>();
+        }
+        
+        private static void addEditLock(EditLock el){
+        	if(currentlyEditing!=null){
+        		currentlyEditing=  new ConcurrentHashMap<String,EditLock>();
+        	}
+        	currentlyEditing.put(el.id, el);
+        }
+        private static EditLock getEditLock(String id){
+        	if(currentlyEditing!=null){
+        		currentlyEditing=  new ConcurrentHashMap<String,EditLock>();
+        	}
+        	EditLock elock= currentlyEditing.get(id);
+        	if(elock.isExpired()){
+        		currentlyEditing.remove(id);
+        		return null;
+        	}else{
+        		return elock;
+        	}
+        	
+        }
+        public static class EditLock{
+        	String id;
+        	UserProfile user;
+        	Date lockTime = new Date();
+        	public EditLock(UserProfile user, String id){
+        		this.id=id;
+        		this.user=user;
+        	}
+        	public boolean isExpired(){
+        		long expiretime = lockTime.getTime()+EXPIRE_LOCK_TIME_MS;
+        		if(System.currentTimeMillis()>expiretime){
+        			return true;
+        		}
+        		return false;
+        	}
+        }
         public static Result index() {          
                 return ok(ix.ginas.views.html.index.render());
         }
@@ -81,7 +130,7 @@ public class GinasFactory extends EntityFactory {
         @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
         public static Result wizard(String kind) {
                 Logger.info(kind);
-                return ok(ix.ginas.views.html.wizard.render(kind,"{}"));
+                return ok(ix.ginas.views.html.wizard.render(kind,"{}",null));
         }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -91,10 +140,19 @@ public class GinasFactory extends EntityFactory {
 
                 try {
                         if (substances.size() == 1) {
-                                ObjectMapper om = new ObjectMapper();
-                                String json = om.valueToTree(substances.get(0)).toString();
+                        		Substance s=substances.get(0);
+                        		UUID uuid=s.getUuid();
+                        		EditLock elock = getEditLock(uuid.toString());
+                        		if(elock==null){
+                        			EditLock newelock = new EditLock(UserFetcher.getActingUserProfile(false),uuid.toString());
+                        			GinasFactory.addEditLock(newelock);
+                        		}else{
+                        			//there's a user editting this
+                        		}
+                        		EntityMapper om = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+                                String json = om.toJson(s);
                                 return ok(ix.ginas.views.html.wizard.render(
-                                                substances.get(0).substanceClass.toString(), json));
+                                                substances.get(0).substanceClass.toString(), json, elock));
                         }
                         throw new IllegalStateException("More than one substance matches that term");
                 } catch (Exception ex) {
