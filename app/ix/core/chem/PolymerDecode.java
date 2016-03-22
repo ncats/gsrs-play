@@ -785,8 +785,8 @@ public class PolymerDecode {
 		public Double average;
 		public Double lowLimit;
 		public Double highLimit;
-		public String units="";
-		public String valueText="";
+		public String units=null;
+		public String nonNumericValue=null;
 		public String type=null;
 		
 	}

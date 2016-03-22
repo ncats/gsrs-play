@@ -1070,3 +1070,14 @@ ul.tree-list {
     font-size: 15em;
     padding: 10%;
 }
+
+#lockmessage{
+	background:  red;
+    width: 		100%;
+    position: fixed;
+    top:  0px;
+    left: 0px;
+    z-index: 1999998;
+    color: white;
+    padding:5px;
+}
