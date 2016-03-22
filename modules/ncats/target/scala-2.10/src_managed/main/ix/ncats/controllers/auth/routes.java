@@ -1,6 +1,6 @@
-// @SOURCE:/Users/peryeata/workspace/inxight/modules/ncats/conf/ix.ncats.routes
+// @SOURCE:/ncats/users/katzelda/GIT/inxight/modules/ncats/conf/ix.ncats.routes
 // @HASH:49330f5a9c09070749dc18ef3d15e909e8c39625
-// @DATE:Wed Mar 09 19:06:28 EST 2016
+// @DATE:Tue Mar 22 10:44:22 EDT 2016
 
 package ix.ncats.controllers.auth;
 

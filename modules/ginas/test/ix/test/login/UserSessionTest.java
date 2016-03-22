@@ -2,22 +2,38 @@ package ix.test.login;
 
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import play.libs.ws.WSResponse;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
 /**
  * Created by katzelda on 3/14/16.
  */
 public class UserSessionTest {
-
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getName() + " . " + description.getMethodName());
+        }
+    };
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 
     private GinasTestServer.User luke;
 
+
+    private static Pattern LOGGED_IN_AS_PATTERN = Pattern.compile("username:\\s*(\\S+)?");
+            //Pattern.compile("var session = \{\\s+username:null\\s+\};", Pattern.MULTILINE);
     @Before
     public void createuser(){
         luke = ts.createNormalUser("Luke", "TK421");
@@ -81,7 +97,7 @@ public class UserSessionTest {
         try (BrowserSession session = ts.notLoggedInBrowserSession()) {
             WSResponse response = session.get("ginas/app/substances");
 
-            ensureNoLoggedInAs(response);
+            ensureNotLoggedIn(response);
         }
     }
 
@@ -95,27 +111,79 @@ public class UserSessionTest {
             ensureLoggedInAs(response, user1);
         }
     }
-    private static void ensureNoLoggedInAs(WSResponse response){
-        assertTrue("User should not be logged in",response.getBody().contains("username:null"));
+    private static void ensureNotLoggedIn(WSResponse response){
+        ensureLoggedInAs(response, "null");
     }
     private static void ensureLoggedInAs(WSResponse response, GinasTestServer.User user){
-        String username = user.getUserName();
+        ensureLoggedInAs(response, user.getUserName());
 
-        String body = response.getBody();
-
-        assertTrue("User should be logged in as " + username,body.contains("username:\"" + username + "\""));
     }
 
-   /* @Test
-    public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsers() {
-        try (BrowserSession session = ts.notLoggedInBrowserSession()) {
-            WSResponse response = session.get("ginas/app/substances");
+    private static void ensureLoggedInAs(WSResponse response, String username) {
+        String body = response.getBody();
 
-            assertTrue("User should not be logged in",response.getBody().contains("username:null"));
+        Matcher matcher = LOGGED_IN_AS_PATTERN.matcher(body);
+        if(!matcher.find()){
+            throw new IllegalStateException("could not parse username from session:" + body);
+        }
+        String foundName = unquote(matcher.group(1));
+        System.out.println("USER NAME FOUND = '" + foundName+"'");
+        assertEquals(username, foundName);
+    }
+
+    private static String unquote(String s){
+       return s.replaceAll("\"", "");
+    }
+
+    @Test
+    public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsersSingleThreaded() {
+        GinasTestServer.User user1 = ts.getFakeUser1();
+
+        try (RestSession session = ts.newRestSession(user1);
+             RestSession session2 = ts.notLoggedInRestSession()) {
+
+
+
+            ensureNotLoggedIn(session2.get("ginas/app/substances"));
+
+            System.out.println("first logged in attempt");
+            ensureLoggedInAs( session.get("ginas/app/substances"), user1);
+
+            System.out.println("================================");
+            ensureNotLoggedIn(session2.get("ginas/app/substances"));
+
+            System.out.println("2nd logged in attempt");
+            ensureLoggedInAs( session.get("ginas/app/substances"), user1);
+
         }
 
     }
-    */
+
+    @Test
+    public void twoDifferentLoggedInUsersViewSubstancesWithOtherLoggedInUsersSingleThreaded() {
+        GinasTestServer.User user1 = ts.getFakeUser1();
+        GinasTestServer.User user3 = ts.getFakeUser3();
+
+        try (RestSession session1 = ts.newRestSession(user1);
+             RestSession session3 = ts.newRestSession(user3);) {
+
+
+
+            ensureLoggedInAs( session3.get("ginas/app/substances"), user3);
+
+            System.out.println("first logged in attempt");
+            ensureLoggedInAs( session1.get("ginas/app/substances"), user1);
+
+            System.out.println("================================");
+            ensureLoggedInAs( session3.get("ginas/app/substances"), user3);
+
+            System.out.println("2nd logged in attempt");
+            ensureLoggedInAs( session1.get("ginas/app/substances"), user1);
+
+        }
+
+    }
+
 
 
 }

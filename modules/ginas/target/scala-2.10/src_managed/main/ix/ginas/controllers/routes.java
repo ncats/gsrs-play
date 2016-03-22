@@ -1,6 +1,6 @@
-// @SOURCE:/Users/peryeata/workspace/inxight/modules/ginas/conf/ix.ginas.routes
+// @SOURCE:/ncats/users/katzelda/GIT/inxight/modules/ginas/conf/ix.ginas.routes
 // @HASH:51d3f871d3b7f2a62e3526a3edbc75154982d7da
-// @DATE:Thu Mar 10 14:29:21 EST 2016
+// @DATE:Tue Mar 22 10:44:26 EDT 2016
 
 package ix.ginas.controllers;
 

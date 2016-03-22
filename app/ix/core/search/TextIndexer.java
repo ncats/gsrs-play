@@ -539,6 +539,7 @@ public class TextIndexer implements Closeable{
                                       System.currentTimeMillis()-start));
                     }
                     catch (IOException ex) {
+                        ex.printStackTrace();
                         Logger.error("Error in processing payload", ex);
                     }
                 }
@@ -615,6 +616,7 @@ public class TextIndexer implements Closeable{
           return indexer;
         }
         catch (IOException ex) {
+            ex.printStackTrace();
             return indexers.get(baseDir);
         }
     }
@@ -671,6 +673,7 @@ public class TextIndexer implements Closeable{
                     lookups.put(f.getName(), new SuggestLookup (f));
                 }
                 catch (IOException ex) {
+                    ex.printStackTrace();
                     Logger.error("Unable to load lookup from "+f, ex);
                 }
             }
@@ -832,6 +835,7 @@ public class TextIndexer implements Closeable{
                 query = parser.parse(qtext);
             }
             catch (ParseException ex) {
+                ex.printStackTrace();
                 Logger.warn("Can't parse query expression: "+qtext, ex);
             }
         }

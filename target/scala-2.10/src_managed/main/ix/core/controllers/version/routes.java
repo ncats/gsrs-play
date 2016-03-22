@@ -1,6 +1,6 @@
-// @SOURCE:/Users/peryeata/workspace/inxight/conf/ix.core.api.routes
+// @SOURCE:/ncats/users/katzelda/GIT/inxight/conf/ix.core.api.routes
 // @HASH:62bd281173ee74fb8cb81b756ddf267737ecc6a0
-// @DATE:Sat Feb 27 00:19:02 EST 2016
+// @DATE:Tue Mar 22 10:44:18 EDT 2016
 
 package ix.core.controllers.version;
 
