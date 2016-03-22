@@ -35,20 +35,18 @@
             </ul>
             <div class="nav navbar-nav pull-right" id ="menu-login">
                 <ul class="nav navbar-nav pull-right">
-                    <li>@if(ix.ncats.controllers.auth.Authentication.getUser() != null) {
-                        <h6>Logged in as: @ix.ncats.controllers.auth.Authentication.getUser().username</h6>
-                        <h6>Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()</h6>
-                    }</li>
+                    @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                        <li>
+                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile" id ="profile-button" target="_self"><button class="btn btn-default"><i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</button></a>
+                        </li>
+                    }
                     @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self"><button class="btn btn-default">Admin</button></a></li>
                 }
                 @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">
-                        Login</button></a></li>
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a></li>
                 }{
-                    <li>
-
-                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">
+                   <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">
                         Logout</button></a></li>
                 }
                 </ul>

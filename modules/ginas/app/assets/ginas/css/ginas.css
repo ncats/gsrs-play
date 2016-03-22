@@ -126,10 +126,6 @@ body, html {
     text-align: left;
 }
 
-#full {
-    padding: 0px;
-}
-
 #icons {
     padding-top: 100px;
     text-align: center;
@@ -155,16 +151,6 @@ div.box .on {
 
 }
 
-#login-button {
-    padding: 0px;
-}
-
-#load-button,
-#admin-button {
-    padding: 0px;
-    padding-right: 15px;
-}
-
 #grid {
     background-color: #F8F8F8;
 }
@@ -179,10 +165,6 @@ div.box .on {
     border: 1px solid #e8e8e8;
     padding-top: 15px;
     padding-bottom: 15px;
-}
-
-#menu-login {
-    padding-top: 8px;
 }
 
 #search-bar {
@@ -1084,3 +1066,7 @@ ul.tree-list {
     }
 }
 
+.fa-15x {
+    font-size: 15em;
+    padding: 10%;
+}
