@@ -15,6 +15,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -53,6 +56,13 @@ public class SubstanceSubmitTest {
         File resource;
         @Rule
         public GinasTestServer ts = new GinasTestServer(9001);
+
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + description.getMethodName());
+        }
+    };
 
 
         public SubstanceSubmitTest(File f, String onlyUsedForParameterName){

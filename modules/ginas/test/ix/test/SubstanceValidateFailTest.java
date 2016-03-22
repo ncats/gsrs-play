@@ -15,6 +15,9 @@ import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -52,6 +55,13 @@ public class SubstanceValidateFailTest extends WithApplication {
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
+
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + description.getMethodName());
+        }
+    };
 
 
     public SubstanceValidateFailTest(File f, String dummy){

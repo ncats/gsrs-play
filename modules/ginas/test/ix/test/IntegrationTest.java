@@ -18,11 +18,21 @@ import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 public class IntegrationTest {
 	
 	@Rule
 	public GinasTestServer ts = new GinasTestServer(9001);
+
+	@Rule
+	public TestRule watcher = new TestWatcher() {
+		protected void starting(Description description) {
+			System.out.println("Starting test: " + description.getMethodName());
+		}
+	};
 
 
     @Test

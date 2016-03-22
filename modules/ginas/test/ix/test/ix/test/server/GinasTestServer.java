@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import ix.core.adapters.EntityPersistAdapter;
@@ -40,6 +42,7 @@ import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import net.sf.ehcache.CacheManager;
+import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -50,6 +53,8 @@ import play.libs.ws.WSCookie;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 import play.test.TestServer;
+
+import javax.sql.DataSource;
 
 /**
  * JUnit Rule to handle starting and stopping
@@ -323,12 +328,14 @@ public class GinasTestServer extends ExternalResource{
 
     @Override
     protected void before() throws Throwable {
-        deleteH2Db();
+       // deleteH2Db();
+       dropOracleDb();
         //This cleans out the old eh-cache
         //and forces us to use a new one with each test
         CacheManager.getInstance().shutdown();
-
+        System.out.println("After clean db");
         ts = testServer(port);
+        System.out.println("start server");
         ts.start();
         initializeControllers();
         //we have to wait to create the users until after Play has started.
@@ -388,6 +395,89 @@ public class GinasTestServer extends ExternalResource{
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    public void dropOracleDb() throws IOException {
+        Config confFile = ConfigFactory.load();
+        String source = "default";
+        Config dbconf = confFile.getConfig("db");
+        Config db = dbconf.getConfig(source);
+        BoneCPDataSource ds = new BoneCPDataSource();
+        ds.setJdbcUrl(db.getString("url"));
+        ds.setUsername(db.getString("user"));
+        ds.setPassword(db.getString("password"));
+        DataSource datasource = ds;
+
+        try {
+
+            Connection con = datasource.getConnection();
+            Statement stm = con.createStatement();
+
+            String evolutionContent = FileUtils.readFileToString(new File("conf/evolutions/default/1.sql"));
+            String[] splittedEvolutionContent = evolutionContent.split("# --- !Ups");
+            String[] upsDowns = splittedEvolutionContent[1].split("# --- !Downs");
+            String createDdl = upsDowns[0];
+            String dropDdl = upsDowns[1];
+            String[] ups = createDdl.split(";");
+            String[] downs = dropDdl.split(";");
+            List tableName = new ArrayList<String>();
+            List seqName = new ArrayList<String>();
+
+
+
+            PreparedStatement ps = con.prepareStatement("SELECT TABLE_NAME FROM USER_TABLES");
+            ResultSet rs = ps.executeQuery();
+            while(rs.next())
+            {
+                tableName.add( rs.getString(1).trim());
+            }
+            System.out.println("DROP TABLES XXXXXXXXXXXXXXXXXX");
+
+            for(int i = 0; i<tableName.size(); i++)
+            {
+                String tName = tableName.get(i).toString();
+                String query = "drop table " + tName + " cascade constraints purge";
+                //System.out.println("query:" + query);
+               try {
+                   stm.executeQuery(query);
+               }catch(Exception e){
+                  System.out.println(e.getMessage());
+               }
+            }
+
+            PreparedStatement ps1 = con.prepareStatement("select SEQUENCE_NAME from dba_sequences where SEQUENCE_OWNER = 'IXGINAS_ADMIN'");
+            ResultSet rs1 = ps1.executeQuery();
+            while(rs1.next())
+            {
+                seqName.add( rs1.getString(1).trim());
+            }
+            System.out.println("DROP SEQUENCES XXXXXXXXXXXXXXXXXX");
+            for(int i = 0; i<seqName.size(); i++)
+            {
+                String sName = seqName.get(i).toString();
+                String query = "drop sequence " + sName;
+                try {
+                    stm.executeQuery(query);
+                }catch(Exception e){
+                    System.out.println(e.getMessage());
+                }
+            }
+
+           System.out.println("CREATE TABLES XXXXXXXXXXXXXXXXXX");
+           for(int i = 0; i<ups.length; i++)
+            {
+               // System.out.println("up query: " + i + " - " + ups[i]);
+                try{
+                   if(ups[i] != null && !ups[i].trim().equals("")) {
+                       stm.executeQuery(ups[i]);
+                   }
+                }catch(Exception e){
+                    System.out.println("query - " + ups[i] +" : " + e.getMessage());
+                }
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
