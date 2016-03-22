@@ -1742,7 +1742,6 @@
                 size:'='
             },
             link: function (scope, element) {
-                console.log(scope.size);
                 var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);

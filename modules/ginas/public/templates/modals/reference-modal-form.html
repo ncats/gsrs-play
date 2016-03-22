@@ -70,7 +70,7 @@
                 </form>
             </div>
         </uib-tab>
-        <uib-tab heading="Apply a reference" index ="2">
+        <uib-tab heading="Apply a reference" >
             <div class="col-md-12">
                 <div ng-repeat="obj in parent.references">
                     <div class="row">
@@ -101,7 +101,7 @@
                         </div>
                         <div class="col-md-1">
                             <label for="uploader">Document</label><br>
-                            <a ng-href={{obj.uploadedFile}} ng-if="obj.uploadedFile">
+                            <a ng-href={{obj.uploadedFile}} target ="_blank" ng-if="obj.uploadedFile">
                                 <i class="fa fa-file-text fa-stack-2x success"></i>
                             </a>
                             <i class="fa fa-upload fa-2x success" ng-show="!obj.uploadedFile"
