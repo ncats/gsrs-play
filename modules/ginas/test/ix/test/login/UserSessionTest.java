@@ -43,7 +43,7 @@ public class UserSessionTest {
         try(BrowserSession session = ts.newBrowserSession(luke)){
                 WSResponse response = session.get("ginas/app/substances");
                 String content = response.getBody();
-                assertTrue(content.contains("Logged in as: " + session.getUserName()));
+                ensureLoggedInAs(response, luke);
                 assertTrue(content.contains("/ginas/app/logout"));
         }
     }
@@ -86,8 +86,7 @@ public class UserSessionTest {
             WSResponse response = session.get("ginas/app/wizard?kind=chemical");
 
             assertEquals(200, response.getStatus());
-
-            assertTrue(response.getBody().contains("Logged in as: " + session.getUserName()));
+            ensureLoggedInAs(response, luke);
         }
     }
 
@@ -135,7 +134,7 @@ public class UserSessionTest {
        return s.replaceAll("\"", "");
     }
 
-    @Test
+    @Test @Ignore
     public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsersSingleThreaded() {
         GinasTestServer.User user1 = ts.getFakeUser1();
 
