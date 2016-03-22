@@ -75,6 +75,10 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 			vr.setValid();
 		}
 		_strategy.addWarnings(objnew, vlad);
+
+        if(GinasProcessingMessage.ALL_VALID(vlad)){
+        	vlad.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+        }
 		return vr;
 	}
 
@@ -84,6 +88,11 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		if(!objnew.getClass().equals(objold.getClass())){
 			vlad.add(GinasProcessingMessage.WARNING_MESSAGE("Substance class should not typically be changed"));
 		}
+		
+		if(!objold.version.equals(objnew.version)){
+			vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Substance version '" + objnew.version +  "', does not match the stored version '" +  objold.version +"', record may have been changed while being updated"));
+		}
+		
 		if( objnew.getAccess().isEmpty() &&
 				   !objold.getAccess().isEmpty()
 						){

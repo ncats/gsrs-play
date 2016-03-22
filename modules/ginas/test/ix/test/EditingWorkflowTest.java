@@ -24,6 +24,8 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+
+import util.json.ChangeFilters;
 import util.json.Changes;
 import util.json.ChangesBuilder;
 import util.json.JsonUtil;
@@ -187,6 +189,38 @@ public class EditingWorkflowTest {
             ensurePass(api.updateSubstance(updated));
             JsonNode fetchedagain=api.fetchSubstanceJson(uuid);
             assertEquals(fetchedagain.at("/substanceClass").asText(), "protein");
+            
+            
+        }
+   	}
+    @Test
+   	public void testFailDoubleEditProtein() throws Exception {
+        try( RestSession session1 = ts.newRestSession(fakeUser1);
+        	 RestSession session2 = ts.newRestSession(fakeUser2);
+        		) {
+            SubstanceAPI api1 = new SubstanceAPI(session1);
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+    		
+           	JsonNode entered= parseJsonFile(resource);
+           	String uuid=entered.get("uuid").asText();
+            ensurePass(api1.submitSubstance(entered));
+            JsonNode fetched=api1.fetchSubstanceJson(uuid);
+            
+            
+            JsonNode updated1 = new JsonUtil
+                    .JsonNodeBuilder(fetched)
+                    .set("/names/0/name", "MADE UP NAME 1")
+                    .build();
+            JsonNode updated2 = new JsonUtil
+                    .JsonNodeBuilder(fetched)
+                    .set("/names/0/name", "MADE UP NAME 2")
+                    .build();
+            
+            ensurePass(api1.updateSubstance(updated1));
+            ensureFailure(api2.updateSubstance(updated2));
+            
+            JsonNode fetchedagain=api1.fetchSubstanceJson(uuid);
+            assertEquals(fetchedagain.at("/names/0/name").asText(), "MADE UP NAME 1");
             
             
         }
@@ -519,7 +553,6 @@ public class EditingWorkflowTest {
             assertEquals(oldName, api.fetchSubstanceJson(uuid).at("/names/0/name").asText());
 
             JsonNode originalNode = api.fetchSubstanceJson(uuid, 1).getOldValue();
-
             JsonNode v2Node = api.fetchSubstanceJson(uuid, 2).getOldValue();
 
             assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());
@@ -551,10 +584,43 @@ public class EditingWorkflowTest {
             assertEquals("v1 new value", jsonHistoryResult.getNewValue(), api.fetchSubstanceJson(uuid));
             renameServer(api, uuid, oldName);
 
-
             JsonNode v2Node = api.fetchSubstanceJson(uuid, 2).getOldValue();
 
             assertEquals("v2", originalNode, v2Node);
+            
+        }
+
+
+    }
+    @Test
+    public void revertHistoryShouldBeTheSameAsOldValuesExceptMetaData() throws Exception {
+        try(RestSession session = ts.newRestSession(fakeUser1)) {
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+
+            ensurePass(api.submitSubstance(entered));
+            String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+            String newName = "foo";
+            renameServer(api, uuid, newName);
+
+            JsonHistoryResult jsonHistoryResult = api.fetchSubstanceJson(uuid, 1);
+            JsonNode originalNode = jsonHistoryResult.getOldValue();
+            originalNode = new JsonUtil.JsonNodeBuilder(originalNode).set("/version", "2").build();
+            ensurePass(api.updateSubstance(originalNode));
+            
+            JsonNode reverted = api.fetchSubstanceJson(uuid);
+            
+            Changes changes = JsonUtil.computeChanges(originalNode, reverted,ChangeFilters.keyMatches("last.*"));
+            
+            Changes expectedChangesDirect = new ChangesBuilder(originalNode,reverted)
+                    .replace("/version")
+                    .build();
+
+            assertEquals(expectedChangesDirect, changes);
+            
+            
         }
 
 
