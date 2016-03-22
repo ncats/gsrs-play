@@ -15,6 +15,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -30,7 +33,12 @@ import static ix.test.SubstanceJsonUtil.*;
 @RunWith(Parameterized.class)
 public class SubstanceSubmitTest {
 
-	
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getName() + " . " + description.getMethodName());
+        }
+    };
         
         
 

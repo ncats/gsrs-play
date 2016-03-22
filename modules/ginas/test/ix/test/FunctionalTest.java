@@ -7,6 +7,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import play.test.WithApplication;
 
 public class FunctionalTest extends WithApplication {
@@ -14,7 +17,12 @@ public class FunctionalTest extends WithApplication {
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 
-    
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+    };
 
     @Test
     public void loggedInUserHasLogout()   throws Exception {

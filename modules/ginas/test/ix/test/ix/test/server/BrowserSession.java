@@ -15,6 +15,8 @@ import static play.mvc.Http.Status.OK;
 public class BrowserSession extends AbstractSession<WSResponse>{
 
 
+    private static final long TIMEOUT = 10_000L;
+
     private  String sessionCookie;
     public BrowserSession(int port) {
         super(port);
@@ -41,7 +43,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
                     .setQueryParameter("password", user.getPassword())
                     .setFollowRedirects(false)
                     .post("")
-                    .get(1000);
+                    .get(TIMEOUT);
 
 
             WSCookie sessionCookie = response.getCookie("PLAY_SESSION");

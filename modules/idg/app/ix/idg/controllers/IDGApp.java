@@ -1931,26 +1931,26 @@ public class IDGApp extends App implements Commons {
                        .liganddetails.render(ligand, acts, breadcrumb));
         }
         else {
-            TextIndexer indexer = _textIndexer.createEmptyInstance();
-            for (Ligand lig : ligands)
-                indexer.add(lig);
-            
-            TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
-                 request().queryString());
-            if (result.count() < ligands.size()) {
-                ligands.clear();
-                for (int i = 0; i < result.count(); ++i) {
-                    ligands.add((Ligand)result.getMatches().get(i));
+            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
+                for (Ligand lig : ligands)
+                    indexer.add(lig);
+
+                TextIndexer.SearchResult result = SearchFactory.search
+                        (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
+                                request().queryString());
+                if (result.count() < ligands.size()) {
+                    ligands.clear();
+                    for (int i = 0; i < result.count(); ++i) {
+                        ligands.add((Ligand) result.getMatches().get(i));
+                    }
                 }
+                TextIndexer.Facet[] facets = filter
+                        (result.getFacets(), LIGAND_FACETS);
+
+                return ok(ix.idg.views.html.ligands.render
+                        (1, result.count(), result.count(),
+                                new int[0], decorate(facets), ligands));
             }
-            TextIndexer.Facet[] facets = filter
-                (result.getFacets(), LIGAND_FACETS);
-            indexer.shutdown();
-        
-            return ok (ix.idg.views.html.ligands.render
-                       (1, result.count(), result.count(),
-                        new int[0], decorate (facets), ligands));
         }
     }
     

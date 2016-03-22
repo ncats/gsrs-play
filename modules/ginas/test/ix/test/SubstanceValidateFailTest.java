@@ -15,6 +15,9 @@ import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -32,7 +35,14 @@ public class SubstanceValidateFailTest extends WithApplication {
 
     private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	private static long timeout= 10000L;
-    
+
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+    };
+
     @Parameters(name="{1}")
     static public Collection<Object[]> findstuff(){
     	List<Object[]> mylist  =  new ArrayList<Object[]>();
