@@ -1,6 +1,6 @@
 // @SOURCE:/Users/peryeata/workspace/inxight/modules/ginas/conf/ix.ginas.routes
-// @HASH:51d3f871d3b7f2a62e3526a3edbc75154982d7da
-// @DATE:Thu Mar 10 14:29:21 EST 2016
+// @HASH:c011da5438551a0760837b01172b31e6c428445e
+// @DATE:Tue Mar 22 15:00:12 EDT 2016
 
 package ix.ginas.controllers;
 

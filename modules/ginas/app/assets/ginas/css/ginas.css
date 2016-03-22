@@ -1084,3 +1084,14 @@ ul.tree-list {
     }
 }
 
+#lockmessage{
+	background:  red;
+    width: 		100%;
+    position: fixed;
+    top:  0px;
+    left: 0px;
+    z-index: 1999998;
+    color: white;
+    padding:5px;
+}
+
