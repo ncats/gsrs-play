@@ -134,7 +134,7 @@ public class UserSessionTest {
        return s.replaceAll("\"", "");
     }
 
-    @Test @Ignore
+    @Test
     public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsersSingleThreaded() {
         GinasTestServer.User user1 = ts.getFakeUser1();
 
@@ -148,12 +148,16 @@ public class UserSessionTest {
             System.out.println("first logged in attempt");
             ensureLoggedInAs( session.get("ginas/app/substances"), user1);
 
-            System.out.println("================================");
+            System.out.println("1================================");
             ensureNotLoggedIn(session2.get("ginas/app/substances"));
 
+            System.out.println("2================================");
             System.out.println("2nd logged in attempt");
             ensureLoggedInAs( session.get("ginas/app/substances"), user1);
 
+        }catch(Exception e){
+        	e.printStackTrace();
+        	throw e;
         }
 
     }

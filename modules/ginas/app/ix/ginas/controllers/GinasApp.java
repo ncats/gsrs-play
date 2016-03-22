@@ -3,6 +3,7 @@ package ix.ginas.controllers;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import be.objectify.deadbolt.java.actions.SubjectPresent;
 import gov.nih.ncgc.chemical.Chemical;
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
@@ -482,8 +483,12 @@ public class GinasApp extends App {
     static Result _substances(final String q, final int rows, final int page)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
+        final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
 
+//        System.out.println("######################################");
+//        System.out.println("Fetching key:" + key);
+        
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {
@@ -494,9 +499,10 @@ public class GinasApp extends App {
                          + result.finished());
             if (result.finished()) {
                 final String k = key + "/result";
+                
                 return getOrElse(k, new Callable<Result>() {
                         public Result call() throws Exception {
-                            Logger.debug("Cache missed: " + k);
+                        	Logger.debug("Cache missed: " + k);
                             return createSubstanceResult(result, rows, page);
                         }
                     });

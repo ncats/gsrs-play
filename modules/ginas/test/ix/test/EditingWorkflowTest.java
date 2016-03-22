@@ -40,13 +40,13 @@ import com.fasterxml.jackson.databind.JsonNode;
  * [done] add references (add/remove) check
  * [done] add checks for access control of edits for non-logged in users
  * [done] add names (add/remove) check
+ * [done] add names reordering check
+ * [done] add other editor changing something
  * add codes (add/remove) check
- * add other editor changing something
  * add chemical access (add/remove) check
- * add names reordering check
  * add access reordering check
  * add what would look like a "copy" operation check 
- * refactor
+ * [mostly done] refactor
  *
  */
 public class EditingWorkflowTest {
@@ -430,7 +430,6 @@ public class EditingWorkflowTest {
         }
    	}
     
-    //@Ignore("This test will fail, because there is a non-trivial mapping from the JSON to the old substance record. The recursive strategy can't discover the right properties")
     @Test
    	public void testAddAccessGroupToExistingProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {

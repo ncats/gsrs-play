@@ -54,7 +54,6 @@ public class GinasFactory extends EntityFactory {
         		currentlyEditing.remove(id);
         		return null;
         	}else{
-        		System.out.println("got lock");
         		return elock;
         	}
         	
@@ -184,7 +183,6 @@ public class GinasFactory extends EntityFactory {
 
                 try {
                         if (substances.size() == 1) {
-                        	System.out.println("Going to edit");
                         		Substance s=substances.get(0);
                         		UUID uuid=s.getUuid();
                         		EditLock elock = getEditLock(uuid.toString());
@@ -201,7 +199,6 @@ public class GinasFactory extends EntityFactory {
                         		}
                         		EntityMapper om = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
                                 String json = om.toJson(s);
-                                System.out.println("Alright, lets go!");
                                 return ok(ix.ginas.views.html.wizard.render(
                                                 substances.get(0).substanceClass.toString(), json, elock));
                         }
