@@ -1,6 +1,6 @@
 <div class="row info">
     <uib-tabset>
-        <uib-tab heading="Add a reference">
+        <uib-tab heading="Add a reference" index ="1">
             <div class="col-md-12">
                 <form class="form-horizontal" name="refForm" id="addRefForm" role="form" novalidate>
                     <div class="row form-row">
@@ -27,13 +27,13 @@
                         <div class="col-md-2">
                             <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                                 <label for="upload">Upload a Document</label><br>
-                                <file-field ng-show="!reference.uploadedFile && !$$uploadFile" ng-model="$$uploadFile"
+                                <file-field ng-show="!reference.uploadedFile && !reference.$$uploadFile" ng-model="reference.$$uploadFile"
                                             id="upload"><i class="fa fa-folder-open fa-lg"></i> Browse
                                 </file-field>
                                 <br>
-                                {{$$uploadFile.name}}
+                                {{reference.$$uploadFile.name}}
                                 <br>
-                                <button ng-hide="reference.uploadedFile || !$$uploadFile" class="btn btn-default"
+                                <button ng-hide="reference.uploadedFile || !reference.$$uploadFile" class="btn btn-default"
                                         ng-click="submitFile();"><i class="fa fa-upload"></i></button>
                                 <button ng-show="reference.uploadedFile" class="btn btn-success" disabled><i
                                         class="fa fa-check"></i></button>
@@ -70,7 +70,7 @@
                 </form>
             </div>
         </uib-tab>
-        <uib-tab heading="Apply a reference">
+        <uib-tab heading="Apply a reference" index ="2">
             <div class="col-md-12">
                 <div ng-repeat="obj in parent.references">
                     <div class="row">

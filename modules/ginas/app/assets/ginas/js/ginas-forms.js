@@ -55,10 +55,10 @@
             replace: 'true',
             scope: {
                 type: '@',
-                referenceobj: '=',
+                referenceobj: '=?',
                 parent: '=',
                 path: '@',
-                iscollapsed: '='
+                iscollapsed: '=?'
             },
             link: function (scope, element, attrs) {
                 scope.getLength = function(){
@@ -1437,7 +1437,6 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
-                console.log(scope);
             }
         };
     });
@@ -1477,12 +1476,13 @@ console.log(scope);
             restrict: 'E',
             replace: true,
             scope: {
-                apply: '=ngModel',
-                obj: '=',
+                apply: '=?ngModel',
+                obj: '=?',
                 referenceobj: '=',
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 var uuid;
                 var index;
                 var template;
@@ -1619,12 +1619,14 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                     //create form data object
                     var fd = new FormData();
                     if(obj){
-                        scope.$$uploadFile = obj.$$uploadFile;
+                        scope.reference.$$uploadFile = obj.$$uploadFile;
                     }
+                    console.log(scope);
                     //  fd.append('file', scope.$$uploadFile);
-                    fd.append('file-name', scope.$$uploadFile);
-                    fd.append('file-type', scope.$$uploadFile.type);
+                    fd.append('file-name', scope.reference.$$uploadFile);
+                    fd.append('file-type', scope.reference.$$uploadFile.type);
                     //send the file / data to your server
+                    console.log(fd);
                     $http.post(baseurl + 'upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
@@ -1632,14 +1634,14 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                         if(obj){
                             _.set(obj, 'uploadedFile', data.url);
                             _.set(scope, 'uploadDoc', false);
-                            delete obj.$$uploadFile;
+                       //     delete obj.$$uploadFile;
                         }else {
                             _.set(scope.reference, 'uploadedFile', data.url);
                         }
                     }).error(function (err) {
                     });
                     _.set(scope, 'uploadDoc', false);
-                    delete scope.$$uploadFile;
+                    //delete scope.$$uploadFile;
                 };
 
                     scope.validate = function () {
@@ -1991,12 +1993,12 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
         };
     });
 
-    ginasForms.directive('headerForm', function ($compile) {
+    ginasForms.directive('headerForm', function () {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-                name: '=',
+               // name: '=',
                 parent: '='
             },
             link: function (scope, element, attrs) {
