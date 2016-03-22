@@ -31,6 +31,7 @@ POST        /register/duplicateCheck     ix.ginas.controllers.GinasLoad.validate
 GET         /_updateIndex/:key          ix.ginas.controllers.GinasApp.updateIndex(key: String)
 
 GET         /admin                      ix.ginas.controllers.GinasApp.admin()
+GET         /profile                      ix.ginas.controllers.GinasApp.profile()
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

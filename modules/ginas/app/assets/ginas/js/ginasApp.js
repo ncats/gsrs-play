@@ -1161,10 +1161,10 @@
     ginasApp.directive('reftable', function () {
         return {
             scope: {
-                substance: '=',
-                objreferences: '=',
-                references: '=',
-                divid: '='
+                substance: '=?',
+                objreferences: '=?',
+                references: '=?',
+                divid: '=?'
             },
             require: '^referencesmanager',
             link: function (scope, element, attrs, referencesCtrl) {
@@ -1394,14 +1394,15 @@
         return {
             restrict: 'E',
             scope: {
-                parent: '=',
-                obj: '=',
+                parent: '=?',
+                obj: '=?',
                 uuid: '=',
                 index: '=',
                 view: '@',
                 numbers: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.numbers = true;
                 scope.edit = false;
 
@@ -1741,7 +1742,6 @@
                 size:'='
             },
             link: function (scope, element) {
-                console.log(scope.size);
                 var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);
@@ -1766,11 +1766,12 @@
             replace: true,
             scope: {
                 parent: '=',
-                structure: '=',
+                structure: '=?',
                 mol: '=ngModel'
             },
 
             link: function (scope, element, attrs) {
+                console.log(scope);
                 var url = baseurl + 'structure';
 
                 if (!_.isUndefined(scope.parent.structure)) {
@@ -1822,7 +1823,8 @@
                     structureid = false;
                 }
 
-                if (scope.parent.substanceClass === 'polymer') {
+                if (scope.parent.substanceClass === 'polymer' &&  scope.parent.polymer.displayStructure) {
+                    console.log(scope);
                     scope.mol = scope.parent.polymer.displayStructure.molfile;
                     scope.updateMol();
                 }
@@ -1979,7 +1981,7 @@ ginasApp.directive('referenceModalButton', function ($compile, $templateRequest,
             },
             link: function (scope, element, attrs) {
                 var modalInstance;
-                        var template = angular.element(' <a aria-label="Add References" uib-tooltip ="Add References" ng-click = "open()"><span class="sr-only">Add References</span><i class="fa fa-external-link fa-2x success"></i></a>');
+                        var template = angular.element(' <a aria-label="Add References" ng-click = "open()"><span class="sr-only">Add References</span><i class="fa fa-external-link fa-2x success" uib-tooltip ="Add References"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                        var  templateUrl = baseurl + "assets/templates/modals/reference-modal.html";
@@ -1989,6 +1991,7 @@ ginasApp.directive('referenceModalButton', function ($compile, $templateRequest,
                 };
 
                 scope.open = function () {
+                    console.log(scope);
                     modalInstance = $uibModal.open({
                         templateUrl: templateUrl,
                         size: 'xl',

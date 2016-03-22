@@ -1,15 +1,13 @@
 package ix.ginas.controllers;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
+import be.objectify.deadbolt.java.actions.SubjectPresent;
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
-import ix.core.models.Keyword;
-import ix.core.models.Payload;
-import ix.core.models.Structure;
-import ix.core.models.Value;
+import ix.core.models.*;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.TextIndexer;
@@ -357,6 +355,14 @@ public class GinasApp extends App {
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result admin () {
         return ok (ix.ginas.views.html.admin.admin.render());
+    }
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result profile () {
+
+        Principal user = ix.ncats.controllers.auth.Authentication.getUser();
+
+        return ok (ix.ginas.views.html.admin.profile.render(user));
     }
     
    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)

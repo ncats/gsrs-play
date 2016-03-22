@@ -534,6 +534,7 @@
             scope: {
                 obj: '=obj',
                 field: '@',
+                label: '@',
                 name: '='
 
             },

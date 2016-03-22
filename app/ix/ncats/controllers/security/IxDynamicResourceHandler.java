@@ -23,6 +23,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
     public static final String CAN_UPDATE = "canUpdate";
     public static final String CAN_SEARCH = "canSearch";
     public static final String IS_ADMIN = "isAdmin";
+    public static final String IS_USER_PRESENT = "isUserPresent";
     private static Map<String, DynamicResourceHandler> HANDLERS;
 
     static {
@@ -76,6 +77,21 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
             }
 
         });
+
+        HANDLERS.put(IS_USER_PRESENT,
+                new AbstractDynamicResourceHandler() {
+                    public boolean isAllowed(final String name,
+                                             final String meta,
+                                             final DeadboltHandler deadboltHandler,
+                                             final Http.Context context) {
+                        Subject subject = deadboltHandler.getSubject(context);
+                        boolean allowed=false;
+                        if (subject != null &&(subject.getIdentifier() != null || !subject.getIdentifier().equals(""))) {
+                            allowed = true;
+                        }
+                        return allowed;
+                    }
+                });
 
 
     }

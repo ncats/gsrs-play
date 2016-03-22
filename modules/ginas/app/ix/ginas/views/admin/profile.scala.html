@@ -1,0 +1,50 @@
+@import ix.core.models.Principal
+
+
+@(user: ix.core.models.Principal)
+
+@ix.ginas.views.html.ginas("User Portal", "null") {
+    @ix.ginas.views.html.menu()
+} {
+    <uib-tabset>
+        <uib-tab>
+            <uib-tab-heading>
+                User Info <i class ="fa fa-users fa-2x"></i>
+            </uib-tab-heading>
+            <div class="row info">
+                <div class="col-md-4">
+                    @if(user.selfie != null){
+                        <img src = '@user.selfie' class = "img-responsive">
+                    }else{
+                        <i class="fa fa-user-secret fa-15x"></i>
+                    }
+
+                </div>
+                <div class = "col-md-8">
+            <h6>Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()</h6>
+           @user.username
+           @user.selfie
+           @user.email
+                    </div>
+</div>
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                Structure Preferences <i class="fa fa-cogs fa-2x"></i>
+            </uib-tab-heading>
+            <p>Coming Soon</p>
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                My Edits <i class="fa fa-pencil-square-o fa-2x"></i>
+            </uib-tab-heading>
+            <p>Coming Soon</p>
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                Messages <i class="fa fa-envelope fa-2x"></i>
+            </uib-tab-heading>
+            <p>Coming Soon</p>
+        </uib-tab>
+    </uib-tabset>
+}
