@@ -25,6 +25,7 @@ public class MixtureSubstance extends Substance {
     	for(Component c:mixture.getMixture()){
 			sref.add(c.substance);
 		}
+    	
 		return sref;
 	}
     @Override

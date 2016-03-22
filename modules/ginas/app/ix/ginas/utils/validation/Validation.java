@@ -177,13 +177,7 @@ public class Validation {
 		            break;
 	        }
 	        
-	        // TODO: move to some other location,
-	        // perhaps a preUpdate hook?
-	        //attempted
-	        
-	        if(GinasProcessingMessage.ALL_VALID(gpm)){
-	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
-	        }
+	       
         }catch(Exception e){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
         }
