@@ -15,7 +15,89 @@
         });
 
 
-    ginasApp.factory('Substance', function (CVFields) {
+    ginasApp.factory('Substance', function ($q, CVFields) {
+
+        function isCV(ob) {
+            if (typeof ob !== "object") return false;
+            if (ob === null) return false;
+            //   if (typeof ob.value !== "undefined") {
+            if (typeof ob.display !== "undefined") {
+                return true;
+            }
+            // }
+            return false;
+        }
+
+        function flattenCV(sub) {
+            for (var v in sub) {
+                if (isCV(sub[v])) {
+                    if (sub[v].value) {
+                        sub[v] = sub[v].value;
+                    } else {
+                        sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
+                        //  sub[v] = sub[v].display;
+                    }
+                } else {
+                    if (typeof sub[v] === "object") {
+                        flattenCV(sub[v]);
+                    }
+                }
+            }
+            return sub;
+        }
+
+        function expandCV(sub, path) {
+            _.forEach(_.keysIn(sub), function (field) {
+                if (path) {
+                    var newpath = path + "." + field;
+                } else {
+                    var newpath = field;
+                }
+                if (_.isObject(sub[field])) {
+                    if (_.isArray(sub[field])) {
+                        _.forEach((sub[field]), function (value, key) {
+                            if (_.isObject(value)) {
+                                expandCV(value, newpath);
+                            } else {
+                                CVFields.getByField(newpath).then(function (response) {
+                                    if (response.data.count > 0) {
+                                        var cv = response.data.content[0].terms;
+                                        var newcv = _.find(cv, ['value', value]);
+                                        if (_.isUndefined(newcv)) {
+                                            newcv = {};
+                                            _.set(newcv, 'display', value + ' (not in CV)');
+                                        }
+                                        sub[field][key] = newcv;
+
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        if (!_.isNull(sub[field])) {
+                            expandCV(sub[field], newpath);
+                            //});
+                        }
+                    }
+                } else {
+                    if (!_.isNull(sub[field])) {
+                        CVFields.getByField(newpath).then(function (response) {
+                            if (response.data.content.length > 0) {
+                                var cv = response.data.content[0].terms;
+                                var newcv = _.find(cv, ['value', sub[field]]);
+                                if (_.isUndefined(newcv)) {
+                                    newcv = {};
+                                    _.set(newcv, 'display', sub[field] + ' (not in CV)');
+                                }
+                                sub[field] = newcv;
+                            }
+                        });
+                    }
+                }
+            });
+            return sub;
+        }
+
         var substance = {};
         substance.$$setClass = function (subClass) {
             var substanceClass = subClass;
@@ -74,14 +156,11 @@
             return substance;
         };
 
-       /* substance.$$pasteSubstance = function (sub) {
-            substance.$$expandCV(sub);
-            console.log(substance);
+        substance.$$pasteSubstance = function (sub) {
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
-            console.log(sub);
-            return sub;
+            return $q.when(expandCV(substance));
         };
 
         substance.$$fromFormSubstance = function () {
@@ -106,7 +185,7 @@
                 }
             }
 
-            substance = substance.$$flattenCV(substance);
+            substance = flattenCV(substance);
             if (_.has(substance, 'moieties')) {
                 _.forEach(substance.moieties, function (m) {
                     m.id = UUID.newID();
@@ -125,92 +204,6 @@
             }
             return substance;
         };
-
-        substance.$$expandCV = function (sub, path) {
-            _.forEach(_.keysIn(sub), function (field) {
-                if (path) {
-                    var newpath = path + "." + field;
-                } else {
-                    var newpath = field;
-                }
-                if (_.isObject(sub[field])) {
-                    if (_.isArray(sub[field])) {
-                        _.forEach((sub[field]), function (value, key) {
-                            if (_.isObject(value)) {
-                                substance.$$expandCV(value, newpath);
-                            } else {
-                                CVFields.getByField(newpath).then(function (response) {
-                                    if (response.data.count > 0) {
-                                        var cv = response.data.content[0].terms;
-                                        var newcv = _.find(cv, ['value', value]);
-                                        if (_.isUndefined(newcv)) {
-                                            newcv = {};
-                                            _.set(newcv, 'display', value + ' (not in CV)');
-                                        }
-                                        sub[field][key] = newcv;
-
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        if (!_.isNull(sub[field])) {
-                            substance.$$expandCV(sub[field], newpath);
-                            //});
-                        }
-                    }
-                } else {
-                    if (!_.isNull(sub[field])) {
-                        CVFields.getByField(newpath).then(function (response) {
-                            if (response.data.content.length > 0) {
-                                var cv = response.data.content[0].terms;
-                                var newcv = _.find(cv, ['value', sub[field]]);
-                                console.log(newcv);
-                                if (_.isUndefined(newcv)) {
-                                    newcv = {};
-                                    _.set(newcv, 'display', sub[field] + ' (not in CV)');
-                                }
-                                sub[field] = newcv;
-                            }
-                        });
-                    }
-                }
-            });
-            console.log("finished");
-            //return sub;
-        };
-
-        substance.$$flattenCV = function (sub) {
-            for (var v in sub) {
-                if (substance.isCV(sub[v])) {
-                    if (sub[v].value) {
-                        sub[v] = sub[v].value;
-                    } else {
-                        sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
-                        //  sub[v] = sub[v].display;
-                    }
-                } else {
-                    if (typeof sub[v] === "object") {
-                        substance.flattenCV(sub[v]);
-                    }
-                }
-            }
-            return sub;
-        };
-
-        substance.$$isCV = function (ob) {
-            if (typeof ob !== "object") return false;
-            if (ob === null) return false;
-            //   if (typeof ob.value !== "undefined") {
-            if (typeof ob.display !== "undefined") {
-                return true;
-            }
-            // }
-            return false;
-        };
-
-*/
-
 
         return substance;
     });
@@ -491,7 +484,7 @@
             localStorageService.remove('structureid');
         };
 
-        $scope.toFormSubstance = function (apiSub) {
+   /*     $scope.toFormSubstance = function (apiSub) {
             var formSub = $scope.expandCV(apiSub);
             return formSub;
         };
@@ -616,7 +609,7 @@
             // }
             return false;
         };
-
+*/
               //Method for pushing temporary objects into the final message
         //Note: This was changed to use a full path for type.
         //That means that passing something like "nucleicAcid.type"
@@ -693,18 +686,16 @@
                     return err;
                 }
             });
-            console.log(errs);
 			 return (errs.length<=0);
 		};
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
-            sub = angular.toJson($scope.fromFormSubstance(sub));
+            sub = angular.toJson(Substance.$$fromFormSubstance(sub));
             console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
                 var arr = [];
-                console.log(responseTotal);
                 var response=responseTotal.validationMessages;
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
@@ -746,7 +737,7 @@
              }*/
             var sub = angular.copy($scope.substance);
             if (_.has(sub, '$$update')) {
-                sub = angular.toJson($scope.fromFormSubstance(sub));
+                sub = angular.toJson(Substance.$$fromFormSubstance(sub));
                 console.log("TEST");
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
@@ -757,7 +748,7 @@
                     $scope.open(url);
                 });
             } else {
-                sub = angular.toJson($scope.fromFormSubstance(sub));
+                sub = angular.toJson(Substance.$$fromFormSubstance(sub));
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -789,7 +780,7 @@
         };
         $scope.approveSubstance = function () {
             var sub = angular.copy($scope.substance);
-            sub = $scope.fromFormSubstance(sub);
+            sub = Substance.$$fromFormSubstance(sub);
             var keyid = sub.uuid.substr(0, 8);
           //  location.href = baseurl + "substance/" + keyid + "/approve";
         };
@@ -839,9 +830,13 @@
         };
 
         $scope.submitpaster = function (input) {
-            console.log(input);
-//            $scope.substance = Substance.$$pasteSubstance(JSON.parse(input));
-            $scope.substance = $scope.toFormSubstance(sub);
+            console.log(JSON.parse(input));
+            Substance.$$pasteSubstance(JSON.parse(input)).then(function(data){
+                console.log(data);
+                $scope.substance = data;
+            });
+            console.log($scope);
+          //  $scope.substance = $scope.toFormSubstance(sub);
             if ($scope.substance.substanceClass === 'chemical') {
                 molChanger.setMol($scope.substance.structure.molfile);
             }
@@ -889,7 +884,7 @@
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
-            var sub = $scope.toFormSubstance(angular.copy($window.loadjson));
+            var sub = Substance.$$toFormSubstance(angular.copy($window.loadjson));
             _.set(sub, '$$update', true);
             $scope.substance = sub;
         } else {
@@ -908,7 +903,7 @@
             //} else {
         //    console.log($location);
             var substanceClass = $location.$$search.kind;
-            $scope.substance = Substance.$$setClass(substanceClass);
+            $scope.substance.$$setClass(substanceClass);
 //            console.log($scope);
         }
 

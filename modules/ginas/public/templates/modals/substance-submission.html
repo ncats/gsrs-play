@@ -4,6 +4,7 @@
                 <h4 class="modal-title" id="myModalLabelExport">Submit Substance</h4>
             </div>
             <div class="modal-body">
+                <h4 ng-if="errorsArray.length>0">Errors must be dismissed before final submission</h4>
                 <div class = "row" ng-repeat="err in errorsArray">
                     <div class="col-md-12">
                         <div class="alert {{err.class}} alert-dismissible" role="alert">
@@ -16,7 +17,15 @@
                             <a target = "_blank" href="{{link.href}}">{{link.text}}</a>
                         </div>
                     </span>
+                            <div class ="row">
+                                <div class ="col-md-2 pull-right">
+                                <button ng-click="dismiss(err)" type="button" class="btn btn-default" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">Dismiss</span>
+                                </button>
+                                    </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
                 <div class = "row">
@@ -31,7 +40,7 @@
                     	<button type="button" class="btn btn-success" ng-click="submitSubstance()">Submit</button>
                     </span>
                     <span ng-hide="canSubmit">
-                    	<button type="button" class="btn btn-success" disabled >Submit</button>
+                    	<button type="button" class="btn btn-success" disabled>Submit</button>
                     </span>
                 </div>
         </div>
