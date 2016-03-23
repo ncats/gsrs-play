@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
+import ix.core.UserFetcher;
+import ix.core.models.Session;
+import ix.utils.Util;
 import play.Logger;
 import play.Plugin;
 import play.Application;
@@ -70,10 +73,16 @@ public class IxCache extends Plugin {
     public static Element getElm (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.get(key);
+        return _instance.cache.get(adaptKey(key));
     }
     
     public static Object get (String key) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        Element elm = _instance.cache.get(adaptKey(key));
+        return elm != null ? elm.getObjectValue() : null;
+    }
+    private static Object getRaw (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
         Element elm = _instance.cache.get(key);
@@ -83,21 +92,21 @@ public class IxCache extends Plugin {
     public static long getLastAccessTime (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = _instance.cache.get(adaptKey(key));
         return elm != null ? elm.getLastAccessTime() : 0l;
     }
 
     public static long getExpirationTime (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = _instance.cache.get(adaptKey(key));
         return elm != null ? elm.getExpirationTime() : 0l;
     }
 
     public static boolean isExpired (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = _instance.cache.get(adaptKey(key));
         return elm != null ? elm.isExpired() : false;
     }
 
@@ -109,10 +118,10 @@ public class IxCache extends Plugin {
         throws Exception {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
+        Element elm = _instance.cache.get(adaptKey(key));
         if (elm == null || elm.getCreationTime() < epoch) {
             T v = generator.call();
-            elm = new Element (key, v);
+            elm = new Element (adaptKey(key), v);
             _instance.cache.put(elm);
         }
         return (T)elm.getObjectValue();
@@ -126,9 +135,9 @@ public class IxCache extends Plugin {
         Object value = get (key);
         if (value == null) {
             if (_instance.ctx.debug(2))
-                Logger.debug("IxCache missed: "+key);
+                Logger.debug("IxCache missed: "+adaptKey(key));
             T v = generator.call();
-            _instance.cache.put(new Element (key, v));
+            _instance.cache.put(new Element (adaptKey(key), v));
             return v;
         }
         return (T)value;
@@ -143,14 +152,30 @@ public class IxCache extends Plugin {
         Object value = get (key);
         if (value == null) {
             if (_instance.ctx.debug(2))
-                Logger.debug("IxCache missed: "+key);
+                Logger.debug("IxCache missed: "+adaptKey(key));
             T v = generator.call();
             _instance.cache.put
-                (new Element (key, v, seconds <= 0, seconds, seconds));
+                (new Element (adaptKey(key), v, seconds <= 0, seconds, seconds));
             return v;
         }
         return (T)value;
     }
+    public static <T> T getOrElseRaw (String key, Callable<T> generator,
+            int seconds) throws Exception {
+		if (_instance == null)
+		throw new IllegalStateException ("Cache hasn't been initialized!");
+		
+		Object value = getRaw (key);
+		if (value == null) {
+		if (_instance.ctx.debug(2))
+		Logger.debug("IxCache missed: "+key);
+		T v = generator.call();
+		_instance.cache.put
+		(new Element (key, v, seconds <= 0, seconds, seconds));
+		return v;
+		}
+		return (T)value;
+	}
 
     public static List getKeys () {
         try {
@@ -173,20 +198,20 @@ public class IxCache extends Plugin {
     public static void set (String key, Object value) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        _instance.cache.put(new Element (key, value));
+        _instance.cache.put(new Element (adaptKey(key), value));
     }
 
     public static void set (String key, Object value, int expiration) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
         _instance.cache.put
-            (new Element (key, value, expiration <= 0, expiration, expiration));
+            (new Element (adaptKey(key), value, expiration <= 0, expiration, expiration));
     }
 
     public static boolean remove (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.remove(key);
+        return _instance.cache.remove(adaptKey(key));
     }
     
     public static Statistics getStatistics () {
@@ -198,6 +223,18 @@ public class IxCache extends Plugin {
     public static boolean contains (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.isKeyInCache(key);
+        return _instance.cache.isKeyInCache(adaptKey(key));
     }
+    
+    public static String adaptKey(String okey){
+    	final String user = UserFetcher.getActingUser(true).username;
+    	String nkey = okey + "#" + Util.sha1(user);
+    	return nkey;
+    }
+
+	public static void setRaw(String key, Object value) {
+		 if (_instance == null)
+	            throw new IllegalStateException ("Cache hasn't been initialized!");
+	      _instance.cache.put(new Element (key, value));
+	}
 }

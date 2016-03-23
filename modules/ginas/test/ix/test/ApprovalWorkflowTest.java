@@ -18,6 +18,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.ginas.models.v1.Substance;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 public class ApprovalWorkflowTest {
 	
@@ -25,6 +28,12 @@ public class ApprovalWorkflowTest {
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+    };
     
 
     

@@ -66,7 +66,7 @@ import static org.apache.lucene.document.Field.Store.YES;
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer {
+public class TextIndexer implements Closeable{
     protected static final String STOP_WORD = " THE_STOP";
     protected static final String START_WORD = "THE_START ";
     protected static final String GIVEN_STOP_WORD = "$";
@@ -100,7 +100,6 @@ public class TextIndexer {
 
     static final DateFormat YEAR_DATE_FORMAT = new SimpleDateFormat ("yyyy");
     static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
-    static final Object POISON_PILL = new Object ();
     
     public static class FV {
         String label;
@@ -521,9 +520,9 @@ public class TextIndexer {
             Logger.debug(Thread.currentThread()
                          +": FetchWorker started at "+new Date ());
             try {
-                for (SearchResultPayload payload; (payload = fetchQueue.take())
-                         != POISON_PAYLOAD
-                         && !Thread.currentThread().isInterrupted(); ) {
+                for (SearchResultPayload payload;
+                     !Thread.currentThread().isInterrupted() &&
+                             (payload = fetchQueue.take()) != POISON_PAYLOAD; ) {
                     try {
                         long start = System.currentTimeMillis();
                         Logger.debug(Thread.currentThread()
@@ -540,6 +539,7 @@ public class TextIndexer {
                                       System.currentTimeMillis()-start));
                     }
                     catch (IOException ex) {
+                        ex.printStackTrace();
                         Logger.error("Error in processing payload", ex);
                     }
                 }
@@ -547,7 +547,7 @@ public class TextIndexer {
                              +": FetchWorker stopped at "+new Date());
             }
             catch (Exception ex) {
-                //ex.printStackTrace();
+                ex.printStackTrace();
                 Logger.trace(Thread.currentThread()+" stopped", ex);
             }
         }
@@ -596,6 +596,9 @@ public class TextIndexer {
         
     static ConcurrentMap<File, TextIndexer> indexers;
 
+    private File indexFileDir, facetFileDir;
+
+    private boolean isShutDown=false;
     static{
         init();
     }
@@ -613,6 +616,7 @@ public class TextIndexer {
           return indexer;
         }
         catch (IOException ex) {
+            ex.printStackTrace();
             return indexers.get(baseDir);
         }
     }
@@ -625,17 +629,17 @@ public class TextIndexer {
         if (!dir.isDirectory())
             throw new IllegalArgumentException ("Not a directory: "+dir);
 
-        File index = new File (dir, "index");
-        if (!index.exists())
-            index.mkdirs();
+        indexFileDir = new File (dir, "index");
+        if (!indexFileDir.exists())
+            indexFileDir.mkdirs();
         indexDir = new NIOFSDirectory 
-            (index, NoLockFactory.getNoLockFactory());
+            (indexFileDir, NoLockFactory.getNoLockFactory());
 
-        File taxon = new File (dir, "facet");
-        if (!taxon.exists())
-            taxon.mkdirs();
+        facetFileDir = new File (dir, "facet");
+        if (!facetFileDir.exists())
+            facetFileDir.mkdirs();
         taxonDir = new NIOFSDirectory
-            (taxon, NoLockFactory.getNoLockFactory());
+            (facetFileDir, NoLockFactory.getNoLockFactory());
 
         indexAnalyzer = createIndexAnalyzer ();
         IndexWriterConfig conf = new IndexWriterConfig 
@@ -669,6 +673,7 @@ public class TextIndexer {
                     lookups.put(f.getName(), new SuggestLookup (f));
                 }
                 catch (IOException ex) {
+                    ex.printStackTrace();
                     Logger.error("Unable to load lookup from "+f, ex);
                 }
             }
@@ -693,22 +698,24 @@ public class TextIndexer {
                 if (f != null)
                     f.cancel(true);
         }
-        
+        System.out.println("set fetchworkers for " + System.identityHashCode(this));
+
         fetchWorkers = new Future[n];
         for (int i = 0; i < fetchWorkers.length; ++i)
             fetchWorkers[i] = threadPool.submit(new FetchWorker ());
     }
     
     protected synchronized DirectoryReader getReader () throws IOException {
-        if(indexReader.getRefCount() <=0){
+       /* if(indexReader.getRefCount() <=0){
 
             indexReader = DirectoryReader.open(indexReader.directory());
             return indexReader;
         }
+        */
         DirectoryReader reader = DirectoryReader.openIfChanged(indexReader);
         if (reader != null) {
             indexReader.decRef();
-            //indexReader.close();
+            closeAndIgnore(indexReader);
             indexReader = reader;
         }
         return indexReader;
@@ -744,23 +751,6 @@ public class TextIndexer {
         return config (indexer);
     }
 
-    public TextIndexer createEmptyInstance (File dir) throws IOException {
-        TextIndexer indexer = new TextIndexer ();
-
-        File index = new File (dir, "index");
-        if (!index.exists())
-            index.mkdirs();
-        indexer.indexDir = new NIOFSDirectory
-            (index, NoLockFactory.getNoLockFactory());
-        
-        File taxon = new File (dir, "facet");
-        if (!taxon.exists())
-            taxon.mkdirs();
-        indexer.taxonDir = new NIOFSDirectory
-            (taxon, NoLockFactory.getNoLockFactory());
-        
-        return config (indexer);
-    }
 
     protected TextIndexer config (TextIndexer indexer) throws IOException {
         indexer.indexAnalyzer = createIndexAnalyzer ();
@@ -845,6 +835,7 @@ public class TextIndexer {
                 query = parser.parse(qtext);
             }
             catch (ParseException ex) {
+                ex.printStackTrace();
                 Logger.warn("Can't parse query expression: "+qtext, ex);
             }
         }
@@ -938,10 +929,10 @@ public class TextIndexer {
         long start = System.currentTimeMillis();
             
         FacetsCollector fc = new FacetsCollector ();
-        TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
+
         TopDocs hits = null;
         
-        try {
+        try (TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter)){
             Sort sorter = null;
             if (!options.order.isEmpty()) {
                 List<SortField> fields = new ArrayList<SortField>();
@@ -1105,9 +1096,6 @@ public class TextIndexer {
                     }
                 }
             }
-        }
-        finally {
-            taxon.close();
         }
 
         if (DEBUG (1)) {
@@ -1836,6 +1824,7 @@ public class TextIndexer {
 
         }catch (IOException ex) {
             Logger.trace("Can't persist facets config!", ex);
+            ex.printStackTrace();
         }
     }
 
@@ -1902,13 +1891,32 @@ public class TextIndexer {
         }
         catch (IOException ex) {
             Logger.trace("Can't persist sorter config!", ex);
+            ex.printStackTrace();
         }
     }
 
+    /**
+     * Closing this indexer will
+     * shut it down.  This is the same
+     * as calling {@link #shutdown()}.
+     */
+    @Override
+    public void close(){
+        shutdown();
+    }
+
     public void shutdown () {
+        if(isShutDown){
+            System.out.println("already shutdown");
+            return;
+        }
+        System.out.println("shutting down " + System.identityHashCode(this));
         try {
             fetchQueue.put(POISON_PAYLOAD);
             scheduler.shutdown();
+            System.out.println("waiting for termination");
+            scheduler.awaitTermination(1, TimeUnit.MINUTES);
+            System.out.println("done waiting for termination");
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
             saveSorters (getSorterConfigFile (), sorters);
 
@@ -1923,7 +1931,7 @@ public class TextIndexer {
             closeAndIgnore(indexDir);
             closeAndIgnore(taxonDir);
 
-
+            isShutDown=true;
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1931,7 +1939,13 @@ public class TextIndexer {
         }
         finally {
             indexers.remove(baseDir);
-            threadPool.shutdown();
+            System.out.println("indexers left after shutdown =" + indexers.keySet());
+            threadPool.shutdownNow();
+            try{
+                threadPool.awaitTermination(1, TimeUnit.MINUTES);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
     }
 

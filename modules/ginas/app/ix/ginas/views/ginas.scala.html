@@ -96,8 +96,8 @@
     <script type="text/javascript">
         var session = {
         
-        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {         
-            username:"@ix.ncats.controllers.auth.Authentication.getUser().username"
+        @if(ix.ncats.controllers.auth.Authentication.fakeThing() != null) {         
+            username:"@ix.ncats.controllers.auth.Authentication.fakeThing().username"
         } else {
             username:null
         }
