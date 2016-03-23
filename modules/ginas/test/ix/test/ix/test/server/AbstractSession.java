@@ -64,7 +64,8 @@ public abstract class AbstractSession<T> implements Closeable{
     }
 
     public String getUserName(){
-        WSResponse wsResponse1 = get("/ginas/app/api/v1/whoam");
+        WSResponse wsResponse1 = get("ginas/app/api/v1/whoami");
+
         if(wsResponse1.getStatus() != 200){
             return null;
         }
