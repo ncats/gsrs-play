@@ -30,7 +30,6 @@ public class TextIndexerPlugin extends Plugin {
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize text indexer", ex);
-            ex.printStackTrace();
         }
     }
 
