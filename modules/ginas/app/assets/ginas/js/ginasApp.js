@@ -97,7 +97,6 @@
             });
             return sub;
         }
-
         var substance = {};
         substance.$$setClass = function (subClass) {
             var substanceClass = subClass;
@@ -151,58 +150,64 @@
             return substance;
         };
 
+        substance.$$getClass = function(){
+            return substance.substanceClass;
+        }
+
         substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
             return substance;
         };
 
-        substance.$$pasteSubstance = function (sub) {
+        substance.$$setSubstance = function (sub) {
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
             return $q.when(expandCV(substance));
         };
 
-        substance.$$fromFormSubstance = function () {
-            if (substance.q) {
-                delete substance.q;
+        //returns a flattened clone of the substance
+        substance.$$flattenSubstance = function () {
+            var sub = _.cloneDeep(substance);
+            if (sub.q) {
+                delete sub.q;
             }
 
-            if (substance.substanceClass === 'protein') {
-                if (_.has(substance.protein, 'disulfideLinks')) {
+            if (sub.substanceClass === 'protein') {
+                if (_.has(sub.protein, 'disulfideLinks')) {
                     console.log("working");
-                    _.forEach(substance.protein.disulfideLinks, function (value, key) {
+                    _.forEach(sub.protein.disulfideLinks, function (value, key) {
                         var disulfideLink = {};
                         var sites = _.toArray(value.sites);
                         disulfideLink.sites = sites;
-                        substance.protein.disulfideLinks[key] = disulfideLink;
+                        sub.protein.disulfideLinks[key] = disulfideLink;
                     });
                 }
-                if (_.has(substance.protein, 'otherLinks')) {
-                    _.forEach(substance.protein.otherLinks, function (value, key) {
-                        substance.protein.otherLinks[key] = value.sites;
+                if (_.has(sub.protein, 'otherLinks')) {
+                    _.forEach(sub.protein.otherLinks, function (value, key) {
+                        sub.protein.otherLinks[key] = value.sites;
                     });
                 }
             }
 
-            substance = flattenCV(substance);
-            if (_.has(substance, 'moieties')) {
-                _.forEach(substance.moieties, function (m) {
+            sub = flattenCV(sub);
+            if (_.has(sub, 'moieties')) {
+                _.forEach(sub.moieties, function (m) {
                     m.id = UUID.newID();
                 });
             }
-            if (_.has(substance, 'structure')) {
+            if (_.has(sub, 'structure')) {
                 //apparently needs to be reset as well
-                substance.structure.id = UUID.newID();
-                if (substance.substanceClass === 'polymer') {
-                    _.set(substance, 'polymer.idealizedStructure', substance.structure);
-                    console.log(substance);
-                    substance = _.omit(substance, 'structure');
-                    console.log(substance);
+                sub.structure.id = UUID.newID();
+                if (sub.substanceClass === 'polymer') {
+                    _.set(sub, 'polymer.idealizedStructure', sub.structure);
+                    console.log(sub);
+                    sub = _.omit(sub, 'structure');
+                    console.log(sub);
                 }
 
             }
-            return substance;
+            return sub;
         };
 
         return substance;
@@ -415,6 +420,34 @@
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
        // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
+        $scope.substance = $window.loadjson;
+        if (typeof $window.loadjson !== "undefined" &&
+            JSON.stringify($window.loadjson) !== "{}") {
+            Substance.$$setSubstance($window.loadjson).then(function(data){
+                console.log(data);
+                _.set(data, '$$update', true);
+                $scope.substance = data;
+                console.log($scope);
+            });
+        } else {
+            //var edit = localStorageService.get('editID');
+            //console.log(edit);
+            //if (edit) {
+            //    localStorageService.remove('structureid');
+            //    substanceIDRetriever.getSubstance(edit).then(function (data) {
+            //        var sub = $scope.toFormSubstance(data);
+            //        $scope.substance = sub;
+            //
+            //      //This removes the substance, so reloading returns an empty form
+            //      //  localStorageService.remove('editID');
+            //    });
+            //
+            //} else {
+            //    console.log($location);
+            var substanceClass = $location.$$search.kind;
+            $scope.substance = Substance.$$setClass(substanceClass);
+//            console.log($scope);
+        }
 
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
@@ -426,7 +459,7 @@
             $anchorScroll();
         };
         $scope.viewToggle = function () {
-            $scope.submitSubstanceView = $scope.fromFormSubstance(angular.copy($scope.substance));
+            $scope.submitSubstanceView = angular.fromJson(angular.toJson($scope.substance.$$flattenSubstance()));
         };
 
         $scope.toggleGrid = function () {
@@ -444,8 +477,8 @@
         };
 
         $scope.compare = function () {
-            //$scope.left = angular.toJson(Substance.$$fromFormSubstance(angular.copy($scope.substance)));
-            $scope.left = angular.toJson($scope.fromFormSubstance(angular.copy($scope.substance)));
+            //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
+            $scope.left = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.right = angular.toJson(angular.copy($window.loadjson));
             $scope.substancesEqual = angular.equals($scope.right, $scope.left);
         };
@@ -690,9 +723,9 @@
 		};
 
         $scope.validateSubstance = function (callback) {
-            var sub = angular.copy($scope.substance);
-            sub = angular.toJson(Substance.$$fromFormSubstance(sub));
+            var sub = angular.toJson($scope.substance.$$flattenSubstance());
             console.log(sub);
+            console.log($scope.substance);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
                 var arr = [];
@@ -720,6 +753,7 @@
 
         $scope.submitSubstance = function () {
             var url;
+            var sub={};
             $scope.close();
             //  $scope.$broadcast('show-errors-check-validity');
             //      $scope.checkErrors();
@@ -735,9 +769,8 @@
              if (r != true) {
              return;
              }*/
-            var sub = angular.copy($scope.substance);
-            if (_.has(sub, '$$update')) {
-                sub = angular.toJson(Substance.$$fromFormSubstance(sub));
+            sub = angular.toJson(sub.$$flattenSubstance());
+            if (_.has($scope.substance, '$$update')) {
                 console.log("TEST");
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
@@ -748,7 +781,6 @@
                     $scope.open(url);
                 });
             } else {
-                sub = angular.toJson(Substance.$$fromFormSubstance(sub));
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -779,8 +811,7 @@
             $scope.open(url);
         };
         $scope.approveSubstance = function () {
-            var sub = angular.copy($scope.substance);
-            sub = Substance.$$fromFormSubstance(sub);
+            sub = angular.toJson(sub.$$flattenSubstance());
             var keyid = sub.uuid.substr(0, 8);
           //  location.href = baseurl + "substance/" + keyid + "/approve";
         };
@@ -831,7 +862,7 @@
 
         $scope.submitpaster = function (input) {
             console.log(JSON.parse(input));
-            Substance.$$pasteSubstance(JSON.parse(input)).then(function(data){
+            Substance.$$setSubstance(JSON.parse(input)).then(function(data){
                 console.log(data);
                 $scope.substance = data;
             });
@@ -859,8 +890,8 @@
 /!*            var sub = Substance.$$setClass($window.loadjson.substanceClass);
             var sub2 = ;
             console.log(sub);;*!/
-            console.log(Substance.$$pasteSubstance($window.loadjson));
-            $scope.substance = Substance.$$pasteSubstance($window.loadjson);
+            console.log(Substance.$$setSubstance($window.loadjson));
+            $scope.substance = Substance.$$setSubstance($window.loadjson);
             _.set( $scope.substance, '$$update', true);
             console.log($scope);
         } else {
@@ -878,34 +909,10 @@
             //
             //} else {
             var substanceClass = $location.$$search.kind;
-            $scope.substance = Substance.$$pasteSubstance(substanceClass);
+            $scope.substance = Substance.$$setSubstance(substanceClass);
             console.log($scope);
         }*/
 
-        if (typeof $window.loadjson !== "undefined" &&
-            JSON.stringify($window.loadjson) !== "{}") {
-            var sub = Substance.$$toFormSubstance(angular.copy($window.loadjson));
-            _.set(sub, '$$update', true);
-            $scope.substance = sub;
-        } else {
-            //var edit = localStorageService.get('editID');
-            //console.log(edit);
-            //if (edit) {
-            //    localStorageService.remove('structureid');
-            //    substanceIDRetriever.getSubstance(edit).then(function (data) {
-            //        var sub = $scope.toFormSubstance(data);
-            //        $scope.substance = sub;
-            //
-            //      //This removes the substance, so reloading returns an empty form
-            //      //  localStorageService.remove('editID');
-            //    });
-            //
-            //} else {
-        //    console.log($location);
-            var substanceClass = $location.$$search.kind;
-            $scope.substance.$$setClass(substanceClass);
-//            console.log($scope);
-        }
 
 
 
@@ -1786,14 +1793,14 @@
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;
-                            for (var i in data.structuralUnits) {
                                 CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
-                                    var cv = response.data.content[0].terms;
-                                    data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
+                                    for (var i in data.structuralUnits) {
+                                        var cv = response.data.content[0].terms;
+                                        data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
+                                    }
+                                    polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                                    scope.parent.polymer.structuralUnits = data.structuralUnits;
                                 });
-                            }
-                            polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
-                            scope.parent.polymer.structuralUnits = data.structuralUnits;
                         }
                         scope.parent.structure = data.structure;
                         scope.parent.moieties = [];
@@ -1972,13 +1979,17 @@ ginasApp.directive('referenceModalButton', function ($compile, $templateRequest,
              replace: 'true',*/
             scope: {
                 referenceobj:'=',
-                parent:'='
+                parent:'=',
+                edit:'=?'
             },
             link: function (scope, element, attrs) {
                 var modalInstance;
-                        var template = angular.element(' <a aria-label="Add References" ng-click = "open()"><span class="sr-only">Add References</span><i class="fa fa-external-link fa-2x success" uib-tooltip ="Add References"></i></a>');
-                        element.append(template);
-                        $compile(template)(scope);
+                var template;
+                $templateRequest(baseurl + "assets/templates/selectors/reference-selector.html").then(function (html) {
+                    template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                    });
                        var  templateUrl = baseurl + "assets/templates/modals/reference-modal.html";
 
                 scope.close = function () {

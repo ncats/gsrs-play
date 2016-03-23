@@ -3,34 +3,30 @@
         <form-header type="sourceMaterials" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="detailsForm" id="addDetailsForm" id="add-name" role="form" novalidate>
+        <form class="form-horizontal" name="diverseSourceForm" id="addDiverseSourceForm" role="form"
+              novalidate>
             <div class="row form-row">
-                <div class="col-md-12" uib-collapse="iscollapsed">
-                    <form class="form-horizontal" name="diverseSourceForm" id="addDiverseSourceForm" role="form"
-                          novalidate>
-                        <div class="row form-row">
-                            <div class="col-md-3">
-                                <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialClass"
-                                                    cv="SOURCE_MATERIAL_CLASS"
-                                                    label="Source Material Class"></dropdown-view-edit>
-                            </div>
-                            <div class="col-md-3">
-                                <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialType"
-                                                    cv="SOURCE_MATERIAL_TYPE"
-                                                    label="Source Material Type"></dropdown-view-edit>
-                            </div>
-                            <div class="col-md-3"
-                                 ng-if="parent.structurallyDiverse.sourceMaterialClass.display=='ORGANISM'">
-                                <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialState"
-                                                    cv="SOURCE_MATERIAL_STATE"
-                                                    label="Source Material State"></dropdown-view-edit>
-                            </div>
-                            <div class="col-md-1 pull-right">
-                                <form-selector referenceobj=parent.structurallyDiverse parent="substance"
-                                               type="reference" divid="diverseSourceForm"></form-selector>
-                            </div>
-                        </div>
-                        <div class="diverseSourceForm"></div>
-                    </form>
+                <div class="col-md-3">
+                    <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialClass"
+                                        cv="SOURCE_MATERIAL_CLASS"
+                                        label="Source Material Class"></dropdown-view-edit>
+                </div>
+                <div class="col-md-3">
+                    <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialType"
+                                        cv="SOURCE_MATERIAL_TYPE"
+                                        label="Source Material Type"></dropdown-view-edit>
+                </div>
+                <div class="col-md-3"
+                     ng-if="parent.structurallyDiverse.sourceMaterialClass.display=='ORGANISM'">
+                    <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialState"
+                                        cv="SOURCE_MATERIAL_STATE"
+                                        label="Source Material State"></dropdown-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <reference-modal-button referenceobj="parent.structurallyDiverse"
+                                            parent="parent"></reference-modal-button>
                 </div>
             </div>
+        </form>
+    </div>
+</div>

@@ -15,7 +15,8 @@
                     <form-selector referenceobj ="component" parent = "parent" divid="componentForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="component" parent = "parent" divid="componentForm" type = "reference"></form-selector>
+                    <reference-modal-button referenceobj= "component" parent = "parent"></reference-modal-button>
+
                 </div>
             </div>
             <div class="componentForm"></div>
@@ -38,7 +39,7 @@
                     <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "reference" divid={{obj.$$hashKey}}></form-selector>
+                    <reference-modal-button referenceobj= "obj" parent = "parent" edit = "true"></reference-modal-button>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

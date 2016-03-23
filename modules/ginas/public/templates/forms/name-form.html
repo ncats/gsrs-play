@@ -32,11 +32,7 @@
                     <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <label>References</label>
-                    <reference-modal-button class= "pull-right padded" referenceobj= "name" parent = "parent"></reference-modal-button>
-<!--
-                    <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "reference" required></form-selector>
--->
+                    <reference-modal-button referenceobj= "name" parent = "parent"></reference-modal-button>
                 </div>
             </div>
             <div class="row form-row">
@@ -87,7 +83,7 @@
                     <form-selector referenceobj ="obj" parent = "parent" type = "access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" type = "reference" divid={{obj.$$hashKey}}></form-selector>
+                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
                 </div>
                 </div>
                 <div class="row form-row">
