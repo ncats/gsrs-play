@@ -59,6 +59,34 @@ public class UserSessionTest {
     }
 
 
+    @Test(expected = IllegalArgumentException.class)
+    public void invalildPasswordBrowser(){
+        ts.newBrowserSession( new GinasTestServer.User(luke.getUserName(), "wrong_pass"));
+    }
+
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalildUsernameBrowser(){
+        ts.newBrowserSession( new GinasTestServer.User("not_a_user", "wrong_pass"));
+    }
+
+    @Test
+    public void invalildUsernameRest(){
+        RestSession session = ts.newRestSession( new GinasTestServer.User("not_a_user", "wrong_pass"));
+
+        WSResponse response = session.get("ginas/app/wizard?kind=chemical");
+        assertEquals(401, response.getStatus());
+    }
+
+    @Test
+    public void invalildPassordRest(){
+        RestSession session = ts.newRestSession( new GinasTestServer.User(luke.getUserName(), "wrong_pass"));
+
+        WSResponse response = session.get("ginas/app/wizard?kind=chemical");
+        assertEquals(401, response.getStatus());
+    }
+
 
     @Test
     public void restrictedUrlRequestAfterLogoutShouldError401() throws Exception{
@@ -66,7 +94,6 @@ public class UserSessionTest {
 
             session.logout();
             WSResponse response = session.get("ginas/app/wizard?kind=chemical");
-            System.out.println(response.getBody());
             assertEquals(401, response.getStatus());
         }
     }
