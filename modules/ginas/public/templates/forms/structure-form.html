@@ -6,30 +6,16 @@
         <form name = "structureForm" id = "addStructureForm" role="form" novalidate>
             <div class="row">
                 <div class = "col-md-12" id="jsdraw">
-<!--
-                    <sketcher ng-model ="struc" structure="parent"></sketcher>
--->
                     <sketcher parent =parent ng-model=parent.structure.molfile></sketcher>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-12 pull-right">
-<!--
-                    <button class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
--->
                         <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
-<!--
-                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export" uib-tooltip="Export Molfile"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
--->
-<!--
-                    <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" uib-tooltip="Import a molfile"><i class="fa fa-clipboard fa-2x success"></i></a>
--->
                 </div>
             </div>
 <hr>
-
             <div class = "row" ng-repeat="err in structureErrorsArray">
                 <div class="col-md-12">
                     <div class="alert {{err.class}} alert-dismissible" role="alert">
@@ -45,7 +31,6 @@
                     </div>
                 </div>
             </div>
-
                     <div class ="row">
                         <div class="col-md-3">
                             <text-view-edit obj = "parent.structure" field = "formula" id = "formula" label="Molecular Formula"></text-view-edit>
@@ -65,8 +50,8 @@
                                            type="access"></form-selector>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector referenceobj="parent.structure" parent="parent" divid="structureForm"
-                                           type="reference"></form-selector>
+                            <reference-modal-button referenceobj= "parent.structure" parent = "parent"></reference-modal-button>
+
                         </div>
                     </div>
                     <br>
