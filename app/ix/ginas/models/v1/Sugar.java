@@ -37,7 +37,7 @@ public class Sugar extends GinasCommonSubData {
     	siteContainer.setSites(sites);
     }
     
- // @JsonView(BeanViews.Internal.class)
+    
  	public String getSitesShorthand(){
  		if(siteContainer!=null){
      		return siteContainer.getShorthand();

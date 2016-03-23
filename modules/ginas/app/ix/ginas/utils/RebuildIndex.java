@@ -1,6 +1,7 @@
 package ix.ginas.utils;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.utils.EntityUtils;
 
 import java.lang.reflect.Field;
@@ -46,28 +47,39 @@ public class RebuildIndex  {
 				int page = 0;
 				int pageSize = 10;
 				int rcount = finder.findRowCount();
+				UPDATE_MESSAGE = "Fetching first " + pageSize + " of " + rcount + " records in " + (System.currentTimeMillis() - start) + "ms";
+				long totalTimeSerializing=0;
 				while (true) {
 					Query q = finder.query();
 					q.setFirstRow(pageSize * page)
 							.setMaxRows(pageSize);
+					System.out.println("This is the raw sql:" + q.getGeneratedSql());
 					List l = q.findList();
-					ObjectMapper om = new ObjectMapper();
+					EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
+					
 					for (Object o : l) {
+						long serialTime=System.currentTimeMillis();
 						try {
-							String v = om.valueToTree(o).toString();
+							String v = em.valueToTree(o).toString();
 						} catch (Exception e) {
 							e.printStackTrace();
 							Logger.info("Error serializing entity:" + o);
 						}
+						serialTime=System.currentTimeMillis()-serialTime;
+						totalTimeSerializing+=serialTime;
+						
 					}
-					UPDATE_MESSAGE = "Records Processed:" + (page + 1) * pageSize + " of " + rcount + " in " + (System.currentTimeMillis() - start) + "ms";
+					long timesofar=(System.currentTimeMillis() - start);
+					double serialFraction = totalTimeSerializing/(timesofar+0.0);
+					
+					UPDATE_MESSAGE += "\nRecords Processed:" + (page + 1) * pageSize + " of " + rcount + " in " +timesofar + "ms (" +totalTimeSerializing + "ms serializing, " +serialFraction + ")";
 					if (l.isEmpty() || (page + 1) * pageSize > rcount) break;
 					page++;
 				}
 				page = 0;
 				pageSize = 10;
 			}
-			UPDATE_MESSAGE = "Complete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
+			UPDATE_MESSAGE += "\n\nComplete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
 		}catch(Exception e){
 			e.printStackTrace();
 			UPDATE_MESSAGE = e.getMessage();

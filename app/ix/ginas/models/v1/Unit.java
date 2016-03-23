@@ -48,7 +48,6 @@ public class Unit extends GinasCommonSubData {
     public Map<String,LinkedHashSet<String>> getAttachmentMap(){
     	ObjectMapper om = new ObjectMapper();
     	Map<String, LinkedHashSet<String>> amap=null;
-    	
 		try {
 			amap = om.readValue(_attachmentMap, new TypeReference<Map<String, LinkedHashSet<String>>>(){});
 		} catch (Exception e) {
