@@ -65,7 +65,7 @@ public class RebuildIndex  {
 					page++;
 				}
 				page = 0;
-				pageSize = 100;
+				pageSize = 10;
 			}
 			UPDATE_MESSAGE = "Complete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
 		}catch(Exception e){

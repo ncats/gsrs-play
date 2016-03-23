@@ -6,6 +6,7 @@
 
 @(chem: PolymerSubstance, ctx: String = null)
 
+
 <div class="panel panel-default prot-list">
     <div class="panel-heading prot-title">
     	
@@ -23,9 +24,13 @@
     	
 
         <div class = "row">
+        	
             <div class = "col-md-3 text-center">
                 <span class="label label-primary label-offset list-view-badge pull-left">POLYMER</span>
-                <div class = "magnify" ng-click = "showLarge('@chem.polymer.displayStructure.id', '@chem.approvalID');"><rendered id = '@chem.polymer.displayStructure.id'></rendered></div>
+                <div class = "magnify" ng-click = "showLarge('@chem.polymer.displayStructure.id', '@chem.approvalID');">
+	                <rendered id = '@chem.polymer.displayStructure.id'>
+	                </rendered>
+                </div>
                 <div class = "row">
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
@@ -46,6 +51,8 @@
                     </div>
                 </div>
             </div>
+            
+           
             <div class = "col-md-6">
                 <div class = "row">
                     <div class = "col-md-2">
@@ -63,8 +70,8 @@
                         <h5>@ix.ginas.controllers.GinasApp.codesList(chem.codes)</h5>
                     </div>
                 </div>
+                
                 <h5>Relationships: @chem.relationships.size()</h5>
-
             </div>
 
             <div class = "col-md-2">
@@ -88,8 +95,12 @@
                 </div>
                     </div>
             </div>
+            
         </div>
+        
         <div class="@chem.approvalID" ng-click="showLarge('', '@chem.approvalID')"></div>
 
     </div>
+    
 </div><!--END panel panel-primary-->
+

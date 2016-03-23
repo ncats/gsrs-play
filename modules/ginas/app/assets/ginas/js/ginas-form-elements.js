@@ -16,6 +16,8 @@
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
         var CV = {
+        	
+        	
             getByField: function(path){
                 var ret;
 /*             return load().then(function(data){
@@ -532,20 +534,42 @@
             templateUrl: baseurl + "assets/templates/elements/text-box-view-edit.html",
             replace: true,
             scope: {
-                obj: '=obj',
+                obj: '=',
                 field: '@',
                 label: '@',
-                name: '='
-
+                name: '=',
+                validator: '&',
+                changeValidator: '&'
             },
             link: function (scope, element, attrs, ngModel) {
+
                 scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
+                    scope.errors=[];
+                	try{
+                		scope.validator(obj);
+                		if (_.has(obj, '_editing')) {
+                        	obj._editing = !obj._editing;
+                    	} else {
+                        	_.set(obj, '_editing', true);
+                    	}
+                	}catch(e){
+                		scope.errors.push(e);
+                	}
                 };
+                scope.errors=[];
+                
+                if(!scope.validator){
+                	scope.validator=function(){
+                		//console.log("default validating");
+                	};
+                }
+                
+                if(!scope.changeValidator){
+                	scope.changeValidator=function(){
+                		//console.log("default validating");
+                	};
+                }
+                
             }
         };
     });
