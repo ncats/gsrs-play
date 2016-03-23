@@ -118,21 +118,7 @@ public class RestSession extends AbstractSession<Void>{
         return exctractJSON(get(path));
     }
 
-    public JsonNode exctractJSON(WSResponse wsResponse1){
-        Objects.requireNonNull(wsResponse1);
 
-        int status2 = wsResponse1.getStatus();
-        if(status2>300){
-            System.out.println("That's an error!");
-            System.out.println(wsResponse1.getBody());
-        }
-        if(status2 != 200 && status2 != 201){
-            throw new IllegalStateException("response status Not OK : " + status2);
-        }
-        JsonNode returned = wsResponse1.asJson();
-        Objects.requireNonNull(returned);
-        return returned;
-    }
 
     public WSResponse whoAmI(){
         return get(API_URL_USERFETCH);

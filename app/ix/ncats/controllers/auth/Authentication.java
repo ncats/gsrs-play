@@ -44,7 +44,6 @@ public class Authentication extends Controller {
 
     static ix.core.plugins.SchedulerPlugin scheduler;
 
-
     
     static{
     	init();
@@ -350,20 +349,13 @@ public class Authentication extends Controller {
     }
     
     public static UserProfile getUserProfile() {
-        System.out.println("Get UserProfile");
         Session session = getSession();
         if(session!=null){
         	if(session.profile!=null){
-                System.out.println("found profile " + session.profile.user.username);
         		return session.profile;
         	}
         }
-        System.out.println("session = null!!");
-        try{
-            throw new IllegalStateException("session is null");
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+
         //do key auth
         String user=request().getHeader("auth-username");
         String key=request().getHeader("auth-key");
@@ -371,11 +363,6 @@ public class Authentication extends Controller {
         String password=request().getHeader("auth-password");
         
         UserProfile up=null;
-        System.out.println("session = " + session);
-        System.out.println("user" + user);
-        System.out.println("key" + key);
-        System.out.println("token" + token);
-        System.out.println("pass" + password);
 
         if(user!=null && key!=null){
         	up=getUserProfileFromKey(user,key);
@@ -427,17 +414,11 @@ public class Authentication extends Controller {
     public static Session getSession() {
     	
         String id = session(SESSION);
-        System.out.println("session id =" + id);
         Session session = getCachedSession(id);
-        System.out.println("session obj = " + session);
-
         if (session != null) {
-            System.out.println("session user = " + session.profile.user.username);
             long current = System.currentTimeMillis();
             if ((current - session.accessed) > TIMEOUT) {
-
                 Logger.debug("Session " + session.id + " expired!");
-                System.out.println("expired!!! current = " + current + "  last accessed = " + session.accessed + "  time out = " + TIMEOUT + " diff = " + (current - session.accessed));
                 flush(session);
             } else {
                 session.accessed = current;
@@ -445,7 +426,6 @@ public class Authentication extends Controller {
                 //Logger.debug("Session " + session.id + " expires at " + new java.util.Date(current + TIMEOUT));
             }
         } else {
-            System.out.println("clearing session");
             session().clear();
         }
         return session;
@@ -453,13 +433,6 @@ public class Authentication extends Controller {
     
 
     static void flush(Session session) {
-        System.out.println("flushing session!!!!");
-
-        try{
-            throw new Exception("foo");
-        }catch(Exception e){
-            e.printStackTrace();
-        }
         Transaction tx = Ebean.beginTransaction();
         try {
             session.expired = true;

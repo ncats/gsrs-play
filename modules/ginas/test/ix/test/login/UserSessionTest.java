@@ -1,8 +1,10 @@
 package ix.test.login;
 
+import ix.test.ix.test.server.AbstractSession;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
+import ix.test.util.MultiThreadInteracter;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -138,10 +140,8 @@ public class UserSessionTest {
     public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsersSingleThreaded() {
         GinasTestServer.User user1 = ts.getFakeUser1();
 
-        try (RestSession session = ts.newRestSession(user1);
-             RestSession session2 = ts.notLoggedInRestSession()) {
-
-
+        try (AbstractSession session = ts.newBrowserSession(user1);
+             AbstractSession session2 = ts.notLoggedInBrowserSession()) {
 
             ensureNotLoggedIn(session2.get("ginas/app/substances"));
 
@@ -155,9 +155,6 @@ public class UserSessionTest {
             System.out.println("2nd logged in attempt");
             ensureLoggedInAs( session.get("ginas/app/substances"), user1);
 
-        }catch(Exception e){
-        	e.printStackTrace();
-        	throw e;
         }
 
     }
@@ -187,6 +184,113 @@ public class UserSessionTest {
 
     }
 
+
+
+    @Test
+    public void twoDifferentLoggedInUsersViewSubstancesMultiThreadedInterleaved() {
+
+        final GinasTestServer.User user1 = ts.getFakeUser1();
+        final GinasTestServer.User user3 = ts.getFakeUser3();
+
+        try (final RestSession session1 = ts.newRestSession(user1);
+             final RestSession session3 = ts.newRestSession(user3);) {
+
+            MultiThreadInteracter.Builder builder = new MultiThreadInteracter.Builder();
+
+            builder.newThread()
+                    .step(1, new MultiThreadInteracter.Step() {
+
+                        @Override
+                        public void execute() throws Exception {
+                            ensureLoggedInAs(session3.get("ginas/app/substances"), user3);
+                        }
+                    })
+                    .step(3, new MultiThreadInteracter.Step() {
+
+                        @Override
+                        public void execute() throws Exception {
+                            ensureLoggedInAs(session3.get("ginas/app/substances"), user3);
+                        }
+                    });
+
+
+            builder.newThread()
+                    .step(2, new MultiThreadInteracter.Step() {
+
+                        @Override
+                        public void execute() throws Exception {
+                            ensureLoggedInAs(session1.get("ginas/app/substances"), user1);
+                        }
+                    })
+                    .step(4, new MultiThreadInteracter.Step() {
+
+                        @Override
+                        public void execute() throws Exception {
+                            ensureLoggedInAs(session1.get("ginas/app/substances"), user1);
+                        }
+                    });
+
+
+            MultiThreadInteracter multiThreadInteracter = builder.build();
+
+            multiThreadInteracter.run();
+
+        }
+    }
+
+        @Test
+        public void twoDifferentLoggedInUsersViewSubstancesMultiThreadedConcurrently(){
+
+            final GinasTestServer.User user1 = ts.getFakeUser1();
+            final GinasTestServer.User user3 = ts.getFakeUser3();
+
+            try (final RestSession session1 = ts.newRestSession(user1);
+                 final RestSession session3 = ts.newRestSession(user3);) {
+
+                MultiThreadInteracter.Builder builder = new MultiThreadInteracter.Builder();
+
+                builder.newThread()
+                        .step(1, new MultiThreadInteracter.Step(){
+
+                            @Override
+                            public void execute() throws Exception {
+                                ensureLoggedInAs( session3.get("ginas/app/substances"), user3);
+                            }
+                        })
+                        .step(3, new MultiThreadInteracter.Step(){
+
+                            @Override
+                            public void execute() throws Exception {
+                                ensureLoggedInAs( session3.get("ginas/app/substances"), user3);
+                            }
+                        });
+
+
+                builder.newThread()
+                        .step(2, new MultiThreadInteracter.Step(){
+
+                            @Override
+                            public void execute() throws Exception {
+                                ensureLoggedInAs( session1.get("ginas/app/substances"), user1);
+                            }
+                        })
+                        .step(3, new MultiThreadInteracter.Step(){
+
+                            @Override
+                            public void execute() throws Exception {
+                                ensureLoggedInAs( session1.get("ginas/app/substances"), user1);
+                            }
+                        });
+
+
+                MultiThreadInteracter multiThreadInteracter = builder.build();
+
+                multiThreadInteracter.run();
+
+            }
+
+
+    }
 
 
 }

@@ -698,7 +698,6 @@ public class TextIndexer implements Closeable{
                 if (f != null)
                     f.cancel(true);
         }
-        System.out.println("set fetchworkers for " + System.identityHashCode(this));
 
         fetchWorkers = new Future[n];
         for (int i = 0; i < fetchWorkers.length; ++i)
