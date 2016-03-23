@@ -212,9 +212,9 @@ public class ConcurrentLoginsTest {
 
 
         MultiThreadInteracter.Builder builder = new MultiThreadInteracter.Builder();
-        int numLoggedInUsers = 10;
+        int numLoggedInUsers = 5;
 
-        int numNotLoggedInUsers=20;
+        int numNotLoggedInUsers=5;
 
         final Random rand = new Random();
         for(int i=0; i< numLoggedInUsers; i++){
