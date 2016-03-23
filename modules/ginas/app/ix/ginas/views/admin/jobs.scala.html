@@ -5,7 +5,10 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], jobList: List[ProcessingJob])
 
-
+@ix.ginas.views.html.content("Jobs", "ix.core.models.ProcessingJob", ix.ginas.controllers.routes.GinasLoad.jobs().url,
+    current, rows, total, pages, facets) {
+    @ix.ginas.views.html.menu()
+} {
     <div class= "panel-body">
         <div class = "row hidden-xs" ng-show="enabled" id ="grid">
                @for(sub <- jobList) {
@@ -19,4 +22,4 @@
                 }
         </div>
     </div>
-
+}
