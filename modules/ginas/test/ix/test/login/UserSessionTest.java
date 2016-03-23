@@ -14,9 +14,11 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import play.libs.ws.WSResponse;
 
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ix.test.login.LoginUtil.*;
 import static org.junit.Assert.*;
 /**
  * Created by katzelda on 3/14/16.
@@ -33,9 +35,6 @@ public class UserSessionTest {
 
     private GinasTestServer.User luke;
 
-
-    private static Pattern LOGGED_IN_AS_PATTERN = Pattern.compile("username:\\s*(\\S+)?");
-            //Pattern.compile("var session = \{\\s+username:null\\s+\};", Pattern.MULTILINE);
     @Before
     public void createuser(){
         luke = ts.createNormalUser("Luke", "TK421");
@@ -112,29 +111,7 @@ public class UserSessionTest {
             ensureLoggedInAs(response, user1);
         }
     }
-    private static void ensureNotLoggedIn(WSResponse response){
-        ensureLoggedInAs(response, "null");
-    }
-    private static void ensureLoggedInAs(WSResponse response, GinasTestServer.User user){
-        ensureLoggedInAs(response, user.getUserName());
 
-    }
-
-    private static void ensureLoggedInAs(WSResponse response, String username) {
-        String body = response.getBody();
-
-        Matcher matcher = LOGGED_IN_AS_PATTERN.matcher(body);
-        if(!matcher.find()){
-            throw new IllegalStateException("could not parse username from session:" + body);
-        }
-        String foundName = unquote(matcher.group(1));
-        System.out.println("USER NAME FOUND = '" + foundName+"'");
-        assertEquals(username, foundName);
-    }
-
-    private static String unquote(String s){
-       return s.replaceAll("\"", "");
-    }
 
     @Test
     public void notLoggedInBrowserSessionViewSubstancesWithOtherLoggedInUsersSingleThreaded() {
@@ -186,111 +163,10 @@ public class UserSessionTest {
 
 
 
-    @Test
-    public void twoDifferentLoggedInUsersViewSubstancesMultiThreadedInterleaved() {
-
-        final GinasTestServer.User user1 = ts.getFakeUser1();
-        final GinasTestServer.User user3 = ts.getFakeUser3();
-
-        try (final RestSession session1 = ts.newRestSession(user1);
-             final RestSession session3 = ts.newRestSession(user3);) {
-
-            MultiThreadInteracter.Builder builder = new MultiThreadInteracter.Builder();
-
-            builder.newThread()
-                    .step(1, new MultiThreadInteracter.Step() {
-
-                        @Override
-                        public void execute() throws Exception {
-                            ensureLoggedInAs(session3.get("ginas/app/substances"), user3);
-                        }
-                    })
-                    .step(3, new MultiThreadInteracter.Step() {
-
-                        @Override
-                        public void execute() throws Exception {
-                            ensureLoggedInAs(session3.get("ginas/app/substances"), user3);
-                        }
-                    });
 
 
-            builder.newThread()
-                    .step(2, new MultiThreadInteracter.Step() {
-
-                        @Override
-                        public void execute() throws Exception {
-                            ensureLoggedInAs(session1.get("ginas/app/substances"), user1);
-                        }
-                    })
-                    .step(4, new MultiThreadInteracter.Step() {
-
-                        @Override
-                        public void execute() throws Exception {
-                            ensureLoggedInAs(session1.get("ginas/app/substances"), user1);
-                        }
-                    });
 
 
-            MultiThreadInteracter multiThreadInteracter = builder.build();
-
-            multiThreadInteracter.run();
-
-        }
-    }
-
-        @Test
-        public void twoDifferentLoggedInUsersViewSubstancesMultiThreadedConcurrently(){
-
-            final GinasTestServer.User user1 = ts.getFakeUser1();
-            final GinasTestServer.User user3 = ts.getFakeUser3();
-
-            try (final RestSession session1 = ts.newRestSession(user1);
-                 final RestSession session3 = ts.newRestSession(user3);) {
-
-                MultiThreadInteracter.Builder builder = new MultiThreadInteracter.Builder();
-
-                builder.newThread()
-                        .step(1, new MultiThreadInteracter.Step(){
-
-                            @Override
-                            public void execute() throws Exception {
-                                ensureLoggedInAs( session3.get("ginas/app/substances"), user3);
-                            }
-                        })
-                        .step(3, new MultiThreadInteracter.Step(){
-
-                            @Override
-                            public void execute() throws Exception {
-                                ensureLoggedInAs( session3.get("ginas/app/substances"), user3);
-                            }
-                        });
-
-
-                builder.newThread()
-                        .step(2, new MultiThreadInteracter.Step(){
-
-                            @Override
-                            public void execute() throws Exception {
-                                ensureLoggedInAs( session1.get("ginas/app/substances"), user1);
-                            }
-                        })
-                        .step(3, new MultiThreadInteracter.Step(){
-
-                            @Override
-                            public void execute() throws Exception {
-                                ensureLoggedInAs( session1.get("ginas/app/substances"), user1);
-                            }
-                        });
-
-
-                MultiThreadInteracter multiThreadInteracter = builder.build();
-
-                multiThreadInteracter.run();
-
-            }
-
-
-    }
 
 
 }
