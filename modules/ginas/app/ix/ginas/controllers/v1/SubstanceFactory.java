@@ -17,6 +17,7 @@ import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.models.Value;
 import ix.core.plugins.SequenceIndexerPlugin;
+import ix.core.util.TimeUtil;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -565,7 +566,7 @@ public class SubstanceFactory extends EntityFactory {
 		}
 
 		s.approvalID = GinasUtils.getAPPROVAL_ID_GEN().generateID();
-		s.approved = new Date();
+		s.approved = TimeUtil.getCurrentDate();
 		s.approvedBy = user;
 		s.status=Substance.STATUS_APPROVED;
 	}

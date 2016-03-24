@@ -1,5 +1,6 @@
 package ix.ntd.models;
 
+import ix.core.util.TimeUtil;
 import ix.ntd.models.Disease;
 import play.db.ebean.Model;
 import javax.persistence.*;
@@ -15,7 +16,7 @@ public class Patient extends Model {
     @Id
     public Long id;
 
-    public final Date created = new Date ();
+    public final Date created = TimeUtil.getCurrentDate();
     public Date lastModified;
 
     public enum Age {

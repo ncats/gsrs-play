@@ -2,6 +2,8 @@ package ix.core.models;
 
 import java.util.Date;
 import javax.persistence.*;
+
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,7 +21,7 @@ public class IxModel extends BaseModel {
     @JsonView(BeanViews.Full.class)
     public Namespace namespace; // namespace of dictionary, ontology, etc.
     
-    public Date created = new Date ();
+    public Date created = TimeUtil.getCurrentDate();
     public Date modified;
     public boolean deprecated;
 
@@ -34,6 +36,6 @@ public class IxModel extends BaseModel {
     @PrePersist
     @PreUpdate
     public void modified () {
-        this.modified = new Date ();
+        this.modified = TimeUtil.getCurrentDate();
     }
 }

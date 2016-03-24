@@ -38,9 +38,14 @@ public class SubstanceAPI {
     public RestSession getSession(){
         return session;
     }
-    public JsonNode search(){
+    public JsonNode searchJson(){
         return session.getAsJson(API_URL_SUBSTANCES_SEARCH);
     }
+
+    public WSResponse search(){
+        return session.get(API_URL_SUBSTANCES_SEARCH);
+    }
+
 
     public WSResponse submitSubstance(JsonNode js){
         return session.createRequestHolder(API_URL_SUBMIT).post(js).get(timeout);
