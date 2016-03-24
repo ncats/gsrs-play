@@ -1425,7 +1425,7 @@ console.log(scope);
         };
     });
 
-    ginasForms.directive('polymerSruForm', function () {
+    ginasForms.directive('polymerSruForm', function (polymerUtils) {
         return {
             restrict: 'E',
             replace: true,
@@ -1435,6 +1435,10 @@ console.log(scope);
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
                 console.log(scope);
+                scope.validateConnectivity=function(obj){
+                	console.log("nonsense function of obj: ");
+                	var map=polymerUtils.sruDisplayToConnectivity(obj._displayConnectivity);
+                }
             }
         };
     });

@@ -36,7 +36,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
             //before our login() method returns!
             //
             //So we have to manually do the login POST with out following
-            //redirects, parse the cookie and the redirect location
+            //redirects, parse the cookie
             //from the response, and then use it to create out UserSession object.
 
             WSResponse response = ws.setQueryParameter("username", user.getUserName())
@@ -45,12 +45,13 @@ public class BrowserSession extends AbstractSession<WSResponse>{
                     .post("")
                     .get(TIMEOUT);
 
-
+            //need to get back a valid cookie value to be successfully logged in
             WSCookie sessionCookie = response.getCookie("PLAY_SESSION");
+
+        if(sessionCookie.getValue() == null || sessionCookie.getValue().trim().isEmpty()){
+            throw new IllegalArgumentException("could not log in as " + user);
+        }
             this.sessionCookie = String.format("%s=%s", sessionCookie.getName(), sessionCookie.getValue());
-
-
-        //    UserSession newSession = new UserSession(new User(username, password), type, sessionCookie, port);
     }
     @Override
     public WSResponse get(String path){

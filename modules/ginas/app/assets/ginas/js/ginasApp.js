@@ -161,11 +161,11 @@
                     break;
                 default:
                     substance.substanceClass = substanceClass;
-//                substance.polymer = {};
                     console.log('invalid substance class');
                     break;
             }
             substance.references = [];
+            substance.definitionType = {value:"PRIMARY", display:"Primary"};
             substance.access =[{value:'protected', display: 'PROTECTED'}];
 //            console.log(substance);
             return substance;
@@ -264,11 +264,41 @@
             }
             return disp;
         };
+        utils.sruDisplayToConnectivity = function (display) {
+            var connections = display.split(";");
+            var regex=/^\s*[A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)[-][A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
+
+
+    		var map={};
+    		
+            for(var i=0;i<connections.length;i++){
+                var con=connections[i].trim();
+                if(con==="")continue;
+
+				regex.lastIndex = 0;
+    			var res = regex.exec(con);
+            	if(res==null){
+            		throw "Connection '" + con + "' is not properly formatted";
+            	}else{
+					if(!map[res[1]]){
+						map[res[1]]=[];
+					}
+            		map[res[1]].push(res[2]);
+            	}
+            }
+            return map;
+        };
         utils.setSRUConnectivityDisplay = function (srus) {
             var rmap = utils.getAttachmentMapUnits(srus);
             for (var i in srus) {
                 var disp = utils.sruConnectivityToDisplay(srus[i].attachmentMap, rmap);
                 srus[i]._displayConnectivity = disp;
+            }
+        };
+        utils.setSRUFromConnectivityDisplay = function (srus) {
+            for (var i in srus) {
+                var map = utils.sruDisplayToConnectivity(srus[i]._displayConnectivity);
+                srus[i].attachmentMap = map;
             }
         };
 
@@ -437,7 +467,7 @@
         };
     }]);
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll,
+    ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll,polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
        // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
@@ -563,6 +593,10 @@
                     });
                 }
             }
+            if (formSub.substanceClass === 'polymer') {
+            	polymerUtils.setSRUFromConnectivityDisplay(formSub.polymer.structuralUnits);
+            }
+            
 
             formSub = $scope.flattenCV(formSub);
             if (_.has(formSub, 'moieties')) {

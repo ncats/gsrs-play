@@ -25,6 +25,7 @@ import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
 import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
@@ -154,6 +155,7 @@ public class Validation {
 		        	gpm.addAll(validateAndPrepareNa((NucleicAcidSubstance) s,strat));
 		            break;
 		        case polymer:
+		        	gpm.addAll(validateAndPreparePolymer((PolymerSubstance) s,strat));
 		            break;
 		        case protein:
 		        	gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s,strat));
@@ -524,6 +526,57 @@ public class Validation {
         				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
         			}
         		}
+        	}
+        }
+        return gpm;
+	}
+    private static List<? extends GinasProcessingMessage> validateAndPreparePolymer(
+			PolymerSubstance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+        if(cs.polymer==null){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Polymer substance must have a polymer element"));
+        }else{
+        	if(cs.polymer.displayStructure==null || cs.polymer.displayStructure.molfile==null){
+        		if(cs.polymer.idealizedStructure!=null && cs.polymer.idealizedStructure.molfile!=null){
+        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using idealized Structure").appliableChange(true);
+        			gpm.add(gpmwarn);
+        			strat.processMessage(gpmwarn);
+        			
+        			switch(gpmwarn.actionType){
+					case APPLY_CHANGE:
+						try{
+							cs.polymer.displayStructure= cs.polymer.idealizedStructure.copy();
+						}catch(Exception e){
+							gpm.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
+						}
+						break;
+					case DO_NOTHING:
+						break;
+					case FAIL:
+						break;
+					case IGNORE:
+						break;
+					default:
+						break;
+        			
+        			}
+        		}else{
+        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.ERROR_MESSAGE("No Display structure or idealized structure found");
+        			gpm.add(gpmwarn);
+        			
+        		}
+        	}
+        	if(cs.polymer.idealizedStructure==null || cs.polymer.idealizedStructure.molfile==null){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Polymer substance must have an idealized structure"));
+        	}
+        	if(cs.polymer.structuralUnits==null || cs.polymer.structuralUnits.size()<=0){
+        		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have structural units"));
+        	}
+        	if(cs.polymer.monomers==null || cs.polymer.monomers.size()<=0){
+        		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have monomers"));
+        	}
+        	if(cs.properties==null || cs.properties.size()<=0){
+        		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance has no properties, typically expected at least a molecular weight"));
         	}
         }
         return gpm;
