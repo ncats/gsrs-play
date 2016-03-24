@@ -1,9 +1,11 @@
 package ix.ginas.utils.validation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -34,6 +36,7 @@ import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.Unit;
 import ix.ginas.utils.CodeSequentialGenerator;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingMessage.Link;
@@ -571,6 +574,71 @@ public class Validation {
         	}
         	if(cs.polymer.structuralUnits==null || cs.polymer.structuralUnits.size()<=0){
         		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have structural units"));
+        	}else{
+        		List<Unit> srus=cs.polymer.structuralUnits;
+        		//ensure that all mappings make sense
+        		//first of all, any mapping should be found as a key somewhere
+        		Set<String> rgroups=new HashSet<String>();
+        		Set<String> rgroupMentions=new HashSet<String>();
+        		Set<String> connections=new HashSet<String>();
+        		for(Unit u:srus){
+        			Map<String,LinkedHashSet<String>> mymap=u.getAttachmentMap();
+        			if(mymap!=null){
+	        			for(String k:mymap.keySet()){
+	        				rgroups.add(k);
+	        				for(String m:mymap.get(k)){
+	        					rgroupMentions.add(m);
+	        					connections.add(k +"-" + m);
+	        				}
+	        			}
+        			}
+        		}
+        		if(!rgroups.containsAll(rgroupMentions)){
+        			Set<String> leftovers=new HashSet<String>(rgroupMentions);
+        			leftovers.removeAll(rgroups);
+        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mentioned attachment point(s) '" + leftovers.toString() + "' cannot be found "));
+        		}
+        		
+        		Map<String,String> newConnections = new HashMap<String,String>();
+        		//symmetry detection
+        		for(String con:connections){
+        			String[] c=con.split("-");
+        			if(!connections.contains(c[1] +"-" + c[0])){
+        				GinasProcessingMessage gp=GinasProcessingMessage.WARNING_MESSAGE("Connection '" + con + "' does not have inverse connection. This can be created.").appliableChange(true);
+        				strat.processMessage(gp);
+        				gpm.add(gp);
+        				switch(gp.actionType){
+						case APPLY_CHANGE:
+							String old=newConnections.get(c[1]);
+							if(old==null)old="";
+							newConnections.put(c[1], old + c[0] + ";");
+							break;
+						case DO_NOTHING:
+							break;
+						case FAIL:
+							break;
+						case IGNORE:
+							break;
+						default:
+							break;
+        				
+        				}
+        				
+        			}
+        		}
+        		for(Unit u:srus){
+        			for(String c:u.getContainedConnections()){
+        				String additions=newConnections.get(c);
+        				if(additions!=null){
+        					for(String add:additions.split(";")){
+        						if(!add.equals("")){
+        							u.addConnection(c, add);
+        						}
+        					}
+        				}
+        			}
+        		}
+        		
         	}
         	if(cs.polymer.monomers==null || cs.polymer.monomers.size()<=0){
         		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have monomers"));
@@ -581,6 +649,7 @@ public class Validation {
         }
         return gpm;
 	}
+    
     
     private static List<? extends GinasProcessingMessage> validateAndPrepareNa(
 			NucleicAcidSubstance cs, GinasProcessingStrategy strat) {

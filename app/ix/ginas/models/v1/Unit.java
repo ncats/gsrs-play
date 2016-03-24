@@ -1,6 +1,9 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Basic;
@@ -34,11 +37,11 @@ public class Unit extends GinasCommonSubData {
     public Amount amount;
     public Integer attachmentCount;
     public String label;
+    
+    
     @Lob
     @Basic(fetch=FetchType.EAGER)
-    
-    //TODO: should be changed to be a structure
-    public String structure;
+    public String structure;  //TODO: should be changed to be a structure
     
     public String type;
     
@@ -53,7 +56,6 @@ public class Unit extends GinasCommonSubData {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
     	return amap;
     }
     
@@ -65,6 +67,38 @@ public class Unit extends GinasCommonSubData {
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
+    }
+    
+    @JsonIgnore
+    //TODO:Make this inspect the structure itself
+    public List<String> getContainedConnections(){
+    	return getMentionedConnections();
+    }
+    
+    @JsonIgnore
+    public List<String> getMentionedConnections(){
+    	Map<String,LinkedHashSet<String>> mymap=this.getAttachmentMap();
+    	List<String> conset=new ArrayList<String>();
+		if(mymap!=null){
+			for(String k:mymap.keySet()){
+				conset.add(k);
+			}
+		}
+		return conset;
+    }
+    
+    public void addConnection(String rgroup1, String rgroup2){
+    	Map<String,LinkedHashSet<String>> amap=this.getAttachmentMap();
+    	if(amap==null){
+    		amap=new HashMap<String,LinkedHashSet<String>>();
+    	}
+    	LinkedHashSet<String> set1=amap.get(rgroup1);
+    	if(set1==null){
+    		set1=new LinkedHashSet<String>();
+    		amap.put(rgroup1, set1);
+    	}
+    	set1.add(rgroup2);
+    	setAttachmentMap(amap);
     }
     /*
     public Map<String,LinkedHashSet<String>> getAttachmentMap(){
