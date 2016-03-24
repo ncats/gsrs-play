@@ -1,21 +1,42 @@
 (function () {
 
-    var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
+    var ginasApp = angular.module('ginas', ['ngRoute', 'ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
     ]).run(['$anchorScroll', function ($anchorScroll) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
         }])
-        .config(function (localStorageServiceProvider, $locationProvider) {
+        .config(function (localStorageServiceProvider, $locationProvider, $routeProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
             $locationProvider.html5Mode({
                 enabled: true,
                 hashPrefix: '!'
             });
+            $routeProvider
+                .when('/wizard?kind=chemical', {
+                    templateUrl: 'template/forms/name-form.html',
+                    resolve: {
+                        // I will cause a 1 second delay
+                        delay: function($q, $timeout) {
+                            console.log("resolving");
+                            var delay = $q.defer();
+                            $timeout(delay.resolve, 1000);
+                            return delay.promise;
+                        }
+                    }
+                })
+                .when('/wizard?kind=protein', {
+                    templateUrl: 'code-form.html'
+                });
+
+
+
+
+
         });
 
 
-    ginasApp.factory('Substance', function ($q, CVFields) {
+    ginasApp.factory('Substance', function ($q, CVFields, UUID) {
 
         function isCV(ob) {
             if (typeof ob !== "object") return false;
@@ -152,7 +173,7 @@
 
         substance.$$getClass = function(){
             return substance.substanceClass;
-        }
+        };
 
         substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
@@ -730,7 +751,8 @@
         $scope.open = function (url) {
             modalInstance = $uibModal.open({
                 templateUrl: url,
-                scope: $scope
+                scope: $scope,
+                size: 'lg'
             });
         };
 
@@ -803,7 +825,7 @@
              if (r != true) {
              return;
              }*/
-            sub = angular.toJson(sub.$$flattenSubstance());
+            sub = angular.toJson($scope.substance.$$flattenSubstance());
             if (_.has($scope.substance, '$$update')) {
                 console.log("TEST");
                 $http.put(baseurl + 'api/v1/substances', sub, {
@@ -890,18 +912,16 @@
             });
         };
 
-        $scope.getRange = function (start, end) {
-            return _.reverse(_.range(start, (end - 1 + 2)));
-        };
+        $scope.applyPaster = function(){
+            $scope.close();
+            var originalSubstanceClass = $scope.substance.substanceClass;
+            console.log(originalSubstanceClass);
+            if(originalSubstanceClass ==="chemical"){
+                originalSubstanceClass = "structure";
+            }
+            delete $scope.substance[originalSubstanceClass];
+            $scope.substance.$$changeClass($scope.substanceClass);
 
-        $scope.submitpaster = function (input) {
-            console.log(JSON.parse(input));
-            Substance.$$setSubstance(JSON.parse(input)).then(function(data){
-                console.log(data);
-                $scope.substance = data;
-            });
-            console.log($scope);
-          //  $scope.substance = $scope.toFormSubstance(sub);
             if ($scope.substance.substanceClass === 'chemical') {
                 molChanger.setMol($scope.substance.structure.molfile);
             }
@@ -909,6 +929,34 @@
                 molChanger.setMol($scope.substance.idealizedStructure.molfile);
             }
             console.log($scope);
+        };
+
+        $scope.redirect = function(){
+            alert("fine, im leaving");
+             console.log($location);
+             console.log($scope.substance.substanceClass);
+             $location.search({kind: $scope.substance.substanceClass});
+             console.log($window.location);
+             $window.location.search = "kind="+ $scope.substance.substanceClass;
+             $window.location.reload();
+
+        };
+
+        $scope.getRange = function (start, end) {
+            return _.reverse(_.range(start, (end - 1 + 2)));
+        };
+
+        $scope.submitpaster = function (input) {
+            console.log(JSON.parse(input));
+            $scope.substanceClass = $location.$$search.kind;
+            Substance.$$setSubstance(JSON.parse(input)).then(function(data){
+                $scope.substance = data;
+                if($scope.substance.substanceClass != $scope.substanceClass) {
+                    var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
+                    $scope.open(url);
+                }
+            });
+
         };
 
         $scope.bugSubmit = function (bugForm) {
