@@ -230,7 +230,7 @@
         };
     });
 
-    ginasForms.directive('conceptUpgradeForm', function ($http, $location, toggler, Substance) {
+    ginasForms.directive('conceptUpgradeForm', function ($window, localStorageService) {
         return {
             restrict: 'E',
             replace: true,
@@ -239,21 +239,24 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
+
                 scope.iscollapsed = false;
-                console.log($location);
                 if(scope.parent.uuid){
                     scope.editid = scope.parent.uuid.split('-')[0];
                 }
 
                 scope.changeClass = function (newClass) {
-                    var newSub = scope.$parent.fromFormSubstance(scope.parent);
-                    console.log(scope);
-                   // newSub.substanceClass = newClass;
-                  //  var upgradeSub = Substance.$$setSubstance(newSub);
-                   // var upgradeSub= Substance.$$changeClass(newClass);
-                    var upgradeSub= scope.parent;
-                    upgradeSub.substanceClass = newClass;
-                   console.log(scope);
+                    var upgradeSub= scope.parent.$$setClass(newClass);
+                    _.set(upgradeSub, 'update', true);
+                    console.log(upgradeSub);
+                    localStorageService.set('tempsubstance', upgradeSub);
+                   $window.location.href = $window.location.origin + baseurl + "wizard?kind=" +newClass;
+   /*                 scope.parent.$$setSubstance(scope.parent.$$changeClass(newClass)).then(function(response){
+                       var upgradeSub= response;
+                        console.log(upgradeSub);*/
+
+                  /* console.log(scope);
                     _.set(upgradeSub, 'update', true);
                     console.log(upgradeSub);
                     if (_.has(upgradeSub, 'update')) {
@@ -265,10 +268,6 @@
                         }).success(function(data){
                                 alert('Load was performed.');
                             console.log(data);
-                            /*url = baseurl + "assets/templates/modals/update-success.html";
-                            scope.$parent.open(url);*/
-/*                                $location.path('app/substance/{{editid}}/edit');
-                                $location.replace();*/
                             });
                     } else {
                         $http.post(baseurl + 'api/v1/substances', postSub).success(function () {
@@ -278,8 +277,8 @@
                           //  $location.replace();
                         });
                     }
-
-
+*/
+                  //  });
                 };
             }
         };
@@ -458,7 +457,7 @@
             },
             templateUrl: function (scope) {
                 console.log(scope);
-                var url = baseurl + "assets/templates/forms/diverse-organism-form.html";
+               return baseurl + "assets/templates/forms/diverse-organism-form.html";
             }
         };
 /*            templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
