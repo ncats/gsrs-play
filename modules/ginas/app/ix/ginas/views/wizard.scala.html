@@ -1,10 +1,14 @@
 @import play.api.Play.current
+@import ix.ginas.controllers.GinasFactory.EditLock
 
-@(kind: String, json: String)
+@(kind: String, json: String, lock: EditLock)
 
+	
 
     @wizardfields(kind: String) = {
-
+		@if(lock!=null){
+			<span class="warning" id="lockmessage">This record is currently being edited by another user, you may have difficulty saving changes.</span>
+		}
         <header-form kind = "substance.substanceClass" parent = substance></header-form>
         <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
 
@@ -14,7 +18,7 @@
             @*
             <div>@forms.structureform()</div>
             *@
-            <structure-form parent = substance></structure-form>
+            <structure-form parent = substance ng-cloak></structure-form>
 
             <moiety-form parent = substance ng-cloak></moiety-form>
         }
@@ -23,7 +27,7 @@
         }
         case "protein" => {
             <protein-details-form parent = substance></protein-details-form>
-            <subunit-form referenceobj ="referenceobj" parent = substance ng-cloak></subunit-form>
+            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
                 <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
                 <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
@@ -170,8 +174,30 @@
         </div>
 
         <script>
+	        	
                 var loadjson = @Html(json);
+                @if(!"{}".equals(json) && json != null) {
+	        		$(window).load(function(){
+			        	$(window).bind('beforeunload', function(){
+				                    return 'Navigating away from this page will lose all unsaved changed. Are you sure?';
+			            });
+			        }); 
+	        		window.setInterval(function(){
+	        			$.ajax({
+	        				url: baseurl + "lock?uuid=" + loadjson.uuid, 
+	        				success: function(result){
+	        		        	if(result.hasLock){
+	        		        		$("#lockmessage").hide();
+	        		        	}else{
+	        		        		$("#lockmessage").show();
+	        		        	}
+	        		    	}
+	        			});
+	        			
+	        			},20000);
+	        	} 
         </script>
+        
         @* <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >
         <div uib-tooltip="{{data.citation}}">

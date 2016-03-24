@@ -697,7 +697,8 @@ public class PolymerDecode {
 		public Map<String,List<String>> attachmentMap;
 		public List<Integer> amap= new ArrayList<Integer>();
 		public int attachmentCount=0;
-		public Amount amount=new Amount();
+		//public Amount amount=new Amount();
+		public Amount amount=null;
 		public Structure _structure;
 		
 		public StructuralUnit(Chemical ch){
@@ -785,8 +786,8 @@ public class PolymerDecode {
 		public Double average;
 		public Double lowLimit;
 		public Double highLimit;
-		public String units="";
-		public String valueText="";
+		public String units=null;
+		public String nonNumericValue=null;
 		public String type=null;
 		
 	}

@@ -25,6 +25,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
@@ -193,4 +195,12 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
         	}
     	}
     }
+
+	public GinasChemicalStructure copy() throws Exception {
+		EntityMapper em=EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		JsonNode jsn=em.valueToTree(this);
+		GinasChemicalStructure gcs=em.treeToValue(jsn, GinasChemicalStructure.class);
+		gcs.id=null;
+		return gcs;
+	}
 }

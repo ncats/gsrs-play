@@ -37,7 +37,7 @@ public class IntegrationTest {
 
     @Test
     public void testRestAPISubstance() throws Exception {
-        JsonNode substances = ts.notLoggedInRestSession().urlJSON("http://localhost:9001/ginas/app/api/v1/substances");
+        JsonNode substances = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/substances");
         assertFalse( SubstanceJsonUtil.isLiteralNull(substances));
     }
 
@@ -46,7 +46,7 @@ public class IntegrationTest {
     public void ensureSetupUsers() throws Exception{
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
-            assertEquals(ts.getFakeUser1().getUserName(), session.whoAmIJson().get("identifier").asText());
+            assertEquals(ts.getFakeUser1().getUserName(), session.getUserName());
         }
 
     }
@@ -56,7 +56,7 @@ public class IntegrationTest {
         GinasTestServer.User user = ts.createUser(Role.DataEntry);
         try(RestSession session = ts.newRestSession(user, RestSession.AUTH_TYPE.USERNAME_PASSWORD)){
 
-            assertEquals(user.getUserName(), session.whoAmIJson().get("identifier").asText());
+            assertEquals(user.getUserName(), session.getUserName());
         }
     }
     
@@ -64,7 +64,7 @@ public class IntegrationTest {
     public void testFakeUserLoginKey() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1(), RestSession.AUTH_TYPE.USERNAME_KEY)){
 
-            assertEquals(ts.getFakeUser1().getUserName(), session.whoAmIJson().get("identifier").asText());
+            assertEquals(ts.getFakeUser1().getUserName(), session.getUserName());
         }
     }
     
@@ -73,7 +73,7 @@ public class IntegrationTest {
     public void loginToken() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1(), RestSession.AUTH_TYPE.TOKEN)){
 
-            assertEquals(ts.getFakeUser1().getUserName(), session.whoAmIJson().get("identifier").asText());
+            assertEquals(ts.getFakeUser1().getUserName(), session.getUserName());
         }
     	
     }
@@ -81,7 +81,7 @@ public class IntegrationTest {
     @Test
     public void notPassingCredentialsShouldFailRestCalls() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1(), RestSession.AUTH_TYPE.NONE)){
-            SubstanceJsonUtil.ensureFailure(session.whoAmI());
+           assertNull(session.getUserName());
         }
 
     }

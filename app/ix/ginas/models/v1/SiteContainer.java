@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.persistence.Entity;
 import javax.persistence.Lob;
@@ -63,22 +64,21 @@ public class SiteContainer extends GinasCommonSubData{
 	}
 
 	public static String generateShorthand(List<Site> slist){
-		List<Site> sitelist = new ArrayList<Site>(new HashSet<Site>(slist));
-		Collections.sort(sitelist,new Comparator<Site>(){
+		
+		TreeSet<Site> sitelist= new TreeSet<Site>(new Comparator<Site>(){
 			@Override
 			public int compare(Site o1, Site o2) {
 				int d = -(o2.subunitIndex-o1.subunitIndex);
 				if(d!=0) return d;
 				d = -(o2.residueIndex-o1.residueIndex);
 				return d;
-			}});
+			}
+		});
+		sitelist.addAll(slist);
 		StringBuilder sb = new StringBuilder();
 		Site lastSite=null;
 		Site startSite=null;
 		String add=null;
-//		int lastsi=-1;
-//		int startri=-1;
-//		int lastri=-1;
 		boolean range=false;
 		for(Site s:sitelist){
 			add=null;

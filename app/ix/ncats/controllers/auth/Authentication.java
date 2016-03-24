@@ -230,7 +230,7 @@ public class Authentication extends Controller {
     private static void setUserSessionDirectly(UserProfile profile){
     	Session session = new Session(profile);
         session.save();
-        IxCache.set(session.id.toString(), session);
+        IxCache.setRaw(session.id.toString(), session);
 
         Logger.debug("** new session " + session.id
                 + " created for user "
@@ -343,6 +343,11 @@ public class Authentication extends Controller {
 
     
 
+    public static Principal fakeThing(){
+    	System.out.println("Fetching for scala");
+    	return getUser();
+    }
+    
     public static UserProfile getUserProfile() {
         Session session = getSession();
         if(session!=null){
@@ -350,7 +355,7 @@ public class Authentication extends Controller {
         		return session.profile;
         	}
         }
-        
+
         //do key auth
         String user=request().getHeader("auth-username");
         String key=request().getHeader("auth-key");
@@ -358,7 +363,7 @@ public class Authentication extends Controller {
         String password=request().getHeader("auth-password");
         
         UserProfile up=null;
-        
+
         if(user!=null && key!=null){
         	up=getUserProfileFromKey(user,key);
         }else if(token!=null){
@@ -393,7 +398,7 @@ public class Authentication extends Controller {
         Session session = null;
         if (id != null) {
             try {
-                session = IxCache.getOrElse
+                session = IxCache.getOrElseRaw
                         (id, new Callable<Session>() {
                             public Session call() throws Exception {
                                 return _sessions.byId(UUID.fromString(id));

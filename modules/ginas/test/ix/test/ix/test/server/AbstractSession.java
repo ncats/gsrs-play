@@ -1,5 +1,6 @@
 package ix.test.ix.test.server;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import play.libs.ws.WSResponse;
 
 import java.io.Closeable;
@@ -46,8 +47,30 @@ public abstract class AbstractSession<T> implements Closeable{
         this.neverLogout = false;
     }
 
+    public JsonNode exctractJSON(WSResponse wsResponse1){
+        Objects.requireNonNull(wsResponse1);
+
+        int status2 = wsResponse1.getStatus();
+        if(status2>300){
+            System.out.println("That's an error!");
+            System.out.println(wsResponse1.getBody());
+        }
+        if(status2 != 200 && status2 != 201){
+            throw new IllegalStateException("response status Not OK : " + status2);
+        }
+        JsonNode returned = wsResponse1.asJson();
+        Objects.requireNonNull(returned);
+        return returned;
+    }
+
     public String getUserName(){
-        return this.user.getUserName();
+        WSResponse wsResponse1 = get("ginas/app/api/v1/whoami");
+
+        if(wsResponse1.getStatus() != 200){
+            return null;
+        }
+        JsonNode node = exctractJSON(wsResponse1);
+        return node.get("identifier").asText();
     }
 
     public GinasTestServer.User getUser(){
@@ -61,6 +84,7 @@ public abstract class AbstractSession<T> implements Closeable{
                 .append(path)
                 .toString();
     }
+
 
     /**
      * Is this user logged in.

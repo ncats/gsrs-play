@@ -1425,7 +1425,7 @@ console.log(scope);
         };
     });
 
-    ginasForms.directive('polymerSruForm', function () {
+    ginasForms.directive('polymerSruForm', function (polymerUtils) {
         return {
             restrict: 'E',
             replace: true,
@@ -1435,6 +1435,10 @@ console.log(scope);
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
                 console.log(scope);
+                scope.validateConnectivity=function(obj){
+                	console.log("nonsense function of obj: ");
+                	var map=polymerUtils.sruDisplayToConnectivity(obj._displayConnectivity);
+                }
             }
         };
     });
@@ -1605,12 +1609,20 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             replace: 'true',
             scope: {
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                edit: '=?'
             },
             templateUrl: baseurl + "assets/templates/modals/reference-modal-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
                 scope.reference={};
+
+                if(scope.edit){
+                    console.log("edit");
+                    console.log(scope);
+                    scope.active = 2;
+                }
+
                 scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();

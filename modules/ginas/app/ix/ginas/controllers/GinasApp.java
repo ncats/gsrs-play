@@ -3,6 +3,7 @@ package ix.ginas.controllers;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import be.objectify.deadbolt.java.actions.SubjectPresent;
 import gov.nih.ncgc.chemical.Chemical;
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
@@ -482,8 +483,12 @@ public class GinasApp extends App {
     static Result _substances(final String q, final int rows, final int page)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
+        final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
 
+//        System.out.println("######################################");
+//        System.out.println("Fetching key:" + key);
+        
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {
@@ -494,9 +499,10 @@ public class GinasApp extends App {
                          + result.finished());
             if (result.finished()) {
                 final String k = key + "/result";
+                
                 return getOrElse(k, new Callable<Result>() {
                         public Result call() throws Exception {
-                            Logger.debug("Cache missed: " + k);
+                        	Logger.debug("Cache missed: " + k);
                             return createSubstanceResult(result, rows, page);
                         }
                     });
@@ -622,25 +628,26 @@ public class GinasApp extends App {
             }
         }
         else {
-            TextIndexer indexer = _textIndexer.createEmptyInstance();
-            for (Substance sub : substances)
-                indexer.add(sub);
+            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
+                for (Substance sub : substances)
+                    indexer.add(sub);
 
-            TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, Substance.class, null, null, indexer.size(),
-                 0, FACET_DIM, request().queryString());
-            if (result.count() < substances.size()) {
-                substances.clear();
-                for (int i = 0; i < result.count(); ++i) {
-                    substances.add((Substance) result.get(i));
+                TextIndexer.SearchResult result = SearchFactory.search
+                        (indexer, Substance.class, null, null, indexer.size(),
+                                0, FACET_DIM, request().queryString());
+                if (result.count() < substances.size()) {
+                    substances.clear();
+                    for (int i = 0; i < result.count(); ++i) {
+                        substances.add((Substance) result.get(i));
+                    }
                 }
-            }
-            TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
-            indexer.shutdown();
+                TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
 
-            return ok(ix.ginas.views.html.substances.render
-                      (1, result.count(), result.count(), new int[0],
-                       decorate(facets), substances, null, null));
+
+                return ok(ix.ginas.views.html.substances.render
+                        (1, result.count(), result.count(), new int[0],
+                                decorate(facets), substances, null, null));
+            }
         }
     }
 
@@ -825,26 +832,27 @@ public class GinasApp extends App {
             return ok(ix.ginas.views.html.details.chemicaldetails
                       .render((ChemicalSubstance) chemical));
         } else {
-            TextIndexer indexer = _textIndexer.createEmptyInstance();
-            for (Substance chem : chemicals)
-                indexer.add(chem);
+            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
+                for (Substance chem : chemicals)
+                    indexer.add(chem);
 
-            TextIndexer.SearchResult result = SearchFactory.search(indexer,
-                                                                   Substance.class, null, null, indexer.size(), 0, FACET_DIM,
-                                                                   request().queryString());
-            if (result.count() < chemicals.size()) {
-                chemicals.clear();
-                for (int i = 0; i < result.count(); ++i) {
-                    chemicals.add((Substance) result.get(i));
+                TextIndexer.SearchResult result = SearchFactory.search(indexer,
+                        Substance.class, null, null, indexer.size(), 0, FACET_DIM,
+                        request().queryString());
+                if (result.count() < chemicals.size()) {
+                    chemicals.clear();
+                    for (int i = 0; i < result.count(); ++i) {
+                        chemicals.add((Substance) result.get(i));
+                    }
                 }
-            }
-            TextIndexer.Facet[] facets = filter(result.getFacets(),
-                                                CHEMICAL_FACETS);
-            indexer.shutdown();
+                TextIndexer.Facet[] facets = filter(result.getFacets(),
+                        CHEMICAL_FACETS);
 
-            return ok(ix.ginas.views.html.substances.render
-                      (1, result.count(),result.count(), new int[0],
-                       decorate(facets), chemicals, null, null));
+
+                return ok(ix.ginas.views.html.substances.render
+                        (1, result.count(), result.count(), new int[0],
+                                decorate(facets), chemicals, null, null));
+            }
         }
     }
 
@@ -1093,27 +1101,28 @@ public class GinasApp extends App {
             return ok(ix.ginas.views.html.details.proteindetails
                       .render((ProteinSubstance) protein));
         } else {
-            TextIndexer indexer = _textIndexer.createEmptyInstance();
-            for (Substance prot : proteins)
-                indexer.add(prot);
-            
-            TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, ProteinSubstance.class, null, null, indexer.size(),
-                 0,  FACET_DIM, request().queryString());
-            if (result.count() < proteins.size()) {
-                proteins.clear();
-                for (int i = 0; i < result.count(); ++i) {
-                    proteins.add((ProteinSubstance) result.get(i));
-                    
+            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
+                for (Substance prot : proteins)
+                    indexer.add(prot);
+
+                TextIndexer.SearchResult result = SearchFactory.search
+                        (indexer, ProteinSubstance.class, null, null, indexer.size(),
+                                0, FACET_DIM, request().queryString());
+                if (result.count() < proteins.size()) {
+                    proteins.clear();
+                    for (int i = 0; i < result.count(); ++i) {
+                        proteins.add((ProteinSubstance) result.get(i));
+
+                    }
                 }
+                TextIndexer.Facet[] facets = filter(result.getFacets(),
+                        PROTEIN_FACETS);
+
+
+                return ok(ix.ginas.views.html.substances.render
+                        (1, result.count(), result.count(), new int[0],
+                                decorate(facets), proteins, null, null));
             }
-            TextIndexer.Facet[] facets = filter(result.getFacets(),
-                                                PROTEIN_FACETS);
-            indexer.shutdown();
-            
-            return ok(ix.ginas.views.html.substances.render
-                      (1, result.count(), result.count(), new int[0],
-                       decorate(facets), proteins, null, null));
         }
     }
     

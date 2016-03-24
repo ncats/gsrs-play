@@ -33,7 +33,12 @@ import static ix.test.SubstanceJsonUtil.*;
 @RunWith(Parameterized.class)
 public class SubstanceSubmitTest {
 
-	
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getName() + " . " + description.getMethodName());
+        }
+    };
         
         
 

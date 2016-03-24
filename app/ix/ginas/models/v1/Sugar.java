@@ -37,7 +37,13 @@ public class Sugar extends GinasCommonSubData {
     	siteContainer.setSites(sites);
     }
     
-   
+    
+ 	public String getSitesShorthand(){
+ 		if(siteContainer!=null){
+     		return siteContainer.getShorthand();
+     	}
+     	return "";
+ 	}
     public void setSitesShorthand(String sites){
     	if(siteContainer==null){
     		siteContainer=new SiteContainer(this.getClass().getName());
@@ -53,13 +59,7 @@ public class Sugar extends GinasCommonSubData {
 		this.sugar = sugar;
 	}
 	
-	// @JsonView(BeanViews.Internal.class)
-	public String getSitesShorthand(){
-		if(siteContainer!=null){
-    		return siteContainer.getShorthand();
-    	}
-    	return "";
-	}
+	
 
 	/*public void setFromMap(Map m) {
 		super.setFromMap(m);

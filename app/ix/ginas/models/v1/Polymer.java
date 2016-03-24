@@ -20,6 +20,7 @@ public class Polymer extends GinasCommonSubData {
 
     @OneToOne(cascade=CascadeType.ALL)
     public GinasChemicalStructure displayStructure;
+    
     @OneToOne(cascade=CascadeType.ALL)
     public GinasChemicalStructure idealizedStructure;
 
@@ -32,4 +33,6 @@ public class Polymer extends GinasCommonSubData {
     public List<Unit> structuralUnits = new ArrayList<Unit>();
 
     public Polymer () {}
+    
+    
 }

@@ -31,10 +31,10 @@ public class ApprovalWorkflowTest {
     @Rule
     public TestRule watcher = new TestWatcher() {
         protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
+            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
         }
     };
-
+    
 	@Test
 	public void testApprovalRoundTrip() throws Exception {
         String uuid;
