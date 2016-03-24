@@ -578,14 +578,25 @@ public class Validation {
         		List<Unit> srus=cs.polymer.structuralUnits;
         		//ensure that all mappings make sense
         		//first of all, any mapping should be found as a key somewhere
-        		Set<String> rgroups=new HashSet<String>();
+        		Set<String> rgroupsWithMappings=new HashSet<String>();
+        		Set<String> rgroupsActual=new HashSet<String>();
         		Set<String> rgroupMentions=new HashSet<String>();
         		Set<String> connections=new HashSet<String>();
         		for(Unit u:srus){
+        			List<String> contained=u.getContainedConnections();
+        			List<String> mentioned=u.getMentionedConnections();
+        			if(mentioned!=null){
+        				if(!contained.contains(mentioned)){
+        					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mentioned attachment points '" 
+        							+ mentioned.toString() 
+        							+ "' in unit '" + u.label + "' are not all found in actual connecitons '"
+        							+ contained.toString() + "'. "));
+        				}
+        			}
         			Map<String,LinkedHashSet<String>> mymap=u.getAttachmentMap();
         			if(mymap!=null){
 	        			for(String k:mymap.keySet()){
-	        				rgroups.add(k);
+	        				rgroupsWithMappings.add(k);
 	        				for(String m:mymap.get(k)){
 	        					rgroupMentions.add(m);
 	        					connections.add(k +"-" + m);
@@ -593,9 +604,9 @@ public class Validation {
 	        			}
         			}
         		}
-        		if(!rgroups.containsAll(rgroupMentions)){
+        		if(!rgroupsWithMappings.containsAll(rgroupMentions)){
         			Set<String> leftovers=new HashSet<String>(rgroupMentions);
-        			leftovers.removeAll(rgroups);
+        			leftovers.removeAll(rgroupsWithMappings);
         			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mentioned attachment point(s) '" + leftovers.toString() + "' cannot be found "));
         		}
         		
