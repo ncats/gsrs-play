@@ -1081,3 +1081,7 @@ ul.tree-list {
     color: white;
     padding:5px;
 }
+
+.json-formatter-row .string {
+    white-space: inherit;
+}

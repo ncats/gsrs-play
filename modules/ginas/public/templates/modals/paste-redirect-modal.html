@@ -1,0 +1,26 @@
+<div class ="modal-lg">
+            <div class="modal-header">
+                <a type="button" class="close"  ng-click="close()" uib-tooltip ="Close" aria-label="Close"><i class ="fa fa-times danger"></i></a>
+                <h4 class="modal-title" id="myModalLabelExport">There is an error with your submission!</h4>
+            </div>
+            <div class="modal-body">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <p>The Substance you have pasted has a substance class of: {{substance.substanceClass}}, which is incompatible with the {{substanceClass}} form.</p>
+                        Would you like to stay on the current form, or be redirected to the {{substance.substanceClass}} form?
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                    The following information will be lost:
+                    </div>
+                    <div class = "col-md-12">
+                        <json-formatter json=substance[substance.substanceClass] open="1"></json-formatter>
+                        <json-formatter ng-if="substance.substanceClass==='chemical'" json=substance.structure open="1"></json-formatter>
+            </div>
+    <div class="modal-footer">
+                    <button type="button" class="btn btn-danger"  ng-click="applyPaster()">Stay</button>
+                    	<button type="button" class="btn btn-success" ng-click="redirect()">Redirect</button>
+                </div>
+        </div>
+
