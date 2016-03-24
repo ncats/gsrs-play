@@ -1,5 +1,6 @@
 package ix.core.models;
 
+import ix.core.util.TimeUtil;
 import ix.utils.Global;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class Structure extends BaseModel{
     @Version
     public Long version;
     
-    public final Date created = new Date();
+    public final Date created = TimeUtil.getCurrentDate();
     public Date lastEdited;
     public boolean deprecated;
 
@@ -217,11 +218,7 @@ public class Structure extends BaseModel{
     @PrePersist
     @PreUpdate
     public void modified() {
-        Date newDate = new Date();
-        if (this.lastEdited == null) {
-            this.lastEdited = newDate;
-        }
-        this.lastEdited = newDate;
+        this.lastEdited = TimeUtil.getCurrentDate();
     }
 
     public String getId() {

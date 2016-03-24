@@ -11,6 +11,7 @@ import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
+import ix.core.util.TimeUtil;
 import ix.utils.Global;
 import ix.utils.Util;
 
@@ -230,7 +231,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
     public synchronized static void updateJob(ProcessingJob job,Statistics stat) {
     	Logger.debug("I think it's done:" + stat.toString());
         ObjectMapper om = new ObjectMapper();
-        job.stop = System.currentTimeMillis();
+        job.stop = TimeUtil.getCurrentTimeMillis();
         job.status = ProcessingJob.Status.COMPLETE;
         job.statistics = om.valueToTree(stat).toString();
         PersistModel pm = PersistModel.Update(job);
@@ -331,7 +332,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     // at the moment!
                     Logger.debug("Job already exists");
                     ProcessingJob job = new ProcessingJob();
-                    job.start = job.stop = System.currentTimeMillis();
+                    job.start = job.stop = TimeUtil.getCurrentTimeMillis();
                     job.keys.add(new Keyword(GinasRecordProcessorPlugin.class
                                              .getName(), payload.key));
                     job.status = ProcessingJob.Status.NOT_RUN;
@@ -511,7 +512,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
                 
         ProcessingJob job = new ProcessingJob();
-        job.start = System.currentTimeMillis();
+        job.start = TimeUtil.getCurrentTimeMillis();
         job.keys.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
         job.setExtractor(extractor);
         job.setPersister(persister);
@@ -557,7 +558,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         ProcessingJob job = null;
         if (jobs.isEmpty()) {
             job = new ProcessingJob();
-            job.start = System.currentTimeMillis();
+            job.start = TimeUtil.getCurrentTimeMillis();
             job.keys.add(new Keyword(
                                      GinasRecordProcessorPlugin.class.getName(), pp.key));
             job.status = ProcessingJob.Status.PENDING;
@@ -618,7 +619,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
             } catch (Throwable t) {
                 job.message = t.getMessage();
                 job.status = ProcessingJob.Status.FAILED;
-                job.stop = System.currentTimeMillis();
+                job.stop = TimeUtil.getCurrentTimeMillis();
                 t.printStackTrace();
                 Logger.trace("Failed to process payload " + pp.payload.id, t);
             } finally {

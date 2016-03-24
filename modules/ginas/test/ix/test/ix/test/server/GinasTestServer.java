@@ -92,7 +92,9 @@ import play.test.TestServer;
  */
 public class GinasTestServer extends ExternalResource{
 
-     
+
+    public static int DEFAULT_PORT = 9001;
+
      private static final String FAKE_USERNAME_PREFIX="FAKE";
      private static final String FAKE_PASSWORD_PREFIX="pa$$word";
      
@@ -142,6 +144,12 @@ public class GinasTestServer extends ExternalResource{
 
     }
 
+    /**
+     * Create a new instance listening on the default port.
+     */
+    public GinasTestServer(){
+        this(DEFAULT_PORT);
+    }
     public GinasTestServer(int port){
        this.port = port;
         defaultBrowserSession = new BrowserSession(port){
@@ -378,7 +386,11 @@ public class GinasTestServer extends ExternalResource{
                     //use new delete method which throws IOException
                     //if it can't delete instead of returning flag
                     //so we will know the reason why it failed.
-                    Files.delete(file);
+                    try{
+                        Files.delete(file);
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
                 }
                 else{
                     System.out.println("found nfs file " + file.toString());

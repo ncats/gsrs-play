@@ -11,6 +11,7 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.plugins.IxCache;
+import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
 
@@ -206,7 +207,7 @@ public class TextIndexer implements Closeable{
         final BlockingQueue matches = new LinkedBlockingQueue ();
         int count;
         SearchOptions options;
-        final long timestamp = System.currentTimeMillis();
+        final long timestamp = TimeUtil.getCurrentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
         SearchResult () {}
@@ -925,7 +926,7 @@ public class TextIndexer implements Closeable{
                          +" Options:"+options);
         }
         
-        long start = System.currentTimeMillis();
+        long start = TimeUtil.getCurrentTimeMillis();
             
         FacetsCollector fc = new FacetsCollector ();
 
@@ -1101,7 +1102,7 @@ public class TextIndexer implements Closeable{
             Logger.debug("## Query executes in "
                          +String.format
                          ("%1$.3fs", 
-                          (System.currentTimeMillis()-start)*1e-3)
+                          (TimeUtil.getCurrentTimeMillis()-start)*1e-3)
                          +"..."+hits.totalHits+" hit(s) found!");
         }
 
@@ -1260,7 +1261,7 @@ public class TextIndexer implements Closeable{
             Logger.debug("++ adding document "+doc);
         
         indexWriter.addDocument(doc);
-        lastModified.set(System.currentTimeMillis());
+        lastModified.set(TimeUtil.getCurrentTimeMillis());
     }
 
     public long lastModified () { return lastModified.get(); }
@@ -1787,7 +1788,7 @@ public class TextIndexer implements Closeable{
     static JsonNode setFacetsConfig (FacetsConfig config) {
         ObjectMapper mapper = new ObjectMapper ();
         ObjectNode node = mapper.createObjectNode();
-        node.put("created", new java.util.Date().getTime());
+        node.put("created", TimeUtil.getCurrentTimeMillis());
         node.put("version", LUCENE_VERSION.toString());
         node.put("warning", "AUTOMATICALLY GENERATED FILE; DO NOT EDIT");
         Map<String, FacetsConfig.DimConfig> dims = config.getDimConfigs();
@@ -1874,7 +1875,7 @@ public class TextIndexer implements Closeable{
         ObjectMapper mapper = new ObjectMapper ();
 
         ObjectNode conf = mapper.createObjectNode();
-        conf.put("created", new java.util.Date().getTime());
+        conf.put("created", TimeUtil.getCurrentTimeMillis());
         ArrayNode node = mapper.createArrayNode();
         for (Map.Entry<String, SortField.Type> me : sorters.entrySet()) {
             ObjectNode obj = mapper.createObjectNode();

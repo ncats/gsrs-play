@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
 
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -15,8 +16,8 @@ public class Session extends BaseModel {
     @OneToOne(cascade=CascadeType.ALL)
     public UserProfile profile;
     
-    public final long created = System.currentTimeMillis();
-    public long accessed = System.currentTimeMillis();
+    public final long created = TimeUtil.getCurrentTimeMillis();
+    public long accessed = TimeUtil.getCurrentTimeMillis();
     public String location;
     public boolean expired;
         

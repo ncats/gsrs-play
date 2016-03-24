@@ -1,6 +1,8 @@
 package ix.core.models;
 
 import java.util.Date;
+
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -28,7 +30,7 @@ public class Curation extends BaseModel {
     public Principal curator;
     public Status status;
 
-    public final Date timestamp = new Date ();
+    public final Date timestamp = TimeUtil.getCurrentDate();
 
     public Curation () {}
     public Curation (Principal curator) {

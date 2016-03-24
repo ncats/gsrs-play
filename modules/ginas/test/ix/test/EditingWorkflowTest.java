@@ -368,7 +368,7 @@ public class EditingWorkflowTest {
    	}
 
     public int getFacetCountFor(SubstanceAPI session, String face, String label){
-    	JsonNode jsn=session.search();
+    	JsonNode jsn=session.searchJson();
        	JsonNode facets=jsn.at("/facets");
        	for(JsonNode facet:facets){
        		String name=facet.at("/name").asText();

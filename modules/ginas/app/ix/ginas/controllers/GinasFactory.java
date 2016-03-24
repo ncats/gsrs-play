@@ -14,6 +14,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.util.TimeUtil;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils;
@@ -61,20 +62,20 @@ public class GinasFactory extends EntityFactory {
         public static class EditLock{
         	String id;
         	UserProfile user;
-        	Date lockTime = new Date();
+        	long lockTime = TimeUtil.getCurrentTimeMillis();
         	public EditLock(UserProfile user, String id){
         		this.id=id;
         		this.user=user;
         	}
         	public boolean isExpired(){
-        		long expiretime = lockTime.getTime()+EXPIRE_LOCK_TIME_MS;
-        		if(System.currentTimeMillis()>expiretime){
+        		long expiretime = lockTime +EXPIRE_LOCK_TIME_MS;
+        		if(TimeUtil.getCurrentTimeMillis()>expiretime){
         			return true;
         		}
         		return false;
         	}
         	public void updateLock(){
-        		lockTime=new Date();
+        		lockTime=TimeUtil.getCurrentTimeMillis();
         	}
 			public boolean isUser(UserProfile up) {
 				if(this.user.getIdentifier().equals(up.getIdentifier())){

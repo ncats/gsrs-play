@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.persistence.*;
 
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,7 +25,7 @@ public class Phenotype extends Model {
     @Lob
     public String text;
     
-    public final Date created = new Date ();
+    public final Date created = TimeUtil.getCurrentDate();
     public Date modified;
 
     @ManyToMany(cascade=CascadeType.ALL)
@@ -36,6 +37,6 @@ public class Phenotype extends Model {
     @PrePersist
     @PreUpdate
     public void modified () {
-        this.modified = new Date ();
+        this.modified = TimeUtil.getCurrentDate();
     }
 }

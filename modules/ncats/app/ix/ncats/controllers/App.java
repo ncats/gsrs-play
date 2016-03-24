@@ -1697,7 +1697,7 @@ public class App extends Authentication {
         if (Global.epoch != null) {
             ups = new int[3];
             // epoch in seconds
-            long u = (new java.util.Date().getTime()
+            long u = (System.currentTimeMillis()
                       - Global.epoch.getTime())/1000;
             ups[0] = (int)(u/3600); // hour
             ups[1] = (int)((u/60) % 60); // min

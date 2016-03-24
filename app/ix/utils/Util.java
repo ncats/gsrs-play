@@ -15,6 +15,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Play;
 import play.mvc.Http;
@@ -197,9 +198,8 @@ public class Util {
     }
     
     public static long getCanonicalCacheTimeStamp(){
-    	long TIMESTAMP=(new Date()).getTime();
-    	long date=(long)(Math.floor(TIMESTAMP/getTimeResolutionMS()));
-    	return date;
+    	long TIMESTAMP= TimeUtil.getCurrentTimeMillis();
+        return (long) Math.floor(TIMESTAMP/getTimeResolutionMS());
     }
     public static long getTimeResolutionMS(){
     	return TIME_RESOLUTION_MS;
