@@ -71,7 +71,9 @@ public class Unit extends GinasCommonSubData {
     
     @JsonIgnore
     //TODO:Make this inspect the structure itself
+    //there are
     public List<String> getContainedConnections(){
+    	System.err.println("WARNING: SRU structure not validated to check for connection points");
     	return getMentionedConnections();
     }
     
