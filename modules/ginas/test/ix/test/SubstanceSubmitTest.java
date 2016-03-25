@@ -62,14 +62,6 @@ public class SubstanceSubmitTest {
         @Rule
         public GinasTestServer ts = new GinasTestServer(9001);
 
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-    };
-
-
         public SubstanceSubmitTest(File f, String onlyUsedForParameterName){
             this.resource=f;
         }
