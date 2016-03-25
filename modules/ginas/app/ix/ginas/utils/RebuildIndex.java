@@ -2,6 +2,7 @@ package ix.ginas.utils;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.BackupEntity;
 import ix.utils.EntityUtils;
 
 import java.lang.reflect.Field;
@@ -28,7 +29,56 @@ public class RebuildIndex  {
 		return UPDATE_MESSAGE;
 	}
 	
-    public static void updateLuceneIndex(String models) throws Exception{
+	public static void updateLuceneIndex(String models) throws Exception{
+		try {
+			UPDATE_MESSAGE = "Preprocessing ...";
+			Collection<Class<?>> classes = getEntityClasses(models.split(","));
+
+			long start = System.currentTimeMillis();
+			EntityPersistAdapter.setUpdatingIndex(true);
+			for (Class<?> eclass : classes) {
+
+				Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
+				int page = 0;
+				int pageSize = 10;
+				int rcount = finder.findRowCount();
+				
+				UPDATE_MESSAGE = "Fetching first " + pageSize + " of " + rcount + " records in " + (System.currentTimeMillis() - start) + "ms";
+				long totalTimeSerializing=0;
+				while (true) {
+					Query q = finder.query();
+					q.setFirstRow(pageSize * page)
+							.setMaxRows(pageSize);
+					System.out.println("This is the raw sql:" + q.getGeneratedSql());
+					List<BackupEntity> l = q.findList();
+					
+					for (BackupEntity o : l) {
+						long serialTime=System.currentTimeMillis();
+						Object oreal=o.getInstantiated();
+						EntityPersistAdapter.getInstance().deepreindex(oreal);
+						serialTime=System.currentTimeMillis()-serialTime;
+						totalTimeSerializing+=serialTime;
+						
+					}
+					long timesofar=(System.currentTimeMillis() - start);
+					double serialFraction = totalTimeSerializing/(timesofar+0.0);
+					
+					UPDATE_MESSAGE += "\nRecords Processed:" + (page + 1) * pageSize + " of " + rcount + " in " +timesofar + "ms (" +totalTimeSerializing + "ms serializing, " +serialFraction + ")";
+					if (l.isEmpty() || (page + 1) * pageSize > rcount) break;
+					page++;
+				}
+				page = 0;
+				pageSize = 10;
+			}
+			UPDATE_MESSAGE += "\n\nComplete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
+		}catch(Exception e){
+			e.printStackTrace();
+			UPDATE_MESSAGE = e.getMessage();
+		}finally {
+			EntityPersistAdapter.setUpdatingIndex(false);
+		}
+	}
+    public static void updateLuceneIndexOld(String models) throws Exception{
 		try {
 			UPDATE_MESSAGE = "Preprocessing ...";
 			Collection<Class<?>> classes = getEntityClasses(models.split(","));

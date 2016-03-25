@@ -114,6 +114,7 @@ public class EntityFactory extends Controller {
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
 
+        
         // only in the context of a request
                         
         public FetchOptions () {
@@ -1462,7 +1463,10 @@ public class EntityFactory extends Controller {
     public static interface EntityCallable{
         public void call(Object m, String path);
     }
-    protected static void recursivelyApply(Model entity, String path,
+    public static void recursivelyApply(Model entity,EntityCallable c){
+    	recursivelyApply(entity,"/",c);
+    }
+    private static void recursivelyApply(Model entity, String path,
                                            EntityCallable c){
         try{
             for(Field f: entity.getClass().getFields()){

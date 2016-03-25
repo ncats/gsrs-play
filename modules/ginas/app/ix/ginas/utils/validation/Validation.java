@@ -586,7 +586,7 @@ public class Validation {
         			List<String> contained=u.getContainedConnections();
         			List<String> mentioned=u.getMentionedConnections();
         			if(mentioned!=null){
-        				if(!contained.contains(mentioned)){
+        				if(!contained.containsAll(mentioned)){
         					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mentioned attachment points '" 
         							+ mentioned.toString() 
         							+ "' in unit '" + u.label + "' are not all found in actual connecitons '"

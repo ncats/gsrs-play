@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.models.Backup;
 import ix.core.models.BeanViews;
 import ix.core.models.DataVersion;
 import ix.core.models.Indexable;
@@ -44,6 +45,7 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.utils.Global;
 import play.Logger;
 
+@Backup
 @JSONEntity(name = "substance", title = "Substance")
 @Entity
 @Table(name = "ix_ginas_substance")

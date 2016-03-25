@@ -4,6 +4,7 @@ CREATE INDEX value_label_index on ix_core_value (label);
 CREATE INDEX value_term_index on ix_core_value (term);
 CREATE INDEX sub_approval_index on ix_ginas_substance (approval_id);
 CREATE INDEX name_index on ix_ginas_name (name);
+CREATE INDEX code_index on ix_ginas_code (code);
 CREATE INDEX ref_id_index on ix_ginas_reference (id);
 CREATE INDEX interaction_index on ix_ginas_relationship (interaction_type);
 CREATE INDEX qualification_index on ix_ginas_relationship (qualification);

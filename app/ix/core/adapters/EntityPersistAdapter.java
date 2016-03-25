@@ -24,17 +24,21 @@ import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityCallable;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.Backup;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.processors.BackupProcessor;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
 import play.Logger;
 import play.Play;
+import play.db.ebean.Model;
 import tripod.chem.indexer.StructureIndexer;
 //import javax.annotation.PreDestroy;
 
@@ -84,7 +88,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static void init(){
 
         strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
-       seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
+        seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
 
         alreadyLoaded = new ConcurrentHashMap<String,String>();
 
@@ -247,19 +251,25 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         	if(c.isAssignableFrom(cls)){
         		EntityProcessor ep =extraProcessors.get(c);
         		Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
-        		
-        		registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
-        		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
-        		registerProcessor(cls,ep,preUpdateCallback,PreUpdate.class);
-        		registerProcessor(cls,ep,postUpdateCallback,PostUpdate.class);
-        		registerProcessor(cls,ep,preDeleteCallback,PreRemove.class);
-        		registerProcessor(cls,ep,postDeleteCallback,PostRemove.class);
-        		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
-        		
+        		addEntityProcessor(cls,ep);
         	}
         }
+        if(cls.isAnnotationPresent(Backup.class)){
+        	addEntityProcessor(cls,BackupProcessor.getInstance());
+        }
+        
         return registered;
     }
+    private void addEntityProcessor(Class cls, EntityProcessor ep){
+    	registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
+		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
+		registerProcessor(cls,ep,preUpdateCallback,PreUpdate.class);
+		registerProcessor(cls,ep,postUpdateCallback,PostUpdate.class);
+		registerProcessor(cls,ep,preDeleteCallback,PreRemove.class);
+		registerProcessor(cls,ep,postDeleteCallback,PostRemove.class);
+		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
+    }
+    
     void registerProcessor(Class cls, EntityProcessor ep, Map<String, List<Hook>> registry, Class<?> hookAnnotation){
     	List<Hook> methods = registry.get(cls.getName());
     	if (methods == null) {
@@ -556,6 +566,18 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 reindex(bean);
         }
     }
+    
+    public void deepreindex(Object bean){
+    	if(bean instanceof Model){
+	    	EntityFactory.recursivelyApply((Model)bean, new EntityCallable(){
+				@Override
+				public void call(Object m, String path) {
+					reindex(m);
+				}
+	    	});
+    	}
+    }
+    
     
     public void reindex(Object bean){
         String _id=EntityUtils.getIdForBeanAsString(bean);

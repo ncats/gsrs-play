@@ -24,8 +24,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @Entity
 @Table(name = "ix_ginas_moiety")
 public class Moiety extends GinasCommonSubData {
-	@Id
-	public UUID uuid;
 	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)

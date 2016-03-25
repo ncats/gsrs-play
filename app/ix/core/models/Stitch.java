@@ -27,4 +27,11 @@ public class Stitch extends BaseModel {
 
     public Stitch () {}
     public Stitch (String name) { this.name = name; }
+    
+    
+	@Override
+	public String fetchIdAsString() {
+		if(id!=null)return this.getClass().getName() + ":" + id.toString();
+		return null;
+	}
 }

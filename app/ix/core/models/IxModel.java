@@ -36,4 +36,10 @@ public class IxModel extends BaseModel {
     public void modified () {
         this.modified = new Date ();
     }
+
+	@Override
+	public String fetchIdAsString() {
+		if(id!=null)return this.getClass().getName() + ":" + id.toString();
+		return null;
+	}
 }

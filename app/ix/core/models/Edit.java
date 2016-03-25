@@ -78,4 +78,10 @@ public class Edit extends BaseModel {
         return newValue != null
             ? Global.getNamespace()+"/edits/"+id+"/$newValue" : null;
     }
+    
+    @Override
+    public String fetchIdAsString(){
+    	if(this.id==null)return null;
+    	return this.id.toString();
+    }
 }

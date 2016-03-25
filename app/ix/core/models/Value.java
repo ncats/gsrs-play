@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 @Table(name="ix_core_value")
 @Inheritance
 @DiscriminatorValue("VAL")
-public class Value extends BaseModel {
+public class Value extends LongBaseModel {
     @Id
     public Long id;
     public String label;

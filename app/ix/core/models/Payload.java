@@ -59,4 +59,10 @@ public class Payload extends BaseModel {
         }
         return prop;
     }
+
+	@Override
+	public String fetchIdAsString() {
+		if(this.id==null)return null;
+		return this.id.toString();
+	}
 }

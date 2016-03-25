@@ -15,7 +15,7 @@
         });
 
 
-    ginasApp.factory('Substance', function ($q, CVFields) {
+    ginasApp.factory('Substance', function ($q, CVFields, UUID) {
 
         function isCV(ob) {
             if (typeof ob !== "object") return false;
@@ -388,7 +388,7 @@
                 });
             };
         };
-
+        
         // Wrap the onProgress event by broadcasting an event
         var onProgress = function(reader, scope) {
             console.log(scope);

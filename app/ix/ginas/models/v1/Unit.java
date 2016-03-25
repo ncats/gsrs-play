@@ -8,12 +8,14 @@ import java.util.Map;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +48,7 @@ public class Unit extends GinasCommonSubData {
     public String type;
     
     @Lob
+    @Column(name="attachmentMap")
     private String _attachmentMap;
     
     public Map<String,LinkedHashSet<String>> getAttachmentMap(){
@@ -69,11 +72,15 @@ public class Unit extends GinasCommonSubData {
 		}
     }
     
+    
+    
     @JsonIgnore
     //TODO:Make this inspect the structure itself
     //there are
     public List<String> getContainedConnections(){
     	System.err.println("WARNING: SRU structure not validated to check for connection points");
+    	
+    	
     	return getMentionedConnections();
     }
     

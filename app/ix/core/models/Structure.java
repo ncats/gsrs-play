@@ -242,4 +242,10 @@ public class Structure extends BaseModel{
          }
     	 return newhash;
     }
+
+	@Override
+	public String fetchIdAsString() {
+		if(this.id==null)return null;
+		return id.toString();
+	}
 }

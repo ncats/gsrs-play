@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonView;
  */
 @Entity
 @Table(name="ix_core_curation")
-public class Curation extends BaseModel {
+public class Curation extends LongBaseModel {
     public enum Status {
         	Unknown,
             Pending,

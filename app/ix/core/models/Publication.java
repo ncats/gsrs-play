@@ -14,7 +14,7 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_publication")
-public class Publication extends BaseModel {
+public class Publication extends LongBaseModel {
     @Id
     public Long id; // internal id
 
