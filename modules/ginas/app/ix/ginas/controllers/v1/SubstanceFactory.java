@@ -8,6 +8,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.FetchOptions;
+import ix.core.controllers.ValueFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Group;
@@ -54,6 +55,7 @@ import play.mvc.Result;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
 import com.avaje.ebean.Query;
+import com.avaje.ebean.QueryIterator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -364,9 +366,16 @@ public class SubstanceFactory extends EntityFactory {
 		}
 	}
 
+	//silly test
 	public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
+		System.out.println("Dupe chack");
 		String hash = cs.structure.getLychiv4Hash();
-		List<Substance> dupeList = finder.where().eq("structure.properties.term", hash).findList();
+		List<Substance> dupeList= new ArrayList<Substance>();
+		QueryIterator<Value> values=ValueFactory.finder.where().eq("term", hash).findIterate();
+		if(values.hasNext()){
+			dupeList = finder.where().eq("structure.properties.term", hash).findList();
+		}
+		values.close();
 		return dupeList;
 	}
 	//TODO
