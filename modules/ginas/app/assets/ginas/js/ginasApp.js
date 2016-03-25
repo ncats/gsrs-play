@@ -183,10 +183,13 @@
                         var sites = _.toArray(value.sites);
                         disulfideLink.sites = sites;
                         sub.protein.disulfideLinks[key] = disulfideLink;
+                        console.log(sub.protein.disulfideLinks);
                     });
                 }
                 if (_.has(sub.protein, 'otherLinks')) {
+                    console.log(sub.protein.otherLinks);
                     _.forEach(sub.protein.otherLinks, function (value, key) {
+                        console.log(value);
                         sub.protein.otherLinks[key] = value.sites;
                     });
                 }
@@ -637,11 +640,14 @@
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
+            console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
                   $scope.canSubmit=$scope.noErrors();
-                callback();
+               if(callback){
+                   callback();
+               }
             });
         };
 

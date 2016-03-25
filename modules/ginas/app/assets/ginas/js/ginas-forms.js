@@ -408,17 +408,6 @@
                 };
 
                 scope.validate = function () {
-                    if (!scope.parent.protein.otherLinks) {
-                        scope.parent.protein.otherLinks = [];
-                    }
-                    scope.parent.protein.otherLinks.push(scope.otherLink);
-                    scope.otherLink = {};
-                    scope.otherLinksForm.$setPristine();
-                };
-
-
-
-                scope.validate = function () {
                     console.log(scope);
                     console.log("validationg");
                     if (!scope.parent.protein.disulfideLinks) {
@@ -1288,6 +1277,7 @@ console.log(scope);
             link: function (scope, element, attrs) {
 
                 scope.validate = function () {
+                    console.log(scope);
                     if (!scope.parent.protein.otherLinks) {
                         scope.parent.protein.otherLinks = [];
                     }
@@ -1801,7 +1791,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 field: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var template;
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
@@ -1852,28 +1841,13 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 };
 
                 scope.makeSiteList = function () {
-/*                    if(scope.field ==='sites'){
-                        console.log(scope);
-                        console.log(siteList.siteList(scope.referenceobj.$$displayString));
-                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj.sites.$$displayString));
-                        if(scope.referenceobj.sitesShorthand) {
-                            scope.referenceobj.sitesShorthand = scope.referenceobj.$$displayString;
-                        }
-                       // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
-                       console.log(scope);
-
-                    }else {*/
                     console.log(scope);
                         var temp= angular.copy(scope.referenceobj[scope.field].$$displayString);
                         _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
                         scope.referenceobj[scope.field].$$displayString = temp;
-     //               }
-/*
-*/
                 };
 
                 scope.redraw = function () {
-                    console.log(scope);
                     scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                 };
 
