@@ -450,6 +450,7 @@
        // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
+        console.log($location);
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
@@ -458,8 +459,8 @@
             });
         } else {
             var temp = localStorageService.get('tempsubstance');
-            if (temp) {
-                localStorageService.remove('tempsubstance');
+            localStorageService.remove('tempsubstance');
+            if (temp && $location.$$search.kind != undefined) {
                 Substance.$$setSubstance(temp).then(function(data){
                     $scope.substance = data;
                 });
@@ -486,8 +487,8 @@
             localStorageService.set('gridView', $scope.gridView);
         };
 
-        $scope.redirect = function(){
-        var base =  $window.location.pathname.split('/v/')[0];
+        $scope.redirectVersion = function(){
+            var base =  $window.location.pathname.split('/v/')[0];
            var newLocation = "/v/" + $scope.versionNumber;
             $window.location.pathname = base + newLocation;
         };
