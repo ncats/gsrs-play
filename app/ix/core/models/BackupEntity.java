@@ -32,7 +32,7 @@ public class BackupEntity extends IxModel{
 	@Lob
     @JsonIgnore
     @Indexable(indexed=false)
-    @Basic(fetch=FetchType.EAGER)
+    @Basic(fetch=FetchType.LAZY)
     public byte[] data;
 //	@Lob
 //	private String json;
@@ -92,7 +92,7 @@ public class BackupEntity extends IxModel{
 	@JsonIgnore
 	public void setInstantiated(BaseModel o) throws Exception{
 		kind=o.getClass().getName();
-		refid=o.fetchIdAsString();
+		refid=o.fetchGlobalId();
 		EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
 		setBytes(em.toJson(o).getBytes(StandardCharsets.UTF_8));
 		sha1=Util.sha1(data);
@@ -101,5 +101,11 @@ public class BackupEntity extends IxModel{
 	public boolean matchesHash(){
 		String sha1=Util.sha1(data);
 		return this.sha1.equals(sha1);
+	}
+	
+	public boolean isOfType(Class<?> type){
+		Class<?> cls= getKind();
+		if(cls==null)return false;
+		return type.isAssignableFrom(cls);
 	}
 }

@@ -80,7 +80,7 @@ public class Edit extends BaseModel {
     }
     
     @Override
-    public String fetchIdAsString(){
+    public String fetchGlobalId(){
     	if(this.id==null)return null;
     	return this.id.toString();
     }

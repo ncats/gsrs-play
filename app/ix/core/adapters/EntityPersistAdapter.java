@@ -1,6 +1,5 @@
 package ix.core.adapters;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -8,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
@@ -91,7 +91,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
         seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
 
-        alreadyLoaded = new ConcurrentHashMap<String,String>();
+        alreadyLoaded = new ConcurrentHashMap<String,String>(10000);
 
         editMap = new ConcurrentHashMap<String,Edit>();
     }
@@ -564,7 +564,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             }
         }
         if(UPDATE_INDEX){
-                reindex(bean);
+               reindex(bean);
         }
     }
     
@@ -587,26 +587,37 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     	
     }
     
-    
+//    public static long reindexCount=0;
+//    public Stack<Long> times= new Stack<Long>();
     public void reindex(Object bean){
+    	
     	String _id=null;
     	if(bean instanceof BaseModel){
-    		_id=((BaseModel)bean).fetchIdAsString();
+    		_id=((BaseModel)bean).fetchGlobalId();
     	}else{
     		_id=EntityUtils.getIdForBeanAsString(bean);
     	}
         if(alreadyLoaded.containsKey(bean.getClass()+_id)){
             return;
         }
-        
+//        long ocount=reindexCount;
         try {
+//        	long start=System.currentTimeMillis();
+        	//times.push();
             if(_id!=null)
                 alreadyLoaded.put(bean.getClass()+_id,_id);
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
+            
+//            times.pop();
         } catch (Exception e) {
             e.printStackTrace();
         }
+//        if(ocount==reindexCount){
+//        	System.out.println(bean.getClass().getName());
+//        }
+//        reindexCount++;
+        
     }
     public static List<Field> getSequenceIndexableField(Object entity){
     	List<Field> flist = new ArrayList<Field>();

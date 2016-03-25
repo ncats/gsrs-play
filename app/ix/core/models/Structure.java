@@ -244,7 +244,7 @@ public class Structure extends BaseModel{
     }
 
 	@Override
-	public String fetchIdAsString() {
+	public String fetchGlobalId() {
 		if(this.id==null)return null;
 		return id.toString();
 	}

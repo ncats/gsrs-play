@@ -39,7 +39,7 @@ public class FileData extends BaseModel {
     public FileData () {}
 
 	@Override
-	public String fetchIdAsString() {
+	public String fetchGlobalId() {
 		if(this.id==null)return null;
 		return id.toString();
 	}

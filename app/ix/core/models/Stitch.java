@@ -30,7 +30,7 @@ public class Stitch extends BaseModel {
     
     
 	@Override
-	public String fetchIdAsString() {
+	public String fetchGlobalId() {
 		if(id!=null)return this.getClass().getName() + ":" + id.toString();
 		return null;
 	}
