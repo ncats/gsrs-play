@@ -46,11 +46,8 @@ public class RebuildIndex  {
 		
 		UPDATE_MESSAGE = "Fetching first " + pageSize + " of " + rcount + " records in " + (System.currentTimeMillis() - start) + "ms";
 		long totalTimeSerializing=0;
-		
-		BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<Runnable>(pageSize);
-	    RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
-	    ExecutorService executor =  new ThreadPoolExecutor(5, 5, 
-	        1L, TimeUnit.MINUTES, blockingQueue, rejectedExecutionHandler);
+
+	    ExecutorService executor =  new BlockingSubmitExecutor(5, 5, 1L, TimeUnit.MINUTES, pageSize);
 
 		while (true) {
 			Query q = finder.query()
@@ -77,7 +74,9 @@ public class RebuildIndex  {
 			double serialFraction = totalTimeSerializing/(timesofar+0.0);
 			
 			UPDATE_MESSAGE += "\nRecords Processed:" + (page + 1) * pageSize + " of " + rcount + " in " +timesofar + "ms (" +totalTimeSerializing + "ms serializing, " +serialFraction + ")";
-			if (l.isEmpty() || (page + 1) * pageSize > rcount) break;
+			if (l.isEmpty() || (page + 1) * pageSize > rcount){
+				break;
+			}
 			page++;
 		}
 		executor.shutdown();
