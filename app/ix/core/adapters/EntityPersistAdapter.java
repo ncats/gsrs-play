@@ -27,6 +27,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityCallable;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Backup;
+import ix.core.models.BaseModel;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxContext;
@@ -568,19 +569,32 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     
     public void deepreindex(Object bean){
+//    	long start=System.nanoTime();
+//    	final long[] l= new long[]{0};
     	if(bean instanceof Model){
 	    	EntityFactory.recursivelyApply((Model)bean, new EntityCallable(){
 				@Override
 				public void call(Object m, String path) {
+//					long start2=System.nanoTime();
 					reindex(m);
+//					l[0]+=(System.nanoTime()-start2);
 				}
 	    	});
     	}
+//    	long duration = (System.nanoTime()-start);
+//    	System.out.println("Reindexing took:" + duration + " with " + l[0] + " for actual indexing");
+//    	System.out.println("Basic I/O fraction:" + ((duration-l[0]+0.0)/(duration+0.0)));
+    	
     }
     
     
     public void reindex(Object bean){
-        String _id=EntityUtils.getIdForBeanAsString(bean);
+    	String _id=null;
+    	if(bean instanceof BaseModel){
+    		_id=((BaseModel)bean).fetchIdAsString();
+    	}else{
+    		_id=EntityUtils.getIdForBeanAsString(bean);
+    	}
         if(alreadyLoaded.containsKey(bean.getClass()+_id)){
             return;
         }

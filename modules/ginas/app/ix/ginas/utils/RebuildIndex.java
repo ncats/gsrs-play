@@ -1,26 +1,29 @@
 package ix.ginas.utils;
-import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EntityFactory;
-import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.core.models.BackupEntity;
-import ix.utils.EntityUtils;
-
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 import org.reflections.Reflections;
 
+import com.avaje.ebean.Query;
+
+import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.BackupEntity;
+import ix.utils.EntityUtils;
 import play.Logger;
 import play.db.ebean.Model;
-import com.avaje.ebean.Query;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RebuildIndex  {
 	public static String UPDATE_MESSAGE = "";
@@ -36,30 +39,35 @@ public class RebuildIndex  {
 
 			long start = System.currentTimeMillis();
 			EntityPersistAdapter.setUpdatingIndex(true);
+			int PAGE_SIZE=10;
 			for (Class<?> eclass : classes) {
 
 				Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
 				int page = 0;
-				int pageSize = 10;
+				int pageSize = PAGE_SIZE;
 				int rcount = finder.findRowCount();
 				
 				UPDATE_MESSAGE = "Fetching first " + pageSize + " of " + rcount + " records in " + (System.currentTimeMillis() - start) + "ms";
 				long totalTimeSerializing=0;
+				
+				BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<Runnable>(pageSize);
+			    RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
+			    ExecutorService executor =  new ThreadPoolExecutor(5, 5, 
+			        1L, TimeUnit.MINUTES, blockingQueue, rejectedExecutionHandler);
+
 				while (true) {
 					Query q = finder.query();
 					q.setFirstRow(pageSize * page)
 							.setMaxRows(pageSize);
-					System.out.println("This is the raw sql:" + q.getGeneratedSql());
 					List<BackupEntity> l = q.findList();
 					
 					for (BackupEntity o : l) {
 						long serialTime=System.currentTimeMillis();
-						Object oreal=o.getInstantiated();
-						EntityPersistAdapter.getInstance().deepreindex(oreal);
+						executor.submit(new Worker(o));
 						serialTime=System.currentTimeMillis()-serialTime;
 						totalTimeSerializing+=serialTime;
-						
 					}
+					
 					long timesofar=(System.currentTimeMillis() - start);
 					double serialFraction = totalTimeSerializing/(timesofar+0.0);
 					
@@ -67,8 +75,11 @@ public class RebuildIndex  {
 					if (l.isEmpty() || (page + 1) * pageSize > rcount) break;
 					page++;
 				}
+				executor.shutdown();
+				while(!executor.isTerminated()){}
+
 				page = 0;
-				pageSize = 10;
+				pageSize = PAGE_SIZE;
 			}
 			UPDATE_MESSAGE += "\n\nComplete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
 		}catch(Exception e){
@@ -78,7 +89,24 @@ public class RebuildIndex  {
 			EntityPersistAdapter.setUpdatingIndex(false);
 		}
 	}
-    public static void updateLuceneIndexOld(String models) throws Exception{
+	
+	public static class Worker implements Runnable{
+		BackupEntity oreal;
+		public Worker(BackupEntity bm){
+			this.oreal=bm;
+		}
+		@Override
+		public void run() {
+			try{
+				EntityPersistAdapter.getInstance().deepreindex(oreal.getInstantiated());
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+    public static void updateLuceneIndexLegacy(String models) throws Exception{
 		try {
 			UPDATE_MESSAGE = "Preprocessing ...";
 			Collection<Class<?>> classes = getEntityClasses(models.split(","));

@@ -2,7 +2,7 @@
 # Plugins
 # ~~~~~~~
 199:ix.core.plugins.IxContext
-#200:com.edulify.play.hikaricp.HikariCPPlugin
+200:com.edulify.play.hikaricp.HikariCPPlugin
 #1500:com.typesafe.plugin.CommonsMailerPlugin
 # inxight plugins
 # this plugin must be first!

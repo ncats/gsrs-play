@@ -1,6 +1,7 @@
 package ix.utils;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +12,10 @@ import java.util.Date;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -98,6 +102,21 @@ public class Util {
         }
         return null;
     }
+    public static String sha1 (byte[] bytes) {
+        if (bytes == null)
+            return null;
+        
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+            
+            md.update(bytes);
+            return toHex (md.digest());
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't generate sha1 hash!", ex);
+        }
+        return null;
+    }
 
     public static String URLEncode (String value) {
         try {
@@ -121,8 +140,9 @@ public class Util {
      * @return
      * @throws IOException
      */
-    public static InputStream getUncompressedInputStream(InputStream is,
-                                                         boolean[] uncompressed) throws IOException {
+    public static InputStream getUncompressedInputStream(
+    		InputStream is,
+            boolean[] uncompressed) throws IOException {
         InputStream retStream = new BufferedInputStream(is);
         // if(true)return retStream;
         retStream.mark(100);
@@ -161,6 +181,34 @@ public class Util {
         return retStream;
 
     }
+    public static byte[] compress(byte[] data) throws IOException {  
+    	   Deflater deflater = new Deflater();  
+    	   deflater.setInput(data);  
+    	   ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);   
+    	   deflater.finish();  
+    	   byte[] buffer = new byte[1024];   
+    	   while (!deflater.finished()) {  
+    	    int count = deflater.deflate(buffer); // returns the generated code... index  
+    	    outputStream.write(buffer, 0, count);   
+    	   }  
+    	   outputStream.close();  
+    	   byte[] output = outputStream.toByteArray();  
+    	     
+    	   return output;  
+    }  
+    public static byte[] decompress(byte[] data) throws IOException, DataFormatException {  
+    	   Inflater inflater = new Inflater();   
+    	   inflater.setInput(data);  
+    	   ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);  
+    	   byte[] buffer = new byte[1024];  
+    	   while (!inflater.finished()) {  
+    	    int count = inflater.inflate(buffer);  
+    	    outputStream.write(buffer, 0, count);  
+    	   }  
+    	   outputStream.close();  
+    	   byte[] output = outputStream.toByteArray();  
+    	   return output;  
+    }  
     
     public static String encrypt(String clearTextPassword, String salt) {
         String text = "---" + clearTextPassword + "---" + salt + "---";

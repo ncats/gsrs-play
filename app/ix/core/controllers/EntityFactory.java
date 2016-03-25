@@ -1472,11 +1472,10 @@ public class EntityFactory extends Controller {
             for(Field f: entity.getClass().getFields()){
                 Class type= f.getType();
                 Annotation e=type.getAnnotation(Entity.class);
-                        
+                
                 if(e!=null){
                     try {
                         Object nextEntity=f.get(entity);
-                                        
                         if(nextEntity instanceof Model)
                             recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
                     } catch (IllegalArgumentException e1) {
@@ -1495,7 +1494,6 @@ public class EntityFactory extends Controller {
                         }
                     }
                 }
-                        
             }
         }catch(Exception e){
             e.printStackTrace();

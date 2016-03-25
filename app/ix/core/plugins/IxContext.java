@@ -114,13 +114,8 @@ public class IxContext extends Plugin {
         	runPreEvolutionSQL();
         }
         try{
-        	System.err.println("Running post evolutions");
-        	for(int i=0;i<20;i++){
-        		System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&");
-        	}
         	runPostEvolutionSQL();
         }catch(Exception e){
-        	System.err.println("That's an errrrrrrrrrrrrrrrrrrrrrrrrrrrrror");
         	e.printStackTrace();
         }
         

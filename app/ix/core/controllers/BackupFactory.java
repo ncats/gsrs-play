@@ -25,7 +25,7 @@ public class BackupFactory extends EntityFactory {
             return notFound ("Bad request: "+request().uri());
         }
         catch (Exception ex) {
-            Logger.trace("Can't retrieve edit "+id, ex);
+            Logger.trace("Can't retrieve backup "+id, ex);
         }
         
         return internalServerError
@@ -36,6 +36,7 @@ public class BackupFactory extends EntityFactory {
     	BackupEntity be = finder.where().eq("refid", refid).findUnique();
     	return be;
     }
+  
     
     public static Integer getCount () {
         try {
@@ -58,7 +59,7 @@ public class BackupFactory extends EntityFactory {
             return notFound ("Bad request: "+request().uri());
         }
         catch (Exception ex) {
-            Logger.trace("Can't retrieve edit "+id, ex);
+            Logger.trace("Can't retrieve backup "+id, ex);
         }
 
         return internalServerError
