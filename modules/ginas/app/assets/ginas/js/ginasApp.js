@@ -598,11 +598,18 @@
             $scope.validateSubstance(f);
         };
 
-		$scope.dismiss = function (err){
+		$scope.dismissAll = function (){
+				$scope.errorsArray =[];
+			$scope.canSubmit=$scope.noErrors();
+		};
+
+        $scope.dismiss = function (err){
 				_.pull($scope.errorsArray,err);
 			$scope.canSubmit=$scope.noErrors();
 		};
+
 		$scope.canSubmit=false;
+
 		$scope.noErrors = function (){
             var errs = _.filter($scope.errorsArray, function(err){
                 if(err.messageType==="ERROR" || err.messageType==="WARNING" ){
@@ -612,28 +619,27 @@
 			 return (errs.length<=0);
 		};
 
+        $scope.parseErrorArray = function(errorArr){
+            _.forEach(errorArr, function(value){
+                if (value.messageType == "WARNING")
+                    value.class = "warning";
+                if (value.messageType == "ERROR")
+                    value.class = "danger";
+                if (value.messageType == "INFO")
+                    value.class = "info";
+                if (value.messageType == "SUCCESS")
+                    value.class = "success";
+            });
+            errorArr= _.difference(errorArr,(_.filter(errorArr, ['class', 'info'])));
+            return errorArr;
+        };
+
         $scope.validateSubstance = function (callback) {
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.errorsArray = [];
-            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (responseTotal) {
-                var arr = [];
-                var response=responseTotal.validationMessages;
-                for (var i in response) {
-                    if (response[i].messageType != "INFO")
-                        arr.push(response[i]);
-                    if (response[i].messageType == "WARNING")
-                        response[i].class = "alert-warning";
-                    if (response[i].messageType == "ERROR")
-                        response[i].class = "alert-danger";
-                    if (response[i].messageType == "INFO")
-                        response[i].class = "alert-info";
-                    if (response[i].messageType == "SUCCESS")
-                        response[i].class = "alert-success";
-                }
-
-                $scope.errorsArray = arr;
-                $scope.canSubmit=$scope.noErrors();
-                
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
+                $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
+                  $scope.canSubmit=$scope.noErrors();
                 callback();
             });
         };
@@ -664,20 +670,28 @@
                     headers: {
                         'Content-Type': 'application/json'
                     }
-                }).success(function (response) {
-                    sub = angular.toJson($scope.substance.$$flattenSubstance());
+                }).then(function (response) {
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.redirect = response.uuid;
                     $scope.open(url);
+                }, function(response){
+                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.open(url);
                 });
             } else {
+                sub = angular.toJson($scope.substance.$$flattenSubstance());
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
-                }).success(function (response) {
+                }).then(function (response) {
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.redirect = response.uuid;
+                    $scope.open(url);
+                }, function(response){
+                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.open(url);
                 });
             }
@@ -764,7 +778,7 @@
         };
 
         $scope.viewSubstance = function(){
-            $window.search ="";
+            $window.location.search ="";
             $window.location.pathname = baseurl+'substance/' + $scope.redirect.split('-')[0];
         };
 

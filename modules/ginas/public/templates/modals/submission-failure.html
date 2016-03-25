@@ -1,0 +1,30 @@
+<div>
+    <div class="modal-header">
+        <a type="button" class="close" ng-click="close()" uib-tooltip="Close" aria-label="Close"><i
+                class="fa fa-times danger"></i></a>
+        <h4 class="modal-title" id="myModalLabelExport">Submission Failed!</h4>
+    </div>
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-12 warn">
+                <p>Your submission failed!</p>
+                <div class="row" ng-repeat="err in errorsArray track by $index">
+                    <div class="col-md-12">
+                        <div class="alert alert-{{::err.class}}" role="alert">
+                    <span><h4>{{::err.messageType}}</h4>
+                        <span>{{::err.message}}</span>
+                        <div ng-repeat="link in err.links">
+                            <a target="_blank" href="{{::link.href}}">{{::link.text}}</a>
+                        </div>
+                    </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-error" ng-click="close()">Go Back</button>
+        </div>
+    </div>
+</div>
+
