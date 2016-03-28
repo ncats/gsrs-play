@@ -193,6 +193,7 @@
                         sub.protein.otherLinks[key] = value.sites;
                     });
                 }
+                console.log(JSON.stringify(sub.protein.otherLinks));
             }
 
             sub = flattenCV(sub);
@@ -693,8 +694,9 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    var url = baseurl + "assets/templates/modals/submission-success.html";
+                    console.log(response);
                     $scope.redirect = response.uuid;
+                    var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
                 }, function(response){
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
@@ -785,6 +787,7 @@
         };
 
         $scope.viewSubstance = function(){
+            console.log("new");
             $window.location.search ="";
             $window.location.pathname = baseurl+'substance/' + $scope.redirect.split('-')[0];
         };
@@ -1151,6 +1154,7 @@
                         scope.referenceobj.sites.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if(scope.field) {
+                            console.log(scope);
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
                     alert('error');
@@ -1840,35 +1844,49 @@
         }
     });
 
+   ginasApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance) {
+        $scope.ok = function () {
+            $uibModalInstance.close();
+        };
 
-ginasApp.directive('referenceModalButton', function ($compile, $templateRequest, $http, $uibModal) {
+
+
+
+       $scope.cancel = function () {
+            $uibModalInstance.dismiss('cancel');
+        };
+    });
+
+
+
+ginasApp.directive('referenceModalButton', function ($uibModal) {
         return {
-            /*            restrict: 'AE',
-             replace: 'true',*/
             scope: {
                 referenceobj:'=',
                 parent:'=',
                 edit:'=?'
             },
-            link: function (scope, element, attrs) {
+            templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
+            controller: function ($scope) {
+                console.log($scope);
                 var modalInstance;
-                var template;
-                $templateRequest(baseurl + "assets/templates/selectors/reference-selector.html").then(function (html) {
-                    template = angular.element(html);
-                    element.append(template);
-                    $compile(template)(scope);
-                    });
-                       var  templateUrl = baseurl + "assets/templates/modals/reference-modal.html";
-
-                scope.close = function () {
+                $scope.close = function () {
+                    console.log("yo");
+                    $scope.$broadcast ('save');
                     modalInstance.close();
                 };
 
-                scope.open = function () {
+                $scope.open = function () {
                     modalInstance = $uibModal.open({
-                        templateUrl: templateUrl,
+                        templateUrl: baseurl + "assets/templates/modals/reference-modal.html",
+                       // controller: 'ModalInstanceCtrl',
                         size: 'xl',
-                        scope: scope
+                        scope: $scope,
+                        resolve: {
+                            parent :function(){
+                                return $scope.substance;
+                            }
+                        }
                     });
                 }
             }
