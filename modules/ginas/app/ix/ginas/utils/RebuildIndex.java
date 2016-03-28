@@ -5,16 +5,12 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import javax.persistence.Entity;
 
+import com.avaje.ebean.Page;
+import com.avaje.ebean.PagingList;
 import org.reflections.Reflections;
 
 import com.avaje.ebean.Query;
@@ -42,47 +38,63 @@ public class RebuildIndex  {
 		Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
 		int page = 0;
 		int pageSize = PAGE_SIZE;
-		int rcount = finder.findRowCount();
+
 		
-		UPDATE_MESSAGE = "Fetching first " + pageSize + " of " + rcount + " records in " + (System.currentTimeMillis() - start) + "ms";
+
 		long totalTimeSerializing=0;
 
 	    ExecutorService executor =  new BlockingSubmitExecutor(5, 5, 1L, TimeUnit.MINUTES, pageSize);
 
-		while (true) {
-			Query q = finder.query()
-					.setFirstRow(pageSize * page)
-					.setMaxRows(pageSize);
-			
-			List<BackupEntity> l = q.findList();
-			
-			for (BackupEntity o : l) {
-				//TODO: make part of query
-				if(!o.isOfType(type))continue;
-				if(since!=null){
-					if(!o.modified.after(since)){
-						continue;
-					}
-				}
-				long serialTime=System.currentTimeMillis();
-				executor.submit(new Worker(o));
-				serialTime=System.currentTimeMillis()-serialTime;
-				totalTimeSerializing+=serialTime;
-			}
-			
-			long timesofar=(System.currentTimeMillis() - start);
-			double serialFraction = totalTimeSerializing/(timesofar+0.0);
-			
-			UPDATE_MESSAGE += "\nRecords Processed:" + (page + 1) * pageSize + " of " + rcount + " in " +timesofar + "ms (" +totalTimeSerializing + "ms serializing, " +serialFraction + ")";
-			if (l.isEmpty() || (page + 1) * pageSize > rcount){
-				break;
-			}
-			page++;
-		}
-		executor.shutdown();
-		while(!executor.isTerminated()){}
 
-		UPDATE_MESSAGE += "\n\nCompleted " +type.getName() + " reindexing.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
+
+
+			PagingList<BackupEntity> pagingList = finder.query()
+					//.setFirstRow(pageSize * page)
+					//.setMaxRows(pageSize)
+                    .findPagingList(pageSize);
+			
+
+            //Future<Integer> futureRowCount = pagingList.getFutureRowCount();
+        List<BackupEntity> l;
+        Page<BackupEntity> currentPage;
+            try {
+                do {
+                    long startPageTime = System.currentTimeMillis();
+
+
+                   currentPage = pagingList.getPage(page);
+                   l = currentPage.getList();
+                    for (BackupEntity o : l) {
+                        //TODO: make part of query
+                        if (!o.isOfType(type)) continue;
+                        if (since != null) {
+                            if (!o.modified.after(since)) {
+                                continue;
+                            }
+                        }
+
+                        executor.submit(new Worker(o));
+
+                    }
+                    long currentTime = System.currentTimeMillis();
+
+
+                    long timeForThisPage = currentTime - startPageTime;
+                    totalTimeSerializing += System.currentTimeMillis() - start;
+
+
+                    UPDATE_MESSAGE += "\nRecords Processed:" + (page + 1) * pageSize + " of ? in " + timeForThisPage + "ms (" + totalTimeSerializing + "ms serializing)";
+
+                    page++;
+                } while (! l.isEmpty());
+                executor.shutdown();
+                executor.awaitTermination(1, TimeUnit.DAYS);
+            }catch(InterruptedException  /*| ExecutionException */ e){
+                e.printStackTrace();
+            }
+
+
+        UPDATE_MESSAGE += "\n\nCompleted " +type.getName() + " reindexing.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
 	}
 	
 	public static void updateLuceneIndex(String models) throws Exception{

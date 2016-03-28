@@ -32,7 +32,10 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
     public static long TIME_RESOLUTION_MS=Play.application().configuration().getLong("ix.tokenexpiretime",(long)(3600*1000*24));
-    
+
+
+    private static int BUFFER_SIZE = 8192; //8K
+
     static Random rand = new Random ();
     public static String randomUserAgent () {
         return UserAgents[rand.nextInt(UserAgents.length)];
@@ -184,30 +187,37 @@ public class Util {
     public static byte[] compress(byte[] data) throws IOException {  
     	   Deflater deflater = new Deflater();  
     	   deflater.setInput(data);  
-    	   ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);   
-    	   deflater.finish();  
-    	   byte[] buffer = new byte[1024];   
-    	   while (!deflater.finished()) {  
-    	    int count = deflater.deflate(buffer); // returns the generated code... index  
-    	    outputStream.write(buffer, 0, count);   
-    	   }  
-    	   outputStream.close();  
-    	   byte[] output = outputStream.toByteArray();  
-    	     
-    	   return output;  
+
+    	   deflater.finish();
+        try(ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length)) {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            while (!deflater.finished()) {
+                int count = deflater.deflate(buffer); // returns the generated code... index
+                outputStream.write(buffer, 0, count);
+            }
+            return outputStream.toByteArray();
+        }
+
     }  
-    public static byte[] decompress(byte[] data) throws IOException, DataFormatException {  
-    	   Inflater inflater = new Inflater();   
-    	   inflater.setInput(data);  
-    	   ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);  
-    	   byte[] buffer = new byte[1024];  
-    	   while (!inflater.finished()) {  
-    	    int count = inflater.inflate(buffer);  
-    	    outputStream.write(buffer, 0, count);  
-    	   }  
-    	   outputStream.close();  
-    	   byte[] output = outputStream.toByteArray();  
-    	   return output;  
+    public static byte[] decompress(byte[] data) throws IOException, DataFormatException {
+        Inflater inflater = new Inflater();
+        inflater.setInput(data);
+
+        //initialize to 10x the compressed size
+        //I guess we can parse the compressed data to read the uncompressed size from the ZIP header
+        //but this will be a faster approximation.
+        //the buffer will grow as needed but if we make it too small,
+        //then we will have several resizing operations which will cause the arry to get
+        //copied over and over again.
+        try(ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length *10)) {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            while (!inflater.finished()) {
+                int count = inflater.inflate(buffer);
+                outputStream.write(buffer, 0, count);
+            }
+
+            return outputStream.toByteArray();
+        }
     }  
     
     public static String encrypt(String clearTextPassword, String salt) {
