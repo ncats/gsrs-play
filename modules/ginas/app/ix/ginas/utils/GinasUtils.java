@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +55,7 @@ import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 public class GinasUtils {
 	private static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
@@ -358,10 +360,11 @@ public class GinasUtils {
 	public static class GinasDumpExtractor extends RecordExtractor<JsonNode> {
 		BufferedReader buff;
 
+		private static final Pattern TOKEN_SPLIT_PATTERN = Pattern.compile("\t");
 		public GinasDumpExtractor(InputStream is) {
 			super(is);
 			try {
-				buff = new BufferedReader(new InputStreamReader(is, "UTF8"));
+				buff = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			} catch (Exception e) {
 				
 			}
@@ -373,16 +376,19 @@ public class GinasUtils {
 			if (buff == null)
 				return null;
 			String line=null;
+			ObjectMapper mapper = new ObjectMapper();
 			try {
 				line = buff.readLine();
-				if (line == null)
+				if (line == null) {
 					return null;
-				String[] toks = line.split("\t");
+				}
+				//use static pattern so we don't recompile on every split call
+				//which is what String.split() does
+				String[] toks = TOKEN_SPLIT_PATTERN.split(line);
 				// Logger.debug("extracting:"+ toks[1]);
-				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes("utf8"));
-				ObjectMapper mapper = new ObjectMapper();
-				JsonNode tree = mapper.readTree(bis);
-				return tree;
+				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes(StandardCharsets.UTF_8));
+
+				return mapper.readTree(bis);
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw e;

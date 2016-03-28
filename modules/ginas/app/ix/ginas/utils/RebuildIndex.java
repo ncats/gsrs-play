@@ -54,9 +54,10 @@ public class RebuildIndex  {
                     .findPagingList(pageSize);
 			
 
-            //Future<Integer> futureRowCount = pagingList.getFutureRowCount();
+            Future<Integer> futureRowCount = pagingList.getFutureRowCount();
         List<BackupEntity> l;
         Page<BackupEntity> currentPage;
+        int recordsReIndexed = 0;
             try {
                 do {
                     long startPageTime = System.currentTimeMillis();
@@ -80,16 +81,25 @@ public class RebuildIndex  {
 
 
                     long timeForThisPage = currentTime - startPageTime;
-                    totalTimeSerializing += System.currentTimeMillis() - start;
+                    totalTimeSerializing = System.currentTimeMillis() - start;
 
-
-                    UPDATE_MESSAGE += "\nRecords Processed:" + (page + 1) * pageSize + " of ? in " + timeForThisPage + "ms (" + totalTimeSerializing + "ms serializing)";
+                    recordsReIndexed += l.size();
+                    //this ugliness is so we don't call get() before we
+                    //to most other ways to write this will invoke get() before
+                    //we want which will cause it to block.
+                    String numRecords;
+                    if(futureRowCount.isDone()){
+                        numRecords = futureRowCount.get().toString();
+                    }else{
+                        numRecords = "?";
+                    }
+                    UPDATE_MESSAGE += "\nRecords Processed:" + recordsReIndexed + " of " + numRecords + " in " + timeForThisPage + "ms (" + totalTimeSerializing + "ms serializing)";
 
                     page++;
                 } while (! l.isEmpty());
                 executor.shutdown();
                 executor.awaitTermination(1, TimeUnit.DAYS);
-            }catch(InterruptedException  /*| ExecutionException */ e){
+            }catch(InterruptedException | ExecutionException  e){
                 e.printStackTrace();
             }
 
