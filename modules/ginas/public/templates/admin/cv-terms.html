@@ -28,7 +28,7 @@
             </div>
         </ng-form>
 
-        <div ng-repeat="obj in domain.terms">
+        <div ng-repeat="obj in domain.terms track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">

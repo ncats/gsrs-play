@@ -414,6 +414,7 @@
                         scope.parent.protein.disulfideLinks = [];
 
                     }
+                    console.log(JSON.stringify(scope.disulfideLink));
                     scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
                     scope.disulfideLink = {};
                     scope.disulfideLinksForm.$setPristine();
@@ -663,6 +664,7 @@
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
+                        console.log(scope.referenceobj);
                         $templateRequest(baseurl + "assets/templates/selectors/site-selector.html").then(function (html) {
                             template = angular.element(html);
                             element.append(template);
@@ -1278,6 +1280,7 @@ console.log(scope);
 
                 scope.validate = function () {
                     console.log(scope);
+                    console.log(JSON.stringify(scope.otherLink));
                     if (!scope.parent.protein.otherLinks) {
                         scope.parent.protein.otherLinks = [];
                     }
@@ -1639,8 +1642,12 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                     delete scope.$$uploadFile;
                 };
 
+                scope.$on('save', function(e) {
+                    scope.validate();
+                });
+
+
                     scope.validate = function () {
-                        console.log(scope);
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
@@ -1826,6 +1833,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                                         v = _.remove(ret, function (n) {
                                             return n == site.residueIndex
                                         });
+                                        return v;
                                     }
                                 });
                             });
