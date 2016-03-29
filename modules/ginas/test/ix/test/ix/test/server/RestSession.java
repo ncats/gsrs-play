@@ -1,6 +1,7 @@
 package ix.test.ix.test.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import ix.core.util.TimeUtil;
 import play.api.mvc.Controller;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
@@ -74,7 +75,7 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     private void refreshTokenIfNeccesarry(){
-        if(System.currentTimeMillis()>this.deadtime){
+        if(TimeUtil.getCurrentTimeMillis()>this.deadtime){
             refreshAuthInfoByUserNamePassword();
         }
     }
@@ -93,7 +94,7 @@ public class RestSession extends AbstractSession<Void>{
         JsonNode userinfo=wsr.asJson();
         token=userinfo.get("computedToken").asText();
         key=userinfo.get("key").asText();
-        deadtime=System.currentTimeMillis()+userinfo.get("tokenTimeToExpireMS").asLong();
+        deadtime= TimeUtil.getCurrentTimeMillis() + userinfo.get("tokenTimeToExpireMS").asLong();
 
 
     }

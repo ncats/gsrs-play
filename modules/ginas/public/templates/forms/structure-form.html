@@ -11,21 +11,22 @@
             </div>
             <div class="row">
                 <div class="col-md-12 pull-right">
-                        <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
+                    <button class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
+                    <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
                 </div>
             </div>
 <hr>
-            <div class = "row" ng-repeat="err in structureErrorsArray">
+            <div class = "row" ng-repeat="err in structureErrorsArray track by $index">
                 <div class="col-md-12">
-                    <div class="alert {{err.class}} alert-dismissible" role="alert">
+                    <div class="alert alert-{{err.class}} alert-dismissible" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
-                            <span><h4>{{err.messageType}}</h4>
-                                <span>{{err.message}}</span>
+                            <span><h4>{{::err.messageType}}</h4>
+                                <span>{{::err.message}}</span>
                                 <div ng-repeat="link in err.links">
-                                    <a target = "_blank" href="{{link.href}}">{{link.text}}</a>
+                                    <a target = "_blank" href="{{link.href}}">{{::link.text}}</a>
                                 </div>
                             </span>
                     </div>

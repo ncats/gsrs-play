@@ -1072,7 +1072,7 @@ ul.tree-list {
 }
 
 #lockmessage{
-	background:  red;
+	background:  #d9534f;
     width: 		100%;
     position: fixed;
     top:  0px;
@@ -1081,3 +1081,28 @@ ul.tree-list {
     color: white;
     padding:5px;
 }
+
+.json-formatter-row .string {
+    white-space: inherit;
+}
+
+
+/*
+!*
+Material Design Overwrite*!
+a.md-default-theme:not(.md-button), a:not(.md-button) {
+     color: #337ab7;
+}
+
+a.md-default-theme:not(.md-button):hover, a:not(.md-button):hover {
+    color: #23527c;
+}
+
+a.badge.ng-binding {
+    color: white;
+}
+
+a.btn.btn-primary {
+    color: #fff;
+}
+*/

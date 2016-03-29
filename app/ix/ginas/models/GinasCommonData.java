@@ -29,6 +29,7 @@ import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
+import ix.core.util.TimeUtil;
 import ix.utils.Global;
 import ix.utils.Util;
 
@@ -186,13 +187,14 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     @PrePersist
     @PreUpdate
     public void modified () {
-    	this.lastEdited = new Date ();
+        Date currentDate = TimeUtil.getCurrentDate();
+    	this.lastEdited =currentDate;
         Principal p1=UserFetcher.getActingUser();
         if(p1!=null){
     		lastEditedBy=p1;
     		if(this.createdBy==null){
     			createdBy=p1;
-    			created= new Date();
+    			created= currentDate;
         	}
         }
         if(this.uuid==null){

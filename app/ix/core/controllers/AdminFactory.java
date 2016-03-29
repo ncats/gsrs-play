@@ -2,6 +2,7 @@ package ix.core.controllers;
 
 import ix.core.models.*;
 import ix.core.models.Role;
+import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authenticator;
 import ix.utils.Util;
 
@@ -317,7 +318,7 @@ public class AdminFactory extends Controller {
     
 
     public static String generateSalt() {
-        return Util.encrypt(new Date().toString(), String.valueOf(Math.random()));
+        return Util.encrypt(TimeUtil.getCurrentDate().toString(), String.valueOf(Math.random()));
     }
 
     public static boolean validatePassword(UserProfile profile, String password) {

@@ -3,10 +3,25 @@ package ix.core.search;
 import play.Logger;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class SearchOptions {
+    
+    public static class FacetLongRange {
+        public String field;
+        public Map<String, long[]> range = new TreeMap<String, long[]>();
+
+        public FacetLongRange (String field) {
+            this.field = field;
+        }
+
+        public void add (String title, long[] range) {
+            this.range.put(title, range);
+        }
+    }
+    
     public static final int DEFAULT_TOP = 10;
     public static final int DEFAULT_FDIM = 10;
     // default number of elements to fetch while blocking
@@ -26,10 +41,15 @@ public class SearchOptions {
      * Facet is of the form: DIMENSION/VALUE...
      */
     public List<String> facets = new ArrayList<String>();
+    public List<FacetLongRange> longRangeFacets =
+        new ArrayList<FacetLongRange>();
     public List<String> order = new ArrayList<String>();
     public List<String> expand = new ArrayList<String>();
 
     public SearchOptions () { }
+    public SearchOptions (Class<?> kind) {
+        this.kind = kind;
+    }
     public SearchOptions (Class<?> kind, int top, int skip, int fdim) {
         this.kind = kind;
         this.top = Math.max(1, top);

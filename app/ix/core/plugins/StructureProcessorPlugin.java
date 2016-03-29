@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.Serializable;
 
+import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Plugin;
 import play.Application;
@@ -378,7 +379,7 @@ public class StructureProcessorPlugin extends Plugin {
                     // the given payload is currently processing
                     // at the moment!
                     ProcessingJob job = new ProcessingJob ();
-                    job.start = job.stop = System.currentTimeMillis();
+                    job.start = job.stop = TimeUtil.getCurrentTimeMillis();
                     job.keys.add(new Keyword
                                  (StructureProcessorPlugin.class.getName(),
                                   payload.key));
@@ -448,15 +449,15 @@ public class StructureProcessorPlugin extends Plugin {
                 ProcessingRecord rec = new ProcessingRecord ();
                 rec.name = pr.mol.getName();
                 rec.job = pr.job;
-                rec.start = System.currentTimeMillis();
+                rec.start = TimeUtil.getCurrentTimeMillis();
                 Structure struc = null;
                 try {
                     struc = StructureProcessor.instrument(pr.mol);
-                    rec.stop = System.currentTimeMillis();
+                    rec.stop = TimeUtil.getCurrentTimeMillis();
                     rec.status = ProcessingRecord.Status.OK;
                 }
                 catch (Throwable t) {
-                    rec.stop = System.currentTimeMillis();
+                    rec.stop = TimeUtil.getCurrentTimeMillis();
                     rec.status = ProcessingRecord.Status.FAILED;
                     rec.message = t.getMessage();
                     t.printStackTrace();
@@ -475,7 +476,7 @@ public class StructureProcessorPlugin extends Plugin {
                     try {                   
                         ProcessingJob job = ProcessingJobFactory.getJob(jid);
                         if (job != null) {
-                            job.stop = System.currentTimeMillis();
+                            job.stop = TimeUtil.getCurrentTimeMillis();
                             job.status = ProcessingJob.Status.COMPLETE;
                             reporter.tell
                                 (PersistModel.Update(job), self ());
@@ -535,7 +536,7 @@ public class StructureProcessorPlugin extends Plugin {
              (new FromConfig().withFallback(config)), "processor");
         system.actorOf(Props.create(Reporter.class, PQ), "reporter");
         
-        long start= System.currentTimeMillis();
+        long start= TimeUtil.getCurrentTimeMillis();
         while(true){
             try{
                 inbox = Inbox.create(system);
@@ -543,7 +544,7 @@ public class StructureProcessorPlugin extends Plugin {
             }catch(Exception e){
                 Logger.error(e.getMessage() + " retrying");
             }
-            if(System.currentTimeMillis()>start+StructureProcessorPlugin.AKKA_TIMEOUT){
+            if(TimeUtil.getCurrentTimeMillis()>start+StructureProcessorPlugin.AKKA_TIMEOUT){
                 throw new IllegalStateException("Couldn't start akka");
             }
             try{
@@ -604,7 +605,7 @@ public class StructureProcessorPlugin extends Plugin {
         ProcessingJob job = null;       
         if (jobs.isEmpty()) {
             job = new ProcessingJob ();
-            job.start = System.currentTimeMillis();
+            job.start = TimeUtil.getCurrentTimeMillis();
             job.keys.add(new Keyword
                          (StructureProcessorPlugin.class.getName(), pp.key));
             job.status = ProcessingJob.Status.RUNNING;
@@ -621,7 +622,7 @@ public class StructureProcessorPlugin extends Plugin {
             catch (Throwable t) {
                 job.message = t.getMessage();
                 job.status = ProcessingJob.Status.FAILED;
-                job.stop = System.currentTimeMillis();
+                job.stop = TimeUtil.getCurrentTimeMillis();
                 Logger.trace("Failed to process payload "+pp.payload.id, t);
             }
             finally {
