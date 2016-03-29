@@ -1712,23 +1712,26 @@ public class GinasApp extends App {
         Logger.debug("SERIALIZED:" + om.valueToTree(messages).toString());
         response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
                 try {
-                        if (format.equalsIgnoreCase("mol")){
-                                return ok(c.export(Chemical.FORMAT_MOL).replaceAll(".*Marvin.*"," G-SRS "));
-                        }else if (format.equalsIgnoreCase("sdf")){
-                                return ok(c.export(Chemical.FORMAT_SDF).replaceAll(".*Marvin.*"," G-SRS "));
-                        }else if (format.equalsIgnoreCase("smiles")){
-                                return ok(c.export(Chemical.FORMAT_SMILES));
-                        }else if (format.equalsIgnoreCase("cdx")){
-                                return ok(c.export(Chemical.FORMAT_CDX));
-                        }else if (format.equalsIgnoreCase("fas")){
-                                if(s instanceof ProteinSubstance){      
-                                        return ok(makeFastaFromProtein(((ProteinSubstance)s)));
-                                }else{
-                                        return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
-                                }
+                    /*
+                     * really?
+                     */
+                    if (format.equalsIgnoreCase("mol")){
+                        return ok(c.export(Chemical.FORMAT_MOL).replaceAll(".*Marvin.*"," G-SRS "));
+                    }else if (format.equalsIgnoreCase("sdf")){
+                        return ok(c.export(Chemical.FORMAT_SDF).replaceAll(".*Marvin.*"," G-SRS "));
+                    }else if (format.equalsIgnoreCase("smiles")){
+                        return ok(c.export(Chemical.FORMAT_SMILES));
+                    }else if (format.equalsIgnoreCase("cdx")){
+                        return ok(c.export(Chemical.FORMAT_CDX));
+                    }else if (format.equalsIgnoreCase("fas")){
+                        if(s instanceof ProteinSubstance){      
+                            return ok(makeFastaFromProtein(((ProteinSubstance)s)));
                         }else{
-                                return _badRequest("unknown format:" + format);
+                            return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
                         }
+                    }else{
+                        return _badRequest("unknown format:" + format);
+                    }
                 } catch (Exception e) {
                         e.printStackTrace();
                         return _badRequest(e.getMessage());
@@ -1739,16 +1742,16 @@ public class GinasApp extends App {
         String resp = "";
         List<Subunit> subs=p.protein.subunits;
         Collections.sort(subs, new Comparator<Subunit>(){
-                        @Override
-                        public int compare(Subunit o1, Subunit o2) {
-                                return o1.subunitIndex-o2.subunitIndex;
-                        }});
+                @Override
+                public int compare(Subunit o1, Subunit o2) {
+                    return o1.subunitIndex-o2.subunitIndex;
+                }});
         
         for(Subunit s: subs){
-                resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
-                for(String seq : splitBuffer(s.sequence,80)){
-                        resp+=seq+"\n";
-                }
+            resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+            for(String seq : splitBuffer(s.sequence,80)){
+                resp+=seq+"\n";
+            }
         }
         return resp;
     }

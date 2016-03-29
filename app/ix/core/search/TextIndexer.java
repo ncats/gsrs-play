@@ -33,6 +33,10 @@ import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.FieldCacheRangeFilter;
+import org.apache.lucene.queries.BooleanFilter;
+import org.apache.lucene.queries.ChainedFilter;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
@@ -996,6 +1000,54 @@ public class TextIndexer implements Closeable{
             }
             
             List<String> drills = options.facets;
+            // remove all range facets
+            Map<String, List<Filter>> filters =
+                new HashMap<String, List<Filter>>();
+            List<String> remove = new ArrayList<String>();
+            for (String f : drills) {
+                int pos = f.indexOf('/');
+                if (pos > 0) {
+                    String facet = f.substring(0, pos);
+                    String value = f.substring(pos+1);
+                    for (SearchOptions.FacetLongRange flr
+                             : options.longRangeFacets) {
+                        if (facet.equals(flr.field)) {
+                            long[] range = flr.range.get(value);
+                            if (range != null) {
+                                // add this as filter..
+                                List<Filter> fl = filters.get(facet);
+                                if (fl == null) {
+                                    filters.put
+                                        (facet, fl = new ArrayList<Filter>());
+                                }
+                                Logger.debug("adding range filter \""
+                                             +facet+"\": "+range[0]
+                                             +" "+range[1]);
+                                fl.add(FieldCacheRangeFilter.newLongRange
+                                       (facet, range[0], range[1], true, true));
+                            }
+                            remove.add(f);
+                        }
+                    }
+                }
+            }
+
+            drills.removeAll(remove);
+            if (!filters.isEmpty()) {
+                List<Filter> all = new ArrayList<Filter>();
+                if (filter != null)
+                    all.add(filter);
+                
+                for (Map.Entry<String, List<Filter>> me : filters.entrySet()) {
+                    ChainedFilter cf = new ChainedFilter
+                        (me.getValue().toArray(new Filter[0]),
+                         ChainedFilter.OR);
+                    all.add(cf);
+                }
+                filter = new ChainedFilter (all.toArray(new Filter[0]),
+                                            ChainedFilter.AND);
+            }
+            
             if (drills.isEmpty()) {
                 hits = sorter != null 
                     ? (FacetsCollector.search
