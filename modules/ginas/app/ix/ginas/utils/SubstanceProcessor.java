@@ -36,42 +36,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
 	public void postPersist(Substance obj) {
-			   //System.out.println("Post Persist Hook on:" + obj);
-               //All of the logic for processing goes here
-               
-               //Grab BDNUM
-               String internalCode=null;
-               for(Code c: obj.codes){
-                       if(c.codeSystem.equals(INTERNAL_CODE_SYSTEM)){
-                               if(internalCode!=null){
-                                       throw new IllegalStateException("Duplicate internal code");
-                               }
-                               internalCode=c.code;
-                       }
-               }
-               if(internalCode==null){
-                       for(Reference r: obj.references){
-                               if(r.docType.equals(INTERNAL_CODE_SYSTEM)){
-                                       if(internalCode!=null){
-                                               throw new IllegalStateException("Duplicate internal code");
-                                       }
-                                       internalCode=r.citation;
-                               }
-                       }
-               }
-               
-               
-               //Here is an example, which simply prints out the names
-               for(Name n:obj.names){
-                       //System.out.println(obj.getApprovalIDDisplay() + "\t" + internalCode +"\t" + n.getName() + "\t" + n.type);
-               }
-              //System.out.println("Updating the substance:" + obj.approvalID); 
-               
-            if (obj instanceof ChemicalSubstance) {
-            	
-   			} else if (obj instanceof ProteinSubstance) {
-   				
-   			}
+			   System.out.print(System.currentTimeMillis() + "\t");
 	}
 	
 	@Override
@@ -161,7 +126,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 				Logger.error("Persist error. Alternative definition has no primary relationship");
 			}
 		}
-		
+		System.out.print("pp\t" + System.currentTimeMillis() + "\t");
 	}
 	@Override
 	public void preUpdate(Substance obj) {

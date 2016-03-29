@@ -74,6 +74,7 @@ public class Validation {
     }
 
     static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
+    	long start = System.currentTimeMillis();
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
     	try{
 	    	
@@ -186,6 +187,11 @@ public class Validation {
         }catch(Exception e){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
         }
+    	long dur=System.currentTimeMillis()-start;
+    	
+    	
+    	//System.out.println("@Validation time:\t" + dur/(1000.0));
+    	
         return gpm;
     }
 	

@@ -61,7 +61,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
-	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.5;
+	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
 	static public Model.Finder<UUID, Substance> finder;
 
 	// Do we still need these?
@@ -367,15 +367,11 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	//silly test
-	public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
-		System.out.println("Dupe chack");
+	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
+		//System.out.println("Dupe chack");
 		String hash = cs.structure.getLychiv4Hash();
 		List<Substance> dupeList= new ArrayList<Substance>();
-		QueryIterator<Value> values=ValueFactory.finder.where().eq("term", hash).findIterate();
-		if(values.hasNext()){
-			dupeList = finder.where().eq("structure.properties.term", hash).findList();
-		}
-		values.close();
+		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
 		return dupeList;
 	}
 	//TODO

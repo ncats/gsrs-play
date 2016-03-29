@@ -1,6 +1,7 @@
 package ix.core.plugins;
 
 import ix.core.UserFetcher;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -194,9 +195,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
             UserFetcher.setLocalThreadUser(rec.job.owner);
 			try {
 				try {
+					EntityPersistAdapter.persistcount=0;
+					long start=System.currentTimeMillis();
 					rec.job.getPersister().persist(this);
 					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
-					System.out.println("Persisted at :" + System.currentTimeMillis());
+					long done=System.currentTimeMillis()-start;
+					System.out.println(     "Persisted at \t" + 
+							System.currentTimeMillis() + "\t" + 
+							this.theRecordToPersist.getClass().getName() + "\t" + 
+							done + "\t" + 
+							EntityPersistAdapter.persistcount);
+					EntityPersistAdapter.timeProfile.printResults();
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
@@ -551,8 +560,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
      */
     static ProcessingJob process(ActorRef reporter, ActorRef proc,
                                  ActorRef sender, PayloadProcessor pp) throws Exception {
-        List<ProcessingJob> jobs = ProcessingJobFactory
-            .getJobsByPayload(pp.payload.id.toString());
+        List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(pp.payload.id.toString());
         Logger.debug("Okay, where are these jobs?");
         ProcessingJob job = null;
         if (jobs.isEmpty()) {

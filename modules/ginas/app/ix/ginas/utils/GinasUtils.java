@@ -256,24 +256,24 @@ public class GinasUtils {
 		}
 	}
 
-	public static boolean persistSubstance(Substance theRecordToPersist, StructureIndexer index, List<String> errors) {
+	public static boolean persistSubstance(Substance theRecordToPersist, List<String> errors) {
 		boolean worked = false;
 		Transaction tx = Ebean.beginTransaction();
 		try {
-			if (theRecordToPersist instanceof ChemicalSubstance) {
-				persist((ChemicalSubstance) theRecordToPersist, index);
-
-			} else if (theRecordToPersist instanceof ProteinSubstance) {
-				//System.out.println("Persisting protein");
-				Protein protein = ((ProteinSubstance) theRecordToPersist).protein;
-				for (Subunit su : protein.subunits) {
-					if (su.sequence != null && su.sequence.length() > 0) {
-						su.save();
-						//System.out.println("About to add sequence to indexer");
-						//_seqIndexer.add(su.uuid.toString(), su.sequence);
-					}
-				}
-			}
+//			if (theRecordToPersist instanceof ChemicalSubstance) {
+//				persist((ChemicalSubstance) theRecordToPersist, index);
+//
+//			} else if (theRecordToPersist instanceof ProteinSubstance) {
+//				//System.out.println("Persisting protein");
+//				Protein protein = ((ProteinSubstance) theRecordToPersist).protein;
+//				for (Subunit su : protein.subunits) {
+//					if (su.sequence != null && su.sequence.length() > 0) {
+//						su.save();
+//						//System.out.println("About to add sequence to indexer");
+//						//_seqIndexer.add(su.uuid.toString(), su.sequence);
+//					}
+//				}
+//			}
 			theRecordToPersist.save();
 			tx.commit();
 			worked = true;
@@ -287,24 +287,6 @@ public class GinasUtils {
 		return worked;
 	}
 
-	public static boolean persistSubstance(Substance theRecordToPersist, StructureIndexer index) {
-		return persistSubstance(theRecordToPersist, index);
-	}
-
-	static Substance persist(ChemicalSubstance chem, StructureIndexer index) throws Exception {
-		// now index the structure for searching
-		try {
-			Chem.setFormula(chem.structure);
-			chem.structure.save();
-			//index.add(String.valueOf(chem.structure.id), chem.structure.molfile);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-		for (Moiety m : chem.moieties)
-			m.structure.save();
-		return chem;
-	}
 
 	/*********************************************
 	 * Ginas bits for 1. extracting from InputStream 2. transforming to
@@ -319,8 +301,10 @@ public class GinasUtils {
 			boolean worked = false;
 			List<String> errors = new ArrayList<String>();
 			if (prec.theRecordToPersist != null) {
-
-				worked = GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer, errors);
+				long start= System.currentTimeMillis();
+				worked = GinasUtils.persistSubstance(prec.theRecordToPersist, errors);
+				long dur=System.currentTimeMillis()-start;
+				System.out.print(dur + "\t");
 				if (worked) {
 					prec.rec.status = ProcessingRecord.Status.OK;
 					prec.rec.xref = new XRef(prec.theRecordToPersist);
