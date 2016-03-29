@@ -25,6 +25,8 @@ import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
+import org.apache.lucene.facet.range.LongRange;
+import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.index.*;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
 import org.apache.lucene.queries.TermsFilter;
@@ -362,6 +364,18 @@ public class TextIndexer implements Closeable{
             dirty.incrementAndGet();
         }
 
+        public void refreshIfDirty () {
+            if (dirty.get() > 0) {
+                try {
+                    refresh ();
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                    Logger.trace("Can't refresh suggest index!", ex);
+                }
+            }
+        }
+
         synchronized void refresh () throws IOException {
             long start = System.currentTimeMillis();
             lookup.refresh();
@@ -548,14 +562,14 @@ public class TextIndexer implements Closeable{
                              +": FetchWorker stopped at "+new Date());
             }
             catch (Exception ex) {
-                ex.printStackTrace();
+                //ex.printStackTrace();
                 Logger.trace(Thread.currentThread()+" stopped", ex);
             }
         }
     }
 
-    class ConfigFileDaemon implements Runnable {
-        ConfigFileDaemon () {
+    class FlushDaemon implements Runnable {
+        FlushDaemon () {
         }
 
         public void run () {
@@ -570,6 +584,27 @@ public class TextIndexer implements Closeable{
             file = getSorterConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 saveSorters (file, sorters);
+            }
+
+            if (indexWriter.hasUncommittedChanges()) {
+                Logger.debug("Committing index changes...");
+                try {
+                    indexWriter.commit();
+                    taxonWriter.commit();
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                    try {
+                        indexWriter.rollback();
+                        taxonWriter.rollback();
+                    }
+                    catch (IOException exx) {
+                        exx.printStackTrace();
+                    }
+                }
+
+                for (SuggestLookup lookup : lookups.values())
+                    lookup.refreshIfDirty();
             }
         }
     }
@@ -690,7 +725,7 @@ public class TextIndexer implements Closeable{
 
         // run daemon every 5s
         scheduler.scheduleAtFixedRate
-            (new ConfigFileDaemon (), 5, 5, TimeUnit.SECONDS);
+            (new FlushDaemon (), 5, 5, TimeUnit.SECONDS);
     }
 
     public void setFetchWorkers (int n) {
@@ -929,9 +964,7 @@ public class TextIndexer implements Closeable{
         long start = TimeUtil.getCurrentTimeMillis();
             
         FacetsCollector fc = new FacetsCollector ();
-
         TopDocs hits = null;
-        
         try (TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter)){
             Sort sorter = null;
             if (!options.order.isEmpty()) {
@@ -971,7 +1004,7 @@ public class TextIndexer implements Closeable{
                        (searcher, query, filter, options.max(), fc));
                 
                 Facets facets = new FastTaxonomyFacetCounts
-                    (taxon, facetsConfig, fc);
+                     (taxon, facetsConfig, fc);
                 
                 List<FacetResult> facetResults =
                     facets.getAllDims(options.fdim);
@@ -1095,7 +1128,9 @@ public class TextIndexer implements Closeable{
                         searchResult.facets.add(f);
                     }
                 }
-            }
+            } // facets is empty
+            
+            collectLongRangeFacets (fc, searchResult);
         }
 
         if (DEBUG (1)) {
@@ -1136,6 +1171,41 @@ public class TextIndexer implements Closeable{
         return searchResult;
     }
 
+    protected void collectLongRangeFacets (FacetsCollector fc,
+                                           SearchResult searchResult)
+        throws IOException {
+        SearchOptions options = searchResult.getOptions();
+        for (SearchOptions.FacetLongRange flr : options.longRangeFacets) {
+            if (flr.range.isEmpty())
+                continue;
+
+            Logger.debug("[Range facet: \""+flr.field+"\"");
+            LongRange[] range = new LongRange[flr.range.size()];
+            int i = 0;
+            for (Map.Entry<String, long[]> me : flr.range.entrySet()) {
+                // assume range [low,high)
+                long[] r = me.getValue();
+                range[i++] = new LongRange
+                    (me.getKey(), r[0], true, r[1], true);
+                Logger.debug("  "+me.getKey()+": "+r[0]+" to "+r[1]);
+            }
+            
+            Facets facets = new LongRangeFacetCounts (flr.field, fc, range);
+            FacetResult result = facets.getTopChildren(options.fdim, flr.field);
+            Facet f = new Facet (result.dim);
+            if (DEBUG (1)) {
+                Logger.info(" + ["+result.dim+"]");
+            }
+            for (i = 0; i < result.labelValues.length; ++i) {
+                LabelAndValue lv = result.labelValues[i];
+                if (DEBUG (1)) {
+                    Logger.info("     \""+lv.label+"\": "+lv.value);
+                }
+                f.values.add(new FV (lv.label, lv.value.intValue()));
+            }
+            searchResult.facets.add(f);
+        }
+    }
 
     protected Term getTerm (Object entity) {
         if (entity == null)
@@ -1281,11 +1351,13 @@ public class TextIndexer implements Closeable{
             
 
             if (id != null) {
-                
                 String field = entity.getClass().getName()+".id";
                 BooleanQuery q = new BooleanQuery();
-                q.add(new TermQuery(new Term (field, id.toString())),BooleanClause.Occur.MUST);
-                q.add(new TermQuery(new Term (FIELD_KIND, entity.getClass().getName())),BooleanClause.Occur.MUST);
+                q.add(new TermQuery(new Term (field, id.toString())),
+                      BooleanClause.Occur.MUST);
+                q.add(new TermQuery
+                      (new Term (FIELD_KIND, entity.getClass().getName())),
+                      BooleanClause.Occur.MUST);
                 indexWriter.deleteDocuments(q);   
                 
                 if (DEBUG (2))
@@ -1302,10 +1374,7 @@ public class TextIndexer implements Closeable{
 
         if (DEBUG (2))
             Logger.debug("<<< "+entity);
-        
     }
-    
-    
 
     public void remove (Object entity) throws Exception {
         Class cls = entity.getClass();
@@ -1317,8 +1386,11 @@ public class TextIndexer implements Closeable{
                 if (DEBUG (2))
                     Logger.debug("Deleting document "+field+"="+id+"...");
                 BooleanQuery q = new BooleanQuery();
-            	q.add(new TermQuery(new Term (field, id.toString())),BooleanClause.Occur.MUST);
-            	q.add(new TermQuery(new Term (FIELD_KIND, entity.getClass().getName())),BooleanClause.Occur.MUST);
+                q.add(new TermQuery(new Term (field, id.toString())),
+                      BooleanClause.Occur.MUST);
+                q.add(new TermQuery
+                      (new Term (FIELD_KIND, entity.getClass().getName())),
+                      BooleanClause.Occur.MUST);
                 indexWriter.deleteDocuments(q); 
             }
             else {
@@ -1449,9 +1521,8 @@ public class TextIndexer implements Closeable{
                         // composite type; recurse
                         instrument (path, value, ixFields);
                         Indexable ind=f.getAnnotation(Indexable.class);
-                        if(ind!=null){
-                                
-                                indexField (ixFields, indexable, path, value);
+                        if (ind != null) {
+                            indexField (ixFields, indexable, path, value);
                         }
                     }
                     else { // treat as string
@@ -1616,7 +1687,7 @@ public class TextIndexer implements Closeable{
         }
         else if (value instanceof java.util.Date) {
             long date = ((Date)value).getTime();
-            fields.add(new LongField (name, date, store));
+            fields.add(new LongField (name, date, YES));
             if (!full.equals(name))
                 fields.add(new LongField (full, date, NO));
             if (indexable.sortable())
