@@ -7,6 +7,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
+import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Plugin;
 import play.Application;
@@ -47,7 +48,7 @@ public class PersistenceQueue extends Plugin implements Runnable {
     static class ContextWrapper implements PersistenceContext,
                                            Comparable<ContextWrapper> {
         PersistenceContext context;
-        long whence = System.currentTimeMillis();
+        long whence = TimeUtil.getCurrentTimeMillis();
         
         ContextWrapper () {}
         ContextWrapper (PersistenceContext context) {

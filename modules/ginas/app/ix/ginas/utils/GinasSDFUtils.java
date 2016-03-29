@@ -8,6 +8,7 @@ import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
+import ix.core.util.TimeUtil;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.GinasChemicalStructure;
@@ -540,7 +541,7 @@ public class GinasSDFUtils {
 			Reference r = new Reference();
 			r.citation = path;
 			r.docType = "SDF_PROPERTY";
-			r.documentDate=new Date();
+			r.documentDate= TimeUtil.getCurrentDate();
 			s.references.add(r);
 			return r;
 		}

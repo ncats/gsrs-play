@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 
 import controllers.routes;
+import ix.core.util.TimeUtil;
 import play.*;
 import play.cache.Cache;
 import play.data.*;
@@ -43,7 +44,7 @@ public class ReachApp extends Controller {
     //2003-12-13T18:30:02Z
     static final DateFormat DATE_FORMAT = new SimpleDateFormat
         ("yyy-MM-dd'T'HH:mm:ss'Z'");
-    static final String TIMESTAMP = DATE_FORMAT.format(new java.util.Date ());
+    static final String TIMESTAMP = DATE_FORMAT.format(TimeUtil.getCurrentDate());
     
     public static final String[] PUBLICATION_FACETS = {
         "Program",
