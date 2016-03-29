@@ -753,6 +753,9 @@ public class Substance extends GinasCommonData {
 		for(Note n:notes){
 			n.delete();
 		}
+		for(Relationship n:relationships){
+			n.delete();
+		}
 		if(this.modifications!=null){
 			for(AgentModification am:this.modifications.agentModifications){
 				am.delete();
