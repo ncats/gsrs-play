@@ -1,16 +1,13 @@
 package ix.ginas.utils;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 import javax.persistence.Entity;
 
 import com.avaje.ebean.Page;
 import com.avaje.ebean.PagingList;
+import ix.core.controllers.EntityFactory;
 import org.reflections.Reflections;
 
 import com.avaje.ebean.Query;
@@ -24,205 +21,148 @@ import play.Logger;
 import play.db.ebean.Model;
 
 public class RebuildIndex  {
-	public static String UPDATE_MESSAGE = "";
+
 	public static int PAGE_SIZE=10;
 	
-	public static String getUpdateMessage(){
-		return UPDATE_MESSAGE;
-	}
-	
-	
-	private static void updateIndexesFromBackup(Class<?> type, Date since){
-		
-		long start = System.currentTimeMillis();
-		Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
-		int page = 0;
-		int pageSize = PAGE_SIZE;
 
-		
-
-		long totalTimeSerializing=0;
-
-	    ExecutorService executor =  new BlockingSubmitExecutor(5, 5, 1L, TimeUnit.MINUTES, pageSize);
+    private final int pageSize;
 
 
+    private final ExecutorService executor;
+
+    private ReIndexListener listener;
+
+    public RebuildIndex(ReIndexListener listener){
+        this(listener, PAGE_SIZE);
+    }
+    public RebuildIndex(ReIndexListener listener, int pageSize){
+        Objects.requireNonNull(listener);
+        this.pageSize = pageSize;
+        this.listener = listener;
+        this.executor =  new BlockingSubmitExecutor(5, 5, 1L, TimeUnit.MINUTES, pageSize);
+    }
+
+    public void reindex(Class<?> type){
+        reindex(type, null);
+    }
+    public void reindex(Class<?> type, Date since){
+        listener.newReindex();
+        Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
+
+        PagingList<BackupEntity> pagingList = finder.query()
+                //.setFirstRow(pageSize * page)
+                //.setMaxRows(pageSize)
+                .findPagingList(pageSize);
 
 
-			PagingList<BackupEntity> pagingList = finder.query()
-					//.setFirstRow(pageSize * page)
-					//.setMaxRows(pageSize)
-                    .findPagingList(pageSize);
-			
-
-            Future<Integer> futureRowCount = pagingList.getFutureRowCount();
+        Future<Integer> futureRowCount = pagingList.getFutureRowCount();
         List<BackupEntity> l;
         Page<BackupEntity> currentPage;
-        int recordsReIndexed = 0;
-            try {
-                do {
-                    long startPageTime = System.currentTimeMillis();
+        int page = 0;
 
+        boolean computedTotalAlready=false;
+        try {
+            do {
 
-                   currentPage = pagingList.getPage(page);
-                   l = currentPage.getList();
-                    for (BackupEntity o : l) {
-                        //TODO: make part of query
-                        if (!o.isOfType(type)) continue;
-                        if (since != null) {
-                            if (!o.modified.after(since)) {
-                                continue;
-                            }
+                currentPage = pagingList.getPage(page);
+                l = currentPage.getList();
+                for (BackupEntity o : l) {
+                    //TODO: make part of query
+                    if (!o.isOfType(type)) continue;
+                    if (since != null) {
+                        if (!o.modified.after(since)) {
+                            continue;
                         }
-
-                        executor.submit(new Worker(o));
-
                     }
-                    long currentTime = System.currentTimeMillis();
+
+                    executor.submit(new Worker(o, listener));
+
+                }
+
+                //this ugliness is so we don't call get() before we
+                //to most other ways to write this will invoke get() before
+                //we want which will cause it to block.
+                if(!computedTotalAlready && futureRowCount.isDone()){
+                    computedTotalAlready = true;
+                    listener.totalRecordsToIndex(futureRowCount.get());
+                }
+
+                page++;
+            } while (! l.isEmpty());
+
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.DAYS);
+        }catch(InterruptedException | ExecutionException  e){
+            listener.error(e);
+        }finally{
+            listener.doneReindex();
+        }
+
+    }
 
 
-                    long timeForThisPage = currentTime - startPageTime;
-                    totalTimeSerializing = System.currentTimeMillis() - start;
+    /**
+     * Listener for reindexing progress.
+     */
+    public interface ReIndexListener{
+        /**
+         * Starting a new re-indexing process.
+         */
+        void newReindex();
 
-                    recordsReIndexed += l.size();
-                    //this ugliness is so we don't call get() before we
-                    //to most other ways to write this will invoke get() before
-                    //we want which will cause it to block.
-                    String numRecords;
-                    if(futureRowCount.isDone()){
-                        numRecords = futureRowCount.get().toString();
-                    }else{
-                        numRecords = "?";
-                    }
-                    UPDATE_MESSAGE += "\nRecords Processed:" + recordsReIndexed + " of " + numRecords + " in " + timeForThisPage + "ms (" + totalTimeSerializing + "ms serializing)";
+        /**
+         * Finished a re-indexing process.
+         */
+        void doneReindex();
 
-                    page++;
-                } while (! l.isEmpty());
-                executor.shutdown();
-                executor.awaitTermination(1, TimeUnit.DAYS);
-            }catch(InterruptedException | ExecutionException  e){
+        /**
+         * The following object was
+         * successfully re-indexed.
+         * @param o the object that was re-indexed.
+         */
+        void recordReIndexed(Object o);
+
+        /**
+         * An error occurred.
+         * @param t the {@link Throwable} that caused the error.
+         */
+        void error(Throwable t);
+
+        /**
+         * The total number of records that are to be indexed.
+         * This method will be called before {@link #doneReindex()}
+         * but is not guarenteed to be be called before
+         * {@link #recordReIndexed(Object)} because some implementations
+         * may compute the total asynchronously.
+         *
+         * @param total the total number of records to be indexed.
+         */
+        void totalRecordsToIndex(int total);
+    }
+
+	private static class Worker implements Runnable {
+        private final BackupEntity oreal;
+
+        private final ReIndexListener listener;
+        public Worker(BackupEntity bm,ReIndexListener listener) {
+            this.oreal = bm;
+            this.listener = listener;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Object instantiated = oreal.getInstantiated();
+                EntityPersistAdapter.getInstance().deepreindex(instantiated);
+                listener.recordReIndexed(instantiated);
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
-        UPDATE_MESSAGE += "\n\nCompleted " +type.getName() + " reindexing.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
-	}
-	
-	public static void updateLuceneIndex(String models) throws Exception{
-		//if(true){
-		//	updateLuceneIndexLegacy(models);
-		//	return;
-		//}
-		try{
-			UPDATE_MESSAGE = "Preprocessing ...";
-			
-			Collection<Class<?>> classes = getEntityClasses(models.split(","));
-			long start = System.currentTimeMillis();
-			EntityPersistAdapter.setUpdatingIndex(true);
-			
-			for (Class<?> eclass : classes) {
-				updateIndexesFromBackup(eclass,null);
-			}
-			UPDATE_MESSAGE += "\n\n====================\n\nComplete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
-		}catch(Exception e){
-			e.printStackTrace();
-			UPDATE_MESSAGE = e.getMessage();
-		}finally {
-			EntityPersistAdapter.setUpdatingIndex(false);
-		}
-	}
-	
-	public static class Worker implements Runnable{
-		BackupEntity oreal;
-		public Worker(BackupEntity bm){
-			this.oreal=bm;
-		}
-		@Override
-		public void run() {
-			try{
-				EntityPersistAdapter.getInstance().deepreindex(oreal.getInstantiated());
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	
-    public static void updateLuceneIndexLegacy(String models) throws Exception{
-		try {
-			UPDATE_MESSAGE = "Preprocessing ...";
-			Collection<Class<?>> classes = getEntityClasses(models.split(","));
-
-			final long start = System.currentTimeMillis();
-			//EntityPersistAdapter.setUpdatingIndex(true);
-			for (Class<?> eclass : classes) {
-
-				Class idClass = Long.class;
-				Field idf = EntityUtils.getIdFieldForClass(eclass);
-				if (idf != null) {
-					idClass = idf.getType();
-				}
-				//System.out.println(eclass + "\t" + idClass);
-				Model.Finder finder = new Model.Finder(idClass, eclass);
-				final int[] page = new int[]{ 0};
-				final int pageSize = 10;
-				final int[] fetchcount=new int[]{0};
-				final int rcount = finder.findRowCount();
-				UPDATE_MESSAGE = "Fetching first " + pageSize + " of " + rcount + " records in " + (System.currentTimeMillis() - start) + "ms";
-				final long[] totalTimeSerializing=new long[]{0};
-				final EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
-				
-					QueryIterator qi =finder.findIterate();
-					Consumer c=new Consumer(){
-						@Override
-						public void accept(Object o) {
-							long serialTime=System.currentTimeMillis();
-							try {
-								String v = em.valueToTree(o).toString();
-							} catch (Exception e) {
-								e.printStackTrace();
-								Logger.info("Error serializing entity:" + o);
-							}
-							serialTime=System.currentTimeMillis()-serialTime;
-							
-							synchronized(fetchcount){
-								fetchcount[0]++;
-								totalTimeSerializing[0]+=serialTime;
-								System.out.println("fetched:" + fetchcount[0]);
-								
-								
-								
-								if(fetchcount[0]%pageSize==0){
-									long timesofar=(System.currentTimeMillis() - start);
-									double serialFraction = totalTimeSerializing[0]/(timesofar+0.0);
-									UPDATE_MESSAGE += "\nRecords Processed:" + (page[0] + 1) * pageSize + " of " + rcount
-										+ " in " + timesofar + "ms (" + totalTimeSerializing[0] + "ms serializing, "
-										+ serialFraction + ")";
-									page[0]++;
-								}
-							}
-						}
-					};
-					int i=0;
-					while(qi.hasNext()){
-						Object o=qi.next();
-						//c.accept(o);
-						System.out.println(i);
-						i++;
-					}
-					qi.close();
-			}
-			UPDATE_MESSAGE += "\n\nComplete.\nTotal Time:" + (System.currentTimeMillis() - start) + "ms";
-		}catch(Exception e){
-			e.printStackTrace();
-			UPDATE_MESSAGE = e.getMessage();
-		}finally {
-			EntityPersistAdapter.setUpdatingIndex(false);
-		}
+        }
     }
-    
-    public static interface Consumer{
-    	public void accept(Object o);
-    }
+
+
     public static Set<Class<?>> getEntityClasses (String[] models) throws Exception {
         Set<Class<?>> classes = new HashSet<Class<?>>();
         for(String load: models) {

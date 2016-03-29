@@ -94,6 +94,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         alreadyLoaded = new ConcurrentHashMap<String,String>(10000);
 
         editMap = new ConcurrentHashMap<String,Edit>();
+
+
     }
 
     
@@ -113,8 +115,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static int getEditUpdateCount(){
     	return editMap.size();
     }
-    
-    private static boolean UPDATE_INDEX = false;
     
     public EntityPersistAdapter () {
     	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
@@ -563,9 +563,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-        if(UPDATE_INDEX){
-               reindex(bean);
-        }
+
     }
     
     public void deepreindex(Object bean){
@@ -661,16 +659,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         return flist;
     }
-    
 
-    public static boolean isUpdatingIndex() {
-        return UPDATE_INDEX;
+
+    public static void doneReindexing(){
+        alreadyLoaded.clear();
     }
 
-    public static void setUpdatingIndex(boolean update) {
-        if(update!=UPDATE_INDEX){
-            alreadyLoaded.clear();
-            UPDATE_INDEX = update;
-        }
-    }
 }
