@@ -343,9 +343,8 @@ public class Authentication extends Controller {
     
 
     
-
+    //TODO: revert
     public static Principal fakeThing(){
-    	System.out.println("Fetching for scala");
     	return getUser();
     }
     

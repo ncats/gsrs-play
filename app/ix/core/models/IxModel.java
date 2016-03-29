@@ -38,4 +38,10 @@ public class IxModel extends BaseModel {
     public void modified () {
         this.modified = TimeUtil.getCurrentDate();
     }
+
+	@Override
+	public String fetchGlobalId() {
+		if(id!=null)return this.getClass().getName() + ":" + id.toString();
+		return null;
+	}
 }

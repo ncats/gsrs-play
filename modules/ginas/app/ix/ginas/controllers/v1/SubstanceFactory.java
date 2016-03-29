@@ -367,7 +367,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
 		String hash = cs.structure.getLychiv4Hash();
-		List<Substance> dupeList = finder.where().like("structure.properties.term", hash).findList();
+		List<Substance> dupeList = finder.where().eq("structure.properties.term", hash).findList();
 		return dupeList;
 	}
 	//TODO

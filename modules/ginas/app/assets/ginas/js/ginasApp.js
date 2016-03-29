@@ -392,7 +392,7 @@
                 });
             };
         };
-
+        
         // Wrap the onProgress event by broadcasting an event
         var onProgress = function(reader, scope) {
             return function (event) {

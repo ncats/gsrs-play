@@ -14,10 +14,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.BaseModel;
 import ix.core.models.Group;
+import ix.core.models.LongBaseModel;
 
 @Entity
 @Table(name = "ix_ginas_access")
-public class GinasAccessContainer extends BaseModel{
+public class GinasAccessContainer extends LongBaseModel{
 	@Id
 	public Long id;
 
@@ -59,9 +60,4 @@ public class GinasAccessContainer extends BaseModel{
 		return access;
 	}
 	
-//	@PostUpdate
-//	@PostPersist
-//	public void testPersist(){
-//		System.out.println("It saved:" +id + " " +  access.size());
-//	}
 }

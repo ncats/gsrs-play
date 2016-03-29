@@ -114,6 +114,7 @@ public class EntityFactory extends Controller {
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
 
+        
         // only in the context of a request
                         
         public FetchOptions () {
@@ -1462,17 +1463,19 @@ public class EntityFactory extends Controller {
     public static interface EntityCallable{
         public void call(Object m, String path);
     }
-    protected static void recursivelyApply(Model entity, String path,
+    public static void recursivelyApply(Model entity,EntityCallable c){
+    	recursivelyApply(entity,"/",c);
+    }
+    private static void recursivelyApply(Model entity, String path,
                                            EntityCallable c){
         try{
             for(Field f: entity.getClass().getFields()){
                 Class type= f.getType();
                 Annotation e=type.getAnnotation(Entity.class);
-                        
+                
                 if(e!=null){
                     try {
                         Object nextEntity=f.get(entity);
-                                        
                         if(nextEntity instanceof Model)
                             recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
                     } catch (IllegalArgumentException e1) {
@@ -1491,7 +1494,6 @@ public class EntityFactory extends Controller {
                         }
                     }
                 }
-                        
             }
         }catch(Exception e){
             e.printStackTrace();

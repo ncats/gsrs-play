@@ -282,4 +282,19 @@ public class Name extends GinasCommonSubData {
 		return false;
 	}
 	
+	@Override
+	public void delete(){
+		super.delete();
+		if(this.nameOrgs!=null){
+			for(NameOrg nameorg:this.nameOrgs){
+				nameorg.delete();
+			}
+		}
+		if(this.languages!=null){
+			for(Keyword language:this.languages){
+				language.delete();
+			}
+		}
+	}
+	
 }

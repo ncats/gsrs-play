@@ -9,7 +9,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_acl")
-public class Acl extends BaseModel implements be.objectify.deadbolt.core.models.Permission{
+public class Acl extends LongBaseModel implements be.objectify.deadbolt.core.models.Permission{
 
     public enum Permission {
         None, // 
@@ -72,5 +72,6 @@ public class Acl extends BaseModel implements be.objectify.deadbolt.core.models.
         }
         return vals;
     }
+    
 }
 
