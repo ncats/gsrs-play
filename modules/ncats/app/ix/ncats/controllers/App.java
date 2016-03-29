@@ -112,30 +112,20 @@ public class App extends Authentication {
     public static final int MAX_SEARCH_RESULTS = 1000;
 
     public static TextIndexer _textIndexer;
-    
-    
     public static PayloadPlugin _payloader;
-        
     public static IxContext _ix;
-
     public static PersistenceQueue _pq;
 
-
-
-    static{
+    static {
         init();
     }
 
-    public static void init(){
+    public static void init() {
         _textIndexer =
-                Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-        _payloader =
-                Play.application().plugin(PayloadPlugin.class);
-
-       _ix =
-                Play.application().plugin(IxContext.class);
-        _pq =
-                Play.application().plugin(PersistenceQueue.class);
+            Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        _payloader = Play.application().plugin(PayloadPlugin.class);
+       _ix = Play.application().plugin(IxContext.class);
+       _pq = Play.application().plugin(PersistenceQueue.class);
     }
 
     /**
@@ -575,6 +565,18 @@ public class App extends Authentication {
         return new ArrayList<Facet>();
     }
 
+    public static List<Facet> getFacets (SearchOptions options) {
+        try {
+            SearchResult result = _textIndexer.search(options, null, null);
+            return result.getFacets();
+        }
+        catch (IOException ex) {
+            Logger.trace("Can't retrieve facets for "+options.kind, ex);
+        }
+        
+        return new ArrayList<Facet>();
+    }
+
     public static List<String> getUnspecifiedFacets
         (final FacetDecorator[] decors) {
         String[] facets = request().queryString().get("facet");
@@ -810,24 +812,6 @@ public class App extends Authentication {
                                 return cacheKey (result, sha1);
                             }
                         });
-
-                /*
-                if (hasFacets && result.count() == 0) {
-                    Logger.debug("No results found for facet; "
-                                 +"retry as just query: "+q);
-                    // empty result.. perhaps the query contains /'s
-                    IxCache.remove(sha1); // clear cache
-                    result = getOrElse
-                        (sha1, new Callable<SearchResult>() {
-                                public SearchResult call ()
-                                    throws Exception {
-                                    return SearchFactory.search
-                                    (kind, q, total, 0, FACET_DIM,
-                                     request().queryString());
-                                }
-                            });
-                }
-                */
                 Logger.debug(sha1+" => "+result);
             }
             double elapsed = (System.currentTimeMillis() - start)*1e-3;

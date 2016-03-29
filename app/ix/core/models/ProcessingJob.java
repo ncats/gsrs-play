@@ -38,7 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Entity
 @Table(name="ix_core_procjob")
-public class ProcessingJob extends BaseModel {
+public class ProcessingJob extends LongBaseModel {
 	private static final String EXTRACTOR_KEYWORD = "EXTRACTOR";
 	private static final String TRANSFORM_KEYWORD = "TRANSFORM";
 	private static final String PERSISTER_KEYWORD = "PERSISTER";

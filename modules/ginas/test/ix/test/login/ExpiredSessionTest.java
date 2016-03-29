@@ -59,7 +59,7 @@ public class ExpiredSessionTest {
     }
     @Test
     public void notYetExpiredSessionShouldStillBeLogginIn(){
-        try(BrowserSession session = ts.newBrowserSession(ts.getFakeUser1())){
+        try(BrowserSession session = ts.newBrowserSession(user)){
 
             timeTraveller.jump(Authentication.TIMEOUT -1, TimeUnit.MILLISECONDS);
 

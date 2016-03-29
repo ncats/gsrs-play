@@ -307,6 +307,12 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 		
 	}
 	
+	@Override
+	public String fetchGlobalId(){
+		if(this.uuid==null)return null;
+		return this.uuid.toString();
+	}
+	
 	
 	
 }

@@ -37,5 +37,11 @@ public class FileData extends BaseModel {
     public String sha1;
 
     public FileData () {}
+
+	@Override
+	public String fetchGlobalId() {
+		if(this.id==null)return null;
+		return id.toString();
+	}
     
 }

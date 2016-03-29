@@ -33,8 +33,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 @RunWith(Parameterized.class)
 public class SubstanceValidateFailTest extends WithApplication {
 
-    private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
-	private static long timeout= 10000L;
+
 
     @Rule
     public TestRule watcher = new TestWatcher() {
@@ -61,7 +60,7 @@ public class SubstanceValidateFailTest extends WithApplication {
     File resource;
 
     @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+    public GinasTestServer ts = new GinasTestServer();
 
 
     public SubstanceValidateFailTest(File f, String dummy){

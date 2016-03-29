@@ -9,7 +9,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_etagref")
-public class ETagRef extends BaseModel {
+public class ETagRef extends LongBaseModel {
     @Id
     public Long id;
 

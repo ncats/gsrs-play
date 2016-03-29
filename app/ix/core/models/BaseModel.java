@@ -5,8 +5,10 @@ import javax.persistence.MappedSuperclass;
 import play.db.ebean.Model;
 
 @MappedSuperclass
-public class BaseModel extends Model{
+public abstract class BaseModel extends Model{
 
+	public abstract String fetchGlobalId();
+	
 	public BaseModel(){
 		
 	}
@@ -15,6 +17,7 @@ public class BaseModel extends Model{
 	public Class<?>[] fetchEquivalentClasses() {
 		return new Class<?>[]{this.getClass()};
 	}
+	
 	
 	
 }

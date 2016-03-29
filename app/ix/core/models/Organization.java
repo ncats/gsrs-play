@@ -7,7 +7,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_organization")
-public class Organization extends BaseModel {
+public class Organization extends LongBaseModel {
     @Id
     public Long id; // internal id
 

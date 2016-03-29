@@ -25,4 +25,9 @@ public class Session extends BaseModel {
     public Session (UserProfile profile) {
         this.profile = profile;
     }
+	@Override
+	public String fetchGlobalId() {
+		if(this.id==null)return null;
+		return this.id.toString();
+	}
 }

@@ -7,13 +7,7 @@ import ix.core.models.Payload;
 import ix.utils.Global;
 import ix.utils.Util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -69,18 +63,20 @@ public class PayloadPlugin extends Plugin {
         throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA1");
         File tmp = File.createTempFile("___", ".tmp", ctx.payload);
-        FileOutputStream fos = new FileOutputStream (tmp);
-        DigestInputStream dis = new DigestInputStream (is, md);
-        
-        byte[] buf = new byte[2048];
-        Payload payload = new Payload ();            
-        payload.size = 0l;
-        for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
-            fos.write(buf, 0, nb);
-            payload.size += nb;
+        Payload payload = new Payload();
+
+        try(OutputStream fos = new BufferedOutputStream(new FileOutputStream (tmp));
+            InputStream in = new BufferedInputStream(new DigestInputStream (is, md))) {
+            //default buffersize of BufferedOutputStream is 8K
+            byte[] buf = new byte[8192];
+
+            payload.size = 0l;
+            int bytesRead=0;
+            while ( (bytesRead = in.read(buf)) > 0){
+                fos.write(buf, 0, bytesRead);
+                payload.size += bytesRead;
+            }
         }
-        dis.close();
-        fos.close();
         
         payload.sha1 = Util.toHex(md.digest());
         List<Payload> found =
@@ -322,8 +318,7 @@ public class PayloadPlugin extends Plugin {
         File file = getPayloadFile (pl);
         if (file != null) {
             try {
-                
-                return new FileInputStream (file);
+                return new BufferedInputStream(new FileInputStream (file));
             }
             catch (IOException ex) {
                 Logger.trace("Can't open file "+file, ex);

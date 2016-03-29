@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 @Entity
 @Table(name="ix_core_timeline")
-public class Timeline extends BaseModel {
+public class Timeline extends LongBaseModel {
     @Id
     public Long id;
     public String name;
