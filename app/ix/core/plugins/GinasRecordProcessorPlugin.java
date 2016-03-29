@@ -17,6 +17,7 @@ import ix.utils.Global;
 import ix.utils.TimeProfiler;
 import ix.utils.Util;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -47,6 +48,8 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -190,6 +193,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
+        	
             getInstance().decrementExtractionQueue();
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             
@@ -211,6 +215,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					if(Math.random()>0.9){
 						TimeProfiler.getInstance().printResults();
 					}
+					TimeProfiler.stopGlobalTime("full submit");
+					TimeProfiler.addGlobalTime("full submit");
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
@@ -222,6 +228,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			} finally {
 				// unset local user, just in case
 				UserFetcher.setLocalThreadUser(null);
+				
 			}
         }
     }
@@ -249,6 +256,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         job.statistics = om.valueToTree(stat).toString();
         PersistModel pm = PersistModel.Update(job);
         pm.persists();
+        TimeProfiler.stopGlobalTime("full submit");
     }
 
         

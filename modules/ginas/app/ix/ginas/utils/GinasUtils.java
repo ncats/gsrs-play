@@ -262,20 +262,6 @@ public class GinasUtils {
 		boolean worked = false;
 		Transaction tx = Ebean.beginTransaction();
 		try {
-//			if (theRecordToPersist instanceof ChemicalSubstance) {
-//				persist((ChemicalSubstance) theRecordToPersist, index);
-//
-//			} else if (theRecordToPersist instanceof ProteinSubstance) {
-//				//System.out.println("Persisting protein");
-//				Protein protein = ((ProteinSubstance) theRecordToPersist).protein;
-//				for (Subunit su : protein.subunits) {
-//					if (su.sequence != null && su.sequence.length() > 0) {
-//						su.save();
-//						//System.out.println("About to add sequence to indexer");
-//						//_seqIndexer.add(su.uuid.toString(), su.sequence);
-//					}
-//				}
-//			}
 			theRecordToPersist.save();
 			tx.commit();
 			worked = true;
@@ -291,8 +277,10 @@ public class GinasUtils {
 
 
 	/*********************************************
-	 * Ginas bits for 1. extracting from InputStream 2. transforming to
-	 * Substance 3. persisting
+	 * Ginas bits for 
+	 * 1. extracting from InputStream 
+	 * 2. transforming to Substance 
+	 * 3. persisting
 	 * 
 	 * @author peryeata
 	 *

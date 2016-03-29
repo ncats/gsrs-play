@@ -56,7 +56,7 @@ public class TimeProfiler{
     	
     	public boolean containsKey(Object okey){
     		String key = okey.toString();
-    		return timeCount.getKeys().contains(key);    		
+    		return timeCount.count.containsKey(key);    		
     	}
     	
     	public void addTime(Object okey){
@@ -68,6 +68,7 @@ public class TimeProfiler{
     	
     	public void stopTime(Object okey){
     		String key = okey.toString();
+    		if(!numberCount.count.containsKey(key))return;
     		long total=numberCount.get(key);
     		long chunktotal=lastChunkCount.get(key);
     		long time=ix.core.util.TimeUtil.getCurrentTime(TimeUnit.NANOSECONDS)-startTimes.get(key);
@@ -144,17 +145,24 @@ public class TimeProfiler{
     	public void printResults(){
     		System.out.println("===========");
     		for(String s:numberCount.getKeys()){
+    			
     			double average=getAverageTime(s,TimeUnit.MILLISECONDS);
     			double lastAverage = getLastAverageTime(s,TimeUnit.MILLISECONDS);
-    			System.out.print(
-    					s + "\t" + 
-    					numberCount.get(s) + "\t" + 
-    					(timeCount.get(s)/(1E6+0.0)) + "\t" +
-    					average);
-    			for(double avg:lastTimes.get(s)){
-    				System.out.print("\t" + avg/(1E6+0.0));
+    			
+    			if(timeCount.count.containsKey(s)){
+    				StringBuilder sb = new StringBuilder();
+	    			
+	    			for(double avg:lastTimes.get(s)){
+	    				sb.append("\t" + avg/(1E6+0.0));
+	    			}
+	    			System.out.println(
+	    					s + "\t" + 
+	    					numberCount.get(s) + "\t" + 
+	    					(timeCount.get(s)/(1E6+0.0)) + "\t" +
+	    					average + sb.toString() + "\t" + lastAverage);
+    			}else{
+    				//System.out.println("NO key:" + s + " avg:" + average);
     			}
-    			System.out.println("\t" + lastAverage);
     		}
     		System.out.println("==========");
     	}
