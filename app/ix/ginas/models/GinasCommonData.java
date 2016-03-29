@@ -9,11 +9,14 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.BaseModel;
 import ix.core.models.ForceUpdatableModel;
@@ -81,10 +85,18 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	//Where did this come from?
     public boolean deprecated;
     
+    //OLD WAY
+//    @JsonIgnore
+//    @OneToOne(cascade=CascadeType.ALL)
+//    private GinasAccessContainer recordAccess;
+    
     
     @JsonIgnore
-    @OneToOne(cascade=CascadeType.ALL)
-    public GinasAccessContainer recordAccess;
+    @Lob
+    private String recordAccessJSON;
+    
+    
+    
 
     public UUID getUuid() {
         return uuid;
@@ -120,34 +132,40 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 
     @JsonIgnore
     public GinasAccessContainer getRecordAccess() {
-        return recordAccess;
+    	if(recordAccessJSON==null)return null;
+    	try{
+	    	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+	    	GinasAccessContainer gac=em.readValue(recordAccessJSON, GinasAccessContainer.class);
+	        return gac;
+    	}catch(Exception e){
+    		return null;
+    	}
     }
 
     @JsonIgnore
     public void setRecordAccess(GinasAccessContainer recordAccess) {
-        this.recordAccess = recordAccess;
+    	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+    	this.recordAccessJSON=em.toJson(recordAccess);
+        //this.recordAccess = recordAccess;
     }
 
     @JsonProperty("access")
     @JsonDeserialize(using = GroupListDeserializer.class)
     public void setAccess(Set<Group> access){
-    	List<String> accessGroups=new ArrayList<String>();
-    	for(Group g: access){
-    		accessGroups.add(g.name);
-    	}
+    	GinasAccessContainer recordAccess=this.getRecordAccess();
     	if(recordAccess==null){
     		recordAccess=new GinasAccessContainer(this);
     	}
-    	
-    	recordAccess.access=new LinkedHashSet<Group>(access);
-    	return;
+    	recordAccess.setAccess(access);
+		setRecordAccess(recordAccess);
     }
     
     @JsonProperty("access")
     @JsonSerialize(using = GroupListSerializer.class)
     public Set<Group> getAccess(){
-    	if(recordAccess!=null){
-    		return recordAccess.getAccess();
+    	GinasAccessContainer gac=getRecordAccess();
+    	if(gac!=null){
+    		return gac.getAccess();
     	}
     	return new LinkedHashSet<Group>();
     }
@@ -256,11 +274,14 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 
 
 	public void addRestrictGroup(Group p){
-		if(this.recordAccess==null){
-			this.recordAccess=new GinasAccessContainer();
+		GinasAccessContainer gac=this.getRecordAccess();
+		if(gac==null){
+			gac=new GinasAccessContainer(this);
 		}
-		this.recordAccess.add(p);
+		gac.add(p);
+		this.setRecordAccess(gac);
 	}
+	
 	public void addRestrictGroup(String group){
 		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
 	}
@@ -274,10 +295,11 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	@Override
 	public void forceUpdate() {
 		currentVersion++;
-		if(this.recordAccess!=null){
-			//System.out.println("Saving record access too");
-			this.recordAccess.save();
-		}
+		
+//		if(this.recordAccess!=null){
+//			this.recordAccess.save();
+//		}
+		
 		super.update();
 		
 	}

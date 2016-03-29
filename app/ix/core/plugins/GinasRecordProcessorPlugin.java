@@ -14,6 +14,7 @@ import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
+import ix.utils.TimeProfiler;
 import ix.utils.Util;
 
 import java.io.Serializable;
@@ -206,7 +207,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 							this.theRecordToPersist.getClass().getName() + "\t" + 
 							done + "\t" + 
 							EntityPersistAdapter.persistcount);
-					//EntityPersistAdapter.timeProfile.printResults();
+					
+					if(Math.random()>0.9){
+						TimeProfiler.getInstance().printResults();
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);

@@ -87,7 +87,10 @@ public final class TimeTraveller extends ExternalResource{
     }
 
     public void travelTo(long timeMillis){
-        TimeUtil.setCurrentTime(timeMillis);
+        travelTo(timeMillis,TimeUnit.MILLISECONDS);
+    }
+    public void travelTo(long time, TimeUnit tu){
+        TimeUtil.setCurrentTime(time,tu);
     }
 
     public void travelTo(Date date){

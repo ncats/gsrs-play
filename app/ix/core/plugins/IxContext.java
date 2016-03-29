@@ -242,7 +242,6 @@ public class IxContext extends Plugin {
         String sqlRun=getSQLFromFile(f);
             
         if(sqlRun!=null){
-        	System.err.println("Found the sql, it's:" + sqlRun);
         	applySQL(sqlRun, new ExceptionHandler(){
 
 				@Override
@@ -255,9 +254,8 @@ public class IxContext extends Plugin {
 				}
         		
         	});
-        	System.err.println("Applied!");
         }else{
-        	System.err.println("Didn't find nothin");
+        	
         }
     }
     private void runTestSQL() throws Exception{

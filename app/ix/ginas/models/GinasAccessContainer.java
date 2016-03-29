@@ -1,5 +1,6 @@
 package ix.ginas.models;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -25,7 +26,7 @@ public class GinasAccessContainer extends LongBaseModel{
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JsonSerialize(using = GroupListSerializer.class)
 	@JsonDeserialize(using = GroupListDeserializer.class)
-	public Set<Group> access;
+	private Set<Group> access;
 	
 	public String entityType;
 	
@@ -58,6 +59,9 @@ public class GinasAccessContainer extends LongBaseModel{
 			return new LinkedHashSet<Group>();
 		}
 		return access;
+	}
+	public void setAccess(Collection<Group> acc){
+		this.access=new LinkedHashSet<Group>(acc);
 	}
 	
 }

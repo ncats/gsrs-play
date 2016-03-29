@@ -38,6 +38,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
+import ix.utils.TimeProfiler;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -292,55 +293,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             methods.add(new InstanceMethodHook(m));
         }
     }
-    public static class Counter{
-    	private Map<String,Long> count= new LinkedHashMap<String,Long>();
-    	public void addTo(String key, long c){
-    		Long o=count.get(key);
-    		if(o==null){
-    			o=0l;
-    		}
-    		o=o+c;
-    		count.put(key,o);
-    	}
-    	public void increment(String key){
-    		addTo(key,1);
-    	}
-    	public long get(String key){
-    		return count.get(key);
-    	}
-    	public Set<String> getKeys(){
-    		return count.keySet();
-    	}
-    }
-    public static class TimeProfiler{
-    	private Counter numberCount = new Counter();
-    	private Counter timeCount = new Counter();
-    	private Map<String,Long> startTimes = new HashMap<String,Long>();
-    	
-    	public void addTime(Object o){
-    		numberCount.increment(o.toString());
-    		startTimes.put(o.toString(), System.currentTimeMillis());
-    	}
-    	public void stopTime(Object o){
-    		timeCount.addTo(o.toString(), (System.currentTimeMillis()-startTimes.get(o.toString())));
-    		startTimes.remove(o.toString());
-    	}
-    	public void printResults(){
-    		System.out.println("===========");
-    		for(String s:numberCount.getKeys()){
-    			double average=0;
-    			average+=timeCount.get(s)/(0.0+numberCount.get(s));
-    			
-    			System.out.println(s + "\t" + 
-    					numberCount.get(s) + "\t" + 
-    					timeCount.get(s) + "\t" 
-    					+ average);
-    		}
-    		System.out.println("==========");
-    	}
-    	
-    }
-    public static TimeProfiler timeProfile= new TimeProfiler();
+    
+    
     public static long persistcount=0;
     @Override
     public boolean preInsert (BeanPersistRequest<?> request) {
@@ -348,6 +302,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         
         String name = bean.getClass().getName();
+        TimeProfiler.addGlobalTime(name);
         
         List<Hook> methods = preInsertCallback.get(name);
         if (methods != null) {
@@ -362,8 +317,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-        persistcount++;
-        timeProfile.addTime(name);
+        
+        
         return true;
     }
 
@@ -391,7 +346,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
         }
-        timeProfile.stopTime(name);
+        TimeProfiler.stopGlobalTime(name);
     }
     public static SequenceIndexer getSequenceIndexer(){
 		if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {

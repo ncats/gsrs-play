@@ -135,7 +135,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @JsonSerialize(using = GroupListSerializer.class)
     public Set<Group> getAccess(){
     	if(recordAccess!=null){
-    		return recordAccess.access;
+    		return recordAccess.getAccess();
     	}
     	return new LinkedHashSet<Group>();
     }

@@ -1717,11 +1717,12 @@ public class GinasApp extends App {
                 try {
                     /*
                      * really?
+                     * 
                      */
                     if (format.equalsIgnoreCase("mol")){
-                        return ok(c.export(Chemical.FORMAT_MOL).replaceAll(".*Marvin.*"," G-SRS "));
+                        return ok(formatMolfile(c,Chemical.FORMAT_MOL));
                     }else if (format.equalsIgnoreCase("sdf")){
-                        return ok(c.export(Chemical.FORMAT_SDF).replaceAll(".*Marvin.*"," G-SRS "));
+                        return ok(formatMolfile(c,Chemical.FORMAT_SDF));
                     }else if (format.equalsIgnoreCase("smiles")){
                         return ok(c.export(Chemical.FORMAT_SMILES));
                     }else if (format.equalsIgnoreCase("cdx")){
@@ -1740,6 +1741,22 @@ public class GinasApp extends App {
                         return _badRequest(e.getMessage());
                 } 
         
+    }
+    public static String formatMolfile(Chemical c, int format) throws Exception{
+    	String mol=c.export(format);
+    	StringBuilder sb=new StringBuilder();
+    	int i=0;
+    	for(String line: mol.split("\n")){
+    		if(i!=0){
+    			sb.append("\n");
+    		}
+    		if(i==1){
+    			line=" G-SRS " + line;
+    		}
+    		i++;
+    		sb.append(line);
+    	}
+    	return sb.toString();
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
         String resp = "";
