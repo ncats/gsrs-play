@@ -157,7 +157,11 @@ public class GinasApp extends App {
                        substances, context.getId(), null));
         }
     }
-    
+
+
+    private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
+
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     static <T> List<T> filter(Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
@@ -1828,45 +1832,7 @@ public class GinasApp extends App {
                 }
                 return ret;
         }
-    private static String updateKey =null;
 
-    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result updateIndex(String key){
-        if(!GinasLoad.ALLOW_REBUILD){
-                return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
-        }
-        if(updateKey==null){
-                updateKey=UUID.randomUUID().toString();
-        }
-        Call callMonitor = routes.GinasApp.updateIndex("_monitor");
-        if(!EntityPersistAdapter.isUpdatingIndex()){
-                if(key==null || !updateKey.equals(key)){
-                        Call call = routes.GinasApp.updateIndex(updateKey);
-                        return ok(new Html("<h1>Updated indexes:</h1><pre>" + RebuildIndex.UPDATE_MESSAGE+ "</pre><br><a href=\""+call.url() + "\">Rebuild Index (warning: will take some time)</a>"));
-                }
-        
-        
-        
-                EntityPersistAdapter.setUpdatingIndex(true);
-                System.out.println("UPDATING INDEX");
-                Runnable r= new Runnable(){
-                        @Override
-                        public void run() {
-                                try {
-                                        RebuildIndex.updateLuceneIndex("ix.ginas.models.v1.Substance");
-                                } catch (Exception e) {
-                                        e.printStackTrace();
-                                }
-                        }};
-                new Thread(r).start();
-                updateKey=UUID.randomUUID().toString();
-                return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
-        }else{
-                
-                return ok(new Html("<h1>Updating indexes:</h1><pre>" + RebuildIndex.UPDATE_MESSAGE+ "</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
-                
-        }
-    }
     
     
     
@@ -1874,5 +1840,132 @@ public class GinasApp extends App {
     public static String getAsJson(Object o){
         ObjectMapper om = new ObjectMapper();
         return om.valueToTree(o).toString();
+    }
+
+    private static String updateKey =null;
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result updateIndex(String key){
+        if(!GinasLoad.ALLOW_REBUILD){
+            return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
+        }
+        if(updateKey==null){
+            updateKey=UUID.randomUUID().toString();
+        }
+        Call callMonitor = routes.GinasApp.updateIndex("_monitor");
+
+        if(listener.isCurrentlyRunning()) {
+            return ok(new Html( new StringBuilder("<h1>Updating indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(callMonitor.url()).append("\">refresh</a>").toString()));
+        }else{
+
+            if(key==null || !updateKey.equals(key)){
+
+                Call call = routes.GinasApp.updateIndex(updateKey);
+
+                return ok(new Html(new StringBuilder("<h1>Updated indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(call.url()).append("\">Rebuild Index (warning: will take some time)</a>").toString()));
+            }
+
+            Runnable r= new Runnable(){
+                @Override
+                public void run() {
+                    try {
+                        new RebuildIndex(listener).reindex(Substance.class);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            new Thread(r).start();
+            updateKey=UUID.randomUUID().toString();
+
+            return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
+        }
+    }
+
+
+
+
+    private static class SubstanceReIndexListener implements RebuildIndex.ReIndexListener {
+
+        private long startTime;
+        private StringBuilder message = new StringBuilder();
+
+        private int totalIndexed = 0;
+
+        private String recordsToIndex = "?";
+
+        private long lastUpdateTime;
+
+        private boolean currentlyRunning = false;
+
+        private int currentRecordsIndexed=0;
+
+        private int recordsIndexedLastUpdate=0;
+        @Override
+        public void newReindex() {
+            lastUpdateTime = startTime = System.currentTimeMillis();
+            message = new StringBuilder(10_000);
+            totalIndexed = 0;
+            recordsToIndex = "?";
+            currentlyRunning = true;
+            currentRecordsIndexed=0;
+
+            recordsIndexedLastUpdate=0;
+        }
+
+        public StringBuilder getMessage() {
+            return message;
+        }
+
+        public boolean isCurrentlyRunning() {
+            return currentlyRunning;
+        }
+
+        @Override
+        public void doneReindex() {
+            currentlyRunning = false;
+
+            EntityPersistAdapter.doneReindexing();
+            message.append("\n\nCompleted Substance reindexing.\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
+        }
+
+        @Override
+        public void recordReIndexed(Object o) {
+            currentRecordsIndexed++;
+
+            if(currentRecordsIndexed %10 ==0){
+                updateMessage();
+            }
+        }
+
+        @Override
+        public void totalRecordsToIndex(int total) {
+            recordsToIndex = Integer.toString(total);
+        }
+
+
+
+        private void updateMessage() {
+            long currentTime = System.currentTimeMillis();
+
+
+            long totalTimeSerializing = currentTime - startTime;
+
+            int numProcessedThisTime = currentRecordsIndexed - recordsIndexedLastUpdate;
+
+            message.append("\n").append(numProcessedThisTime).append(" more records Processed: ").append(currentRecordsIndexed).append(" of ").append(recordsToIndex)
+                    .append(" in ").append((currentTime - lastUpdateTime)).append("ms (").append(totalTimeSerializing).append("ms serializing)");
+
+            lastUpdateTime = currentTime;
+
+            recordsIndexedLastUpdate = currentRecordsIndexed;
+        }
+
+
+        @Override
+        public void error(Throwable t) {
+            t.printStackTrace();
+        }
     }
 }

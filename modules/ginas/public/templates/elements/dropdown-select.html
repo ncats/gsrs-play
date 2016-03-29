@@ -5,6 +5,6 @@
                 ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
             <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
         </select>
-        <input type="text" class="form-control" name ="{{::field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" aria-labelledby="{{::field}}-label" ng-if="obj.display=='Other'" ng-hide="obj.display=='Other'"/>
+        <input type="text" class="form-control" name ="{{::field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" aria-labelledby="{{::field}}-label" ng-if="obj.display=='Other'"/>
     </div>
 </div>

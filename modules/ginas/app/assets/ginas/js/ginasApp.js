@@ -695,7 +695,7 @@
                     }
                 }).then(function (response) {
                     console.log(response);
-                    $scope.redirect = response.uuid;
+                    $scope.redirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
                 }, function(response){
@@ -1844,7 +1844,7 @@
         }
     });
 
-   ginasApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance) {
+    ginasApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance) {
         $scope.ok = function () {
             $uibModalInstance.close();
         };
@@ -1857,9 +1857,7 @@
         };
     });
 
-
-
-ginasApp.directive('referenceModalButton', function ($uibModal) {
+    ginasApp.directive('referenceModalButton', function ($uibModal) {
         return {
             scope: {
                 referenceobj:'=',
@@ -1871,7 +1869,6 @@ ginasApp.directive('referenceModalButton', function ($uibModal) {
                 console.log($scope);
                 var modalInstance;
                 $scope.close = function () {
-                    console.log("yo");
                     $scope.$broadcast ('save');
                     modalInstance.close();
                 };
@@ -1965,12 +1962,15 @@ ginasApp.directive('referenceModalButton', function ($uibModal) {
             },
             link: function (scope, element, attrs) {
                 scope.codes = [];
+                scope.link = [];
                 var template ='<div>';
                 _.forEach(scope.text.split('|'), function(c){
-                    scope.codes.push(c.split('['));
+                    scope.link.push(c);
+;                    scope.codes.push(c.split('['));
                 });
-                _.forEach(scope.codes, function(c) {
-                    template += '<ul class="tree-list"><li><a href = "app/substances?q=comments:'+c[0]+'" uib-tooltip="Search ginas for'+ c[0]+'" target ="_self">'+ c[0]+'</a>';
+                _.forEach(scope.codes, function(c, key) {
+                    var link = "app/substances?q=comments:%22"+ _.join(_.slice(scope.link,0,key+1),'|')+ "%22";
+                    template += '<ul class="tree-list"><li><a href = "' + link + '" uib-tooltip="Search ginas for '+ c[0]+'" target ="_self">'+ c[0]+'</a>';
                     if(c[1]){
                     template += '<span>'+'['+ c[1]+'</span>';
                     }
