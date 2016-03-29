@@ -1962,12 +1962,15 @@
             },
             link: function (scope, element, attrs) {
                 scope.codes = [];
+                scope.link = [];
                 var template ='<div>';
                 _.forEach(scope.text.split('|'), function(c){
-                    scope.codes.push(c.split('['));
+                    scope.link.push(c);
+;                    scope.codes.push(c.split('['));
                 });
-                _.forEach(scope.codes, function(c) {
-                    template += '<ul class="tree-list"><li><a href = "app/substances?q=comments:'+c[0]+'" uib-tooltip="Search ginas for'+ c[0]+'" target ="_self">'+ c[0]+'</a>';
+                _.forEach(scope.codes, function(c, key) {
+                    var link = "app/substances?q=comments:%22"+ _.join(_.slice(scope.link,0,key+1),'|')+ "%22";
+                    template += '<ul class="tree-list"><li><a href = "' + link + '" uib-tooltip="Search ginas for '+ c[0]+'" target ="_self">'+ c[0]+'</a>';
                     if(c[1]){
                     template += '<span>'+'['+ c[1]+'</span>';
                     }
