@@ -896,8 +896,11 @@ public class GinasApp extends App {
     
         public static Result lychimatch(final String query, int rows, int page) {
                 try{
-                        Structure struc2 = StructureProcessor.instrument(query, null, false); // don't standardize
-                        return _substances(struc2.getLychiv4Hash(),rows,page);
+                        Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
+//                        System.out.println("L4:" + struc2.getLychiv4Hash());
+//                        System.out.println("L3:" + struc2.getLychiv3Hash());
+                        
+                        return _substances(struc2.getLychiv3Hash(),rows,page);
                 }catch(Exception e){
                         
                 }

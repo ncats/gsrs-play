@@ -618,9 +618,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-        if(UPDATE_INDEX){
-               reindex(bean);
-        }
+//        if(UPDATE_INDEX){
+//               reindex(bean);
+//        }
     }
     
     public void deepreindex(Object bean){

@@ -792,7 +792,7 @@ public class Validation {
             {
 	            List<Structure> moieties = new ArrayList<Structure>();
 	            struc = StructureProcessor.instrument
-	                (payload, moieties, false); // don't standardize
+	                (payload, moieties, true); // don't standardize
 	            for(Structure m: moieties){
 	                Moiety m2= new Moiety();
 	                m2.structure=new GinasChemicalStructure(m);
@@ -819,7 +819,7 @@ public class Validation {
                 }
             }else{
             	for(Moiety m:cs.moieties){
-            		Structure struc2 = StructureProcessor.instrument(m.structure.molfile, null, false); // don't standardize
+            		Structure struc2 = StructureProcessor.instrument(m.structure.molfile, null, true); // don't standardize
             		strat.addAndProcess(validateChemicalStructure(m.structure,struc2,strat),gpm);
             	}
             }

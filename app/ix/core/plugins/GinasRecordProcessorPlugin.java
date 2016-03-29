@@ -206,7 +206,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 							this.theRecordToPersist.getClass().getName() + "\t" + 
 							done + "\t" + 
 							EntityPersistAdapter.persistcount);
-					EntityPersistAdapter.timeProfile.printResults();
+					//EntityPersistAdapter.timeProfile.printResults();
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);

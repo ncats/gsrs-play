@@ -36,7 +36,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
 	public void postPersist(Substance obj) {
-			   System.out.print(System.currentTimeMillis() + "\t");
+			   //System.out.print(System.currentTimeMillis() + "\t");
 	}
 	
 	@Override
@@ -126,7 +126,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 				Logger.error("Persist error. Alternative definition has no primary relationship");
 			}
 		}
-		System.out.print("pp\t" + System.currentTimeMillis() + "\t");
+		//System.out.print("pp\t" + System.currentTimeMillis() + "\t");
 	}
 	@Override
 	public void preUpdate(Substance obj) {
