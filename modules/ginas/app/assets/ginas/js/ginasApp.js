@@ -695,7 +695,7 @@
                     }
                 }).then(function (response) {
                     console.log(response);
-                    $scope.redirect = response.uuid;
+                    $scope.redirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
                 }, function(response){
@@ -1844,7 +1844,7 @@
         }
     });
 
-   ginasApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance) {
+    ginasApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance) {
         $scope.ok = function () {
             $uibModalInstance.close();
         };
@@ -1857,9 +1857,7 @@
         };
     });
 
-
-
-ginasApp.directive('referenceModalButton', function ($uibModal) {
+    ginasApp.directive('referenceModalButton', function ($uibModal) {
         return {
             scope: {
                 referenceobj:'=',
@@ -1871,7 +1869,6 @@ ginasApp.directive('referenceModalButton', function ($uibModal) {
                 console.log($scope);
                 var modalInstance;
                 $scope.close = function () {
-                    console.log("yo");
                     $scope.$broadcast ('save');
                     modalInstance.close();
                 };
