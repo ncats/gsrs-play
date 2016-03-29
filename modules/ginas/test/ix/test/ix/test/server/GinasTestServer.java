@@ -104,6 +104,7 @@ public class GinasTestServer extends ExternalResource{
 	 public static final String FAKE_PASSWORD_2="madeup2";
 	 public static final String FAKE_PASSWORD_3="madeup3";
 
+    private static final int DEFAULT_PORT = 9001;
 
     private final BrowserSession defaultBrowserSession;
     private final RestSession defaultRestSession;
@@ -116,6 +117,8 @@ public class GinasTestServer extends ExternalResource{
 
     private static final List<Role> superUserRoles = Role.roles(Role.SuperUpdate,Role.SuperDataEntry );
     private static final List<Role> normalUserRoles = Role.roles(Role.DataEntry,Role.Updater );
+
+    private static final List<Role> adminUserRoles = Role.roles(Role.values() );
 
     private int userCount=0;
 
@@ -142,6 +145,9 @@ public class GinasTestServer extends ExternalResource{
 
     }
 
+    public GinasTestServer(){
+        this(DEFAULT_PORT);
+    }
     public GinasTestServer(int port){
        this.port = port;
         defaultBrowserSession = new BrowserSession(port){
@@ -293,6 +299,9 @@ public class GinasTestServer extends ExternalResource{
     }
 
 
+    public User createAdmin(String username, String password){
+        return createUser(username, password, adminUserRoles);
+    }
 
     public User createNormalUser(String username, String password){
         return createUser(username, password, normalUserRoles);
