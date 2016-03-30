@@ -1,6 +1,8 @@
 package ix.core.models;
 
 import java.util.Date;
+
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -13,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonView;
  */
 @Entity
 @Table(name="ix_core_curation")
-public class Curation extends BaseModel {
+public class Curation extends LongBaseModel {
     public enum Status {
         	Unknown,
             Pending,
@@ -28,7 +30,7 @@ public class Curation extends BaseModel {
     public Principal curator;
     public Status status;
 
-    public final Date timestamp = new Date ();
+    public final Date timestamp = TimeUtil.getCurrentDate();
 
     public Curation () {}
     public Curation (Principal curator) {

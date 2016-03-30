@@ -191,6 +191,25 @@ public class UserSessionTest {
 
 
 
+    @Test
+    public void adminCanSeeAdminPage(){
+        GinasTestServer.User admin = ts.createAdmin("vader", "anakin");
+
+        try(BrowserSession session = ts.newBrowserSession(admin)){
+            WSResponse response = session.get("ginas/app/admin");
+            ensureLoggedInAs(response, admin);
+        }
+    }
+    @Test
+    public void normalUserCantSeeAdminPage(){
+
+        try(BrowserSession session = ts.newBrowserSession(ts.getFakeUser1())){
+            WSResponse response = session.get("ginas/app/admin");
+            assertEquals(401, response.getStatus());
+
+
+        }
+    }
 
 
 

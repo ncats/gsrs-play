@@ -38,10 +38,12 @@ public class IxContext extends Plugin {
     static final String IX_STRUCTURE_BASE = IX_STRUCTURE+".base";
     static final String IX_SEQUENCE = "ix.sequence";
     static final String IX_SEQUENCE_BASE = IX_SEQUENCE+".base";
+    static final String APPLICATION_NAME = "application.appname";
     
     static final String APPLICATION_SQL_INIT = "application.sql.init";
     static final String APPLICATION_SQL_TEST = "application.sql.test";
 	static final String APPLICATION_SQL_LOAD = "application.sql.load";
+	static final String APPLICATION_SQL_POST = "application.sql.post";
     
 
     private final Application app;
@@ -58,6 +60,8 @@ public class IxContext extends Plugin {
     private String context;
     private String api;
     private String host;
+    
+    private String dbName;
 
     public IxContext (Application app) {
         this.app = app;
@@ -97,136 +101,31 @@ public class IxContext extends Plugin {
             this.debug = level;
         Logger.info("## "+IX_DEBUG+": "+debug); 
 
-        DatabaseMetaData meta = DB.getConnection().getMetaData();
-        Logger.info("## Database vendor: "+meta.getDatabaseProductName()
-                    +" "+meta.getDatabaseProductVersion());
+        retrieveDatabaseMetaData();
         
-        String dbName=meta.getDatabaseProductName().toLowerCase();
         Logger.info("Checking for existence of DB schema ... " + dbName);
-        if(!dbinitialized(meta)){
-            Logger.info("Database not initialized, applying scripts");
-            File f=null;
-            f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
-                
-            if(f.exists()){
-                Logger.info("Initialization folder exists:" + f.getCanonicalPath());
-                String path = f.getAbsolutePath()+"/"+dbName+".sql";
-                File initFile = new File(path);
-                Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
-                if(initFile.exists()){
-                    Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
-                    Statement s = DB.getConnection().createStatement();
-                    String sqlRun = readFullFileToString(initFile);
-                   // System.out.println(sqlRun);
-                    sqlRun = interpretSQL(sqlRun);
-                    for(String sqlLine : sqlRun.split(";")){
-	                    try{
-	                    	Logger.debug("applying");
-	                        ResultSet rs1=s.executeQuery(sqlLine);
-	                        rs1.close();
-	                    	Logger.debug("closing");
-	                        Logger.info("SQL initialization applied.");
-	                    }catch(Exception e){
-	                    	Logger.debug("ERROR");
-	                    	Logger.info("SQL initialization failed:");
-	                        e.printStackTrace();
-	                    }
-                    }
-                    Logger.debug("finished");
-                    s.close();
-                                
-                }else{
-                    Logger.info("No SQL initialization present for database:" + dbName);
-                }
-            }else{
-                Logger.info("Initialization folder does not exist:" + f.getCanonicalPath());
-            }
-        }else{
-            Logger.info("Schema exists");
+        
+        try{
+        	runPreConnectionSQL();
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        if(!dbinitialized()){
+        	runPreEvolutionSQL();
+        }
+        try{
+        	runPostEvolutionSQL();
+        }catch(Exception e){
+        	e.printStackTrace();
         }
         
-        //Testing
-        {
-            Logger.info("Teting database configuration");
-            File f=null;
-            f=getFile(APPLICATION_SQL_TEST,"../conf/sql/test/");
-                
-            if(f.exists()){
-                Logger.info("Test folder exists:" + f.getCanonicalPath());
-                String path = f.getAbsolutePath()+"/"+dbName+".sql";
-                File initFile = new File(path);
-                //Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
-                if(initFile.exists()){
-                    Logger.info("Applying SQL testing:" + initFile.getCanonicalPath());
-                    Statement s = DB.getConnection().createStatement();
-                    String sqlRun = readFullFileToString(initFile);
-                    //System.out.println(sqlRun);
-                    sqlRun = interpretSQL(sqlRun);
-                    boolean working=true;
-                    try{
-                    	
-                        ResultSet rs1=s.executeQuery(sqlRun);
-                        while(rs1.next()){
-                            if(!"worked".equals(rs1.getString("result"))){
-                                working=false;
-                                Logger.error(rs1.getString("message") + "\n\nTry running the following SQL to fix this:\n\n" + rs1.getString("sql"));
-                            }
-                        }
-                        rs1.close();
-                                        
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
-                    if(working){
-                        Logger.debug("Passed configutation test");
-                    }
-                    s.close();
-                }else{
-                    Logger.info("No SQL test present for database:" + dbName);
-                }
-            }else{
-                Logger.info("Test folder does not exist:" + f.getCanonicalPath());
-            }
-                
+        runTestSQL();
+        
+        try{
+        	runPreConnectionSQL();
+        }catch(Exception e){
+        	e.printStackTrace();
         }
-        //Loading
-        {
-            Logger.info("Loading database-specific production scripts");
-            File f=null;
-            f=getFile(APPLICATION_SQL_LOAD,"../conf/sql/load/");
-                
-            if(f.exists()){
-                Logger.info("Load folder exists:" + f.getCanonicalPath());
-                String path = f.getAbsolutePath()+"/"+dbName+".sql";
-                File initFile = new File(path);
-                if(initFile.exists()){
-                    Logger.info("Applying SQL loading:" + initFile.getCanonicalPath());
-                    Statement s = DB.getConnection().createStatement();
-                    String sqlRun = readFullFileToString(initFile);
-                    sqlRun = interpretSQL(sqlRun);
-                    for(String sqlLine : sqlRun.split(";")){
-	                    try{
-	                    	Logger.debug("applying load");
-	                        ResultSet rs1=s.executeQuery(sqlLine);
-	                        rs1.close();
-	                    	Logger.debug("closing load");
-	                        Logger.info("SQL initialization applied.");
-	                    }catch(Exception e){
-	                    	Logger.debug("ERROR load");
-	                    	Logger.info("SQL loading failed:");
-	                        e.printStackTrace();
-	                    }
-                    }
-                    s.close();
-                }else{
-                    Logger.info("No SQL load present for database:" + dbName);
-                }
-            }else{
-                Logger.info("Load folder does not exist:" + f.getCanonicalPath());
-            }
-                
-        }
-        //meta.
 
         host = app.configuration().getString(IxContext.APPLICATION_HOST);
         if (host == null || host.length() == 0) {
@@ -259,6 +158,140 @@ public class IxContext extends Plugin {
             api = "/"+api;
         Logger.info("## Application api context: "
                     +((host != null ? host : "") + context+api));
+    }
+    private void retrieveDatabaseMetaData() throws Exception{
+    	DatabaseMetaData meta = DB.getConnection().getMetaData();
+        Logger.info("## Database vendor: "+meta.getDatabaseProductName()
+                    +" "+meta.getDatabaseProductVersion());
+        
+        dbName=meta.getDatabaseProductName().toLowerCase();
+    }
+    public static interface ExceptionHandler{
+    	public void handleException(Exception e);
+    }
+    public final static ExceptionHandler PRINT_EXCEPTION_HANDLER= new ExceptionHandler(){
+		@Override
+		public void handleException(Exception e) {
+			e.printStackTrace();
+		}
+    };
+    
+    private void applySQL(String sqlRun) throws Exception {
+    	applySQL(sqlRun,PRINT_EXCEPTION_HANDLER);
+    }
+	private void applySQL(String sqlRun, ExceptionHandler eh) throws Exception {
+		
+		if (sqlRun != null) {
+			Statement s = DB.getConnection().createStatement();
+			for (String sqlLine : sqlRun.split(";")) {
+				try {
+					Logger.debug("applying");
+					try{
+						ResultSet rs1 = s.executeQuery(sqlLine);
+						rs1.close();
+					}catch(Exception e1){
+						s.execute(sqlLine);
+					}
+					Logger.debug("closing");
+					Logger.info("SQL initialization applied.");
+				} catch (Exception e) {
+					eh.handleException(e);
+				}
+			}
+			Logger.debug("finished");
+			s.close();
+		}
+	}
+    private String getSQLFromFile(File f) throws Exception{
+    	if(f.exists()){
+    		String appname = app.configuration().getString(APPLICATION_NAME);
+    		File initFile=null;
+    		if(appname!=null){
+    			String path = f.getAbsolutePath()+"/"+appname+"-"+dbName+".sql";
+                initFile = new File(path);
+    		}
+            if(initFile==null || !initFile.exists()){
+            	String path = f.getAbsolutePath()+"/"+dbName+".sql";
+                initFile = new File(path);
+            }
+            
+            if(initFile!=null && initFile.exists()){
+            	String sqlRun = readFullFileToString(initFile);
+            	return interpretSQL(sqlRun);
+                            
+            }
+        }
+    	return null;
+    }
+    private void runPreEvolutionSQL() throws Exception{
+    	Logger.info("Database not initialized, applying scripts");
+        File f=null;
+        f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
+        String sqlRun=getSQLFromFile(f);
+        if(sqlRun!=null){
+        	applySQL(sqlRun);
+        }
+    }
+    
+    
+
+    
+    private void runPostEvolutionSQL() throws Exception{
+        File f=null;
+        f=getFile(APPLICATION_SQL_POST,"../conf/sql/post/");
+        String sqlRun=getSQLFromFile(f);
+            
+        if(sqlRun!=null){
+        	applySQL(sqlRun, new ExceptionHandler(){
+
+				@Override
+				public void handleException(Exception e) {
+					if(e.getMessage().contains("already exists")){
+						System.err.println(e.getMessage());
+					}else{
+						e.printStackTrace();
+					}
+				}
+        		
+        	});
+        }else{
+        	
+        }
+    }
+    private void runTestSQL() throws Exception{
+            Logger.info("Teting database configuration");
+            File f=null;
+            f=getFile(APPLICATION_SQL_TEST,"../conf/sql/test/");
+            String sqlRun=getSQLFromFile(f);
+            if(sqlRun!=null){
+                    Statement s = DB.getConnection().createStatement();
+                    boolean working=true;
+                    try{
+                        ResultSet rs1=s.executeQuery(sqlRun);
+                        while(rs1.next()){
+                            if(!"worked".equals(rs1.getString("result"))){
+                                working=false;
+                                Logger.error(rs1.getString("message") + "\n\nTry running the following SQL to fix this:\n\n" + rs1.getString("sql"));
+                            }
+                        }
+                        rs1.close();
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    if(working){
+                        Logger.debug("Passed configutation test");
+                    }
+                    s.close();
+            }
+    }
+    private void runPreConnectionSQL() throws Exception{
+    	Logger.info("Loading database-specific production scripts");
+        File f=null;
+        f=getFile(APPLICATION_SQL_LOAD,"../conf/sql/load/");
+        String sqlRun=getSQLFromFile(f);
+        if(sqlRun!=null){
+        	applySQL(sqlRun);
+        }
     }
     
     public String interpretSQL(String rawSQL){
@@ -317,6 +350,10 @@ public class IxContext extends Plugin {
         return null;
     }
     
+    private static boolean dbinitialized() throws Exception{
+    	DatabaseMetaData meta = DB.getConnection().getMetaData();
+    	return dbinitialized(meta);
+    }
     /**
      * Checks if the db has been initialized. Used for running
      * sql scripts needed for some databases before later initialization.

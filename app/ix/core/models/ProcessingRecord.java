@@ -16,7 +16,7 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_procrec")
-public class ProcessingRecord extends BaseModel {
+public class ProcessingRecord extends LongBaseModel {
     public enum Status {
         OK, FAILED, PENDING, UNKNOWN, ADAPTED
     }

@@ -253,8 +253,6 @@ public class Name extends GinasCommonSubData {
     	return displayName;
 	}
     
-
-    
     
     @JsonIgnore
 	public boolean isOfficial() {

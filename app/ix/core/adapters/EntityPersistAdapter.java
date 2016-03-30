@@ -1,13 +1,14 @@
 package ix.core.adapters;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
@@ -24,17 +25,23 @@ import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityCallable;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.Backup;
+import ix.core.models.BaseModel;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.processors.BackupProcessor;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
+import ix.utils.TimeProfiler;
 import play.Logger;
 import play.Play;
+import play.db.ebean.Model;
 import tripod.chem.indexer.StructureIndexer;
 //import javax.annotation.PreDestroy;
 
@@ -84,11 +91,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static void init(){
 
         strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
-       seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
+        seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
 
-        alreadyLoaded = new ConcurrentHashMap<String,String>();
+        alreadyLoaded = new ConcurrentHashMap<String,String>(10000);
 
         editMap = new ConcurrentHashMap<String,Edit>();
+
+
     }
 
     
@@ -108,8 +117,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static int getEditUpdateCount(){
     	return editMap.size();
     }
-    
-    private static boolean UPDATE_INDEX = false;
     
     public EntityPersistAdapter () {
     	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
@@ -247,19 +254,25 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         	if(c.isAssignableFrom(cls)){
         		EntityProcessor ep =extraProcessors.get(c);
         		Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
-        		
-        		registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
-        		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
-        		registerProcessor(cls,ep,preUpdateCallback,PreUpdate.class);
-        		registerProcessor(cls,ep,postUpdateCallback,PostUpdate.class);
-        		registerProcessor(cls,ep,preDeleteCallback,PreRemove.class);
-        		registerProcessor(cls,ep,postDeleteCallback,PostRemove.class);
-        		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
-        		
+        		addEntityProcessor(cls,ep);
         	}
         }
+        if(cls.isAnnotationPresent(Backup.class)){
+        	addEntityProcessor(cls,BackupProcessor.getInstance());
+        }
+        
         return registered;
     }
+    private void addEntityProcessor(Class cls, EntityProcessor ep){
+    	registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
+		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
+		registerProcessor(cls,ep,preUpdateCallback,PreUpdate.class);
+		registerProcessor(cls,ep,postUpdateCallback,PostUpdate.class);
+		registerProcessor(cls,ep,preDeleteCallback,PreRemove.class);
+		registerProcessor(cls,ep,postDeleteCallback,PostRemove.class);
+		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
+    }
+    
     void registerProcessor(Class cls, EntityProcessor ep, Map<String, List<Hook>> registry, Class<?> hookAnnotation){
     	List<Hook> methods = registry.get(cls.getName());
     	if (methods == null) {
@@ -281,10 +294,16 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
     }
     
+    
+    public static long persistcount=0;
     @Override
     public boolean preInsert (BeanPersistRequest<?> request) {
+    	
         Object bean = request.getBean();
+        
         String name = bean.getClass().getName();
+        TimeProfiler.addGlobalTime(name);
+        
         List<Hook> methods = preInsertCallback.get(name);
         if (methods != null) {
             for (Hook m : methods) {
@@ -298,7 +317,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-
+        
+        
         return true;
     }
 
@@ -326,6 +346,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
         }
+        TimeProfiler.stopGlobalTime(name);
     }
     public static SequenceIndexer getSequenceIndexer(){
 		if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {
@@ -552,25 +573,58 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-        if(UPDATE_INDEX){
-                reindex(bean);
-        }
     }
     
+    public void deepreindex(Object bean){
+//    	long start=System.nanoTime();
+//    	final long[] l= new long[]{0};
+    	if(bean instanceof Model){
+	    	EntityFactory.recursivelyApply((Model)bean, new EntityCallable(){
+				@Override
+				public void call(Object m, String path) {
+//					long start2=System.nanoTime();
+					reindex(m);
+//					l[0]+=(System.nanoTime()-start2);
+				}
+	    	});
+    	}
+//    	long duration = (System.nanoTime()-start);
+//    	System.out.println("Reindexing took:" + duration + " with " + l[0] + " for actual indexing");
+//    	System.out.println("Basic I/O fraction:" + ((duration-l[0]+0.0)/(duration+0.0)));
+    	
+    }
+    
+//    public static long reindexCount=0;
+//    public Stack<Long> times= new Stack<Long>();
     public void reindex(Object bean){
-        String _id=EntityUtils.getIdForBeanAsString(bean);
+    	
+    	String _id=null;
+    	if(bean instanceof BaseModel){
+    		_id=((BaseModel)bean).fetchGlobalId();
+    	}else{
+    		_id=EntityUtils.getIdForBeanAsString(bean);
+    	}
         if(alreadyLoaded.containsKey(bean.getClass()+_id)){
             return;
         }
-        
+//        long ocount=reindexCount;
         try {
+//        	long start=System.currentTimeMillis();
+        	//times.push();
             if(_id!=null)
                 alreadyLoaded.put(bean.getClass()+_id,_id);
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
+            
+//            times.pop();
         } catch (Exception e) {
             e.printStackTrace();
         }
+//        if(ocount==reindexCount){
+//        	System.out.println(bean.getClass().getName());
+//        }
+//        reindexCount++;
+        
     }
     public static List<Field> getSequenceIndexableField(Object entity){
     	List<Field> flist = new ArrayList<Field>();
@@ -614,16 +668,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         return flist;
     }
-    
 
-    public static boolean isUpdatingIndex() {
-        return UPDATE_INDEX;
+
+    public static void doneReindexing(){
+        alreadyLoaded.clear();
     }
 
-    public static void setUpdatingIndex(boolean update) {
-        if(update!=UPDATE_INDEX){
-            alreadyLoaded.clear();
-            UPDATE_INDEX = update;
-        }
-    }
 }

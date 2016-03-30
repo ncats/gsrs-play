@@ -1,10 +1,10 @@
 <div ng-cloak>
     <div>
-        <label id ="{{field}}-label" class="text-capitalize">{{label || field}}</label>
-        <select ng-hide = "obj.display =='Other'" class="form-control" title="{{field}}" name="{{field}}" aria-labelledby="{{field}}-label" id="{{field}}" ng-model= obj
+        <label id ="{{::field}}-label" class="text-capitalize">{{label || field}}</label>
+        <select ng-hide = "obj.display =='Other'" class="form-control" title="{{::field}}" name="{{::field}}" aria-labelledby="{{::field}}-label" id="{{::field}}" ng-model= obj
                 ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
             <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
         </select>
-        <input type="text" class="form-control" name ="{{field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" aria-labelledby="{{field}}-label" ng-if="obj.display=='Other'" ng-hide="obj.display=='Other'"/>
+        <input type="text" class="form-control" name ="{{::field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" aria-labelledby="{{::field}}-label" ng-if="obj.display=='Other'"/>
     </div>
 </div>

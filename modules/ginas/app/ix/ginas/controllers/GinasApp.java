@@ -12,6 +12,8 @@ import ix.core.models.*;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.TextIndexer;
+import static ix.core.search.TextIndexer.*;
+import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
@@ -59,6 +61,7 @@ import java.io.InputStream;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -91,12 +94,12 @@ import ix.seqaln.SequenceIndexer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
-        static final Model.Finder<UUID, Substance> SUBFINDER = new Model.Finder<UUID, Substance>(
-                        UUID.class, Substance.class);
+    static final Model.Finder<UUID, Substance> SUBFINDER =
+        new Model.Finder<UUID, Substance>(UUID.class, Substance.class);
 
-        // relationship finder
-        static final Model.Finder<UUID, Relationship> RELFINDER = new Model.Finder<UUID, Relationship>(
-                        UUID.class, Relationship.class);
+    // relationship finder
+    static final Model.Finder<UUID, Relationship> RELFINDER =
+        new Model.Finder<UUID, Relationship>(UUID.class, Relationship.class);
     
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
@@ -104,7 +107,6 @@ public class GinasApp extends App {
         "SubstanceStereoChemistry", 
         "Molecular Weight",
         "GInAS Tag"
-        
     };
     
     public static final String[] PROTEIN_FACETS = {
@@ -125,10 +127,10 @@ public class GinasApp extends App {
         "Parts", 
         "Code System",
         "Last Edited By",
-        "Last Edited Date",
-            "Reference Type",
+        "modified", //"Last Edited Date",
+        "Reference Type",
         "Approved By",
-        "Approved Date"
+        "approved"         //"Approved Date"
     };
 
     static final PayloadPlugin _payload =
@@ -155,7 +157,11 @@ public class GinasApp extends App {
                        substances, context.getId(), null));
         }
     }
-    
+
+
+    private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
+
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     static <T> List<T> filter(Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
@@ -264,13 +270,18 @@ public class GinasApp extends App {
             String n = super.name();
             if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
                 return "Stereochemistry";
+            if ("modified".equalsIgnoreCase(n))
+                return "Last Edited";
+            if ("approved".equalsIgnoreCase(n))
+                return "Last Approved";
             return n.trim();
         }
         
         @Override
         public String label(final int i) {
             final String label = super.label(i);
-            //final String name = super.name();
+            final String name = super.name();
+            
             if ("StructurallyDiverse".equalsIgnoreCase(label))
                 return "Structurally Diverse";
             if ("protein".equalsIgnoreCase(label))
@@ -291,9 +302,13 @@ public class GinasApp extends App {
             if ("EP".equalsIgnoreCase(label))
                 return "PH. EUR";
             if(Substance.STATUS_APPROVED.equalsIgnoreCase(label))
-            	return "Validated (UNII)";
+                return "Validated (UNII)";
             if("non-approved".equalsIgnoreCase(label))
-            	return "Non-Validated";
+                return "Non-Validated";
+            if (name.equalsIgnoreCase("approved")
+                || name.equalsIgnoreCase("modified"))
+                return label.substring(1); // skip the prefix character
+            
             return label;
         }
     }
@@ -416,7 +431,7 @@ public class GinasApp extends App {
                        (400, "Invalid search parameters: type=\""
                                + type + "\"; q=\"" + q + "\" cutoff=\""
                                + cutoff + "\"!"));
-           }
+            }
 
             return _substances (q, rows, page);
         }
@@ -470,6 +485,107 @@ public class GinasApp extends App {
              (500, "Unable to perform squence search!"));
     }
 
+    public static void instrumentSubstanceSearchOptions
+        (SearchOptions options) {
+        SearchOptions.FacetLongRange editedRange =
+            new SearchOptions.FacetLongRange ("modified");
+        SearchOptions.FacetLongRange approvedRange =
+            new SearchOptions.FacetLongRange ("approved");
+
+        Calendar now = Calendar.getInstance();
+        Calendar cal = (Calendar)now.clone();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        // add a single character prefix so as to keep the map sorted; the
+        // decorator strips this out
+        long[] range = new long[]{cal.getTimeInMillis(),
+                                  now.getTimeInMillis()};
+        editedRange.add("aToday", range);
+        approvedRange.add("aToday", range);
+
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        range = new long[]{cal.getTimeInMillis(),
+                           now.getTimeInMillis()};
+        editedRange.add("bThis week", range);
+        approvedRange.add("bThis week", range);
+
+        cal.set(Calendar.WEEK_OF_MONTH, 1);
+        range = new long[]{cal.getTimeInMillis(),
+                           now.getTimeInMillis()};
+        editedRange.add("cThis month", range);
+        approvedRange.add("cThis month", range);
+
+        cal = (Calendar)now.clone();
+        cal.add(Calendar.MONTH, -6);
+        range = new long[]{cal.getTimeInMillis(),
+                           now.getTimeInMillis()};
+        editedRange.add("dPast 6 months", range);
+        approvedRange.add("dPast 6 months", range);
+
+        cal = (Calendar)now.clone();
+        cal.add(Calendar.YEAR, -1);
+        range = new long[]{cal.getTimeInMillis(),
+                           now.getTimeInMillis()};
+        editedRange.add("ePast 1 year", range);
+        approvedRange.add("ePast 1 year", range);
+        
+        cal = (Calendar)now.clone();
+        cal.add(Calendar.YEAR, -2);
+        range = new long[]{cal.getTimeInMillis(),
+                           now.getTimeInMillis()};
+        editedRange.add("fPast 2 years", range);
+        approvedRange.add("fPast 2 years", range);
+
+        options.longRangeFacets.add(editedRange);
+        options.longRangeFacets.add(approvedRange);
+    }
+
+    public static List<Facet> getSubstanceFacets (int fdim) throws IOException {
+        SearchOptions options = new SearchOptions (Substance.class);
+        options.fdim = fdim;
+        instrumentSubstanceSearchOptions (options);
+        return _textIndexer.search(options, null, null).getFacets();
+    }
+
+    public static SearchResult getSubstanceSearchResult
+        (final String q, final int total) {
+        final Map<String, String[]> params = App.getRequestQuery();     
+        final String sha1 = signature (q, params);
+
+        try {
+            long start = System.currentTimeMillis();
+            SearchResult result = getOrElse
+                (sha1, new Callable<SearchResult>() {
+                        public SearchResult call () throws Exception {
+                            SearchOptions options = new SearchOptions
+                            (Substance.class);
+                            options.parse(params);
+                            options.fetch = total;
+                            instrumentSubstanceSearchOptions (options);
+                            SearchResult result = _textIndexer.search
+                            (options, q, null);
+                            return cacheKey (result, sha1);
+                        }
+                    });
+            Logger.debug(sha1+" => "+result);
+            
+            double elapsed = (System.currentTimeMillis() - start)*1e-3;
+            Logger.debug(String.format("Elapsed %1$.3fs to retrieve "
+                                       +"search %2$d/%3$d results...",
+                                       elapsed, result.size(),
+                                       result.count()));
+            return result;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.trace("Unable to perform search", ex);
+        }
+        return null;    
+    }
+
     /**
      * Returns substances based in provided query string and/or request
      * parameters.
@@ -493,7 +609,8 @@ public class GinasApp extends App {
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
-                getSearchResult (Substance.class, q, total);
+                //getSearchResult (Substance.class, q, total);
+                getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
@@ -502,7 +619,7 @@ public class GinasApp extends App {
                 
                 return getOrElse(k, new Callable<Result>() {
                         public Result call() throws Exception {
-                        	Logger.debug("Cache missed: " + k);
+                                Logger.debug("Cache missed: " + k);
                             return createSubstanceResult(result, rows, page);
                         }
                     });
@@ -516,7 +633,7 @@ public class GinasApp extends App {
                     public Result call() throws Exception {
                         Logger.debug("Cache missed: " + key);
                         TextIndexer.Facet[] facets = filter
-                            (getFacets(Substance.class, 30), ALL_FACETS);
+                            (getSubstanceFacets (30), ALL_FACETS);
                         int nrows = Math.max(Math.min
                                              (total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
@@ -545,8 +662,6 @@ public class GinasApp extends App {
         }
         long starttime = System.currentTimeMillis();
                 
-               
-                
         String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
                 
         Logger.debug("############## serialization time:" + tt);
@@ -558,20 +673,20 @@ public class GinasApp extends App {
 
     }
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
-    	String version;
-    	public SubstanceVersionFetcher(String version){
-    		super(Substance.class, SubstanceFactory.finder);
-    		this.version=version;
-    	}
-    	Result getResult(List<Substance> e) throws Exception{
-    		//System.out.println("Found the substances, now look for history");
-    		List<Substance> slist=new ArrayList<Substance>();
-    		for(Substance s:e){
-    			Substance s2=SubstanceFactory.getSubstanceVersion(s.uuid.toString(),version);
-    			slist.add(s2);
-    		}
-    		 return _getSubstanceResult(slist);
-    	}
+        String version;
+        public SubstanceVersionFetcher(String version){
+                super(Substance.class, SubstanceFactory.finder);
+                this.version=version;
+        }
+        Result getResult(List<Substance> e) throws Exception{
+                //System.out.println("Found the substances, now look for history");
+                List<Substance> slist=new ArrayList<Substance>();
+                for(Substance s:e){
+                        Substance s2=SubstanceFactory.getSubstanceVersion(s.uuid.toString(),version);
+                        slist.add(s2);
+                }
+                 return _getSubstanceResult(slist);
+        }
     }
 
     //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
@@ -783,17 +898,20 @@ public class GinasApp extends App {
              (500, "Unable to perform similarity search: " + query));
     }
     
-	public static Result lychimatch(final String query, int rows, int page) {
-		try{
-			Structure struc2 = StructureProcessor.instrument(query, null, false); // don't standardize
-			return _substances(struc2.getLychiv4Hash(),rows,page);
-		}catch(Exception e){
-			
-		}
-		return internalServerError
-	            (ix.ginas.views.html.error.render
-	             (500, "Unable to perform flex search: " + query));
-	}
+        public static Result lychimatch(final String query, int rows, int page) {
+                try{
+                        Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
+//                        System.out.println("L4:" + struc2.getLychiv4Hash());
+//                        System.out.println("L3:" + struc2.getLychiv3Hash());
+                        
+                        return _substances(struc2.getLychiv3Hash(),rows,page);
+                }catch(Exception e){
+                        
+                }
+                return internalServerError
+                    (ix.ginas.views.html.error.render
+                     (500, "Unable to perform flex search: " + query));
+        }
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
@@ -960,15 +1078,15 @@ public class GinasApp extends App {
         if (name == null) {
             return null;
         }else{
-        	try{
-        		UUID uuid = UUID.fromString(name);
-        		List<T> slist=new ArrayList<T>();
-        		slist.add((T)SubstanceFactory.getSubstance(uuid));
-        		return slist;
-        	}catch(Exception e){
-        		//Not a UUID
-        	}
-        	
+                try{
+                        UUID uuid = UUID.fromString(name);
+                        List<T> slist=new ArrayList<T>();
+                        slist.add((T)SubstanceFactory.getSubstance(uuid));
+                        return slist;
+                }catch(Exception e){
+                        //Not a UUID
+                }
+                
         }
         List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid
@@ -992,9 +1110,9 @@ public class GinasApp extends App {
     }
 
     public static Set<Keyword> getStructureReferences(GinasChemicalStructure s) {
-    	if(s.getReferences()!=null)
-    		return s.getReferences();
-    	return new LinkedHashSet<Keyword>();
+        if(s.getReferences()!=null)
+                return s.getReferences();
+        return new LinkedHashSet<Keyword>();
     }
 
         // ******************* PROTEINS
@@ -1185,9 +1303,9 @@ public class GinasApp extends App {
     public static String getAAName(char aa) {
         ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("AMINO_ACID_RESIDUE");
         for(VocabularyTerm t : cv.terms){
-        	if(t.value.equals(aa+"")){
-        		return t.display;
-        	}
+                if(t.value.equals(aa+"")){
+                        return t.display;
+                }
         }
         return "UNKNOWN";
 
@@ -1195,9 +1313,9 @@ public class GinasApp extends App {
     public static String getNAName(char aa) {
         ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("NUCLEIC_ACID_BASE");
         for(VocabularyTerm t : cv.terms){
-        	if(t.value.equals(aa+"")){
-        		return t.display;
-        	}
+                if(t.value.equals(aa+"")){
+                        return t.display;
+                }
         }
         return "UNKNOWN";
 
@@ -1209,9 +1327,9 @@ public class GinasApp extends App {
         if (obj == null)
             return count;
         try {
-        	count+=obj.getCGlycosylationSites().size();
-        	count+=obj.getOGlycosylationSites().size();
-        	count+=obj.getNGlycosylationSites().size();
+                count+=obj.getCGlycosylationSites().size();
+                count+=obj.getOGlycosylationSites().size();
+                count+=obj.getNGlycosylationSites().size();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1516,7 +1634,7 @@ public class GinasApp extends App {
                 String sid1= ((ChemicalSubstance) s).structure.id.toString();
                 return App.structure(sid1, format, size, atomMap);
             }else{
-            	return placeHolderImage(s);
+                return placeHolderImage(s);
             }
         }
         return r1;
@@ -1524,39 +1642,39 @@ public class GinasApp extends App {
     }
     
     public static Result placeHolderImage(Substance s){
-    	String placeholderFile="polymer.svg";
-    	if(s!=null){
-	    	switch (s.substanceClass) {
-	        case chemical:
-	        	placeholderFile="chemical.svg";break;
-	        case protein:
-	        	placeholderFile="protein.svg";break;
-	        case mixture:
-	        	placeholderFile="mixture.svg";break;
-	        case polymer:
-	        	placeholderFile="polymer.svg";break;
-	        case structurallyDiverse:
-	        	placeholderFile="structurally-diverse.svg";break;
-	        case concept:
-	        	placeholderFile="concept.svg";break;
-	        case nucleicAcid:
-	        	placeholderFile="nucleic-acid.svg";break;
-	        case specifiedSubstanceG1:
-	        default:
-	        	placeholderFile="polymer.svg";
-	        }
-    	}
-    	
-    	//Assets.at("public/images/",placeholderFile,true).apply();
-    	try{
-    		
-    		InputStream is=Util.getFile(placeholderFile, "public/images/");
-    		response().setContentType("image/svg+xml");
-    		return ok(is);
-    	}catch(Exception e){
-    		return _internalServerError(e);
-    	}
-    	
+        String placeholderFile="polymer.svg";
+        if(s!=null){
+                switch (s.substanceClass) {
+                case chemical:
+                        placeholderFile="chemical.svg";break;
+                case protein:
+                        placeholderFile="protein.svg";break;
+                case mixture:
+                        placeholderFile="mixture.svg";break;
+                case polymer:
+                        placeholderFile="polymer.svg";break;
+                case structurallyDiverse:
+                        placeholderFile="structurally-diverse.svg";break;
+                case concept:
+                        placeholderFile="concept.svg";break;
+                case nucleicAcid:
+                        placeholderFile="nucleic-acid.svg";break;
+                case specifiedSubstanceG1:
+                default:
+                        placeholderFile="polymer.svg";
+                }
+        }
+        
+        //Assets.at("public/images/",placeholderFile,true).apply();
+        try{
+                
+                InputStream is=Util.getFile(placeholderFile, "public/images/");
+                response().setContentType("image/svg+xml");
+                return ok(is);
+        }catch(Exception e){
+                return _internalServerError(e);
+        }
+        
     }
     
     /**
@@ -1588,11 +1706,11 @@ public class GinasApp extends App {
                 c = GinasUtils.structureToChemical(struc, messages);
                 
         }else{
-        	if(s instanceof ProteinSubstance){
-        		p=((ProteinSubstance)s).protein;
-        	}else{
-        		c = GinasUtils.substanceToChemical(s, messages);
-        	}
+                if(s instanceof ProteinSubstance){
+                        p=((ProteinSubstance)s).protein;
+                }else{
+                        c = GinasUtils.substanceToChemical(s, messages);
+                }
         }
         
         
@@ -1601,144 +1719,253 @@ public class GinasApp extends App {
         Logger.debug("SERIALIZED:" + om.valueToTree(messages).toString());
         response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
                 try {
-                        if (format.equalsIgnoreCase("mol")){
-                                return ok(c.export(Chemical.FORMAT_MOL).replaceAll(".*Marvin.*"," G-SRS "));
-                        }else if (format.equalsIgnoreCase("sdf")){
-                                return ok(c.export(Chemical.FORMAT_SDF).replaceAll(".*Marvin.*"," G-SRS "));
-                        }else if (format.equalsIgnoreCase("smiles")){
-                                return ok(c.export(Chemical.FORMAT_SMILES));
-                        }else if (format.equalsIgnoreCase("cdx")){
-                                return ok(c.export(Chemical.FORMAT_CDX));
-                        }else if (format.equalsIgnoreCase("fas")){
-                        	if(s instanceof ProteinSubstance){	
-                        		return ok(makeFastaFromProtein(((ProteinSubstance)s)));
-                        	}else{
-                        		return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
-                        	}
+                    /*
+                     * really?
+                     * 
+                     */
+                    if (format.equalsIgnoreCase("mol")){
+                        return ok(formatMolfile(c,Chemical.FORMAT_MOL));
+                    }else if (format.equalsIgnoreCase("sdf")){
+                        return ok(formatMolfile(c,Chemical.FORMAT_SDF));
+                    }else if (format.equalsIgnoreCase("smiles")){
+                        return ok(c.export(Chemical.FORMAT_SMILES));
+                    }else if (format.equalsIgnoreCase("cdx")){
+                        return ok(c.export(Chemical.FORMAT_CDX));
+                    }else if (format.equalsIgnoreCase("fas")){
+                        if(s instanceof ProteinSubstance){      
+                            return ok(makeFastaFromProtein(((ProteinSubstance)s)));
                         }else{
-                                return _badRequest("unknown format:" + format);
+                            return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
                         }
+                    }else{
+                        return _badRequest("unknown format:" + format);
+                    }
                 } catch (Exception e) {
                         e.printStackTrace();
                         return _badRequest(e.getMessage());
                 } 
         
     }
-    public static String makeFastaFromProtein(ProteinSubstance p){
-    	String resp = "";
-    	List<Subunit> subs=p.protein.subunits;
-    	Collections.sort(subs, new Comparator<Subunit>(){
-			@Override
-			public int compare(Subunit o1, Subunit o2) {
-				return o1.subunitIndex-o2.subunitIndex;
-			}});
-    	
-    	for(Subunit s: subs){
-    		resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
-    		for(String seq : splitBuffer(s.sequence,80)){
-    			resp+=seq+"\n";
+    public static String formatMolfile(Chemical c, int format) throws Exception{
+    	String mol=c.export(format);
+    	StringBuilder sb=new StringBuilder();
+    	int i=0;
+    	for(String line: mol.split("\n")){
+    		if(i!=0){
+    			sb.append("\n");
     		}
+    		if(i==1){
+    			line=" G-SRS " + line;
+    		}
+    		i++;
+    		sb.append(line);
     	}
-    	return resp;
+    	return sb.toString();
+    }
+    public static String makeFastaFromProtein(ProteinSubstance p){
+        String resp = "";
+        List<Subunit> subs=p.protein.subunits;
+        Collections.sort(subs, new Comparator<Subunit>(){
+                @Override
+                public int compare(Subunit o1, Subunit o2) {
+                    return o1.subunitIndex-o2.subunitIndex;
+                }});
+        
+        for(Subunit s: subs){
+            resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+            for(String seq : splitBuffer(s.sequence,80)){
+                resp+=seq+"\n";
+            }
+        }
+        return resp;
     }
     public static String makeFastaFromNA(NucleicAcidSubstance p){
-    	String resp = "";
-    	List<Subunit> subs=p.nucleicAcid.getSubunits();
-    	Collections.sort(subs, new Comparator<Subunit>(){
-			@Override
-			public int compare(Subunit o1, Subunit o2) {
-				return o1.subunitIndex-o2.subunitIndex;
-			}});
-    	
-    	for(Subunit s: subs){
-    		resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
-    		for(String seq : splitBuffer(s.sequence,80)){
-    			resp+=seq+"\n";
-    		}
-    	}
-    	return resp;
+        String resp = "";
+        List<Subunit> subs=p.nucleicAcid.getSubunits();
+        Collections.sort(subs, new Comparator<Subunit>(){
+                        @Override
+                        public int compare(Subunit o1, Subunit o2) {
+                                return o1.subunitIndex-o2.subunitIndex;
+                        }});
+        
+        for(Subunit s: subs){
+                resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+                for(String seq : splitBuffer(s.sequence,80)){
+                        resp+=seq+"\n";
+                }
+        }
+        return resp;
     }
     public static int totalSites(NucleicAcidSubstance sub, boolean includeEnds){
-    	int tot=0;
-    	for(Subunit s: sub.nucleicAcid.getSubunits()){
-    		tot+=s.sequence.length();
-    		if(!includeEnds)tot--;
-    	}
-    	return tot;
+        int tot=0;
+        for(Subunit s: sub.nucleicAcid.getSubunits()){
+                tot+=s.sequence.length();
+                if(!includeEnds)tot--;
+        }
+        return tot;
     }
     public static int totalSites(NucleicAcidSubstance sub){
-    	
-    			
-    	return totalSites(sub, true);
+        
+                        
+        return totalSites(sub, true);
     }
     
     public static Long getDateTime(Date d){
-    	if(d==null)return null;
-    	return d.getTime();
+        if(d==null)return null;
+        return d.getTime();
     }
     public static String getSugarName(Sugar s){
-    	return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_SUGAR",s.getSugar());
-    	
+        return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_SUGAR",s.getSugar());
+        
     }
     public static String getLinkageName(Linkage s){
-    	return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_LINKAGE",s.getLinkage());
+        return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_LINKAGE",s.getLinkage());
     }
 
-	public static String[] splitBuffer(String input, int maxLength) {
-		int elements = (input.length() + maxLength - 1) / maxLength;
-		String[] ret = new String[elements];
-		for (int i = 0; i < elements; i++) {
-			int start = i * maxLength;
-			ret[i] = input.substring(start,
-					Math.min(input.length(), start + maxLength));
-		}
-		return ret;
-	}
-    private static String updateKey =null;
+        public static String[] splitBuffer(String input, int maxLength) {
+                int elements = (input.length() + maxLength - 1) / maxLength;
+                String[] ret = new String[elements];
+                for (int i = 0; i < elements; i++) {
+                        int start = i * maxLength;
+                        ret[i] = input.substring(start,
+                                        Math.min(input.length(), start + maxLength));
+                }
+                return ret;
+        }
 
-    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result updateIndex(String key){
-        if(!GinasLoad.ALLOW_REBUILD){
-    		return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
-    	}
-    	if(updateKey==null){
-    		updateKey=UUID.randomUUID().toString();
-    	}
-    	Call callMonitor = routes.GinasApp.updateIndex("_monitor");
-    	if(!EntityPersistAdapter.isUpdatingIndex()){
-	    	if(key==null || !updateKey.equals(key)){
-	    		Call call = routes.GinasApp.updateIndex(updateKey);
-	    		return ok(new Html("<h1>Updated indexes:</h1><pre>" + RebuildIndex.UPDATE_MESSAGE+ "</pre><br><a href=\""+call.url() + "\">Rebuild Index (warning: will take some time)</a>"));
-	    	}
-    	
-    	
-    	
-    		EntityPersistAdapter.setUpdatingIndex(true);
-    		System.out.println("UPDATING INDEX");
-    		Runnable r= new Runnable(){
-			@Override
-			public void run() {
-				try {
-					RebuildIndex.updateLuceneIndex("ix.ginas.models.v1.Substance");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}};
-    		new Thread(r).start();
-    		updateKey=UUID.randomUUID().toString();
-    		return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
-    	}else{
-    		
-    		return ok(new Html("<h1>Updating indexes:</h1><pre>" + RebuildIndex.UPDATE_MESSAGE+ "</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
-    		
-    	}
-    }
     
     
     
 
     public static String getAsJson(Object o){
-    	ObjectMapper om = new ObjectMapper();
-    	return om.valueToTree(o).toString();
+        ObjectMapper om = new ObjectMapper();
+        return om.valueToTree(o).toString();
+    }
+
+    private static String updateKey =null;
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result updateIndex(String key){
+        if(!GinasLoad.ALLOW_REBUILD){
+            return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
+        }
+        if(updateKey==null){
+            updateKey=UUID.randomUUID().toString();
+        }
+        Call callMonitor = routes.GinasApp.updateIndex("_monitor");
+
+        if(listener.isCurrentlyRunning()) {
+            return ok(new Html( new StringBuilder("<h1>Updating indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(callMonitor.url()).append("\">refresh</a>").toString()));
+        }else{
+
+            if(key==null || !updateKey.equals(key)){
+
+                Call call = routes.GinasApp.updateIndex(updateKey);
+
+                return ok(new Html(new StringBuilder("<h1>Updated indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(call.url()).append("\">Rebuild Index (warning: will take some time)</a>").toString()));
+            }
+
+            Runnable r= new Runnable(){
+                @Override
+                public void run() {
+                    try {
+                        new RebuildIndex(listener).reindex(Substance.class);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            new Thread(r).start();
+            updateKey=UUID.randomUUID().toString();
+
+            return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
+        }
+    }
+
+
+
+
+    private static class SubstanceReIndexListener implements RebuildIndex.ReIndexListener {
+
+        private long startTime;
+        private StringBuilder message = new StringBuilder();
+
+        private int totalIndexed = 0;
+
+        private String recordsToIndex = "?";
+
+        private long lastUpdateTime;
+
+        private boolean currentlyRunning = false;
+
+        private int currentRecordsIndexed=0;
+
+        private int recordsIndexedLastUpdate=0;
+        @Override
+        public void newReindex() {
+            lastUpdateTime = startTime = System.currentTimeMillis();
+            message = new StringBuilder(10_000);
+            totalIndexed = 0;
+            recordsToIndex = "?";
+            currentlyRunning = true;
+            currentRecordsIndexed=0;
+
+            recordsIndexedLastUpdate=0;
+        }
+
+        public StringBuilder getMessage() {
+            return message;
+        }
+
+        public boolean isCurrentlyRunning() {
+            return currentlyRunning;
+        }
+
+        @Override
+        public void doneReindex() {
+            currentlyRunning = false;
+
+            EntityPersistAdapter.doneReindexing();
+            message.append("\n\nCompleted Substance reindexing.\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
+        }
+
+        @Override
+        public void recordReIndexed(Object o) {
+            currentRecordsIndexed++;
+
+            if(currentRecordsIndexed %10 ==0){
+                updateMessage();
+            }
+        }
+
+        @Override
+        public void totalRecordsToIndex(int total) {
+            recordsToIndex = Integer.toString(total);
+        }
+
+
+
+        private void updateMessage() {
+            long currentTime = System.currentTimeMillis();
+
+
+            long totalTimeSerializing = currentTime - startTime;
+
+            int numProcessedThisTime = currentRecordsIndexed - recordsIndexedLastUpdate;
+
+            message.append("\n").append(numProcessedThisTime).append(" more records Processed: ").append(currentRecordsIndexed).append(" of ").append(recordsToIndex)
+                    .append(" in ").append((currentTime - lastUpdateTime)).append("ms (").append(totalTimeSerializing).append("ms serializing)");
+
+            lastUpdateTime = currentTime;
+
+            recordsIndexedLastUpdate = currentRecordsIndexed;
+        }
+
+
+        @Override
+        public void error(Throwable t) {
+            t.printStackTrace();
+        }
     }
 }

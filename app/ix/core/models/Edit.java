@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.persistence.*;
 
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,7 +22,7 @@ public class Edit extends BaseModel {
     @JsonIgnore
     @Id
     public UUID id; // internal random id
-    public final Long created = System.currentTimeMillis();
+    public final Long created = TimeUtil.getCurrentTimeMillis();
 
     public String refid; // edited entity
     public String kind;
@@ -77,5 +78,11 @@ public class Edit extends BaseModel {
     public String getNewValue () {
         return newValue != null
             ? Global.getNamespace()+"/edits/"+id+"/$newValue" : null;
+    }
+    
+    @Override
+    public String fetchGlobalId(){
+    	if(this.id==null)return null;
+    	return this.id.toString();
     }
 }

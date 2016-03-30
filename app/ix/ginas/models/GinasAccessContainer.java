@@ -1,5 +1,6 @@
 package ix.ginas.models;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -14,17 +15,18 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.BaseModel;
 import ix.core.models.Group;
+import ix.core.models.LongBaseModel;
 
 @Entity
 @Table(name = "ix_ginas_access")
-public class GinasAccessContainer extends BaseModel{
+public class GinasAccessContainer extends LongBaseModel{
 	@Id
 	public Long id;
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JsonSerialize(using = GroupListSerializer.class)
 	@JsonDeserialize(using = GroupListDeserializer.class)
-	public Set<Group> access;
+	private Set<Group> access;
 	
 	public String entityType;
 	
@@ -58,10 +60,8 @@ public class GinasAccessContainer extends BaseModel{
 		}
 		return access;
 	}
+	public void setAccess(Collection<Group> acc){
+		this.access=new LinkedHashSet<Group>(acc);
+	}
 	
-//	@PostUpdate
-//	@PostPersist
-//	public void testPersist(){
-//		System.out.println("It saved:" +id + " " +  access.size());
-//	}
 }

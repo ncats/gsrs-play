@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.avaje.ebean.Ebean;
@@ -54,6 +56,7 @@ import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 public class GinasUtils {
 	private static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
@@ -255,25 +258,27 @@ public class GinasUtils {
 			throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
 		}
 	}
+	
+	public static boolean persistSubstances(Collection<Substance> subs){
+		Transaction tx = Ebean.beginTransaction();
+		try{
+			for(Substance s: subs){
+				s.save();
+			}
+			tx.commit();
+			return true;
+		}catch(Exception ex){
+			return false;
+		}finally{
+			tx.end();
+		}
+	}
+	
 
-	public static boolean persistSubstance(Substance theRecordToPersist, StructureIndexer index, List<String> errors) {
+	public static boolean persistSubstance(Substance theRecordToPersist, List<String> errors) {
 		boolean worked = false;
 		Transaction tx = Ebean.beginTransaction();
 		try {
-			if (theRecordToPersist instanceof ChemicalSubstance) {
-				persist((ChemicalSubstance) theRecordToPersist, index);
-
-			} else if (theRecordToPersist instanceof ProteinSubstance) {
-				//System.out.println("Persisting protein");
-				Protein protein = ((ProteinSubstance) theRecordToPersist).protein;
-				for (Subunit su : protein.subunits) {
-					if (su.sequence != null && su.sequence.length() > 0) {
-						su.save();
-						//System.out.println("About to add sequence to indexer");
-						//_seqIndexer.add(su.uuid.toString(), su.sequence);
-					}
-				}
-			}
 			theRecordToPersist.save();
 			tx.commit();
 			worked = true;
@@ -287,40 +292,25 @@ public class GinasUtils {
 		return worked;
 	}
 
-	public static boolean persistSubstance(Substance theRecordToPersist, StructureIndexer index) {
-		return persistSubstance(theRecordToPersist, index);
-	}
-
-	static Substance persist(ChemicalSubstance chem, StructureIndexer index) throws Exception {
-		// now index the structure for searching
-		try {
-			Chem.setFormula(chem.structure);
-			chem.structure.save();
-			//index.add(String.valueOf(chem.structure.id), chem.structure.molfile);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-		for (Moiety m : chem.moieties)
-			m.structure.save();
-		return chem;
-	}
+	public static List<Substance> toPersist = new ArrayList<Substance>();
+	
 
 	/*********************************************
-	 * Ginas bits for 1. extracting from InputStream 2. transforming to
-	 * Substance 3. persisting
+	 * Ginas bits for 
+	 * 1. extracting from InputStream 
+	 * 2. transforming to Substance 
+	 * 3. persisting
 	 * 
 	 * @author peryeata
 	 *
 	 */
 	public static class GinasSubstancePersister extends RecordPersister<Substance, Substance> {
-		@Override
+		
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception {
 			boolean worked = false;
 			List<String> errors = new ArrayList<String>();
 			if (prec.theRecordToPersist != null) {
-
-				worked = GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer, errors);
+				worked = GinasUtils.persistSubstance(prec.theRecordToPersist, errors);
 				if (worked) {
 					prec.rec.status = ProcessingRecord.Status.OK;
 					prec.rec.xref = new XRef(prec.theRecordToPersist);
@@ -337,6 +327,17 @@ public class GinasUtils {
 					+ " record " + prec.rec.id);
 			if (!worked)
 				throw new IllegalStateException(prec.rec.message);
+		}
+		public void persistb(TransformedRecord<Substance, Substance> prec) throws Exception {
+			
+			if (prec.theRecordToPersist != null) {
+				toPersist.add(prec.theRecordToPersist);
+				if(toPersist.size()>=20){
+					persistSubstances(toPersist);
+					toPersist.clear();
+				}
+				
+			}
 		}
 	}
 
@@ -358,10 +359,11 @@ public class GinasUtils {
 	public static class GinasDumpExtractor extends RecordExtractor<JsonNode> {
 		BufferedReader buff;
 
+		private static final Pattern TOKEN_SPLIT_PATTERN = Pattern.compile("\t");
 		public GinasDumpExtractor(InputStream is) {
 			super(is);
 			try {
-				buff = new BufferedReader(new InputStreamReader(is, "UTF8"));
+				buff = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			} catch (Exception e) {
 				
 			}
@@ -373,16 +375,19 @@ public class GinasUtils {
 			if (buff == null)
 				return null;
 			String line=null;
+			ObjectMapper mapper = new ObjectMapper();
 			try {
 				line = buff.readLine();
-				if (line == null)
+				if (line == null) {
 					return null;
-				String[] toks = line.split("\t");
+				}
+				//use static pattern so we don't recompile on every split call
+				//which is what String.split() does
+				String[] toks = TOKEN_SPLIT_PATTERN.split(line);
 				// Logger.debug("extracting:"+ toks[1]);
-				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes("utf8"));
-				ObjectMapper mapper = new ObjectMapper();
-				JsonNode tree = mapper.readTree(bis);
-				return tree;
+				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes(StandardCharsets.UTF_8));
+
+				return mapper.readTree(bis);
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw e;

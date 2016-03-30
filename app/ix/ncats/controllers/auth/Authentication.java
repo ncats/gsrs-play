@@ -7,6 +7,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.models.*;
+import ix.core.util.TimeUtil;
 import play.*;
 import play.Logger;
 import play.db.ebean.*;
@@ -342,9 +343,8 @@ public class Authentication extends Controller {
     
 
     
-
+    //TODO: revert
     public static Principal fakeThing(){
-    	System.out.println("Fetching for scala");
     	return getUser();
     }
     
@@ -416,7 +416,7 @@ public class Authentication extends Controller {
         String id = session(SESSION);
         Session session = getCachedSession(id);
         if (session != null) {
-            long current = System.currentTimeMillis();
+            long current = TimeUtil.getCurrentTimeMillis();
             if ((current - session.accessed) > TIMEOUT) {
                 Logger.debug("Session " + session.id + " expired!");
                 flush(session);

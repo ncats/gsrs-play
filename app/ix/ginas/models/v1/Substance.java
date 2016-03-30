@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.models.Backup;
 import ix.core.models.BeanViews;
 import ix.core.models.DataVersion;
 import ix.core.models.Indexable;
@@ -34,6 +35,7 @@ import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
+import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
@@ -44,6 +46,7 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.utils.Global;
 import play.Logger;
 
+@Backup
 @JSONEntity(name = "substance", title = "Substance")
 @Entity
 @Table(name = "ix_ginas_substance")
@@ -617,7 +620,7 @@ public class Substance extends GinasCommonData {
 		Reference r = new Reference();
 		r.docType = Substance.DOC_TYPE_BATCH_IMPORT;
 		r.citation = p.payload.name;
-		r.documentDate = new Date();
+		r.documentDate = TimeUtil.getCurrentDate();
 		//r.tags.add(new Keyword(p.getClass().getName(), p.id + ""));
 		r.tags.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), 
 				p.getKeyMatching(GinasRecordProcessorPlugin.class.getName())
@@ -630,7 +633,7 @@ public class Substance extends GinasCommonData {
 		Reference r = new Reference();
 		r.docType = DOC_TYPE_PROPERTY_IMPORT;
 		r.citation = property;
-		r.documentDate = new Date();
+		r.documentDate = TimeUtil.getCurrentDate();
 		n.addReference(r);
 		for(Note oldNote:this.notes){
 			if(oldNote.note.equals(n.note)){
@@ -750,6 +753,9 @@ public class Substance extends GinasCommonData {
 			n.delete();
 		}
 		for(Note n:notes){
+			n.delete();
+		}
+		for(Relationship n:relationships){
 			n.delete();
 		}
 		if(this.modifications!=null){

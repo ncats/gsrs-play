@@ -230,7 +230,7 @@
         };
     });
 
-    ginasForms.directive('conceptUpgradeForm', function ($http, $location, toggler, Substance) {
+    ginasForms.directive('conceptUpgradeForm', function ($window, localStorageService) {
         return {
             restrict: 'E',
             replace: true,
@@ -239,21 +239,24 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
+
                 scope.iscollapsed = false;
-                console.log($location);
                 if(scope.parent.uuid){
                     scope.editid = scope.parent.uuid.split('-')[0];
                 }
 
                 scope.changeClass = function (newClass) {
-                    var newSub = scope.$parent.fromFormSubstance(scope.parent);
-                    console.log(scope);
-                   // newSub.substanceClass = newClass;
-                  //  var upgradeSub = Substance.$$setSubstance(newSub);
-                   // var upgradeSub= Substance.$$changeClass(newClass);
-                    var upgradeSub= scope.parent;
-                    upgradeSub.substanceClass = newClass;
-                   console.log(scope);
+                    var upgradeSub= scope.parent.$$setClass(newClass);
+                    _.set(upgradeSub, 'update', true);
+                    console.log(upgradeSub);
+                    localStorageService.set('tempsubstance', upgradeSub);
+                   $window.location.href = $window.location.origin + baseurl + "wizard?kind=" +newClass;
+   /*                 scope.parent.$$setSubstance(scope.parent.$$changeClass(newClass)).then(function(response){
+                       var upgradeSub= response;
+                        console.log(upgradeSub);*/
+
+                  /* console.log(scope);
                     _.set(upgradeSub, 'update', true);
                     console.log(upgradeSub);
                     if (_.has(upgradeSub, 'update')) {
@@ -265,10 +268,6 @@
                         }).success(function(data){
                                 alert('Load was performed.');
                             console.log(data);
-                            /*url = baseurl + "assets/templates/modals/update-success.html";
-                            scope.$parent.open(url);*/
-/*                                $location.path('app/substance/{{editid}}/edit');
-                                $location.replace();*/
                             });
                     } else {
                         $http.post(baseurl + 'api/v1/substances', postSub).success(function () {
@@ -278,8 +277,8 @@
                           //  $location.replace();
                         });
                     }
-
-
+*/
+                  //  });
                 };
             }
         };
@@ -409,23 +408,13 @@
                 };
 
                 scope.validate = function () {
-                    if (!scope.parent.protein.otherLinks) {
-                        scope.parent.protein.otherLinks = [];
-                    }
-                    scope.parent.protein.otherLinks.push(scope.otherLink);
-                    scope.otherLink = {};
-                    scope.otherLinksForm.$setPristine();
-                };
-
-
-
-                scope.validate = function () {
                     console.log(scope);
                     console.log("validationg");
                     if (!scope.parent.protein.disulfideLinks) {
                         scope.parent.protein.disulfideLinks = [];
 
                     }
+                    console.log(JSON.stringify(scope.disulfideLink));
                     scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
                     scope.disulfideLink = {};
                     scope.disulfideLinksForm.$setPristine();
@@ -458,7 +447,7 @@
             },
             templateUrl: function (scope) {
                 console.log(scope);
-                var url = baseurl + "assets/templates/forms/diverse-organism-form.html";
+               return baseurl + "assets/templates/forms/diverse-organism-form.html";
             }
         };
 /*            templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
@@ -675,6 +664,7 @@
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
+                        console.log(scope.referenceobj);
                         $templateRequest(baseurl + "assets/templates/selectors/site-selector.html").then(function (html) {
                             template = angular.element(html);
                             element.append(template);
@@ -1289,6 +1279,8 @@ console.log(scope);
             link: function (scope, element, attrs) {
 
                 scope.validate = function () {
+                    console.log(scope);
+                    console.log(JSON.stringify(scope.otherLink));
                     if (!scope.parent.protein.otherLinks) {
                         scope.parent.protein.otherLinks = [];
                     }
@@ -1650,8 +1642,12 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                     delete scope.$$uploadFile;
                 };
 
+                scope.$on('save', function(e) {
+                    scope.validate();
+                });
+
+
                     scope.validate = function () {
-                        console.log(scope);
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
@@ -1802,7 +1798,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 field: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var template;
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
@@ -1838,6 +1833,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                                         v = _.remove(ret, function (n) {
                                             return n == site.residueIndex
                                         });
+                                        return v;
                                     }
                                 });
                             });
@@ -1853,28 +1849,13 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 };
 
                 scope.makeSiteList = function () {
-/*                    if(scope.field ==='sites'){
-                        console.log(scope);
-                        console.log(siteList.siteList(scope.referenceobj.$$displayString));
-                        _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj.sites.$$displayString));
-                        if(scope.referenceobj.sitesShorthand) {
-                            scope.referenceobj.sitesShorthand = scope.referenceobj.$$displayString;
-                        }
-                       // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
-                       console.log(scope);
-
-                    }else {*/
                     console.log(scope);
                         var temp= angular.copy(scope.referenceobj[scope.field].$$displayString);
                         _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
                         scope.referenceobj[scope.field].$$displayString = temp;
-     //               }
-/*
-*/
                 };
 
                 scope.redraw = function () {
-                    console.log(scope);
                     scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                 };
 

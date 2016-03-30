@@ -14,6 +14,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import ix.core.util.TimeUtil;
 import play.db.ebean.Model;
 
 @Entity
@@ -26,7 +27,7 @@ public class Payload extends BaseModel {
     public Namespace namespace;
     
     
-    public final Date created = new Date ();
+    public final Date created = TimeUtil.getCurrentDate();
     
     @Column(length=1024)
     public String name;
@@ -59,4 +60,10 @@ public class Payload extends BaseModel {
         }
         return prop;
     }
+
+	@Override
+	public String fetchGlobalId() {
+		if(this.id==null)return null;
+		return this.id.toString();
+	}
 }

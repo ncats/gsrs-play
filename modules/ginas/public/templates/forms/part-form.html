@@ -1,26 +1,29 @@
-<div class = "row info">
-    <button class="btn btn-primary label-offset det" id="parts">
-                        Parts & Fractions&nbsp;<span class="badge" ng-show="parent.structurallyDiverse.part.length>0">
-                        {{parent.structurallyDiverse.part.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-
+<div class="row info">
+    <div class="row">
+        <form-header type="partsAndFractions" parent="parent" path="structurallyDiverse.part"
+                     iscollapsed="iscollapsed"></form-header>
+    </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="partForm" id="addPartForm" role="form" novalidate>
-        <div class="row form-row">
+            <div class="row form-row">
                 <div class="col-md-3">
-                    <dropdown-view-edit obj="parent.structurallyDiverse" field="partLocation" cv = "PART_LOCATION" name ="partLocation" label ="Part Location"></dropdown-view-edit>
+                    <dropdown-view-edit obj="parent.structurallyDiverse" field="partLocation" cv="PART_LOCATION"
+                                        name="partLocation" label="Part Location"></dropdown-view-edit>
                 </div>
                 <div class="col-md-3">
-                    <multi-view-edit obj="parent.structurallyDiverse" field="part" cv = "PART" id ="part"></multi-view-edit>
+                    <multi-view-edit obj="parent.structurallyDiverse" field="part" cv="PART"
+                                     id="part"></multi-view-edit>
                 </div>
                 <div class="col-md-3">
-                    <text-view-edit obj = "parent.structurallyDiverse" field="fractionName" label="Fraction Name"></text-view-edit>
+                    <text-view-edit obj="parent.structurallyDiverse" field="fractionName"
+                                    label="Fraction Name"></text-view-edit>
                 </div>
                 <div class="col-md-3">
-                    <dropdown-view-edit obj = "parent.structurallyDiverse" field="fractionMaterialType" cv = "FRACTION_MATERIAL_TYPE" label="Fraction Material Type"></dropdown-view-edit>
+                    <dropdown-view-edit obj="parent.structurallyDiverse" field="fractionMaterialType"
+                                        cv="FRACTION_MATERIAL_TYPE" label="Fraction Material Type"></dropdown-view-edit>
                 </div>
             </div>
-        <p></p>
-            </form>
+            <p></p>
+        </form>
     </div>
 </div>

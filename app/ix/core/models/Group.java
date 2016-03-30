@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
 @Table(name="ix_core_group")
-public class Group extends BaseModel {
+public class Group extends LongBaseModel {
     @Id
     public Long id;
 

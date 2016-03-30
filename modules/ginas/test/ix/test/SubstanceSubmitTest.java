@@ -60,7 +60,7 @@ public class SubstanceSubmitTest {
 
         File resource;
         @Rule
-        public GinasTestServer ts = new GinasTestServer(9001);
+        public GinasTestServer ts = new GinasTestServer();
 
         public SubstanceSubmitTest(File f, String onlyUsedForParameterName){
             this.resource=f;

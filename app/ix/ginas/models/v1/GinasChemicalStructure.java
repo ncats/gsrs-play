@@ -32,6 +32,7 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
+import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
@@ -134,7 +135,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @JsonSerialize(using = GroupListSerializer.class)
     public Set<Group> getAccess(){
     	if(recordAccess!=null){
-    		return recordAccess.access;
+    		return recordAccess.getAccess();
     	}
     	return new LinkedHashSet<Group>();
     }
@@ -185,7 +186,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @PreUpdate
     public void modifiedV2() {
     	if(created==null){
-    		created=new Date();
+    		created= TimeUtil.getCurrentDate();
     	}
     	Principal p1=UserFetcher.getActingUser();
     	if(p1!=null){

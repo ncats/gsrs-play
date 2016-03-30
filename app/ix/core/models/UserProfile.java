@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import be.objectify.deadbolt.core.models.Subject;
 import ix.core.controllers.AdminFactory;
+import ix.core.util.TimeUtil;
 import ix.utils.Util;
 
 @Entity
@@ -132,7 +133,7 @@ public class UserProfile extends IxModel implements Subject {
     
     public Long getTokenTimeToExpireMS(){
         long date=(Util.getCanonicalCacheTimeStamp()+1)*Util.getTimeResolutionMS();
-        return (date-System.currentTimeMillis());
+        return (date- TimeUtil.getCurrentTimeMillis());
     }
     
     private String getPreviousComputedToken(){

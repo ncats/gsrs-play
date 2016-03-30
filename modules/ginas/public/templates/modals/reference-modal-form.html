@@ -13,10 +13,10 @@
                                              cv="DOCUMENT_TYPE"></dropdown-select>
                         </div>
                         <div class="col-md-2">
-                            <text-input ng-model="reference.sourceClass" field="sourceClass" ng-class="disabled" disabled></text-input>
+                            <text-input ng-model="reference.sourceClass" field="sourceClass" label="Source Class" class="disabled" disabled></text-input>
                         </div>
                         <div class="col-md-2">
-                            <text-input ng-model="reference.id" field="id"></text-input>
+                            <text-input ng-model="reference.id" label="Source Id" field="id"></text-input>
                         </div>
                         <div class="col-md-2">
                             <check-box ng-model="reference.publicDomain" field="publicDomain"
@@ -25,7 +25,7 @@
                         <div class="col-md-2">
                             <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                                 <label for="upload">Upload a Document</label><br>
-                                <file-field ng-show="!reference.uploadedFile && !reference.$$uploadFile" ng-model="reference.$$uploadFile"
+                                <file-field ng-show="!reference.uploadedFile && !reference.$$uploadFile" ng-change = "submitFile()" ng-model="reference.$$uploadFile"
                                             id="upload"><i class="fa fa-folder-open fa-lg"></i> Browse
                                 </file-field>
                                 <br>
