@@ -25,7 +25,7 @@ public class SequenceIndexerPlugin extends Plugin {
                 ("IxContext plugin is not loaded!");
         
         try {
-            indexer = SequenceIndexer.open(ctx.sequence());
+            indexer = SequenceIndexer.openReadOnly(ctx.sequence());
             Logger.info("Plugin "+getClass().getName()+" started!");        
         }
         catch (IOException ex) {
