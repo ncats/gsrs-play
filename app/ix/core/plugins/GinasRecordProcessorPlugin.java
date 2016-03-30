@@ -202,10 +202,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			try {
 				try {
 					EntityPersistAdapter.persistcount=0;
-					long start=System.currentTimeMillis();
+					long start=TimeUtil.getCurrentTimeMillis();
 					rec.job.getPersister().persist(this);
 					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
-					long done=System.currentTimeMillis()-start;
+					long done=TimeUtil.getCurrentTimeMillis()-start;
 					System.out.println(     "Persisted at \t" + 
 							System.currentTimeMillis() + "\t" + 
 							this.theRecordToPersist.getClass().getName() + "\t" + 

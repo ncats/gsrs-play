@@ -159,7 +159,7 @@ public class TimeProfiler{
 				int i=0;
     			for(double avg:times){
     				if(i>0){
-    					sb.append("\t" + avg/(1E6+0.0));
+    					sb.append("," + avg/(1E6+0.0));
     				}
     				i++;
     			}

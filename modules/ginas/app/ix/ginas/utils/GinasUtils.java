@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.avaje.ebean.Ebean;
@@ -257,6 +258,22 @@ public class GinasUtils {
 			throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
 		}
 	}
+	
+	public static boolean persistSubstances(Collection<Substance> subs){
+		Transaction tx = Ebean.beginTransaction();
+		try{
+			for(Substance s: subs){
+				s.save();
+			}
+			tx.commit();
+			return true;
+		}catch(Exception ex){
+			return false;
+		}finally{
+			tx.end();
+		}
+	}
+	
 
 	public static boolean persistSubstance(Substance theRecordToPersist, List<String> errors) {
 		boolean worked = false;
@@ -275,6 +292,8 @@ public class GinasUtils {
 		return worked;
 	}
 
+	public static List<Substance> toPersist = new ArrayList<Substance>();
+	
 
 	/*********************************************
 	 * Ginas bits for 
@@ -286,15 +305,12 @@ public class GinasUtils {
 	 *
 	 */
 	public static class GinasSubstancePersister extends RecordPersister<Substance, Substance> {
-		@Override
+		
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception {
 			boolean worked = false;
 			List<String> errors = new ArrayList<String>();
 			if (prec.theRecordToPersist != null) {
-				long start= System.currentTimeMillis();
 				worked = GinasUtils.persistSubstance(prec.theRecordToPersist, errors);
-				long dur=System.currentTimeMillis()-start;
-				System.out.print(dur + "\t");
 				if (worked) {
 					prec.rec.status = ProcessingRecord.Status.OK;
 					prec.rec.xref = new XRef(prec.theRecordToPersist);
@@ -311,6 +327,17 @@ public class GinasUtils {
 					+ " record " + prec.rec.id);
 			if (!worked)
 				throw new IllegalStateException(prec.rec.message);
+		}
+		public void persistb(TransformedRecord<Substance, Substance> prec) throws Exception {
+			
+			if (prec.theRecordToPersist != null) {
+				toPersist.add(prec.theRecordToPersist);
+				if(toPersist.size()>=20){
+					persistSubstances(toPersist);
+					toPersist.clear();
+				}
+				
+			}
 		}
 	}
 
