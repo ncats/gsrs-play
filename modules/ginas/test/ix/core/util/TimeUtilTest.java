@@ -29,9 +29,10 @@ public class TimeUtilTest {
     }
     private static void ensureSameWithinDelta(long now, long actual) {
         long delta = Math.abs(actual - now);
+        System.out.println("Delta:" + delta);
         //1 second resolution is good enough for
         //this test.  We just care that we are close.
-        assertTrue(delta < 1000);
+        assertTrue("Expected dt to be < 1000, got " + delta , delta < 1000);
     }
 
     @Test
