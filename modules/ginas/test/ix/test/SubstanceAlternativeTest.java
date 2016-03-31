@@ -59,147 +59,92 @@ public class SubstanceAlternativeTest {
     }
 
     @Test
-    public void testAPIValidateSubmitSubstance()  throws Exception {
-
+    public void testAPIAlternativeSubstanceSubmitValidate()   throws Exception {
+        //submit primary
         resource = new File("test/testJSON/alternative/Prim1.json");
         JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-        JsonNode jsonNode1 = api.validateSubstanceJson(js);
-
-        SubstanceJsonUtil.ensureIsValid(jsonNode1);
-
+        String uuid = js.get("uuid").asText();
+        JsonNode validationResult = api.validateSubstanceJson(js);
+        SubstanceJsonUtil.ensureIsValid(validationResult);
         ensurePass(api.submitSubstance(js));
-    }
-    @Test
-    public void testAPIValidateSubmitFetchSubstance()   throws Exception {
 
+        //submit alternative
+        resource = new File("test/testJSON/alternative/PostAlt.json");
+        JsonNode jsA = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        String uuidA = jsA.get("uuid").asText();
+        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        ensurePass(api.submitSubstance(jsA));
+
+        //check alternative relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJson(uuidA);
+        String refUuidA = SubstanceJsonUtil.getRefUuid(fetchedA);
+        assertTrue(refUuidA.equals(uuid));
+
+        //check primary relationship with alternative
+        JsonNode fetched = api.fetchSubstanceJson(uuid);
+        String refUuid = SubstanceJsonUtil.getRefUuid(fetched);
+        assertTrue(refUuid.equals(uuidA));
+    }
+
+    @Test
+    public void testAPIAlternativeUpdatePrimarySubstance()   throws Exception {
+
+        //submit primary
+        resource = new File("test/testJSON/alternative/Prim1.json");
         JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
         String uuid = js.get("uuid").asText();
         JsonNode validationResult = api.validateSubstanceJson(js);
-
         SubstanceJsonUtil.ensureIsValid(validationResult);
-
         ensurePass(api.submitSubstance(js));
 
+        //submit alternative
+        resource = new File("test/testJSON/alternative/PostAlt.json");
+        JsonNode jsA = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        String uuidA = jsA.get("uuid").asText();
+        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        ensurePass(api.submitSubstance(jsA));
+
+        /*//check alternative relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJson(uuidA);
+        String refUuidA = SubstanceJsonUtil.getRefUuid(fetchedA);
+        assertTrue(refUuidA.equals(uuid));
+
+        //check primary relationship with alternative
         JsonNode fetched = api.fetchSubstanceJson(uuid);
+        String refUuid = SubstanceJsonUtil.getRefUuid(fetched);
+        assertTrue(refUuid.equals(uuidA));*/
 
-        assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
+        //submit new primary
+        resource = new File("test/testJSON/alternative/Prim2.json");
+        JsonNode jsNew = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        String uuidNew = js.get("uuid").asText();
+        JsonNode validationResultNew = api.validateSubstanceJson(jsNew);
+        SubstanceJsonUtil.ensureIsValid(validationResultNew);
+        ensurePass(api.submitSubstance(jsNew));
 
-        assertThatNonDestructive(js, fetched);
+        //update alternative
+        resource = new File("test/testJSON/alternative/PutAlt.json");
+        JsonNode jsAUpdate = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        String uuidAUpdate = jsAUpdate.get("uuid").asText();
+        JsonNode validationResultAUpdate = api.validateSubstanceJson(jsAUpdate);
+        SubstanceJsonUtil.ensureIsValid(validationResultAUpdate);
+        ensurePass(api.updateSubstance(jsAUpdate));
 
-    }
-    @Test
-    public void validateFetchedSubmittedSubstance()  throws Exception {
-
-
-        JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
-
-        String uuid = js.get("uuid").asText();
-
-        JsonNode validationResult = api.validateSubstanceJson(js);
-
-        SubstanceJsonUtil.ensureIsValid(validationResult);
-
-
-        ensurePass(api.submitSubstance(js));
-
+        /*//check primary has no relationship with alternate
         JsonNode fetched = api.fetchSubstanceJson(uuid);
+        String refUuid = SubstanceJsonUtil.getRefUuid(fetched);
+        assertFalse(refUuid.equals(uuidAUpdate));
 
-        assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
+        //check alternative relationship with New primary
+        JsonNode fetchedAUpdate = api.fetchSubstanceJson(uuidAUpdate);
+        String refUuidAUpdate = SubstanceJsonUtil.getRefUuid(fetchedAUpdate);
+        assertTrue(refUuidAUpdate.equals(uuidNew));
 
-        assertThatNonDestructive(js, fetched);
-
-        //validate
-        JsonNode fetchedValidationResult = api.validateSubstanceJson(fetched);
-        SubstanceJsonUtil.ensureIsValid(fetchedValidationResult);
-
-
-
+        //check New primary relationship with alternative
+        JsonNode fetchedNew = api.fetchSubstanceJson(uuidNew);
+        String refUuidNew = SubstanceJsonUtil.getRefUuid(fetchedNew);
+        assertTrue(refUuidNew.equals(uuidAUpdate)); */
     }
-
-    /**
-     * Ideally this method would actually fail when there is a destructive change between the two
-     * JSON objects. However, the current implementation uses JSONPatch, which is specifically attempting
-     * just to give instructions on how to turn JSON a into JSON b using a few operations.
-     *
-     * The problem is, we don't consider reordering of list items to be destructive. We consider
-     * those to be "move" operations. It turns out that the server will sometimes reorder
-     * names, for example, which is allowed and expected.The implementation of JSONPatch
-     * we use though doesn't do the heavy-lifting of finding if a "move" is more appropriate.
-     *
-     *
-     * So, for example:
-     *
-     * JSON a:
-     * [
-     * {
-     * 		"name":"myname1"
-     * },
-     * {
-     * 		"name":"myname2",
-     * 		"type":"type2"
-     * }
-     * ]
-     *
-     * JSON b:
-     * [
-     * {
-     * 		"name":"myname2",
-     * 		"type":"type2"
-     * },
-     * {
-     * 		"name":"myname1"
-     * }
-     * ]
-     *
-     *
-     * This implementation is likely to call a->b destructive, because may say 4 operations
-     * have happened:
-     *
-     * 1. "/0/name", "change", "myname2"
-     * 2. "/0/type", "add", "type2"
-     * 3. "/1/name", "change", "myname1"
-     * 4. "/1/type", "remove", null
-     *
-     * TODO: We should fix this to allow any list/array to change the ordering
-     *
-     * @param before
-     * @param after
-     * @throws AssertionError
-     */
-    public static void assertThatNonDestructive(JsonNode before, JsonNode after) throws AssertionError{
-
-        JsonNode jp =JsonDiff.asJson(before,after);
-        for(JsonNode jn:jp){
-
-            if(jn.get("op").asText().equals("remove")){
-                if(jn.get("path").asText().equals("/protein/modifications") ||
-                        jn.get("path").asText().equals("/nucleicAcid/modifications")
-                        ||
-                        jn.get("path").asText().contains("nameOrgs") ||		//silly hacks to allow workaround for above
-                        jn.get("path").asText().contains("domains")  ||
-                        (jn.get("path").asText().startsWith("/names/") &&
-                                jn.get("path").asText().contains("references")
-                        )
-                        ){
-                    //acceptable removals, do nothing
-
-                }else{
-                    JsonNode jsbefore=before.at(jn.get("path").textValue());
-                    //TODO check if jsbefore is equivalent to null in some way:
-                    // [], {}, "", [""]
-                    if(jsbefore.toString().equals("[\"\"]")){
-
-                    }else{
-//            				System.out.println("OLD:");
-//            				System.out.println(before);
-//            				System.out.println("NEW:");
-//            				System.out.println(after);
-                        throw new AssertionError("removed property at '" + jn.get("path") + "' , was '" + jsbefore+ "'");
-                    }
-                }
-                //System.out.println("Error:" + jn + " was:" + before.at(jn.get("path").textValue()));
-            }
-        }
-    }
-
 }

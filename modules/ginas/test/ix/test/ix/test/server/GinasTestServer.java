@@ -336,13 +336,33 @@ public class GinasTestServer extends ExternalResource{
     	UserProfile up=UserProfileFactory.addActiveUser(username, password, roles, Collections.singletonList(fakeUserGroup));
     	return new User(up.getIdentifier(), password);
     }
+
+    public boolean isOracleDB(){
+        boolean isOracle = false;
+        Config confFile = ConfigFactory.load();
+        String source = "default";
+        Config dbconf = confFile.getConfig("db");
+        Config db = dbconf.getConfig(source);
+        String dbUrl = db.getString("url");
+        if(dbUrl.contains("jdbc:oracle:thin")){
+            isOracle = true;
+        }
+        System.out.println("db oracle:" + isOracle);
+        return isOracle;
+    }
     
 
 
     @Override
     protected void before() throws Throwable {
-       // deleteH2Db();
-       dropOracleDb();
+       if(isOracleDB()){
+           System.out.println("in the Oracle db loop");
+           dropOracleDb();
+       }else { //h2 for now
+           System.out.println("in the h2 db loop");
+           deleteH2Db();
+       }
+
         //This cleans out the old eh-cache
         //and forces us to use a new one with each test
         CacheManager.getInstance().shutdown();
@@ -483,7 +503,6 @@ public class GinasTestServer extends ExternalResource{
            System.out.println("CREATE TABLES XXXXXXXXXXXXXXXXXX");
            for(int i = 0; i<ups.length; i++)
             {
-               // System.out.println("up query: " + i + " - " + ups[i]);
                 try{
                    if(ups[i] != null && !ups[i].trim().equals("")) {
                        stm.executeQuery(ups[i]);
