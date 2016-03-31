@@ -293,9 +293,52 @@ public class PojoDiffTest {
 			throw e;
 		}
     }
+    public class MapContainer{
+    	public Map<String,String> fstring;
+    	
+    	public boolean equals(Object o){
+    		if(o!=null && o instanceof MapContainer){
+    			return ((MapContainer)o).fstring.equals(this.fstring);
+    		}
+    		return false;
+    	}
+    	
+    	public String toString(){
+    		if(fstring==null)return null;
+    		return fstring.toString();
+    	}
+    	public void addProperty(String key, String val){
+    		if(fstring==null){
+    			fstring=new HashMap<String,String>();
+    		}
+    		fstring.put(key, val);
+    	}
+    }
     
     @Test
-    public void AddNewToListWithIDSimple() throws Exception {
+    public void addPropertiesToMap() throws Exception {
+    	MapContainer mc1=new MapContainer();
+    	mc1.addProperty("key1", "value1");
+    	mc1.addProperty("key2", "value2");
+    	MapContainer mc2=new MapContainer();
+    	PojoPatch<MapContainer> patch = PojoDiff.getDiff(mc2, mc1);
+    	patch.apply(mc2);
+    	assertEquals(mc1,mc2);
+    }
+    
+    @Test
+    public void removePropertiesToMap() throws Exception {
+    	MapContainer mc1=new MapContainer();
+    	mc1.addProperty("key1", "value1");
+    	mc1.addProperty("key2", "value2");
+    	MapContainer mc2=new MapContainer();
+    	PojoPatch<MapContainer> patch = PojoDiff.getDiff(mc1, mc2);
+    	patch.apply(mc1);
+    	assertEquals(mc2,mc1);
+    }
+    
+    @Test
+    public void addNewToListWithIDSimple() throws Exception {
     	try{
 	        List<Parameter> originalParams = new ArrayList<>();
 	        Parameter p1 = new Parameter();
@@ -335,7 +378,7 @@ public class PojoDiffTest {
 		}
     }
     @Test
-    public void AddNewToListWithoutIDSimple() throws Exception {
+    public void addNewToListWithoutIDSimple() throws Exception {
     	try{
 	        List<Parameter> originalParams = new ArrayList<>();
 	        Parameter p1 = new Parameter();

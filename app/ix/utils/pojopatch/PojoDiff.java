@@ -1010,11 +1010,8 @@ public class PojoDiff {
 				}
 				
 			}
-			if(tr.setters.containsKey(prop)){
-				final TypeRegistry.Setter setter=tr.setters.get(prop);
-				return setter;
-			}
-			return null;
+			
+			return getSetterDirect(o,prop);
 		}
 		public static Object getObjectAt(Object src, String objPointer, Collection chainChange){
 			//System.out.println(objPointer);
