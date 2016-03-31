@@ -651,6 +651,27 @@ public class PojoDiff {
 			public void set(Object instance, Object set);
 			public boolean isIgnored();
 		}
+		public static class MapSetter implements Setter{
+			private String key;
+			public MapSetter(String key){
+				this.key=key;
+			}
+			@Override
+			public void set(Object instance, Object set) {
+				if(instance instanceof Map){
+					if(set==null){
+						((Map)instance).remove(key);
+					}else{
+						((Map)instance).put(key, set);
+					}
+				}else{
+					throw new IllegalStateException(instance.getClass() + " is not a Map");
+				}
+			}
+			@Override
+			public boolean isIgnored() {return false;}
+			
+		}
 		
 		public static class MethodSetter implements Setter{
 			private Method m;
@@ -817,6 +838,11 @@ public class PojoDiff {
 					i++;
 				}
 			}
+			if(o instanceof Map){
+				Map m=(Map)o;
+				return m.get(prop);
+			}
+			
 			TypeRegistry.Getter g= tr.getters.get(prop);
 			if(g!=null){
 				return g.get(o);
@@ -863,9 +889,13 @@ public class PojoDiff {
 				}
 				
 			}
+			if(o instanceof Map){
+				return new TypeRegistry.MapSetter(prop);
+			}
 			if(tr.setters.containsKey(prop)){
 				return tr.setters.get(prop);
 			}
+			
 			return null;
 		}
 		private static TypeRegistry.Setter getRemoverDirect(Object o, final String prop){
@@ -906,16 +936,13 @@ public class PojoDiff {
 				}
 				
 			}
-			if(tr.setters.containsKey(prop)){
-				final TypeRegistry.Setter setter=tr.setters.get(prop);
-				tr.setters.get(prop);
+			final TypeRegistry.Setter setter = getSetterDirect(o,prop);
+			if(setter!=null){
 				return new TypeRegistry.Setter(){
-
 					@Override
 					public void set(Object instance, Object set) {
 						setter.set(instance, null);
 					}
-
 					@Override
 					public boolean isIgnored() {return false;}
 				};

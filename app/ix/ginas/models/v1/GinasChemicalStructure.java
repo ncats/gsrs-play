@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -91,6 +92,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 	
 	@JsonIgnore
+//	@Lob
 	@OneToOne(cascade = CascadeType.ALL)
 	GinasAccessContainer recordAccess;
 

@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Lob;
 
+import ix.ginas.models.GinasCommonData;
+
 @Entity
 @DiscriminatorValue("KEY")
 @DynamicFacet(label="label", value="term")
@@ -36,5 +38,20 @@ public class Keyword extends Value {
                 return label.equals(kw.label) && term.equals(kw.term);
         }
         return false;
+    }
+    public String toString(){
+    	String ret=this.getClass().getName() + " ";
+    	if(GinasCommonData.REFERENCE.equals(this.label)){
+    		ret+= this.label;
+    	}else if(this.label !=null && this.label.contains("LyChI_L")){
+    		ret+= this.label;
+    	}else{
+	    	if(this.label==null){
+	    		ret+= "NO_LABEL:" + this.term;
+	    	}else{
+	    		ret+= this.label + ":" + this.term;
+	    	}
+    	}
+    	return ret;
     }
 }

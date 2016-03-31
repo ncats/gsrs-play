@@ -31,6 +31,7 @@ import ix.core.models.Backup;
 import ix.core.models.BaseModel;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
@@ -302,7 +303,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         
         String name = bean.getClass().getName();
+        
         TimeProfiler.addGlobalTime(name);
+        if(bean instanceof Keyword){
+        	TimeProfiler.addGlobalTime(((Keyword)bean).toString());
+        }
         
         List<Hook> methods = preInsertCallback.get(name);
         if (methods != null) {
@@ -347,6 +352,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             Logger.trace("Can't index bean "+bean, ex);
         }
         TimeProfiler.stopGlobalTime(name);
+        if(bean instanceof Keyword){
+        	TimeProfiler.stopGlobalTime(((Keyword)bean).toString());
+        }
     }
     public static SequenceIndexer getSequenceIndexer(){
 		if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {

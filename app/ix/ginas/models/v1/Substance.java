@@ -37,10 +37,10 @@ import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasCommonData;
+import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.TagListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.utils.Global;
@@ -196,7 +196,7 @@ public class Substance extends GinasCommonData {
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "ix_ginas_substance_tag")
 	@JsonSerialize(using = KeywordListSerializer.class)
-	@JsonDeserialize(using = TagListDeserializer.class)
+	@JsonDeserialize(using = KeywordListDeserializer.TagListDeserializer.class)
 	private List<Keyword> tags = new ArrayList<Keyword>();
 	
 	public void addTag(Keyword tag){

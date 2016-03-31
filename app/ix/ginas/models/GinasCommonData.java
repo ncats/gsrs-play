@@ -41,6 +41,10 @@ import ix.utils.Util;
 public class GinasCommonData extends BaseModel implements GinasAccessControlled,ForceUpdatableModel{
     static public final String REFERENCE = "GInAS Reference";
     static public final String TAG = "GInAS Tag";
+	public static final String LANGUAGE = "GInAS Language";
+	public static final String DOMAIN = "GInAS Domain";
+	public static final String REFERENCE_TAG = "GInAS Document Tag";
+	public static final String NAME_JURISDICTION = "GInAS Name Jurisdiction";
     
     
     //used only for forcing updates
@@ -87,9 +91,10 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     //OLD WAY
 //    @JsonIgnore
+//    @Lob
 //    @OneToOne(cascade=CascadeType.ALL)
 //    private GinasAccessContainer recordAccess;
-    
+//    
     
     @JsonIgnore
     @Lob
@@ -132,6 +137,8 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 
     @JsonIgnore
     public GinasAccessContainer getRecordAccess() {
+//    	return recordAccess;
+    	
     	if(recordAccessJSON==null)return null;
     	try{
 	    	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -146,7 +153,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     public void setRecordAccess(GinasAccessContainer recordAccess) {
     	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
     	this.recordAccessJSON=em.toJson(recordAccess);
-        //this.recordAccess = recordAccess;
+//        this.recordAccess = recordAccess;
     }
 
     @JsonProperty("access")

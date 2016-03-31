@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import ch.qos.logback.core.util.TimeUtil;
+import play.Play;
 
 public class TimeProfiler{
 		private static final int CHUNK_SIZE=10;
@@ -23,6 +23,7 @@ public class TimeProfiler{
 		private Counter lastChunkTimeCount = new Counter();
 		
 		private int chunkSize=10;
+		private boolean enabled=true;
 		
 		//private static final int CHUNK_SIZE=10;
     	public static class Counter{
@@ -51,6 +52,8 @@ public class TimeProfiler{
     	
     	
     	public TimeProfiler(int bins){
+    		enabled=Play.application().configuration()
+    				.getBoolean("ix.ginas.debug.profile", false);
     		chunkSize=bins;
     	}
     	
@@ -60,6 +63,7 @@ public class TimeProfiler{
     	}
     	
     	public void addTime(Object okey){
+    		if(!enabled)return;
     		String key=okey.toString();
     		numberCount.increment(key);
     		lastChunkCount.increment(key);
@@ -67,6 +71,7 @@ public class TimeProfiler{
     	}
     	
     	public void stopTime(Object okey){
+    		if(!enabled)return;
     		String key = okey.toString();
     		if(!numberCount.count.containsKey(key))return;
     		long total=numberCount.get(key);
@@ -174,11 +179,13 @@ public class TimeProfiler{
     	}
     	
     	public void printResults(){
-    		System.out.println("===========");
-    		for(String s:numberCount.getKeys()){
-    			printResult(s);
+    		if(enabled){
+	    		System.out.println("===========");
+	    		for(String s:numberCount.getKeys()){
+	    			printResult(s);
+	    		}
+	    		System.out.println("==========");
     		}
-    		System.out.println("==========");
     	}
     	
     	private static TimeProfiler _instance;
