@@ -55,11 +55,11 @@ public class NCATSAuthentication extends Controller {
         }
     }
     public static Result authenticate(String url) {
+    	
         DynamicForm requestData = Form.form().bindFromRequest();
         String username = requestData.get("username");
         String password = requestData.get("password");
         Logger.debug("username: " + username);
-        
         try{
         	Authentication.directlogin(username,password);
         }catch(IllegalArgumentException e){
@@ -67,7 +67,6 @@ public class NCATSAuthentication extends Controller {
         }catch(Exception e){
         	return internalServerError(e.getMessage());
         }
-
         if (url != null) {
             return redirect(url);
         }

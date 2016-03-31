@@ -298,7 +298,13 @@ public class PojoDiffTest {
     	
     	public boolean equals(Object o){
     		if(o!=null && o instanceof MapContainer){
-    			return ((MapContainer)o).fstring.equals(this.fstring);
+    			if(fstring==null){
+    				if(((MapContainer)o).fstring==null){
+    					return true;
+    				}
+    			}else{
+    				return ((MapContainer)o).fstring.equals(this.fstring);
+    			}
     		}
     		return false;
     	}
@@ -327,7 +333,7 @@ public class PojoDiffTest {
     }
     
     @Test
-    public void removePropertiesToMap() throws Exception {
+    public void removePropertiesFromMap() throws Exception {
     	MapContainer mc1=new MapContainer();
     	mc1.addProperty("key1", "value1");
     	mc1.addProperty("key2", "value2");
