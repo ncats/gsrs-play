@@ -1,6 +1,7 @@
 package ix.core.plugins;
 
 import ix.core.UserFetcher;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -13,8 +14,10 @@ import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
+import ix.utils.TimeProfiler;
 import ix.utils.Util;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -45,6 +48,8 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -188,6 +193,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
+        	
             getInstance().decrementExtractionQueue();
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             
@@ -195,9 +201,22 @@ public class GinasRecordProcessorPlugin extends Plugin {
             UserFetcher.setLocalThreadUser(rec.job.owner);
 			try {
 				try {
+					EntityPersistAdapter.persistcount=0;
+					long start=TimeUtil.getCurrentTimeMillis();
 					rec.job.getPersister().persist(this);
 					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
-					System.out.println("Persisted at :" + System.currentTimeMillis());
+					long done=TimeUtil.getCurrentTimeMillis()-start;
+					System.out.println(     "Persisted at \t" + 
+							System.currentTimeMillis() + "\t" + 
+							this.theRecordToPersist.getClass().getName() + "\t" + 
+							done + "\t" + 
+							EntityPersistAdapter.persistcount);
+					
+					if(Math.random()>0.9){
+						TimeProfiler.getInstance().printResults();
+					}
+					TimeProfiler.stopGlobalTime("full submit");
+					TimeProfiler.addGlobalTime("full submit");
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
@@ -209,6 +228,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			} finally {
 				// unset local user, just in case
 				UserFetcher.setLocalThreadUser(null);
+				
 			}
         }
     }
@@ -236,6 +256,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         job.statistics = om.valueToTree(stat).toString();
         PersistModel pm = PersistModel.Update(job);
         pm.persists();
+        TimeProfiler.stopGlobalTime("full submit");
     }
 
         
@@ -552,8 +573,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
      */
     static ProcessingJob process(ActorRef reporter, ActorRef proc,
                                  ActorRef sender, PayloadProcessor pp) throws Exception {
-        List<ProcessingJob> jobs = ProcessingJobFactory
-            .getJobsByPayload(pp.payload.id.toString());
+        List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(pp.payload.id.toString());
         Logger.debug("Okay, where are these jobs?");
         ProcessingJob job = null;
         if (jobs.isEmpty()) {

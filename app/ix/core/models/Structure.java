@@ -239,6 +239,21 @@ public class Structure extends BaseModel{
          }
     	 return newhash;
     }
+    
+    @JsonIgnore
+    public String getLychiv3Hash(){
+    	 String newhash=null;
+    	 for (Value val : this.properties) {
+             if (Structure.H_LyChI_L3.equals(val.label)) {
+            	 try{
+            		 newhash=val.getValue()+"";
+            	 }catch(Exception e){
+            		 
+            	 }
+             }
+         }
+    	 return newhash;
+    }
 
 	@Override
 	public String fetchGlobalId() {

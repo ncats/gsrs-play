@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import ix.core.models.Backup;
 import ix.core.models.BaseModel;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
@@ -37,6 +39,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
+import ix.utils.TimeProfiler;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -94,6 +97,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         alreadyLoaded = new ConcurrentHashMap<String,String>(10000);
 
         editMap = new ConcurrentHashMap<String,Edit>();
+
+
     }
 
     
@@ -113,8 +118,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static int getEditUpdateCount(){
     	return editMap.size();
     }
-    
-    private static boolean UPDATE_INDEX = false;
     
     public EntityPersistAdapter () {
     	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
@@ -292,10 +295,20 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
     }
     
+    
+    public static long persistcount=0;
     @Override
     public boolean preInsert (BeanPersistRequest<?> request) {
+    	
         Object bean = request.getBean();
+        
         String name = bean.getClass().getName();
+        
+        TimeProfiler.addGlobalTime(name);
+        if(bean instanceof Keyword){
+        	TimeProfiler.addGlobalTime(((Keyword)bean).toString());
+        }
+        
         List<Hook> methods = preInsertCallback.get(name);
         if (methods != null) {
             for (Hook m : methods) {
@@ -309,7 +322,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-
+        
+        
         return true;
     }
 
@@ -336,6 +350,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
+        }
+        TimeProfiler.stopGlobalTime(name);
+        if(bean instanceof Keyword){
+        	TimeProfiler.stopGlobalTime(((Keyword)bean).toString());
         }
     }
     public static SequenceIndexer getSequenceIndexer(){
@@ -563,9 +581,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
-        if(UPDATE_INDEX){
-               reindex(bean);
-        }
     }
     
     public void deepreindex(Object bean){
@@ -661,16 +676,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         return flist;
     }
-    
 
-    public static boolean isUpdatingIndex() {
-        return UPDATE_INDEX;
+
+    public static void doneReindexing(){
+        alreadyLoaded.clear();
     }
 
-    public static void setUpdatingIndex(boolean update) {
-        if(update!=UPDATE_INDEX){
-            alreadyLoaded.clear();
-            UPDATE_INDEX = update;
-        }
-    }
 }

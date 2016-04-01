@@ -2,6 +2,7 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.ginas.models.v1.Relationship;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 
@@ -58,4 +59,10 @@ public final class SubstanceJsonUtil {
     public static String getApprovalId(JsonNode js){
         return js.get("approvalID").asText();
     }
+
+	public static String getRefUuid(JsonNode js){
+		JsonNode relations = js.get("relationships").get(0);
+		JsonNode relatedSubs = relations.get("relatedSubstance");
+		return relatedSubs.get("refuuid").asText();
+	}
 }
