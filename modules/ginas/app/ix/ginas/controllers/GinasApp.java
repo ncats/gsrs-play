@@ -61,18 +61,7 @@ import java.io.InputStream;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.Calendar;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import org.springframework.util.StringUtils;
@@ -342,13 +331,16 @@ public class GinasApp extends App {
     }
 
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
-                   maxLength = 100000)
+                   maxLength = 10_000)
     public static Result sequenceSearch () {
+
         if (request().body().isMaxSizeExceeded()) {
+
             return badRequest ("Sequence is too large!");
         }
         
         Map<String, String[]> params = request().body().asFormUrlEncoded();
+
         String[] values = params.get("sequence");
         if (values != null && values.length > 0) {
             String seq = values[0];

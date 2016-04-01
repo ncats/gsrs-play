@@ -86,6 +86,8 @@ public abstract class AbstractSession<T> implements Closeable{
     }
 
 
+
+
     /**
      * Is this user logged in.
      * @return {@code true} if  logged in; {@code false} otherwise.

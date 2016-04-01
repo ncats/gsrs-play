@@ -24,7 +24,7 @@ public class SubstanceAPI {
 
 
 
-    private static final String UI_URL_SUBSTANCE="http://localhost:9001/ginas/app/substance/$ID$";
+    private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
 
     private final RestSession session;
@@ -70,13 +70,16 @@ public class SubstanceAPI {
         return session.exctractJSON( validateSubstance(js));
     }
 
-    public WSResponse fetchSubstance(String uuid){
+    public WSResponse fetchSubstanceByUuid(String uuid){
         return session.createRequestHolder(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     }
-    public JsonNode fetchSubstanceJson(String uuid){
-        return session.exctractJSON(fetchSubstance(uuid));
+    public JsonNode fetchSubstanceJsonByUuid(String uuid){
+        return session.exctractJSON(fetchSubstanceByUuid(uuid));
     }
 
+    public WSResponse fetchSubstance(String id){
+        return session.createRequestHolder(UI_URL_SUBSTANCE.replace("$ID$", id)).get().get(timeout);
+    }
     public WSResponse fetchSubstance(String id, int version){
         return session.createRequestHolder(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", Integer.toString(version))).get().get(timeout);
     }
@@ -115,7 +118,7 @@ public class SubstanceAPI {
         return session.exctractJSON(fetchSubstanceHistory(uuid, version));
     }
 
-    public JsonHistoryResult fetchSubstanceJson(String uuid, int version){
+    public JsonHistoryResult fetchSubstanceJsonByUuid(String uuid, int version){
         JsonNode edits = fetchSubstanceHistoryJson(uuid,version);
         //should only have 1 edit...so this should be safe
         JsonNode edit = edits.iterator().next();
