@@ -912,8 +912,8 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
 
 .sk-folding-cube {
     margin: 20px auto;
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     position: relative;
     -webkit-transform: rotateZ(45deg);
     transform: rotateZ(45deg);
@@ -936,7 +936,7 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #333;
+    background-color: white;
     -webkit-animation: sk-foldCubeAngle 2.4s infinite linear both;
     animation: sk-foldCubeAngle 2.4s infinite linear both;
     -webkit-transform-origin: 100% 100%;
@@ -944,32 +944,50 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
     transform-origin: 100% 100%;
 }
 
+.sk-folding-cube .sk-cube1 {
+    background-color: rgba(161, 200, 227, 0.50);
+    -webkit-transform: scale(1.1) rotateZ(90deg);
+    transform: scale(1.1) rotateZ(90deg);
+}
+
 .sk-folding-cube .sk-cube2 {
+    background-color: rgba(161, 200, 227, 0.75);
     -webkit-transform: scale(1.1) rotateZ(90deg);
     transform: scale(1.1) rotateZ(90deg);
 }
 
 .sk-folding-cube .sk-cube3 {
+    background-color: rgba(15, 41, 77, 0.75);
     -webkit-transform: scale(1.1) rotateZ(180deg);
     transform: scale(1.1) rotateZ(180deg);
 }
 
 .sk-folding-cube .sk-cube4 {
+    background-color: rgba(0, 0, 0, 0.75);
     -webkit-transform: scale(1.1) rotateZ(270deg);
     transform: scale(1.1) rotateZ(270deg);
 }
 
 .sk-folding-cube .sk-cube2:before {
+    background-color: #ffffff;
+    -webkit-animation-delay: 0.3s;
+    animation-delay: 0.3s;
+}
+
+.sk-folding-cube .sk-cube2:before {
+    background-color: #A1C8E3;
     -webkit-animation-delay: 0.3s;
     animation-delay: 0.3s;
 }
 
 .sk-folding-cube .sk-cube3:before {
+    background-color:  #0F294D;
     -webkit-animation-delay: 0.6s;
     animation-delay: 0.6s;
 }
 
 .sk-folding-cube .sk-cube4:before {
+    background-color: black;
     -webkit-animation-delay: 0.9s;
     animation-delay: 0.9s;
 }
@@ -1086,23 +1104,6 @@ ul.tree-list {
     white-space: inherit;
 }
 
-
-/*
-!*
-Material Design Overwrite*!
-a.md-default-theme:not(.md-button), a:not(.md-button) {
-     color: #337ab7;
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
 }
-
-a.md-default-theme:not(.md-button):hover, a:not(.md-button):hover {
-    color: #23527c;
-}
-
-a.badge.ng-binding {
-    color: white;
-}
-
-a.btn.btn-primary {
-    color: #fff;
-}
-*/

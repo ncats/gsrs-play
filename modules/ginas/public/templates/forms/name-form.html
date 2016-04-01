@@ -6,10 +6,10 @@
         <ng-form name="nameForm" id = "addNameForm" novalidate isolate-form>
             <div class="row form-row">
                 <div class="col-md-4" >
-                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" ></text-input>
 <!--
-                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validate="true"></text-input>
+                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validator="duplicateCheck(name)"></text-input>
 -->
+                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm"></text-input>
                     <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
                         <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
                         <ng-message when="required" class="help-block">parent name is required</ng-message>
@@ -37,7 +37,10 @@
             </div>
             <div class="row form-row">
                 <div class = "col-md-2">
+<!--
                     <resolve-button name="name.name" parent = "parent" divid="nameForm"></resolve-button>
+-->
+                    <button class="btn btn-primary" ng-click="duplicateCheck(name.name)">Resolve Name</button>
                 </div>
                 <div ng-if="name.type.value=='of'">
                 <div class="col-md-2">
@@ -53,8 +56,16 @@
                 </div>
                 </div>
             </div>
+
+<!--
+            <h4 ng-if="name.name">Results for <code>{{name.name}}</code>:</h4>
+-->
+            <div class = "row">
+                <spinner name="nameSpinner"><loading></loading><br/></spinner>
+                <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>
+            </div>
             <div class="nameForm"></div>
-            <submit-buttons submit="name" form="nameForm" path="names"></submit-buttons>
+            <submit-buttons submit="name" form="nameForm" path="names" customSubmit ="clear()" ></submit-buttons>
         </ng-form>
 
 

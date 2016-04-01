@@ -1,10 +1,6 @@
-<div>
-    <div class="row grid">
-        <div class="col-md-3 text-center" ng-repeat="item in data track by $index">
-            <a ng-click="select(item)">
-                <rendered id={{item.value.id}}></rendered>
-                <br><code>{{item.source}}</code>
-            </a>
-        </div>
+<div class="row grid" ng-cloak>
+    <div class="col-md-3 text-center" ng-repeat="item in data">
+        <subref ref= item></subref>
+        </a>
     </div>
 </div>
