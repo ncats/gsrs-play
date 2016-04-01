@@ -65,7 +65,7 @@ public class Name extends GinasCommonSubData {
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)
-    @JsonDeserialize(using=KeywordListDeserializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.DomainListDeserializer.class)
     public List<Keyword> domains = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
@@ -76,7 +76,7 @@ public class Name extends GinasCommonSubData {
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)
-    @JsonDeserialize(using=KeywordListDeserializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.LanguageListDeserializer.class)
     public List<Keyword> languages = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
@@ -87,7 +87,7 @@ public class Name extends GinasCommonSubData {
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)    
-    @JsonDeserialize(using=KeywordListDeserializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.JurisdictionListDeserializer.class)
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
 
 //    @ManyToMany(cascade=CascadeType.ALL)
@@ -251,21 +251,6 @@ public class Name extends GinasCommonSubData {
     
     public boolean isDisplayName() {
     	return displayName;
-	}
-
-	@Override
-	public void delete(){
-		super.delete();
-		if(this.nameOrgs!=null){
-			for(NameOrg nameorg:this.nameOrgs){
-				nameorg.delete();
-			}
-		}
-		if(this.languages!=null){
-			for(Keyword language:this.languages){
-				language.delete();
-			}
-		}
 	}
     
     

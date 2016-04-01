@@ -242,22 +242,21 @@ public class IxContext extends Plugin {
         String sqlRun=getSQLFromFile(f);
             
         if(sqlRun!=null){
-        	System.err.println("Found the sql, it's:" + sqlRun);
         	applySQL(sqlRun, new ExceptionHandler(){
 
 				@Override
 				public void handleException(Exception e) {
-					if(e.getMessage().contains("already exists")){
-						System.err.println(e.getMessage());
+					if( e.getMessage().contains("already exists") || 
+						e.getMessage().contains(" name is already used by an existing object")){
+						System.err.println("Post evolutions alredy applied:" + e.getMessage());
 					}else{
 						e.printStackTrace();
 					}
 				}
         		
         	});
-        	System.err.println("Applied!");
         }else{
-        	System.err.println("Didn't find nothin");
+        	
         }
     }
     private void runTestSQL() throws Exception{

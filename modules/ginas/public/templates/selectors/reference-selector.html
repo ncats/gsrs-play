@@ -2,8 +2,8 @@
    <label for={{name}}-{{type}} class="text-capitalize">References</label>
     <a ng-show="referenceobj.references.length>0" ng-click="open()" role="button" uib-tooltip ="{{referenceobj.references.length}} reference(s)">
         <span class="badge">{{referenceobj.references.length}}</span></a>
-    <div class="text-center">
-    <a ng-hide="referenceobj.references.length>0" ng-click="open()" role="button" aria-label="Add a reference" uib-tooltip="Add a reference" id="{{name}}-{{type}}">
+    <div class="text-center" uib-tooltip="Add a reference">
+    <a ng-hide="referenceobj.references.length>0" ng-click="open()" role="button" aria-label="Add a reference"  id="{{name}}-{{type}}">
         <span class="sr-only">Add References</span>
         <span class="danger" ng-show="!referenceobj.references">Please Add a Reference</span>
         <i class="fa fa-plus fa-2x success"></i></a>

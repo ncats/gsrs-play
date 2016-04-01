@@ -8,14 +8,14 @@
             <div class="row form-row">
                 <div class="col-md-2">
                     <label for="subunitIndex" class="text-capitalize">Subunit Index</label>
-                    <select ng-model="referenceobj.sites[0].subunitIndex" ng-change="redraw()" class="form-control"
+                    <select ng-model="referenceobj[field][0].subunitIndex" ng-change="redraw()" class="form-control"
                             id="subunitIndex" ng-options="r for r in getSubunitRange()">
                         <option class="text-capitalize" value='' disabled selected>Subunit Index</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label for="residueIndex" class="text-capitalize">Residue Index</label>
-                    <select ng-model="referenceobj.sites[0].residueIndex" ng-change="redraw()" class="form-control"
+                    <select ng-model="referenceobj[field][0].residueIndex" ng-change="redraw()" class="form-control"
                             id="residueIndex"
                             ng-options="r for r in validResidues(referenceobj.sites[0].subunitIndex)">
                         <option class="text-capitalize" value='' disabled selected>Residue Index</option>
@@ -26,14 +26,14 @@
                 </div>
                 <div class="col-md-2">
                     <label for="endSubunitIndex" class="text-capitalize">Subunit Index</label>
-                    <select ng-model="referenceobj.sites[1].subunitIndex" ng-change="redraw()" class="form-control"
+                    <select ng-model="referenceobj[field][1].subunitIndex" ng-change="redraw()" class="form-control"
                             id="endSubunitIndex" ng-options="r for r in getSubunitRange()">
                         <option class="text-capitalize" value='' disabled selected>Subunit Index</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label for="endResidueIndex" class="text-capitalize">Residue Index</label>
-                    <select ng-model="referenceobj.sites[1].residueIndex" ng-change="redraw()" class="form-control"
+                    <select ng-model="referenceobj[field][1].residueIndex" ng-change="redraw()" class="form-control"
                             id="endResidueIndex"
                             ng-options="r for r in validResidues(referenceobj.sites[1].subunitIndex)">
                         <option class="text-capitalize" value='' disabled selected>Residue Index</option>

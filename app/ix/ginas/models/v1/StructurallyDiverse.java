@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.KeywordListSerializer;
-import ix.ginas.models.v1.PartListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 
 @Entity
@@ -46,7 +46,7 @@ public class StructurallyDiverse extends GinasCommonSubData {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_strucdiv_part")
     @JsonSerialize(using = KeywordListSerializer.class)
-    @JsonDeserialize(using = PartListDeserializer.class)    
+    @JsonDeserialize(using = KeywordListDeserializer.PartListDeserializer.class)    
     public List<Keyword> part = new ArrayList<Keyword>();
 
     public String infraSpecificType;

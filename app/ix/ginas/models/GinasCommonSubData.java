@@ -1,33 +1,42 @@
 package ix.ginas.models;
 
-import ix.core.models.Keyword;
-import ix.ginas.models.v1.Reference;
-import ix.ginas.models.v1.Substance;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import ix.core.models.Keyword;
+import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Substance;
 
 @MappedSuperclass
 public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
 	public GinasReferenceContainer recordReference;
+    
+    
+//    
+//    @Embeddable
+//    public static class Test1 implements Serializable{
+//    	public String inside="inside1";
+//    }
+//    
+//    @Embedded
+//    @Lob
+//    public Test1 test= new Test1();
     
    
     @JsonSerialize(using = ReferenceSetSerializer.class)
@@ -66,7 +75,6 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 		this.recordReference.getReferences().add(new Keyword(GinasCommonSubData.REFERENCE,
 				refUUID
 		));
-		
 	}
 	
 	public void addReference(Reference r){

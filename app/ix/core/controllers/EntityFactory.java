@@ -71,6 +71,7 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
@@ -975,6 +976,7 @@ public class EntityFactory extends Controller {
         }
         catch (Throwable ex) {
         	Logger.error("Problem creating record", ex);
+        	ex.printStackTrace();
             return internalServerError (ex.getMessage());
         }
     }
@@ -1565,9 +1567,9 @@ public class EntityFactory extends Controller {
 	            //Get the difference as a patch
 	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
 	            
+	            
 	            //Apply the changes, grabbing every change along the way
 	            Stack changeStack=patch.apply(oldValueContainer.value);
-	        	
 	            
 	        	while(!changeStack.isEmpty()){
 	        		Object v=changeStack.pop();
@@ -1577,6 +1579,7 @@ public class EntityFactory extends Controller {
 	            		((Model)v).update();
 	            	}
 	        	}
+	        	
 	        	//The old value is now the new value
 	        	newValue = oldValueContainer.value;
             }else{
@@ -1587,17 +1590,9 @@ public class EntityFactory extends Controller {
             	//	1. Version not incremented correctly (post update hooks not called) 
             	//  2. Some metadata may be problematic
 
-            	
-            	
-            	
-            	
-            	
             	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
             	((Model)newValue).save();
             	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
-            	//Now explicitly call 
-            	
-            	
             }
         	
         	

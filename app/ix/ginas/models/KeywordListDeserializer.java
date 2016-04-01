@@ -15,8 +15,10 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
+	
     private final String label;
     public KeywordListDeserializer (String label) {
+    	
         this.label = label;
     }
     
@@ -52,9 +54,42 @@ public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
     	}
     	return keywords;
     }
+    
     //kept getter package-private to keep it
     //the same as when we used direct field access
     String getLabel() {
         return label;
     }
+    
+    public static class LanguageListDeserializer extends KeywordListDeserializer {
+        public LanguageListDeserializer () {
+            super (GinasCommonData.LANGUAGE);
+        }
+    }
+    public static class DomainListDeserializer extends KeywordListDeserializer {
+        public DomainListDeserializer () {
+            super (GinasCommonData.DOMAIN);
+        }
+    }
+    public static class ReferenceTagListDeserializer extends KeywordListDeserializer {
+        public ReferenceTagListDeserializer () {
+            super (GinasCommonData.REFERENCE_TAG);
+        }
+    }
+    public static class TagListDeserializer extends KeywordListDeserializer {
+        public TagListDeserializer () {
+            super (GinasCommonSubData.TAG);
+        }
+    }
+    public static class PartListDeserializer extends KeywordListDeserializer {
+        public PartListDeserializer () {
+            super ("Parts");
+        }
+    }
+    public static class JurisdictionListDeserializer extends KeywordListDeserializer {
+        public JurisdictionListDeserializer () {
+            super (GinasCommonData.NAME_JURISDICTION);
+        }
+    }
+    
 }

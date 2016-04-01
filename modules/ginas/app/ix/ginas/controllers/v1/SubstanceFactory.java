@@ -8,6 +8,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.FetchOptions;
+import ix.core.controllers.ValueFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Group;
@@ -55,12 +56,13 @@ import play.mvc.Result;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
 import com.avaje.ebean.Query;
+import com.avaje.ebean.QueryIterator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
-	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.5;
+	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
 	static public Model.Finder<UUID, Substance> finder;
 
 	// Do we still need these?
@@ -365,9 +367,12 @@ public class SubstanceFactory extends EntityFactory {
 		}
 	}
 
-	public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
+	//silly test
+	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
+		//System.out.println("Dupe chack");
 		String hash = cs.structure.getLychiv4Hash();
-		List<Substance> dupeList = finder.where().eq("structure.properties.term", hash).findList();
+		List<Substance> dupeList= new ArrayList<Substance>();
+		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
 		return dupeList;
 	}
 	//TODO

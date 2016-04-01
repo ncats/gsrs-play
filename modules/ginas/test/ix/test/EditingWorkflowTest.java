@@ -819,9 +819,10 @@ public class EditingWorkflowTest {
 		api.updateSubstanceJson(updated);
 		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		JsonNode accessArray=updateFetched.at("/access");
-		assertTrue("Fetched access group exists",accessArray!=null);
-		assertTrue("Fetched access group is not JSON-null",!accessArray.isNull());
-		assertTrue("Fetched access group is not Empty, afer being added",accessArray.size()>0);
+		System.out.println("Got:" + accessArray.toString());
+		assertTrue("Fetched access group should exist",accessArray!=null);
+		assertTrue("Fetched access group should not be JSON-null",!accessArray.isNull());
+		assertTrue("Fetched access group should not be empty, after being added",accessArray.size()>0);
 		assertEquals("testGROUP",updateFetched.at("/access/0").textValue());
 		
 		
@@ -863,11 +864,12 @@ public class EditingWorkflowTest {
     public JsonNode addAccessGroupThenRegister(SubstanceAPI api, JsonNode fetched){
     	
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/access/-", "testGROUP").build();
-		//ts.updateSubstanceJSON(updated);
-		JsonNode updateFetched = api.submitSubstanceJson(updated);
-		assertEquals("testGROUP",updateFetched.at("/access/0").textValue());
+    	String uuid = updated.at("/uuid").textValue();
+		api.submitSubstanceJson(updated);
+		JsonNode fetchedBack = api.fetchSubstanceJson(uuid);
+		assertEquals("testGROUP",fetchedBack.at("/access/0").textValue());
 		
-		return updateFetched;
+		return fetchedBack;
     }
 
 

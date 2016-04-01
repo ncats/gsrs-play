@@ -11,9 +11,11 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Version;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -91,54 +93,66 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 	
 	@JsonIgnore
-	@OneToOne(cascade = CascadeType.ALL)
+	//@Lob
+//	@OneToOne(cascade = CascadeType.ALL)
 	GinasAccessContainer recordAccess;
+	
+	@Version
+    private Long internalVersion;
 
 	@JsonIgnore
 	@OneToOne(cascade = CascadeType.ALL)
 	public GinasReferenceContainer recordReference;
 
-	@JsonProperty("access")
+
+    @JsonIgnore
+    public GinasAccessContainer getRecordAccess() {
+    	return recordAccess;
+    }
+
+    @JsonIgnore
+    public void setRecordAccess(GinasAccessContainer recordAccess) {
+        this.recordAccess = new GinasAccessContainer(this);
+        if(recordAccess!=null){
+        this.recordAccess.setAccess(recordAccess.getAccess());
+        }
+    }
+
+    @JsonProperty("access")
     @JsonDeserialize(using = GroupListDeserializer.class)
     public void setAccess(Set<Group> access){
-    	List<String> accessGroups=new ArrayList<String>();
-    	for(Group g: access){
-    		accessGroups.add(g.name);
+    	GinasAccessContainer recordAccess=this.getRecordAccess();
+    	if(recordAccess==null){
+    		recordAccess=new GinasAccessContainer(this);
     	}
-    	
-    	ObjectMapper om = new ObjectMapper();
-    	Map mm = new HashMap();
-    	mm.put("access", accessGroups);
-    	mm.put("entityType", this.getClass().getName());
-    	JsonNode jsn=om.valueToTree(mm);
-    	try {
-			recordAccess= om.treeToValue(jsn, GinasAccessContainer.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+    	recordAccess.setAccess(access);
+		setRecordAccess(recordAccess);
+    }
+    
+    @JsonProperty("access")
+    @JsonSerialize(using = GroupListSerializer.class)
+    public Set<Group> getAccess(){
+    	GinasAccessContainer gac=getRecordAccess();
+    	if(gac!=null){
+    		return gac.getAccess();
+    	}
+    	return new LinkedHashSet<Group>();
     }
 
 	public void addRestrictGroup(Group p){
-		if(this.recordAccess==null){
-			this.recordAccess=new GinasAccessContainer();
+		GinasAccessContainer gac=this.getRecordAccess();
+		if(gac==null){
+			gac=new GinasAccessContainer(this);
 		}
-		this.recordAccess.add(p);
+		gac.add(p);
+		this.setRecordAccess(gac);
 	}
+	
 	public void addRestrictGroup(String group){
 		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
 	}
 
 
-
-	
-	@JsonProperty("access")
-    @JsonSerialize(using = GroupListSerializer.class)
-    public Set<Group> getAccess(){
-    	if(recordAccess!=null){
-    		return recordAccess.access;
-    	}
-    	return new LinkedHashSet<Group>();
-    }
 
 	
 	

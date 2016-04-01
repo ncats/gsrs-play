@@ -262,10 +262,11 @@ public class Authentication extends Controller {
     
     public static UserProfile directlogin(String username, String password) throws Exception{
     	Principal cred;
-        UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
-        
-        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
-                cred = profile.user;
+
+    	UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
+
+    	if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
+    			cred = profile.user;
         } else {
         		cred = AdminFactory.externalAuthenticate(username,password);
         }
@@ -277,6 +278,7 @@ public class Authentication extends Controller {
         }catch(Exception e){
         	throw e;
         }
+
         return profile;
     }
     

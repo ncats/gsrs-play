@@ -1,7 +1,8 @@
 (function () {
-
-    var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
+    'use strict';
+    var ginasApp = angular.module('ginas', ['ngAria','ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
+        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
+        'angularSpinners'
     ]).run(['$anchorScroll', function ($anchorScroll) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
         }])
@@ -181,6 +182,10 @@
                     _.forEach(sub.protein.disulfideLinks, function (value, key) {
                         var disulfideLink = {};
                         var sites = _.toArray(value.sites);
+                        console.log(sites.length % 2);
+                        if(sites.length % 2 != 0) {
+                           sites = _.dropRight(sites);
+                        }
                         disulfideLink.sites = sites;
                         sub.protein.disulfideLinks[key] = disulfideLink;
                         console.log(sub.protein.disulfideLinks);
@@ -189,8 +194,13 @@
                 if (_.has(sub.protein, 'otherLinks')) {
                     console.log(sub.protein.otherLinks);
                     _.forEach(sub.protein.otherLinks, function (value, key) {
-                        console.log(value);
-                        sub.protein.otherLinks[key] = value.sites;
+                        var otherLink = {};
+                        var sites = _.toArray(value.sites);
+                        console.log(sites.length % 2);
+                        if(sites.length % 2 != 0) {
+                            sites = _.dropRight(sites);
+                        }
+                        sub.protein.otherLinks[key].sites = sites;
                     });
                 }
                 console.log(JSON.stringify(sub.protein.otherLinks));
@@ -454,7 +464,6 @@
        // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
-        console.log($location);
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
@@ -724,7 +733,7 @@
             $scope.open(url);
         };
         $scope.approveSubstance = function () {
-            sub = angular.toJson(sub.$$flattenSubstance());
+           var  sub = angular.toJson(sub.$$flattenSubstance());
             var keyid = sub.uuid.substr(0, 8);
           //  location.href = baseurl + "substance/" + keyid + "/approve";
         };
@@ -885,7 +894,7 @@
                 if (attrs.smiles) {
                     url = baseurl + "render?structure=" + attrs.smiles +"&size={{size||150}}";
                 }
-                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image" class="tooltip-img">');
+                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image" class="tooltip-img" ng-cloak>');
                 element.append(template);
                 $compile(template)(scope);
             }
@@ -1154,7 +1163,6 @@
                         scope.referenceobj.sites.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if(scope.field) {
-                            console.log(scope);
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
                     alert('error');
@@ -1844,19 +1852,6 @@
         }
     });
 
-    ginasApp.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance) {
-        $scope.ok = function () {
-            $uibModalInstance.close();
-        };
-
-
-
-
-       $scope.cancel = function () {
-            $uibModalInstance.dismiss('cancel');
-        };
-    });
-
     ginasApp.directive('referenceModalButton', function ($uibModal) {
         return {
             scope: {
@@ -1866,7 +1861,6 @@
             },
             templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
             controller: function ($scope) {
-                console.log($scope);
                 var modalInstance;
                 $scope.close = function () {
                     $scope.$broadcast ('save');
@@ -1876,7 +1870,6 @@
                 $scope.open = function () {
                     modalInstance = $uibModal.open({
                         templateUrl: baseurl + "assets/templates/modals/reference-modal.html",
-                       // controller: 'ModalInstanceCtrl',
                         size: 'xl',
                         scope: $scope,
                         resolve: {
