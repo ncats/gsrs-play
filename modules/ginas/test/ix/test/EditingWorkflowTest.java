@@ -866,7 +866,7 @@ public class EditingWorkflowTest {
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/access/-", "testGROUP").build();
     	String uuid = updated.at("/uuid").textValue();
 		api.submitSubstanceJson(updated);
-		JsonNode fetchedBack = api.fetchSubstanceJson(uuid);
+		JsonNode fetchedBack = api.fetchSubstanceJsonByUuid(uuid);
 		assertEquals("testGROUP",fetchedBack.at("/access/0").textValue());
 		
 		return fetchedBack;
