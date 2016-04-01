@@ -1,10 +1,12 @@
 package ix.core.plugins;
 
+import java.io.File;
 import java.io.IOException;
 
 import ix.seqaln.SequenceIndexer;
 import play.Application;
 import play.Logger;
+import play.Play;
 import play.Plugin;
 
 public class SequenceIndexerPlugin extends Plugin {
@@ -25,7 +27,9 @@ public class SequenceIndexerPlugin extends Plugin {
                 ("IxContext plugin is not loaded!");
         
         try {
-            indexer = SequenceIndexer.openReadOnly(ctx.sequence());
+            File sequence = ctx.sequence();
+            indexer = SequenceIndexer.open(sequence);
+
             Logger.info("Plugin "+getClass().getName()+" started!");        
         }
         catch (IOException ex) {
