@@ -65,8 +65,8 @@ import play.Logger;
  * What is not yet done:
  * 	[?]	"move" and "copy" operations of JSONPatch are not applied
  *  [/] A JSONPatch itself can not be applied an existing object
- * 	[ ] Array handling is likely broken
- *  [ ] Certain Collection operations are also problematic, specifically involving
+ * 	[/] Array handling is likely broken
+ *  [/] Certain Collection operations are also problematic, specifically involving
  *      the ambiguous '/-' JSONPointer notation, which may mean different things
  *      depending on context
  * 
@@ -84,6 +84,10 @@ public class PojoDiff {
 		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
 		public Stack apply(T old) throws Exception{
 			return applyPatch(old,jp);
+		}
+		@Override
+		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
+			return new ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
 		}
 	}
 	
@@ -105,6 +109,16 @@ public class PojoDiff {
 				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
 			}
 		}
+		@Override
+		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
+			List<ix.utils.pojopatch.PojoPatch.Change> changes= new
+					ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+			JsonNode jsnp = getJsonDiff(oldV,newV);
+			for(JsonNode jsn:jsnp){
+				changes.add(new ix.utils.pojopatch.PojoPatch.Change(jsn));
+			}
+			return changes;
+		}
 	}
 	
 	public static class EnhancedObjectPatch implements PojoPatch{
@@ -116,7 +130,6 @@ public class PojoDiff {
 			this.newV=newV;
 		}
 		
-		
 		public Stack apply(Object old) throws Exception{
 			if(jp==null){
 				jp=getEnhancedJsonDiff(oldV,newV);
@@ -126,6 +139,16 @@ public class PojoDiff {
 			}else{
 				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
 			}
+		}
+		@Override
+		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
+			List<ix.utils.pojopatch.PojoPatch.Change> changes= new
+					ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+			JsonNode jsnp = getEnhancedJsonDiff(oldV,newV);
+			for(JsonNode jsn:jsnp){
+				changes.add(new ix.utils.pojopatch.PojoPatch.Change(jsn));
+			}
+			return changes;
 		}
 	}
 	

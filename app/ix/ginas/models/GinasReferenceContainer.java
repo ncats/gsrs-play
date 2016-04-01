@@ -1,26 +1,22 @@
 package ix.ginas.models;
 
-import ix.core.models.Keyword;
-import play.db.ebean.Model;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.models.Keyword;
+import ix.core.models.LongBaseModel;
+
 @Entity
 @Table(name = "ix_ginas_reference_cit")
-public class GinasReferenceContainer {
-	@Id
-    public Long id;
+public class GinasReferenceContainer extends LongBaseModel{
 	
 	@ManyToMany(cascade = CascadeType.ALL)
     @JsonSerialize(using=ReferenceSetSerializer.class)    
@@ -32,6 +28,7 @@ public class GinasReferenceContainer {
 	public GinasReferenceContainer(){
 		
 	}
+	
 	public GinasReferenceContainer(Object o){
 		this.entityType=o.getClass().getName();
 	}

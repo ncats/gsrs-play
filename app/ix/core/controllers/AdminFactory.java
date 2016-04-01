@@ -37,6 +37,8 @@ public class AdminFactory extends Controller {
     
 
     private static Map<String,Group> alreadyRegistered;
+    
+    private static Map<Long, Group> groupCache;
 
     
     //Authenticators are used as fallback to authenticate if built in auth doesn't work
@@ -86,6 +88,8 @@ public class AdminFactory extends Controller {
 
         authenticators = new ArrayList<Authenticator>();
         alreadyRegistered = new ConcurrentHashMap<String,Group>();
+        
+        groupCache=new ConcurrentHashMap<Long,Group>();
         setupAuth();
     }
 
@@ -434,12 +438,22 @@ public class AdminFactory extends Controller {
     public static List<Group> allGroups() {
         return groupfinder.all();
     }
+    
+    public static Group getGroupById(Long id) {
+    	Group g=groupCache.get(id);
+    	if(g!=null)return g;
+        g=groupfinder.byId(id);
+        if(g!=null){
+        	groupCache.put(id, g);
+        }
+        return g;
+    }
 
 
     public static synchronized Group registerGroupIfAbsent(Group org) {
-        Group grp = groupfinder.where().eq("name", org.name).findUnique();
+    	Group grp=alreadyRegistered.get(org.name);
         if(grp==null){
-        	grp=alreadyRegistered.get(org.name);
+        	grp = groupfinder.where().eq("name", org.name).findUnique();
         }
         if (grp == null) {
             try {

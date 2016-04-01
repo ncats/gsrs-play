@@ -3,6 +3,7 @@ package ix.core.models;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Lob;
@@ -31,14 +32,21 @@ public class Keyword extends Value {
     @Override
     public String getValue () { return term; }
 
+    public int hashCode(){
+    	return (label + ":" + term).hashCode();
+    }
     public boolean equals (Object obj) {
         if (obj instanceof Keyword) {
             Keyword kw = (Keyword)obj;
             if (label != null && term != null)
                 return label.equals(kw.label) && term.equals(kw.term);
+            if(label==null && kw.label==null){
+            	return term.equals(kw.term);
+            }
         }
         return false;
     }
+    
     public String toString(){
     	String ret=this.getClass().getName() + " ";
     	if(GinasCommonData.REFERENCE.equals(this.label)){

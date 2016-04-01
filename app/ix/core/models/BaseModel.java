@@ -17,7 +17,4 @@ public abstract class BaseModel extends Model{
 	public Class<?>[] fetchEquivalentClasses() {
 		return new Class<?>[]{this.getClass()};
 	}
-	
-	
-	
 }
