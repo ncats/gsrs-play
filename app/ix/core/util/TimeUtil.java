@@ -9,9 +9,15 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by katzelda on 3/24/16.
  */
 public final class TimeUtil {
-
+	static private long startNano=0;
+	static private long startMSNano=0;
+	static{
+		startNano=System.nanoTime();
+        startMSNano=TimeUnit.NANOSECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+	}
+	
     private TimeUtil(){
-        //can not instantiate
+        
     }
 
     private static AtomicReference<Long> FIXED_TIME = new AtomicReference<>();
@@ -24,8 +30,8 @@ public final class TimeUtil {
     }
     public static long getCurrentTime(TimeUnit tu){
     	Long setTime = FIXED_TIME.get();
-    	if(setTime ==null){
-    		setTime= System.nanoTime();
+    	if(setTime == null){
+    		setTime= startMSNano + (System.nanoTime()-startNano);
         }
     	return tu.convert(setTime, TimeUnit.NANOSECONDS);
     }

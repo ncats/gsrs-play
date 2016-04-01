@@ -13,6 +13,8 @@ import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
+import ix.utils.pojopatch.PojoPatch.Change;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -486,19 +488,26 @@ public class PojoDiffTest {
 
     @Test
     public void elementsInSetReordered() throws Exception{
-        Property old = new Property();
-
+        
+    	Property old = new Property();
         old.addReference(getUUID(0));
         old.addReference(getUUID(1));
+        old.addReference(getUUID(2));
+        old.addReference(getUUID(3));
+        old.addReference(getUUID(4));
+        old.addReference(getUUID(5));
 
         Property newProp = new Property();
-
+        
+        newProp.addReference(getUUID(5));
+        newProp.addReference(getUUID(4));
+        newProp.addReference(getUUID(3));
+        newProp.addReference(getUUID(2));
         newProp.addReference(getUUID(1));
         newProp.addReference(getUUID(0));
 
-
         PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
-
+        
         patch.apply(old);
 
         JsonMatches(newProp, old);
