@@ -23,15 +23,7 @@ public class SequenceIndexerTest {
 
 
     private static final double DELTA = 0.001D;
-    /**
-     * Flag that tells Sequence Indexer that
-     * we can write the index too.  It is set to
-     * {@code false} because the constructor
-     * takes a boolean to mean read only.
-     *
-     * This constant is so we don't get confused.
-     */
-    private static boolean READ_WRITE_FLAG = false;
+
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder();
 
@@ -42,7 +34,7 @@ public class SequenceIndexerTest {
         clearCache();
         SequenceIndexer.init();
 
-        indexer = new SequenceIndexer(tmpDir.newFolder(), READ_WRITE_FLAG);
+        indexer = SequenceIndexer.open(tmpDir.newFolder());
     }
 
     @After

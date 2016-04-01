@@ -278,15 +278,16 @@ public class SequenceIndexer {
     private AtomicLong lastModified = new AtomicLong (0);
     
     public static SequenceIndexer openReadOnly (File dir) throws IOException {
-        return new SequenceIndexer (dir);
+        return new SequenceIndexer (dir, true);
     }
 
-    
-    private SequenceIndexer (File dir) throws IOException {
-        this (dir, true);
+    public static SequenceIndexer open (File dir) throws IOException {
+        return new SequenceIndexer (dir, false);
     }
+
+
     
-    public SequenceIndexer (File dir, boolean readOnly) throws IOException {
+    private SequenceIndexer (File dir, boolean readOnly) throws IOException {
         this (dir, readOnly, Executors.newCachedThreadPool());
         localThreadPool = true;
     }

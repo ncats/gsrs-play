@@ -24,7 +24,6 @@ import org.junit.runners.Parameterized;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import play.Logger;
 import util.json.JsonUtil;
 
 
@@ -72,8 +71,7 @@ public class SubstanceSubmitTest {
 
         @Before
         public void login(){
-            //TODO do we need to specify token type?
-            session = ts.newRestSession(ts.getFakeUser1(), RestSession.AUTH_TYPE.TOKEN);
+            session = ts.newRestSession(ts.getFakeUser1());
 
             api = new SubstanceAPI(session);
         }
@@ -111,7 +109,7 @@ public class SubstanceSubmitTest {
 
             ensurePass(api.submitSubstance(js));
 
-            JsonNode fetched = api.fetchSubstanceJson(uuid);
+            JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
 
             assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
 
@@ -133,7 +131,7 @@ public class SubstanceSubmitTest {
 
             ensurePass(api.submitSubstance(js));
 
-            JsonNode fetched = api.fetchSubstanceJson(uuid);
+            JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
 
             assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
 
