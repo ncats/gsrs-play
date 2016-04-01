@@ -878,7 +878,9 @@ public class PojoDiff {
 			TypeRegistry tr=registries.get(o.getClass().getName());
 			
 			if(o instanceof Collection){
+				
 				Collection col = (Collection)o;
+				//System.out.println("size:" + col.size());
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
@@ -886,14 +888,12 @@ public class PojoDiff {
 				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
-
 						@Override
 						public void set(Object instance, Object set) {
 							((List)instance).set(c, set);
 						}
 						@Override
 						public boolean isIgnored() {return false;}
-						
 					};
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
@@ -902,11 +902,24 @@ public class PojoDiff {
 
 						@Override
 						public void set(Object instance, Object set) {
-							((Collection)instance).remove(old);
-							((Collection)instance).add(set);
+							Collection c1=(Collection)instance;
+							List l = new ArrayList(c1);
+							c1.clear();
+							for(Object o:l){
+								if((o==old) || o.equals(old)){
+									c1.add(set);
+								}else{
+									if(c1.contains(o)){
+										c1.add(new Object(){});
+									}
+									c1.add(o);
+								}
+							}
 						}
 						@Override
 						public boolean isIgnored() {return false;}
+						
+						
 						
 					};
 				}
@@ -986,11 +999,8 @@ public class PojoDiff {
 				}
 				
 				final int c=cind;
-				
-				
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
-
 						@Override
 						public void set(Object instance, Object set) {
 							if(c<0){
@@ -1001,7 +1011,6 @@ public class PojoDiff {
 						}
 						@Override
 						public boolean isIgnored() {return false;}
-						
 					};
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
@@ -1062,7 +1071,6 @@ public class PojoDiff {
 			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
 			
 			Object fetched=getObjectAt(src,subPath,changeChain);
-			
 			TypeRegistry.Setter s=getSetterDirect(fetched,lastPath);
 			if(s!=null){
 				s.set(fetched, newValue);

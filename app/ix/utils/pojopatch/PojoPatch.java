@@ -27,5 +27,8 @@ public interface PojoPatch<T>{
 					jsn.at("/value").asText()
 					);
 		}
+		public String toString(){
+			return this.op + "\t" + this.path + "\t" + this.newValue;
+		}
 	}
 }
