@@ -592,16 +592,16 @@
             }
         };
 
-        $scope.close = function () {
-            modalInstance.close();
-        };
-
         $scope.open = function (url) {
-            modalInstance = $uibModal.open({
+           var modalInstance = $uibModal.open({
                 templateUrl: url,
                 scope: $scope,
                 size: 'lg'
             });
+        };
+
+        $scope.close = function () {
+            modalInstance.close();
         };
 
         $scope.submitSubstanceConfirm = function () {

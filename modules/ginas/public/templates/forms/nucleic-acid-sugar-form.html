@@ -37,8 +37,7 @@
                     <dropdown-view-edit obj="obj" field="sugar"
                                         cv="NUCLEIC_ACID_SUGAR"
                                         label="Sugar"></dropdown-view-edit>
-                    {{obj.sugar}}
-                    <rendered id= {{obj.sugar.fragmentStructure}}></rendered>
+                    <rendered smiles= {{obj.sugar.fragmentStructure}}></rendered>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}
