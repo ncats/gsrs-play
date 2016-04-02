@@ -36,7 +36,9 @@ import ix.core.models.Principal;
 import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.TimeUtil;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonData;
+import ix.ginas.models.KeywordDeserializer;
 import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
@@ -81,6 +83,7 @@ public class Substance extends GinasCommonData {
 		concept, 
 		reference
 	}
+	
 	public enum SubstanceDefinitionType{
 		PRIMARY,
 		ALTERNATIVE
@@ -193,11 +196,11 @@ public class Substance extends GinasCommonData {
 
 	// TODO in original schema, this field is missing its items: String
 	@JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_tag")
+//	@ManyToMany(cascade = CascadeType.ALL)
+//	@JoinTable(name = "ix_ginas_substance_tag")
 	@JsonSerialize(using = KeywordListSerializer.class)
-	@JsonDeserialize(using = KeywordListDeserializer.TagListDeserializer.class)
-	private List<Keyword> tags = new ArrayList<Keyword>();
+    @JsonDeserialize(contentUsing = KeywordDeserializer.TagDeserializer.class)
+	public EmbeddedKeywordList tags = new EmbeddedKeywordList();
 	
 	public void addTag(Keyword tag){
 		for(Keyword k:tags){

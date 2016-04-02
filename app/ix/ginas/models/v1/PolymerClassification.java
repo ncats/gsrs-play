@@ -1,16 +1,17 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-import javax.persistence.*;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Indexable;
-import ix.core.models.Keyword;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.KeywordDeserializer;
 import ix.ginas.models.KeywordListSerializer;
 
 @Entity
@@ -20,10 +21,12 @@ public class PolymerClassification extends GinasCommonSubData {
     public String polymerClass;
     @Indexable(facet=true,name="Polymer Geometry")
     public String polymerGeometry;
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_polymerclass_sub")
-    @JsonSerialize(using=KeywordListSerializer.class)    
-    public List<Keyword> polymerSubclass = new ArrayList<Keyword>();
+    
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_polymerclass_sub")
+    @JsonSerialize(using=KeywordListSerializer.class) 
+    @JsonDeserialize(contentUsing = KeywordDeserializer.SubClassDeserializer.class)  
+    public EmbeddedKeywordList polymerSubclass = new EmbeddedKeywordList();
     public String sourceType;
     
     @OneToOne(cascade=CascadeType.ALL)

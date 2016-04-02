@@ -35,7 +35,6 @@ public final class LoginUtil {
             throw new IllegalStateException("could not parse username from session:" + body);
         }
         String foundName = unquote(matcher.group(1));
-        System.out.println("USER NAME FOUND = '" + foundName+"'");
         assertEquals(username, foundName);
     }
 

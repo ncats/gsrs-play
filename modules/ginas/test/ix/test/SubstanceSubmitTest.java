@@ -137,6 +137,7 @@ public class SubstanceSubmitTest {
 
             assertFalse(SubstanceJsonUtil.isLiteralNull(fetched));
 
+            System.out.println("about to test if it's destructive");
             assertThatNonDestructive(js, fetched);
 
             //validate

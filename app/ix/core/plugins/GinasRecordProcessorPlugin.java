@@ -201,7 +201,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
             UserFetcher.setLocalThreadUser(rec.job.owner);
 			try {
 				try {
-					EntityPersistAdapter.persistcount=0;
+
+					TimeProfiler.addGlobalTime("persist");
+					
 					long start=TimeUtil.getCurrentTimeMillis();
 					rec.job.getPersister().persist(this);
 					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
@@ -209,13 +211,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					System.out.println(     "Persisted at \t" + 
 							System.currentTimeMillis() + "\t" + 
 							this.theRecordToPersist.getClass().getName() + "\t" + 
-							done + "\t" + 
-							EntityPersistAdapter.persistcount);
+							done);
+					
+					
+					TimeProfiler.stopGlobalTime("persist");
+					TimeProfiler.stopGlobalTime("full submit");
 					
 					if(Math.random()>0.9){
 						TimeProfiler.getInstance().printResults();
 					}
-					TimeProfiler.stopGlobalTime("full submit");
+					
 					TimeProfiler.addGlobalTime("full submit");
 				} catch (Exception e) {
 					e.printStackTrace();

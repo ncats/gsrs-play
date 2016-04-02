@@ -1,6 +1,8 @@
 package ix.ginas.models;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -24,7 +26,7 @@ public class GinasReferenceContainer extends LongBaseModel{
     public Set<Keyword> references = new LinkedHashSet<Keyword>();
     public String entityType;
 
-	
+    
 	public GinasReferenceContainer(){
 		
 	}
@@ -55,5 +57,24 @@ public class GinasReferenceContainer extends LongBaseModel{
 
     public void setEntityType(String entityType) {
         this.entityType = entityType;
+    }
+    
+    public boolean equals(Object o){
+    	return false;
+    }
+    public void addReference(String refUUID){
+    	this.references.add(new Keyword(GinasCommonSubData.REFERENCE,
+				refUUID
+		));
+    	
+    }
+    public void removeReference(String refUUID){
+    	List<Keyword> refs=new ArrayList<Keyword>(this.references);
+    	for(Keyword k:refs){
+    		if(refUUID.equals(k.term)){
+    			this.references.remove(k);
+    		}
+    	}
+    	
     }
 }

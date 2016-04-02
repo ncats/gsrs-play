@@ -17,7 +17,9 @@ import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.plugins.PayloadPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.KeywordDeserializer;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -297,7 +299,9 @@ public class Validation {
     	                gpm.add(mes);
     	                strat.processMessage(mes);
     	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
-    	                    if(n.languages==null)n.languages=new ArrayList<Keyword>();
+    	                    if(n.languages==null){
+    	                    	n.languages=new EmbeddedKeywordList();
+    	                    }
     	                    n.languages.add(new Keyword("en"));
     	                }
                 	}
