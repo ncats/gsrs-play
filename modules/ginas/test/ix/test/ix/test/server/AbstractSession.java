@@ -56,7 +56,7 @@ public abstract class AbstractSession<T> implements Closeable{
             System.out.println(wsResponse1.getBody());
         }
         if(status2 != 200 && status2 != 201){
-            throw new IllegalStateException("response status Not OK : " + status2);
+            throw new IllegalStateException("response status Not OK : " + status2 + " in " + wsResponse1.getBody());
         }
         JsonNode returned = wsResponse1.asJson();
         Objects.requireNonNull(returned);
