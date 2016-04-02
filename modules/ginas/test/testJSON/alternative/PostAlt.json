@@ -1,0 +1,7 @@
+{
+  "uuid": "2d235069-8b69-41f7-90bf-6ce3d893393f",
+  "definitionType":"ALTERNATIVE",
+  "protein":{"subunits":[{"sequence":"APLEPVYPGDNATPEQMAQYAADLRRYINMLTRQRY","subunitIndex":1}],"disulfideLinks":[],"otherLinks":[],"modifications":{"structuralModifications":[{"sites":[{"subunitIndex":1,"residueIndex":36}],"residueModified":"","structuralModificationType":"AMINO ACID SUBSTITUTION","extent":"COMPLETE","molecularFragment":{"substanceClass":"reference","refuuid":"b4566a27-a53d-41c5-b9b6-c328c39698e0","approvalID":"05LU01CS4T","refPname":"TYROSINE AMIDE"}}],"physicalModifications":[],"agentModifications":[]},"glycosylation":{"NGlycosylationSites":[],"OGlycosylationSites":[],"CGlycosylationSites":[]},"sequenceType":"COMPLETE","references":[]},
+  "substanceClass":"protein",
+  "relationships":[{"relatedSubstance":{"refuuid":"f111441b-0d75-4073-a23a-7da4bbfe480a"}, "type":"SUB_ALTERNATE->SUBSTANCE"}]
+}

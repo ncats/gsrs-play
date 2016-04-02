@@ -189,7 +189,39 @@
         };
         return CV;
     });
+/*
 
+    ginasFormElements.directive('duplicate', function (isDuplicate) {
+        return {
+            restrict: 'A',
+            require: 'ngModel',
+            link: function (scope, element, attrs, ngModel) {
+                // console.log(ngModel);
+                //  console.log(scope);
+                ngModel.$asyncValidators.duplicate = isDuplicate;
+            }
+        };
+    });
+*/
+
+/*    ginasFormElements.directive('duplicate', function (substanceFactory) {
+        return {
+            restrict: 'A',
+            require: 'ngModel',
+            link: function (scope, element, attrs, ngModel) {
+                 console.log(ngModel);
+                 console.log(scope);
+                  console.log(scope.name.name);
+                if(!_.isUndefined(scope.name.name)) {
+                    substanceFactory.getSubstances(scope.name.name).then(function (response) {
+                        console.log(response);
+                        ngModel.$asyncValidators.duplicate = (response.count >= 1);
+                    });
+                }
+            }
+        };
+    });*/
+/*
     ginasFormElements.factory('isDuplicate', function ($q, substanceFactory) {
         return function dupCheck(modelValue) {
                 var deferred = $q.defer();
@@ -208,7 +240,7 @@
                 return deferred.promise;
         };
     });
-
+*/
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
@@ -585,10 +617,12 @@
                 field: '@',
                 label: '@',
                 form:'@',
-                validate:'='
+                validator: '&'
             },
-            link: function(scope, element){
-                //console.log(scope);
+            link: function(scope, elem, attrs, ngModel){
+                scope.validatorFunction= function(){
+                    scope.validator({name : scope.obj});
+                }
             }
         };
     });
@@ -612,17 +646,7 @@
         };
     });
 
-    ginasFormElements.directive('duplicate', function (isDuplicate) {
-        return {
-            restrict: 'A',
-            require: 'ngModel',
-            link: function (scope, element, attrs, ngModel) {
-               // console.log(ngModel);
-              //  console.log(scope);
-                ngModel.$asyncValidators.duplicate = isDuplicate;
-            }
-        };
-    });
+
 
     ginasFormElements.directive('closeButton', function () {
         return {
@@ -665,10 +689,13 @@
         };
     });
 
-    ginasFormElements.service('resolver', function($location, $http){
+    ginasFormElements.service('resolver', function($http, spinnerService){
         var resolver = {};
 
-        resolver.resolve= function(name){
+        resolver.resolve= function(name, loading){
+/*            if(loading){
+                spinnerService.show(loading);
+            }*/
             var url = baseurl + "resolve/"+name;
             return $http.get(url,{cache:true}, {
                 headers: {
@@ -676,13 +703,19 @@
                 }
             }).success(function (data) {
                 return data;
+            }).finally(function(){
+/*                if (loading) {
+                    console.log("hiding spinner");
+                    spinnerService.hide(loading);
+                }*/
             });
+
         };
 
         return resolver;
     });
 
-ginasFormElements.directive('substanceViewer', function(molChanger){
+ginasFormElements.directive('substanceViewer', function(molChanger, spinnerService){
     return{
         restrict: 'E',
         scope:{
@@ -691,12 +724,44 @@ ginasFormElements.directive('substanceViewer', function(molChanger){
         },
         templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
         link: function(scope,element, attrs) {
-            console.log(scope);
-            scope.select = function(selected){
-                console.log(selected);
+            scope.select = function (selected) {
                 molChanger.setMol(selected.value.molfile);
-                scope.$parent.close();
+                scope.data = [];
             };
+
+        }
+}
+});
+
+    ginasFormElements.directive('subref', function($compile, spinnerService){
+    return{
+        replace: true,
+        restrict: 'E',
+        scope:{
+            ref: '='
+        },
+        link: function(scope,element, attrs) {
+/*
+*/
+            var template;
+            if(scope.ref.uuid){
+                var url = baseurl+'substance/' + scope.ref.uuid.split('-')[0];
+                template =  angular.element('<div>' +
+                    '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>Ginas Duplicate</code><br/>' +
+                    '<div class ="row"><div class="col-md-3 col-md-offset-3"><a class = "btn btn-primary" href = "'+url+'" target="_blank">View</a></div>' +
+                    '<div class = "col-md-3"><a class = "btn btn-primary" href = "'+url+'/edit" target="_self">Edit</a></div>' +
+                    '</div></div>');
+            }else if(scope.ref=="empty"){
+                template = angular.element('<div><code>No substances found</code></div>');
+            }else{
+                template = angular.element('<div>' +
+                    '<rendered id= {{ref.value.id}} size="200"></rendered><br><code>{{ref.source}}</code><br>' +
+                    '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Use</button>' +
+                    '</div>');
+            }
+            element.append(template);
+            $compile(template)(scope);
+            spinnerService.hideAll();
         }
     }
 });

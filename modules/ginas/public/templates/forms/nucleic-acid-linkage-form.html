@@ -36,6 +36,7 @@
                     <dropdown-view-edit obj="obj" field="linkage"
                                         cv="NUCLEIC_ACID_LINKAGE"
                                         label="linkage"></dropdown-view-edit>
+                    <rendered smiles= {{obj.linkage.fragmentStructure}}></rendered>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}></form-selector>

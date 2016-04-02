@@ -1,7 +1,7 @@
 (function () {
     var ginasForms = angular.module('ginasForms', ['bootstrap.fileField']);
 
-    ginasForms.service('toggler', function ($compile, $templateRequest) {
+    ginasForms.service('toggler', function ($compile, $templateRequest, spinnerService) {
 
         var childScope;
         this.stageCheck = function () {
@@ -21,7 +21,6 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 $templateRequest(url).then(function (html) {
-                    console.log(scope);
                     template = angular.element(html);
                     elementResult.append(template);
                     $compile(elementResult)(scope);
@@ -30,6 +29,16 @@
                 elementResult.empty();
                 scope.stage = true;
             }
+        };
+
+        this.refresh = function (scope, element, template, loading) {
+/*            if(scope.data.length > 0) {
+                spinnerService.hideAll();
+                spinnerService.show('drawSpinner');*/
+                var result = angular.element(document.getElementsByClassName(element));
+                result.html(template);
+                $compile(result)(scope);
+         //   }
         };
 
         this.toggle = function (scope, element, newForm) {
@@ -408,13 +417,10 @@
                 };
 
                 scope.validate = function () {
-                    console.log(scope);
-                    console.log("validationg");
                     if (!scope.parent.protein.disulfideLinks) {
                         scope.parent.protein.disulfideLinks = [];
 
                     }
-                    console.log(JSON.stringify(scope.disulfideLink));
                     scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
                     scope.disulfideLink = {};
                     scope.disulfideLinksForm.$setPristine();
@@ -664,7 +670,6 @@
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
-                        console.log(scope.referenceobj);
                         $templateRequest(baseurl + "assets/templates/selectors/site-selector.html").then(function (html) {
                             template = angular.element(html);
                             element.append(template);
@@ -890,14 +895,66 @@
         };
     });
 
-    ginasForms.directive('nameForm', function () {
+    ginasForms.directive('nameForm', function (substanceFactory, $q, $timeout, resolver, toggler, spinnerService) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/name-form.html"
+            templateUrl: baseurl + "assets/templates/forms/name-form.html",
+            link: function(scope){
+                scope.stage=true;
+                console.log(scope);
+                scope.duplicateCheck = function(name) {
+                    var result = angular.element(document.getElementsByClassName('nameForm'));
+                    result.empty();
+                        var resolve= resolver.resolve(name).then(function (response) {
+                            if (response.data.length > 0) {
+                               return response.data;
+                            }
+                            return [];
+                        });
+                        var duplicate = substanceFactory.getSubstances(name).then(function (response) {
+                            var duplicate =[];
+                            scope.nameForm.name.$error.duplicate = (response.data.count > 0);
+                            if (response.data.count > 0) {
+                                _.forEach(response.data.content, function (sub) {
+                                    _.set(sub, 'refType', 'duplicate');
+                                    duplicate.push(sub);
+                                });
+                            }
+                            return duplicate;
+                        });
+                    if (!_.isUndefined(name) && name!=="") {
+                        console.log("opening");
+                        spinnerService.show('nameSpinner');
+                        var template;
+                        $q.all([resolve, duplicate]).then(function(results) {
+                            scope.data = [];
+                            var temp = [];
+                            _.forEach(results, function(result){
+                               if(!_.isUndefined(result)){
+                                  temp.push(result);
+                               }
+                                scope.data = _.flattenDeep(temp);
+                            });
+                        }).finally(function(){
+                                if(_.isEmpty(scope.data)){
+                                    scope.data.push("empty");
+                                }
+                                template = angular.element('<substance-viewer data = data></substance-viewer>');
+                            toggler.refresh(scope, 'nameForm', template);
+                        });
+                    }else {
+                            spinnerService.hideAll();
+                    }
+                };
+
+                scope.select = function(item){
+                    console.log(item);
+                };
+            }
         };
     });
 

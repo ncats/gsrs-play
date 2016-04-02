@@ -20,7 +20,6 @@ import org.junit.Test;
 
 import static ix.test.SubstanceJsonUtil.*;
 
-import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -86,7 +85,7 @@ public class EditingWorkflowTest {
 
         String uuid = entered.get("uuid").asText();
 
-        ensurePass(api.fetchSubstance(uuid));
+        ensurePass(api.fetchSubstanceByUuid(uuid));
         ensureFailure(api.updateSubstance(entered));
     }
    
@@ -126,7 +125,7 @@ public class EditingWorkflowTest {
 
             ensurePass(api.submitSubstance(entered));
 
-            JsonNode fetched = api.fetchSubstanceJson(uuid);
+            JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
             String lookingfor = "(±)-1-CHLORO-2,3-EPOXYPROPANE";
 
             Set<String> names = new HashSet<String>();
@@ -179,7 +178,7 @@ public class EditingWorkflowTest {
             .build();
            	String uuid=entered.get("uuid").asText();
             ensurePass(api.submitSubstance(concept));
-            JsonNode fetched=api.fetchSubstanceJson(uuid);
+            JsonNode fetched=api.fetchSubstanceJsonByUuid(uuid);
             assertEquals(fetched.at("/substanceClass").asText(), "concept");
             JsonNode updated = new JsonUtil
                     .JsonNodeBuilder(fetched)
@@ -187,7 +186,7 @@ public class EditingWorkflowTest {
                     .set("/substanceClass", "protein")
                     .build();
             ensurePass(api.updateSubstance(updated));
-            JsonNode fetchedagain=api.fetchSubstanceJson(uuid);
+            JsonNode fetchedagain=api.fetchSubstanceJsonByUuid(uuid);
             assertEquals(fetchedagain.at("/substanceClass").asText(), "protein");
             
             
@@ -204,7 +203,7 @@ public class EditingWorkflowTest {
            	JsonNode entered= parseJsonFile(resource);
            	String uuid=entered.get("uuid").asText();
             ensurePass(api1.submitSubstance(entered));
-            JsonNode fetched=api1.fetchSubstanceJson(uuid);
+            JsonNode fetched=api1.fetchSubstanceJsonByUuid(uuid);
             
             
             JsonNode updated1 = new JsonUtil
@@ -219,7 +218,7 @@ public class EditingWorkflowTest {
             ensurePass(api1.updateSubstance(updated1));
             ensureFailure(api2.updateSubstance(updated2));
             
-            JsonNode fetchedagain=api1.fetchSubstanceJson(uuid);
+            JsonNode fetchedagain=api1.fetchSubstanceJsonByUuid(uuid);
             assertEquals(fetchedagain.at("/names/0/name").asText(), "MADE UP NAME 1");
             
             
@@ -490,7 +489,7 @@ public class EditingWorkflowTest {
             JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
             String uuid = entered.get("uuid").asText();
 
-            ensureFailure(api.fetchSubstance(uuid));
+            ensureFailure(api.fetchSubstanceByUuid(uuid));
         }
 
    	}
@@ -504,7 +503,7 @@ public class EditingWorkflowTest {
             String uuid = entered.get("uuid").asText();
 
             ensureFailure(api.updateSubstance(entered));
-            ensureFailure(api.fetchSubstance(uuid));
+            ensureFailure(api.fetchSubstanceByUuid(uuid));
         }
 
    	}
@@ -546,18 +545,18 @@ public class EditingWorkflowTest {
 
             mostRecentEditHistory(api, uuid, oldNode);
 
-            assertEquals(newName, api.fetchSubstanceJson(uuid).at("/names/0/name").asText());
+            assertEquals(newName, api.fetchSubstanceJsonByUuid(uuid).at("/names/0/name").asText());
 
             renameServer(api, uuid, oldName);
-            assertEquals(oldName, api.fetchSubstanceJson(uuid).at("/names/0/name").asText());
+            assertEquals(oldName, api.fetchSubstanceJsonByUuid(uuid).at("/names/0/name").asText());
 
-            JsonNode originalNode = api.fetchSubstanceJson(uuid, 1).getOldValue();
-            JsonNode v2Node = api.fetchSubstanceJson(uuid, 2).getOldValue();
+            JsonNode originalNode = api.fetchSubstanceJsonByUuid(uuid, 1).getOldValue();
+            JsonNode v2Node = api.fetchSubstanceJsonByUuid(uuid, 2).getOldValue();
 
             assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());
             assertEquals("v2 name", newName, v2Node.at("/names/0/name").asText());
 
-            JsonNode currentNode = api.fetchSubstanceJson(uuid);
+            JsonNode currentNode = api.fetchSubstanceJsonByUuid(uuid);
             assertEquals("current name", oldName, currentNode.at("/names/0/name").asText());
 
         }
@@ -577,13 +576,13 @@ public class EditingWorkflowTest {
             JsonNode oldNode = renameServer(api, uuid, newName);
 
 
-            JsonHistoryResult jsonHistoryResult = api.fetchSubstanceJson(uuid, 1);
+            JsonHistoryResult jsonHistoryResult = api.fetchSubstanceJsonByUuid(uuid, 1);
             JsonNode originalNode = jsonHistoryResult.getNewValue();
 
-            assertEquals("v1 new value", jsonHistoryResult.getNewValue(), api.fetchSubstanceJson(uuid));
+            assertEquals("v1 new value", jsonHistoryResult.getNewValue(), api.fetchSubstanceJsonByUuid(uuid));
             renameServer(api, uuid, oldName);
 
-            JsonNode v2Node = api.fetchSubstanceJson(uuid, 2).getOldValue();
+            JsonNode v2Node = api.fetchSubstanceJsonByUuid(uuid, 2).getOldValue();
 
             assertEquals("v2", originalNode, v2Node);
             
@@ -604,12 +603,12 @@ public class EditingWorkflowTest {
             String newName = "foo";
             renameServer(api, uuid, newName);
 
-            JsonHistoryResult jsonHistoryResult = api.fetchSubstanceJson(uuid, 1);
+            JsonHistoryResult jsonHistoryResult = api.fetchSubstanceJsonByUuid(uuid, 1);
             JsonNode originalNode = jsonHistoryResult.getOldValue();
             originalNode = new JsonUtil.JsonNodeBuilder(originalNode).set("/version", "2").build();
             ensurePass(api.updateSubstance(originalNode));
             
-            JsonNode reverted = api.fetchSubstanceJson(uuid);
+            JsonNode reverted = api.fetchSubstanceJsonByUuid(uuid);
             
             Changes changes = JsonUtil.computeChanges(originalNode, reverted,ChangeFilters.keyMatches("last.*"));
             
@@ -626,7 +625,7 @@ public class EditingWorkflowTest {
     }
 
     public void retrieveHistoryView(SubstanceAPI api, String uuid, int version){
-    	String newHTML=api.fetchSubstance(uuid).getBody();
+    	String newHTML=api.fetchSubstanceByUuid(uuid).getBody();
     	String oldHTML=api.fetchSubstance(uuid,version).getBody();
 
     	Set<String> oldlines = new LinkedHashSet<String>();
@@ -659,7 +658,7 @@ public class EditingWorkflowTest {
     	
     }
     private void renameLocal(SubstanceAPI api, String uuid, String oldName, String newName){
-        JsonNode fetched = api.fetchSubstanceJson(uuid);
+        JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
         JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
 
         Changes changes = JsonUtil.computeChanges(fetched, updated);
@@ -681,7 +680,7 @@ public class EditingWorkflowTest {
     }
     
     public void mostRecentEditHistory(SubstanceAPI api, String uuid, JsonNode oldRecordExpected){
-    		JsonNode newRecordFetched = api.fetchSubstanceJson(uuid);
+    		JsonNode newRecordFetched = api.fetchSubstanceJsonByUuid(uuid);
     		int oversion=Integer.parseInt(newRecordFetched.at("/version").textValue());
     		JsonNode edits = api.fetchSubstanceHistoryJson(uuid,oversion-1);
 
@@ -712,13 +711,13 @@ public class EditingWorkflowTest {
     }
     public JsonNode renameServer(SubstanceAPI session, String uuid, String newName){
     	
-    	JsonNode fetched = session.fetchSubstanceJson(uuid);
+    	JsonNode fetched = session.fetchSubstanceJsonByUuid(uuid);
 
     	String oldVersion=fetched.at("/version").asText();
     
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
 		session.updateSubstanceJson(updated);
-		JsonNode updateFetched = session.fetchSubstanceJson(uuid);
+		JsonNode updateFetched = session.fetchSubstanceJsonByUuid(uuid);
 		
 		assertEquals(Integer.parseInt(oldVersion) + 1, Integer.parseInt(updateFetched.at("/version").asText()));
 		assertEquals(newName, updateFetched.at("/_name").asText());
@@ -738,7 +737,7 @@ public class EditingWorkflowTest {
     
     public JsonNode addNameOrgServer(SubstanceAPI api, String uuid, String nameorg){
     	
-    	JsonNode fetched = api.fetchSubstanceJson(uuid);
+    	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
 
     	
     	NameOrg nameOrg = new NameOrg();
@@ -752,7 +751,7 @@ public class EditingWorkflowTest {
     	//System.out.println("FIrst name org is:" + updated.at("/names/0/nameOrgs/0"));
     	api.updateSubstanceJson(updated);
 		
-		JsonNode updateFetched = api.fetchSubstanceJson(uuid);
+		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		assertEquals(
 					  updated.at("/names/0/nameOrgs/0/nameOrg").toString(),
 				updateFetched.at("/names/0/nameOrgs/0/nameOrg").toString()
@@ -766,7 +765,7 @@ public class EditingWorkflowTest {
     public JsonNode addNameServer(SubstanceAPI api, String uuid){
 
     	
-    	JsonNode fetched = api.fetchSubstanceJson(uuid);
+    	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
 
     	String oldVersion=fetched.at("/version").asText();
     	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
@@ -779,7 +778,7 @@ public class EditingWorkflowTest {
     			.build();
 
         api.updateSubstanceJson(updated);
-		JsonNode updateFetched = api.fetchSubstanceJson(uuid);
+		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		
 		assertEquals(Integer.parseInt(oldVersion) + 1, Integer.parseInt(updateFetched.at("/version").asText()));
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
@@ -799,12 +798,12 @@ public class EditingWorkflowTest {
     }
     public JsonNode removeNameServer(SubstanceAPI session, String uuid){
     	
-		JsonNode updateFetched = session.fetchSubstanceJson(uuid);
+		JsonNode updateFetched = session.fetchSubstanceJsonByUuid(uuid);
 		session.updateSubstanceJson(new JsonUtil.JsonNodeBuilder(updateFetched)
 				.remove("/names/1")
 				.build()
 				);
-		JsonNode afterRemove=session.fetchSubstanceJson(uuid);
+		JsonNode afterRemove=session.fetchSubstanceJsonByUuid(uuid);
 		
 		assertTrue("After removing name, should have (1) name, found (" + afterRemove.at("/names").size() + ")",
 				afterRemove.at("/names").size() == 1);
@@ -814,11 +813,11 @@ public class EditingWorkflowTest {
     
     public JsonNode testAddAccessGroupServer(SubstanceAPI api,String uuid){
     	
-    	JsonNode fetched = api.fetchSubstanceJson(uuid);
+    	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
     
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/access/-", "testGROUP").build();
 		api.updateSubstanceJson(updated);
-		JsonNode updateFetched = api.fetchSubstanceJson(uuid);
+		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		JsonNode accessArray=updateFetched.at("/access");
 		System.out.println("Got:" + accessArray.toString());
 		assertTrue("Fetched access group should exist",accessArray!=null);
@@ -841,12 +840,12 @@ public class EditingWorkflowTest {
     
     public JsonNode testAddReferenceNameServer(SubstanceAPI api, String uuid){
     	
-    	JsonNode fetched = api.fetchSubstanceJson(uuid);
+    	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
     
     	String ref=fetched.at("/references/5/uuid").asText();
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/names/0/references/-", ref).build();
 		api.updateSubstanceJson(updated);
-		JsonNode updateFetched = api.fetchSubstanceJson(uuid);
+		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		
 		System.out.println(updated.at("/names/0/references/1"));
 		System.out.println(updateFetched.at("/names/0/references/1"));
@@ -873,7 +872,7 @@ public class EditingWorkflowTest {
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/access/-", "testGROUP").build();
     	String uuid = updated.at("/uuid").textValue();
 		api.submitSubstanceJson(updated);
-		JsonNode fetchedBack = api.fetchSubstanceJson(uuid);
+		JsonNode fetchedBack = api.fetchSubstanceJsonByUuid(uuid);
 		assertEquals("testGROUP",fetchedBack.at("/access/0").textValue());
 		
 		return fetchedBack;
@@ -900,7 +899,7 @@ public class EditingWorkflowTest {
 	 * 
 	 */
 	public JsonNode removeLastDisulfide(SubstanceAPI api, String uuid){
-		JsonNode updatedReturned = api.fetchSubstanceJson(uuid);
+		JsonNode updatedReturned = api.fetchSubstanceJsonByUuid(uuid);
 		JsonNode disulfs=updatedReturned.at("/protein/disulfideLinks");
 		//System.out.println("Site shorthand is:" + updatedReturnedb.at("/protein/disulfideLinks/1/sitesShorthand"));
 		
@@ -920,7 +919,7 @@ public class EditingWorkflowTest {
 		JsonNode updatedReturnedb;
 		//submit edit
 		updatedReturnedb = api.updateSubstanceJson(updated2);
-		updatedReturnedb = api.fetchSubstanceJson(uuid);
+		updatedReturnedb = api.fetchSubstanceJsonByUuid(uuid);
     	Changes changes2 = JsonUtil.computeChanges(updated2, updatedReturnedb);
     	
     	
