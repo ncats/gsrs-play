@@ -59,14 +59,14 @@ public class UserSessionTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void invalildPasswordBrowser(){
         ts.newBrowserSession( new GinasTestServer.User(luke.getUserName(), "wrong_pass"));
     }
 
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void invalildUsernameBrowser(){
         ts.newBrowserSession( new GinasTestServer.User("not_a_user", "wrong_pass"));
     }

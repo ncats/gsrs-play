@@ -8,6 +8,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 import static org.junit.Assert.*;
 
@@ -24,6 +27,18 @@ public class SequenceIndexerTest {
 
     private static final double DELTA = 0.001D;
 
+    @Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+        
+        @Override
+        protected void finished(Description description) {
+            System.out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+    };
+    
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder();
 
