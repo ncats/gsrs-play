@@ -58,6 +58,7 @@ public class Validation {
 	}
 
     static PayloadPlugin _payload =null;
+    public static boolean extractLocators=true;
 
     static{
         init();
@@ -73,6 +74,7 @@ public class Validation {
             seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
         }
         _payload = Play.application().plugin(PayloadPlugin.class);
+        extractLocators=			conf.getBoolean("ix.ginas.prepare.extractlocators", true);
     }
 
     static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
@@ -247,7 +249,32 @@ public class Validation {
 		return worked;
 	}
 	
-	
+	static private void extractLocators(Substance s, Name n,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat ){
+		Pattern p = Pattern.compile("(?:[ \\]])\\[([A-Z0-9]*)\\]");
+        Matcher m=p.matcher(n.name);
+        Set<String> locators = new LinkedHashSet<String>();
+    	if(m.find()){
+    		do{
+    			String loc=m.group(1);
+    		
+    			System.out.println("LOCATOR:" + loc);
+    			locators.add(loc);
+    		}while(m.find(m.start(1)));
+    	}
+    	if(locators.size()>0){
+    		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Names of form \"<NAME> [<TEXT>]\" are transformed to locators. The following locators will be added:" + locators.toString()).appliableChange(true);
+            gpm.add(mes);
+            strat.processMessage(mes);
+            if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+                for(String loc:locators){
+                	n.name=n.name.replace("[" + loc + "]", "").trim();
+                }
+                for(String loc:locators){
+                	n.addLocator(s, loc);
+                }
+            }
+    	}
+	}
 	
 	private static boolean validateNames(Substance s,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat ){
 		 	boolean preferred=false;
@@ -270,30 +297,9 @@ public class Validation {
 	                if(n.isDisplayName()){
 	                	display++;
 	                }
-	                Pattern p = Pattern.compile("(?:[ \\]])\\[([A-Z0-9]*)\\]");
-	                Matcher m=p.matcher(n.name);
-	                Set<String> locators = new LinkedHashSet<String>();
-                	if(m.find()){
-                		do{
-                			String loc=m.group(1);
-                		
-                			System.out.println("LOCATOR:" + loc);
-                			locators.add(loc);
-                		}while(m.find(m.start(1)));
-                	}
-                	if(locators.size()>0){
-                		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Names of form \"<NAME> [<TEXT>]\" are transformed to locators. The following locators will be added:" + locators.toString()).appliableChange(true);
-    	                gpm.add(mes);
-    	                strat.processMessage(mes);
-    	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
-    	                    for(String loc:locators){
-    	                    	n.name=n.name.replace("[" + loc + "]", "").trim();
-    	                    }
-    	                    for(String loc:locators){
-    	                    	n.addLocator(s, loc);
-    	                    }
-    	                }
-                	}
+	                if(extractLocators){
+	                	extractLocators(s,n,gpm,strat);
+	                }
                 	if(n.languages==null||n.languages.size()==0){
                 		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Must specify a language for each name. Defaults to \"English\"").appliableChange(true);
     	                gpm.add(mes);
