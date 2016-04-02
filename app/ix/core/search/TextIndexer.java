@@ -2080,7 +2080,7 @@ public class TextIndexer implements Closeable{
         try{
             closeable.close();
         }catch(Exception e){
-            e.printStackTrace();
+        	System.out.println(e.getMessage());
         }
     }
 }
