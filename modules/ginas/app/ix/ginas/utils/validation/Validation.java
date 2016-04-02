@@ -800,7 +800,7 @@ public class Validation {
 	            for(Structure m: moieties){
 	                Moiety m2= new Moiety();
 	                m2.structure=new GinasChemicalStructure(m);
-	                m2.count=m.count;
+	                m2.setCount(m.count);
 	                moietiesForSub.add(m2);
 	            }
             }

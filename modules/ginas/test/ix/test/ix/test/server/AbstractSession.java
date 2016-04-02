@@ -47,7 +47,7 @@ public abstract class AbstractSession<T> implements Closeable{
         this.neverLogout = false;
     }
 
-    public JsonNode exctractJSON(WSResponse wsResponse1){
+    public JsonNode extractJSON(WSResponse wsResponse1){
         Objects.requireNonNull(wsResponse1);
 
         int status2 = wsResponse1.getStatus();
@@ -69,7 +69,7 @@ public abstract class AbstractSession<T> implements Closeable{
         if(wsResponse1.getStatus() != 200){
             return null;
         }
-        JsonNode node = exctractJSON(wsResponse1);
+        JsonNode node = extractJSON(wsResponse1);
         return node.get("identifier").asText();
     }
 

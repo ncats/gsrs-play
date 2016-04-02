@@ -19,7 +19,7 @@ public class MoietySerializer extends JsonSerializer<Moiety> {
         throws IOException, JsonProcessingException {
         jgen.writeStartObject();
         serializer.serializeValue(moiety.structure, jgen, provider);
-        provider.defaultSerializeField("count", moiety.count, jgen);
+        provider.defaultSerializeField("count", moiety.getCount(), jgen);
         jgen.writeEndObject();
     }
 }

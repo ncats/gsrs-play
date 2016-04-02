@@ -2057,7 +2057,8 @@ public class TextIndexer implements Closeable{
             isShutDown=true;
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	System.out.println(ex.getMessage());
+            //ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
         finally {

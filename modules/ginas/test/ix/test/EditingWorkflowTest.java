@@ -356,7 +356,7 @@ public class EditingWorkflowTest {
             SubstanceAPI api = new SubstanceAPI(session);
 
             String uuid=entered.get("uuid").asText();
-           ensurePass(api.submitSubstance(entered));
+            ensurePass(api.submitSubstance(entered));
             int oldProteinCount=getFacetCountFor(api, "Substance Class","protein");
             assertEquals(1,oldProteinCount);
             renameServer(api, uuid);

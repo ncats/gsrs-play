@@ -387,18 +387,21 @@ public class GinasTestServer extends ExternalResource{
                 //we've have NFS problems where there are lock
                 //objects that we can't delete
                 //should be safe to keep them and delete every other file.
-                if(!file.toFile().getName().startsWith(".nfs")){
+                if(		!file.toFile().getName().startsWith(".nfs")
+                		//&& !file.toFile().getName().endsWith(".cfs")
+                		){
                     //use new delete method which throws IOException
                     //if it can't delete instead of returning flag
                     //so we will know the reason why it failed.
                     try{
+                    	
                         Files.delete(file);
                     }catch(IOException e){
-                        e.printStackTrace();
+                        System.out.println(e.getMessage());
                     }
                 }
                 else{
-                    System.out.println("found nfs file " + file.toString());
+                    //System.out.println("found nfs file " + file.toString());
                 }
 
 
