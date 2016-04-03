@@ -28,15 +28,6 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 	public GinasReferenceContainer recordReference;
     
     
-//    
-//    @Embeddable
-//    public static class Test1 implements Serializable{
-//    	public String inside="inside1";
-//    }
-//    
-//    @Embedded
-//    @Lob
-//    public Test1 test= new Test1();
     
     public GinasCommonSubData () {
     }

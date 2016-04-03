@@ -108,6 +108,8 @@ public class Evolution {
         Set<String> classes = new TreeSet<String>();
         for(String load: models) {
             load = load.trim();
+            //TODO: The class can be an Entity, Embedded type, ScalarType, BeanPersistListener, BeanFinder or BeanPersistController
+            //Right now, only finds Entities
             if (load.endsWith(".*")) {
                 Reflections reflections = new Reflections
                     (load.substring(0, load.length()-2));
