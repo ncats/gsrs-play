@@ -1699,7 +1699,9 @@
                             m._id = UUID.newID();
                             scope.parent.moieties.push(m);
                         });
-                        _.set(scope.parent, 'q', data.structure.smiles);
+                        if(data.structure){
+                        	_.set(scope.parent, 'q', data.structure.smiles);
+                        }
                     });
                 };
 
@@ -1707,6 +1709,7 @@
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
                 scope.sketcher.options.ondatachange = function () {
+                	console.log("DATA CHANGED");
                     scope.mol = scope.sketcher.getMolfile();
                     scope.updateMol();
                 };

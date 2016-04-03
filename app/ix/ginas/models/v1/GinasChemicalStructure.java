@@ -96,9 +96,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	//@Lob
 //	@OneToOne(cascade = CascadeType.ALL)
 	GinasAccessContainer recordAccess;
-	
-	@Version
-    private Long internalVersion;
+
 
 	@JsonIgnore
 	//@OneToOne(cascade = CascadeType.ALL)

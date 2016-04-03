@@ -16,12 +16,12 @@ public class SubstanceAPI {
     private static final String API_URL_SUBMIT = "ginas/app/api/v1/substances";
     private static final String API_URL_FETCH = "ginas/app/api/v1/substances($UUID$)?view=full";
     private static final String API_URL_HISTORY = "ginas/app/api/v1/substances($UUID$)/@edits";
+    private static final String API_URL_MOL = "ginas/app/structure";
 
     private static final String API_URL_APPROVE = "ginas/app/api/v1/substances($UUID$)/@approve";
     private static final String API_URL_UPDATE = "ginas/app/api/v1/substances";
 
     private static final String API_URL_SUBSTANCES_SEARCH="ginas/app/api/v1/substances/search";
-
 
 
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
@@ -87,10 +87,19 @@ public class SubstanceAPI {
     public WSResponse approveSubstance(String uuid){
         return session.createRequestHolder(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
     }
+    public WSResponse instrumentMol(String mol){
+        return session.createRequestHolder(API_URL_MOL).post(mol).get(timeout);
+    }
 
     public JsonNode approveSubstanceJson(String uuid){
         return session.extractJSON( approveSubstance(uuid));
     }
+    
+    public JsonNode fetchInstrumentJson(String molfile){
+    	return session.extractJSON( instrumentMol(molfile));
+    	
+    }
+    
 
     public WSResponse fetchSubstanceHistory(String uuid, int version){
         return session.createRequestHolder(API_URL_HISTORY.replace("$UUID$", uuid))

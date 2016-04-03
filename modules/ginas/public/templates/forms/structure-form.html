@@ -1,6 +1,6 @@
 <div class = "row info">
     <div class="row">
-        <form-header type="structure" parent="parent"></form-header>
+        <form-header type="structure" heading="{{heading}}" parent="parent"></form-header>
     </div>
     <div class="col-md-12" id="structureSearcher">
         <form name = "structureForm" id = "addStructureForm" role="form" novalidate>
@@ -11,7 +11,7 @@
             </div>
             <div class="row">
                 <div class="col-md-12 pull-right">
-                    <button class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
+                    <button ng-show="parent.substanceClass=='chemical'"  class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
                     <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
                 </div>
@@ -32,6 +32,7 @@
                     </div>
                 </div>
             </div>
+            <div ng-show="parent.substanceClass=='chemical'">
                     <div class ="row">
                         <div class="col-md-3">
                             <text-view-edit obj = "parent.structure" field = "formula" id = "formula" label="Molecular Formula"></text-view-edit>
@@ -74,6 +75,8 @@
                             <form-selector referenceobj= "parent.structure" formname="structureForm" field ="stereoComments" parent = parent type = "textbox" divid="structureForm" mode="edit"></form-selector>
                         </div>
                     </div>
+                    
+            </div>
             </form>
             <div class = "structureForm"></div>
     </div>
