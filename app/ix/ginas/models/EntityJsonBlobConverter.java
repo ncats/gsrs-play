@@ -2,9 +2,11 @@ package ix.ginas.models;
 
 import java.io.IOException;
 
+import ix.core.Converter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 
+@Converter
 public abstract class EntityJsonBlobConverter<K> extends EntityBlobConverter<K> {
 	public EntityMapper em =  EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 	private Class<K> cls;

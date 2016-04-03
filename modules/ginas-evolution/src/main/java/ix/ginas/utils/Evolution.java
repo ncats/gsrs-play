@@ -22,6 +22,8 @@ import javax.sql.DataSource;
 
 import com.jolbox.bonecp.*;
 
+import ix.core.Converter;
+
 
 public class Evolution {
     String source;
@@ -119,6 +121,11 @@ public class Evolution {
                     }
                     classes.add(c.getName());
                 }
+                Set<Class<?>> resourcesconverters =
+                        reflections.getTypesAnnotatedWith(Converter.class);
+                for (Class<?> c : resourcesconverters) {
+                    classes.add(c.getName());
+                }
             }
             else {
                 classes.add(load);
@@ -130,6 +137,7 @@ public class Evolution {
             try {
                 config.addClass(Class.forName
                                 (c, true, this.getClass().getClassLoader()));
+                
             }
             catch (Throwable ex) {
                 ex.printStackTrace();

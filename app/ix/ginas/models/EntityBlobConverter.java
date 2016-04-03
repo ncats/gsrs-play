@@ -11,9 +11,11 @@ import com.avaje.ebeaninternal.server.type.DataBind;
 import com.avaje.ebeaninternal.server.type.DataReader;
 import com.avaje.ebeaninternal.server.type.ScalarTypeBase;
 
+import ix.core.Converter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 
+@Converter
 public abstract class EntityBlobConverter<K> extends ScalarTypeBase<K> {
 	
 	
