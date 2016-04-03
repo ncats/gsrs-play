@@ -64,6 +64,13 @@ public class Moiety extends GinasCommonSubData {
     	if(count.average == null)return null;
     	return (int) count.average.longValue();
     }
-    
+
+	public void setCountAmount(Amount amnt) {
+		count=amnt;
+	}
+	
+	public Amount getCountAmount() {
+		return count;
+	}
     
 }

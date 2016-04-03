@@ -394,7 +394,7 @@ public class GinasTestServer extends ExternalResource{
                     //if it can't delete instead of returning flag
                     //so we will know the reason why it failed.
                     try{
-                    	
+                    	//System.out.println("Deleting:" + file);
                         Files.delete(file);
                     }catch(IOException e){
                         System.out.println(e.getMessage());
@@ -407,6 +407,22 @@ public class GinasTestServer extends ExternalResource{
 
                 return FileVisitResult.CONTINUE;
             }
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir,
+                    IOException exc)
+             throws IOException{
+            	
+            	FileVisitResult fvr= super.postVisitDirectory(dir, exc);
+            	File dirfile=dir.toFile();
+            	try{
+                	//System.out.println("Deleting:" + dirfile);
+                    Files.delete(dir);
+                }catch(IOException e){
+                    System.out.println("unable to delete:" + e.getMessage());
+                }
+            	return fvr;
+            }
+             
         });
     }
 

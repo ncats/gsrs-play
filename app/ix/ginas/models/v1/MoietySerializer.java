@@ -20,6 +20,7 @@ public class MoietySerializer extends JsonSerializer<Moiety> {
         jgen.writeStartObject();
         serializer.serializeValue(moiety.structure, jgen, provider);
         provider.defaultSerializeField("count", moiety.getCount(), jgen);
+        provider.defaultSerializeField("countAmount", moiety.getCountAmount(), jgen);
         jgen.writeEndObject();
     }
 }

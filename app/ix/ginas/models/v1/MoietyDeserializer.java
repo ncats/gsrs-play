@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonParser;
 
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Structure;
 
 public class MoietyDeserializer extends JsonDeserializer<Moiety> {
@@ -21,7 +22,21 @@ public class MoietyDeserializer extends JsonDeserializer<Moiety> {
             parser.getCodec().treeToValue(tree, GinasChemicalStructure.class);
         JsonNode n = tree.get("count");
         if (n != null) {
-            moiety.setCount(n.asInt());
+        	try{
+        		moiety.setCount(n.asInt());
+        	}catch(Exception e){
+        		Amount amnt=EntityMapper.FULL_ENTITY_MAPPER().treeToValue(n, Amount.class);
+        		moiety.setCountAmount(amnt);
+        	}
+        }
+        JsonNode namnt = tree.get("countAmount");
+        if (namnt != null) {
+        	try{
+        		Amount amnt=EntityMapper.FULL_ENTITY_MAPPER().treeToValue(namnt, Amount.class);
+        		moiety.setCountAmount(amnt);
+        	}catch(Exception e){
+        		System.out.println(e.getMessage());
+        	}
         }
         moiety.enforce();
         return moiety;

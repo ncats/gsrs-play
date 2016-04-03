@@ -976,7 +976,7 @@ public class EntityFactory extends Controller {
         }
         catch (Throwable ex) {
         	Logger.error("Problem creating record", ex);
-        	ex.printStackTrace();
+        	System.out.println(ex.getMessage());
             return internalServerError (ex.getMessage());
         }
     }
@@ -1623,7 +1623,7 @@ public class EntityFactory extends Controller {
         }
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }

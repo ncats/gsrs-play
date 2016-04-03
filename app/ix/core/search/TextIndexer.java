@@ -651,9 +651,9 @@ public class TextIndexer implements Closeable{
             return indexers.get(baseDir);
 
         try {
-            TextIndexer indexer = new TextIndexer (baseDir);
+           TextIndexer indexer = new TextIndexer (baseDir);
            indexers.put(baseDir, indexer);
-          return indexer;
+           return indexer;
         }
         catch (IOException ex) {
             ex.printStackTrace();
