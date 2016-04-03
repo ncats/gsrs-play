@@ -1,13 +1,11 @@
 package ix.ginas.controllers;
 
 
-import be.objectify.deadbolt.java.actions.Dynamic;
-
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
@@ -17,21 +15,19 @@ import ix.core.models.UserProfile;
 import ix.core.util.TimeUtil;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasUtils;
+import ix.ginas.models.v1.Unit;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
-
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
 public class GinasFactory extends EntityFactory {
         public static final Model.Finder<Long, Principal> finder = new Model.Finder(
                         Long.class, Principal.class);
+        public static final Model.Finder<UUID, Unit> unitFinder = new Model.Finder(
+                UUID.class, Unit.class);
 
         private static final long EXPIRE_LOCK_TIME_MS = 1*60*1000; //one minute
         private static ConcurrentHashMap<String,EditLock> currentlyEditing;
@@ -241,4 +237,5 @@ public class GinasFactory extends EntityFactory {
                 return p;
         }
 
+       
 }

@@ -38,6 +38,7 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.Sugar;
+import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
@@ -1622,11 +1623,23 @@ public class GinasApp extends App {
         int httpStat =  r1.toScala().header().status();
         if(httpStat == NOT_FOUND){
             Substance s = SubstanceFactory.getSubstance(id);
-            if(s instanceof ChemicalSubstance){
-                String sid1= ((ChemicalSubstance) s).structure.id.toString();
-                return App.structure(sid1, format, size, atomMap);
+            if(s!=null){
+            	if(s instanceof ChemicalSubstance){
+	                String sid1= ((ChemicalSubstance) s).structure.id.toString();
+	                return App.structure(sid1, format, size, atomMap);
+	            }else{
+	                return placeHolderImage(s);
+	            }
+            	
             }else{
-                return placeHolderImage(s);
+            	try{
+            		UUID uuid=UUID.fromString(id);
+            		//Unit u=new Unit();
+            		Unit u=GinasFactory.unitFinder.byId(uuid);
+            		return App.render(u.structure,size);
+            	}catch(Exception e){
+            		e.printStackTrace();
+            	}
             }
         }
         return r1;

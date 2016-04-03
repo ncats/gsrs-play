@@ -600,7 +600,7 @@
         };
 
         $scope.open = function (url) {
-           var modalInstance = $uibModal.open({
+           $scope.modalInstance = $uibModal.open({
                 templateUrl: url,
                 scope: $scope,
                 size: 'lg'
@@ -608,7 +608,7 @@
         };
 
         $scope.close = function () {
-            modalInstance.close();
+            $scope.modalInstance.close();
         };
 
         $scope.submitSubstanceConfirm = function () {
