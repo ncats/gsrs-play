@@ -598,6 +598,7 @@ public class Validation {
         		Set<String> rgroupsActual=new HashSet<String>();
         		Set<String> rgroupMentions=new HashSet<String>();
         		Set<String> connections=new HashSet<String>();
+        		
         		for(Unit u:srus){
         			List<String> contained=u.getContainedConnections();
         			List<String> mentioned=u.getMentionedConnections();
@@ -631,6 +632,7 @@ public class Validation {
         		for(String con:connections){
         			String[] c=con.split("-");
         			if(!connections.contains(c[1] +"-" + c[0])){
+        				System.out.println("Missing connection");
         				GinasProcessingMessage gp=GinasProcessingMessage.WARNING_MESSAGE("Connection '" + con + "' does not have inverse connection. This can be created.").appliableChange(true);
         				strat.processMessage(gp);
         				gpm.add(gp);
