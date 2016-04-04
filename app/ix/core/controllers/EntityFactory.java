@@ -2260,8 +2260,6 @@ public class EntityFactory extends Controller {
         return UUID.fromString(id);
     }
 
-
-
     public static abstract class EntityFilter<K> {
         public abstract boolean accept (K sub);
         public List filter(List<K> results) {

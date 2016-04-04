@@ -27,10 +27,11 @@
         @for(r <- relationships) {
 
             <tr>
-                    @if(SubstanceFactory.getFullSubstance(r.relatedSubstance) != null) {
+            	@defining(SubstanceFactory.getFullSubstance(r.relatedSubstance)) { ref =>
+                    @if(ref != null) {
                 
     
-                        @defining(SubstanceFactory.getFullSubstance(r.relatedSubstance)) { ref =>
+                        
                             <td>
                                 @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")) {
                                     <img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
@@ -68,10 +69,11 @@
                                     }
                                 }
                             </td>
-                        }
                     } else {
                         <td><i>Substance not yet imported</i></td>
                     }
+                    
+                }
                 <td>
                 @defining(r.relatedSubstance) { sub =>
                     @if(sub != null && sub.getLinkingID() != null) {

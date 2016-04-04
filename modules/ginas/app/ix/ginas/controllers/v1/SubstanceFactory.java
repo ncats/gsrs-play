@@ -176,13 +176,22 @@ public class SubstanceFactory extends EntityFactory {
 
 
 	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
-		Substance s = getSubstance(uuid);
-		if (s != null)
+		try{
+			System.out.println("######################################");
+			System.out.println("Fetching:" + uuid + " or " + approvalID);
+			Substance s = getSubstance(uuid);
+			
+			if (s == null){
+				System.out.println("didn't get by uuid");
+				s=getSubstanceByApprovalID(approvalID);
+			}else{
+				System.out.println("got by uuid");
+			}
 			return s;
-
-		List<Substance> list = GinasApp.resolve(finder, approvalID);
-		if (list != null && list.size() > 0) {
-			return list.get(0);
+		}catch(Exception e){
+			System.out.println("error fetching");
+			e.printStackTrace();
+			
 		}
 		return null;
 		// return finder.where().eq("approvalID", approvalID).findUnique();
