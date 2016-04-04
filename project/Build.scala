@@ -168,7 +168,7 @@ public class BuildInfo {
       libraryDependencies  += "junit" % "junit" % "4.11" % Test,
       libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
       libraryDependencies += "net.sourceforge.htmlunit" % "htmlunit" % "2.20" % Test,
-
+	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions ++= javaBuildOptions,
       javaOptions in Test += "-Dconfig.file=conf/ginas.conf",
     cleanFiles += file("modules/ginas/ginas.ix")

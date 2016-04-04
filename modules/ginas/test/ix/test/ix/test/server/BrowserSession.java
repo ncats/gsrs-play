@@ -7,6 +7,8 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.util.Cookie;
+
 import org.apache.http.impl.client.HttpClientBuilder;
 import play.libs.ws.WS;
 import play.libs.ws.WSCookie;
@@ -49,8 +51,12 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
             form.getButtonByName("submit").click();
 
-
-            this.sessionCookie = String.format("PLAY_SESSION=%s", webClient.getCookieManager().getCookie("PLAY_SESSION").getValue());
+            Cookie cook=webClient.getCookieManager().getCookie("PLAY_SESSION");
+            //System.out.println(cook);
+            if(cook==null)throw new IOException("no session established");
+            if(cook!=null){
+            	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
+            }
         } catch (IOException e) {
            throw new IllegalStateException("error logging in ", e);
         }

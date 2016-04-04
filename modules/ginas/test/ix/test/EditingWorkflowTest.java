@@ -356,7 +356,7 @@ public class EditingWorkflowTest {
             SubstanceAPI api = new SubstanceAPI(session);
 
             String uuid=entered.get("uuid").asText();
-           ensurePass(api.submitSubstance(entered));
+            ensurePass(api.submitSubstance(entered));
             int oldProteinCount=getFacetCountFor(api, "Substance Class","protein");
             assertEquals(1,oldProteinCount);
             renameServer(api, uuid);
@@ -445,12 +445,12 @@ public class EditingWorkflowTest {
     @Test
    	public void testAddReferenceToExistingProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
-            SubstanceAPI api = new SubstanceAPI(session);
-
+               SubstanceAPI api = new SubstanceAPI(session);
                JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+               
                String uuid = entered.get("uuid").asText();
-
                ensurePass(api.submitSubstance(entered));
+               
                testAddReferenceNameServer(api, uuid);
            }
    	}
@@ -847,6 +847,11 @@ public class EditingWorkflowTest {
 		api.updateSubstanceJson(updated);
 		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		
+		System.out.println(updated.at("/names/0/references/1"));
+		System.out.println(updateFetched.at("/names/0/references/1"));
+		
+		System.out.println(updated.at("/notes").toString());
+		System.out.println(updateFetched.at("/notes").toString());
 		
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
@@ -854,6 +859,7 @@ public class EditingWorkflowTest {
 								.replace("/version")
 								.replace("/lastEdited")
 								.replace("/names/0/lastEdited")
+								
 								
 								.build();
 		

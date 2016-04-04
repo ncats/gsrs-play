@@ -4,7 +4,9 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.Value;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.KeywordDeserializer;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.PrincipalListDeserializer;
@@ -58,37 +60,37 @@ public class Name extends GinasCommonSubData {
     public String type="cn";
     
     @JSONEntity(title = "Domains", format = "table", itemsTitle = "Domain", itemsFormat = JSONConstants.CV_NAME_DOMAIN)
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_domain",
-               joinColumns=@JoinColumn
-               (name="ix_ginas_name_domain_uuid",
-               referencedColumnName="uuid")
-    )
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_name_domain",
+//               joinColumns=@JoinColumn
+//               (name="ix_ginas_name_domain_uuid",
+//               referencedColumnName="uuid")
+//    )
     @JsonSerialize(using=KeywordListSerializer.class)
-    @JsonDeserialize(using=KeywordListDeserializer.DomainListDeserializer.class)
-    public List<Keyword> domains = new ArrayList<Keyword>();
+    @JsonDeserialize(contentUsing=KeywordDeserializer.DomainDeserializer.class)
+    public EmbeddedKeywordList domains = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_lang",
-               joinColumns=@JoinColumn
-               (name="ix_ginas_name_lang_uuid",
-               referencedColumnName="uuid")
-    )
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_name_lang",
+//               joinColumns=@JoinColumn
+//               (name="ix_ginas_name_lang_uuid",
+//               referencedColumnName="uuid")
+//    )
     @JsonSerialize(using=KeywordListSerializer.class)
-    @JsonDeserialize(using=KeywordListDeserializer.LanguageListDeserializer.class)
-    public List<Keyword> languages = new ArrayList<Keyword>();
+    @JsonDeserialize(contentUsing=KeywordDeserializer.LanguageDeserializer.class)
+    public EmbeddedKeywordList languages = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_juris",
-               joinColumns=@JoinColumn
-               (name="ix_ginas_name_juris_uuid",
-               referencedColumnName="uuid")
-    )
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_name_juris",
+//               joinColumns=@JoinColumn
+//               (name="ix_ginas_name_juris_uuid",
+//               referencedColumnName="uuid")
+//    )
     @JsonSerialize(using=KeywordListSerializer.class)    
-    @JsonDeserialize(using=KeywordListDeserializer.JurisdictionListDeserializer.class)
-    public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
+    @JsonDeserialize(contentUsing=KeywordDeserializer.JurisdictionDeserializer.class)
+    public EmbeddedKeywordList nameJurisdiction = new EmbeddedKeywordList();
 
 //    @ManyToMany(cascade=CascadeType.ALL)
 //    @JoinTable(name="ix_ginas_name_ref",

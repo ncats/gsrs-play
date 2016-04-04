@@ -651,9 +651,9 @@ public class TextIndexer implements Closeable{
             return indexers.get(baseDir);
 
         try {
-            TextIndexer indexer = new TextIndexer (baseDir);
+           TextIndexer indexer = new TextIndexer (baseDir);
            indexers.put(baseDir, indexer);
-          return indexer;
+           return indexer;
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -2057,7 +2057,8 @@ public class TextIndexer implements Closeable{
             isShutDown=true;
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	System.out.println(ex.getMessage());
+            //ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
         finally {
@@ -2079,7 +2080,7 @@ public class TextIndexer implements Closeable{
         try{
             closeable.close();
         }catch(Exception e){
-            e.printStackTrace();
+        	System.out.println(e.getMessage());
         }
     }
 }

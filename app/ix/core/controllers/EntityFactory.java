@@ -976,7 +976,7 @@ public class EntityFactory extends Controller {
         }
         catch (Throwable ex) {
         	Logger.error("Problem creating record", ex);
-        	ex.printStackTrace();
+        	System.out.println(ex.getMessage());
             return internalServerError (ex.getMessage());
         }
     }
@@ -1623,7 +1623,7 @@ public class EntityFactory extends Controller {
         }
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
@@ -2262,11 +2262,11 @@ public class EntityFactory extends Controller {
 
 
 
-    public static abstract class EntityFilter {
-        public abstract boolean accept (Object sub);
-        public List filter(List results) {
-			List filteredSubstances = new ArrayList<Substance>();
-			for (Object sub : results) {
+    public static abstract class EntityFilter<K> {
+        public abstract boolean accept (K sub);
+        public List filter(List<K> results) {
+			List<K> filteredSubstances = new ArrayList<K>();
+			for (K sub : results) {
 				if (accept(sub)) {
 					filteredSubstances.add(sub);
 				}

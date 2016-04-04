@@ -50,12 +50,9 @@ public class StructureSerializer extends JsonSerializer<GinasChemicalStructure> 
         	provider.defaultSerializeField("createdBy", struc.createdBy.username, jgen);
         if(struc.lastEditedBy!=null)
         	provider.defaultSerializeField("lastEditedBy", struc.lastEditedBy.username, jgen);
-        if(struc.recordReference!=null){
-        	ObjectMapper om = new ObjectMapper();
-        	JsonNode jsn=om.valueToTree(struc.recordReference);
-        	provider.defaultSerializeField
-            ("references", jsn.get("references"), jgen);
-        }
+        provider.defaultSerializeField("references", struc.getReferences(), jgen);
+        //provider.defaultSerializeField("references", struc.getAccess(), jgen);
+        
         
         //provider.defaultSerializeField("references", struc.getReferences(), jgen);
         provider.defaultSerializeField("access", struc.getAccess(), jgen);

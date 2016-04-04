@@ -40,6 +40,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	public static final String DOMAIN = "GInAS Domain";
 	public static final String REFERENCE_TAG = "GInAS Document Tag";
 	public static final String NAME_JURISDICTION = "GInAS Name Jurisdiction";
+	public static final String SUB_CLASS = "GInAS Subclass";
     
     
     //used only for forcing updates
@@ -136,15 +137,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     @JsonIgnore
     public GinasAccessContainer getRecordAccess() {
     	return recordAccess;
-    	
-//    	if(recordAccessJSON==null)return null;
-//    	try{
-//	    	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
-//	    	GinasAccessContainer gac=em.readValue(recordAccessJSON, GinasAccessContainer.class);
-//	        return gac;
-//    	}catch(Exception e){
-//    		return null;
-//    	}
     }
 
     @JsonIgnore

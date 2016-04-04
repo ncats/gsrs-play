@@ -16,11 +16,27 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.Rule;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+
 /**
  * Created by katzelda on 3/30/16.
  */
 public class SequenceSearchAPI {
-
+	
+	@Rule
+    public TestRule watcher = new TestWatcher() {
+        protected void starting(Description description) {
+            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+        
+        @Override
+        protected void finished(Description description) {
+            System.out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+    };
     private static final Pattern IDENTITY_PRE_PATTERN = Pattern.compile("identity = (\\d+(\\.\\d+)?)");
 ///ginas/app/substance/4cf9ca84
     private static final Pattern PARTIAL_UUID_PATTERN = Pattern.compile("/ginas/app/substance/(\\S+)");

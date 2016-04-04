@@ -96,13 +96,11 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	//@Lob
 //	@OneToOne(cascade = CascadeType.ALL)
 	GinasAccessContainer recordAccess;
-	
-	@Version
-    private Long internalVersion;
+
 
 	@JsonIgnore
-	@OneToOne(cascade = CascadeType.ALL)
-	public GinasReferenceContainer recordReference;
+	//@OneToOne(cascade = CascadeType.ALL)
+	private GinasReferenceContainer recordReference;
 
 
     @JsonIgnore
@@ -153,44 +151,52 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 
 
+    @JsonSerialize(using = ReferenceSetSerializer.class)
+    public Set<Keyword> getReferences(){
+    	if(recordReference!=null){
+    		return recordReference.getReferences();
+    	}
+    	return new LinkedHashSet<Keyword>();
+    }
 
-	
-	
-	@JsonSerialize(using = ReferenceSetSerializer.class)
-	public Set<Keyword> getReferences() {
-		if (recordReference != null) {
-			return recordReference.getReferences();
-		}
-		return new LinkedHashSet<Keyword>();
-	}
-	
-	@JsonProperty("references")    
+    @JsonProperty("references")    
     @JsonDeserialize(using = ReferenceSetDeserializer.class)
 	@Override
 	public void setReferences(Set<Keyword> references) {
-    	if(this.recordReference==null){
-    		this.recordReference=new GinasReferenceContainer(this);
+    	GinasReferenceContainer grc=getRecordReference();
+    	if(grc==null){
+    		grc=new GinasReferenceContainer(this);
     	}
-    	this.recordReference.setReferences(references);
+    	grc.setReferences(references);
+    	setRecordReference(grc);
+	}
+    
+   
+
+    @JsonIgnore
+	public GinasReferenceContainer getRecordReference() {
+		return recordReference;
 	}
 
-	public Set<Group> getAccessGroups() {
-		return getAccess();
+    @JsonIgnore
+	public void setRecordReference(GinasReferenceContainer recordReference) {
+    	GinasReferenceContainer grc=new GinasReferenceContainer(this);
+    	grc.setReferences(recordReference.references);
+		this.recordReference = grc;
 	}
-	
+
 	public void addReference(String refUUID){
-		if(this.recordReference==null){
-			this.recordReference= new GinasReferenceContainer(this);
-		}
-		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE,
-				refUUID
-		));
+		GinasReferenceContainer grc=getRecordReference();
+    	if(grc==null){
+    		grc=new GinasReferenceContainer(this);
+    	}
+    	grc.addReference(refUUID);
+    	setRecordReference(grc);
 	}
 	
 	public void addReference(Reference r){
-		addReference(r.getUuid().toString());
+		addReference(r.getOrGenerateUUID().toString());
 	}
-	
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
 		this.addReference(r);

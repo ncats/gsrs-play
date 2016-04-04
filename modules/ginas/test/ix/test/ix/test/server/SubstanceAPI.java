@@ -16,12 +16,12 @@ public class SubstanceAPI {
     private static final String API_URL_SUBMIT = "ginas/app/api/v1/substances";
     private static final String API_URL_FETCH = "ginas/app/api/v1/substances($UUID$)?view=full";
     private static final String API_URL_HISTORY = "ginas/app/api/v1/substances($UUID$)/@edits";
+    private static final String API_URL_MOL = "ginas/app/structure";
 
     private static final String API_URL_APPROVE = "ginas/app/api/v1/substances($UUID$)/@approve";
     private static final String API_URL_UPDATE = "ginas/app/api/v1/substances";
 
     private static final String API_URL_SUBSTANCES_SEARCH="ginas/app/api/v1/substances/search";
-
 
 
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
@@ -51,7 +51,7 @@ public class SubstanceAPI {
         return session.createRequestHolder(API_URL_SUBMIT).post(js).get(timeout);
     }
     public JsonNode submitSubstanceJson(JsonNode js){
-        return session.exctractJSON(submitSubstance(js));
+        return session.extractJSON(submitSubstance(js));
     }
 
     public WSResponse updateSubstance(JsonNode js){
@@ -59,7 +59,7 @@ public class SubstanceAPI {
 
     }
     public JsonNode updateSubstanceJson(JsonNode js){
-        return session.exctractJSON(updateSubstance(js));
+        return session.extractJSON(updateSubstance(js));
 
     }
 
@@ -67,14 +67,14 @@ public class SubstanceAPI {
         return session.createRequestHolder(API_URL_VALIDATE).post(js).get(timeout);
     }
     public JsonNode validateSubstanceJson(JsonNode js){
-        return session.exctractJSON( validateSubstance(js));
+        return session.extractJSON( validateSubstance(js));
     }
 
     public WSResponse fetchSubstanceByUuid(String uuid){
         return session.createRequestHolder(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     }
     public JsonNode fetchSubstanceJsonByUuid(String uuid){
-        return session.exctractJSON(fetchSubstanceByUuid(uuid));
+        return session.extractJSON(fetchSubstanceByUuid(uuid));
     }
 
     public WSResponse fetchSubstance(String id){
@@ -87,10 +87,19 @@ public class SubstanceAPI {
     public WSResponse approveSubstance(String uuid){
         return session.createRequestHolder(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
     }
+    public WSResponse instrumentMol(String mol){
+        return session.createRequestHolder(API_URL_MOL).post(mol).get(timeout);
+    }
 
     public JsonNode approveSubstanceJson(String uuid){
-        return session.exctractJSON( approveSubstance(uuid));
+        return session.extractJSON( approveSubstance(uuid));
     }
+    
+    public JsonNode fetchInstrumentJson(String molfile){
+    	return session.extractJSON( instrumentMol(molfile));
+    	
+    }
+    
 
     public WSResponse fetchSubstanceHistory(String uuid, int version){
         return session.createRequestHolder(API_URL_HISTORY.replace("$UUID$", uuid))
@@ -100,7 +109,7 @@ public class SubstanceAPI {
 
 
     public JsonNode fetchSubstancesSearchJSON() {
-        return session.exctractJSON(fetchSubstancesSearch());
+        return session.extractJSON(fetchSubstancesSearch());
     }
     public WSResponse fetchSubstancesSearch() {
         return session.createRequestHolder(API_URL_SUBSTANCES_SEARCH).get().get(timeout);
@@ -115,7 +124,7 @@ public class SubstanceAPI {
      * @return the JsonNode , should not be null.
      */
     public JsonNode fetchSubstanceHistoryJson(String uuid, int version){
-        return session.exctractJSON(fetchSubstanceHistory(uuid, version));
+        return session.extractJSON(fetchSubstanceHistory(uuid, version));
     }
 
     public JsonHistoryResult fetchSubstanceJsonByUuid(String uuid, int version){

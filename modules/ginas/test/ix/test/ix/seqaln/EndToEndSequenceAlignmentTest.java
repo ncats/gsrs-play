@@ -1,24 +1,22 @@
 package ix.test.ix.seqaln;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
 import ix.test.SubstanceJsonUtil;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
-import ix.test.login.LoginUtil;
-import org.fluentlenium.core.search.Search;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import static org.junit.Assert.*;
 
 /**
  * Created by katzelda on 3/30/16.

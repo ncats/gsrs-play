@@ -41,10 +41,11 @@ public class Reference extends GinasCommonSubData {
     public boolean publicDomain;
     
     @JSONEntity(title = "Tags", format = "table", itemsTitle = "Tag", itemsFormat = JSONConstants.CV_DOCUMENT_COLLECTION, isUniqueItems = true)
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_reference_tag")
-    @JsonSerialize(using=KeywordListSerializer.class)    
-    public List<Keyword> tags = new ArrayList<Keyword>();
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_reference_tag")
+    @JsonSerialize(using=KeywordListSerializer.class) 
+    @JsonDeserialize(contentUsing=KeywordDeserializer.TagDeserializer.class) 
+    public EmbeddedKeywordList tags = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Uploaded Document")
     @Column(length=1024)

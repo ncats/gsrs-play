@@ -25,12 +25,17 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @Table(name = "ix_ginas_moiety")
 public class Moiety extends GinasCommonSubData {
 	
+//	add getters and setters to convert integers to amounts
+//	add getters and setters to accept amounts
+//	change form to send amount.
+	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Count")
-    public Integer count;
+    @OneToOne(cascade=CascadeType.ALL)
+    private Amount count;
 
     public Moiety () {}
     
@@ -46,7 +51,26 @@ public class Moiety extends GinasCommonSubData {
     	this.innerUuid=structure.id.toString();
     }
     
-    
-    
+    public void setCount(Integer i){
+    	count=new Amount();
+    	if(i!=null){
+    		count.average=i.doubleValue();
+    	}
+    	count.type="MOL RATIO";
+    	count.units="MOL RATIO";
+    }
+    public Integer getCount(){
+    	if(count==null)return null;
+    	if(count.average == null)return null;
+    	return (int) count.average.longValue();
+    }
+
+	public void setCountAmount(Amount amnt) {
+		count=amnt;
+	}
+	
+	public Amount getCountAmount() {
+		return count;
+	}
     
 }

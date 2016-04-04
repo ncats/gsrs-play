@@ -67,7 +67,8 @@
                 referenceobj: '=?',
                 parent: '=',
                 path: '@',
-                iscollapsed: '=?'
+                iscollapsed: '=?',
+                heading: '@'
             },
             link: function (scope, element, attrs) {
                 scope.getLength = function(){
@@ -81,8 +82,19 @@
                 scope.toggle = function () {
                     scope.iscollapsed = !scope.iscollapsed;
                 };
-
-                scope.heading = _.startCase(scope.type);
+               	if(!scope.heading || scope.heading==""){
+					scope.heading=scope.title;
+				}
+				if(!scope.heading || scope.heading==""){
+					scope.heading = _.startCase(scope.type);
+					console.log("heading wasn't defined");
+					console.log(scope.heading);
+				}else{
+					console.log("heading was defined");
+				}
+				scope.title=scope.heading;
+				
+                
                 if (_.isUndefined(scope.path)) {
                     scope.path = scope.type;
                 }
@@ -844,7 +856,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                heading: '@'
             },
             link: function(scope, element){
                 console.log(scope);

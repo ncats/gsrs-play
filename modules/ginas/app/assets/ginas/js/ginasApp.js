@@ -17,7 +17,7 @@
         });
 
 
-    ginasApp.factory('Substance', function ($q, CVFields, UUID) {
+    ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils) {
 
         function isCV(ob) {
             if (typeof ob !== "object") return false;
@@ -221,6 +221,13 @@
                 }
 
             }
+            
+            if (_.has(sub, 'polymer')) {
+            	console.log("Polymer setting");
+            	console.log(sub.polymer.structuralUnits);
+            	polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
+            }
+            	
             return sub;
         };
 
@@ -531,7 +538,7 @@
             if ($scope.substance.status === "approved") {
                 return false;
             }
-            console.log(session.username);
+            //console.log(session.username);
             if (lastEdit === session.username) {
                 return false;
             }
@@ -587,7 +594,7 @@
                 // form.$error= {};
                 return true;
             } else {
-                console.log("Invalid");
+                //console.log("Invalid");
                 return false;
             }
 
@@ -596,15 +603,15 @@
 
         $scope.checkErrors = function () {
             if (_.has($scope.substanceForm, '$error')) {
-                console.log($scope.substanceForm.$error);
+                //console.log($scope.substanceForm.$error);
                 _.forEach($scope.substanceForm.$error, function (error) {
-                    console.log(error);
+                    //console.log(error);
                 });
             }
         };
 
         $scope.open = function (url) {
-           var modalInstance = $uibModal.open({
+           $scope.modalInstance = $uibModal.open({
                 templateUrl: url,
                 scope: $scope,
                 size: 'lg'
@@ -612,7 +619,7 @@
         };
 
         $scope.close = function () {
-            modalInstance.close();
+            $scope.modalInstance.close();
         };
 
         $scope.submitSubstanceConfirm = function () {
@@ -661,7 +668,7 @@
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-            console.log(sub);
+            //console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
@@ -714,7 +721,7 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    console.log(response);
+                    //console.log(response);
                     $scope.redirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
@@ -807,7 +814,7 @@
         };
 
         $scope.viewSubstance = function(){
-            console.log("new");
+            //console.log("new");
             $window.location.search ="";
             $window.location.pathname = baseurl+'substance/' + $scope.redirect.split('-')[0];
         };
@@ -835,7 +842,7 @@
         };
 
         $scope.bugSubmit = function (bugForm) {
-            console.log(bugForm);
+            //console.log(bugForm);
         };
 
         $scope.setEditId = function (editid) {
@@ -1710,7 +1717,9 @@
                             m._id = UUID.newID();
                             scope.parent.moieties.push(m);
                         });
-                        _.set(scope.parent, 'q', data.structure.smiles);
+                        if(data.structure){
+                        	_.set(scope.parent, 'q', data.structure.smiles);
+                        }
                     });
                 };
 
@@ -1718,6 +1727,7 @@
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
                 scope.sketcher.options.ondatachange = function () {
+                	//console.log("DATA CHANGED");
                     scope.mol = scope.sketcher.getMolfile();
                     scope.updateMol();
                 };

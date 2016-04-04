@@ -22,6 +22,8 @@ import javax.sql.DataSource;
 
 import com.jolbox.bonecp.*;
 
+import ix.core.Converter;
+
 
 public class Evolution {
     String source;
@@ -106,6 +108,8 @@ public class Evolution {
         Set<String> classes = new TreeSet<String>();
         for(String load: models) {
             load = load.trim();
+            //TODO: The class can be an Entity, Embedded type, ScalarType, BeanPersistListener, BeanFinder or BeanPersistController
+            //Right now, only finds Entities
             if (load.endsWith(".*")) {
                 Reflections reflections = new Reflections
                     (load.substring(0, load.length()-2));
@@ -119,6 +123,11 @@ public class Evolution {
                     }
                     classes.add(c.getName());
                 }
+                Set<Class<?>> resourcesconverters =
+                        reflections.getTypesAnnotatedWith(Converter.class);
+                for (Class<?> c : resourcesconverters) {
+                    classes.add(c.getName());
+                }
             }
             else {
                 classes.add(load);
@@ -130,6 +139,7 @@ public class Evolution {
             try {
                 config.addClass(Class.forName
                                 (c, true, this.getClass().getClassLoader()));
+                
             }
             catch (Throwable ex) {
                 ex.printStackTrace();
