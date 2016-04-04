@@ -80,7 +80,7 @@ public class Unit extends GinasCommonSubData {
     //TODO:Make this inspect the structure itself
     //there are
     public List<String> getContainedConnections(){
-    	System.err.println("WARNING: SRU structure not validated to check for connection points");
+    	//System.err.println("WARNING: SRU structure not validated to check for connection points");
     	List<String> contained=new ArrayList<String>();
     	
     	Pattern p = Pattern.compile("_(R[0-9][0-9]*)");
@@ -90,7 +90,7 @@ public class Unit extends GinasCommonSubData {
     	while (m.find()) {
     		String rg=m.group(1);
     	    contained.add(rg);
-    	    System.out.println("Found contained:" + rg);
+    	   // System.out.println("Found contained:" + rg);
     	}
     	
     	return contained;

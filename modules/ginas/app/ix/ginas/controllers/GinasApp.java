@@ -7,6 +7,7 @@ import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
+import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
@@ -18,6 +19,7 @@ import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.controllers.v1.SubstanceFactory.SubstanceFilter;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -652,17 +654,13 @@ public class GinasApp extends App {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging(rows, page, result.count());
             result.copyTo(substances, (page-1)*rows, rows);
+            
         }
-        long starttime = System.currentTimeMillis();
-                
-        String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
-                
-        Logger.debug("############## serialization time:" + tt);
-                
-
+        SubstanceFilter subFilter = new SubstanceFilter();
+		
         return ok(ix.ginas.views.html.substances.render
                   (page, rows, result.count(), pages, decorate(facets),
-                   substances, null, result.getSearchContextAnalyzer().getFieldFacets()));
+                		  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
 
     }
     public static class SubstanceVersionFetcher extends GetResult<Substance>{

@@ -2262,11 +2262,11 @@ public class EntityFactory extends Controller {
 
 
 
-    public static abstract class EntityFilter {
-        public abstract boolean accept (Object sub);
-        public List filter(List results) {
-			List filteredSubstances = new ArrayList<Substance>();
-			for (Object sub : results) {
+    public static abstract class EntityFilter<K> {
+        public abstract boolean accept (K sub);
+        public List filter(List<K> results) {
+			List<K> filteredSubstances = new ArrayList<K>();
+			for (K sub : results) {
 				if (accept(sub)) {
 					filteredSubstances.add(sub);
 				}
