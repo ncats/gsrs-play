@@ -116,7 +116,7 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public JsonNode getAsJson(String path){
-        return exctractJSON(get(path));
+        return extractJSON(get(path));
     }
 
 
@@ -129,7 +129,7 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public JsonNode urlJSON(String fullUrl){
-        return exctractJSON(url(fullUrl).get().get(timeout));
+        return extractJSON(url(fullUrl).get().get(timeout));
     }
 
     public ControlledVocab getControlledVocabulary(){

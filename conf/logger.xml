@@ -95,7 +95,4 @@
   <root level="INFO,DEBUG,WARN,ERROR">
     <appender-ref ref="FILE"/>
   </root>
-   <logger name="com.jolbox.bonecp" level="DEBUG">
-        <appender-ref ref="STDOUT" />
-    </logger>
 </configuration>

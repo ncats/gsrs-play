@@ -1,18 +1,14 @@
 package ix.test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static play.mvc.Http.Status.OK;
-import static play.test.Helpers.running;
-import static play.test.Helpers.stop;
-import static play.test.Helpers.testServer;
 
-import java.io.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -22,12 +18,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import play.Logger;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
+import ix.test.ix.test.server.SubstanceAPI;
 import play.libs.ws.WSResponse;
 import play.test.WithApplication;
 import util.json.JsonUtil;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
@@ -39,6 +37,11 @@ public class SubstanceValidateFailTest extends WithApplication {
     public TestRule watcher = new TestWatcher() {
         protected void starting(Description description) {
             System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+        
+        @Override
+        protected void finished(Description description) {
+            System.out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
         }
     };
 

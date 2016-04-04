@@ -11,9 +11,11 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Version;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -91,92 +93,110 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 	
 	@JsonIgnore
-	@OneToOne(cascade = CascadeType.ALL)
+	//@Lob
+//	@OneToOne(cascade = CascadeType.ALL)
 	GinasAccessContainer recordAccess;
 
-	@JsonIgnore
-	@OneToOne(cascade = CascadeType.ALL)
-	public GinasReferenceContainer recordReference;
 
-	@JsonProperty("access")
+	@JsonIgnore
+	//@OneToOne(cascade = CascadeType.ALL)
+	private GinasReferenceContainer recordReference;
+
+
+    @JsonIgnore
+    public GinasAccessContainer getRecordAccess() {
+    	return recordAccess;
+    }
+
+    @JsonIgnore
+    public void setRecordAccess(GinasAccessContainer recordAccess) {
+        this.recordAccess = new GinasAccessContainer(this);
+        if(recordAccess!=null){
+        this.recordAccess.setAccess(recordAccess.getAccess());
+        }
+    }
+
+    @JsonProperty("access")
     @JsonDeserialize(using = GroupListDeserializer.class)
     public void setAccess(Set<Group> access){
-    	List<String> accessGroups=new ArrayList<String>();
-    	for(Group g: access){
-    		accessGroups.add(g.name);
+    	GinasAccessContainer recordAccess=this.getRecordAccess();
+    	if(recordAccess==null){
+    		recordAccess=new GinasAccessContainer(this);
     	}
-    	
-    	ObjectMapper om = new ObjectMapper();
-    	Map mm = new HashMap();
-    	mm.put("access", accessGroups);
-    	mm.put("entityType", this.getClass().getName());
-    	JsonNode jsn=om.valueToTree(mm);
-    	try {
-			recordAccess= om.treeToValue(jsn, GinasAccessContainer.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+    	recordAccess.setAccess(access);
+		setRecordAccess(recordAccess);
+    }
+    
+    @JsonProperty("access")
+    @JsonSerialize(using = GroupListSerializer.class)
+    public Set<Group> getAccess(){
+    	GinasAccessContainer gac=getRecordAccess();
+    	if(gac!=null){
+    		return gac.getAccess();
+    	}
+    	return new LinkedHashSet<Group>();
     }
 
 	public void addRestrictGroup(Group p){
-		if(this.recordAccess==null){
-			this.recordAccess=new GinasAccessContainer();
+		GinasAccessContainer gac=this.getRecordAccess();
+		if(gac==null){
+			gac=new GinasAccessContainer(this);
 		}
-		this.recordAccess.add(p);
+		gac.add(p);
+		this.setRecordAccess(gac);
 	}
+	
 	public void addRestrictGroup(String group){
 		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
 	}
 
 
-
-	
-	@JsonProperty("access")
-    @JsonSerialize(using = GroupListSerializer.class)
-    public Set<Group> getAccess(){
-    	if(recordAccess!=null){
-    		return recordAccess.getAccess();
+    @JsonSerialize(using = ReferenceSetSerializer.class)
+    public Set<Keyword> getReferences(){
+    	if(recordReference!=null){
+    		return recordReference.getReferences();
     	}
-    	return new LinkedHashSet<Group>();
+    	return new LinkedHashSet<Keyword>();
     }
 
-	
-	
-	@JsonSerialize(using = ReferenceSetSerializer.class)
-	public Set<Keyword> getReferences() {
-		if (recordReference != null) {
-			return recordReference.getReferences();
-		}
-		return new LinkedHashSet<Keyword>();
-	}
-	
-	@JsonProperty("references")    
+    @JsonProperty("references")    
     @JsonDeserialize(using = ReferenceSetDeserializer.class)
 	@Override
 	public void setReferences(Set<Keyword> references) {
-    	if(this.recordReference==null){
-    		this.recordReference=new GinasReferenceContainer(this);
+    	GinasReferenceContainer grc=getRecordReference();
+    	if(grc==null){
+    		grc=new GinasReferenceContainer(this);
     	}
-    	this.recordReference.setReferences(references);
+    	grc.setReferences(references);
+    	setRecordReference(grc);
+	}
+    
+   
+
+    @JsonIgnore
+	public GinasReferenceContainer getRecordReference() {
+		return recordReference;
 	}
 
-	public Set<Group> getAccessGroups() {
-		return getAccess();
+    @JsonIgnore
+	public void setRecordReference(GinasReferenceContainer recordReference) {
+    	GinasReferenceContainer grc=new GinasReferenceContainer(this);
+    	grc.setReferences(recordReference.references);
+		this.recordReference = grc;
 	}
-	
+
 	public void addReference(String refUUID){
-		if(this.recordReference==null){
-			this.recordReference= new GinasReferenceContainer(this);
-		}
-		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE,
-				refUUID
-		));
+		GinasReferenceContainer grc=getRecordReference();
+    	if(grc==null){
+    		grc=new GinasReferenceContainer(this);
+    	}
+    	grc.addReference(refUUID);
+    	setRecordReference(grc);
 	}
 	
 	public void addReference(Reference r){
-		addReference(r.getUuid().toString());
+		addReference(r.getOrGenerateUUID().toString());
 	}
-	
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
 		this.addReference(r);

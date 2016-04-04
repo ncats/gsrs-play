@@ -56,7 +56,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	@Override
 	public ValidationResponse<Substance> validate(Substance objnew, Substance objold) {
 		String TIME_KEY="validating";
-		TimeProfiler.addGlobalTime(TIME_KEY);
+		//TimeProfiler.addGlobalTime(TIME_KEY);
 		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
 		vr.setInvalid();
 		try{
@@ -89,7 +89,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		}catch(Exception e){
 			throw e;
 		}finally{
-			TimeProfiler.stopGlobalTime(TIME_KEY);
+			//TimeProfiler.stopGlobalTime(TIME_KEY);
 		}
 	}
 

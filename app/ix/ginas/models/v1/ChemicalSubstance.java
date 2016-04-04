@@ -14,8 +14,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
-import com.avaje.ebean.annotation.ConcurrencyMode;
-import com.avaje.ebean.annotation.EntityConcurrencyMode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -26,7 +24,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
-import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.StructureSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;

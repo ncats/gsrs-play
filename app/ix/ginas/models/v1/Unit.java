@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -78,10 +80,20 @@ public class Unit extends GinasCommonSubData {
     //TODO:Make this inspect the structure itself
     //there are
     public List<String> getContainedConnections(){
-    	System.err.println("WARNING: SRU structure not validated to check for connection points");
+    	//System.err.println("WARNING: SRU structure not validated to check for connection points");
+    	List<String> contained=new ArrayList<String>();
     	
+    	Pattern p = Pattern.compile("_(R[0-9][0-9]*)");
+    	Matcher m = p.matcher(this.structure);
+
+    	//System.out.println(this.structure);
+    	while (m.find()) {
+    		String rg=m.group(1);
+    	    contained.add(rg);
+    	   // System.out.println("Found contained:" + rg);
+    	}
     	
-    	return getMentionedConnections();
+    	return contained;
     }
     
     @JsonIgnore
@@ -91,6 +103,7 @@ public class Unit extends GinasCommonSubData {
 		if(mymap!=null){
 			for(String k:mymap.keySet()){
 				conset.add(k);
+				System.out.println("Found mentioned:" + k);
 			}
 		}
 		return conset;

@@ -71,6 +71,7 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
@@ -975,6 +976,7 @@ public class EntityFactory extends Controller {
         }
         catch (Throwable ex) {
         	Logger.error("Problem creating record", ex);
+        	System.out.println(ex.getMessage());
             return internalServerError (ex.getMessage());
         }
     }
@@ -1565,9 +1567,9 @@ public class EntityFactory extends Controller {
 	            //Get the difference as a patch
 	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
 	            
+	            
 	            //Apply the changes, grabbing every change along the way
 	            Stack changeStack=patch.apply(oldValueContainer.value);
-	        	
 	            
 	        	while(!changeStack.isEmpty()){
 	        		Object v=changeStack.pop();
@@ -1577,6 +1579,7 @@ public class EntityFactory extends Controller {
 	            		((Model)v).update();
 	            	}
 	        	}
+	        	
 	        	//The old value is now the new value
 	        	newValue = oldValueContainer.value;
             }else{
@@ -1587,17 +1590,9 @@ public class EntityFactory extends Controller {
             	//	1. Version not incremented correctly (post update hooks not called) 
             	//  2. Some metadata may be problematic
 
-            	
-            	
-            	
-            	
-            	
             	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
             	((Model)newValue).save();
             	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
-            	//Now explicitly call 
-            	
-            	
             }
         	
         	
@@ -1628,7 +1623,7 @@ public class EntityFactory extends Controller {
         }
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
@@ -2267,11 +2262,11 @@ public class EntityFactory extends Controller {
 
 
 
-    public static abstract class EntityFilter {
-        public abstract boolean accept (Object sub);
-        public List filter(List results) {
-			List filteredSubstances = new ArrayList<Substance>();
-			for (Object sub : results) {
+    public static abstract class EntityFilter<K> {
+        public abstract boolean accept (K sub);
+        public List filter(List<K> results) {
+			List<K> filteredSubstances = new ArrayList<K>();
+			for (K sub : results) {
 				if (accept(sub)) {
 					filteredSubstances.add(sub);
 				}

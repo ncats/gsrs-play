@@ -43,6 +43,7 @@ import ix.seqaln.SequenceIndexer.ResultEnumeration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -382,31 +383,38 @@ public class SubstanceFactory extends EntityFactory {
 	 * 
 	 * 
 	 */
-	public static class SubstanceFilter extends EntityFilter {
+	public static class SubstanceFilter extends EntityFilter<Substance> {
 
 		UserProfile profile = UserFetcher.getActingUserProfile(true);
 		Principal user = profile != null ? profile.user : null;
 		boolean hasAdmin = false;
-		List<Group> groups=null;
+		Set<Group> groups=null;
 		
 		public SubstanceFilter(){
 			if(profile!=null){
-				groups=profile.getGroups();
+				groups=new HashSet<Group>(profile.getGroups());
 			}
 			if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
 				hasAdmin=true;
 			}
+			if(groups==null){
+				groups=new HashSet<Group>();
+			}
 		}
 
-		public boolean accept(Object sub) {
+		public boolean accept(Substance sub) {
 			if(hasAdmin)return true;
 			//Group group = (Group) grp;
 			Substance substance = (Substance) sub;
 			Set<Group> accessG = substance.getAccess();
+			
 			if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
 				return true;
 			}
+			System.out.println("Group 1:" + accessG);
+			System.out.println("Group 2:" + groups);
 			if(Collections.disjoint(accessG, groups)){
+				System.out.println("Won't show:" + sub.getName());
 				return false;
 			}
 			return true;

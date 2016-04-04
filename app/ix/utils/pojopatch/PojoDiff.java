@@ -65,8 +65,8 @@ import play.Logger;
  * What is not yet done:
  * 	[?]	"move" and "copy" operations of JSONPatch are not applied
  *  [/] A JSONPatch itself can not be applied an existing object
- * 	[ ] Array handling is likely broken
- *  [ ] Certain Collection operations are also problematic, specifically involving
+ * 	[/] Array handling is likely broken
+ *  [/] Certain Collection operations are also problematic, specifically involving
  *      the ambiguous '/-' JSONPointer notation, which may mean different things
  *      depending on context
  * 
@@ -84,6 +84,10 @@ public class PojoDiff {
 		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
 		public Stack apply(T old) throws Exception{
 			return applyPatch(old,jp);
+		}
+		@Override
+		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
+			return new ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
 		}
 	}
 	
@@ -105,6 +109,16 @@ public class PojoDiff {
 				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
 			}
 		}
+		@Override
+		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
+			List<ix.utils.pojopatch.PojoPatch.Change> changes= new
+					ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+			JsonNode jsnp = getJsonDiff(oldV,newV);
+			for(JsonNode jsn:jsnp){
+				changes.add(new ix.utils.pojopatch.PojoPatch.Change(jsn));
+			}
+			return changes;
+		}
 	}
 	
 	public static class EnhancedObjectPatch implements PojoPatch{
@@ -116,7 +130,6 @@ public class PojoDiff {
 			this.newV=newV;
 		}
 		
-		
 		public Stack apply(Object old) throws Exception{
 			if(jp==null){
 				jp=getEnhancedJsonDiff(oldV,newV);
@@ -126,6 +139,16 @@ public class PojoDiff {
 			}else{
 				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
 			}
+		}
+		@Override
+		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
+			List<ix.utils.pojopatch.PojoPatch.Change> changes= new
+					ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+			JsonNode jsnp = getEnhancedJsonDiff(oldV,newV);
+			for(JsonNode jsn:jsnp){
+				changes.add(new ix.utils.pojopatch.PojoPatch.Change(jsn));
+			}
+			return changes;
 		}
 	}
 	
@@ -651,6 +674,27 @@ public class PojoDiff {
 			public void set(Object instance, Object set);
 			public boolean isIgnored();
 		}
+		public static class MapSetter implements Setter{
+			private String key;
+			public MapSetter(String key){
+				this.key=key;
+			}
+			@Override
+			public void set(Object instance, Object set) {
+				if(instance instanceof Map){
+					if(set==null){
+						((Map)instance).remove(key);
+					}else{
+						((Map)instance).put(key, set);
+					}
+				}else{
+					throw new IllegalStateException(instance.getClass() + " is not a Map");
+				}
+			}
+			@Override
+			public boolean isIgnored() {return false;}
+			
+		}
 		
 		public static class MethodSetter implements Setter{
 			private Method m;
@@ -817,6 +861,11 @@ public class PojoDiff {
 					i++;
 				}
 			}
+			if(o instanceof Map){
+				Map m=(Map)o;
+				return m.get(prop);
+			}
+			
 			TypeRegistry.Getter g= tr.getters.get(prop);
 			if(g!=null){
 				return g.get(o);
@@ -829,7 +878,9 @@ public class PojoDiff {
 			TypeRegistry tr=registries.get(o.getClass().getName());
 			
 			if(o instanceof Collection){
+				
 				Collection col = (Collection)o;
+				//System.out.println("size:" + col.size());
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
@@ -837,14 +888,12 @@ public class PojoDiff {
 				final int c=getCollectionPostion(col,prop);
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
-
 						@Override
 						public void set(Object instance, Object set) {
 							((List)instance).set(c, set);
 						}
 						@Override
 						public boolean isIgnored() {return false;}
-						
 					};
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
@@ -853,19 +902,36 @@ public class PojoDiff {
 
 						@Override
 						public void set(Object instance, Object set) {
-							((Collection)instance).remove(old);
-							((Collection)instance).add(set);
+							Collection c1=(Collection)instance;
+							List l = new ArrayList(c1);
+							c1.clear();
+							for(Object o:l){
+								if((o==old) || o.equals(old)){
+									c1.add(set);
+								}else{
+									if(c1.contains(o)){
+										c1.add(new Object(){});
+									}
+									c1.add(o);
+								}
+							}
 						}
 						@Override
 						public boolean isIgnored() {return false;}
+						
+						
 						
 					};
 				}
 				
 			}
+			if(o instanceof Map){
+				return new TypeRegistry.MapSetter(prop);
+			}
 			if(tr.setters.containsKey(prop)){
 				return tr.setters.get(prop);
 			}
+			
 			return null;
 		}
 		private static TypeRegistry.Setter getRemoverDirect(Object o, final String prop){
@@ -906,16 +972,13 @@ public class PojoDiff {
 				}
 				
 			}
-			if(tr.setters.containsKey(prop)){
-				final TypeRegistry.Setter setter=tr.setters.get(prop);
-				tr.setters.get(prop);
+			final TypeRegistry.Setter setter = getSetterDirect(o,prop);
+			if(setter!=null){
 				return new TypeRegistry.Setter(){
-
 					@Override
 					public void set(Object instance, Object set) {
 						setter.set(instance, null);
 					}
-
 					@Override
 					public boolean isIgnored() {return false;}
 				};
@@ -936,11 +999,8 @@ public class PojoDiff {
 				}
 				
 				final int c=cind;
-				
-				
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
-
 						@Override
 						public void set(Object instance, Object set) {
 							if(c<0){
@@ -951,7 +1011,6 @@ public class PojoDiff {
 						}
 						@Override
 						public boolean isIgnored() {return false;}
-						
 					};
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
@@ -983,11 +1042,8 @@ public class PojoDiff {
 				}
 				
 			}
-			if(tr.setters.containsKey(prop)){
-				final TypeRegistry.Setter setter=tr.setters.get(prop);
-				return setter;
-			}
-			return null;
+			
+			return getSetterDirect(o,prop);
 		}
 		public static Object getObjectAt(Object src, String objPointer, Collection chainChange){
 			//System.out.println(objPointer);
@@ -1015,7 +1071,6 @@ public class PojoDiff {
 			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
 			
 			Object fetched=getObjectAt(src,subPath,changeChain);
-			
 			TypeRegistry.Setter s=getSetterDirect(fetched,lastPath);
 			if(s!=null){
 				s.set(fetched, newValue);

@@ -5,21 +5,17 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.Table;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import ix.core.models.BaseModel;
 import ix.core.models.Group;
-import ix.core.models.LongBaseModel;
 
-@Entity
-@Table(name = "ix_ginas_access")
-public class GinasAccessContainer extends LongBaseModel{
+//@Entity
+//@Table(name = "ix_ginas_access")
+public class GinasAccessContainer{
 	@Id
 	public Long id;
 
@@ -27,7 +23,6 @@ public class GinasAccessContainer extends LongBaseModel{
 	@JsonSerialize(using = GroupListSerializer.class)
 	@JsonDeserialize(using = GroupListDeserializer.class)
 	private Set<Group> access;
-	
 	public String entityType;
 	
 	public void add(Group p) {
@@ -64,4 +59,8 @@ public class GinasAccessContainer extends LongBaseModel{
 		this.access=new LinkedHashSet<Group>(acc);
 	}
 	
+	
+	public boolean equals(Object o){
+		return false;
+	}
 }

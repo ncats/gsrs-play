@@ -43,11 +43,7 @@ public class Code extends GinasCommonSubData {
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String url;
-
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_code_reference")
-//    @JsonSerialize(using=KeywordListSerializer.class)    
-//    public List<Keyword> references = new ArrayList<Keyword>();
+    
     
     public Code () {}
     public Code (String code) {

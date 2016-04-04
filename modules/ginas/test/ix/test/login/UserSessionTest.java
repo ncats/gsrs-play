@@ -59,14 +59,14 @@ public class UserSessionTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void invalildPasswordBrowser(){
         ts.newBrowserSession( new GinasTestServer.User(luke.getUserName(), "wrong_pass"));
     }
 
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void invalildUsernameBrowser(){
         ts.newBrowserSession( new GinasTestServer.User("not_a_user", "wrong_pass"));
     }
@@ -149,14 +149,14 @@ public class UserSessionTest {
 
             ensureNotLoggedIn(session2.get("ginas/app/substances"));
 
-            System.out.println("first logged in attempt");
+            //System.out.println("first logged in attempt");
             ensureLoggedInAs( session.get("ginas/app/substances"), user1);
 
-            System.out.println("1================================");
+            //System.out.println("1================================");
             ensureNotLoggedIn(session2.get("ginas/app/substances"));
 
-            System.out.println("2================================");
-            System.out.println("2nd logged in attempt");
+            //System.out.println("2================================");
+            //System.out.println("2nd logged in attempt");
             ensureLoggedInAs( session.get("ginas/app/substances"), user1);
 
         }

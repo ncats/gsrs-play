@@ -7,6 +7,7 @@ import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
+import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
@@ -18,6 +19,7 @@ import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.controllers.v1.SubstanceFactory.SubstanceFilter;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -38,6 +40,7 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.Sugar;
+import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
@@ -61,18 +64,7 @@ import java.io.InputStream;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.Calendar;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import org.springframework.util.StringUtils;
@@ -342,13 +334,16 @@ public class GinasApp extends App {
     }
 
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
-                   maxLength = 100000)
+                   maxLength = 10_000)
     public static Result sequenceSearch () {
+
         if (request().body().isMaxSizeExceeded()) {
+
             return badRequest ("Sequence is too large!");
         }
         
         Map<String, String[]> params = request().body().asFormUrlEncoded();
+
         String[] values = params.get("sequence");
         if (values != null && values.length > 0) {
             String seq = values[0];
@@ -659,17 +654,13 @@ public class GinasApp extends App {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging(rows, page, result.count());
             result.copyTo(substances, (page-1)*rows, rows);
+            
         }
-        long starttime = System.currentTimeMillis();
-                
-        String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
-                
-        Logger.debug("############## serialization time:" + tt);
-                
-
+        SubstanceFilter subFilter = new SubstanceFilter();
+		
         return ok(ix.ginas.views.html.substances.render
                   (page, rows, result.count(), pages, decorate(facets),
-                   substances, null, result.getSearchContextAnalyzer().getFieldFacets()));
+                		  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
 
     }
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
@@ -1630,11 +1621,23 @@ public class GinasApp extends App {
         int httpStat =  r1.toScala().header().status();
         if(httpStat == NOT_FOUND){
             Substance s = SubstanceFactory.getSubstance(id);
-            if(s instanceof ChemicalSubstance){
-                String sid1= ((ChemicalSubstance) s).structure.id.toString();
-                return App.structure(sid1, format, size, atomMap);
+            if(s!=null){
+            	if(s instanceof ChemicalSubstance){
+	                String sid1= ((ChemicalSubstance) s).structure.id.toString();
+	                return App.structure(sid1, format, size, atomMap);
+	            }else{
+	                return placeHolderImage(s);
+	            }
+            	
             }else{
-                return placeHolderImage(s);
+            	try{
+            		UUID uuid=UUID.fromString(id);
+            		//Unit u=new Unit();
+            		Unit u=GinasFactory.unitFinder.byId(uuid);
+            		return App.render(u.structure,size);
+            	}catch(Exception e){
+            		e.printStackTrace();
+            	}
             }
         }
         return r1;

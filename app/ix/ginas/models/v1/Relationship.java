@@ -24,10 +24,6 @@ import ix.ginas.models.*;
 @Entity
 @Table(name="ix_ginas_relationship")
 public class Relationship extends GinasCommonSubData {
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_relationship_ref")
-//    @JsonSerialize(using=KeywordListSerializer.class)    
-//    public List<Keyword> references = new ArrayList<Keyword>();
     
     @JSONEntity(title="Amount")
     @OneToOne(cascade=CascadeType.ALL)

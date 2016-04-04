@@ -1,20 +1,12 @@
 package ix.ginas.models.v1;
 
-import java.lang.reflect.*;
 import java.io.IOException;
 
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ix.core.models.Structure;
-import ix.core.models.Keyword;
-import ix.core.models.Value;
 import ix.ginas.models.StructureSerializer;
 
 public class MoietySerializer extends JsonSerializer<Moiety> {
@@ -27,7 +19,8 @@ public class MoietySerializer extends JsonSerializer<Moiety> {
         throws IOException, JsonProcessingException {
         jgen.writeStartObject();
         serializer.serializeValue(moiety.structure, jgen, provider);
-        provider.defaultSerializeField("count", moiety.count, jgen);
+        provider.defaultSerializeField("count", moiety.getCount(), jgen);
+        provider.defaultSerializeField("countAmount", moiety.getCountAmount(), jgen);
         jgen.writeEndObject();
     }
 }

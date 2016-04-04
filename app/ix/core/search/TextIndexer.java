@@ -651,9 +651,9 @@ public class TextIndexer implements Closeable{
             return indexers.get(baseDir);
 
         try {
-            TextIndexer indexer = new TextIndexer (baseDir);
+           TextIndexer indexer = new TextIndexer (baseDir);
            indexers.put(baseDir, indexer);
-          return indexer;
+           return indexer;
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -2030,16 +2030,16 @@ public class TextIndexer implements Closeable{
 
     public void shutdown () {
         if(isShutDown){
-            System.out.println("already shutdown");
+            //System.out.println("already shutdown");
             return;
         }
-        System.out.println("shutting down " + System.identityHashCode(this));
+        //System.out.println("shutting down " + System.identityHashCode(this));
         try {
             fetchQueue.put(POISON_PAYLOAD);
             scheduler.shutdown();
-            System.out.println("waiting for termination");
+            //System.out.println("waiting for termination");
             scheduler.awaitTermination(1, TimeUnit.MINUTES);
-            System.out.println("done waiting for termination");
+            //System.out.println("done waiting for termination");
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
             saveSorters (getSorterConfigFile (), sorters);
 
@@ -2057,12 +2057,13 @@ public class TextIndexer implements Closeable{
             isShutDown=true;
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	System.out.println(ex.getMessage());
+            //ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
         finally {
             indexers.remove(baseDir);
-            System.out.println("indexers left after shutdown =" + indexers.keySet());
+            //System.out.println("indexers left after shutdown =" + indexers.keySet());
             threadPool.shutdownNow();
             try{
                 threadPool.awaitTermination(1, TimeUnit.MINUTES);
@@ -2079,7 +2080,7 @@ public class TextIndexer implements Closeable{
         try{
             closeable.close();
         }catch(Exception e){
-            e.printStackTrace();
+        	System.out.println(e.getMessage());
         }
     }
 }

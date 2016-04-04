@@ -62,11 +62,6 @@ public class SequenceIndexer {
         CACHE_MANAGER = CacheManager.getInstance();
         CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
     }
-    
-    public static void initialize(){
-    	CACHE_MANAGER = CacheManager.getInstance();
-        CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
-    }
 
     static class HSP implements Comparable<HSP> {
         public String kmer;
@@ -98,7 +93,7 @@ public class SequenceIndexer {
         public int qi, qj;
         public int ti, tj;
 
-        SEG (int qi, int qj, int ti, int tj) {
+        public SEG (int qi, int qj, int ti, int tj) {
             this.qi = qi;
             this.qj = qj;
             this.ti = ti;
@@ -141,6 +136,29 @@ public class SequenceIndexer {
 
         public String toString () {
             return "q=["+qi+","+qj+"] t=["+ti+","+tj+"]";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SEG seg = (SEG) o;
+
+            if (qi != seg.qi) return false;
+            if (qj != seg.qj) return false;
+            if (ti != seg.ti) return false;
+            return tj == seg.tj;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = qi;
+            result = 31 * result + qj;
+            result = 31 * result + ti;
+            result = 31 * result + tj;
+            return result;
         }
     }
 
@@ -260,18 +278,16 @@ public class SequenceIndexer {
     private AtomicLong lastModified = new AtomicLong (0);
     
     public static SequenceIndexer openReadOnly (File dir) throws IOException {
-        return new SequenceIndexer (dir);
+        return new SequenceIndexer (dir, true);
     }
-    
+
     public static SequenceIndexer open (File dir) throws IOException {
         return new SequenceIndexer (dir, false);
     }
+
+
     
-    public SequenceIndexer (File dir) throws IOException {
-        this (dir, true);
-    }
-    
-    public SequenceIndexer (File dir, boolean readOnly) throws IOException {
+    private SequenceIndexer (File dir, boolean readOnly) throws IOException {
         this (dir, readOnly, Executors.newCachedThreadPool());
         localThreadPool = true;
     }
@@ -280,7 +296,7 @@ public class SequenceIndexer {
 
     public SequenceIndexer (File dir, boolean readOnly,
                             ExecutorService threadPool) throws IOException {
-    	initialize();
+    	init();
     	
     	
     	
@@ -727,7 +743,7 @@ public class SequenceIndexer {
     }
     
     public static void main (String[] argv) throws Exception {
-        SequenceIndexer seqidx = SequenceIndexer.open(new File ("seqidx"));
+        SequenceIndexer seqidx = SequenceIndexer.openReadOnly(new File ("seqidx"));
         try {
             seqidx.add("1", "abcdefghijklmnabcdef");
             seqidx.add("2", "bcefgjklabc");

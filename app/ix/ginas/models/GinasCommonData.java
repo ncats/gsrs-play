@@ -1,22 +1,18 @@
 package ix.ginas.models;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.persistence.CascadeType;
-import javax.persistence.ElementCollection;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
-import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +22,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
-import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.BaseModel;
 import ix.core.models.ForceUpdatableModel;
@@ -41,12 +36,20 @@ import ix.utils.Util;
 public class GinasCommonData extends BaseModel implements GinasAccessControlled,ForceUpdatableModel{
     static public final String REFERENCE = "GInAS Reference";
     static public final String TAG = "GInAS Tag";
+	public static final String LANGUAGE = "GInAS Language";
+	public static final String DOMAIN = "GInAS Domain";
+	public static final String REFERENCE_TAG = "GInAS Document Tag";
+	public static final String NAME_JURISDICTION = "GInAS Name Jurisdiction";
+	public static final String SUB_CLASS = "GInAS Subclass";
     
     
     //used only for forcing updates
     @JsonIgnore
     private int currentVersion=0;
     
+
+    @Version
+    private Long internalVersion;
     
     @Id
     public UUID uuid;
@@ -86,14 +89,15 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     public boolean deprecated;
     
     //OLD WAY
-//    @JsonIgnore
-//    @OneToOne(cascade=CascadeType.ALL)
-//    private GinasAccessContainer recordAccess;
-    
-    
     @JsonIgnore
-    @Lob
-    private String recordAccessJSON;
+    //@Lob
+//    @OneToOne(cascade=CascadeType.ALL)
+    private GinasAccessContainer recordAccess;
+//    
+    
+//    @JsonIgnore
+//    @Lob
+//    private String recordAccessJSON;
     
     
     
@@ -132,21 +136,15 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 
     @JsonIgnore
     public GinasAccessContainer getRecordAccess() {
-    	if(recordAccessJSON==null)return null;
-    	try{
-	    	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
-	    	GinasAccessContainer gac=em.readValue(recordAccessJSON, GinasAccessContainer.class);
-	        return gac;
-    	}catch(Exception e){
-    		return null;
-    	}
+    	return recordAccess;
     }
 
     @JsonIgnore
     public void setRecordAccess(GinasAccessContainer recordAccess) {
-    	EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
-    	this.recordAccessJSON=em.toJson(recordAccess);
-        //this.recordAccess = recordAccess;
+        this.recordAccess = new GinasAccessContainer(this);
+        if(recordAccess!=null){
+        this.recordAccess.setAccess(recordAccess.getAccess());
+        }
     }
 
     @JsonProperty("access")
@@ -169,6 +167,25 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     	}
     	return new LinkedHashSet<Group>();
     }
+
+	public void addRestrictGroup(Group p){
+		GinasAccessContainer gac=this.getRecordAccess();
+		if(gac==null){
+			gac=new GinasAccessContainer(this);
+		}
+		gac.add(p);
+		this.setRecordAccess(gac);
+	}
+	
+	public void addRestrictGroup(String group){
+		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
+	}
+
+
+	@JsonIgnore
+	public Set<Group> getAccessGroups() {
+		return this.getAccess();
+	}
     
 
     public GinasCommonData () {
@@ -273,24 +290,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
 
 
-	public void addRestrictGroup(Group p){
-		GinasAccessContainer gac=this.getRecordAccess();
-		if(gac==null){
-			gac=new GinasAccessContainer(this);
-		}
-		gac.add(p);
-		this.setRecordAccess(gac);
-	}
-	
-	public void addRestrictGroup(String group){
-		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
-	}
-
-
-	@JsonIgnore
-	public Set<Group> getAccessGroups() {
-		return this.getAccess();
-	}
 
 	@Override
 	public void forceUpdate() {

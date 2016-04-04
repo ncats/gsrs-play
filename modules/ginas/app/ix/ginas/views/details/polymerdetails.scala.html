@@ -83,12 +83,13 @@
                 <th>Label</th>
                 <th>Amount</th>
                 <th>Type</th>
+                <th>Connectivity</th>
             </tr>
         </thead>       
         
         @for(m <- units) {
             <tr>
-                <td><span>SRU Display Not Available</span></td>
+                <td><span><rendered id= '@m.uuid' size ="300"></rendered></span></td>
                 <td><span class="badge badge-primary">@m.label</td>
                 <td>
                 @if(m.amount!=null){
@@ -99,6 +100,7 @@
                 
                 </td>
                 <td><span class="badge">@{m.`type`}</span></td>
+                <td>@{m.getAttachmentMap().toString()}</td>
             </tr>
         }    
     </table>

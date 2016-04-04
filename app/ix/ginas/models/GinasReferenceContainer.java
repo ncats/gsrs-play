@@ -1,26 +1,24 @@
 package ix.ginas.models;
 
-import ix.core.models.Keyword;
-import play.db.ebean.Model;
-
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.models.Keyword;
+import ix.core.models.LongBaseModel;
+
 @Entity
 @Table(name = "ix_ginas_reference_cit")
-public class GinasReferenceContainer {
-	@Id
-    public Long id;
+public class GinasReferenceContainer extends LongBaseModel{
 	
 	@ManyToMany(cascade = CascadeType.ALL)
     @JsonSerialize(using=ReferenceSetSerializer.class)    
@@ -28,10 +26,11 @@ public class GinasReferenceContainer {
     public Set<Keyword> references = new LinkedHashSet<Keyword>();
     public String entityType;
 
-	
+    
 	public GinasReferenceContainer(){
 		
 	}
+	
 	public GinasReferenceContainer(Object o){
 		this.entityType=o.getClass().getName();
 	}
@@ -58,5 +57,24 @@ public class GinasReferenceContainer {
 
     public void setEntityType(String entityType) {
         this.entityType = entityType;
+    }
+    
+    public boolean equals(Object o){
+    	return false;
+    }
+    public void addReference(String refUUID){
+    	this.references.add(new Keyword(GinasCommonSubData.REFERENCE,
+				refUUID
+		));
+    	
+    }
+    public void removeReference(String refUUID){
+    	List<Keyword> refs=new ArrayList<Keyword>(this.references);
+    	for(Keyword k:refs){
+    		if(refUUID.equals(k.term)){
+    			this.references.remove(k);
+    		}
+    	}
+    	
     }
 }

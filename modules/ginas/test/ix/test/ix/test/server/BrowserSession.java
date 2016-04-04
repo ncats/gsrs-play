@@ -1,9 +1,23 @@
 package ix.test.ix.test.server;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+
+
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.util.Cookie;
+
+import org.apache.http.impl.client.HttpClientBuilder;
 import play.libs.ws.WS;
 import play.libs.ws.WSCookie;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import static play.mvc.Http.Status.OK;
 
@@ -17,6 +31,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
     private static final long TIMEOUT = 10_000L;
 
+    private WebClient webClient;
     private  String sessionCookie;
     public BrowserSession(int port) {
         super(port);
@@ -25,33 +40,30 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     public BrowserSession(GinasTestServer.User user, int port) {
         super(user, port);
 
-        WSRequestHolder ws = WS.url(constructUrlFor("ginas/app/login"));
+        webClient = new WebClient();
+        try {
+            HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
+            //there is only 1 form but it isn't named..
+            HtmlForm form = page.getForms().get(0);
 
-            //This whole mess below is because the Play test framework
-            //doesn't respect cookies (?) and the login response
-            //returns the cookie we need to use to remain logged in.
-            //
-            //The login response is also a redirect and Play's redirect
-            //doesn't keep the Cookie so we lose the session and get logged out
-            //before our login() method returns!
-            //
-            //So we have to manually do the login POST with out following
-            //redirects, parse the cookie
-            //from the response, and then use it to create out UserSession object.
+            form.getInputsByName("username").get(0).setValueAttribute(user.getUserName());
+            form.getInputsByName("password").get(0).setValueAttribute(user.getPassword());
 
-            WSResponse response = ws.setQueryParameter("username", user.getUserName())
-                    .setQueryParameter("password", user.getPassword())
-                    .setFollowRedirects(false)
-                    .post("")
-                    .get(TIMEOUT);
+            form.getButtonByName("submit").click();
 
-            //need to get back a valid cookie value to be successfully logged in
-            WSCookie sessionCookie = response.getCookie("PLAY_SESSION");
-
-        if(sessionCookie.getValue() == null || sessionCookie.getValue().trim().isEmpty()){
-            throw new IllegalArgumentException("could not log in as " + user);
+            Cookie cook=webClient.getCookieManager().getCookie("PLAY_SESSION");
+            //System.out.println(cook);
+            if(cook==null)throw new IOException("no session established");
+            if(cook!=null){
+            	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
+            }else{
+            	this.sessionCookie = String.format("PLAY_SESSION=%s", null);
+            }
+        } catch (IOException e) {
+           throw new IllegalStateException("error logging in ", e);
         }
-            this.sessionCookie = String.format("%s=%s", sessionCookie.getName(), sessionCookie.getValue());
+
+
     }
     @Override
     public WSResponse get(String path){
@@ -67,6 +79,22 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         return ws;
     }
 
+    public WebRequest newGetRequest(String path) throws MalformedURLException {
+        return new WebRequest(new URL(constructUrlFor(path)), HttpMethod.GET);
+    }
+
+    public WebRequest newPostRequest(String path) throws MalformedURLException {
+        return new WebRequest(new URL(constructUrlFor(path)), HttpMethod.POST);
+    }
+
+    public HtmlPage submit(WebRequest request) throws IOException{
+        return webClient.getPage(request);
+    }
+
+    public WSRequestHolder newRequestHolder(String relativePath){
+        return url(constructUrlFor(relativePath));
+    }
+
     @Override
     protected WSResponse doLogout() {
         WSResponse wsResponse1 =  get("ginas/app/logout");
@@ -77,6 +105,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
         sessionCookie =null;
 
+        webClient.getCookieManager().clearCookies();
         return wsResponse1;
     }
 }

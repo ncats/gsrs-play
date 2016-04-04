@@ -1709,13 +1709,14 @@ public class App extends Authentication {
                     // we should be really use the PersistenceQueue to do this
                     // so that it doesn't block
                     struc.save();
+                    
 
                     for (Structure m : moieties)
                         m.save();
                     node.put("structure", mapper.valueToTree(struc));
                     node.put("moieties", mapper.valueToTree(moieties));
                 } catch (Exception e) {
-
+                	e.printStackTrace();
                 }
                 try {
                     Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()

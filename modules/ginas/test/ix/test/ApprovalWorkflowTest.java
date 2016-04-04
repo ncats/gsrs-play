@@ -69,7 +69,7 @@ public class ApprovalWorkflowTest {
 
 
 
-              after = api2.fetchSubstanceJson(uuid);
+              after = api2.fetchSubstanceJsonByUuid(uuid);
                 assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
                 assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
 
@@ -130,7 +130,7 @@ public class ApprovalWorkflowTest {
             SubstanceJsonUtil.ensureFailure(api2.approveSubstance(uuid));
 
             SubstanceJsonUtil.ensureFailure(api.approveSubstance(uuid));
-            JsonNode sub = api.fetchSubstanceJson(uuid);
+            JsonNode sub = api.fetchSubstanceJsonByUuid(uuid);
             String approvalID2 = SubstanceJsonUtil.getApprovalId(sub);
 
             assertEquals(approvalID1, approvalID2);

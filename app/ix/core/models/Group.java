@@ -29,4 +29,15 @@ public class Group extends LongBaseModel {
     public Group (String name) {
         this.name = name;
     }
+    
+    
+    public int hashCode(){
+    	return this.name.hashCode();
+    }
+    public boolean equals(Object o){
+    	if(o!=null && o instanceof Group){
+    		return this.name.equals(((Group)o).name);
+    	}
+    	return false;
+    }
 }

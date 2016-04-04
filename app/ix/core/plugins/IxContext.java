@@ -246,8 +246,9 @@ public class IxContext extends Plugin {
 
 				@Override
 				public void handleException(Exception e) {
-					if(e.getMessage().contains("already exists")){
-						System.err.println(e.getMessage());
+					if( e.getMessage().contains("already exists") || 
+						e.getMessage().contains(" name is already used by an existing object")){
+						System.err.println("Post evolutions alredy applied:" + e.getMessage());
 					}else{
 						e.printStackTrace();
 					}
