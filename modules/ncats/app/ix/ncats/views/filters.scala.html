@@ -10,17 +10,19 @@
 </script>
 
 @facet(f: FacetDecorator) = {
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">
+<div class="panel panel-default" >
+  <div class="panel-heading" ng-click="toggleFacet('@f.name.replace(' ', '-')-iscollapsed')">
+    <h3 class="panel-title" >
+        <i ng-show="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-right"></i>
+        <i ng-hide="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-down"></i>
     @if(f.raw) {
       @HtmlFormat.raw(f.name())
     } else {
-      @f.name()
+        @f.name()
     }
     </h3>
   </div>
-  <div class="panel-body">
+  <div class="panel-body" uib-collapse="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')">
     <table class="table table-condensed">
       @** move all selected filters upfront **@
       @for(i <- 0 until f.size()) {
