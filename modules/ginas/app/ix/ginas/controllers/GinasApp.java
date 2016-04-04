@@ -1077,19 +1077,23 @@ public class GinasApp extends App {
                 }catch(Exception e){
                         //Not a UUID
                 }
-                
         }
         List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid
             values = finder.where().istartsWith("uuid", name).findList();
+            
         }
 
         if (values.isEmpty()) {
+        	System.out.println("looking for approvalID");
             values = finder.where().ieq("approvalID", name).findList();
             if (values.isEmpty()) {
-                values = finder.where().ieq("names.name", name).findList();
-                if (values.isEmpty()) // last resort..
-                    values = finder.where().ieq("codes.code", name).findList();
+            	System.out.println("looking for name");
+                values = finder.where().ieq("names.name", name).findList(); //this is a problem for oracle
+                if (values.isEmpty()){ 
+                	System.out.println("looking for codes");
+                    values = finder.where().ieq("codes.code", name).findList();// last resort..
+                }
             }
         }
 
