@@ -1,8 +1,10 @@
 package ix.ginas.models.v1;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -25,6 +27,7 @@ public class PolymerClassification extends GinasCommonSubData {
 //    @JoinTable(name="ix_ginas_polymerclass_sub")
     @JsonSerialize(using=KeywordListSerializer.class) 
     @JsonDeserialize(contentUsing = KeywordDeserializer.SubClassDeserializer.class)  
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList polymerSubclass = new EmbeddedKeywordList();
     public String sourceType;
     

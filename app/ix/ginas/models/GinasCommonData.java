@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.persistence.Basic;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
@@ -90,6 +92,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     //OLD WAY
     @JsonIgnore
+    @Basic(fetch=FetchType.LAZY)
     //@Lob
 //    @OneToOne(cascade=CascadeType.ALL)
     private GinasAccessContainer recordAccess;
