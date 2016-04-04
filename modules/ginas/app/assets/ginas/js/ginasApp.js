@@ -507,6 +507,17 @@
             localStorageService.set('gridView', $scope.gridView);
         };
 
+        $scope.toggleFacet = function(facet){
+                $scope[facet] = !$scope[facet];
+        };
+
+        $scope.getToggleStatus = function(facet){
+            if(_.isUndefined($scope[facet])){
+                $scope[facet]= false;
+            }
+            return $scope[facet];
+        };
+
         $scope.redirectVersion = function(){
             var base =  $window.location.pathname.split('/v/')[0];
            var newLocation = "/v/" + $scope.versionNumber;
