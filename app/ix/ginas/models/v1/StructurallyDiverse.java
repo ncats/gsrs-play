@@ -49,6 +49,7 @@ public class StructurallyDiverse extends GinasCommonSubData {
 //    @JoinTable(name="ix_ginas_strucdiv_part")
     @JsonSerialize(using = KeywordListSerializer.class)
     @JsonDeserialize(contentUsing = KeywordDeserializer.PartDeserializer.class)  
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList part = new EmbeddedKeywordList();
 
     public String infraSpecificType;

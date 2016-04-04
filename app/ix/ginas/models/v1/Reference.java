@@ -45,6 +45,7 @@ public class Reference extends GinasCommonSubData {
 //    @JoinTable(name="ix_ginas_reference_tag")
     @JsonSerialize(using=KeywordListSerializer.class) 
     @JsonDeserialize(contentUsing=KeywordDeserializer.TagDeserializer.class) 
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList tags = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Uploaded Document")

@@ -68,6 +68,7 @@ public class Name extends GinasCommonSubData {
 //    )
     @JsonSerialize(using=KeywordListSerializer.class)
     @JsonDeserialize(contentUsing=KeywordDeserializer.DomainDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList domains = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
@@ -79,6 +80,7 @@ public class Name extends GinasCommonSubData {
 //    )
     @JsonSerialize(using=KeywordListSerializer.class)
     @JsonDeserialize(contentUsing=KeywordDeserializer.LanguageDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList languages = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
@@ -90,6 +92,7 @@ public class Name extends GinasCommonSubData {
 //    )
     @JsonSerialize(using=KeywordListSerializer.class)    
     @JsonDeserialize(contentUsing=KeywordDeserializer.JurisdictionDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList nameJurisdiction = new EmbeddedKeywordList();
 
 //    @ManyToMany(cascade=CascadeType.ALL)
@@ -105,6 +108,7 @@ public class Name extends GinasCommonSubData {
     @JSONEntity(title = "Naming Organizations", format = "table")
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_name_nameorg")
+    @Basic(fetch=FetchType.LAZY)
     public List<NameOrg> nameOrgs = new ArrayList<NameOrg>();
     
     

@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -93,13 +95,13 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 	
 	@JsonIgnore
-	//@Lob
 //	@OneToOne(cascade = CascadeType.ALL)
+	@Basic(fetch=FetchType.LAZY)
 	GinasAccessContainer recordAccess;
 
 
 	@JsonIgnore
-	//@OneToOne(cascade = CascadeType.ALL)
+	@Basic(fetch=FetchType.LAZY)
 	private GinasReferenceContainer recordReference;
 
 
