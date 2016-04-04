@@ -56,8 +56,6 @@ public class BrowserSession extends AbstractSession<WSResponse>{
             if(cook==null)throw new IOException("no session established");
             if(cook!=null){
             	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
-            }else{
-            	this.sessionCookie = String.format("PLAY_SESSION=%s", null);
             }
         } catch (IOException e) {
            throw new IllegalStateException("error logging in ", e);
