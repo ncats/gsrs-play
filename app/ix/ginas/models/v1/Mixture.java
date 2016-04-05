@@ -4,8 +4,7 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -14,8 +13,7 @@ import ix.ginas.models.GinasCommonSubData;
 @Entity
 @Table(name="ix_ginas_mixture")
 public class Mixture extends GinasCommonSubData {
-	@ManyToMany(cascade=CascadeType.ALL)
-	@JoinTable(name="ix_ginas_substance_mix_comp")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	public List<Component> components;
 	
 	@OneToOne(cascade=CascadeType.ALL)

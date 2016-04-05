@@ -1,10 +1,5 @@
 package ix.ginas.models.v1;
 
-import ix.core.models.Indexable;
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.utils.JSONConstants;
-import ix.ginas.models.utils.JSONEntity;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,12 +7,17 @@ import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import ix.core.models.Indexable;
+import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
-@JSONEntity(title = "Code", isFinal = true)
+@JSONEntity (title = "Code", isFinal = true)
 @Entity
 @Table(name="ix_ginas_code")
-public class Code extends GinasCommonSubData {
+public class Code extends CommonDataElementOfCollection{
+	
+	
     @JSONEntity(title = "Code system", format = JSONConstants.CV_CODE_SYSTEM)
     @Indexable(facet=true, name="Code System")
     public String codeSystem;
@@ -49,5 +49,7 @@ public class Code extends GinasCommonSubData {
     public Code (String code) {
         this.code = code;
     }
+    
+    
     
 }

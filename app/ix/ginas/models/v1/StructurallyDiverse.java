@@ -13,9 +13,9 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.KeywordDeserializer;
-import ix.ginas.models.KeywordListDeserializer;
-import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.serialization.KeywordDeserializer;
+import ix.ginas.models.serialization.KeywordListDeserializer;
+import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONEntity;
 
 @Entity
@@ -45,8 +45,6 @@ public class StructurallyDiverse extends GinasCommonSubData {
     
     
     @JSONEntity(title = "Parts", itemsTitle = "Part")
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_strucdiv_part")
     @JsonSerialize(using = KeywordListSerializer.class)
     @JsonDeserialize(contentUsing = KeywordDeserializer.PartDeserializer.class)  
     @Basic(fetch=FetchType.LAZY)

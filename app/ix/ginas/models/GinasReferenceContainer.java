@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Keyword;
 import ix.core.models.LongBaseModel;
+import ix.ginas.models.serialization.ReferenceSetDeserializer;
+import ix.ginas.models.serialization.ReferenceSetSerializer;
 
 @Entity
 @Table(name = "ix_ginas_reference_cit")

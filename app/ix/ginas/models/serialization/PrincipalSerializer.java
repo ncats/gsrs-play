@@ -1,4 +1,4 @@
-package ix.ginas.models;
+package ix.ginas.models.serialization;
 
 import java.io.IOException;
 import com.fasterxml.jackson.databind.JsonSerializer;

@@ -1,4 +1,4 @@
-package ix.ginas.models;
+package ix.ginas.models.serialization;
 
 import java.lang.reflect.*;
 import java.io.IOException;
@@ -14,16 +14,16 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ix.core.models.Keyword;
+import ix.core.models.Principal;
 
-public class KeywordListSerializer extends JsonSerializer<List<Keyword>> {
-    public KeywordListSerializer () {}
-    public void serialize (List<Keyword> keywords, JsonGenerator jgen,
+public class PrincipalListSerializer extends JsonSerializer<List<Principal>> {
+    public PrincipalListSerializer () {}
+    public void serialize (List<Principal> principals, JsonGenerator jgen,
                            SerializerProvider provider)
         throws IOException, JsonProcessingException {
         jgen.writeStartArray();
-        for (Keyword kw : keywords) {
-            provider.defaultSerializeValue(kw.term, jgen);
+        for (Principal p : principals) {
+            provider.defaultSerializeValue(p.username, jgen);
         }
         jgen.writeEndArray();
     }

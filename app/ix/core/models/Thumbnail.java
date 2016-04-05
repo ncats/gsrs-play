@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @DiscriminatorValue("THU")
 public class Thumbnail extends Figure {
     @JsonIgnore
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Figure parent;
 
     public Thumbnail () {}

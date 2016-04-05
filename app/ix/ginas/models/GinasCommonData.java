@@ -31,6 +31,10 @@ import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.util.TimeUtil;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
+import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.utils.Global;
 import ix.utils.Util;
 

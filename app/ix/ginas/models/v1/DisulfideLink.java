@@ -5,22 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
 import javax.persistence.OneToOne;
-import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.IgnoredModel;
 import ix.ginas.models.GinasCommonSimplifiedSubData;
 
 
 @SuppressWarnings("serial")
-@Entity
-@Table(name="ix_ginas_disulfide")
+//@Entity
+//@Table(name="ix_ginas_disulfide")
+@IgnoredModel
 public class DisulfideLink extends GinasCommonSimplifiedSubData {
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_disulfide_site")
-//    public List<Site> sites = new ArrayList<Site>();
 	
 	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
@@ -55,4 +52,6 @@ public class DisulfideLink extends GinasCommonSimplifiedSubData {
 	}
 	
     public DisulfideLink () {}
+    
+    
 }
