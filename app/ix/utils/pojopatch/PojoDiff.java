@@ -267,7 +267,6 @@ public class PojoDiff {
 
 			@Override
 			public int compare(JsonNode o1, JsonNode o2) {
-				// TODO Auto-generated method stub
 				String path1=o1.at("/path").asText();
 				String op1=o1.at("/op").asText();
 				
@@ -305,14 +304,13 @@ public class PojoDiff {
 				
 				int d=newpath1.compareTo(newpath2);
 				if(op1.equals("remove")){
-//					System.out.println("It's a remove:" + d + " from " + newpath1 + " to " + newpath2);
 					d=-d;
 				}
 				
 				return d;
 			}
-			
 		});
+
 	}
 	private static ArrayNode canonicalizeDiff(JsonNode diffs){
 		List<JsonNode> mynodes=new ArrayList<JsonNode>();
@@ -1022,7 +1020,7 @@ public class PojoDiff {
 				int cind=getCollectionPostion(col,prop,true);
 				
 				if(cind>=col.size()){
-					cind=col.size()-1;
+					cind=-1;
 				}
 				
 				final int c=cind;
