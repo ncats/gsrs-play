@@ -18,7 +18,7 @@
             @*
             <div>@forms.structureform()</div>
             *@
-            <structure-form parent = substance ></structure-form>
+            <structure-form parent = substance type="structure" path ="parent.structure"></structure-form>
 
             <moiety-form parent = substance ng-cloak></moiety-form>
         }
@@ -56,7 +56,7 @@
             <div>Polymer not implemented yet, still in development</div>
             <polymer-classification-form parent=substance></polymer-classification-form>
             <polymer-monomer-form parent=substance></polymer-monomer-form>
-            <structure-form heading="Idealized Structure" parent = substance></structure-form>
+            <structure-form type="idealizedStructure" path ="parent.idealizedStructure" parent = substance></structure-form>
             @*
             <div>@forms.polymerstructureform()</div>
             *@
@@ -102,14 +102,14 @@
                             Show JSON</button>
                         <button class="btn btn-primary" ng-show="show" ng-click="show=false" id="hideJSONBth" >
                             Hide JSON</button>
-                        <button class="btn btn-primary" ng-click="validateSubstance(substance)" id="validateBtn">
+                        <button class="btn btn-primary" ng-click="validateSubstance()" id="validateBtn">
                             Validate</button>
                         <button class="btn btn-primary" ng-click="compare(); diff = true" id = "compareBtn">
                             Compare</button></div>
                     <div class="col-md-2 pull-right">
-                        <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">
+                        <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance()">
                             Approve</button>
-                        <button class="btn btn-primary" ng-click="submitSubstanceConfirm(substance)">Submit</button>
+                        <button class="btn btn-primary" ng-click="submitSubstanceConfirm()">Submit</button>
                     </div>
                 </div>
                 <h1 ng-if ="substanceEqual" >{{substancesEqual}}</h1>
