@@ -71,6 +71,37 @@
                 heading: '@'
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.getLength = function(){
+                    if (!_.isUndefined(_.get(scope.parent, scope.path))) {
+                        scope.length = _.get(scope.parent, scope.path).length;
+                    }else{
+                        scope.length =0;
+                    }
+                    return scope.length;
+                };
+                scope.toggle = function () {
+                    scope.iscollapsed = !scope.iscollapsed;
+                };
+
+                scope.heading = _.startCase(scope.type);
+
+                if (_.isUndefined(scope.path)) {
+                    scope.path = scope.type;
+                }
+                scope.length = scope.getLength();
+
+                if (scope.length == 0) {
+                    scope.iscollapsed = true;
+                }
+
+                $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
+                    template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                });
+            }
+            /*link: function (scope, element, attrs) {
                 scope.getLength = function(){
                     if (!_.isUndefined(_.get(scope.parent, scope.path))) {
                         scope.length = _.get(scope.parent, scope.path).length;
@@ -109,7 +140,7 @@
                     element.append(template);
                     $compile(template)(scope);
                 });
-            }
+            }*/
         };
     });
 
@@ -857,7 +888,7 @@
             replace: true,
             scope: {
                 parent: '=',
-                heading: '@'
+                type: '@'
             },
             link: function(scope, element){
                 console.log(scope);
@@ -1194,9 +1225,9 @@ console.log(scope);
             var temp = [];
             _.forEach(display, function (arr) {
                 _.forEach(arr, function (subunit) {
-                    console.log(subunit);
+                //    console.log(subunit);
                     temp = _.reject(subunit, function (su) {
-                        console.log(su[type]);
+                    //    console.log(su[type]);
                         return su[type];
                     });
                 });
@@ -1204,7 +1235,7 @@ console.log(scope);
             if (type == 'linkage') {
                 temp = _.dropRight(temp);
             }
-            console.log(temp);
+           // console.log(temp);
             return temp;
         };
 
@@ -1896,7 +1927,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                         var ret = scope.parent[scope.parent.substanceClass].subunits[su - 1].$$cysteineIndices;
                         if (_.has(scope.parent.protein, 'disulfideLinks')) {
                             _.forEach(scope.parent.protein.disulfideLinks, function (siteList) {
-                                console.log(siteList);
+//                                console.log(siteList);
                                 _.forEach(siteList.sites, function (site) {
                                     var v;
                                     if (site.subunitIndex == (su)) {
