@@ -182,17 +182,17 @@
                     _.forEach(sub.protein.disulfideLinks, function (value, key) {
                         var disulfideLink = {};
                         var sites = _.toArray(value.sites);
-                        console.log(sites.length % 2);
+                     //   console.log(sites.length % 2);
                         if(sites.length % 2 != 0) {
                            sites = _.dropRight(sites);
                         }
                         disulfideLink.sites = sites;
                         sub.protein.disulfideLinks[key] = disulfideLink;
-                        console.log(sub.protein.disulfideLinks);
+                   //    console.log(sub.protein.disulfideLinks);
                     });
                 }
                 if (_.has(sub.protein, 'otherLinks')) {
-                    console.log(sub.protein.otherLinks);
+               //     console.log(sub.protein.otherLinks);
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
@@ -227,7 +227,30 @@
             	console.log(sub.polymer.structuralUnits);
             	polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
             }
-            	
+
+
+            if (_.has(sub, 'nucleicAcid')) {
+                console.log("nucleic setting");
+                if (_.has(sub.nucleicAcid, 'sugars')) {
+                    _.forEach(sub.nucleicAcid.sugars, function (sugar) {
+                       if(sugar.sitesShorthand){
+                           console.log(sugar.sitesShorthand);
+                          // sugar.sitesShorthand = null;//
+                           _.unset(sugar, 'sitesShorthand');
+
+                       }
+                    });
+                }
+                if (_.has(sub.nucleicAcid, 'linkages')) {
+                    _.forEach(sub.nucleicAcid.linkages, function (linkage) {
+                        if(linkage.sitesShorthand){
+                            console.log(linkage.sitesShorthand);
+                         //   linkage.sitesShorthand = null;
+                            _.unset(linkage, 'sitesShorthand');
+                        }
+                    });
+                }
+                }
             return sub;
         };
 
@@ -668,7 +691,7 @@
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-            //console.log(sub);
+            console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
@@ -701,15 +724,18 @@
             console.log($scope);
             if (_.has($scope.substance, 'update')) {
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
+                console.log(JSON.stringify(sub));
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
+                    console.log(response);
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.redirect = response.uuid;
                     $scope.open(url);
                 }, function(response){
+                    console.log(response);
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.open(url);
@@ -855,7 +881,7 @@
             var elementResult = angular.element(result);
             if ($scope.stage === true) {
                 $scope.stage = false;
-                childScope = $scope.$new();
+                var childScope = $scope.$new();
                 var rend;
                 if (!_.isUndefined(ctx)) {
                     rend = '<rendered size="500" id=' + id + ' ctx=' + ctx + '></rendered>';
