@@ -101,7 +101,8 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 
 
 	@JsonIgnore
-	@Basic(fetch=FetchType.LAZY)
+	//@Basic(fetch=FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL)
 	private GinasReferenceContainer recordReference;
 
 

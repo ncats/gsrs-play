@@ -133,7 +133,7 @@ public class SubstanceAlternativeTest {
         SubstanceJsonUtil.ensureIsValid(validationResultAUpdate);
         ensurePass(api.updateSubstance(newAVersion));
 
-       //check primary has no relationships after alternative update
+        //check primary has no relationships after alternative update
         JsonNode fetchedPrim = api.fetchSubstanceJsonByUuid(uuid);
         assertNull(fetchedPrim.get("relationships").get(0));
 
