@@ -23,7 +23,7 @@ public class Payload extends BaseModel {
     @Id
     public UUID id;
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Namespace namespace;
     
     

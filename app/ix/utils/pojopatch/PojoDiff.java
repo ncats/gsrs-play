@@ -82,12 +82,12 @@ public class PojoDiff {
 	public static class JsonObjectPatch<T> implements PojoPatch<T>{
 		private JsonPatch jp;
 		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
-		public Stack apply(T old) throws Exception{
-			return applyPatch(old,jp);
+		public Stack apply(T old, ChangeEventListener ... changeListener) throws Exception{
+			return applyPatch(old,jp,changeListener);
 		}
 		@Override
-		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
-			return new ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+		public List<Change> getChanges() {
+			return new ArrayList<Change>();
 		}
 	}
 	
@@ -99,23 +99,23 @@ public class PojoDiff {
 			this.oldV=oldV;
 			this.newV=newV;
 		}
-		public Stack apply(Object old) throws Exception{
+		public Stack apply(Object old, ChangeEventListener ... changeListener) throws Exception{
 			if(jp==null){
 				jp=getJsonDiff(oldV,newV);
 			}
 			if(old==oldV){
-				return applyChanges(oldV,newV, jp);
+				return applyChanges(oldV,newV, jp,changeListener);
 			}else{
 				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
 			}
 		}
 		@Override
-		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
-			List<ix.utils.pojopatch.PojoPatch.Change> changes= new
-					ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+		public List<Change> getChanges() {
+			List<Change> changes= new
+					ArrayList<Change>();
 			JsonNode jsnp = getJsonDiff(oldV,newV);
 			for(JsonNode jsn:jsnp){
-				changes.add(new ix.utils.pojopatch.PojoPatch.Change(jsn));
+				changes.add(new Change(jsn));
 			}
 			return changes;
 		}
@@ -130,23 +130,23 @@ public class PojoDiff {
 			this.newV=newV;
 		}
 		
-		public Stack apply(Object old) throws Exception{
+		public Stack apply(Object old, ChangeEventListener ... changeListener) throws Exception{
 			if(jp==null){
 				jp=getEnhancedJsonDiff(oldV,newV);
 			}
 			if(old==oldV){
-				return applyChanges(oldV,newV, jp);
+				return applyChanges(oldV,newV, jp,changeListener);
 			}else{
 				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
 			}
 		}
 		@Override
-		public List<ix.utils.pojopatch.PojoPatch.Change> getChanges() {
-			List<ix.utils.pojopatch.PojoPatch.Change> changes= new
-					ArrayList<ix.utils.pojopatch.PojoPatch.Change>();
+		public List<Change> getChanges() {
+			List<Change> changes= new
+					ArrayList<Change>();
 			JsonNode jsnp = getEnhancedJsonDiff(oldV,newV);
 			for(JsonNode jsn:jsnp){
-				changes.add(new ix.utils.pojopatch.PojoPatch.Change(jsn));
+				changes.add(new Change(jsn));
 			}
 			return changes;
 		}
@@ -392,7 +392,7 @@ public class PojoDiff {
 		//return normalDiff;
 	}
 	
-	private static <T> Stack applyPatch(T oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
+	private static <T> Stack applyPatch(T oldValue, JsonPatch jp, ChangeEventListener ... changeListener) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
 		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 		JsonNode oldNode=mapper.valueToTree(oldValue);
 		JsonNode newNode=jp.apply(oldNode);
@@ -409,7 +409,7 @@ public class PojoDiff {
 	    			);
 	}
 	
-	private static <T> Stack applyChanges(T oldValue, T newValue, JsonNode jsonpatch){
+	private static <T> Stack applyChanges(T oldValue, T newValue, JsonNode jsonpatch,ChangeEventListener ... changeListener){
 			LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
 			if(jsonpatch==null){
 				ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -426,6 +426,8 @@ public class PojoDiff {
         		String path=change.get("path").asText();
         		String from=path;
         		Object newv=null;
+        		Object oldv=null;
+        		
         		String op=change.get("op").asText();
         		if("replace".equals(op) ||
         			   "add".equals(op)	
@@ -441,12 +443,12 @@ public class PojoDiff {
         		
         		
         	    if("replace".equals(op)){
-        			Manipulator.setObjectAt(oldValue, path, newv, changedContainers);
+        	    	oldv=Manipulator.setObjectAt(oldValue, path, newv, changedContainers);
         		}
         	    if("remove".equals(op) ||
         	         "move".equals(op)
         	    		){
-        			Manipulator.removeObjectAt(oldValue, from, changedContainers);
+        			oldv=Manipulator.removeObjectAt(oldValue, from, changedContainers);
         		}
         	    if( "add".equals(op) ||
         		   "copy".equals(op) ||
@@ -454,6 +456,12 @@ public class PojoDiff {
         				){
         			Manipulator.addObjectAt(oldValue, path, newv, changedContainers);
         		}
+        	    
+        	    Change c = new Change(path, op, oldv, newv, null);
+        	    
+        	    for(ChangeEventListener ch: changeListener){
+    				ch.handleChange(c);
+    			}
             	
         	}
         	//System.out.println("============");
@@ -671,7 +679,8 @@ public class PojoDiff {
 			public boolean isIgnored();
 		}
 		public static interface Setter{
-			public void set(Object instance, Object set);
+			
+			public Object set(Object instance, Object set);
 			public boolean isIgnored();
 		}
 		public static class MapSetter implements Setter{
@@ -680,12 +689,15 @@ public class PojoDiff {
 				this.key=key;
 			}
 			@Override
-			public void set(Object instance, Object set) {
+			public Object set(Object instance, Object set) {
 				if(instance instanceof Map){
+					Map m= ((Map)instance);
 					if(set==null){
-						((Map)instance).remove(key);
+						return m.remove(key);
 					}else{
-						((Map)instance).put(key, set);
+						Object old=m.get(key);
+						m.put(key, set);
+						return old;
 					}
 				}else{
 					throw new IllegalStateException(instance.getClass() + " is not a Map");
@@ -706,9 +718,10 @@ public class PojoDiff {
 			}
 			
 			@Override
-			public void set(Object instance, Object set) {
+			public Object set(Object instance, Object set) {
 				try{
 					m.invoke(instance, set);
+					return null;
 				}catch(Exception e){
 					throw new IllegalStateException(e);
 				}
@@ -777,9 +790,11 @@ public class PojoDiff {
 			}
 			
 			@Override
-			public void set(Object instance, Object value) {
+			public Object set(Object instance, Object value) {
 				try{
+					Object old=m.get(instance);
 					m.set(instance, value);
+					return old;
 				}catch(Exception e){
 					throw new IllegalStateException(e);
 				}
@@ -889,8 +904,11 @@ public class PojoDiff {
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 						@Override
-						public void set(Object instance, Object set) {
-							((List)instance).set(c, set);
+						public Object set(Object instance, Object set) {
+							List asList=((List)instance);
+							Object old=asList.get(c);
+							asList.set(c, set);
+							return old;
 						}
 						@Override
 						public boolean isIgnored() {return false;}
@@ -901,7 +919,7 @@ public class PojoDiff {
 					return new TypeRegistry.Setter(){
 
 						@Override
-						public void set(Object instance, Object set) {
+						public Object set(Object instance, Object set) {
 							Collection c1=(Collection)instance;
 							List l = new ArrayList(c1);
 							c1.clear();
@@ -915,6 +933,7 @@ public class PojoDiff {
 									c1.add(o);
 								}
 							}
+							return old;
 						}
 						@Override
 						public boolean isIgnored() {return false;}
@@ -948,8 +967,8 @@ public class PojoDiff {
 					return new TypeRegistry.Setter(){
 
 						@Override
-						public void set(Object instance, Object set) {
-							((List)instance).remove(c);
+						public Object set(Object instance, Object set) {
+							return ((List)instance).remove(c);
 						}
 						@Override
 						public boolean isIgnored() {return false;}
@@ -961,9 +980,9 @@ public class PojoDiff {
 					return new TypeRegistry.Setter(){
 
 						@Override
-						public void set(Object instance, Object set) {
+						public Object set(Object instance, Object set) {
 							((Collection)instance).remove(old);
-							//((Collection)instance).add(set);
+							return old;
 						}
 						@Override
 						public boolean isIgnored() {return false;}
@@ -976,8 +995,8 @@ public class PojoDiff {
 			if(setter!=null){
 				return new TypeRegistry.Setter(){
 					@Override
-					public void set(Object instance, Object set) {
-						setter.set(instance, null);
+					public Object set(Object instance, Object set) {
+						return setter.set(instance, null);
 					}
 					@Override
 					public boolean isIgnored() {return false;}
@@ -1002,12 +1021,14 @@ public class PojoDiff {
 				if(o instanceof List){
 					return new TypeRegistry.Setter(){
 						@Override
-						public void set(Object instance, Object set) {
+						public Object set(Object instance, Object set) {
+							List asList = (List)instance;
 							if(c<0){
-								((List)instance).add(set);
+								asList.add(set);
 							}else{
-								((List)instance).add(c, set);
+								asList.add(c, set);
 							}
+							return null;
 						}
 						@Override
 						public boolean isIgnored() {return false;}
@@ -1018,7 +1039,7 @@ public class PojoDiff {
 					return new TypeRegistry.Setter(){
 
 						@Override
-						public void set(Object instance, Object set) {
+						public Object set(Object instance, Object set) {
 							if(c<0){
 								((Collection)instance).add(set);
 							}else{
@@ -1033,7 +1054,7 @@ public class PojoDiff {
 								}
 								
 							}
-							
+							return null;
 						}
 						@Override
 						public boolean isIgnored() {return false;}
@@ -1065,34 +1086,37 @@ public class PojoDiff {
 			return getObjectAt(fetched,subPath, chainChange);
 		}
 		
-		public static void setObjectAt(Object src, String objPointer, Object newValue, Collection<Object> changeChain){
-			if(objPointer==null||objPointer.equals(""))return;
+		public static Object setObjectAt(Object src, String objPointer, Object newValue, Collection<Object> changeChain){
+			if(objPointer==null||objPointer.equals(""))return null;
 			String subPath=objPointer.replaceAll("/[^/]*$", "");
 			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
+			Object old=null;
 			
 			Object fetched=getObjectAt(src,subPath,changeChain);
 			TypeRegistry.Setter s=getSetterDirect(fetched,lastPath);
 			if(s!=null){
-				s.set(fetched, newValue);
+				old=s.set(fetched, newValue);
 				//System.out.println("able to set:" + fetched.getClass());
 				setObjectAt(src,subPath,fetched,changeChain);
 			}else{
 				//System.out.println("not able to set:" + fetched.getClass());
 			}
+			return old;
 		}
-		public static void removeObjectAt(Object src, String objPointer, Collection<Object> changeChain){
+		public static Object removeObjectAt(Object src, String objPointer, Collection<Object> changeChain){
 			List<Object> visited= new ArrayList<Object>();
 			String subPath=objPointer.replaceAll("/[^/]*$", "");
 			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
 			
+			Object oldValue=null;
 			//this is the container for that object
 			Object fetched=getObjectAt(src,subPath,visited);
 			
 			
-			//This gets the setter for the object 
+			//This gets the removal setter for the object 
 			TypeRegistry.Setter s=getRemoverDirect(fetched,lastPath);
 			if(s!=null){
-				s.set(fetched, null);
+				oldValue= s.set(fetched, null);
 				//System.out.println("able to remove:" + fetched.getClass());
 				//Ideally, "fetched" is set correctly now,
 				//so save up the tree
@@ -1102,6 +1126,7 @@ public class PojoDiff {
 				System.out.println("not able to remove:" + fetched.getClass());
 			}
 			changeChain.addAll(visited);
+			return oldValue;
 		}
 		public static void addObjectAt(Object src, String objPointer, Object set, Collection<Object> changeChain){
 			//System.out.println(objPointer);

@@ -1,26 +1,24 @@
 package app.ix.utils.pojopatch;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import ix.core.controllers.EntityFactory;
-import ix.core.models.Author;
-import ix.core.models.Keyword;
-import ix.ginas.models.v1.Parameter;
-import ix.ginas.models.v1.Property;
-import ix.ginas.models.v1.Reference;
-import ix.ginas.models.v1.Substance;
-import ix.utils.pojopatch.PojoDiff;
-import ix.utils.pojopatch.PojoPatch;
-import ix.utils.pojopatch.PojoPatch.Change;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-import java.util.*;
+import ix.core.models.Author;
+import ix.ginas.models.v1.Parameter;
+import ix.ginas.models.v1.Property;
+import ix.utils.pojopatch.PojoDiff;
+import ix.utils.pojopatch.PojoPatch;
 
 /**
  * Created by katzelda on 3/7/16.

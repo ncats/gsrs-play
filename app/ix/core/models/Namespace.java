@@ -22,7 +22,7 @@ public class Namespace extends LongBaseModel {
     @Indexable(facet=true,name="Namespace")
     public String name;
     
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Principal owner;
 
     @Column(length=1024)

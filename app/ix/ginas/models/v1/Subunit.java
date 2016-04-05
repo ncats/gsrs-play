@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import ix.core.SingleParent;
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSubData;
 
@@ -12,6 +13,7 @@ import javax.persistence.Table;
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_subunit")
+@SingleParent
 public class Subunit extends GinasCommonSubData {
     @Lob
     @Basic(fetch=FetchType.EAGER)

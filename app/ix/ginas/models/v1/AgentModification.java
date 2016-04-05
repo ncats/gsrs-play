@@ -1,17 +1,23 @@
 package ix.ginas.models.v1;
 
+import ix.core.SingleParent;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @JSONEntity(title = "Agent Modification", isFinal = true)
 @Entity
 @Table(name="ix_ginas_agentmod")
+@SingleParent
 public class AgentModification extends GinasCommonSubData {
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private Modifications owner;
+	
     @JSONEntity(title = "Process")
     public String agentModificationProcess;
     

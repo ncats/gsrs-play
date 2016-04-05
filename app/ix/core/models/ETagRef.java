@@ -1,11 +1,10 @@
 package ix.core.models;
 
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
-
-import play.db.ebean.Model;
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name="ix_core_etagref")
@@ -13,7 +12,7 @@ public class ETagRef extends LongBaseModel {
     @Id
     public Long id;
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public ETag etag;
 
     public Long refId;

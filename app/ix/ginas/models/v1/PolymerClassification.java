@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.models.Indexable;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.KeywordDeserializer;
-import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.serialization.KeywordDeserializer;
+import ix.ginas.models.serialization.KeywordListSerializer;
 
 @Entity
 public class PolymerClassification extends GinasCommonSubData {
@@ -23,12 +23,12 @@ public class PolymerClassification extends GinasCommonSubData {
     @Indexable(facet=true,name="Polymer Geometry")
     public String polymerGeometry;
     
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_polymerclass_sub")
     @JsonSerialize(using=KeywordListSerializer.class) 
     @JsonDeserialize(contentUsing = KeywordDeserializer.SubClassDeserializer.class)  
     @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList polymerSubclass = new EmbeddedKeywordList();
+    
+    
     public String sourceType;
     
     @OneToOne(cascade=CascadeType.ALL)

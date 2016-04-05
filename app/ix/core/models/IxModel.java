@@ -17,7 +17,7 @@ public class IxModel extends BaseModel {
     @Id public Long id;
     @Version public Long version;
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JsonView(BeanViews.Full.class)
     public Namespace namespace; // namespace of dictionary, ontology, etc.
     

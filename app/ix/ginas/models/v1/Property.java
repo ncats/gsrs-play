@@ -1,19 +1,24 @@
 package ix.ginas.models.v1;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import ix.core.models.Keyword;
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.KeywordListSerializer;
-import ix.ginas.models.utils.JSONEntity;
-
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity(title = "Property", isFinal = true)
 @Entity
 @Table(name = "ix_ginas_property")
-public class Property extends GinasCommonSubData {
+public class Property extends CommonDataElementOfCollection {
+	
+	
     @JSONEntity(title = "Property Name", isRequired = true)
     @Column(nullable = false)
     private String name;
@@ -32,8 +37,7 @@ public class Property extends GinasCommonSubData {
     private Boolean defining;
 
     @JSONEntity(title = "Parameters", format = "table")
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ix_ginas_property_parameter")
+    @OneToMany(mappedBy="owner",cascade = CascadeType.ALL)
     private List<Parameter> parameters = new ArrayList<Parameter>();
 
     public Property() {

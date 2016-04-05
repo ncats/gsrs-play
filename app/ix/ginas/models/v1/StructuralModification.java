@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -17,6 +18,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Table(name="ix_ginas_structuralmod")
 @JSONEntity(title = "Structural Modification", isFinal = true)
 public class StructuralModification extends GinasCommonSubData {
+	
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private Modifications owner;
+	
     @JSONEntity(title = "Modification Type", isRequired = true)
     public String structuralModificationType;
     

@@ -14,6 +14,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -26,12 +27,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.VIntArray;
 import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.IntArrayDeserializer;
-import ix.ginas.models.IntArraySerializer;
+import ix.ginas.models.serialization.IntArrayDeserializer;
+import ix.ginas.models.serialization.IntArraySerializer;
 
 @Entity
 @Table(name="ix_ginas_unit")
 public class Unit extends GinasCommonSubData {
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private Polymer owner;
+	
+	
     @OneToOne(cascade=CascadeType.ALL)
     @JsonSerialize(using = IntArraySerializer.class)
     @JsonDeserialize(using = IntArrayDeserializer.class)

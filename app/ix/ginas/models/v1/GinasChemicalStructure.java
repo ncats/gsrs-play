@@ -41,12 +41,12 @@ import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.GinasReferenceContainer;
-import ix.ginas.models.GroupListDeserializer;
-import ix.ginas.models.GroupListSerializer;
-import ix.ginas.models.PrincipalDeserializer;
-import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.ReferenceSetDeserializer;
-import ix.ginas.models.ReferenceSetSerializer;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
+import ix.ginas.models.serialization.PrincipalSerializer;
+import ix.ginas.models.serialization.ReferenceSetDeserializer;
+import ix.ginas.models.serialization.ReferenceSetSerializer;
 
 @Entity
 @DiscriminatorValue("GSRS")

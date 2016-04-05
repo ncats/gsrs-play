@@ -26,8 +26,9 @@ public class Curation extends LongBaseModel {
     @Id
     public Long id;
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade=CascadeType.PERSIST)
     public Principal curator;
+    
     public Status status;
 
     public final Date timestamp = TimeUtil.getCurrentDate();

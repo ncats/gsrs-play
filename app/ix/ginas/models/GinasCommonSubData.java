@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Keyword;
+import ix.ginas.models.serialization.ReferenceSetDeserializer;
+import ix.ginas.models.serialization.ReferenceSetSerializer;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 

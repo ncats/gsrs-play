@@ -597,9 +597,6 @@ public class GinasApp extends App {
         final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
 
-//        System.out.println("######################################");
-//        System.out.println("Fetching key:" + key);
-        
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {

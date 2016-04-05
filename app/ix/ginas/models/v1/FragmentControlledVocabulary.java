@@ -1,8 +1,9 @@
 package ix.ginas.models.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ix.ginas.models.CodeSystemVocabularyTermListDeserializer;
-import ix.ginas.models.FragmentVocabularyTermListDeserializer;
+
+import ix.ginas.models.serialization.CodeSystemVocabularyTermListDeserializer;
+import ix.ginas.models.serialization.FragmentVocabularyTermListDeserializer;
 
 import javax.persistence.*;
 import java.util.ArrayList;

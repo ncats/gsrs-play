@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.models.Keyword;
 
+
 public class EmbeddedKeywordList extends ArrayList<Keyword>{
 	@JsonIgnore
 	private List<Keyword> keywords = new ArrayList<Keyword>();
