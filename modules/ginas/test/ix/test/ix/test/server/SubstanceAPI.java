@@ -23,7 +23,8 @@ public class SubstanceAPI {
 
     private static final String API_URL_SUBSTANCES_SEARCH="ginas/app/api/v1/substances/search";
 
-
+    
+    private static final String UI_URL_SUBSTANCE_SEARCH_FLEX="ginas/app/substances?type=flex&q=$SMILES$";
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
 
@@ -87,6 +88,16 @@ public class SubstanceAPI {
     public WSResponse approveSubstance(String uuid){
         return session.createRequestHolder(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
     }
+    
+    public WSResponse getFlexMatch(String smiles){
+        return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_FLEX.replace("$SMILES$", smiles)).get().get(timeout);
+    }
+    
+    public String getFlexMatchHTML(String smiles){
+    	WSResponse wsr= getFlexMatch(smiles);
+    	return wsr.getBody();
+    }
+    
     public WSResponse instrumentMol(String mol){
         return session.createRequestHolder(API_URL_MOL).post(mol).get(timeout);
     }

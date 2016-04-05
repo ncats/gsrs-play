@@ -97,12 +97,10 @@ public class ChemicalApiTest {
    	public void testFlexMatch() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
-
             SubstanceAPI api = new SubstanceAPI(session);
-
-            String uuid = entered.get("uuid").asText();
             ensurePass( api.submitSubstance(entered));
-            
+            String html=api.getFlexMatchHTML("ClCC1CO1");
+            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span class=\"label label-default\">1</span>"));
         }
    	}
     

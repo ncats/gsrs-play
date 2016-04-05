@@ -891,7 +891,7 @@ public class GinasApp extends App {
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
 //                        System.out.println("L4:" + struc2.getLychiv4Hash());
 //                        System.out.println("L3:" + struc2.getLychiv3Hash());
-                        
+                        System.out.println("Searching for:" + struc2.getLychiv3Hash());
                         return _substances(struc2.getLychiv3Hash(),rows,page);
                 }catch(Exception e){
                         

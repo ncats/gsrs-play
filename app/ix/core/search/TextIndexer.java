@@ -1345,7 +1345,6 @@ public class TextIndexer implements Closeable{
             if (DEBUG (2)) {
                 Logger.debug(">>> Not indexable "+entity);
             }
-
             return;
         }
 
