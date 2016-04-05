@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Group;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
 
 //@Entity
 //@Table(name = "ix_ginas_access")

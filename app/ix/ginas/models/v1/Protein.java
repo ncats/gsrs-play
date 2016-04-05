@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -21,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
-import ix.core.models.Role;
 import ix.ginas.models.GinasCommonSubData;
 import play.Logger;
 
@@ -46,15 +46,6 @@ public class Protein extends GinasCommonSubData {
     public String disulfJSON=null;
     
     
-    
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_protein_disulfide")
-//    public List<DisulfideLink> disulfideLinks = new ArrayList<DisulfideLink>();
-//    
-//    public List<DisulfideLink> getDisulfideLinks(){
-//    	
-//    	return this.disulfideLinks;
-//    }
     @Transient
     List<DisulfideLink> tmpDisulfides=null;
     
@@ -96,16 +87,10 @@ public class Protein extends GinasCommonSubData {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_protein_subunit")
     public List<Subunit> subunits = new ArrayList<Subunit>();
-
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_protein_otherlinks")
+    
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     public List<OtherLinks> otherLinks = new ArrayList<OtherLinks>();
 
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_protein_reference")
-//    @JsonSerialize(using=ReferenceListSerializer.class)
-//    @JsonDeserialize(using=ReferenceListDeserializer.class)
-//    public List<Value> references = new ArrayList<Value>();
 
     public Protein () {}
 

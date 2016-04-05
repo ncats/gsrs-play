@@ -20,7 +20,7 @@ public class Author extends Principal {
     public String affiliation;
     public String orcid; // http://orcid.org/
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Organization institution;
 
     public Author () {}

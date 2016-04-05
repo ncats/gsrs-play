@@ -1,4 +1,4 @@
-package ix.ginas.models.v1;
+package ix.ginas.models.serialization;
 
 import java.util.Date;
 import java.io.IOException;

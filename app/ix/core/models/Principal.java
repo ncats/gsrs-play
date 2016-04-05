@@ -34,7 +34,7 @@ public class Principal extends IxModel {
     @Column(length=1024)
     public String uri; // can be email or any unique uri
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Figure selfie;
 
     public Principal () {}

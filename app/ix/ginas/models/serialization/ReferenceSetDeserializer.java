@@ -1,7 +1,8 @@
-package ix.ginas.models;
+package ix.ginas.models.serialization;
 
 import ix.core.models.Keyword;
 import ix.core.models.Value;
+import ix.ginas.models.GinasCommonSubData;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;

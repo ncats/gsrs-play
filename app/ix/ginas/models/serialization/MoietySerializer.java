@@ -1,4 +1,4 @@
-package ix.ginas.models.v1;
+package ix.ginas.models.serialization;
 
 import java.io.IOException;
 
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-import ix.ginas.models.StructureSerializer;
+import ix.ginas.models.v1.Moiety;
 
 public class MoietySerializer extends JsonSerializer<Moiety> {
     StructureSerializer serializer = new StructureSerializer ();

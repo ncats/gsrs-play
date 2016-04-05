@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
 
+import ix.core.SingleParent;
 import ix.core.models.BeanViews;
 import ix.ginas.models.GinasCommonSubData;
 
@@ -9,6 +10,7 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -18,7 +20,12 @@ import com.fasterxml.jackson.annotation.JsonView;
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_linkage")
+@SingleParent
 public class Linkage extends GinasCommonSubData {
+
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private NucleicAcid owner;
+	
 	String linkage;
 	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)

@@ -23,7 +23,7 @@ import ix.ginas.models.*;
 @JSONEntity(title = "Relationship", isFinal = true)
 @Entity
 @Table(name="ix_ginas_relationship")
-public class Relationship extends GinasCommonSubData {
+public class Relationship extends CommonDataElementOfCollection {
     
     @JSONEntity(title="Amount")
     @OneToOne(cascade=CascadeType.ALL)

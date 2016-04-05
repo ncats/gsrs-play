@@ -21,7 +21,7 @@ public class Investigator extends LongBaseModel {
 
     public Long piId; // PI id
     
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Organization organization;
 
     public Role role;

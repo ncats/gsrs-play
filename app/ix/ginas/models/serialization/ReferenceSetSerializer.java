@@ -1,4 +1,4 @@
-package ix.ginas.models;
+package ix.ginas.models.serialization;
 
 import ix.core.models.Keyword;
 import ix.core.models.Value;

@@ -55,7 +55,7 @@ public class ProcessingRecord extends LongBaseModel {
     @OneToOne(cascade=CascadeType.ALL)
     public XRef xref;
     
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JsonView(BeanViews.Full.class)
     public ProcessingJob job;
 

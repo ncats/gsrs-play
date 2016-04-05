@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -39,12 +41,12 @@ import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.GinasReferenceContainer;
-import ix.ginas.models.GroupListDeserializer;
-import ix.ginas.models.GroupListSerializer;
-import ix.ginas.models.PrincipalDeserializer;
-import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.ReferenceSetDeserializer;
-import ix.ginas.models.ReferenceSetSerializer;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
+import ix.ginas.models.serialization.PrincipalSerializer;
+import ix.ginas.models.serialization.ReferenceSetDeserializer;
+import ix.ginas.models.serialization.ReferenceSetSerializer;
 
 @Entity
 @DiscriminatorValue("GSRS")
@@ -93,13 +95,13 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 	
 	@JsonIgnore
-	//@Lob
 //	@OneToOne(cascade = CascadeType.ALL)
+	@Basic(fetch=FetchType.LAZY)
 	GinasAccessContainer recordAccess;
 
 
 	@JsonIgnore
-	//@OneToOne(cascade = CascadeType.ALL)
+	@Basic(fetch=FetchType.LAZY)
 	private GinasReferenceContainer recordReference;
 
 

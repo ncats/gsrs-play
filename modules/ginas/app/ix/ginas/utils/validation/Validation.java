@@ -19,7 +19,7 @@ import ix.core.plugins.PayloadPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.KeywordDeserializer;
+import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
