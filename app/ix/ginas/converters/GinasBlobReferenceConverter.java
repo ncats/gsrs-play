@@ -5,8 +5,8 @@ import ix.ginas.models.GinasReferenceContainer;
 import ix.ginas.models.converters.EntityJsonClobConverter;
 
 @Converter
-public class GinasReferenceConverter extends EntityJsonClobConverter<GinasReferenceContainer> {
-	public GinasReferenceConverter() {
+public class GinasBlobReferenceConverter extends EntityJsonClobConverter<GinasReferenceContainer> {
+	public GinasBlobReferenceConverter() {
 		super(GinasReferenceContainer.class);
 	}
 }
