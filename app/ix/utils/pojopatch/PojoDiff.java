@@ -279,27 +279,35 @@ public class PojoDiff {
 				if(diff!=0){
 					return diff;
 				}
-				path1.replaceAll("/_([0-9][0-9]*)", "/#$1");
-				path2.replaceAll("/_([0-9][0-9]*)", "/#$1");
+				//System.out.println(path1);
+				
+				path1=path1.replaceAll("/_([0-9][0-9]*)", "/#$1!");
+				path2=path2.replaceAll("/_([0-9][0-9]*)", "/#$1!");
+				//System.out.println("now:" + path1);
 				String newpath1="";
 				String newpath2="";
 				String[] paths1=path1.split("#");
 				String[] paths2=path2.split("#");
-				for(int i=0;i<paths1.length;i++){
-					if(paths1[i].startsWith("#")){
-						int k=Integer.parseInt(paths1[i].substring(1));
+				for(int i=1;i<paths1.length;i++){
+					//if(paths1[i].startsWith("#")){
+						int k=Integer.parseInt(paths1[i].split("!")[0]);
 						String np=String.format("%05d", k);
 						newpath1+=np;
-					}
+					//}
 				}
-				for(int i=0;i<paths2.length;i++){
-					if(paths2[i].startsWith("#")){
-						int k=Integer.parseInt(paths2[i].substring(1));
+				for(int i=1;i<paths2.length;i++){
+					//if(paths2[i].startsWith("#")){
+						int k=Integer.parseInt(paths2[i].split("!")[0]);
 						String np=String.format("%05d", k);
 						newpath2+=np;
-					}
+					//}
 				}
+				
 				int d=newpath1.compareTo(newpath2);
+				if(op1.equals("remove")){
+//					System.out.println("It's a remove:" + d + " from " + newpath1 + " to " + newpath2);
+					d=-d;
+				}
 				
 				return d;
 			}

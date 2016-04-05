@@ -1583,7 +1583,7 @@ public class EntityFactory extends Controller {
 //	            }
 	            
 	            final List<Object> removed = new ArrayList<Object>();
-	            
+	            //System.out.println("Test");
 	            //Apply the changes, grabbing every change along the way
 	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
 					@Override
@@ -1594,7 +1594,7 @@ public class EntityFactory extends Controller {
 						}
 					}
 	            });
-	            
+	            //System.out.println("Test2");
 	            
 	            
 	        	while(!changeStack.isEmpty()){
@@ -1609,6 +1609,7 @@ public class EntityFactory extends Controller {
 		            	}
 	        		}
 	        	}
+
 	        	//explicitly delete deleted things
 	        	
 	        	//This should ONLY delete objects which "belong"
@@ -1669,6 +1670,7 @@ public class EntityFactory extends Controller {
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
+            //ex.printStackTrace();
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
