@@ -30,6 +30,7 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
     @JsonIgnore
     //@OneToOne(cascade=CascadeType.ALL)
     @Basic(fetch=FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL)
 	public GinasReferenceContainer recordReference;
     
     

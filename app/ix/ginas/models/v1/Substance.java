@@ -10,6 +10,8 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -162,7 +164,10 @@ public class Substance extends GinasCommonData {
 	@JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
 	@JsonSerialize(using = KeywordListSerializer.class)
     @JsonDeserialize(contentUsing = KeywordDeserializer.TagDeserializer.class)
-	public EmbeddedKeywordList tags = new EmbeddedKeywordList();
+	@ManyToMany(cascade = CascadeType.ALL)
+    @JsonView(BeanViews.Full.class)
+    @JoinTable(name = "ix_ginas_substance_tags")
+	public List<Keyword> tags = new ArrayList<Keyword>();
 	
 	public void addTag(Keyword tag){
 		for(Keyword k:tags){
