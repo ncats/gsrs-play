@@ -1102,6 +1102,13 @@ public class TextIndexer implements Closeable{
                     DrillSideways.DrillSidewaysResult swResult = 
                         sideway.search(ddq, filter, null, 
                                        options.max(), sorter, false, false);
+
+                    /*
+                     * TODO: is this the only way to collect the counts
+                     * for range/dynamic facets
+                     */
+                    FacetsCollector.search
+                        (searcher, ddq, filter, options.max(), fc);
                     
                     facets = swResult.facets;
                     hits = swResult.hits;
@@ -2056,7 +2063,7 @@ public class TextIndexer implements Closeable{
             isShutDown=true;
         }
         catch (Exception ex) {
-        	System.out.println(ex.getMessage());
+                System.out.println(ex.getMessage());
             //ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
@@ -2079,7 +2086,7 @@ public class TextIndexer implements Closeable{
         try{
             closeable.close();
         }catch(Exception e){
-        	System.out.println(e.getMessage());
+                System.out.println(e.getMessage());
         }
     }
 }
