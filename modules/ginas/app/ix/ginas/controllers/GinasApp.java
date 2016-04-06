@@ -556,9 +556,8 @@ public class GinasApp extends App {
                 (sha1, new Callable<SearchResult>() {
                         public SearchResult call () throws Exception {
                             SearchOptions options = new SearchOptions
-                            (Substance.class);
+                            (Substance.class, total, 0, FACET_DIM);
                             options.parse(params);
-                            options.fetch = total;
                             instrumentSubstanceSearchOptions (options);
                             SearchResult result = _textIndexer.search
                             (options, q, null);
@@ -654,10 +653,10 @@ public class GinasApp extends App {
             
         }
         SubstanceFilter subFilter = new SubstanceFilter();
-		
+                
         return ok(ix.ginas.views.html.substances.render
                   (page, rows, result.count(), pages, decorate(facets),
-                		  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
+                                  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
 
     }
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
@@ -1082,13 +1081,13 @@ public class GinasApp extends App {
         }
 
         if (values.isEmpty()) {
-        	System.out.println("looking for approvalID");
+                System.out.println("looking for approvalID");
             values = finder.where().ieq("approvalID", name).findList();
             if (values.isEmpty()) {
-            	System.out.println("looking for name");
+                System.out.println("looking for name");
                 values = finder.where().ieq("names.name", name).findList(); //this is a problem for oracle
                 if (values.isEmpty()){ 
-                	System.out.println("looking for codes");
+                        System.out.println("looking for codes");
                     values = finder.where().ieq("codes.code", name).findList();// last resort..
                 }
             }
@@ -1623,22 +1622,22 @@ public class GinasApp extends App {
         if(httpStat == NOT_FOUND){
             Substance s = SubstanceFactory.getSubstance(id);
             if(s!=null){
-            	if(s instanceof ChemicalSubstance){
-	                String sid1= ((ChemicalSubstance) s).structure.id.toString();
-	                return App.structure(sid1, format, size, atomMap);
-	            }else{
-	                return placeHolderImage(s);
-	            }
-            	
+                if(s instanceof ChemicalSubstance){
+                        String sid1= ((ChemicalSubstance) s).structure.id.toString();
+                        return App.structure(sid1, format, size, atomMap);
+                    }else{
+                        return placeHolderImage(s);
+                    }
+                
             }else{
-            	try{
-            		UUID uuid=UUID.fromString(id);
-            		//Unit u=new Unit();
-            		Unit u=GinasFactory.unitFinder.byId(uuid);
-            		return App.render(u.structure,size);
-            	}catch(Exception e){
-            		e.printStackTrace();
-            	}
+                try{
+                        UUID uuid=UUID.fromString(id);
+                        //Unit u=new Unit();
+                        Unit u=GinasFactory.unitFinder.byId(uuid);
+                        return App.render(u.structure,size);
+                }catch(Exception e){
+                        e.printStackTrace();
+                }
             }
         }
         return r1;
@@ -1751,20 +1750,20 @@ public class GinasApp extends App {
         
     }
     public static String formatMolfile(Chemical c, int format) throws Exception{
-    	String mol=c.export(format);
-    	StringBuilder sb=new StringBuilder();
-    	int i=0;
-    	for(String line: mol.split("\n")){
-    		if(i!=0){
-    			sb.append("\n");
-    		}
-    		if(i==1){
-    			line=" G-SRS " + line;
-    		}
-    		i++;
-    		sb.append(line);
-    	}
-    	return sb.toString();
+        String mol=c.export(format);
+        StringBuilder sb=new StringBuilder();
+        int i=0;
+        for(String line: mol.split("\n")){
+                if(i!=0){
+                        sb.append("\n");
+                }
+                if(i==1){
+                        line=" G-SRS " + line;
+                }
+                i++;
+                sb.append(line);
+        }
+        return sb.toString();
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
         String resp = "";
