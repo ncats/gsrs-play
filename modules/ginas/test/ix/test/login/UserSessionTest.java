@@ -58,6 +58,11 @@ public class UserSessionTest {
         }
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void cantCreateUserWithDuplicateUsername(){
+        ts.createAdmin(luke.getUserName(), "a new pass");
+    }
+
 
     @Test(expected = IllegalStateException.class)
     public void invalildPasswordBrowser(){

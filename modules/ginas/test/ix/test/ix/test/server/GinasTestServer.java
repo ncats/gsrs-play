@@ -1,10 +1,8 @@
 package ix.test.ix.test.server;
 import static org.junit.Assert.assertTrue;
-import static play.mvc.Http.Status.OK;
 
 import static play.test.Helpers.testServer;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 
@@ -13,14 +11,8 @@ import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import ix.core.adapters.EntityPersistAdapter;
@@ -31,6 +23,7 @@ import ix.core.controllers.UserProfileFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Group;
+import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -45,9 +38,8 @@ import org.junit.rules.ExternalResource;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.w3c.dom.Document;
-import play.libs.ws.WS;
+import play.db.ebean.Model;
 import play.libs.ws.WSCookie;
-import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 import play.test.TestServer;
 
@@ -123,7 +115,11 @@ public class GinasTestServer extends ExternalResource{
 
     private int userCount=0;
 
-    
+    private boolean running=false;
+
+   private Model.Finder<Long, Principal> principleFinder;
+
+
     public static class User{
     	private final String username;
     	private String password;
@@ -248,6 +244,9 @@ public class GinasTestServer extends ExternalResource{
                 return true;
             }
         };
+
+
+
     }
 
     private void createInitialFakeUsers() {
@@ -328,6 +327,11 @@ public class GinasTestServer extends ExternalResource{
     	if(roles.isEmpty()){
             throw new IllegalArgumentException("roles can not be empty");
         }
+
+        Principal existingUser = principleFinder.where().eq("username", username).findUnique();
+        if(existingUser !=null){
+            throw new IllegalArgumentException("user already exists: " + username);
+        }
     	UserProfile up=UserProfileFactory.addActiveUser(username, password, roles, Collections.singletonList(fakeUserGroup));
     	return new User(up.getIdentifier(), password);
     }
@@ -341,11 +345,9 @@ public class GinasTestServer extends ExternalResource{
         //and forces us to use a new one with each test
         CacheManager.getInstance().shutdown();
 
-        ts = testServer(port);
-        ts.start();
-        initializeControllers();
-        //we have to wait to create the users until after Play has started.
-        createInitialFakeUsers();
+
+
+        restart();
     }
 
     private void initializeControllers() {
@@ -370,16 +372,21 @@ public class GinasTestServer extends ExternalResource{
         EntityPersistAdapter.init();
 
         SequenceIndexer.init();
+
+        //our APIs
+        SubstanceLoader.init();
     }
 
     private void deleteH2Db() throws IOException {
         Config load = ConfigFactory.load();
         //System.out.println(load.entrySet());
-        Path path = new File(load.getString("ix.home")).toPath();
-        if(!path.toFile().exists()){
+        //Path path = new File(load.getString("ix.home")).toPath();
+
+        File home = ConfigUtil.getValueAsFile("ix.home");
+        if(!home.exists()){
             return;
         }
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(home.toPath(), new SimpleFileVisitor<Path>() {
 
 
             @Override
@@ -428,6 +435,33 @@ public class GinasTestServer extends ExternalResource{
 
     @Override
     protected void after() {
+        stop();
+    }
+
+    /**
+     * Start the server, stopping the
+     * old one if it's still running.
+     */
+    public void restart(){
+        stop();
+
+        running = true;
+        ts = testServer(port);
+        ts.start();
+
+        principleFinder =
+                new Model.Finder(Long.class, Principal.class);
+
+        initializeControllers();
+        //we have to wait to create the users until after Play has started.
+        createInitialFakeUsers();
+    }
+
+    public void stop() {
+        if(!running){
+            return;
+        }
+        running = false;
         for(AbstractSession session : sessions){
             session.logout();
         }
@@ -436,11 +470,6 @@ public class GinasTestServer extends ExternalResource{
         App._textIndexer.shutdown();
         ts.stop();
     }
-
-
-
-
-
 
 
 }

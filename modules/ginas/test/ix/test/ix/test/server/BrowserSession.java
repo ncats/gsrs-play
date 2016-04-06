@@ -18,6 +18,7 @@ import play.libs.ws.WSResponse;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Objects;
 
 import static play.mvc.Http.Status.OK;
 
@@ -35,13 +36,14 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     private  String sessionCookie;
     public BrowserSession(int port) {
         super(port);
+        webClient = new WebClient();
     }
 
     public BrowserSession(GinasTestServer.User user, int port) {
         super(user, port);
 
-        webClient = new WebClient();
         try {
+            webClient = new WebClient();
             HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
             //there is only 1 form but it isn't named..
             HtmlForm form = page.getForms().get(0);
@@ -49,10 +51,9 @@ public class BrowserSession extends AbstractSession<WSResponse>{
             form.getInputsByName("username").get(0).setValueAttribute(user.getUserName());
             form.getInputsByName("password").get(0).setValueAttribute(user.getPassword());
 
-            form.getButtonByName("submit").click();
+            HtmlPage returnPage = form.getButtonByName("submit").click();
 
             Cookie cook=webClient.getCookieManager().getCookie("PLAY_SESSION");
-            //System.out.println(cook);
             if(cook==null)throw new IOException("no session established");
             if(cook!=null){
             	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
@@ -86,6 +87,8 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     }
 
     public HtmlPage submit(WebRequest request) throws IOException{
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(webClient, "webclient is null!!!!!!!");
         return webClient.getPage(request);
     }
 
