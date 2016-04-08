@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -38,13 +39,12 @@ import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonData;
-import ix.ginas.models.KeywordDeserializer;
-import ix.ginas.models.KeywordListDeserializer;
-import ix.ginas.models.KeywordListSerializer;
-import ix.ginas.models.PrincipalDeserializer;
-import ix.ginas.models.PrincipalSerializer;
+import ix.ginas.models.serialization.DateDeserializer;
+import ix.ginas.models.serialization.KeywordDeserializer;
+import ix.ginas.models.serialization.KeywordListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
+import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.utils.Global;
 import play.Logger;
 
@@ -104,28 +104,6 @@ public class Substance extends GinasCommonData {
 	@DataVersion
 	public String version = "1";
 	
-
-//	private int updates=0;
-//	// this is here to force an update at the substance level
-//	// we actually need this a few other places as well
-//	// TODO: Discuss this
-//    @Override
-//	public void update(){
-//    	updates++;
-//		//System.out.println("Actually updating");
-//		super.update();
-//	}
-//    
-//    @Override
-//	public void save(){
-//    	updates++;
-//		//System.out.println("Actually saving");
-//		super.save();
-//	}
-	
-	
-	
-	
 	
 	@OneToOne(cascade = CascadeType.ALL)
 	@JsonSerialize(using = PrincipalSerializer.class)
@@ -142,23 +120,15 @@ public class Substance extends GinasCommonData {
 		return this.approved;
 	}
 
-	// @ManyToMany(cascade=CascadeType.ALL)
-	// @JoinTable(name="ix_ginas_substance_access")
-	// @JsonSerialize(using = PrincipalListSerializer.class)
-	// @JsonDeserialize(using = PrincipalListDeserializer.class)
-	// public List<Principal> access = new ArrayList<Principal>();
-
 	@JSONEntity(title = "Names", minItems = 1, isRequired = true)
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_name")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@JsonView(BeanViews.Full.class)
 	public List<Name> names = new ArrayList<Name>();
 
 	// TOOD original schema has superfluous name = codes in the schema here and
 	// in all of Code's properties
 	@JSONEntity(title = "Codes")
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_code")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@JsonView(BeanViews.Full.class)
 	public List<Code> codes = new ArrayList<Code>();
 
@@ -166,26 +136,22 @@ public class Substance extends GinasCommonData {
 	public Modifications modifications;
 
 	@JSONEntity(title = "Notes")
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_note")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@JsonView(BeanViews.Full.class)
 	public List<Note> notes = new ArrayList<Note>();
 
 	@JSONEntity(title = "Properties")
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_prop")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@JsonView(BeanViews.Full.class)
 	public List<Property> properties = new ArrayList<Property>();
 
 	@JSONEntity(title = "Relationships")
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_rel")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@JsonView(BeanViews.Full.class)
 	public List<Relationship> relationships = new ArrayList<Relationship>();
 
 	@JSONEntity(title = "References", minItems = 1, isRequired = true)
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "ix_ginas_substance_ref")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@JsonView(BeanViews.Full.class)
 	public List<Reference> references = new ArrayList<Reference>();
 
@@ -196,11 +162,12 @@ public class Substance extends GinasCommonData {
 
 	// TODO in original schema, this field is missing its items: String
 	@JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
-//	@ManyToMany(cascade = CascadeType.ALL)
-//	@JoinTable(name = "ix_ginas_substance_tag")
 	@JsonSerialize(using = KeywordListSerializer.class)
     @JsonDeserialize(contentUsing = KeywordDeserializer.TagDeserializer.class)
-	public EmbeddedKeywordList tags = new EmbeddedKeywordList();
+	@ManyToMany(cascade = CascadeType.ALL)
+    @JsonView(BeanViews.Full.class)
+    @JoinTable(name = "ix_ginas_substance_tags")
+	public List<Keyword> tags = new ArrayList<Keyword>();
 	
 	public void addTag(Keyword tag){
 		for(Keyword k:tags){
@@ -740,38 +707,4 @@ public class Substance extends GinasCommonData {
 		return thisID.equals(thatID);
 	}
 	
-	@Override
-	public void delete(){
-		super.delete();
-		for(Name n:names){
-			n.delete();
-		}
-		for(Code n:codes){
-			n.delete();
-		}
-		for(Property n:properties){
-			n.delete();
-		}
-		for(Reference n:references){
-			n.delete();
-		}
-		for(Note n:notes){
-			n.delete();
-		}
-		for(Relationship n:relationships){
-			n.delete();
-		}
-		if(this.modifications!=null){
-			for(AgentModification am:this.modifications.agentModifications){
-				am.delete();
-			}
-			for(PhysicalModification pm:this.modifications.physicalModifications){
-				pm.delete();
-			}
-			for(StructuralModification sm:this.modifications.structuralModifications){
-				sm.delete();
-			}
-			this.modifications.delete();
-		}
-	}
 }

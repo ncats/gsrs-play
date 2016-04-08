@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import ix.core.SingleParent;
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.GinasCommonSubData;
@@ -13,7 +14,11 @@ import ix.ginas.models.GinasCommonSubData;
 @Entity
 @Table(name="ix_ginas_parameter")
 @JSONEntity(title = "Parameter", isFinal = true)
+@SingleParent
 public class Parameter extends GinasCommonSubData {
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private Property owner;
+	
     @JSONEntity(title = "Parameter Name", isRequired = true)
     @Column(nullable=false)
     private String name;

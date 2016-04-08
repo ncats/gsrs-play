@@ -15,6 +15,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -29,8 +30,7 @@ import play.Logger;
 public class NucleicAcid extends GinasCommonSubData {
 	
 	@JSONEntity(title = "Linkages")
-	@ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_nucleicacid_linkages")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	List<Linkage> linkages;
 	
 	
@@ -58,8 +58,8 @@ public class NucleicAcid extends GinasCommonSubData {
 	List<Subunit> subunits;
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
-	@ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_nucleicacid_sugar")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    //@JoinTable(name="ix_ginas_nucleicacid_sugar")
 	List<Sugar> sugars;
 
 	public List<Linkage> getLinkages() {

@@ -1,13 +1,12 @@
 package ix.core.models;
 
-import play.db.ebean.Model;
-
-import javax.persistence.*;
-import java.util.List;
-import java.util.ArrayList;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
 @Table(name="ix_core_value")

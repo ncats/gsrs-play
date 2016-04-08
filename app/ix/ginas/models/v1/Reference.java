@@ -14,18 +14,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import ix.core.SingleParent;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.models.Keyword;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.*;
+import ix.ginas.models.serialization.KeywordDeserializer;
+import ix.ginas.models.serialization.KeywordListSerializer;
 
 @JSONEntity(title = "Reference", isFinal = true)
 @Entity
 @Table(name="ix_ginas_reference")
-public class Reference extends GinasCommonSubData {
+@SingleParent
+public class Reference extends GinasCommonData {
 
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	private Substance owner;
+	
     @JSONEntity(title = "Citation Text", isRequired = true)
     @Lob
     public String citation;
@@ -41,10 +48,9 @@ public class Reference extends GinasCommonSubData {
     public boolean publicDomain;
     
     @JSONEntity(title = "Tags", format = "table", itemsTitle = "Tag", itemsFormat = JSONConstants.CV_DOCUMENT_COLLECTION, isUniqueItems = true)
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_reference_tag")
     @JsonSerialize(using=KeywordListSerializer.class) 
     @JsonDeserialize(contentUsing=KeywordDeserializer.TagDeserializer.class) 
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList tags = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Uploaded Document")

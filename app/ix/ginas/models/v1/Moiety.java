@@ -1,14 +1,10 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.utils.JSONEntity;
-
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -17,13 +13,18 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.serialization.MoietyDeserializer;
+import ix.ginas.models.serialization.MoietySerializer;
+import ix.ginas.models.utils.JSONEntity;
+
 
 @JsonDeserialize(using = MoietyDeserializer.class)
 @JsonSerialize(using = MoietySerializer.class)
 @JSONEntity(name = "moiety", title = "Moiety")
 @Entity
 @Table(name = "ix_ginas_moiety")
-public class Moiety extends GinasCommonSubData {
+public class Moiety extends CommonDataElementOfCollection {
 	
 //	add getters and setters to convert integers to amounts
 //	add getters and setters to accept amounts

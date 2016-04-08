@@ -31,7 +31,7 @@ public class Edit extends BaseModel {
     @Column(length=64)
     public String batch;
         
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade=CascadeType.PERSIST)
     public Principal editor;
 
     @Column(length=1024)

@@ -12,17 +12,22 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Group;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
 
 //@Entity
 //@Table(name = "ix_ginas_access")
 public class GinasAccessContainer{
+	
 	@Id
 	public Long id;
-
+	
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JsonSerialize(using = GroupListSerializer.class)
 	@JsonDeserialize(using = GroupListDeserializer.class)
 	private Set<Group> access;
+	
+	
 	public String entityType;
 	
 	public void add(Group p) {

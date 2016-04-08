@@ -22,6 +22,8 @@ import ix.utils.Util;
 @Table(name="ix_core_backup")
 public class BackupEntity extends IxModel{
 	
+	EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
+	
 	@Id
 	private Long id;
 	
@@ -85,7 +87,7 @@ public class BackupEntity extends IxModel{
 		if(cls==null){
 			throw new IllegalStateException("Kind is not set for object");
 		}
-		EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
+		
 		Object inst=em.readValue(asStream(), cls);
 		return inst;
 	}
@@ -93,7 +95,6 @@ public class BackupEntity extends IxModel{
 	public void setInstantiated(BaseModel o) throws Exception{
 		kind=o.getClass().getName();
 		refid=o.fetchGlobalId();
-		EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
 		setBytes(em.toJson(o).getBytes(StandardCharsets.UTF_8));
 		sha1=Util.sha1(data);
 	}

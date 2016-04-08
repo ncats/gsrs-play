@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.persistence.Basic;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
@@ -29,6 +31,10 @@ import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.util.TimeUtil;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
+import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.utils.Global;
 import ix.utils.Util;
 
@@ -90,6 +96,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     //OLD WAY
     @JsonIgnore
+    @Basic(fetch=FetchType.LAZY)
     //@Lob
 //    @OneToOne(cascade=CascadeType.ALL)
     private GinasAccessContainer recordAccess;

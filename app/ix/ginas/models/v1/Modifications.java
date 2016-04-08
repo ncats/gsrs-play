@@ -23,20 +23,20 @@ import ix.ginas.models.GinasCommonSubData;
 @JSONEntity(name = "modifications", title = "Modifications", isFinal = true)
 public class Modifications extends GinasCommonSubData {
     @JSONEntity(title = "Agent Modifications")
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_mod_agent")
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    //@JoinTable(name="ix_ginas_mod_agent")
     public List<AgentModification> agentModifications =
         new ArrayList<AgentModification>();
     
     @JSONEntity(title = "Physical Modifications")
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_mod_physical")
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    //@JoinTable(name="ix_ginas_mod_physical")
     public List<PhysicalModification> physicalModifications =
         new ArrayList<PhysicalModification>();
     
     @JSONEntity(title = "Structural Modifications")
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_mod_structural")
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    //@JoinTable(name="ix_ginas_mod_structural")
     public List<StructuralModification> structuralModifications =
         new ArrayList<StructuralModification>();
 

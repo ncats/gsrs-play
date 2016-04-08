@@ -1,4 +1,4 @@
-package ix.ginas.models.v1;
+package ix.ginas.models.serialization;
 
 import java.io.IOException;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -9,6 +9,9 @@ import com.fasterxml.jackson.core.JsonParser;
 
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Structure;
+import ix.ginas.models.v1.Amount;
+import ix.ginas.models.v1.GinasChemicalStructure;
+import ix.ginas.models.v1.Moiety;
 
 public class MoietyDeserializer extends JsonDeserializer<Moiety> {
     public MoietyDeserializer () {

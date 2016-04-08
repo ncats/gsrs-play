@@ -18,6 +18,7 @@ import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.seqaln.SequenceIndexer;
@@ -101,7 +102,10 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 					//remove old references
 					for(Substance oldPri: realPrimarysubs){
 						Logger.debug("Removing stale bidirectional relationships");
-						oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+						List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+						for(Relationship r:related){
+							r.delete();
+						}
 						oldPri.save();
 					}
 					Logger.debug("Expanding reference");

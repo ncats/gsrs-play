@@ -1,27 +1,21 @@
 package ix.ginas.models.v1;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.Lob;
+import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
-import javax.persistence.Version;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -37,14 +31,13 @@ import ix.core.models.Structure;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.GinasReferenceContainer;
-import ix.ginas.models.GroupListDeserializer;
-import ix.ginas.models.GroupListSerializer;
-import ix.ginas.models.PrincipalDeserializer;
-import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.ReferenceSetDeserializer;
-import ix.ginas.models.ReferenceSetSerializer;
+import ix.ginas.models.serialization.GroupListDeserializer;
+import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
+import ix.ginas.models.serialization.PrincipalSerializer;
+import ix.ginas.models.serialization.ReferenceSetDeserializer;
+import ix.ginas.models.serialization.ReferenceSetSerializer;
 
 @Entity
 @DiscriminatorValue("GSRS")
@@ -93,13 +86,14 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 	
 	@JsonIgnore
-	//@Lob
 //	@OneToOne(cascade = CascadeType.ALL)
+	@Basic(fetch=FetchType.LAZY)
 	GinasAccessContainer recordAccess;
 
 
 	@JsonIgnore
-	//@OneToOne(cascade = CascadeType.ALL)
+	//@Basic(fetch=FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL)
 	private GinasReferenceContainer recordReference;
 
 
@@ -136,6 +130,13 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     	}
     	return new LinkedHashSet<Group>();
     }
+    public Set<String> getAccessString(){
+    	Set<String> keyset=new LinkedHashSet<String>();
+    	for(Group k:getAccess()){
+    		keyset.add(k.name);
+    	}
+    	return keyset;
+    }
 
 	public void addRestrictGroup(Group p){
 		GinasAccessContainer gac=this.getRecordAccess();
@@ -157,6 +158,15 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     		return recordReference.getReferences();
     	}
     	return new LinkedHashSet<Keyword>();
+    }
+    
+    @JsonIgnore
+    public Set<String> getReferencesString(){
+    	Set<String> keyset=new LinkedHashSet<String>();
+    	for(Keyword k:getReferences()){
+    		keyset.add(k.term);
+    	}
+    	return keyset;
     }
 
     @JsonProperty("references")    

@@ -38,7 +38,7 @@ public class Project extends Model {
     public String team;
     public boolean isPublic = true;
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     public Curation curation;
 
     @ManyToMany(cascade=CascadeType.ALL)

@@ -1,20 +1,5 @@
 package ix.ginas.models.v1;
 
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
-import ix.core.models.Value;
-import ix.ginas.models.EmbeddedKeywordList;
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.KeywordDeserializer;
-import ix.ginas.models.KeywordListSerializer;
-import ix.ginas.models.KeywordListDeserializer;
-import ix.ginas.models.PrincipalListDeserializer;
-import ix.ginas.models.PrincipalListSerializer;
-import ix.ginas.models.utils.JSONConstants;
-import ix.ginas.models.utils.JSONEntity;
-
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,10 +12,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -39,11 +22,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.SingleParent;
+import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.serialization.KeywordDeserializer;
+import ix.ginas.models.serialization.KeywordListSerializer;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
+
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
-public class Name extends GinasCommonSubData {
+@SingleParent
+public class Name extends CommonDataElementOfCollection {
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
+    
 
     @JSONEntity(title = "Name", isRequired = true)
     @Column(nullable=false)
@@ -60,51 +55,26 @@ public class Name extends GinasCommonSubData {
     public String type="cn";
     
     @JSONEntity(title = "Domains", format = "table", itemsTitle = "Domain", itemsFormat = JSONConstants.CV_NAME_DOMAIN)
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_name_domain",
-//               joinColumns=@JoinColumn
-//               (name="ix_ginas_name_domain_uuid",
-//               referencedColumnName="uuid")
-//    )
     @JsonSerialize(using=KeywordListSerializer.class)
     @JsonDeserialize(contentUsing=KeywordDeserializer.DomainDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList domains = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_name_lang",
-//               joinColumns=@JoinColumn
-//               (name="ix_ginas_name_lang_uuid",
-//               referencedColumnName="uuid")
-//    )
     @JsonSerialize(using=KeywordListSerializer.class)
     @JsonDeserialize(contentUsing=KeywordDeserializer.LanguageDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList languages = new EmbeddedKeywordList();
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_name_juris",
-//               joinColumns=@JoinColumn
-//               (name="ix_ginas_name_juris_uuid",
-//               referencedColumnName="uuid")
-//    )
     @JsonSerialize(using=KeywordListSerializer.class)    
     @JsonDeserialize(contentUsing=KeywordDeserializer.JurisdictionDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList nameJurisdiction = new EmbeddedKeywordList();
-
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_name_ref",
-//               joinColumns=@JoinColumn
-//               (name="ix_ginas_name_ref_uuid",
-//               referencedColumnName="uuid")
-//    )
-//    @JsonSerialize(using=KeywordListSerializer.class)    
-//    @JsonDeserialize(using=KeywordListDeserializer.class)
-//    public List<Keyword> references = new ArrayList<Keyword>();    
     
     @JSONEntity(title = "Naming Organizations", format = "table")
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_nameorg")
+
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     public List<NameOrg> nameOrgs = new ArrayList<NameOrg>();
     
     
@@ -268,5 +238,7 @@ public class Name extends GinasCommonSubData {
 		}
 		return false;
 	}
+	
+	
 	
 }

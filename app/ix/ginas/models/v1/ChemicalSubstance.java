@@ -9,8 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
@@ -24,7 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
-import ix.ginas.models.StructureSerializer;
+import ix.ginas.models.serialization.StructureSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -42,8 +41,8 @@ public class ChemicalSubstance extends Substance  {
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Chemical Moieties", isRequired = true, minItems = 1)
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_chemical_moiety")
+    @OneToMany(cascade=CascadeType.ALL)
+    //@JoinTable(name="ix_ginas_chemical_moiety")
     @JsonView(BeanViews.Full.class)
     public List<Moiety> moieties = new ArrayList<Moiety>();
 

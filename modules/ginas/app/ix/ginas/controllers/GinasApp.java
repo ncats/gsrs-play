@@ -556,9 +556,8 @@ public class GinasApp extends App {
                 (sha1, new Callable<SearchResult>() {
                         public SearchResult call () throws Exception {
                             SearchOptions options = new SearchOptions
-                            (Substance.class);
+                            (Substance.class, total, 0, FACET_DIM);
                             options.parse(params);
-                            options.fetch = total;
                             instrumentSubstanceSearchOptions (options);
                             SearchResult result = _textIndexer.search
                             (options, q, null);
@@ -597,9 +596,6 @@ public class GinasApp extends App {
         final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
 
-//        System.out.println("######################################");
-//        System.out.println("Fetching key:" + key);
-        
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {
@@ -657,10 +653,10 @@ public class GinasApp extends App {
             
         }
         SubstanceFilter subFilter = new SubstanceFilter();
-		
+                
         return ok(ix.ginas.views.html.substances.render
                   (page, rows, result.count(), pages, decorate(facets),
-                		  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
+                                  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
 
     }
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
@@ -894,7 +890,7 @@ public class GinasApp extends App {
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
 //                        System.out.println("L4:" + struc2.getLychiv4Hash());
 //                        System.out.println("L3:" + struc2.getLychiv3Hash());
-                        
+                        System.out.println("Searching for:" + struc2.getLychiv3Hash());
                         return _substances(struc2.getLychiv3Hash(),rows,page);
                 }catch(Exception e){
                         
@@ -1077,19 +1073,23 @@ public class GinasApp extends App {
                 }catch(Exception e){
                         //Not a UUID
                 }
-                
         }
         List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid
             values = finder.where().istartsWith("uuid", name).findList();
+            
         }
 
         if (values.isEmpty()) {
+                System.out.println("looking for approvalID");
             values = finder.where().ieq("approvalID", name).findList();
             if (values.isEmpty()) {
-                values = finder.where().ieq("names.name", name).findList();
-                if (values.isEmpty()) // last resort..
-                    values = finder.where().ieq("codes.code", name).findList();
+                System.out.println("looking for name");
+                values = finder.where().ieq("names.name", name).findList(); //this is a problem for oracle
+                if (values.isEmpty()){ 
+                        System.out.println("looking for codes");
+                    values = finder.where().ieq("codes.code", name).findList();// last resort..
+                }
             }
         }
 
@@ -1622,22 +1622,22 @@ public class GinasApp extends App {
         if(httpStat == NOT_FOUND){
             Substance s = SubstanceFactory.getSubstance(id);
             if(s!=null){
-            	if(s instanceof ChemicalSubstance){
-	                String sid1= ((ChemicalSubstance) s).structure.id.toString();
-	                return App.structure(sid1, format, size, atomMap);
-	            }else{
-	                return placeHolderImage(s);
-	            }
-            	
+                if(s instanceof ChemicalSubstance){
+                        String sid1= ((ChemicalSubstance) s).structure.id.toString();
+                        return App.structure(sid1, format, size, atomMap);
+                    }else{
+                        return placeHolderImage(s);
+                    }
+                
             }else{
-            	try{
-            		UUID uuid=UUID.fromString(id);
-            		//Unit u=new Unit();
-            		Unit u=GinasFactory.unitFinder.byId(uuid);
-            		return App.render(u.structure,size);
-            	}catch(Exception e){
-            		e.printStackTrace();
-            	}
+                try{
+                        UUID uuid=UUID.fromString(id);
+                        //Unit u=new Unit();
+                        Unit u=GinasFactory.unitFinder.byId(uuid);
+                        return App.render(u.structure,size);
+                }catch(Exception e){
+                        e.printStackTrace();
+                }
             }
         }
         return r1;
@@ -1750,20 +1750,20 @@ public class GinasApp extends App {
         
     }
     public static String formatMolfile(Chemical c, int format) throws Exception{
-    	String mol=c.export(format);
-    	StringBuilder sb=new StringBuilder();
-    	int i=0;
-    	for(String line: mol.split("\n")){
-    		if(i!=0){
-    			sb.append("\n");
-    		}
-    		if(i==1){
-    			line=" G-SRS " + line;
-    		}
-    		i++;
-    		sb.append(line);
-    	}
-    	return sb.toString();
+        String mol=c.export(format);
+        StringBuilder sb=new StringBuilder();
+        int i=0;
+        for(String line: mol.split("\n")){
+                if(i!=0){
+                        sb.append("\n");
+                }
+                if(i==1){
+                        line=" G-SRS " + line;
+                }
+                i++;
+                sb.append(line);
+        }
+        return sb.toString();
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
         String resp = "";

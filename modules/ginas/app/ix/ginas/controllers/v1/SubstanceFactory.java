@@ -1,23 +1,31 @@
 package ix.ginas.controllers.v1;
 
-import be.objectify.deadbolt.java.actions.Dynamic;
-import static ix.ncats.controllers.auth.Authentication.getUserProfile;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.Expression;
+import com.avaje.ebean.Query;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
-import ix.core.controllers.EntityFactory.FetchOptions;
-import ix.core.controllers.ValueFactory;
+import ix.core.controllers.KeywordFactory;
+import ix.core.controllers.StructureFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Group;
 import ix.core.models.Principal;
-import ix.core.models.Role;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
-import ix.core.models.Value;
-import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.util.TimeUtil;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
@@ -36,30 +44,11 @@ import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.security.IxDeadboltHandler;
-import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import play.Logger;
-import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
-
-import com.avaje.ebean.Expr;
-import com.avaje.ebean.Expression;
-import com.avaje.ebean.Query;
-import com.avaje.ebean.QueryIterator;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
@@ -176,20 +165,29 @@ public class SubstanceFactory extends EntityFactory {
 
 
 	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
-		Substance s = getSubstance(uuid);
-		if (s != null)
+		try{
+			System.out.println("######################################");
+			System.out.println("Fetching:" + uuid + " or " + approvalID);
+			Substance s = getSubstance(uuid);
+			
+			if (s == null){
+				System.out.println("didn't get by uuid");
+				s=getSubstanceByApprovalID(approvalID);
+			}else{
+				System.out.println("got by uuid");
+			}
 			return s;
-
-		List<Substance> list = GinasApp.resolve(finder, approvalID);
-		if (list != null && list.size() > 0) {
-			return list.get(0);
+		}catch(Exception e){
+			System.out.println("error fetching");
+			e.printStackTrace();
+			
 		}
 		return null;
 		// return finder.where().eq("approvalID", approvalID).findUnique();
 	}
 
 	public static Substance getSubstanceByApprovalID(String approvalID) {
-		List<Substance> list = GinasApp.resolve(finder, approvalID);
+		List<Substance> list = finder.where().ieq("approvalID", approvalID).findList();
 		if (list != null && list.size() > 0) {
 			return list.get(0);
 		}
@@ -369,13 +367,14 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	//silly test
-	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
-		//System.out.println("Dupe chack");
-		String hash = cs.structure.getLychiv4Hash();
-		List<Substance> dupeList= new ArrayList<Substance>();
-		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
-		return dupeList;
-	}
+	//silly test
+		public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
+			//System.out.println("Dupe chack");
+			String hash = cs.structure.getLychiv4Hash();
+			List<Substance> dupeList= new ArrayList<Substance>();
+			dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+			return dupeList;
+		}
 	//TODO
 	/*
 	 * This filter isn't quite sufficient for what we need, though it's a good start
@@ -414,7 +413,7 @@ public class SubstanceFactory extends EntityFactory {
 			System.out.println("Group 1:" + accessG);
 			System.out.println("Group 2:" + groups);
 			if(Collections.disjoint(accessG, groups)){
-				System.out.println("Won't show:" + sub.getName());
+				//System.out.println("Won't show:" + sub.getName());
 				return false;
 			}
 			return true;

@@ -58,6 +58,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.DefaultValidator;
+import ix.core.IgnoredModel;
+import ix.core.SingleParent;
 import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
@@ -71,11 +73,12 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
 import ix.utils.Util;
+import ix.utils.pojopatch.ChangeEventListener;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import play.Logger;
@@ -671,6 +674,8 @@ public class EntityFactory extends Controller {
             T inst = query.setId(id).findUnique();
             if (inst != null) {
                 return ok (mapper.valueToTree(inst));
+            }else{
+            	System.out.println("There's no one here by that name");
             }
         }
         else {
@@ -1466,20 +1471,24 @@ public class EntityFactory extends Controller {
         public void call(Object m, String path);
     }
     public static void recursivelyApply(Model entity,EntityCallable c){
-    	recursivelyApply(entity,"/",c);
+    	recursivelyApply(entity,"",c);
     }
     private static void recursivelyApply(Model entity, String path,
                                            EntityCallable c){
+    	
         try{
+        	
+        	c.call(entity, path);
             for(Field f: entity.getClass().getFields()){
                 Class type= f.getType();
                 Annotation e=type.getAnnotation(Entity.class);
-                
+               
                 if(e!=null){
                     try {
                         Object nextEntity=f.get(entity);
-                        if(nextEntity instanceof Model)
+                        if(nextEntity instanceof Model){
                             recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
+                        }
                     } catch (IllegalArgumentException e1) {
                         e1.printStackTrace();
                     } catch (IllegalAccessException e1) {
@@ -1488,10 +1497,12 @@ public class EntityFactory extends Controller {
                 } else if (Collection.class.isAssignableFrom(type)) {
                     Collection col = (Collection) f.get(entity);
                     if(col!=null){
+                    	
                         int i=0;
                         for(Object nextEntity:col){
-                            if(nextEntity instanceof Model)
+                            if(nextEntity instanceof Model){
                                 recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
+                            }
                             i++;
                         }
                     }
@@ -1500,7 +1511,7 @@ public class EntityFactory extends Controller {
         }catch(Exception e){
             e.printStackTrace();
         }
-        c.call(entity, path);
+        
     }
 
     protected static Result updateEntity (Class<?> type) {
@@ -1557,35 +1568,69 @@ public class EntityFactory extends Controller {
             //this saves and everything
             EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
             
-            boolean POJOPATCH=true;
+            boolean usePojoPatch=true;
             if(!oldValueContainer.cls.equals(type)){
-            	POJOPATCH=false;
+            	usePojoPatch=false;
             }
             
             
-            if(POJOPATCH){
+            if(usePojoPatch){
 	            //Get the difference as a patch
 	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
 	            
+//	            for(Object c:patch.getChanges()){
+//	            	System.out.println("Change was:" + c.toString());
+//	            }
 	            
+	            final List<Object> removed = new ArrayList<Object>();
+	            //System.out.println("Test");
 	            //Apply the changes, grabbing every change along the way
-	            Stack changeStack=patch.apply(oldValueContainer.value);
+	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
+					@Override
+					public void handleChange(ix.utils.pojopatch.Change c) {
+						//System.out.println("Change IS:" + c);
+						if("remove".equals(c.op)){
+							removed.add(c.oldValue);
+						}
+					}
+	            });
+	            //System.out.println("Test2");
+	            
 	            
 	        	while(!changeStack.isEmpty()){
 	        		Object v=changeStack.pop();
-	        		if(v instanceof ForceUpdatableModel){
-	            		((ForceUpdatableModel)v).forceUpdate();
-	            	}else if(v instanceof Model){
-	            		((Model)v).update();
+	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
+		        		if(v instanceof ForceUpdatableModel){
+		            		((ForceUpdatableModel)v).forceUpdate();
+		            	}else if(v instanceof Model){
+		            		((Model)v).update();
+		            	}else{
+		            		//System.out.println("Nothing to do for:" + v);
+		            	}
+	        		}
+	        	}
+
+	        	//explicitly delete deleted things
+	        	
+	        	//This should ONLY delete objects which "belong"
+	        	//to something. That is, have a @SingleParent annotation
+	        	//inside
+	        	for(Object toDelete : removed){
+	        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
+	        		   toDelete.getClass().isAnnotationPresent(SingleParent.class)){
+	        			if(toDelete instanceof Model){
+	        				System.out.println("deleting:" + ((Model)toDelete));
+	        				((Model)toDelete).delete();
+	        			}
 	            	}
 	        	}
 	        	
 	        	//The old value is now the new value
 	        	newValue = oldValueContainer.value;
+	        	
             }else{
             	Model m=(Model)oldValueContainer.value;
             	m.delete();
-            	
             	// Now need to take care of bad update pieces:
             	//	1. Version not incremented correctly (post update hooks not called) 
             	//  2. Some metadata may be problematic
@@ -1593,6 +1638,7 @@ public class EntityFactory extends Controller {
             	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
             	((Model)newValue).save();
             	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
+            	
             }
         	
         	
@@ -1624,6 +1670,7 @@ public class EntityFactory extends Controller {
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
+            //ex.printStackTrace();
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
@@ -2259,8 +2306,6 @@ public class EntityFactory extends Controller {
         }
         return UUID.fromString(id);
     }
-
-
 
     public static abstract class EntityFilter<K> {
         public abstract boolean accept (K sub);

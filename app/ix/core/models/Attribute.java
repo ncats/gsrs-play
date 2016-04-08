@@ -17,7 +17,7 @@ public class Attribute extends LongBaseModel {
     @Column(length=1024)
     public String value;
 
-    @ManyToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JsonView(BeanViews.Full.class)
     public Namespace namespace;
 

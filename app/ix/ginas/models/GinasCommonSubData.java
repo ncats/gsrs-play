@@ -4,9 +4,11 @@ import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
+import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
@@ -18,6 +20,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Keyword;
+import ix.ginas.models.serialization.ReferenceSetDeserializer;
+import ix.ginas.models.serialization.ReferenceSetSerializer;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
@@ -25,6 +29,8 @@ import ix.ginas.models.v1.Substance;
 public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
     @JsonIgnore
     //@OneToOne(cascade=CascadeType.ALL)
+    @Basic(fetch=FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL)
 	public GinasReferenceContainer recordReference;
     
     

@@ -15,6 +15,8 @@ import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
+import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.PrincipalDeserializer;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
