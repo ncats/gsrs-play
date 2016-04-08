@@ -19,10 +19,16 @@ public class TextIndexerPlugin extends Plugin {
 
     private static boolean updateStoarageCount = true;
 
+    private static File storageDir;
+
     public TextIndexerPlugin (Application app) {
         this.app = app;
     }
 
+
+    public static synchronized File getStorageRootDir(){
+        return storageDir;
+    }
     public synchronized void onStart () {
 
         Logger.info("Loading plugin "+getClass().getName()+"...");
@@ -40,7 +46,8 @@ public class TextIndexerPlugin extends Plugin {
         //on because it will usually be a restart
         updateStoarageCount=true;
         try {
-            indexer = TextIndexer.getInstance(getStorageDir(ctx));
+            storageDir = getStorageDir(ctx);
+            indexer = TextIndexer.getInstance(storageDir);
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize text indexer", ex);

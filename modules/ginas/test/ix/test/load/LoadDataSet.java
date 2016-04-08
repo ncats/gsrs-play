@@ -50,9 +50,9 @@ public class LoadDataSet {
 
             SubstanceSearch searcher = new SubstanceSearch(session);
 
-            Set<String> uuids = searcher.substructure("C1=CC=CC=C1");
+            SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
-            assertEquals(17, uuids.size());
+            assertEquals(17, results.numberOfResults());
         }
     }
     @Test
@@ -68,9 +68,9 @@ public class LoadDataSet {
 
             SubstanceSearch searcher = new SubstanceSearch(session);
 
-           Set<String> uuids = searcher.substructure("C1=CC=CC=C1");
+            SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
-            assertEquals(17, uuids.size());
+            assertEquals(17, results.numberOfResults());
         }
     }
 
@@ -91,9 +91,9 @@ public class LoadDataSet {
 
             SubstanceSearch searcher = new SubstanceSearch(session);
 
-            Set<String> uuids = searcher.substructure("C1=CC=CC=C1");
+            SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
-            assertEquals(17, uuids.size());
+            assertEquals(17, results.numberOfResults());
         }
 
     }
@@ -119,9 +119,11 @@ public class LoadDataSet {
 
         SubstanceSearch searcher = new SubstanceSearch(ts.notLoggedInBrowserSession());
 
-        Set<String> uuids = searcher.substructure("C1=CC=CC=C1");
+        SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
-        assertEquals(0, uuids.size());
+        assertEquals(0, results.numberOfResults());
 
     }
+
+
 }

@@ -122,6 +122,8 @@ public class GinasTestServer extends ExternalResource{
    private Model.Finder<Long, Principal> principleFinder;
 
 
+    private File storage;
+
     public static class User{
     	private final String username;
     	private String password;
@@ -444,11 +446,20 @@ public class GinasTestServer extends ExternalResource{
      * old one if it's still running.
      *
      * This does not delete the h2 database.
+     *
+     * This is the same as calling:
+     *
+     * <pre>
+     *     stop(true);
+     *     start();
+     *
+     *
+     * </pre>
      */
     public void restart(){
         System.out.println("restarting...");
-        stop();
-        TextIndexerPlugin.prepareTestRestart();
+        stop(true);
+
         start();
     }
 
@@ -465,19 +476,45 @@ public class GinasTestServer extends ExternalResource{
         createInitialFakeUsers();
     }
 
-    public void stop() {
-        if(!running){
-            return;
+    /**
+     * Stop the server and optionally preserve
+     * the h2 databases and indexes computed so far
+     * so that on the next start of the server, we re-use
+     * them.
+     * @param preserveDatabase {@code true} if the h2 database and indexes
+     *                         should be preserved; {@code false} if they should be deleted.
+     */
+    public void stop(boolean preserveDatabase){
+        if(running) {
+
+            running = false;
+            for (AbstractSession session : sessions) {
+                session.logout();
+            }
+            sessions.clear();
+            //explicitly shutdown indexer to clear file locks
+            App._textIndexer.shutdown();
+            ts.stop();
+
         }
-        running = false;
-        for(AbstractSession session : sessions){
-            session.logout();
+        if(preserveDatabase){
+            TextIndexerPlugin.prepareTestRestart();
         }
-        sessions.clear();
-        //explicitly shutdown indexer to clear file locks
-        App._textIndexer.shutdown();
-        ts.stop();
     }
 
+    /**
+     * Stop the server and do not preserve
+     * the databases and indexes.  This is the same
+     * as {@link #stop(boolean) stop(false}.
+     *
+     * @see #stop(boolean)
+     */
+    public void stop() {
+       stop(false);
+    }
+
+    public File getStorageRootDir(){
+        return TextIndexerPlugin.getStorageRootDir();
+    }
 
 }
