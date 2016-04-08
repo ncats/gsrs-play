@@ -26,6 +26,7 @@ import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.utils.validation.Validation;
 import ix.ncats.controllers.App;
@@ -344,10 +345,7 @@ public class GinasTestServer extends ExternalResource{
         //This cleans out the old eh-cache
         //and forces us to use a new one with each test
         CacheManager.getInstance().shutdown();
-
-
-
-        restart();
+        start();
     }
 
     private void initializeControllers() {
@@ -374,7 +372,7 @@ public class GinasTestServer extends ExternalResource{
         SequenceIndexer.init();
 
         //our APIs
-        SubstanceLoader.init();
+       // SubstanceLoader.init();
     }
 
     private void deleteH2Db() throws IOException {
@@ -435,16 +433,24 @@ public class GinasTestServer extends ExternalResource{
 
     @Override
     protected void after() {
+        System.out.println("after shuttind down");
         stop();
     }
 
     /**
      * Start the server, stopping the
      * old one if it's still running.
+     *
+     * This does not delete the h2 database.
      */
     public void restart(){
+        System.out.println("restarting...");
         stop();
+        TextIndexerPlugin.prepareTestRestart();
+        start();
+    }
 
+    private void start() {
         running = true;
         ts = testServer(port);
         ts.start();

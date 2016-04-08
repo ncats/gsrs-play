@@ -17,12 +17,14 @@ public class TextIndexerPlugin extends Plugin {
     private boolean closed=false;
     private static int initCount=0;
 
+    private static boolean updateStoarageCount = true;
+
     public TextIndexerPlugin (Application app) {
         this.app = app;
     }
 
-    public void onStart () {
-    	initCount++;
+    public synchronized void onStart () {
+
         Logger.info("Loading plugin "+getClass().getName()+"...");
         ctx = app.plugin(IxContext.class);
         if (ctx == null){
@@ -30,24 +32,40 @@ public class TextIndexerPlugin extends Plugin {
                 ("IxContext plugin is not loaded!");
         }
         try {
-        	File storage=ctx.text();
-        	
-        	//Sometimes tests may hold on to folders they shouldn't
-        	//Here, we side-step the issue by changing the directory
-        	if(Play.isTest()){
-        		String newStorage=storage.getAbsolutePath() + initCount;
-        		Logger.info("Making new text index folder for test:" + newStorage);
-        		storage = new File(newStorage);
-        		storage.mkdirs();
-        	}
-            indexer = TextIndexer.getInstance(storage);
+            indexer = TextIndexer.getInstance(getStorageDir(ctx));
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize text indexer", ex);
         }
     }
 
-    public void onStop () {
+    private static synchronized File getStorageDir(IxContext ctx){
+        File storage=ctx.text();
+        System.out.println(updateStoarageCount);
+        if(Play.isTest()){
+            String newStorage=storage.getAbsolutePath() + initCount;
+            Logger.info("Making new text index folder for test:" + newStorage);
+            storage = new File(newStorage);
+            storage.mkdirs();
+            //Sometimes tests may hold on to folders they shouldn't
+            //Here, we side-step the issue by changing the directory
+            if(updateStoarageCount){
+                initCount++;
+            }
+            //always update the storage count from now
+            //on because it will usually be a restart
+            updateStoarageCount=true;
+        }
+        System.out.println(updateStoarageCount);
+        System.out.println("storage path " + storage.getAbsolutePath());
+        return storage;
+    }
+
+    public static synchronized void prepareTestRestart(){
+        updateStoarageCount = false;
+    }
+
+    public synchronized void onStop () {
         //We don't want to shutdown during testing
         //because the indexes get messed up
         //TODO find root cause of this issue
@@ -63,6 +81,6 @@ public class TextIndexerPlugin extends Plugin {
     }
     
 
-    public boolean enabled () { return !closed; }
-    public TextIndexer getIndexer () { return indexer; }
+    public synchronized boolean enabled () { return !closed; }
+    public synchronized TextIndexer getIndexer () { return indexer; }
 }

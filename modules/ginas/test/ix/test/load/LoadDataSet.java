@@ -2,9 +2,12 @@ package ix.test.load;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import ix.test.ix.test.server.*;
+import ix.test.util.TestNamePrinter;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,13 +18,17 @@ import static org.junit.Assert.*;
  */
 public class LoadDataSet {
 
+
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
+    private GinasTestServer ts = new GinasTestServer();
 
-    @Test
+    @Rule
+    public RuleChain chain = RuleChain.outerRule( new TestNamePrinter())
+                                                    .around(ts);
+
+    @Test @Ignore
     public void loadAsAdmin() throws IOException {
         GinasTestServer.User admin = ts.createAdmin("admin2", "adminPass");
         try(BrowserSession session = ts.newBrowserSession(admin)){
@@ -39,6 +46,31 @@ public class LoadDataSet {
 
             assertEquals(17, uuids.size());
         }
+    }
+
+    @Test
+    public void loadedDataPersistedAcrossRestarts() throws IOException {
+        GinasTestServer.User admin = ts.createAdmin("admin2", "adminPass");
+        try(BrowserSession session = ts.newBrowserSession(admin)) {
+
+            SubstanceLoader loader = new SubstanceLoader(session);
+
+            File f = new File("test/testdumps/rep90.ginas");
+
+            loader.loadJson(f);
+
+        }
+
+        ts.restart();
+        try(BrowserSession session = ts.newBrowserSession(admin)){
+
+            SubstanceSearch searcher = new SubstanceSearch(session);
+
+            Set<String> uuids = searcher.substructure("C1=CC=CC=C1");
+
+            assertEquals(17, uuids.size());
+        }
+
     }
 
     @Test

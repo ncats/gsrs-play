@@ -6,6 +6,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.KeyDataPair;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.apache.lucene.analysis.miscellaneous.PatternAnalyzer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,26 +14,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by katzelda on 4/4/16.
  */
 public class SubstanceLoader {
 
+    private static final Pattern LOAD_MONITOR_PATTERN = Pattern.compile(" <a href=\"/(ginas/app/monitor/[a-z0-9]+)\" target=\"_self\">");
+/*
+<code>
+                    COMPLETE
+                  </code>
+
+ */
+    private static final Pattern LOAD_PROGRESS_PATTERN = Pattern.compile("<code>\\s*(COMPLETE|PENDING|RUNNING)\\s*</code>");
     private final BrowserSession session;
 
-    private static int jobCount;
 
-    static{
-        init();
-    }
-
-    /**
-     * Reset the jobCount whenever we (re)start the test server.
-     */
-    public static synchronized void init(){
-        jobCount=1;
-    }
 
     public SubstanceLoader(BrowserSession session){
         Objects.requireNonNull(session);
@@ -45,7 +45,7 @@ public class SubstanceLoader {
             throw new FileNotFoundException(json.getAbsolutePath());
         }
         String url;
-        String status;
+       String status=null;
         //syncrhonize here in the critical section
         //where we start an upload.
         //this should prevent all other
@@ -61,6 +61,13 @@ public class SubstanceLoader {
 
             HtmlPage result = session.submit(request);
 
+           Matcher matcher = LOAD_MONITOR_PATTERN.matcher(result.asXml());
+            if(!matcher.find()){
+                throw new IOException("could not parse monitor URL for load");
+            }
+
+            url = matcher.group(1);
+            System.out.println("monitor URL = " + url);
             //instead of trying to figureout when the javascript compeltes
             //we can do rest requests to query the job status
 
@@ -68,7 +75,7 @@ public class SubstanceLoader {
 
             //compute status url once which we will use over and over
             //in the do-while loop below
-            url = "ginas/app/api/v1/jobs/" + (jobCount++);
+           // url = "ginas/app/api/v1/jobs/" + (jobCount++);
         }
         do {
             try {
@@ -76,10 +83,15 @@ public class SubstanceLoader {
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
-            status = session.get(url)
-                    .asJson()
-                    .get("status").asText();
+            WebRequest request = session.newGetRequest(url);
+            HtmlPage monitorPage = session.submit(request);
 
+           // System.out.println(monitorPage.asXml());
+
+            Matcher matcher = LOAD_PROGRESS_PATTERN.matcher(monitorPage.asXml());
+            if(matcher.find()){
+                status = matcher.group(1);
+            }
             System.out.println(status);
 
         }while(!"COMPLETE".equals(status));
