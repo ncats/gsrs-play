@@ -23,12 +23,7 @@ import java.util.regex.Pattern;
 public class SubstanceLoader {
 
     private static final Pattern LOAD_MONITOR_PATTERN = Pattern.compile(" <a href=\"/(ginas/app/monitor/[a-z0-9]+)\" target=\"_self\">");
-/*
-<code>
-                    COMPLETE
-                  </code>
 
- */
     private static final Pattern LOAD_PROGRESS_PATTERN = Pattern.compile("<code>\\s*(COMPLETE|PENDING|RUNNING)\\s*</code>");
     private final BrowserSession session;
 
@@ -44,46 +39,23 @@ public class SubstanceLoader {
         if(!json.exists()){
             throw new FileNotFoundException(json.getAbsolutePath());
         }
-        String url;
-       String status=null;
-        //syncrhonize here in the critical section
-        //where we start an upload.
-        //this should prevent all other
-        //loaders from loading a file at the same time
-        //so our jobCount valable stays in sync
-        synchronized(SubstanceLoader.class) {
-            List<NameValuePair> params = new ArrayList<>();
-            params.add(new NameValuePair("file-type", "JSON"));
-            params.add(new KeyDataPair("file-name", json, json.getName(), "application/json", "utf-8"));
-            WebRequest request = session.newPostRequest("ginas/app/load");
-            request.setEncodingType(FormEncodingType.MULTIPART);
-            request.setRequestParameters(params);
+        String url = submitFileForLoading(json);
 
-            HtmlPage result = session.submit(request);
+        waitUntilComplete(url);
+    }
 
-           Matcher matcher = LOAD_MONITOR_PATTERN.matcher(result.asXml());
-            if(!matcher.find()){
-                throw new IOException("could not parse monitor URL for load");
-            }
-
-            url = matcher.group(1);
-            System.out.println("monitor URL = " + url);
-            //instead of trying to figureout when the javascript compeltes
-            //we can do rest requests to query the job status
-
-            //http://localhost:$port/dev/ginas/app/api/v1/jobs/1"
-
-            //compute status url once which we will use over and over
-            //in the do-while loop below
-           // url = "ginas/app/api/v1/jobs/" + (jobCount++);
-        }
+    private void waitUntilComplete(String monitorUrl) throws IOException {
+        waitUntilComplete(monitorUrl, 2_000L);
+    }
+    private void waitUntilComplete(String monitorUrl, long sleeptimeMillis) throws IOException {
+        String status=null;
         do {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(sleeptimeMillis);
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
-            WebRequest request = session.newGetRequest(url);
+            WebRequest request = session.newGetRequest(monitorUrl);
             HtmlPage monitorPage = session.submit(request);
 
            // System.out.println(monitorPage.asXml());
@@ -95,5 +67,28 @@ public class SubstanceLoader {
             System.out.println(status);
 
         }while(!"COMPLETE".equals(status));
+    }
+
+    private String submitFileForLoading(File json) throws IOException {
+        String url;
+
+
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new NameValuePair("file-type", "JSON"));
+        params.add(new KeyDataPair("file-name", json, json.getName(), "application/json", "utf-8"));
+        WebRequest request = session.newPostRequest("ginas/app/load");
+        request.setEncodingType(FormEncodingType.MULTIPART);
+        request.setRequestParameters(params);
+
+        HtmlPage result = session.submit(request);
+
+        Matcher matcher = LOAD_MONITOR_PATTERN.matcher(result.asXml());
+        if(!matcher.find()){
+            throw new IOException("could not parse monitor URL for load");
+        }
+
+        url = matcher.group(1);
+        System.out.println("monitor URL = " + url);
+        return url;
     }
 }

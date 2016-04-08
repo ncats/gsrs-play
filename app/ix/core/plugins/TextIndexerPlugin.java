@@ -31,6 +31,14 @@ public class TextIndexerPlugin extends Plugin {
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
         }
+        //Sometimes tests may hold on to folders they shouldn't
+        //Here, we side-step the issue by changing the directory
+        if(updateStoarageCount){
+            initCount++;
+        }
+        //always update the storage count from now
+        //on because it will usually be a restart
+        updateStoarageCount=true;
         try {
             indexer = TextIndexer.getInstance(getStorageDir(ctx));
         }
@@ -41,23 +49,14 @@ public class TextIndexerPlugin extends Plugin {
 
     private static synchronized File getStorageDir(IxContext ctx){
         File storage=ctx.text();
-        System.out.println(updateStoarageCount);
+
         if(Play.isTest()){
             String newStorage=storage.getAbsolutePath() + initCount;
             Logger.info("Making new text index folder for test:" + newStorage);
             storage = new File(newStorage);
             storage.mkdirs();
-            //Sometimes tests may hold on to folders they shouldn't
-            //Here, we side-step the issue by changing the directory
-            if(updateStoarageCount){
-                initCount++;
-            }
-            //always update the storage count from now
-            //on because it will usually be a restart
-            updateStoarageCount=true;
+
         }
-        System.out.println(updateStoarageCount);
-        System.out.println("storage path " + storage.getAbsolutePath());
         return storage;
     }
 

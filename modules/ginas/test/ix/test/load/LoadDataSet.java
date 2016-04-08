@@ -3,6 +3,7 @@ package ix.test.load;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import ix.test.ix.test.server.*;
 import ix.test.util.TestNamePrinter;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,9 +29,34 @@ public class LoadDataSet {
     public RuleChain chain = RuleChain.outerRule( new TestNamePrinter())
                                                     .around(ts);
 
-    @Test @Ignore
+    private GinasTestServer.User admin;
+
+    @Before
+    public void createAdmin(){
+        admin = ts.createAdmin("admin2", "adminPass");
+    }
+
+    @Test
+    public void loadMultipleFiles() throws IOException {
+
+        try(BrowserSession session = ts.newBrowserSession(admin)){
+
+            SubstanceLoader loader = new SubstanceLoader(session);
+
+
+            loader.loadJson(new File("test/testdumps/rep90_part1.ginas"));
+
+            loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
+
+            SubstanceSearch searcher = new SubstanceSearch(session);
+
+            Set<String> uuids = searcher.substructure("C1=CC=CC=C1");
+
+            assertEquals(17, uuids.size());
+        }
+    }
+    @Test
     public void loadAsAdmin() throws IOException {
-        GinasTestServer.User admin = ts.createAdmin("admin2", "adminPass");
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
             SubstanceLoader loader = new SubstanceLoader(session);
@@ -50,7 +76,6 @@ public class LoadDataSet {
 
     @Test
     public void loadedDataPersistedAcrossRestarts() throws IOException {
-        GinasTestServer.User admin = ts.createAdmin("admin2", "adminPass");
         try(BrowserSession session = ts.newBrowserSession(admin)) {
 
             SubstanceLoader loader = new SubstanceLoader(session);
