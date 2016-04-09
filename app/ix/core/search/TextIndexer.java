@@ -209,8 +209,9 @@ public class TextIndexer implements Closeable{
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        //final List matches = new CopyOnWriteArrayList ();
-        final BlockingQueue matches = new LinkedBlockingQueue ();
+        Map<Object, Integer> rank;
+        BlockingQueue matches = new LinkedBlockingQueue ();
+        List result; // final result when there are no more updates
         int count;
         SearchOptions options;
         final long timestamp = TimeUtil.getCurrentTimeMillis();
@@ -219,7 +220,26 @@ public class TextIndexer implements Closeable{
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
             this.options = options;
-            this.query = query;            
+            this.query = query;
+        }
+
+        void setRank (final Map<Object, Integer> rank) {
+            this.rank = rank;
+            matches = new PriorityBlockingQueue
+                (rank.size(), new Comparator () {
+                        public int compare (Object o1, Object o2) {
+                            Object id1 = EntityUtils.getIdForBean(o1);
+                            Object id2 = EntityUtils.getIdForBean(o2);
+                            Integer r1 = rank.get(id1), r2 = rank.get(id2);
+                            if (r1 != null && r2 != null)
+                                return r1 - r2;
+                            if (r1 == null)
+                                Logger.error("Unknown rank for "+o1);
+                            if (r2 == null)
+                                Logger.error("Unknown rank for "+o2);
+                            return 0;
+                        }
+                });
         }
 
         public String getKey() { return key; }
@@ -244,8 +264,8 @@ public class TextIndexer implements Closeable{
             if (start >= matches.size()) {
                 return 0;
             }
-                
-            Iterator it = matches.iterator();
+
+            Iterator it = getMatches().iterator();
             for (int i = 0; i < start && it.hasNext(); ++i)
                 it.next(); // skip
             
@@ -257,7 +277,19 @@ public class TextIndexer implements Closeable{
         }
         
         public List getMatches () {
-            return new ArrayList (matches);
+            if (result != null) return result;
+            
+            List list = new ArrayList (matches);
+            if (matches instanceof PriorityBlockingQueue) {
+                PriorityBlockingQueue q = (PriorityBlockingQueue)matches;
+                Collections.sort(list, q.comparator());
+            }
+            
+            if (finished ()) {
+                result = list;
+            }
+            
+            return list;
         }
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
@@ -886,6 +918,18 @@ public class TextIndexer implements Closeable{
                 //Logger.debug("Filter terms "+subset.size());
                 if (!terms.isEmpty())
                     f = new TermsFilter (terms);
+                
+                Map<Object, Integer> rank = new HashMap<Object, Integer>();
+                int r = 0;
+                for (Iterator it = subset.iterator(); it.hasNext(); ) {
+                    Object entity = it.next();
+                    Object id = EntityUtils.getIdForBean(entity);
+                    if (id != null)
+                        rank.put(id, ++r);
+                }
+                
+                if (!rank.isEmpty())
+                    searchResult.setRank(rank);
             }
             else if (options.kind != null) {
                 Set<String> kinds = new TreeSet<String>();
@@ -1021,10 +1065,10 @@ public class TextIndexer implements Closeable{
                                         (facet, fl = new ArrayList<Filter>());
                                 }
                                 Logger.debug("adding range filter \""
-                                             +facet+"\": "+range[0]
-                                             +" "+range[1]);
+                                             +facet+"\": ["+range[0]
+                                             +","+range[1]+")");
                                 fl.add(FieldCacheRangeFilter.newLongRange
-                                       (facet, range[0], range[1], true, true));
+                                       (facet, range[0], range[1], true, false));
                             }
                             remove.add(f);
                         }
@@ -1105,10 +1149,11 @@ public class TextIndexer implements Closeable{
 
                     /*
                      * TODO: is this the only way to collect the counts
-                     * for range/dynamic facets
+                     * for range/dynamic facets?
                      */
-                    FacetsCollector.search
-                        (searcher, ddq, filter, options.max(), fc);
+                    if (!options.longRangeFacets.isEmpty())
+                        FacetsCollector.search
+                            (searcher, ddq, filter, options.max(), fc);
                     
                     facets = swResult.facets;
                     hits = swResult.hits;

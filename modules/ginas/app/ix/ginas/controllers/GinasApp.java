@@ -96,7 +96,7 @@ public class GinasApp extends App {
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
         "Substance Class", 
-        "SubstanceStereoChemistry", 
+        "SubstanceStereochemistry", 
         "Molecular Weight",
         "GInAS Tag"
     };
@@ -108,7 +108,7 @@ public class GinasApp extends App {
     public static final String[] ALL_FACETS = {
         "Record Status",
         "Substance Class", 
-        "SubstanceStereoChemistry", 
+        "SubstanceStereochemistry", 
         "Molecular Weight",
         "GInAS Tag", 
         "Relationships",
@@ -400,8 +400,11 @@ public class GinasApp extends App {
                     if (type.equalsIgnoreCase("substructure")) {
                         return substructure(q, rows, page);
                     } else {
-                        return similarity(q, Double.parseDouble(cutoff), rows,
-                                          page);
+                        // cap the cutoff at .3.. there is no need to go lower,
+                        // otherwise, you're up to no good
+                        double thres = Math.max
+                            (.3, Math.min(1.,Double.parseDouble(cutoff)));
+                        return similarity(q, thres, rows, page);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -501,17 +504,19 @@ public class GinasApp extends App {
         editedRange.add("aToday", range);
         approvedRange.add("aToday", range);
 
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
         range = new long[]{cal.getTimeInMillis(),
                            now.getTimeInMillis()};
         editedRange.add("bThis week", range);
         approvedRange.add("bThis week", range);
+        now = (Calendar)cal.clone();
 
         cal.set(Calendar.WEEK_OF_MONTH, 1);
         range = new long[]{cal.getTimeInMillis(),
                            now.getTimeInMillis()};
         editedRange.add("cThis month", range);
         approvedRange.add("cThis month", range);
+        now = (Calendar)cal.clone();
 
         cal = (Calendar)now.clone();
         cal.add(Calendar.MONTH, -6);
@@ -519,6 +524,7 @@ public class GinasApp extends App {
                            now.getTimeInMillis()};
         editedRange.add("dPast 6 months", range);
         approvedRange.add("dPast 6 months", range);
+        now = (Calendar)cal.clone();
 
         cal = (Calendar)now.clone();
         cal.add(Calendar.YEAR, -1);
@@ -526,6 +532,7 @@ public class GinasApp extends App {
                            now.getTimeInMillis()};
         editedRange.add("ePast 1 year", range);
         approvedRange.add("ePast 1 year", range);
+        now = (Calendar)cal.clone();
         
         cal = (Calendar)now.clone();
         cal.add(Calendar.YEAR, -2);
@@ -1336,12 +1343,15 @@ public class GinasApp extends App {
         
         GinasSearchResultProcessor() {
         }
-            
+
+        int index;
         protected Object instrument(StructureIndexer.Result r)
             throws Exception {
             List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
-            
+            Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
+                                       r.getId(), r.getSimilarity()));
+                         
             ChemicalSubstance chem = null;
             if (!chemicals.isEmpty()) {
                 int[] amap = new int[r.getMol().getAtomCount()];
