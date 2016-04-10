@@ -96,7 +96,7 @@ public class GinasApp extends App {
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
         "Substance Class", 
-        "SubstanceStereoChemistry", 
+        "SubstanceStereochemistry", 
         "Molecular Weight",
         "LyChI_L4",
         "GInAS Tag"
@@ -104,12 +104,14 @@ public class GinasApp extends App {
     
     public static final String[] PROTEIN_FACETS = {
         "Sequence Type",
-        "Substance Class", "Status" };
+        "Substance Class", 
+        "Status" 
+    };
     
     public static final String[] ALL_FACETS = {
         "Record Status",
         "Substance Class", 
-        "SubstanceStereoChemistry", 
+        "SubstanceStereochemistry", 
         "Molecular Weight",
         "GInAS Tag", 
         "Molecular Weight",
@@ -405,8 +407,11 @@ public class GinasApp extends App {
                     if (type.toLowerCase().startsWith("sub")) {
                         return substructure(q, rows, page);
                     } else {
-                        return similarity(q, Double.parseDouble(cutoff), rows,
-                                          page);
+                        // cap the cutoff at .3.. there is no need to go lower,
+                        // otherwise, you're up to no good
+                        double thres = Math.max
+                            (.3, Math.min(1.,Double.parseDouble(cutoff)));
+                        return similarity(q, thres, rows, page);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -504,17 +509,19 @@ public class GinasApp extends App {
         editedRange.add("aToday", range);
         approvedRange.add("aToday", range);
 
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
         range = new long[]{cal.getTimeInMillis(),
                            now.getTimeInMillis()};
         editedRange.add("bThis week", range);
         approvedRange.add("bThis week", range);
+        now = (Calendar)cal.clone();
 
         cal.set(Calendar.WEEK_OF_MONTH, 1);
         range = new long[]{cal.getTimeInMillis(),
                            now.getTimeInMillis()};
         editedRange.add("cThis month", range);
         approvedRange.add("cThis month", range);
+        now = (Calendar)cal.clone();
 
         cal = (Calendar)now.clone();
         cal.add(Calendar.MONTH, -6);
@@ -522,6 +529,7 @@ public class GinasApp extends App {
                            now.getTimeInMillis()};
         editedRange.add("dPast 6 months", range);
         approvedRange.add("dPast 6 months", range);
+        now = (Calendar)cal.clone();
 
         cal = (Calendar)now.clone();
         cal.add(Calendar.YEAR, -1);
@@ -529,6 +537,7 @@ public class GinasApp extends App {
                            now.getTimeInMillis()};
         editedRange.add("ePast 1 year", range);
         approvedRange.add("ePast 1 year", range);
+        now = (Calendar)cal.clone();
         
         cal = (Calendar)now.clone();
         cal.add(Calendar.YEAR, -2);
@@ -559,9 +568,8 @@ public class GinasApp extends App {
                 (sha1, new Callable<SearchResult>() {
                         public SearchResult call () throws Exception {
                             SearchOptions options = new SearchOptions
-                            (Substance.class);
+                            (Substance.class, total, 0, FACET_DIM);
                             options.parse(params);
-                            options.fetch = total;
                             instrumentSubstanceSearchOptions (options);
                             SearchResult result = _textIndexer.search
                             (options, q, null);
@@ -651,14 +659,13 @@ public class GinasApp extends App {
             int rows, int page) throws Exception{
     	return createSubstanceResult(result,rows,page,ALL_FACETS);
     }
+    
     static Result createSubstanceResult(TextIndexer.SearchResult result,
                                         int rows, int page, String[] facets) throws Exception{
         SearchResultContext src= new SearchResultContext(result);
-        
-        return fetchResult (src, rows, page,
-                new SubstanceResultRenderer (facets));
-
+        return fetchResult (src, rows, page, new SubstanceResultRenderer (facets));
     }
+    
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
         String version;
         public SubstanceVersionFetcher(String version){
@@ -666,23 +673,15 @@ public class GinasApp extends App {
                 this.version=version;
         }
         Result getResult(List<Substance> e) throws Exception{
-                //System.out.println("Found the substances, now look for history");
                 List<Substance> slist=new ArrayList<Substance>();
                 for(Substance s:e){
                         Substance s2=SubstanceFactory.getSubstanceVersion(s.uuid.toString(),version);
                         slist.add(s2);
                 }
-                 return _getSubstanceResult(slist);
+                return _getSubstanceResult(slist);
         }
     }
 
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-    /* public static final GetResult<Substance> SubstanceVersionResult =
-            new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
-                public Result getResult(List<Substance> substances) throws Exception {
-                    return _getSubstanceResult(substances);
-                }
-            };*/
 
 
     public static final GetResult<Substance> SubstanceResult =
@@ -761,42 +760,6 @@ public class GinasApp extends App {
         return new SubstanceVersionFetcher(version).get(name);
     }
 
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-    /*public static Result chemicals(final String q, final int rows,
-                                   final int page) {
-        String type = request().getQueryString("type");
-        Logger.debug("Chemicals: rows=" + rows + " page=" + page);
-        try {
-            if (type != null
-                && (type.equalsIgnoreCase("substructure") || type
-                    .equalsIgnoreCase("similarity"))) {
-                // structure search
-                String cutoff = request().getQueryString("cutoff");
-                Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
-                             + cutoff);
-                try {
-                    if (type.equalsIgnoreCase("substructure")) {
-                        return substructure(q, rows, page);
-                    } else {
-                        return similarity(q, Double.parseDouble(cutoff), rows,
-                                          page);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                return notFound(ix.ginas.views.html.error.render
-                                (400, "Invalid search parameters: type=\""
-                                 + type + "\"; q=\"" + q + "\" cutoff=\""
-                                 + cutoff + "\"!"));
-            } else {
-                return _chemicals(q, rows, page);
-            }
-        } catch (Exception ex) {
-            return _internalServerError(ex);
-        }
-    }*/
-
     static Result createChemicalResult(TextIndexer.SearchResult result,
                                        int rows, int page) {
         TextIndexer.Facet[] facets = filter(result.getFacets(), CHEMICAL_FACETS);
@@ -841,15 +804,12 @@ public class GinasApp extends App {
         public static Result lychimatch(final String query, int rows, int page, boolean exact) {
                 try{
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
-//                        System.out.println("L4:" + struc2.getLychiv4Hash());
-//                        System.out.println("L3:" + struc2.getLychiv3Hash());
                         String hash=null;
                         if(exact){
                         	hash=struc2.getLychiv3Hash();
                         }else{
                         	hash=struc2.getLychiv4Hash();
                         }
-                        System.out.println("Searching for:" + hash);
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
                         
@@ -890,8 +850,6 @@ public class GinasApp extends App {
      * 
      */
     public static String getId(Substance substance) {
-//        if (substance.approvalID != null)
-//            return substance.approvalID;
 
         /**
          * proper permission should be checked here
@@ -904,16 +862,6 @@ public class GinasApp extends App {
          * While it's not as pretty, I'm defaulting to using the uuid or
          * approvalID.
          */
-        // String official = null;
-        // for (Name n : substance.names) {
-        // if (n.preferred)
-        // return n.name;
-        // else if ("of".equalsIgnoreCase(n.type))
-        // official = n.name;
-        // }
-        //
-        // return official != null ? official
-        // : substance.uuid.toString().substring(0, 8);
 
         return substance.getUuid().toString().substring(0, 8);
     }
@@ -995,13 +943,13 @@ public class GinasApp extends App {
         }
 
         if (values.isEmpty()) {
-        	System.out.println("looking for approvalID");
+                System.out.println("looking for approvalID");
             values = finder.where().ieq("approvalID", name).findList();
             if (values.isEmpty()) {
-            	System.out.println("looking for name");
+                System.out.println("looking for name");
                 values = finder.where().ieq("names.name", name).findList(); //this is a problem for oracle
                 if (values.isEmpty()){ 
-                	System.out.println("looking for codes");
+                        System.out.println("looking for codes");
                     values = finder.where().ieq("codes.code", name).findList();// last resort..
                 }
             }
@@ -1118,12 +1066,16 @@ public class GinasApp extends App {
         
         GinasSearchResultProcessor() {
         }
-            
+
+        int index;
         protected Object instrument(StructureIndexer.Result r)
             throws Exception {
             List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
             double similarity=r.getSimilarity();
+            Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
+                                       r.getId(), r.getSimilarity()));
+                         
             ChemicalSubstance chem = null;
             if (!chemicals.isEmpty()) {
                 int[] amap = new int[r.getMol().getAtomCount()];
@@ -1273,22 +1225,22 @@ public class GinasApp extends App {
         if(httpStat == NOT_FOUND){
             Substance s = SubstanceFactory.getSubstance(id);
             if(s!=null){
-            	if(s instanceof ChemicalSubstance){
-	                String sid1= ((ChemicalSubstance) s).structure.id.toString();
-	                return App.structure(sid1, format, size, atomMap);
-	            }else{
-	                return placeHolderImage(s);
-	            }
-            	
+                if(s instanceof ChemicalSubstance){
+                        String sid1= ((ChemicalSubstance) s).structure.id.toString();
+                        return App.structure(sid1, format, size, atomMap);
+                    }else{
+                        return placeHolderImage(s);
+                    }
+                
             }else{
-            	try{
-            		UUID uuid=UUID.fromString(id);
-            		//Unit u=new Unit();
-            		Unit u=GinasFactory.unitFinder.byId(uuid);
-            		return App.render(u.structure,size);
-            	}catch(Exception e){
-            		e.printStackTrace();
-            	}
+                try{
+                        UUID uuid=UUID.fromString(id);
+                        //Unit u=new Unit();
+                        Unit u=GinasFactory.unitFinder.byId(uuid);
+                        return App.render(u.structure,size);
+                }catch(Exception e){
+                        e.printStackTrace();
+                }
             }
         }
         return r1;
@@ -1401,20 +1353,20 @@ public class GinasApp extends App {
         
     }
     public static String formatMolfile(Chemical c, int format) throws Exception{
-    	String mol=c.export(format);
-    	StringBuilder sb=new StringBuilder();
-    	int i=0;
-    	for(String line: mol.split("\n")){
-    		if(i!=0){
-    			sb.append("\n");
-    		}
-    		if(i==1){
-    			line=" G-SRS " + line;
-    		}
-    		i++;
-    		sb.append(line);
-    	}
-    	return sb.toString();
+        String mol=c.export(format);
+        StringBuilder sb=new StringBuilder();
+        int i=0;
+        for(String line: mol.split("\n")){
+                if(i!=0){
+                        sb.append("\n");
+                }
+                if(i==1){
+                        line=" G-SRS " + line;
+                }
+                i++;
+                sb.append(line);
+        }
+        return sb.toString();
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
         String resp = "";
