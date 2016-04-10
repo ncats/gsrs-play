@@ -437,7 +437,6 @@ public class GinasTestServer extends ExternalResource{
 
     @Override
     protected void after() {
-        System.out.println("after shuttind down");
         stop();
     }
 

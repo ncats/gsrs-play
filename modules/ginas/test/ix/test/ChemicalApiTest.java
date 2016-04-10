@@ -13,8 +13,6 @@ import org.junit.runner.Description;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
@@ -106,13 +104,6 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test
-    public void testChemicalIface() throws Exception{
-    	ChemicalFactory cf = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY();
-    	Chemical c=cf.createChemical("QIQLQQSGPEVVKPGASVKISCKASGYTFTDYYITWVKQKPGQGLEWIGWIYPGSGNTKYNEKFKGKATLTVDTSSSTAFMQLSSLTSEDTAVYFCANYGNYWFAYWGQGTQVTVSAASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSRDELTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPG", Chemical.FORMAT_AUTO);
-    	System.out.println(c.getAtomCount());
-    	
-    }
     
     public JsonNode parseJsonFile(String path){
 		return parseJsonFile(new File(path));
