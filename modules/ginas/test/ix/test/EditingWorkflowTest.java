@@ -13,6 +13,7 @@ import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.JsonHistoryResult;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.util.TestNamePrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,11 +57,7 @@ public class EditingWorkflowTest {
     public GinasTestServer ts = new GinasTestServer(9001);
 
     @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-    };
+    public TestNamePrinter testNamePrinter = new TestNamePrinter();
 
 
     private GinasTestServer.User fakeUser1, fakeUser2;

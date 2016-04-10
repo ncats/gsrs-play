@@ -19,10 +19,7 @@ import ix.utils.Util;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import play.Application;
@@ -101,6 +98,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         public Long jobId;
                 
         public PayloadProcessor(Payload payload) {
+            Objects.requireNonNull(payload);
             this.payload = payload;
             this.key = randomKey(10);
             this.id = payload.id + ":" + this.key;
