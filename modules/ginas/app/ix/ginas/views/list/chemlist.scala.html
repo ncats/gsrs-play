@@ -45,6 +45,18 @@
 
                 <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
                     <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>
+                    <div>
+                    @defining(GinasApp.getChemSimilarity(ctx,chem.structure.id.toString())){ sim =>
+		  		         @if(sim != null) {
+							 <br>
+							 <em>Similarity</em> <code>
+							 @{"%.3f".format(sim)}
+							 </code>
+				      	  }else{
+				      	  
+				      	  }
+				      }
+                    </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12 text-center">

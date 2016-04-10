@@ -1225,7 +1225,7 @@ public class App extends Authentication {
         SearchResultContext () {
         }
 
-        SearchResultContext (SearchResult result) {
+        public SearchResultContext (SearchResult result) {
             start = result.getTimestamp();          
             if (result.finished()) {
                 status = Status.Done;
