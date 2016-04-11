@@ -1,51 +1,70 @@
 @(id: String)
 
-@ginas("Sequence Search", null) {
-    @menu()
-} {
-    <div class="container">
-      <div class="row" id="pub-history">
-        <div class="col-md-8 col-md-offset-2">
-          <h1>Sequence Search</h1>
-	  
-          <form role="search" method="POST"
-		enctype="application/x-www-form-urlencoded"
-		action="@ix.ginas.controllers.routes.GinasApp.sequenceSearch"
-                id="search-bar">
-            <div class="form-group">
-	      @**
-              <div class="row">
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <!--     <label for="exampleInputFile">Load File</label> -->
-                    <input type="button" value="Choose File"
-                           onclick="window.FileContentsGrabber.append('nuc-sequence')"
-                           id="exampleInputFile">
-		    
-                    <!--     <input type="file" id="exampleInputFile"> -->
-                    <p class="help-block">or</p>
-                  </div>
+    @ginas("Sequence Search", null) {
+        @menu()
+    } {
+        <div class="container">
+            <div class="row" id="pub-history">
+                <div class="col-md-8 col-md-offset-2">
+                    <h1>Sequence Search</h1>
+
+                    <form role="search" method="POST"
+                    enctype="application/x-www-form-urlencoded"
+                    action="@ix.ginas.controllers.routes.GinasApp.sequenceSearch"
+                    id="search-bar">
+                        <div class="form-group">
+                            @**
+                            <div class="row">
+                            <div class="col-md-3">
+                            <div class="form-group">
+                            <!-- <label for="exampleInputFile">Load File</label> -->
+                            <input type="button" value="Choose File"
+                            onclick="window.FileContentsGrabber.append('nuc-sequence')"
+                            id="exampleInputFile">
+
+                            <!-- <input type="file" id="exampleInputFile"> -->
+                            <p class="help-block">or</p>
+                            </div>
+                            </div>
+                            </div>
+                            **@
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="identity">Search Identity: </label>
+                                    <input type="text" class="form-control" id="identity"
+                                    name="identity" value="0.5">
+                                </div>
+                                <div class="col-md-2">
+                                    <label>
+                                        Protein
+                                    </label><br>
+                                    <input type="checkbox" value="">
+                                    </div>
+                                    <div class="col-md-2">
+                                    <label>
+                                            Nucleic Acid
+                                    </label>
+                                    <br>
+                                <input type="checkbox" value="">
+                                        </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label for="sequence">Query Sequence:</label>
+                                        <textarea class="form-control" rows="6" id="sequence"
+                                        style="font-family: monospace"
+                                        title="Search" name="sequence">@ix.ginas.controllers.GinasFactory.getSequence(id)</textarea>
+                                    </div>
+                                </div>
+                            <div class="row">
+                                <button type="submit" class="btn btn-default">Search</button>
+
+                            </div>
+                            </div>
+
+                    </form>
                 </div>
-              </div>
-	      **@
-              <div class="row">
-                <div class="col-md-12">
-                  <label for="identity">Search Identity: </label>
-		  <input type="text" class="form-control" id="identity"
-			 name="identity" value="0.5">
-		  <br>
-		  <label for="sequence">Query Sequence:</label>
-                  <textarea class="form-control" rows="6" id="sequence"
-			    style="font-family: monospace"
-                            title="Search" name="sequence">@ix.ginas.controllers.GinasFactory.getSequence(id)</textarea>
-                </div>
-              </div>
             </div>
-	    
-            <button type="submit" class="btn btn-default">Search</button>
-          </form>
         </div>
-      </div>
-    </div>
-}
+    }
 
