@@ -757,7 +757,7 @@
                 }).then(function (response) {
                     console.log(response);
                     url = baseurl + "assets/templates/modals/update-success.html";
-                    $scope.redirect = response.uuid;
+                    $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
                 }, function(response){
                     console.log(response);
@@ -773,7 +773,7 @@
                     }
                 }).then(function (response) {
                     //console.log(response);
-                    $scope.redirect = response.data.uuid;
+                    $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
                 }, function(response){
@@ -865,9 +865,12 @@
         };
 
         $scope.viewSubstance = function(){
-            //console.log("new");
-            $window.location.search ="";
-            $window.location.pathname = baseurl+'substance/' + $scope.redirect.split('-')[0];
+            console.log("new");
+            $window.location.search = null;
+            console.log($window.location);
+            console.log($location);
+            $window.location.href = baseurl+'substance/' + $scope.postRedirect.split('-')[0];
+          //  $window.location.search =null;
         };
 
         $scope.redirect = function(){
