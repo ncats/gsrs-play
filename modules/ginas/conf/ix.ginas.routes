@@ -10,8 +10,6 @@ GET         /substance/:name/v/:version ix.ginas.controllers.GinasApp.substanceV
 GET         /substance/:name/edit       ix.ginas.controllers.GinasFactory.edit(name: String)
 GET         /substance/:name/approve    ix.ginas.controllers.GinasFactory.approve(name: String)
 GET         /substances                 ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
-#GET         /chemicals                  ix.ginas.controllers.GinasApp.chemicals(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
-#GET         /proteins                   ix.ginas.controllers.GinasApp.proteins(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
 GET         /sequence                   ix.ginas.controllers.GinasFactory.sequence(id: String ?= null)
 POST        /sequence			        ix.ginas.controllers.GinasApp.sequenceSearch
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)

@@ -3,7 +3,7 @@
         Data Management&nbsp;</button>
     <span><i class="fa fa-question-circle fa-lg"></i></span>
     <div class="col-md-12">
-                <form class="form-horizontal" role="form" method="POST"
+                <form class="form-horizontal" role="form" method="POST" name="upload-form"
                 enctype="multipart/form-data"
                 action="@ix.ginas.controllers.routes.GinasLoad.loadJSON()" novalidate>
                     <div class="row form-row">
@@ -30,7 +30,7 @@
                     <hr>
                     <div class="row">
                         <div class="col-md-offset-10 col-md-2">
-                            <button type="submit" class="btn btn-success">Load</button>
+                            <button type="submit" name="submit" class="btn btn-success">Load</button>
                         </div>
                     </div>
                 </form>
