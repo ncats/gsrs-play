@@ -1571,7 +1571,7 @@
         };
     });
 
-    ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile) {
+    ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile, toggler, substanceFactory, spinnerService, CVFields) {
         return {
             replace: true,
             restrict: 'E',
@@ -1585,9 +1585,61 @@
             },
             link: function (scope, element, attrs, ngModel) {
                 var formHolder;
-                var childScope;
                 var template;
+
+                scope.toggle = function () {
+                    if(scope.stage==false){
+                        scope.q = null;
+                    }
+                    toggler.toggle(scope, scope.formname, formHolder, scope.referenceobj);
+                };
+
                 scope.stage = true;
+
+                scope.fetch = function (term, skip) {
+                    spinnerService.show('subrefSpinner');
+                    var url = baseurl + "api/v1/substances?filter=names.name='" +
+                            // var url = baseurl + "api/v1/substances/search?q=" +
+                        term + "'&top=" + scope.top + "&skip=" + skip;
+                    substanceFactory.getSubstances(scope.q).then(function (response) {
+                        /*                 $http.get(url, {cache: true}).then(function (response, status, headers, config) {*/
+                        console.log(response);
+                        scope.data = response.data.content;
+                        spinnerService.hide('subrefSpinner');
+                        var template = angular.element('<substance-viewer data = data format= "subref"></substance-viewer>');
+                        toggler.refresh(scope, scope.formname, template);
+                    });
+                };
+
+                scope.createSubref = function (selectedItem) {
+                    console.log("GGGGGGG");
+                    var temp = {};
+                    temp.refuuid = selectedItem.uuid;
+                    temp.refPname = selectedItem._name;
+                    temp.approvalID = selectedItem.approvalID;
+                    temp.substanceClass = "reference";
+                    if (attrs.definition) {
+                        var r = {relatedSubstance: temp};
+                        CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
+                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            r.type = type;
+                        });
+                        /*
+                         var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
+                         */
+                        if (!_.has(scope.referenceobj, 'relationships')) {
+                            _.set(scope.referenceobj, 'relationships', []);
+                        }
+                        scope.referenceobj.relationships.push(r);
+                    }
+                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
+                    scope.q = null;
+                    scope.toggle();
+                };
+
+
+
+
                 switch (scope.type) {
                     case "lite":
                         $templateRequest(baseurl + "assets/templates/substance-select.html").then(function (html) {
@@ -1605,49 +1657,28 @@
                         if (attrs.definition) {
                             scope.definition = attrs.definition;
                         }
-                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q  definition={{definition}}></substance-search-form>';
+                        formHolder = '<substance-search-form referenceobj = referenceobj formname =formname field =field q=q  definition={{definition}}></substance-search-form>';
                         break;
                 }
-
-                scope.toggleStage = function () {
-                    if (_.isUndefined(scope.referenceobj)) {
-                        var x = {};
-                        _.set(scope, scope.referenceobj, x);
-                    }
-                    var result = document.getElementsByClassName(attrs.formname);
-                    var elementResult = angular.element(result);
-                    if (scope.stage === true) {
-                        scope.stage = false;
-                        childScope = scope.$new();
-                        var compiledDirective = $compile(formHolder);
-                        var directiveElement = compiledDirective(childScope);
-                        elementResult.append(directiveElement);
-                    } else {
-                        scope.q = null;
-                        childScope.$destroy();
-                        elementResult.empty();
-                        scope.stage = true;
-                    }
-                };
             }
         };
     });
 
-    ginasApp.directive('substanceSearchForm', function ($http, CVFields) {
+    ginasApp.directive('substanceSearchForm', function (CVFields, toggler, substanceFactory, spinnerService) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
                 referenceobj: '=',
                 field: '=',
-                q: '='
+                q: '=',
+                formname:'='
             },
             templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
             link: function (scope, element, attrs) {
                 scope.results = {};
                 scope.top = 8;
                 scope.testb = 0;
-                scope.searching = true;
                 scope.createSubref = function (selectedItem) {
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
@@ -1670,22 +1701,26 @@
                     }
                     _.set(scope.referenceobj, scope.field, angular.copy(temp));
                     scope.q = null;
-                    scope.$parent.$parent.toggleStage();
+                    scope.$parent.$parent.toggle();
                 };
 
                 scope.fetch = function (term, skip) {
-                    var url = baseurl + "api/v1/substances/search?q=" +
-                        term + "*&top=" + scope.top + "&skip=" + skip;
-                    var responsePromise = $http.get(url, {cache: true});
-
-                    responsePromise.success(function (data, status, headers, config) {
-                        scope.searching = false;
-                        scope.results = data;
-                    });
-
+                    spinnerService.show('subrefSpinner');
+                    var url = baseurl + "api/v1/substances?filter=names.name='" +
+                   // var url = baseurl + "api/v1/substances/search?q=" +
+                        term + "'&top=" + scope.top + "&skip=" + skip;
+                        substanceFactory.getSubstances(scope.q).then(function (response) {
+      /*                 $http.get(url, {cache: true}).then(function (response, status, headers, config) {*/
+                        console.log(response);
+                        scope.data = response.data.content;
+                     spinnerService.hide('subrefSpinner');
+                           var template = angular.element('<substance-viewer data = data format="subref"></substance-viewer>');
+                            toggler.refresh(scope, scope.formname, template);
+                 });
+/*
                     responsePromise.error(function (data, status, headers, config) {
                         scope.searching = false;
-                    });
+                    });*/
                 };
 
                 scope.fetch(scope.q, 0);

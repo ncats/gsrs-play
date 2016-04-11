@@ -267,7 +267,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name.toUpperCase() + "'", {cache: true}, {
+            return $http.get(url + name + "'", {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -829,20 +829,33 @@
         return resolver;
     });
 
-ginasFormElements.directive('substanceViewer', function(molChanger, spinnerService){
+ginasFormElements.directive('substanceViewer', function(molChanger, CVFields){
     return{
         restrict: 'E',
         scope:{
             data: '=',
-            parent: '='
+            parent: '=',
+            format: '@'
         },
         templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
         link: function(scope,element, attrs) {
+            console.log(scope);
+            if(scope.data.content){
+                scope.subs= scope.data.content;
+            }else{
+                scope.subs = scope.data;
+            }
             scope.select = function (selected) {
-                molChanger.setMol(selected.value.molfile);
+                console.log(selected);
+                if(selected.value && selected.value.molfile) {
+                    molChanger.setMol(selected.value.molfile);
+                }
+                if(scope.format =="subref"){
+                    console.log("passing");
+                    scope.$parent.createSubref(selected);
+                }
                 scope.data = [];
             };
-
         }
 }
 });
@@ -852,13 +865,18 @@ ginasFormElements.directive('substanceViewer', function(molChanger, spinnerServi
         replace: true,
         restrict: 'E',
         scope:{
-            ref: '='
+            ref: '=',
+            format: '='
         },
         link: function(scope,element, attrs) {
-/*
-*/
+            console.log(scope);
             var template;
-            if(scope.ref.uuid){
+            if(scope.format == "subref"){
+                template = angular.element('<div>' +
+                    '<rendered id= {{ref.uuid}} size="200"></rendered><br><code>{{ref.source}}</code><br>' +
+                    '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Select</button>' +
+                    '</div>');
+            }else if(scope.ref.uuid){
                 var url = baseurl+'substance/' + scope.ref.uuid.split('-')[0];
                 template =  angular.element('<div>' +
                     '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>Ginas Duplicate</code><br/>' +

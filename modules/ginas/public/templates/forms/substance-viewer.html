@@ -1,6 +1,31 @@
 <div class="row grid" ng-cloak>
-    <div class="col-md-3 text-center" ng-repeat="item in data">
-        <subref ref= item></subref>
+<!--
+    <code ng-if="subs.length==0" >No substances found</code>
+-->
+    <div class="col-md-3 text-center" ng-repeat="item in subs">
+        <subref ref= item format = format></subref>
         </a>
+    </div>
+
+    <div class="btn-toolbar" role="toolbar" ng-if="subs.length > 0" >
+        <div class="btn-group" role="group">
+            <h3><span class="label label-default">{{ data.total || data.count}}</span></h3>
+        </div>
+        <div class="btn-group" role="group" ng-if="results.total>4">
+            <ul class="pagination">
+                <li>
+                    <a href='#' aria-label="Previous"
+                       ng-click="prevPage()">
+                        <i class="fa fa-angle-double-right"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href='#' aria-label="Next"
+                       ng-click="nextPage()">
+                        <i class="fa fa-angle-double-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
