@@ -1670,7 +1670,7 @@ public class EntityFactory extends Controller {
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
-            //ex.printStackTrace();
+            ex.printStackTrace();
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }

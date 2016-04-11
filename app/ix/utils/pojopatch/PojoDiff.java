@@ -729,6 +729,8 @@ public class PojoDiff {
 					m.invoke(instance, set);
 					return null;
 				}catch(Exception e){
+					System.err.println(instance.getClass() + " set to:" + set + " using " + m);
+					System.err.println(set.getClass());
 					throw new IllegalStateException(e);
 				}
 			}
@@ -891,7 +893,7 @@ public class PojoDiff {
 			if(g!=null){
 				return g.get(o);
 			}else{
-				throw new IllegalArgumentException("No getter for '" + prop + "'");
+				throw new IllegalArgumentException("No getter for '" + prop + "' in " + o.getClass().getName() );
 			}
 		}
 		private static TypeRegistry.Setter getSetterDirect(Object o, final String prop){

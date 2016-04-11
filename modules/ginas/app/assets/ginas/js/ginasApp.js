@@ -209,12 +209,12 @@
             sub = flattenCV(sub);
             if (_.has(sub, 'moieties')) {
                 _.forEach(sub.moieties, function (m) {
-                    m.id = UUID.newID();
+                    //m.id = UUID.newID();
                 });
             }
             if (_.has(sub, 'structure')) {
                 //apparently needs to be reset as well
-                sub.structure.id = UUID.newID();
+                //sub.structure.id = UUID.newID();
                 if (sub.substanceClass === 'polymer') {
                     _.set(sub, 'polymer.idealizedStructure', sub.structure);
                     sub = _.omit(sub, 'structure');
@@ -1740,7 +1740,7 @@
                         scope.parent.structure = data.structure;
                         scope.parent.moieties = [];
                         _.forEach(data.moieties, function (m) {
-                            m._id = UUID.newID();
+                            //m._id = UUID.newID();
                             scope.parent.moieties.push(m);
                         });
                         if(data.structure){
