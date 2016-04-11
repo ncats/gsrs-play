@@ -1234,7 +1234,9 @@
                         if(scope.field) {
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
+/*
                     alert('error');
+*/
                         }
 
                     }

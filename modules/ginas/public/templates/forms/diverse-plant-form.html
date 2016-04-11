@@ -15,7 +15,8 @@
             </select>-->
 <h3>{{values.length}}</h3>
             <div class="col-md-3" ng-if="::parent.structurallyDiverse.organismFamily">
-                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= parent.structurallyDiverse.organismFamily field="organismGenus"  label="Organism Genus" filteredcv></dropdown-select>
+                {{parent.structurallyDiverse}}
+                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= "parent.structurallyDiverse" field="organismGenus"  label="Organism Genus" filteredcv></dropdown-select>
             </div>
                 <div class="col-md-3">
                 <dropdown-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></dropdown-view-edit>

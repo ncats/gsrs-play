@@ -18,7 +18,10 @@
                     <dropdown-select ng-model="mod.locationType" field="locationType" cv="LOCATION_TYPE"
                                      label="Location Type"></dropdown-select>
                 </div>
-                <div class="col-md-2">
+                <div class ="col-md-2" ng-if="mod.locationType.value=='RESIDUE_SPECIFIC'">
+                <text-input ng-model="mod.residueModified" field="residueModified" name ="residueModified" label="Residue Modified" form="strucModForm"></text-input>
+                    </div>
+                <div class="col-md-1">
                     <form-selector referenceobj="mod" parent="parent" field = "sites" divid="strucModForm"
                                    type="site"></form-selector>
                     <!--<input type="text" class="form-control" ng-model="structuralModification._displaySites"
@@ -28,7 +31,7 @@
                         {{strucModForm.modsites.$errorMsg.naSites}}
                     </small>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <dropdown-select ng-model="mod.extent" field="extent" cv="EXTENT_TYPE"
                                      label="Extent"></dropdown-select>
                 </div>
@@ -59,6 +62,9 @@
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="locationType" cv="LOCATION_TYPE"
                                         label="Location Type"></dropdown-view-edit>
+                </div>
+                <div class ="col-md-2" ng-if="obj.locationType.value=='RESIDUE_SPECIFIC'">
+                    <text-view-edit obj = "obj" field = "residueModified"></text-view-edit>
                 </div>
                     <div class="col-md-1">
                         <form-selector referenceobj="obj" parent="parent" type="site" divid={{obj.$$hashKey}}></form-selector>

@@ -397,7 +397,9 @@
                 filterName:'@filter'
             },
             link: function (scope, element, attrs) {
+/*
                 console.log(attrs);
+*/
                 scope.filterFunction= function(){
                 var filtered = [];
  var family = scope.filter;
@@ -412,6 +414,7 @@
  console.log(filtered);
  }
                 };
+
 /*
 
                 console.log(scope);
@@ -427,6 +430,13 @@
                     console.log(scope.filter);
                     console.log(scope.field);
                     filterService._register(scope.filterName, attrs.ngModel, scope.filter);
+
+                    scope.$watch(scope.filter, function(newNames, oldNames) {
+                        console.log(scope.filter);
+                        console.log(newNames);
+                        console.log(oldNames);
+                    });
+
                 }
 
                 if(attrs.cv) {
