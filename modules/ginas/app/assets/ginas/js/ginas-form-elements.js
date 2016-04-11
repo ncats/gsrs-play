@@ -167,15 +167,37 @@
                      'Content-Type': 'application/json'
                      }
                      }).success(function(data){
-
+                        console.log(data);
                    //  alert('update was performed.');
                      });
                 });
             },
 
+            addTerms: function(cv){
+                CV.getCV(cv.domain).then(function(response) {
+                    console.log(response);
+                   var t2 = response.data.content[0].terms.concat(cv.terms);
+                    var cv2=  response.data.content[0];
+                    cv2.terms = t2;
+                    console.log(cv2);
+                    $http.put(baseurl + 'api/v1/vocabularies', cv2, {
+                     headers: {
+                     'Content-Type': 'application/json'
+                     }
+                     }).success(function(data){
+
+                     alert('update was performed.');
+                     });
+                });
+            },
+
             addDomain: function(cv){
-                console.log("adding domain");
-                var promise = $http.post(baseurl + 'api/v1/vocabularies', cv, {
+                console.log("adding domain");console.log(cv);
+                var c = {
+                    domain: cv.domain
+                        //terms: []
+                };
+                var promise = $http.post(baseurl + 'api/v1/vocabularies', c, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -361,7 +383,7 @@
         };
     });
 
-    ginasFormElements.directive('dropdownSelect', function (CVFields) {
+    ginasFormElements.directive('dropdownSelect', function (CVFields, filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/dropdown-select.html",
@@ -369,14 +391,88 @@
             scope: {
                 obj: '=ngModel',
                 field: '@',
-                label: '@'
+                label: '@',
+                values:'=?',
+                filter:'=',
+                filterName:'@filter'
             },
             link: function (scope, element, attrs) {
-                scope.values =[];
-                CVFields.getCV(attrs.cv).then(function (data) {
-                    scope.values = _.concat(_.orderBy(data.data.content[0].terms, ['display'],['asc']),[{display:"Other", value:'Other'}]);
-               //     console.log(scope.values);
-                });
+                console.log(attrs);
+                scope.filterFunction= function(){
+                var filtered = [];
+ var family = scope.filter;
+ if (!_.isUndefined(family)) {
+ console.log(scope);
+ _.forEach(scope.values, function (value) {
+ if (_.isEqual(family, value.filter.split('=')[1])) {
+ filtered.push(value);
+ }
+ });
+ scope.values = filtered;
+ console.log(filtered);
+ }
+                };
+/*
+
+                console.log(scope);
+                console.log(scope.field);
+                */
+/*
+                console.log(scope.filter);
+                console.log(scope.filterName);
+*/
+
+                if(scope.filter) {
+                    console.log("there's a filter");
+                    console.log(scope.filter);
+                    console.log(scope.field);
+                    filterService._register(scope.filterName, attrs.ngModel, scope.filter);
+                }
+
+                if(attrs.cv) {
+                    CVFields.getCV(attrs.cv).then(function (response) {
+                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                        if(response.data.content[0].editable==true) {
+                            scope.values.push(
+                                {
+                                    display: "Other",
+                                    value: "Other",
+                                    filter:" = "
+                                });
+                        }
+                        if(scope.filter) {
+                          scope.filterFunction();
+
+                            //   scope.filterCV(scope[filter]);
+                        }
+
+/*                        scope.$watch(scope.filter, function handleFooChange( newValue, oldValue ) {
+                            console.log(scope.filterName);
+                            console.log(attrs);
+                            console.log( "vm.new:", newValue );
+                                console.log( "vm.old:", oldValue );
+                            });*/
+                    /*    if (response.data.content[0].filterable) {
+                            var filtered = [];
+                            var family = scope.filter;
+                            if (!_.isUndefined(family)) {
+                                _.forEach(scope.values, function (value) {
+                                    if (_.isEqual(family, value.filter.split('=')[1])) {
+                                        filtered.push(value);
+                                        console.log(filtered.length);
+                                    }
+                                });
+                                scope.values = filtered;
+                                console.log(scope.values);
+                            }
+*/
+
+                        //}
+
+                    });
+                }
+
+
 
                 scope.makeNewCV = function(){
                     console.log(scope);
@@ -414,14 +510,22 @@
                 formname: '=',
                 obj: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                values:'=?'
             },
             link: function (scope, element, attrs) {
-                scope.values =[];
-                CVFields.getCV(attrs.cv).then(function (data) {
-                    scope.values = _.concat(_.orderBy(data.data.content[0].terms, ['display'],['asc']),[{display:"Other", value:'Other'}]);
-                    //     console.log(scope.values);
-                });
+                if(attrs.cv) {
+                    CVFields.getCV(attrs.cv).then(function (response) {
+                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                        if(response.data.content[0].editable==true) {
+                            scope.values.push(
+                                {
+                                    display: "Other",
+                                    value: 'Other'
+                                });
+                        }
+                    });
+                }
 
                 scope.makeNewCV = function(){
                     console.log(scope);

@@ -71,7 +71,6 @@
                 heading: '@'
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.getLength = function(){
                     if (!_.isUndefined(_.get(scope.parent, scope.path))) {
                         scope.length = _.get(scope.parent, scope.path).length;
@@ -487,6 +486,46 @@
         };
     });
 
+    ginasForms.directive('diversePlantForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
+            link: function (scope) {
+
+                console.log(scope);
+
+
+               /* scope.filterCV = function (sent) {
+                    console.log("get cv");
+                    console.log(sent);
+                    console.log(scope);
+                    CVFields.getCV('KEW_PLANT_GENUS').then(function (response) {
+                        console.log(response);
+                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                        if (response.data.content[0].filterable) {
+                            var filtered = [];
+                            var family = scope.parent.structurallyDiverse.organismFamily;
+                            if (!_.isUndefined(family)) {
+                                _.forEach(scope.values, function (value) {
+                                    if (_.isEqual(family, value.filter.split('=')[1])) {
+                                        filtered.push(value);
+                                        console.log(filtered.length);
+                                    }
+                                });
+                                scope.values = filtered;
+                            }
+                        }
+                    });
+                return scope.values;
+                };*/
+            }
+        };
+    });
+
     ginasForms.directive('diverseOrganismForm', function () {
         return {
             restrict: 'E',
@@ -828,18 +867,95 @@
         };
     });
 
-    ginasForms.directive('loadCvForm', function (FileReader) {
+    ginasForms.directive('loadCvForm', function (FileReader, CVFields) {
         return {
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
+      /*          scope.cv= {
+                    value:[],
+                    domains: [],
+                    objKeys: [],
+                    terms:[]
+                };*/
+                scope.cv={};
 
+                scope.getPos = function(item,arr){
+                    if (scope.cv.domains.indexOf(item) == -1
+                        && scope.cv.value[arr.indexOf(item)]==true){
+                        scope.cv.domains.push(item)
+                    }
+                    if (scope.cv.domains.indexOf(item) != -1
+                        &&  ! scope.cv.value[arr.indexOf(item)] ){
+                        scope.cv.domains.splice(scope.cv.domains.indexOf(item),1)
+                    }
+                    return arr.indexOf(item);
+                };
+                
                 scope.loadCVFile = function (file) {
+                    var tempValues = [];
+                    scope.values=[];
                         FileReader.readAsText(file, scope).then(function(response){
-                            console.log(response);
+                            scope.data = angular.fromJson(response);
+                            for(var i=0; i<10; i++){
+                                var keys = _.keys(scope.data.substanceNames[i]);
+                              tempValues = _.union(keys, tempValues);
+                            }
+                            _.forEach(tempValues, function(v){
+                                scope.values.push({display: v });
+                            });
+                            //  scope.values = tempValues;
+                            console.log(scope);
                         });
+                };
+
+                scope.makeCV= function(){
+                    console.log(scope);
+                    console.log(scope.cv);
+                  //  var cvs = [];
+/*                    var map = _.map(scope.data.substanceNames, scope.cv.domain.display);
+                    console.log(map);*/
+                    var controlledVocab = {
+                        domain: scope.cv.domainName,
+                        terms:[]
+                    };
+                    var tempTerms=[];
+                    _.forEach(scope.data.substanceNames, function(term){
+                   //    console.log(term);
+                        var t = {
+                            value: term[scope.cv.domain.display],
+                            display: term[scope.cv.domain.display]
+                        };
+                        if(scope.cv.dependencyField){
+                            t.filter= scope.cv.dependencyField.display+'='+term[scope.cv.dependencyField.display];
+                        }
+                      //  console.log(t);
+                        tempTerms.push(t);
+  /*                      var CV = {
+                            domain: "KEW_PLANT_"+ _.toUpper(domain),
+                            terms: []
+                        };
+                        var domains = _.uniq( _.map(scope.data.substanceNames, domain));
+                        _.forEach(domains, function(t){
+                            var term = {
+                                value: t,
+                                display: t
+                            };
+                          //  CVFields.addCV(CV.domain, term);
+                            CV.terms.push(term);
+                        });
+                        console.log(CV);*/
+                      //
+                       // cvs.push(CV);
+                    });
+                   // console.log(tempTerms);
+
+                    controlledVocab.terms = _.uniqWith(tempTerms, _.isEqual);
+                 //   console.log(cvs);
+                    console.log(controlledVocab);
+                    CVFields.addTerms(controlledVocab);
                 };
             }
         };

@@ -1,5 +1,5 @@
 <div>
-<div class="row form-row">
+<div class="row form-row" ng-show = "!values">
     <div class="col-md-6">
             <ng-form class="form" enctype="multipart/form-data">
                 <div class="col-md-3">
@@ -11,13 +11,57 @@
                 </div>
             </ng-form>
         </div>
-</div>
-<hr>
-<div class="row">
-    <div class="col-md-3">
-        <button type="submit" class="btn btn-primary" ng-click="loadCVFile(uploadFile);" disabled>Load</button>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary" ng-click="loadCVFile(uploadFile);">Load</button>
+        </div>
     </div>
-</div>
+
+
+    <div class="row form-row" ng-if = "values">
+        <div class = "col-md-3">
+            <text-input ng-model="cv.domainName" field="domainName" name="domainName" id="domainName"></text-input>
+        </div>
+        <div class = "col-md-3">
+            <dropdown-select ng-model="cv.domain" field="domain" values = values name = "domain"></dropdown-select>
+        </div>
+        <div class = "col-md-1">
+            <label for="upload">Dependency?</label><br>
+            <input type="checkbox" ng-model="dependency">
+        </div>
+        <div class="col-md-3" ng-if="dependency==true">
+            <dropdown-select ng-model="cv.dependencyField" field="dependencyField" values = values name = "dependencyField"></dropdown-select>
+        </div>
+    <div class = "col-md-2">
+        <button class = "btn btn-primary" ng-click="makeCV();">Make CV</button>
+    </div>
+    </div>
+    <hr>
+
+
+
+<!--  <div class = "col-md-6">
+      <div class ="row">
+      <div class ="col-md-3">
+          <label>Make domain</label>
+      </div>
+      <div class = "col-md-9">
+         <label>Field</label>
+      </div>
+          </div>
+      <div class ="row">
+
+
+          <ul class="list-unstyled">
+          <li ng-repeat = "field in cv.objKeys">
+
+                  <input type="checkbox" ng-model="cv.value[getPos(field, cv.objKeys)]">
+                  {{field}}
+          </li>
+      </ul>
+      </div>
+  </div>
+ -->
+
 
 
 

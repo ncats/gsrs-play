@@ -2,7 +2,7 @@
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria','ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
-        'angularSpinners'
+        'angularSpinners', 'filterListener'
     ]).run(['$anchorScroll', function ($anchorScroll) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
         }])
@@ -16,6 +16,31 @@
             });
         });
 
+
+    ginasApp.filter('dependency', function () {
+         function smartCV(incItems, value) {
+             console.log(incItems);
+             console.log(value);
+             if (value) {
+                console.log(value);
+                 return incItems;
+             }
+             return incItems;
+         }
+            return smartCV;
+            /*var out = [{}];
+
+            if(value){
+                for(x=0; x<incItems.length; x++){
+                    if(incItems[x].Value == value)
+                        out.push(incItems[x]);
+                }
+                return out;
+            }
+            else if(!value){
+                return incItems
+            }*/
+    });
 
     ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils) {
 
