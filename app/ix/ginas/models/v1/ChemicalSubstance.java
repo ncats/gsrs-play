@@ -41,8 +41,7 @@ public class ChemicalSubstance extends Substance  {
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Chemical Moieties", isRequired = true, minItems = 1)
-    @OneToMany(cascade=CascadeType.ALL)
-    //@JoinTable(name="ix_ginas_chemical_moiety")
+    @OneToMany(mappedBy = "owner", cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public List<Moiety> moieties = new ArrayList<Moiety>();
 

@@ -5,6 +5,7 @@ import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.models.v1.CodeSystemVocabularyTerm;
 import ix.ginas.models.v1.ControlledVocabulary;
+import ix.ginas.models.v1.VocabularyTerm;
 import ix.ncats.controllers.auth.Authentication;
 import ix.utils.Global;
 import play.Application;
@@ -65,13 +66,22 @@ public class GinasGlobal extends Global {
 			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
 			if(codeSystem!= null){
 				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
-				CodeSystemVocabularyTerm vt = new CodeSystemVocabularyTerm();
-				vt.display=codeSystem;
-				vt.value=codeSystem;
-				vt.hidden=true;
-				vt.save();
-				cvv.addTerms(vt);
-				cvv.save();
+				boolean addNew=true;
+				for(VocabularyTerm vt1 : cvv.terms){
+					if(vt1.value.equals(codeSystem)){
+						addNew=false;
+						break;
+					}
+				}
+				if(addNew){
+					CodeSystemVocabularyTerm vt = new CodeSystemVocabularyTerm();
+					vt.display=codeSystem;
+					vt.value=codeSystem;
+					vt.hidden=true;
+					vt.save();
+					cvv.addTerms(vt);
+					cvv.save();
+				}
 			}
 			if(!Play.isTest()){
 				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
