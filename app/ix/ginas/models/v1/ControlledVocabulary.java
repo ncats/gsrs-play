@@ -51,6 +51,8 @@ public class ControlledVocabulary extends IxModel{
 
 	public boolean editable = true;
 
+	public boolean filterable = false;
+
 
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_cv_terms")

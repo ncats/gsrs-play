@@ -2,7 +2,7 @@
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria','ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
-        'angularSpinners'
+        'angularSpinners', 'filterListener'
     ]).run(['$anchorScroll', function ($anchorScroll) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
         }])
@@ -16,6 +16,31 @@
             });
         });
 
+
+    ginasApp.filter('dependency', function () {
+         function smartCV(incItems, value) {
+             console.log(incItems);
+             console.log(value);
+             if (value) {
+                console.log(value);
+                 return incItems;
+             }
+             return incItems;
+         }
+            return smartCV;
+            /*var out = [{}];
+
+            if(value){
+                for(x=0; x<incItems.length; x++){
+                    if(incItems[x].Value == value)
+                        out.push(incItems[x]);
+                }
+                return out;
+            }
+            else if(!value){
+                return incItems
+            }*/
+    });
 
     ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils) {
 
@@ -732,7 +757,7 @@
                 }).then(function (response) {
                     console.log(response);
                     url = baseurl + "assets/templates/modals/update-success.html";
-                    $scope.redirect = response.uuid;
+                    $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
                 }, function(response){
                     console.log(response);
@@ -748,7 +773,7 @@
                     }
                 }).then(function (response) {
                     //console.log(response);
-                    $scope.redirect = response.data.uuid;
+                    $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
                 }, function(response){
@@ -840,9 +865,12 @@
         };
 
         $scope.viewSubstance = function(){
-            //console.log("new");
-            $window.location.search ="";
-            $window.location.pathname = baseurl+'substance/' + $scope.redirect.split('-')[0];
+            console.log("new");
+            $window.location.search = null;
+            console.log($window.location);
+            console.log($location);
+            $window.location.href = baseurl+'substance/' + $scope.postRedirect.split('-')[0];
+          //  $window.location.search =null;
         };
 
         $scope.redirect = function(){
@@ -1209,7 +1237,9 @@
                         if(scope.field) {
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         }else{
+/*
                     alert('error');
+*/
                         }
 
                     }
