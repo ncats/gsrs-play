@@ -124,7 +124,15 @@ public class IxCache extends Plugin {
             elm = new Element (adaptKey(key), v);
             _instance.cache.put(elm);
         }
-        return (T)elm.getObjectValue();
+        try {
+            return (T) elm.getObjectValue();
+        }
+        catch(Exception e){
+            T v = generator.call();
+            elm = new Element (adaptKey(key), v);
+            _instance.cache.put(elm);
+            return (T) elm.getObjectValue();
+        }
     }
     
     public static <T> T getOrElse (String key, Callable<T> generator)

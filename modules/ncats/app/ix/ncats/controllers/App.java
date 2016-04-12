@@ -856,7 +856,7 @@ public class App extends Authentication {
 
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
-        throws Exception {
+    throws Exception {
         return IxCache.getOrElse(modified, key, callable);
     }
 
@@ -1562,12 +1562,12 @@ public class App extends Authentication {
                 final int _rows = rows;
                 final int _count = count;
                 final int[] _pages = pages;
-            
+
                 // result is cached
                 return getOrElse(result.getStopTime(),
                                  k, new Callable<Result> () {
-                        public Result call () throws Exception {
-                            Logger.debug("Cache misses: "+k+" count="+_count
+                            public Result call () throws Exception {
+                                Logger.debug("Cache misses: "+k+" count="+_count
                                          +" rows="+_rows+" page="+_page);
                             return renderer.render
                                 (context, _page, _rows, _count, _pages,

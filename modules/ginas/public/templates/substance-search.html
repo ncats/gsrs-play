@@ -5,6 +5,7 @@
         <substance-view subref= referenceobj[field]></substance-view>
     </div>
 </a>
+    <spinner name="subrefSpinner"><loading></loading><br/></spinner>
     <div class="input-group" ng-show="!referenceobj[field]"  id="{{field}}">
         <input type="text" class="form-control" ng-model= q  id="struc-search"  placeholder="Search ..." name="search" aria-labelledby="{{field}}-label">
           <span class="input-group-btn">
@@ -12,5 +13,4 @@
             <i class="fa fa-search"></i></button>
               </span>
         </div>
-    <spinner name="subrefSpinner"><loading></loading><br/></spinner>
 </div>
