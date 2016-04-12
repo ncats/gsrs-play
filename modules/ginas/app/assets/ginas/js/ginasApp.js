@@ -1597,10 +1597,11 @@
                 scope.stage = true;
 
                 scope.fetch = function (term, skip) {
+                    var cap =  _.toUpper(term);
                     spinnerService.show('subrefSpinner');
                     var url = baseurl + "api/v1/substances?filter=names.name='" +
                             // var url = baseurl + "api/v1/substances/search?q=" +
-                        term + "'&top=" + scope.top + "&skip=" + skip;
+                       cap + "'&top=" + scope.top + "&skip=" + skip;
                     substanceFactory.getSubstances(scope.q).then(function (response) {
                         /*                 $http.get(url, {cache: true}).then(function (response, status, headers, config) {*/
                         console.log(response);

@@ -856,7 +856,8 @@ public class App extends Authentication {
 
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
-        throws Exception {
+    throws Exception {
+        System.out.println("line 860");
         return IxCache.getOrElse(modified, key, callable);
     }
 
@@ -1557,17 +1558,17 @@ public class App extends Authentication {
             facets.addAll(result.getFacets());
 
             if (result.finished()) {
-                final String k = getKey (context);
+                final String k = getKey (context) + "result";
                 final int _page = page;
                 final int _rows = rows;
                 final int _count = count;
                 final int[] _pages = pages;
-            
+
                 // result is cached
                 return getOrElse(result.getStopTime(),
                                  k, new Callable<Result> () {
-                        public Result call () throws Exception {
-                            Logger.debug("Cache misses: "+k+" count="+_count
+                            public Result call () throws Exception {
+                                Logger.debug("Cache misses: "+k+" count="+_count
                                          +" rows="+_rows+" page="+_page);
                             return renderer.render
                                 (context, _page, _rows, _count, _pages,

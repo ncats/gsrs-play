@@ -987,6 +987,17 @@
         };
     });
 
+    ginasForms.directive('mixtureDetailsForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/mixture-details-form.html"
+        };
+    });
+
     ginasForms.directive('moietyForm', function () {
         return {
             restrict: 'E',

@@ -1,7 +1,5 @@
 <div class="row grid" ng-cloak>
-<!--
-    <code ng-if="subs.length==0" >No substances found</code>
--->
+    <code ng-show="subs && subs.length==0" >No substances found</code>
     <div class="col-md-3 text-center" ng-repeat="item in subs">
         <subref ref= item format = format></subref>
         </a>

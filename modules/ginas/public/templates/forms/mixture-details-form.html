@@ -1,0 +1,22 @@
+<div class = "row info" >
+    <div class="row">
+        <form-header type="Mixture Details" path="parent.mixture" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="mixtureDetailsForm" id="addMixtureDetailsForm" role="form" novalidate>
+        <div class="row form-row">
+                <div class="col-md-3">
+                    <substance-chooser-selector referenceobj ="parent.mixture" field ="parentSubstance" name ="parentSubstance" label ="Source Material Parent" formname ="mixtureDetailsForm" type = "search"></substance-chooser-selector>
+                </div>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="component" parent = "parent" divid="mixtureDetailsForm" type = "access"></form-selector>
+            </div>
+            <div class="col-md-1 pull-right">
+                <reference-modal-button referenceobj= "component" parent = "parent"></reference-modal-button>
+
+            </div>
+            </div>
+        <div class = "mixtureDetailsForm"></div>
+            </form>
+    </div>
+</div>
