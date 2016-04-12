@@ -17,6 +17,7 @@ public class SubstanceSearch {
 
     private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9]+)\"");
 
+    private static final Pattern ROW_PATTERN = Pattern.compile("(un)?checked\\s+(\\S+(\\s+\\S+)?)\\s+(\\d+)");
     /*
      <script>
 	        filters['ec02c577e23436c4a3d5d9dd48272b41796ec06c'] = {
@@ -127,50 +128,60 @@ Substructure Query:  C1=CC=CC=C1
         return results;
     }
 
-    private void parseFacets(SearchResult results, HtmlPage html) {
+    private void parseFacets(SearchResult results, HtmlPage html) throws IOException{
 
-        Matcher matcher = FACET_PATTERN.matcher(html.asText());
 
         Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
-        System.out.println("parsing facets");
-       // System.out.println(html.asText());
-        if(matcher.find()) {
 
-            System.out.println("facet block is " + matcher.group());
-            String facetBlock = matcher.group(1);
+        Scanner scanner = new Scanner(html.asText());
 
-            Scanner scanner = new Scanner(facetBlock);
-            String facetName = null;
-            Map<String, Integer> facetMap = null;
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                if (line == null) {
-                    continue;
-                }
-                String trimmed = line.trim();
-                if (trimmed.isEmpty()) {
-                    continue;
-                }
-                Matcher facetMatcher = FACET_LINE_PATTERN.matcher(trimmed);
-                if (facetMatcher.find()) {
+        String line;
+        do{
+            line = scanner.nextLine();
+        }while(line !=null && !line.contains("Record Status"));
+        //can't get the Pattern matching to work as expected
+        if(line ==null ){
+            throw new IOException("no facets found");
+        }
+        String facetName = line.trim();
 
-                    facetMap.put(facetMatcher.group(1), Integer.parseInt(facetMatcher.group(2)));
-                } else {
-                    if (facetName != null) {
-                        System.out.println("adding facets : " + facetName + " => " + facetMap);
-                        //add parsed facets
-                        results.setFacet(facetName, facetMap);
-                    }
-                    //new facet block
-                    facetName = trimmed;
-                    facetMap = new HashMap<>();
-                }
+        map.put(facetName, new HashMap<String, Integer>());
+        while(scanner.hasNextLine() && line !=null){
 
+            line = scanner.nextLine();
+            if(line ==null){
+                continue;
+            }
+            String trimmed = line.trim();
+            if(trimmed.isEmpty()){
+                continue;
+            }
+
+            if(trimmed.contains("Substructure Query:")){
+                break;
+            }
+            Matcher rowMatcher = ROW_PATTERN.matcher(trimmed);
+            if(rowMatcher.find()){
+
+                map.get(facetName).put(rowMatcher.group(2), Integer.parseInt(rowMatcher.group(4)));
+            }else{
+
+                facetName = trimmed;
+                map.put(facetName, new HashMap<String, Integer>());
+            }
+
+        }
+
+        for(Map.Entry<String, Map<String, Integer>> next : map.entrySet()){
+            if(!next.getValue().isEmpty()){
+                results.setFacet(next.getKey(), next.getValue());
             }
         }
 
 
+
     }
+
 
     private Set<String> getSubstancesFrom(HtmlPage page){
         Set<String> substances = new LinkedHashSet<>();
@@ -212,24 +223,46 @@ Substructure Query:  C1=CC=CC=C1
             Objects.requireNonNull(facetName);
             Objects.requireNonNull(countMap);
 
-            Map<String, Integer> copy = new SortByValueMap<>(Order.DECREASING);
+            Map<String, Integer> copy = new TreeMap<>(new SortByValueComparator(countMap, Order.DECREASING));
             copy.putAll(countMap);
 
-            facetMap.put(facetName, copy);
+            facetMap.put(facetName, Collections.unmodifiableMap(copy));
 
 
+        }
+
+        public Map<String, Map<String, Integer>> getAllFacets(){
+            return Collections.unmodifiableMap(facetMap);
         }
 
         enum Order implements Comparator<Integer>{
             INCREASING{
                 @Override
                 public int compare(Integer o1, Integer o2) {
+                    if(o1 ==null && o2==null){
+                        return 0;
+                    }
+                    if(o2 ==null){
+                        return -1;
+                    }
+                    if(o1 ==null){
+                        return 1;
+                    }
                     return Integer.compare(o1,o2);
                 }
             },
             DECREASING{
                 @Override
                 public int compare(Integer o1, Integer o2) {
+                    if(o1 ==null && o2==null){
+                        return 0;
+                    }
+                    if(o1 ==null){
+                        return -1;
+                    }
+                    if(o2 ==null){
+                        return 1;
+                    }
                     return Integer.compare(o2,o1);
                 }
             };
@@ -237,151 +270,9 @@ Substructure Query:  C1=CC=CC=C1
 
         }
 
-        public static class SortByValueMap<K, V> extends AbstractMap<K,V>
-        implements NavigableMap<K,V>{
-
-            private final TreeMap<K,V> map;
-            //All this code just so we can reference "this" in the
-            //conststructor.
-            //if we extend TreeMap, we can't use "this"
-            //in our call to super()
-            //and we can't set the comparator
-            //except from the call to super
-            //...
-            //I guess we could have changed our comparator to be mutable...
-
-            public SortByValueMap(Comparator<V> valueComparator){
-                map = new TreeMap<K, V>(new SortByValueComparator<>(this, valueComparator));
-            }
-
-            @Override
-            public Set<Entry<K, V>> entrySet() {
-                return map.entrySet();
-            }
-
-            @Override
-            public Entry<K, V> lowerEntry(K key) {
-                return map.lowerEntry(key);
-            }
-
-            @Override
-            public K lowerKey(K key) {
-                return map.lowerKey(key);
-            }
-
-            @Override
-            public Entry<K, V> floorEntry(K key) {
-                return map.floorEntry(key);
-            }
-
-            @Override
-            public K floorKey(K key) {
-                return map.floorKey(key);
-            }
-
-            @Override
-            public Entry<K, V> ceilingEntry(K key) {
-                return map.ceilingEntry(key);
-            }
-
-            @Override
-            public K ceilingKey(K key) {
-                return map.ceilingKey(key);
-            }
-
-            @Override
-            public Entry<K, V> higherEntry(K key) {
-                return map.higherEntry(key);
-            }
-
-            @Override
-            public K higherKey(K key) {
-                return map.higherKey(key);
-            }
-
-            @Override
-            public Entry<K, V> firstEntry() {
-                return map.firstEntry();
-            }
-
-            @Override
-            public Entry<K, V> lastEntry() {
-                return map.lastEntry();
-            }
-
-            @Override
-            public Entry<K, V> pollFirstEntry() {
-                return map.pollFirstEntry();
-            }
-
-            @Override
-            public Entry<K, V> pollLastEntry() {
-                return map.pollLastEntry();
-            }
-
-            @Override
-            public NavigableMap<K, V> descendingMap() {
-                return map.descendingMap();
-            }
-
-            @Override
-            public NavigableSet<K> navigableKeySet() {
-                return map.navigableKeySet();
-            }
-
-            @Override
-            public NavigableSet<K> descendingKeySet() {
-                return null;
-            }
-
-            @Override
-            public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive) {
-                return map.subMap(fromKey, fromInclusive, toKey, toInclusive);
-            }
-
-            @Override
-            public NavigableMap<K, V> headMap(K toKey, boolean inclusive) {
-                return map.headMap(toKey, inclusive);
-            }
-
-            @Override
-            public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
-                return tailMap(fromKey, inclusive);
-            }
-
-            @Override
-            public SortedMap<K, V> subMap(K fromKey, K toKey) {
-                return map.subMap(fromKey, toKey);
-            }
-
-            @Override
-            public SortedMap<K, V> headMap(K toKey) {
-                return map.headMap(toKey);
-            }
-
-            @Override
-            public SortedMap<K, V> tailMap(K fromKey) {
-                return map.tailMap(fromKey);
-            }
-
-            @Override
-            public Comparator<? super K> comparator() {
-                return map.comparator();
-            }
-
-            @Override
-            public K firstKey() {
-                return map.firstKey();
-            }
-
-            @Override
-            public K lastKey() {
-                return map.lastKey();
-            }
-        }
 
 
-        public static class SortByValueComparator<T, V> implements Comparator<T>{
+        private static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
             private final Map<T, V> countMap;
 
             private Comparator<V> order;
@@ -391,9 +282,16 @@ Substructure Query:  C1=CC=CC=C1
                 this.order = order;
             }
 
+
             @Override
             public int compare(T s1, T s2) {
-                return order.compare(countMap.get(s1), countMap.get(s2));
+
+                int valueCmp= order.compare(countMap.get(s1), countMap.get(s2));
+                if(valueCmp !=0){
+                    return valueCmp;
+                }
+                //values are equal, sort by key?
+                return s1.compareTo(s2);
             }
         }
     }
