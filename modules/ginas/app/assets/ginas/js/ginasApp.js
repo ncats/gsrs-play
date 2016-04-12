@@ -1768,6 +1768,14 @@
         this.setMol = function (mol) {
             sketcher.setMolfile(mol);
         };
+
+        this.getMol = function () {
+            return sketcher.getMolfile();
+        };
+
+        this.getSmiles = function () {
+            return sketcher.getSmiles();
+        };
     });
 
     ginasApp.directive('sketcher', function ($compile, $http, UUID, polymerUtils, CVFields, localStorageService, molChanger) {
@@ -1886,7 +1894,7 @@
                         templateUrl = baseurl + "assets/templates/modals/mol-import.html";
                         break;
                     case "export":
-                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
+                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" ng-click = "getExport()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         templateUrl = baseurl + "assets/templates/modals/mol-export.html";
@@ -1935,25 +1943,16 @@
 
 
                 scope.getExport = function () {
-                    var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
-                    $http.get(url, {
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        }
-                    }).success(function (response) {
-                        scope.exportData = response;
-                        url = baseurl + 'export/' + scope.structureid + '.smiles';
-                        $http.get(url, {
+                        var url = baseurl + 'structure';
+                        $http.post(url, molChanger.getMol(), {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
-                        }).success(function (response) {
-                            scope.exportSmiles = response;
+                        }).then(function (response) {
+                                scope.exportData = response.data.structure.molfile;
+                                scope.exportSmiles = response.data.structure.smiles;
                         });
-//                           var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-                        //                          scope.warnings = JSON.parse(warnHead);
-                        scope.open();
-                    });
+                       scope.open();
                 };
 
                 scope.close = function () {
