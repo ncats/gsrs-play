@@ -53,26 +53,24 @@
 			    }
                             case "Substructure" => {
                                 <span><h4>Substructure Query:&nbsp; <a href="#"
-                                tabindex="-1"
                                 data-toggle="popover"
                                 data-animation="true"
                                 data-placement="bottom"
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                data-content="<img src=@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)>"><code>@request().getQueryString("q")</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case "Similarity" => {
                                 <span><h4>Similarity Query:&nbsp; <a href="#"
-                                tabindex="-1"
                                 data-toggle="popover"
                                 data-animation="true"
                                 data-placement="bottom"
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                data-content="<img src=@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
                                 </span> <div id="searching"></div>
                             }
                             case _ => {
@@ -168,6 +166,10 @@ function dismissQuery () {
 }
 
 $(document).ready(function () {
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
+
    @defining(App.checkStatus()) { status =>
      @if(status != null) {
          console.log('status=@status');

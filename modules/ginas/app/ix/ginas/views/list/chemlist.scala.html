@@ -8,7 +8,7 @@
 
 <div class="panel panel-default prot-list">
     <div class="panel-heading prot-title">
-    	
+
         <div class = "row">
             <div class = "col-md-10">
                 <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" uib-tooltip="view record details" target="_self">@chem.getName()</a></h3>
@@ -20,7 +20,7 @@
     </div>
 
     <div class= "panel-body list-item">
-    	
+
 
         <div class = "row">
             <div class = "col-md-3">
@@ -45,18 +45,20 @@
 
                 <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
                     <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>
-                    <div>
-                    @defining(GinasApp.getChemSimilarity(ctx,chem.structure.id.toString())){ sim =>
-		  		         @if(sim != null) {
-							 <br>
-							 <em>Similarity</em> <code>
-							 @{"%.3f".format(sim)}
-							 </code>
-				      	  }else{
-				      	  
-				      	  }
-				      }
-                    </div>
+                </div>
+                <div>
+                @defining(GinasApp.getChemSimilarity(ctx, chem.structure.id.toString())) { sim =>
+                    @if(sim != null) {
+                        <br>
+                        <em>Similarity</em> <code>
+                        @{
+                            "%.3f".format(sim)
+                        }
+                        </code>
+                    } else {
+
+                    }
+                }
                 </div>
                 <div class = "row">
                     <div class = "col-md-12 text-center">
@@ -65,10 +67,12 @@
                                 <modal-button type= "export" structureid ="'@chem.structure.id'" format="sdf" ></modal-button>
                             </li>
                             <li>
-                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.structure.id')" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">Search for Structure</span><span class="fa fa-search fa-2x success"></span></a>
+                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.structure.id')" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">
+                                    Search for Structure</span><span class="fa fa-search fa-2x success"></span></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"><span class="sr-only">Edit Chemical</span><span class="fa fa-pencil fa-2x success"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"><span class="sr-only">
+                                    Edit Chemical</span><span class="fa fa-pencil fa-2x success"></span></a>
                             </li>
                         </ul>
                     </div>
@@ -104,11 +108,11 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        @if(chem.approved==null){
-                           <h6>Not Approved</h6>
-                        }else{
-                            Date approved: <h6>{{@GinasApp.getDateTime(chem.approved) | date: 'mediumDate'}}</h6>
-                        }
+                    @if(chem.approved == null) {
+                        <h6>Not Approved</h6>
+                    } else {
+                        Date approved: <h6>{{@GinasApp.getDateTime(chem.approved) | date: 'mediumDate'}}</h6>
+                    }
                     </div>
                 </div>
                 <div class = "row">
@@ -118,11 +122,11 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                <code>@chem.getDisplayStatus()  version: @chem.version</code>
-                </div>
+                        <code>@chem.getDisplayStatus() version: @chem.version</code>
                     </div>
+                </div>
             </div>
         </div>
         <div class="@chem.approvalID" ng-click="showLarge('@chem.structure.id', '@chem.approvalID')"></div>
     </div>
-</div><!--END panel panel-primary-->
+</div> <!--END panel panel-primary-->

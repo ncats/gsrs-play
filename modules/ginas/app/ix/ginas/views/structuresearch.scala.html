@@ -7,13 +7,13 @@
             <div class= "panel-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <sketcher parent = substance></sketcher>
+                        <sketcher parent = substance ng-model=parent.structure.molfile></sketcher>
+                        </div>
                     </div>
                 </div>
-            </div>
             <div class="panel-footer">
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-10">
 
                         <div class="form-group col-md-2">
                             <label class="sr-only" for="search-selection">Search Type</label>
@@ -54,6 +54,10 @@
                         </div>
                         <button type="submit"
                         class="btn btn-primary" id="search-btn">Search</button>
+                    </div>
+                    <div class="col-md-2 pull-right">
+                        <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
+                        <modal-button class= "pull-right padded" type= "import"></modal-button>
                     </div>
                 </div>
             </div>
