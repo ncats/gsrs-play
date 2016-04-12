@@ -11,13 +11,6 @@
                 <div class="col-md-3">
                     <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
                 </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="component" parent = "parent" divid="componentForm" type = "access"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "component" parent = "parent"></reference-modal-button>
-
-                </div>
             </div>
             <div class="componentForm"></div>
             <submit-buttons submit="component" form="componentForm" path="mixture.components"></submit-buttons>
@@ -34,12 +27,6 @@
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "obj" parent = "parent" edit = "true"></reference-modal-button>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

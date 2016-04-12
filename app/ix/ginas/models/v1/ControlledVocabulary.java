@@ -1,28 +1,31 @@
 package ix.ginas.models.v1;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import ix.core.models.Indexable;
 import ix.core.models.IxModel;
 import ix.core.models.Keyword;
 import ix.ginas.models.serialization.KeywordListDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
-import ix.ginas.models.utils.JSONConstants;
-import ix.ginas.models.utils.JSONEntity;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.*;
 
 
 @Entity
 @Table(name="ix_ginas_controlled_vocab")
 @Inheritance
 @DiscriminatorValue("CTLV")
-
-
 public class ControlledVocabulary extends IxModel{
 
 	private static final long serialVersionUID = 5455592961232451608L;
@@ -51,10 +54,11 @@ public class ControlledVocabulary extends IxModel{
 
 	public boolean editable = true;
 
+	public boolean filterable = false;
 
-	@ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_cv_terms")
-    //@JsonView(BeanViews.Full.class)
+
+	@OneToMany(mappedBy = "owner", cascade=CascadeType.ALL)
+    //@JoinTable(name="ix_ginas_cv_terms")
 	public List<VocabularyTerm> terms;
 
 	public VocabularyTerm getTermWithValue(String val){

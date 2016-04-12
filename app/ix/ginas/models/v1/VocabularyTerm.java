@@ -3,9 +3,11 @@ package ix.ginas.models.v1;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ix.core.models.IxModel;
 
+import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
@@ -20,9 +22,13 @@ public class VocabularyTerm extends IxModel{
     /**
 	 * 
 	 */
+	
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	ControlledVocabulary owner;
+	
     @JsonIgnore
     public Long getId(){
-    return this.id;
+    	return this.id;
     };
 
 	private static final long serialVersionUID = -5625533710493695789L;
@@ -32,5 +38,9 @@ public class VocabularyTerm extends IxModel{
     public String origin;
     public String filter;
     public boolean hidden=false;
+    
     public VocabularyTerm(){};
+    
+    
+    
 }

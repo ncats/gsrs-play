@@ -21685,5 +21685,31 @@
     ],
     "fields": [],
     "_namespace": null
+  },
+  {
+    "id": 78,
+    "version": null,
+    "created": null,
+    "modified": null,
+    "deprecated": false,
+    "domain": "KEW_PLANT_FAMILY",
+    "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
+    "editable": true,
+    "terms": [],
+    "fields": [],
+    "_namespace": null
+  },
+  {
+    "id": 79,
+    "version": null,
+    "created": null,
+    "modified": null,
+    "deprecated": false,
+    "domain": "KEW_PLANT_GENUS",
+    "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
+    "editable": true,
+    "terms": [],
+    "fields": [],
+    "_namespace": null
   }
 ]

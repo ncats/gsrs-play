@@ -68,12 +68,12 @@ public class Structure extends BaseModel{
     public static final String H_LyChI_L4 = "LyChI_L4";
     public static final String H_InChI_Key = "InChI_Key";
 
-        // stereochemistry
+    // stereochemistry
     public enum Stereo {
         ABSOLUTE, ACHIRAL, RACEMIC, MIXED, EPIMERIC, UNKNOWN;
     }
 
-        // optical activity
+    // optical activity
     public enum Optical {
         PLUS("( + )"),
         MINUS("( - )"),
@@ -221,9 +221,16 @@ public class Structure extends BaseModel{
     public void modified() {
         this.lastEdited = TimeUtil.getCurrentDate();
     }
+    
 
+    
     public String getId() {
         return id != null ? id.toString() : null;
+    }
+    
+    @JsonProperty(value="id")
+    public UUID getRealId(){
+    	return this.id;
     }
     
     @JsonIgnore

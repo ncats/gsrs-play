@@ -7,7 +7,7 @@
 </a>
     <div ng-show="!subref" name="{{field}}" id="{{field}}">
         <div ng-if = "type==='search'">
-        <a ng-click ="toggleStage()" uib-tooltip="search for substance" aria-label="Search"><span class="sr-only">Search ginas</span>
+        <a ng-click ="toggle()" uib-tooltip="search for substance" aria-label="Search"><span class="sr-only">Search ginas</span>
             <i class="fa fa-search fa-2x" aria-label="Search"></i></a>
         </div>
         <substance-typeahead subref = "subref"></substance-typeahead>

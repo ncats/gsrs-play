@@ -96,21 +96,25 @@ public class GinasApp extends App {
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
         "Substance Class", 
-        "SubstanceStereoChemistry", 
+        "SubstanceStereochemistry", 
         "Molecular Weight",
+        "LyChI_L4",
         "GInAS Tag"
     };
     
     public static final String[] PROTEIN_FACETS = {
         "Sequence Type",
-        "Substance Class", "Status" };
+        "Substance Class", 
+        "Status" 
+    };
     
     public static final String[] ALL_FACETS = {
         "Record Status",
         "Substance Class", 
-        "SubstanceStereoChemistry", 
+        "SubstanceStereochemistry", 
         "Molecular Weight",
         "GInAS Tag", 
+        "Molecular Weight",
         "Relationships",
         "Sequence Type", 
         "Material Class", 
@@ -266,6 +270,9 @@ public class GinasApp extends App {
                 return "Last Edited";
             if ("approved".equalsIgnoreCase(n))
                 return "Last Approved";
+            if("LyChI_L4".equalsIgnoreCase(n)){
+            	return "Structure Hash";
+            }
             return n.trim();
         }
         
@@ -390,18 +397,21 @@ public class GinasApp extends App {
                 // the query is the uuid of the payload
                 return sequences (q, rows, page);
             }
-            else if (type.equalsIgnoreCase("substructure")
-                     || type.equalsIgnoreCase("similarity")) {
+            else if (type.toLowerCase().startsWith("sub")
+                     || type.toLowerCase().startsWith("sim")) {
                 // structure search
                 String cutoff = request().getQueryString("cutoff");
                 Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
                              + cutoff);
                 try {
-                    if (type.equalsIgnoreCase("substructure")) {
+                    if (type.toLowerCase().startsWith("sub")) {
                         return substructure(q, rows, page);
                     } else {
-                        return similarity(q, Double.parseDouble(cutoff), rows,
-                                          page);
+                        // cap the cutoff at .3.. there is no need to go lower,
+                        // otherwise, you're up to no good
+                        double thres = Math.max
+                            (.3, Math.min(1.,Double.parseDouble(cutoff)));
+                        return similarity(q, thres, rows, page);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -412,20 +422,18 @@ public class GinasApp extends App {
                                 + type + "\"; q=\"" + q + "\" cutoff=\""
                                 + cutoff + "\"!"));
             }else if (type.equalsIgnoreCase("flex") || type.equalsIgnoreCase("exact")) {
-               // structure search
-               String cutoff = request().getQueryString("cutoff");
-               Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
-                            + cutoff);
                try {
-                   return lychimatch(q, rows, page);
+            	   if(type.equalsIgnoreCase("flex")){
+            		   return lychimatch(q, rows, page, false);
+            	   }else{
+            		   return lychimatch(q, rows, page, true);
+            	   }
                } catch (Exception ex) {
                    ex.printStackTrace();
                }
-
                return notFound(ix.ginas.views.html.error.render
                        (400, "Invalid search parameters: type=\""
-                               + type + "\"; q=\"" + q + "\" cutoff=\""
-                               + cutoff + "\"!"));
+                               + type + "\"; q=\"" + q + "\"!"));
             }
 
             return _substances (q, rows, page);
@@ -501,17 +509,19 @@ public class GinasApp extends App {
         editedRange.add("aToday", range);
         approvedRange.add("aToday", range);
 
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
         range = new long[]{cal.getTimeInMillis(),
                            now.getTimeInMillis()};
         editedRange.add("bThis week", range);
         approvedRange.add("bThis week", range);
+        now = (Calendar)cal.clone();
 
         cal.set(Calendar.WEEK_OF_MONTH, 1);
         range = new long[]{cal.getTimeInMillis(),
                            now.getTimeInMillis()};
         editedRange.add("cThis month", range);
         approvedRange.add("cThis month", range);
+        now = (Calendar)cal.clone();
 
         cal = (Calendar)now.clone();
         cal.add(Calendar.MONTH, -6);
@@ -519,6 +529,7 @@ public class GinasApp extends App {
                            now.getTimeInMillis()};
         editedRange.add("dPast 6 months", range);
         approvedRange.add("dPast 6 months", range);
+        now = (Calendar)cal.clone();
 
         cal = (Calendar)now.clone();
         cal.add(Calendar.YEAR, -1);
@@ -526,6 +537,7 @@ public class GinasApp extends App {
                            now.getTimeInMillis()};
         editedRange.add("ePast 1 year", range);
         approvedRange.add("ePast 1 year", range);
+        now = (Calendar)cal.clone();
         
         cal = (Calendar)now.clone();
         cal.add(Calendar.YEAR, -2);
@@ -580,6 +592,10 @@ public class GinasApp extends App {
         return null;    
     }
 
+    static Result _substances(final String q, final int rows, final int page) throws Exception{
+    	return _substances(q,rows,page,ALL_FACETS);
+    }
+    
     /**
      * Returns substances based in provided query string and/or request
      * parameters.
@@ -590,17 +606,17 @@ public class GinasApp extends App {
      * @return
      * @throws Exception
      */
-    static Result _substances(final String q, final int rows, final int page)
+    static Result _substances(final String q, final int rows, final int page, final String[] facets)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
         final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
-
+        
+        final String[] searchFacets = facets;
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
-                //getSearchResult (Substance.class, q, total);
                 getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
@@ -611,7 +627,7 @@ public class GinasApp extends App {
                 return getOrElse(k, new Callable<Result>() {
                         public Result call() throws Exception {
                                 Logger.debug("Cache missed: " + k);
-                            return createSubstanceResult(result, rows, page);
+                            return createSubstanceResult(result, rows, page, facets);
                         }
                     });
             }
@@ -639,26 +655,17 @@ public class GinasApp extends App {
                 });
         }
     }
-
     static Result createSubstanceResult(TextIndexer.SearchResult result,
-                                        int rows, int page) {
-        TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
-
-        List<Substance> substances = new ArrayList<Substance>();
-        int[] pages = new int[0];
-        if (result.count() > 0) {
-            rows = Math.min(result.count(), Math.max(1, rows));
-            pages = paging(rows, page, result.count());
-            result.copyTo(substances, (page-1)*rows, rows);
-            
-        }
-        SubstanceFilter subFilter = new SubstanceFilter();
-                
-        return ok(ix.ginas.views.html.substances.render
-                  (page, rows, result.count(), pages, decorate(facets),
-                                  subFilter.filter(substances), null, result.getSearchContextAnalyzer().getFieldFacets()));
-
+            int rows, int page) throws Exception{
+    	return createSubstanceResult(result,rows,page,ALL_FACETS);
     }
+    
+    static Result createSubstanceResult(TextIndexer.SearchResult result,
+                                        int rows, int page, String[] facets) throws Exception{
+        SearchResultContext src= new SearchResultContext(result);
+        return fetchResult (src, rows, page, new SubstanceResultRenderer (facets));
+    }
+    
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
         String version;
         public SubstanceVersionFetcher(String version){
@@ -666,23 +673,15 @@ public class GinasApp extends App {
                 this.version=version;
         }
         Result getResult(List<Substance> e) throws Exception{
-                //System.out.println("Found the substances, now look for history");
                 List<Substance> slist=new ArrayList<Substance>();
                 for(Substance s:e){
                         Substance s2=SubstanceFactory.getSubstanceVersion(s.uuid.toString(),version);
                         slist.add(s2);
                 }
-                 return _getSubstanceResult(slist);
+                return _getSubstanceResult(slist);
         }
     }
 
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-    /* public static final GetResult<Substance> SubstanceVersionResult =
-            new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
-                public Result getResult(List<Substance> substances) throws Exception {
-                    return _getSubstanceResult(substances);
-                }
-            };*/
 
 
     public static final GetResult<Substance> SubstanceResult =
@@ -761,42 +760,6 @@ public class GinasApp extends App {
         return new SubstanceVersionFetcher(version).get(name);
     }
 
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-    /*public static Result chemicals(final String q, final int rows,
-                                   final int page) {
-        String type = request().getQueryString("type");
-        Logger.debug("Chemicals: rows=" + rows + " page=" + page);
-        try {
-            if (type != null
-                && (type.equalsIgnoreCase("substructure") || type
-                    .equalsIgnoreCase("similarity"))) {
-                // structure search
-                String cutoff = request().getQueryString("cutoff");
-                Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
-                             + cutoff);
-                try {
-                    if (type.equalsIgnoreCase("substructure")) {
-                        return substructure(q, rows, page);
-                    } else {
-                        return similarity(q, Double.parseDouble(cutoff), rows,
-                                          page);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                return notFound(ix.ginas.views.html.error.render
-                                (400, "Invalid search parameters: type=\""
-                                 + type + "\"; q=\"" + q + "\" cutoff=\""
-                                 + cutoff + "\"!"));
-            } else {
-                return _chemicals(q, rows, page);
-            }
-        } catch (Exception ex) {
-            return _internalServerError(ex);
-        }
-    }*/
-
     static Result createChemicalResult(TextIndexer.SearchResult result,
                                        int rows, int page) {
         TextIndexer.Facet[] facets = filter(result.getFacets(), CHEMICAL_FACETS);
@@ -818,53 +781,6 @@ public class GinasApp extends App {
 
     }
 
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-    /*static Result _chemicals(final String q, final int rows, final int page)
-        throws Exception {
-        final int total = SubstanceFactory.finder.findRowCount();
-        final String key = "chemicals/" + Util.sha1(request());
-
-        if (request().queryString().containsKey("facet") || q != null) {
-            final TextIndexer.SearchResult result = getOrElse
-                (key, new Callable<TextIndexer.SearchResult>() {
-                        public TextIndexer.SearchResult call()
-                            throws Exception {
-                            Logger.debug("Cache missed: " + key);
-                            return getSearchResult(ChemicalSubstance.class, q,
-                                                   total);
-                        }
-                    });
-            
-            if (result.finished()) {
-                return getOrElse(key + "/result", new Callable<Result>() {
-                        public Result call() throws Exception {
-                            return createChemicalResult(result, rows, page);
-                        }
-                    });
-            }
-
-            return createChemicalResult(result, rows, page);
-        } else {
-            return getOrElse(key, new Callable<Result>() {
-                    public Result call() throws Exception {
-                        Logger.debug("Cache missed: " + key);
-                        TextIndexer.Facet[] facets = filter(
-                                                            getFacets(ChemicalSubstance.class, 30),
-                                                            CHEMICAL_FACETS);
-                        int nrows = Math.min(total, Math.max(1, rows));
-                        int[] pages = paging(nrows, page, total);
-
-                        List<Substance> chemicals =
-                            SubstanceFactory.getSubstances
-                            (nrows, (page - 1) * rows, null);
-
-                        return ok(ix.ginas.views.html.substances.render
-                                  (page, nrows, total, pages,
-                                   decorate(facets), chemicals, null, null));
-                    }
-                });
-        }
-    }*/
 
     public static Result similarity(final String query, final double threshold,
                                     int rows, int page) {
@@ -885,13 +801,16 @@ public class GinasApp extends App {
              (500, "Unable to perform similarity search: " + query));
     }
     
-        public static Result lychimatch(final String query, int rows, int page) {
+        public static Result lychimatch(final String query, int rows, int page, boolean exact) {
                 try{
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
-//                        System.out.println("L4:" + struc2.getLychiv4Hash());
-//                        System.out.println("L3:" + struc2.getLychiv3Hash());
-                        System.out.println("Searching for:" + struc2.getLychiv3Hash());
-                        return _substances(struc2.getLychiv3Hash(),rows,page);
+                        String hash=null;
+                        if(exact){
+                        	hash=struc2.getLychiv3Hash();
+                        }else{
+                        	hash=struc2.getLychiv4Hash();
+                        }
+                        return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
                         
                 }
@@ -902,11 +821,9 @@ public class GinasApp extends App {
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
-        final GinasSearchResultProcessor processor =
-            new GinasSearchResultProcessor();
         try {
             SearchResultContext context = App.substructure
-                (query, rows, page, processor);
+                (query, rows, page, new GinasSearchResultProcessor());
             
             return App.fetchResult
                 (context, rows, page, 
@@ -920,50 +837,7 @@ public class GinasApp extends App {
              (500, "Unable to perform substructure search: " + query));
     }
 
-    static final GetResult<Substance> ChemicalResult = new GetResult<Substance>(
-                                                                                Substance.class, SubstanceFactory.finder) {
-            public Result getResult(List<Substance> chemicals) throws Exception {
-                return _getChemicalResult(chemicals);
-            }
-        };
 
-    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    static Result _getChemicalResult(List<Substance> chemicals)
-        throws Exception {
-        // force it to show only one since it's possible that the provided
-        // name isn't unique
-        if (true || chemicals.size() == 1) {
-            Substance chemical = chemicals.iterator().next();
-            return ok(ix.ginas.views.html.details.chemicaldetails
-                      .render((ChemicalSubstance) chemical));
-        } else {
-            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
-                for (Substance chem : chemicals)
-                    indexer.add(chem);
-
-                TextIndexer.SearchResult result = SearchFactory.search(indexer,
-                        Substance.class, null, null, indexer.size(), 0, FACET_DIM,
-                        request().queryString());
-                if (result.count() < chemicals.size()) {
-                    chemicals.clear();
-                    for (int i = 0; i < result.count(); ++i) {
-                        chemicals.add((Substance) result.get(i));
-                    }
-                }
-                TextIndexer.Facet[] facets = filter(result.getFacets(),
-                        CHEMICAL_FACETS);
-
-
-                return ok(ix.ginas.views.html.substances.render
-                        (1, result.count(), result.count(), new int[0],
-                                decorate(facets), chemicals, null, null));
-            }
-        }
-    }
-
-    public static Result chemical(String name) {
-        return ChemicalResult.get(name);
-    }
 
     /**
      * return the canonical/default substance id
@@ -976,8 +850,6 @@ public class GinasApp extends App {
      * 
      */
     public static String getId(Substance substance) {
-//        if (substance.approvalID != null)
-//            return substance.approvalID;
 
         /**
          * proper permission should be checked here
@@ -990,16 +862,6 @@ public class GinasApp extends App {
          * While it's not as pretty, I'm defaulting to using the uuid or
          * approvalID.
          */
-        // String official = null;
-        // for (Name n : substance.names) {
-        // if (n.preferred)
-        // return n.name;
-        // else if ("of".equalsIgnoreCase(n.type))
-        // official = n.name;
-        // }
-        //
-        // return official != null ? official
-        // : substance.uuid.toString().substring(0, 8);
 
         return substance.getUuid().toString().substring(0, 8);
     }
@@ -1106,138 +968,6 @@ public class GinasApp extends App {
         return new LinkedHashSet<Keyword>();
     }
 
-        // ******************* PROTEINS
-        // *************************************************//*
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-  /*  public static Result proteins(final String q, final int rows, final int page) {
-        try {
-            final String key = "proteins/" + Util.sha1(request());
-            return getOrElse(key, new Callable<Result>() {
-                    public Result call() throws Exception {
-                        Logger.debug("Cache missed: " + key);
-                        return _proteins(q, rows, page);
-                    }
-                });
-        } catch (Exception ex) {
-            return _internalServerError(ex);
-        }
-    }*/
-
-    //THIS METHOD WAS NEVER BEEN CALLED - 3/9/16
-   /* static Result _proteins(String q, int rows, int page) throws Exception {
-        String type = request().getQueryString("type");
-        Logger.debug("Proteins: rows=" + rows + " page=" + page);
-        if (type != null
-            && (type.equalsIgnoreCase("substructure") || type
-                .equalsIgnoreCase("similarity"))) {
-            // structure search
-            String cutoff = request().getQueryString("cutoff");
-            Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
-                         + cutoff);
-            try {
-                if (type.equalsIgnoreCase("substructure")) {
-                    return substructure(q, rows, page);
-                } else {
-                    return similarity(q, Double.parseDouble(cutoff), rows, page);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-
-            return notFound(ix.ginas.views.html.error.render(400,
-                                                             "Invalid search parameters: type=\"" + type + "\"; q=\""
-                                                             + q + "\" cutoff=\"" + cutoff + "\"!"));
-        }
-
-        final int total = SubstanceFactory.finder.findRowCount();
-        if (request().queryString().containsKey("facet") || q != null) {
-            TextIndexer.SearchResult result = getSearchResult(
-                                                              ProteinSubstance.class, q, total);
-
-            TextIndexer.Facet[] facets = filter(result.getFacets(),
-                                                PROTEIN_FACETS);
-
-            List<Substance> proteins = new ArrayList<Substance>();
-            int[] pages = new int[0];
-            if (result.count() > 0) {
-                rows = Math.min(result.count(), Math.max(1, rows));
-                pages = paging(rows, page, result.count());
-                for (int i = (page - 1) * rows, j = 0; j < rows
-                         && i < result.count(); ++j, ++i) {
-                    proteins.add((Substance) result.get(i));
-                }
-            }
-
-            return ok(ix.ginas.views.html.substances.render
-                      (page, rows, result.count(), pages,
-                       decorate(facets), proteins, null, null));
-        } else {
-            final String key = ProteinSubstance.class.getName() + ".facets";
-            TextIndexer.Facet[] facets = getOrElse(key,
-                                                   new Callable<TextIndexer.Facet[]>() {
-                                                       public TextIndexer.Facet[] call() {
-                                                           Logger.debug("Cache missed: " + key);
-                                                           return filter(
-                                                                         getFacets(ProteinSubstance.class, 30),
-                                                                         PROTEIN_FACETS);
-                                                       }
-                                                   });
-            rows = Math.min(total, Math.max(1, rows));
-            int[] pages = paging(rows, page, total);
-
-            List<Substance> proteins = SubstanceFactory.getSubstances(rows,
-                                                                      (page - 1) * rows, null);
-            Logger.info("protein list length: " + proteins.size());
-            return ok(ix.ginas.views.html.substances.render
-                      (page, rows, total, pages, decorate(facets),
-                       proteins, null, null));
-        }
-    }*/
-
-    static final GetResult<Substance> ProteinResult =
-        new GetResult<Substance>(
-                                 Substance.class, SubstanceFactory.finder) {
-            public Result getResult(List<Substance> proteins) throws Exception {
-                return _getProteinResult(proteins);
-            }
-        };
-    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    static Result _getProteinResult(List<Substance> proteins) throws Exception {
-        // force it to show only one since it's possible that the provided
-        // name isn't unique
-        if (true || proteins.size() == 1) {
-            Substance protein = proteins.iterator().next();
-            return ok(ix.ginas.views.html.details.proteindetails
-                      .render((ProteinSubstance) protein));
-        } else {
-            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
-                for (Substance prot : proteins)
-                    indexer.add(prot);
-
-                TextIndexer.SearchResult result = SearchFactory.search
-                        (indexer, ProteinSubstance.class, null, null, indexer.size(),
-                                0, FACET_DIM, request().queryString());
-                if (result.count() < proteins.size()) {
-                    proteins.clear();
-                    for (int i = 0; i < result.count(); ++i) {
-                        proteins.add((ProteinSubstance) result.get(i));
-
-                    }
-                }
-                TextIndexer.Facet[] facets = filter(result.getFacets(),
-                        PROTEIN_FACETS);
-
-
-                return ok(ix.ginas.views.html.substances.render
-                        (1, result.count(), result.count(), new int[0],
-                                decorate(facets), proteins, null, null));
-            }
-        }
-    }
-    
-    public static Result protein(String name) {
-        return ProteinResult.get(name);
-    }
     
     /**
      * return the canonical/default chemical id
@@ -1336,12 +1066,16 @@ public class GinasApp extends App {
         
         GinasSearchResultProcessor() {
         }
-            
+
+        int index;
         protected Object instrument(StructureIndexer.Result r)
             throws Exception {
             List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
-            
+            double similarity=r.getSimilarity();
+            Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
+                                       r.getId(), r.getSimilarity()));
+                         
             ChemicalSubstance chem = null;
             if (!chemicals.isEmpty()) {
                 int[] amap = new int[r.getMol().getAtomCount()];
@@ -1355,9 +1089,10 @@ public class GinasApp extends App {
 
                 chem = chemicals.iterator().next();             
                 if (nmaps > 0) {
-                    IxCache.set("AtomMaps/"+getContext().getId()+"/"
-                                +r.getId(), amap);
+                    IxCache.set("AtomMaps/"+getContext().getId()+"/" +r.getId(), amap);
+                    
                 }
+                IxCache.set("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
             return chem;
         }
@@ -1388,142 +1123,10 @@ public class GinasApp extends App {
         getSeqAlignment (String context, String id) {
         return (SequenceIndexer.Result)IxCache.get("Alignment/"+context+"/"+id);
     }
-
-///THESE ARE DEPRECATED SEARCH METHODS 2-3-2016 tim ///////////
-
-/*
-    public static Result search(String kind) {
-        try {
-            String q = request().getQueryString("q");
-            String t = request().getQueryString("type");
-            if (kind != null && !"".equals(kind)) {
-                if (ChemicalSubstance.class.getName().equals(kind)) {
-                    return redirect(routes.GinasApp.substances(q, 32, 1));
-                } else if (ProteinSubstance.class.getName().equals(kind)) {
-                    return redirect(routes.GinasApp.substances(q, 32, 1));
-                } else if ("substructure".equalsIgnoreCase(t)) {
-                    String url = routes.GinasApp.substances(q, 16, 1).url()
-                        + "&type=" + t;
-                    return redirect(url);
-                } else if ("similarity".equalsIgnoreCase(t)) {
-                    String cutoff = request().getQueryString("cutoff");
-                    if (cutoff == null) {
-                        cutoff = "0.8";
-                    }
-                    String url = routes.GinasApp.chemicals(q, 16, 1).url()
-                        + "&type=" + t + "&cutoff=" + cutoff;
-                    return redirect(url);
-                }
-            }
-            // generic entity search..
-            return search(8);
-        } catch (Exception ex) {
-            Logger.debug("Can't resolve class: " + kind, ex);
-        }
-
-        return _badRequest("Invalid request: " + request().uri());
+    public static Double
+    	getChemSimilarity (String context, String id) {
+    	return (Double)IxCache.get("Similarity/"+context+"/"+id);
     }
-
-    public static Result search(final int rows) {
-        Logger.info("generic search");
-        try {
-
-            final String key = "search/" + Util.sha1(request());
-            return getOrElse(key, new Callable<Result>() {
-                    public Result call() throws Exception {
-                        Logger.debug("Cache missed: " + key);
-                        return _search(rows);
-                    }
-                });
-        } catch (Exception ex) {
-            return _internalServerError(ex);
-        }
-    }
-
-    static Result _search(int rows) throws Exception {
-        final String query = request().getQueryString("q");
-        Logger.debug("Query: \"" + query + "\"");
-
-        TextIndexer.SearchResult result = null;
-        if (query.indexOf('/') > 0) { // use mesh facet
-            final Map<String, String[]> queryString = new HashMap<String, String[]>();
-            queryString.putAll(request().queryString());
-            // append this facet to the list
-            List<String> f = new ArrayList<String>();
-            f.add("MeSH/" + query);
-            String[] ff = queryString.get("facet");
-            if (ff != null) {
-                for (String fv : ff)
-                    f.add(fv);
-            }
-            Logger.info("1");
-            queryString.put("facet", f.toArray(new String[0]));
-            long start = System.currentTimeMillis();
-            final String key = "search/facet/"
-                + Util.sha1(queryString.get("facet"));
-            result = getOrElse(key, new Callable<TextIndexer.SearchResult>() {
-                    public TextIndexer.SearchResult call() throws Exception {
-                        Logger.debug("Cache missed: " + key);
-                        return SearchFactory.search(MAX_SEARCH_RESULTS, 0,
-                                                    FACET_DIM, queryString);
-                    }
-                });
-
-            double ellapsed = (System.currentTimeMillis() - start) * 1e-3;
-            Logger.debug("1. Elapsed time "
-                         + String.format("%1$.3fs", ellapsed));
-        }
-
-        if (result == null || result.count() == 0) {
-            long start = System.currentTimeMillis();
-            final String key = "search/facet/q/"
-                + Util.sha1(request(), "facet", "q");
-            result = getOrElse(key, new Callable<TextIndexer.SearchResult>() {
-                    public TextIndexer.SearchResult call() throws Exception {
-                        Logger.debug("Cache missed: " + key);
-                        return SearchFactory.search(quote(query),
-                                                    MAX_SEARCH_RESULTS, 0, FACET_DIM, request()
-                                                    .queryString());
-                    }
-                });
-            double ellapsed = (System.currentTimeMillis() - start) * 1e-3;
-            Logger.debug("2. Elapsed time "
-                         + String.format("%1$.3fs", ellapsed));
-        }
-        TextIndexer.Facet[] facets = filter(result.getFacets(), CHEMICAL_FACETS);
-
-        int max = Math.min(rows, Math.max(1, result.count()));
-        int total = 0, totalChemicalSubstances = 0, totalProteinSubstances = 0, totalLigands = 0;
-        for (TextIndexer.Facet f : result.getFacets()) {
-            if (f.getName().equals("ix.Class")) {
-                for (TextIndexer.FV fv : f.getValues()) {
-                    if (ChemicalSubstance.class.getName().equals(fv.getLabel())) {
-                        totalChemicalSubstances = fv.getCount();
-                        total += totalChemicalSubstances;
-                    } else if (ProteinSubstance.class.getName().equals(
-                                                                       fv.getLabel())) {
-                        totalProteinSubstances = fv.getCount();
-                        total += totalProteinSubstances;
-                    } else if (Polymer.class.getName().equals(fv.getLabel())) {
-                        totalLigands = fv.getCount();
-                        total += totalLigands;
-                    }
-                }
-            }
-        }
-
-        List<ChemicalSubstance> chemicalSubstances = filter(
-                                                            ChemicalSubstance.class, result.getMatches(), max);
-
-        List<ProteinSubstance> proteinSubstances = filter(
-                                                          ProteinSubstance.class, result.getMatches(), max);
-
-/////search.scala.html has been removed as of 2-3-2106 tim
-        return ok(ix.ginas.views.html.search.render(query, total,
-                                                    GinasApp.decorate(facets), chemicalSubstances,
-                                                    totalChemicalSubstances, proteinSubstances,
-                                                    totalProteinSubstances, null, totalProteinSubstances));
-    }*/
 
     static public Substance resolve(Relationship rel) {
         Substance relsub = null;

@@ -1,1 +1,248 @@
-{"protein":{"subunits":[{"sequence":"MRLAVGALLVCAVLGLCLAVPDKTVRWCAVSEHEATKCQSFRDHMKSVIPSDGPSVACVKKASYLDCIRAIAANEADAVTLDAGLVYDAYLAPNNLKPVVAEFYGSKEDPQTFYYAVAVVKKDSGFQMNQLRGKKSCHTGLGRSAGWNIPIGLLYCDLPEPRKPLEKAVANFFSGSCAPCADGTDFPQLCQLCPGCGCSTLNQYFGYSGAFKCLKDGAGDVAFVKHSTIFENLANKADRDQYELLCLDNTRKPVDEYKDCHLAQVPSHTVVARSMGGKEDLIWELLNQAQEHFGKDKSKEFQLFSSPHGKDLLFKDSAHGFLKVPPRMDAKMYLGYEYVTAIRNLREGTCPEAPTDECKPVKWCALSHHERLKCDEWSVNSVGKIECVSAETTEDCIAKIMNGEADAMSLDGGFVYIAGKCGLVPVLAENYNKSDNCEDTPEAGYFAVAVVKKSASDLTWDNLKGKKSCHTAVGRTAGWNIPMGLLYNKINHCRFDEFFSEGCAPGSKKDSSLCKLCMGSGLNLCEPNNKEGYYGYTGAFRCLVEKGDVAFVKHQTVPQNTGGKNPDPWAKNLNEKDYELLCLDGTRKPVEEYANCHLARAPNHAVVTRKDKEACVHKILRQQQHLFGSNVTDCSGNFCLFRSETKDLLFRDDTVCLAKLHDRNTYEKYLGEEYVKAVGNLRKCSTSSLLEACTFRRP","subunitIndex":1},{"sequence":"GADDVVDSSKSFVMENFSSYHGTKPGYVDSIQKGIQKPKSGTQGNYDDDWKGFYSTDNKYDAAGYSVDNENPLSGKAGGVVKVTYPGLTKVLALKVDNAETIKKELGLSLTEPLMEQVGTEEFIKRFGDGASRVVLSLPFAEGSSSVEYINNWEQAKALSVELEINFETRGKRGQDAMYEYMAQACAGNRVRRSVGSSLSCINLDWDVIRDKTKTKIESLKEHGPIKNKMSESPNKTVSEEKAKQYLEEFHQTALEHPELSELKTVTGTNPVFAGANYAAWAVNVAQVIDSETADNLEKTTAALSILPGIGSVMGIADGAVHHNTEEIVAQSIALSSLMVAQAIPLVGELVDIGFAAYNFVESIINLFQVVHNSYNRPAYSPGHKTQPFLHDGYAVSWNTVEDSIIRTGFQGESGHDIKITAENTPLPIAGVLLPTIPGKLDVNKSKTHISVNGRKIRMRCRAIDGDVTFCRPKSPVYVGNGVHANLHVAFHRSSSEKIHSNEISSDSIGVLGYQKTVDHTKVNFKLSLFFEIKS","subunitIndex":2}],"disulfideLinks":[{"sites":[{"subunitIndex":1,"residueIndex":28},{"subunitIndex":1,"residueIndex":67}]},{"sites":[{"subunitIndex":1,"residueIndex":38},{"subunitIndex":1,"residueIndex":58}]},{"sites":[{"subunitIndex":1,"residueIndex":137},{"subunitIndex":1,"residueIndex":213}]},{"sites":[{"subunitIndex":1,"residueIndex":156},{"subunitIndex":1,"residueIndex":350}]},{"sites":[{"subunitIndex":1,"residueIndex":177},{"subunitIndex":1,"residueIndex":193}]},{"sites":[{"subunitIndex":1,"residueIndex":180},{"subunitIndex":1,"residueIndex":196}]},{"sites":[{"subunitIndex":1,"residueIndex":190},{"subunitIndex":1,"residueIndex":198}]},{"sites":[{"subunitIndex":1,"residueIndex":246},{"subunitIndex":1,"residueIndex":260}]},{"sites":[{"subunitIndex":1,"residueIndex":358},{"subunitIndex":1,"residueIndex":615}]},{"sites":[{"subunitIndex":1,"residueIndex":364},{"subunitIndex":1,"residueIndex":396}]},{"sites":[{"subunitIndex":1,"residueIndex":374},{"subunitIndex":1,"residueIndex":387}]},{"sites":[{"subunitIndex":1,"residueIndex":421},{"subunitIndex":1,"residueIndex":693}]},{"sites":[{"subunitIndex":1,"residueIndex":437},{"subunitIndex":1,"residueIndex":656}]},{"sites":[{"subunitIndex":1,"residueIndex":469},{"subunitIndex":1,"residueIndex":542}]},{"sites":[{"subunitIndex":1,"residueIndex":493},{"subunitIndex":1,"residueIndex":684}]},{"sites":[{"subunitIndex":1,"residueIndex":514},{"subunitIndex":1,"residueIndex":525}]},{"sites":[{"subunitIndex":1,"residueIndex":503},{"subunitIndex":1,"residueIndex":517}]},{"sites":[{"subunitIndex":1,"residueIndex":582},{"subunitIndex":1,"residueIndex":596}]},{"sites":[{"subunitIndex":1,"residueIndex":634},{"subunitIndex":1,"residueIndex":639}]},{"sites":[{"subunitIndex":2,"residueIndex":186},{"subunitIndex":2,"residueIndex":201}]},{"sites":[{"subunitIndex":2,"residueIndex":461},{"subunitIndex":2,"residueIndex":471}]}],"otherLinks":[],"modifications":{"structuralModifications":[],"physicalModifications":[],"agentModifications":[]},"glycosylation":{"NGlycosylationSites":[{"subunitIndex":1,"residueIndex":432},{"subunitIndex":1,"residueIndex":630}],"OGlycosylationSites":[{"subunitIndex":1,"residueIndex":51}],"CGlycosylationSites":[]},"sequenceType":"COMPLETE","references":["55a78a86-de2a-40fd-a90e-aa9a7c5538df"]},"approvalID":"06TG8R848Y","status":"approved","approvedBy":"FDA_SRS","approved":1441029255240,"substanceClass":"protein","names":[{"name":"TRANSFERRIN ALDIFITOX S EPIMER","type":"of","domains":[],"languages":["en"],"references":["580dac02-aa56-4907-bd80-8d56ab810053"],"preferred":true,"access":[]}],"codes":[],"relationships":[],"references":[{"uuid":"580dac02-aa56-4907-bd80-8d56ab810053","citation":"fd_srs","docType":"SRS","publicDomain":true,"tags":["NOMEN"],"access":[]},{"uuid":"00c14fc6-fb23-405c-a3c9-11fb2ab633e2","citation":"SRS import [06TG8R848Y]","docType":"SRS","publicDomain":true,"documentDate":"2015-08-31T09:54:15.000-0400","tags":["NOMEN"],"url":"http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno\u003d06TG8R848Y","access":[]},{"uuid":"55a78a86-de2a-40fd-a90e-aa9a7c5538df","citation":"inn","docType":"SRS","publicDomain":true,"tags":["NOMEN"],"access":[]}],"properties":[],"notes":[],"tags":[],"uuid":"9957ac89-da74-42fe-8002-7090e7d9b228","access":[],"lastEditedBy":"tyler"}
+{
+	"protein": {
+		"subunits": [{
+			"sequence": "MRLAVGALLVCAVLGLCLAVPDKTVRWCAVSEHEATKCQSFRDHMKSVIPSDGPSVACVKKASYLDCIRAIAANEADAVTLDAGLVYDAYLAPNNLKPVVAEFYGSKEDPQTFYYAVAVVKKDSGFQMNQLRGKKSCHTGLGRSAGWNIPIGLLYCDLPEPRKPLEKAVANFFSGSCAPCADGTDFPQLCQLCPGCGCSTLNQYFGYSGAFKCLKDGAGDVAFVKHSTIFENLANKADRDQYELLCLDNTRKPVDEYKDCHLAQVPSHTVVARSMGGKEDLIWELLNQAQEHFGKDKSKEFQLFSSPHGKDLLFKDSAHGFLKVPPRMDAKMYLGYEYVTAIRNLREGTCPEAPTDECKPVKWCALSHHERLKCDEWSVNSVGKIECVSAETTEDCIAKIMNGEADAMSLDGGFVYIAGKCGLVPVLAENYNKSDNCEDTPEAGYFAVAVVKKSASDLTWDNLKGKKSCHTAVGRTAGWNIPMGLLYNKINHCRFDEFFSEGCAPGSKKDSSLCKLCMGSGLNLCEPNNKEGYYGYTGAFRCLVEKGDVAFVKHQTVPQNTGGKNPDPWAKNLNEKDYELLCLDGTRKPVEEYANCHLARAPNHAVVTRKDKEACVHKILRQQQHLFGSNVTDCSGNFCLFRSETKDLLFRDDTVCLAKLHDRNTYEKYLGEEYVKAVGNLRKCSTSSLLEACTFRRP",
+			"subunitIndex": 1
+		}, {
+			"sequence": "GADDVVDSSKSFVMENFSSYHGTKPGYVDSIQKGIQKPKSGTQGNYDDDWKGFYSTDNKYDAAGYSVDNENPLSGKAGGVVKVTYPGLTKVLALKVDNAETIKKELGLSLTEPLMEQVGTEEFIKRFGDGASRVVLSLPFAEGSSSVEYINNWEQAKALSVELEINFETRGKRGQDAMYEYMAQACAGNRVRRSVGSSLSCINLDWDVIRDKTKTKIESLKEHGPIKNKMSESPNKTVSEEKAKQYLEEFHQTALEHPELSELKTVTGTNPVFAGANYAAWAVNVAQVIDSETADNLEKTTAALSILPGIGSVMGIADGAVHHNTEEIVAQSIALSSLMVAQAIPLVGELVDIGFAAYNFVESIINLFQVVHNSYNRPAYSPGHKTQPFLHDGYAVSWNTVEDSIIRTGFQGESGHDIKITAENTPLPIAGVLLPTIPGKLDVNKSKTHISVNGRKIRMRCRAIDGDVTFCRPKSPVYVGNGVHANLHVAFHRSSSEKIHSNEISSDSIGVLGYQKTVDHTKVNFKLSLFFEIKS",
+			"subunitIndex": 2
+		}],
+		"disulfideLinks": [{
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 28
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 67
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 38
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 58
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 137
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 213
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 156
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 350
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 177
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 193
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 180
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 196
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 190
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 198
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 246
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 260
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 358
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 615
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 364
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 396
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 374
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 387
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 421
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 693
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 437
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 656
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 469
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 542
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 493
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 684
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 514
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 525
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 503
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 517
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 582
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 596
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 1,
+				"residueIndex": 634
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 639
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 2,
+				"residueIndex": 186
+			}, {
+				"subunitIndex": 2,
+				"residueIndex": 201
+			}]
+		}, {
+			"sites": [{
+				"subunitIndex": 2,
+				"residueIndex": 461
+			}, {
+				"subunitIndex": 2,
+				"residueIndex": 471
+			}]
+		}],
+		"otherLinks": [],
+		"modifications": {
+			"structuralModifications": [],
+			"physicalModifications": [],
+			"agentModifications": []
+		},
+		"glycosylation": {
+			"NGlycosylationSites": [{
+				"subunitIndex": 1,
+				"residueIndex": 432
+			}, {
+				"subunitIndex": 1,
+				"residueIndex": 630
+			}],
+			"OGlycosylationSites": [{
+				"subunitIndex": 1,
+				"residueIndex": 51
+			}],
+			"CGlycosylationSites": []
+		},
+		"sequenceType": "COMPLETE",
+		"references": ["55a78a86-de2a-40fd-a90e-aa9a7c5538df"]
+	},
+	"approvalID": "06TG8R848Y",
+	"status": "approved",
+	"approvedBy": "FDA_SRS",
+	"approved": 1441029255240,
+	"substanceClass": "protein",
+	"names": [{
+		"name": "TRANSFERRIN ALDIFITOX S EPIMER",
+		"type": "of",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["580dac02-aa56-4907-bd80-8d56ab810053"],
+		"preferred": true,
+		"access": []
+	}],
+	"codes": [],
+	"relationships": [],
+	"references": [{
+		"uuid": "580dac02-aa56-4907-bd80-8d56ab810053",
+		"citation": "fd_srs",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "00c14fc6-fb23-405c-a3c9-11fb2ab633e2",
+		"citation": "SRS import [06TG8R848Y]",
+		"docType": "SRS",
+		"publicDomain": true,
+		"documentDate": "2015-08-31T09:54:15.000-0400",
+		"tags": ["NOMEN"],
+		"url": "http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno\u003d06TG8R848Y",
+		"access": []
+	}, {
+		"uuid": "55a78a86-de2a-40fd-a90e-aa9a7c5538df",
+		"citation": "inn",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}],
+	"properties": [],
+	"notes": [],
+	"tags": [],
+	"uuid": "9957ac89-da74-42fe-8002-7090e7d9b228",
+	"access": [],
+	"lastEditedBy": "tyler"
+}
