@@ -517,7 +517,7 @@
     }]);
 
     ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
-                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
+                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler) {
         // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
@@ -907,25 +907,27 @@
 
         //method for injecting a large structure image on the browse page//
         $scope.showLarge = function (id, divid, ctx) {
-            var result = document.getElementsByClassName(divid);
-            var elementResult = angular.element(result);
+/*            var result = document.getElementsByClassName(divid);
+            var elementResult = angular.element(result);*/
+            var template;
+            if (!_.isUndefined(ctx)) {
+                template = angular.element('<rendered size="500" id=' + id + ' ctx=' + ctx + '></rendered>');
+            } else {
+                template = angular.element('<rendered size="500" id=' + id + '></rendered>');
+            }
+                toggler.toggle($scope, divid, template);
+
+/*
             if ($scope.stage === true) {
                 $scope.stage = false;
-                var childScope = $scope.$new();
-                var rend;
-                if (!_.isUndefined(ctx)) {
-                    rend = '<rendered size="500" id=' + id + ' ctx=' + ctx + '></rendered>';
-                } else {
-                    rend = '<rendered size="500" id=' + id + '></rendered>';
-                }
+
+
                 var compiledDirective = $compile(rend);
-                var directiveElement = compiledDirective(childScope);
-                elementResult.append(directiveElement);
+                elementResult.append(compiledDirective)($scope);
             } else {
-                childScope.$destroy();
                 elementResult.empty();
                 $scope.stage = true;
-            }
+            }*/
         };
 
     });
