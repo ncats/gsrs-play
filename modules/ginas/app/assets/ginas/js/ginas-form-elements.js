@@ -854,7 +854,6 @@ ginasFormElements.directive('substanceViewer', function(molChanger, CVFields){
                     console.log("passing");
                     scope.$parent.createSubref(selected);
                 }
-                scope.data = [];
             };
         }
 }

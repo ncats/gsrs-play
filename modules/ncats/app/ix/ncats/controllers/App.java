@@ -857,7 +857,6 @@ public class App extends Authentication {
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
     throws Exception {
-        System.out.println("line 860");
         return IxCache.getOrElse(modified, key, callable);
     }
 

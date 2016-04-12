@@ -51,7 +51,9 @@
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
             } else {
-                childScope.$destroy();
+                if(childScope) {
+                    childScope.$destroy();
+                }
                 elementResult.empty();
                 scope.stage = true;
             }

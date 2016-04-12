@@ -119,9 +119,7 @@ public class IxCache extends Plugin {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
         Element elm = _instance.cache.get(adaptKey(key));
-        System.out.println("line 123");
         if (elm == null || elm.getCreationTime() < epoch) {
-            System.out.println("line 124");
             T v = generator.call();
             elm = new Element (adaptKey(key), v);
             _instance.cache.put(elm);
