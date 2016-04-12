@@ -587,15 +587,14 @@ public class Substance extends GinasCommonData {
 		return null;
 	}
 
+	//TODO: should be somewhere else
 	public void addImportReference(ProcessingJob p) {
 		Reference r = new Reference();
 		r.docType = Substance.DOC_TYPE_BATCH_IMPORT;
 		r.citation = p.payload.name;
 		r.documentDate = TimeUtil.getCurrentDate();
-		//r.tags.add(new Keyword(p.getClass().getName(), p.id + ""));
-		r.tags.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), 
-				p.getKeyMatching(GinasRecordProcessorPlugin.class.getName())
-		));
+		String processingKey=p.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+		r.id=processingKey;
 		this.references.add(r);
 	}
 	public Note addPropertyNote(String note, String property){
