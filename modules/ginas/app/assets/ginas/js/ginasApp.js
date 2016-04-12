@@ -234,17 +234,23 @@
             sub = flattenCV(sub);
             if (_.has(sub, 'moieties')) {
                 _.forEach(sub.moieties, function (m) {
-                    //m.id = UUID.newID();
+                    if(!_.has(sub, '$$update') || m["$$new"]){
+						m.id = UUID.newID();
+                    }
                 });
             }
             if (_.has(sub, 'structure')) {
                 //apparently needs to be reset as well
+                if (!_.has(sub, '$$update')) {
+					var nid=UUID.newID();
+                    console.log("Was :" + sub.structure.id + " is " + nid);
+                    sub.structure.id = nid;
+                }
                 //sub.structure.id = UUID.newID();
                 if (sub.substanceClass === 'polymer') {
                     _.set(sub, 'polymer.idealizedStructure', sub.structure);
                     sub = _.omit(sub, 'structure');
                 }
-
             }
             
             if (_.has(sub, 'polymer')) {
@@ -522,7 +528,7 @@
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
-                _.set(data, 'update', true);
+                _.set(data, '$$update', true);
                 $scope.substance = data;
             });
         } else {
@@ -747,7 +753,8 @@
              return;
              }*/
             console.log($scope);
-            if (_.has($scope.substance, 'update')) {
+            if (_.has($scope.substance, '$$update')) {
+            	
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
                 console.log(JSON.stringify(sub));
                 $http.put(baseurl + 'api/v1/substances', sub, {
@@ -1731,7 +1738,6 @@
                 scope.prevPage = function () {
                     scope.fetch(scope.term, scope.results.skip - scope.results.top);
                 };
-
             }
         };
     });
@@ -1802,11 +1808,15 @@
                                     scope.parent.polymer.structuralUnits = data.structuralUnits;
                                 });
                         }
+                        if(scope.parent.structure){
+	                        data.structure.id=scope.parent.structure.id;
+                        }
                         scope.parent.structure = data.structure;
+                        
                         scope.parent.moieties = [];
                         _.forEach(data.moieties, function (m) {
-                            //m._id = UUID.newID();
-                            scope.parent.moieties.push(m);
+                        	m["$$new"]=true;
+                        	scope.parent.moieties.push(m);
                         });
                         if(data.structure){
                         	_.set(scope.parent, 'q', data.structure.smiles);

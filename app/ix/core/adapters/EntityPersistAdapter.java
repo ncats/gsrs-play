@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
@@ -326,10 +327,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         return true;
     }
 
-    @Override
-    public void postInsert (BeanPersistRequest<?> request) {
-        Object bean = request.getBean();
-        String name = bean.getClass().getName();
+    public void postInsertBeanDirect(Object bean){
+    	String name = bean.getClass().getName();
         try {
             List<Hook> methods = postInsertCallback.get(name);
             if (methods != null) {
@@ -354,6 +353,20 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         if(bean instanceof Keyword){
         	TimeProfiler.stopGlobalTime(((Keyword)bean).toString());
         }
+    }
+    @Override
+    public void postInsert (BeanPersistRequest<?> request) {
+        
+        InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
+        final Object bean = request.getBean();
+        it.addPostCommitCall(new Callable(){
+			@Override
+			public Object call() throws Exception {
+				postInsertBeanDirect(bean);
+				return null;
+			}
+        }); 
+        
     }
     public static SequenceIndexer getSequenceIndexer(){
 		if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {
@@ -445,8 +458,19 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
-        Object bean = request.getBean();
-        postUpdateBeanDirect(bean,request.getOldValues());
+    	
+    	InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
+        final Object bean = request.getBean();
+        final Object oldValues = request.getBean();
+        it.addPostCommitCall(new Callable(){
+			@Override
+			public Object call() throws Exception {
+				postUpdateBeanDirect(bean,oldValues);
+				return null;
+			}
+        });
+        
+        
     }
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){

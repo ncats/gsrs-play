@@ -1557,7 +1557,7 @@ public class App extends Authentication {
             facets.addAll(result.getFacets());
 
             if (result.finished()) {
-                final String k = getKey (context);
+                final String k = getKey (context) + "result";
                 final int _page = page;
                 final int _rows = rows;
                 final int _count = count;

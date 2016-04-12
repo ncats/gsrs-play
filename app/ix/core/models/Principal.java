@@ -65,4 +65,10 @@ public class Principal extends IxModel {
     }
 
     public boolean isAdmin () { return admin; }
+    
+    @Override
+    public void delete(){
+    	System.out.println("Deleting");
+    	super.delete();
+    }
 }

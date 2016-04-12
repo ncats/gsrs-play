@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -10,6 +11,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -28,6 +31,7 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
+import ix.core.models.Value;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -52,7 +56,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @Indexable(facet = true, name = "Created By")
     public Principal createdBy;
     
-    @OneToOne(cascade=CascadeType.ALL)
+    @OneToOne()
     @JsonSerialize(using = PrincipalSerializer.class)
     @JsonDeserialize(using = PrincipalDeserializer.class)
     @Indexable(facet = true, name = "Last Edited By")
@@ -194,6 +198,29 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     	grc.setReferences(recordReference.references);
 		this.recordReference = grc;
 	}
+    
+    
+    public void setId(UUID uuid){
+    	System.out.println("Setting id from:" + id + " to " + uuid);
+    	this.id=uuid;
+    }
+    
+    @PostPersist
+    @PostUpdate
+    public void test(){
+    	System.out.println("Saved structure");
+    }
+    
+    public String getHash(){
+    	String hash = null;
+    	for (Value val : this.properties) {
+            if (Structure.H_LyChI_L4.equals(val.label)) {
+                Keyword kw = (Keyword)val;
+                hash = kw.term;
+            }
+        }
+    	return hash;
+    }
 
 	public void addReference(String refUUID){
 		GinasReferenceContainer grc=getRecordReference();

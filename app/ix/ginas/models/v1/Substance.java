@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -105,7 +106,7 @@ public class Substance extends GinasCommonData {
 	public String version = "1";
 	
 	
-	@OneToOne(cascade = CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.PERSIST)
 	@JsonSerialize(using = PrincipalSerializer.class)
 	@JsonDeserialize(using = PrincipalDeserializer.class)
 	@Indexable(facet = true, name = "Approved By")
