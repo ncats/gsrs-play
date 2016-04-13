@@ -519,23 +519,27 @@
 
                 scope.makeNewCV = function () {
                     console.log(scope);
-                    console.log(scope.obj.new);
+                    console.log(scope.obj[scope.field].new);
                     var exists = _.find(scope.values, function (cv) {
-                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
+                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj[scope.field].new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj[scope.field].new));
                     });
-                    if (!exists && scope.obj.new !== '') {
+                    if (!exists && scope.obj[scope.field].new !== '') {
                         var cv = {};
-                        cv.display = scope.obj.new;
-                        cv.value = scope.obj.new;
+                        cv.display = scope.obj[scope.field].new;
+                        cv.value = scope.obj[scope.field].new;
                         scope.values.push(cv);
                         CVFields.updateCV(attrs.cv, cv);
                         console.log(cv);
-                        scope.obj = cv;
+                        scope.obj[scope.field] = cv;
                     } else {
-                        alert(scope.obj.new + ' exists in the cv');
-                        scope.obj = {};
+                        alert(scope.obj[scope.field].new + ' exists in the cv');
+                        scope.obj[scope.field] = {};
                     }
                 };
+
+
+
+
 
                 scope.editing = function (obj) {
                     if (_.has(obj, '_editing')) {
