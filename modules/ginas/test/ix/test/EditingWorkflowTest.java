@@ -368,9 +368,9 @@ public class EditingWorkflowTest {
        	JsonNode facets=jsn.at("/facets");
        	for(JsonNode facet:facets){
        		String name=facet.at("/name").asText();
-       		if("Substance Class".equals(name)){
+       		if(face.equals(name)){
        			for(JsonNode val:facet.at("/values")){
-       				if("protein".equals(val.at("/label").asText())){
+       				if(label.equals(val.at("/label").asText())){
        					return val.at("/count").asInt();
        				}
        			}
@@ -474,10 +474,31 @@ public class EditingWorkflowTest {
             String uuid = entered.get("uuid").asText();
 
             ensurePass( api.submitSubstance(entered));
+            int pcount=getFacetCountFor(api, "Substance Class", "protein");
+            System.out.println("#############");
+            System.out.println(pcount + " for proteins before fail");
             ensureFailure(api.submitSubstance(entered));
-            //TODO: Add test case to make sure no new facets are introduced
         }
    	}
+    
+    @Test
+   	public void failedRecordsDontChangeFacets() throws Exception {
+        try(RestSession session = ts.newRestSession(fakeUser1)) {
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+            
+            ensurePass( api.submitSubstance(entered));
+            int pcount=getFacetCountFor(api, "Substance Class", "protein");
+            JsonNode jsnnew=new JsonUtil.JsonNodeBuilder(entered).set("/uuid", "00c14fc6-fb23-405c-a3c9-11fb2ab633e2").build();
+            //fail because of uuid collision with other references
+            ensureFailure(api.submitSubstance(jsnnew));
+            //TODO: Add test case to make sure no new facets are introduced
+            int pcount2=getFacetCountFor(api, "Substance Class", "protein");
+            assertEquals(pcount, pcount2);
+        }
+   	}
+    
     
 
     @Test
