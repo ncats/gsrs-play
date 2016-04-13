@@ -1,7 +1,8 @@
 package ix.test;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
@@ -13,6 +14,12 @@ import org.junit.runner.Description;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.GinasChemicalStructure;
+import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Reference;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
@@ -32,7 +39,7 @@ public class ChemicalApiTest {
     };
     
     @Test
-    public void testMolfileMoietyDecomposeGetsWriteCounts() throws Exception {
+    public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
     			"\n" + 
@@ -103,6 +110,103 @@ public class ChemicalApiTest {
             assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span class=\"label label-default\">1</span>"));
         }
    	}
+    
+    @Test
+   	public void testFlexMatchWith2Moieties() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            ChemicalSubstance cs = makeChemicalSubstance("ClCC1CO1.O");
+            EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+            JsonNode entered = em.valueToTree(cs);
+            ensurePass( api.submitSubstance(entered));
+            String html=api.getFlexMatchHTML("ClCC1CO1");
+            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span class=\"label label-default\">1</span>"));
+        }
+   	}
+    
+    @Test
+   	public void testFlexMatchWithIons() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode form1 = makeChemicalSubstanceJSON("[O-]C1=CC=CC=C1.[Cl-]");
+            JsonNode form2 = makeChemicalSubstanceJSON("OC1=CC=CC=C1.O");
+            
+            ensurePass( api.submitSubstance(form1));
+            ensurePass( api.submitSubstance(form2));
+            
+            String html=api.getFlexMatchHTML("OC1=CC=CC=C1");
+            assertTrue("Should have 2 results for flex match, but found something else",html.contains("<span class=\"label label-default\">2</span>"));
+        }
+   	}
+    @Test
+   	public void testFlexMatchReturnsNothing() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode form1 = makeChemicalSubstanceJSON("[O-]C1=CC=CC=C1.[Cl-]");
+            JsonNode form2 = makeChemicalSubstanceJSON("OC1=CC=CC=C1.O");
+            
+            ensurePass( api.submitSubstance(form1));
+            ensurePass( api.submitSubstance(form2));
+            
+            String html=api.getFlexMatchHTML("CCCOC1=CC=CC=C1");
+            assertTrue("Should have no matches, but found some",html.contains("There are no results to show."));
+        }
+   	}
+    
+    @Test
+   	public void testSubstructureSearchSimple() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode form1 = makeChemicalSubstanceJSON("[O-]C1=CC=CC=C1.[Cl-]");
+            JsonNode form2 = makeChemicalSubstanceJSON("OC1=CC=CC=C1.O");
+            
+            ensurePass( api.submitSubstance(form1));
+            ensurePass( api.submitSubstance(form2));
+            
+            String html=api.getSubstructureMatchHTML("C1=CC=CC=C1");
+            assertTrue("Should have 2 matches, but found something else",html.contains("<span class=\"label label-default\">2</span>"));
+        }
+   	}
+    
+    @Test
+   	public void testSubstructureSearchSpecificity() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode form1 = makeChemicalSubstanceJSON("CCCC");
+            JsonNode form2 = makeChemicalSubstanceJSON("COC1=CC=CC=C1");
+            
+            ensurePass( api.submitSubstance(form1));
+            ensurePass( api.submitSubstance(form2));
+            
+            String html=api.getSubstructureMatchHTML("C1=CC=CC=C1");
+            assertTrue("Should have 1 match, but found something else:" + html,html.contains("<span class=\"label label-default\">1</span>"));
+        }
+   	}
+    
+    public JsonNode makeChemicalSubstanceJSON(String smiles){
+    	ChemicalSubstance cs = makeChemicalSubstance(smiles);
+        EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+        JsonNode entered = em.valueToTree(cs);
+        return entered;
+    }
+    
+    public ChemicalSubstance makeChemicalSubstance(String smiles){
+    	ChemicalSubstance cs = new ChemicalSubstance();
+    	cs.structure= new GinasChemicalStructure();
+    	cs.structure.molfile=smiles;
+    	Name n = new Name();
+    	n.name=smiles + " name";
+    	Reference r=Reference.SYSTEM_GENERATED();
+    	n.addReference(r, cs);
+    	cs.structure.addReference(r);
+    	cs.names.add(n);
+    	return cs;
+    }
     
     
     public JsonNode parseJsonFile(String path){
