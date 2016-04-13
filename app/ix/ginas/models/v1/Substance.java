@@ -89,8 +89,16 @@ public class Substance extends GinasCommonData {
 		PRIMARY,
 		ALTERNATIVE
 	}
+
+	public enum SubstanceDefinitionLevel{
+		COMPLETE,
+		INCOMPLETE,
+		REPRESENTATIVE
+	}
 	
 	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
+	
+	public SubstanceDefinitionLevel definitionLevel = SubstanceDefinitionLevel.COMPLETE;
 	
 	
 	@JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)

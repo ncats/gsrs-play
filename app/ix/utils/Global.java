@@ -1,16 +1,5 @@
 package ix.utils;
 
-import ix.core.EntityProcessor;
-import ix.core.NamedResource;
-import ix.core.controllers.v1.RouteFactory;
-import ix.core.controllers.EntityFactory;
-import ix.core.controllers.PrincipalFactory;
-import ix.core.controllers.UserProfileFactory;
-import ix.core.models.Principal;
-import ix.core.models.UserProfile;
-import ix.core.plugins.IxContext;
-
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -19,15 +8,28 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 import org.reflections.Reflections;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.Transaction;
+import com.avaje.ebean.config.ServerConfig;
+import com.avaje.ebean.event.TransactionEventListener;
+
+import ix.core.NamedResource;
+import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
+import ix.core.controllers.v1.RouteFactory;
+import ix.core.models.Principal;
+import ix.core.models.UserProfile;
+import ix.core.plugins.IxContext;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
 import play.Play;
 import play.api.mvc.EssentialFilter;
+import play.db.ebean.EbeanPlugin;
 import play.filters.gzip.GzipFilter;
 import play.libs.F.Promise;
 import play.mvc.Action;
@@ -64,23 +66,27 @@ public class Global extends GlobalSettings {
                 ("Plugin "+IxContext.class.getName()+" is not loaded!");
         }
 
-        /*
-        ServerConfig config = new ServerConfig ();
-        config.setName("archive");
-        config.setDataSource(DB.getDataSource("archive"));
-        config.addPackage("models.*");
-        config.setDdlGenerate(true);
-        config.setDdlRun(true);
-
-        archiveEbeanServer = EbeanServerFactory.create(config);
-        Logger.info("## EbeanServer['archive'] = "+archiveEbeanServer);
-        */
     }
 
   
     
     @Override
     public void onStart (Application app) {
+    	ServerConfig sc = new ServerConfig();
+    	sc.add(new TransactionEventListener(){
+
+			@Override
+			public void postTransactionCommit(Transaction arg0) {
+				System.out.println("Saved a transaction");
+			}
+
+			@Override
+			public void postTransactionRollback(Transaction arg0, Throwable arg1) {
+				// TODO Auto-generated method stub
+				
+			}
+    		
+    	});
         try {
             init (app);
             epoch = new Date ();
@@ -109,8 +115,9 @@ public class Global extends GlobalSettings {
         }
 
         loadDefaultUsers();
-        
-        
+//        EbeanPlugin eb = new EbeanPlugin (app);
+//        EbeanServer server = Ebean.getServer(eb.defaultServer());
+//        
         //Logger.debug("IDG routes: "+ix.idg.Routes.routes().getClass());
         /*
         EbeanPlugin eb = new EbeanPlugin (app);
