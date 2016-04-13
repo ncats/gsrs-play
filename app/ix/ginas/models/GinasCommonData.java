@@ -7,9 +7,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
@@ -60,11 +62,14 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     @Id
     public UUID uuid;
     public Date created=null;
+    
     @OneToOne()
     @Indexable(facet = true, name = "Created By")
     public Principal createdBy;
+    
     @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
+    
     //TP: why is this one-to-one?
     @OneToOne()
     @Indexable(facet = true, name = "Last Edited By")

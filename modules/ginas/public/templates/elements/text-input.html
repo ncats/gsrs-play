@@ -1,7 +1,7 @@
 <div>
-        <label id="{{field}}-label" class="text-capitalize">{{label || field}}</label>
-    <input type="text" class="form-control" ng-model= obj ng-change="validatorFunction()" title="{{field}}" id="{{field}}" placeholder = "{{label || field}}"
-           name="{{field}}" aria-labelledby="{{field}}-label">
+        <label id="{{::field}}-label" class="text-capitalize">{{label || field}}</label>
+    <input type="text" class="form-control" ng-model= obj ng-change="validatorFunction()" title="{{::field}}" id="{{::field}}" placeholder = "{{label || field}}"
+           name="{{::field}}" aria-labelledby="{{::field}}-label">
 </div>
 
 

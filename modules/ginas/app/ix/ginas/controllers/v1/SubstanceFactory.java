@@ -267,6 +267,8 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result create() {
+		System.out.println("called create");
+		
 		JsonNode value = request().body().asJson();
 		Class subClass = getClassFromJson(value);
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator.NEW_SUBSTANCE_VALIDATOR(

@@ -24,7 +24,7 @@
             </div>
             <div class="parameterForm"></div>
         </form>
-        <div class="row" ng-repeat="param in referenceobj.parameters">
+        <div class="row" ng-repeat="(index, param) in referenceobj.parameters track by $index">
             <hr>
             <div class="col-md-1">
                 <a ng-click="deleteObj(param, referenceobj.parameters)"><i class="fa fa-times fa-2x danger"></i></a>
@@ -37,9 +37,9 @@
             </div>
             <div class="col-md-1">
                 <form-selector referenceobj="param" parent="substance" formname="parameterForm" field="value" type="amount"
-                               divid={{param.$$hashKey}}></form-selector>
+                               divid=parameter-{{index}}></form-selector>
             </div>
         </div>
-        <div class={{param.$$hashKey}}></div>
+        <div class=parameter-{{index}}></div>
     </div>
 </div>

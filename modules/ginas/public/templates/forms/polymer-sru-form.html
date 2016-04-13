@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="sruForm" id="addSruForm" role="form" novalidate>
-        <div ng-repeat="obj in parent.polymer.structuralUnits">
+        <div ng-repeat="(index, obj) in parent.polymer.structuralUnits track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -21,14 +21,14 @@
                 </div>
 
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="sruForm" field ="amount" type = "amount" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj= "obj" formname="sruForm" field ="amount" type = "amount" divid=sru-{{index}}></form-selector>
                 </div>
                 <div class="col-md-2">
                     <text-box-view-edit validator="validateConnectivity(obj)" obj="obj" label="Connectivity" field="_displayConnectivity"></text-box-view-edit>
                 </div>
 
             </div>
-            <div class = {{obj.$$hashKey}}></div>
+            <div class = sru-{{index}}></div>
         </div>
             </form>
 </div>

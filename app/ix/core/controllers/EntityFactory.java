@@ -63,6 +63,7 @@ import ix.core.SingleParent;
 import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.adapters.InxightTransaction;
 import ix.core.models.BaseModel;
 import ix.core.models.BeanViews;
 import ix.core.models.DataVersion;
@@ -934,12 +935,13 @@ public class EntityFactory extends Controller {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest ("Only POST is accepted!");
         }
+        InxightTransaction tx = InxightTransaction.beginTransaction();
+        
         String content = request().getHeader("Content-Type");
         if (content == null || (content.indexOf("application/json") < 0
                                 && content.indexOf("text/json") < 0)) {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
-
         try {
             EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
             mapper.addHandler(new DeserializationProblemHandler () {
@@ -975,14 +977,18 @@ public class EntityFactory extends Controller {
 		            }
             }
             inst.save();
-            
+            tx.commit();
             Status s=created (mapper.toJson(inst));
             return s;
         }
         catch (Throwable ex) {
         	Logger.error("Problem creating record", ex);
         	System.out.println(ex.getMessage());
+        	ex.printStackTrace();
+        	tx.rollback(ex);
             return internalServerError (ex.getMessage());
+        } finally{
+        	tx.end();
         }
     }
     
@@ -1429,35 +1435,6 @@ public class EntityFactory extends Controller {
             rootChange[2]=obj;
             changes.add(rootChange);
 
-
-            //eventually, figure out enumerated changes directly
-            
-//            
-//            for (Object[] c : changes) {
-//              
-//                Edit e = new Edit ((Class<?>) c[3], c[4]);
-//                
-//                e.path = (String)c[0];
-//                e.editor = principal;
-//                e.oldValue = (String)c[1];
-//                //Need to preserve full tree changes
-//                e.newValue = (new ObjectMapper()).writeValueAsString(c[2]);
-//                Logger.debug("Saving change" + c + "\t" + id);
-//                Transaction tx = Ebean.beginTransaction();
-//                try {
-//                    e.save();
-//                    tx.commit();
-                        //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
-//                }
-//                catch (Exception ex) {
-//                      Logger.error(ex.getMessage());
-//                    Logger.trace
-//                        ("Can't persist Edit for "+type+":"+id, ex);
-//                }
-//                finally {
-//                    Ebean.endTransaction();
-//                }   
-//            }
             return ok (mapper.valueToTree(obj));
                     }
                     catch (Exception ex) {
@@ -1540,8 +1517,9 @@ public class EntityFactory extends Controller {
      * 
      */
     protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
-        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
-        Transaction tx = Ebean.beginTransaction();
+        
+    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
+    	InxightTransaction tx = InxightTransaction.beginTransaction();
         try {       
             Object newValue = mapper.treeToValue(json, type);
 
@@ -1594,8 +1572,6 @@ public class EntityFactory extends Controller {
 						}
 					}
 	            });
-	            //System.out.println("Test2");
-	            
 	            
 	        	while(!changeStack.isEmpty()){
 	        		Object v=changeStack.pop();
@@ -1616,13 +1592,15 @@ public class EntityFactory extends Controller {
 	        	//to something. That is, have a @SingleParent annotation
 	        	//inside
 	        	for(Object toDelete : removed){
-	        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
-	        		   toDelete.getClass().isAnnotationPresent(SingleParent.class)){
-	        			if(toDelete instanceof Model){
-	        				System.out.println("deleting:" + ((Model)toDelete));
-	        				((Model)toDelete).delete();
-	        			}
-	            	}
+	        		if(toDelete !=null){
+		        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
+		        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
+		        			if(toDelete instanceof Model){
+		        				System.out.println("deleting:" + ((Model)toDelete));
+		        				((Model)toDelete).delete();
+		        			}
+		            	}
+	        		}
 	        	}
 	        	
 	        	//The old value is now the new value
@@ -1646,7 +1624,12 @@ public class EntityFactory extends Controller {
         	
             String newJSON=mapper.toJson(newValue);
             
-            //granular parts not working yet
+            
+            //Should this be here?
+            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
+            
+            tx.commit();
+          //granular parts not working yet
             if (newValue != null) {
             	    Object id = EntityUtils.getId (newValue);
 	                eh.edit.refid = id != null ? id.toString() : null;
@@ -1661,10 +1644,6 @@ public class EntityFactory extends Controller {
 	                }
 	                Logger.debug("** New edit history "+eh.edit.id);
             }
-            //Should this be here?
-            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
-            
-            tx.commit();
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
@@ -1675,7 +1654,7 @@ public class EntityFactory extends Controller {
             return internalServerError (ex.getMessage());
         }
         finally {
-            Ebean.endTransaction();
+            tx.end();
         }
     }
 

@@ -34,6 +34,7 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
+import ix.test.util.TestUtil;
 import net.sf.ehcache.CacheManager;
 import org.junit.rules.ExternalResource;
 
@@ -385,55 +386,10 @@ public class GinasTestServer extends ExternalResource{
         //Path path = new File(load.getString("ix.home")).toPath();
 
         File home = ConfigUtil.getValueAsFile("ix.home");
-        if(!home.exists()){
-            return;
-        }
-        Files.walkFileTree(home.toPath(), new SimpleFileVisitor<Path>() {
-
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                //we've have NFS problems where there are lock
-                //objects that we can't delete
-                //should be safe to keep them and delete every other file.
-                if(		!file.toFile().getName().startsWith(".nfs")
-                		//&& !file.toFile().getName().endsWith(".cfs")
-                		){
-                    //use new delete method which throws IOException
-                    //if it can't delete instead of returning flag
-                    //so we will know the reason why it failed.
-                    try{
-                    	//System.out.println("Deleting:" + file);
-                        Files.delete(file);
-                    }catch(IOException e){
-                        System.out.println(e.getMessage());
-                    }
-                }
-                else{
-                    //System.out.println("found nfs file " + file.toString());
-                }
-
-
-                return FileVisitResult.CONTINUE;
-            }
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir,
-                    IOException exc)
-             throws IOException{
-            	
-            	FileVisitResult fvr= super.postVisitDirectory(dir, exc);
-            	File dirfile=dir.toFile();
-            	try{
-                	//System.out.println("Deleting:" + dirfile);
-                    Files.delete(dir);
-                }catch(IOException e){
-                    System.out.println("unable to delete:" + e.getMessage());
-                }
-            	return fvr;
-            }
-             
-        });
+        TestUtil.tryToDeleteRecursively(home);
     }
+
+
 
     @Override
     protected void after() {
@@ -462,7 +418,10 @@ public class GinasTestServer extends ExternalResource{
         start();
     }
 
-    private void start() {
+    public void start() {
+        if(running){
+            return;
+        }
         running = true;
         ts = testServer(port);
         ts.start();
