@@ -1,18 +1,8 @@
 package ix.test.ix.test.server;
-import static org.junit.Assert.assertTrue;
 
-import static play.test.Helpers.testServer;
-
-import java.io.File;
-import java.io.IOException;
-
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import ix.core.adapters.EntityPersistAdapter;
@@ -35,16 +25,31 @@ import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import net.sf.ehcache.CacheManager;
+import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.w3c.dom.Document;
-import play.libs.ws.WS;
+import play.db.ebean.Model;
 import play.libs.ws.WSCookie;
-import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 import play.test.TestServer;
+
+import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.*;
+
+import static play.test.Helpers.testServer;
 
 /**
  * JUnit Rule to handle starting and stopping
