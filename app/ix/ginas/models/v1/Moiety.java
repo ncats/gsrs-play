@@ -76,5 +76,5 @@ public class Moiety extends CommonDataElementOfCollection {
 	public UUID getUUID(){
 		return UUID.fromString(this.innerUuid);
 	}
-    
+	
 }
