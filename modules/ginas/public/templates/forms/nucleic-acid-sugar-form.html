@@ -26,7 +26,7 @@
         </ng-form>
 
 
-        <div ng-repeat="obj in parent.nucleicAcid.sugars">
+        <div ng-repeat="(index, obj) in parent.nucleicAcid.sugars track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -40,7 +40,7 @@
                     <rendered smiles= {{obj.sugar.fragmentStructure}}></rendered>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid=sugar-{{index}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-2">
@@ -48,10 +48,10 @@
                     <div id = "num">{{obj.sites.length}} of {{getAllSites()}}</div>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid=sugar-{{index}}></form-selector>
                 </div>
             </div>
-            <div class={{obj.$$hashKey}}></div>
+            <div class=sugar-{{index}}></div>
         </div>
     </div>
 </div>

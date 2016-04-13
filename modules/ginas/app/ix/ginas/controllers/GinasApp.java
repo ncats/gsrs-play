@@ -810,6 +810,7 @@ public class GinasApp extends App {
                         }else{
                         	hash=struc2.getLychiv4Hash();
                         }
+                        System.out.println("Looking for:" + hash);
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
                         

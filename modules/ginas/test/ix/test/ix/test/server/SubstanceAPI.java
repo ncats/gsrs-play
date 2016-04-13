@@ -79,8 +79,11 @@ public class SubstanceAPI {
                 .get(timeout);
 
     ///ginas/app/substances?type=Substructure&q=C1%3DCC%3DCC%3DC1
-    return session.extractJSON(response);
-}
+        return session.extractJSON(response);
+    }
+
+
+
 
 
     public WSResponse validateSubstance(JsonNode js){

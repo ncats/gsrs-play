@@ -1,8 +1,8 @@
 <div>
-    <label id="{{field}}-label" class="text-capitalize">{{label || field}}</label><br>
+    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}</label><br>
     <a ng-click="edit= !edit" ng-show="!edit">{{obj[field]}}</a>
         <input ng-show="!obj[field] || edit" type="text" class="form-control" ng-model=obj[field] ng-blur="edit = !edit" ng-model-options="{ debounce: 500 }"
-               placeholder ="{{label || field}}" title="{{field}}" id="{{name}}-{{field}}" name="{{field}}" aria-labelledby="{{field}}-label"/>
+               placeholder ="{{label || field}}" title="{{::field}}" id="{{::name}}-{{::field}}" name="{{::field}}" aria-labelledby="{{::field}}-label"/>
 </div>
 
 

@@ -2,7 +2,7 @@
     <div class="row form-row">
         <div class="col-md-6">
             <strong>
-                Subunit {{obj.subunitIndex}}
+                Subunit {{index}}
             </strong>
             <div ng-if="view !== 'subunits'">
             <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits"
@@ -18,11 +18,9 @@
             <textarea ng-show="edit" type="text" class="form-control" rows='5' ng-model=obj.sequence
                       ng-blur="parseSubunit(); edit=!edit" aria-label="Edit Subunit"></textarea>
         </div>
-     <!--   <div ng-hide="edit" class="col-lg-12" ng-repeat="chunk in obj.$$subunitDisplay">
-            {{chunk}}-->
-        <div ng-hide="edit" class="col-lg-2 col-md-3 col-sm-3" ng-repeat="chunk in obj.$$subunitDisplay">
+        <div ng-hide="edit" class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay track by $index">
             <span class = "pull-right count" ng-hide=numbers>{{($index+1)*10}}</span><br>
-            <span ng-repeat="aa in chunk track by $index">
+            <span ng-repeat="(index, aa) in chunk track by $index">
                 <amino-acid acid= aa></amino-acid>
             </span>
         </div>
