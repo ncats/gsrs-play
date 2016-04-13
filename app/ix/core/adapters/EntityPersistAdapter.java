@@ -562,11 +562,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         return true;
     }
-
-    @Override
-    public void postDelete (BeanPersistRequest<?> request) {
-        Object bean = request.getBean();
-        String name = bean.getClass().getName();
+    
+    public void postDeleteBeanDirect (Object bean) {
+    	String name = bean.getClass().getName();
 
         List<Hook> methods = postDeleteCallback.get(name);
         if (methods != null) {
@@ -587,6 +585,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         catch (Exception ex) {
             Logger.trace("Can't remove bean "+bean+" from index!", ex);
         }
+    }
+
+    @Override
+    public void postDelete (BeanPersistRequest<?> request) {
+    	
+    	InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
+        final Object bean = request.getBean();
+        it.addPostCommitCall(new Callable(){
+			@Override
+			public Object call() throws Exception {
+				postDeleteBeanDirect(bean);
+				return null;
+			}
+        });
+        
     }
 
     @Override
