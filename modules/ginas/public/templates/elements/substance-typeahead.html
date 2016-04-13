@@ -1,5 +1,5 @@
 <div>
-    <div ng-show="!subref" id="{{field}}">
+    <div ng-show="!subref" id="{{::field}}">
         <tags-input custom-class="form-control" ng-blur="cancel()" ng-model=subref title="Substance Selector"
                     placeholder="Substance Name" id="substance" name="substance" display-property="_name"
                     key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'

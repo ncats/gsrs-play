@@ -36,6 +36,8 @@ object ApplicationBuild extends Build {
     "org.apache.httpcomponents" % "httpcore" %"4.4.4",
     "org.apache.httpcomponents" % "httpclient" %"4.3.1", //required for Ivy bug?
     "commons-io" % "commons-io" % "2.4",
+
+    "net.sourceforge.htmlunit" % "htmlunit" % "2.20" % Test,
     "com.zaxxer" % "HikariCP-java6" % "2.3.8"
       ,"com.edulify" %% "play-hikaricp" % "2.0.6"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
@@ -167,7 +169,7 @@ public class BuildInfo {
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
       libraryDependencies  += "junit" % "junit" % "4.11" % Test,
       libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
-      libraryDependencies += "net.sourceforge.htmlunit" % "htmlunit" % "2.20" % Test,
+
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions ++= javaBuildOptions,
       javaOptions in Test += "-Dconfig.file=conf/ginas.conf",

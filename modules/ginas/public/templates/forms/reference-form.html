@@ -56,7 +56,7 @@
                 </div>
             </div>
         </form>
-        <div ng-repeat="obj in parent.references">
+        <div ng-repeat="(index, obj) in parent.references track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -90,7 +90,7 @@
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" formname="refForm" type="access"
-                                   divid={{reference.$$hashKey}}></form-selector>
+                                   divid=reference-{{index}}></form-selector>
                 </div>
             </div>
             <div class ="row form-row" >
@@ -103,7 +103,7 @@
                         <button ng-hide ="obj.uploadedFile || !obj.$$uploadFile" class ="btn btn-default" ng-click ="submitFile(obj);"><i class="fa fa-upload"></i></button>
                     </div>
             </div>
-            <div class={{obj.$$hashKey}}></div>
+            <div class=reference-{{index}}></div>
         </div>
     </div>
 </div>

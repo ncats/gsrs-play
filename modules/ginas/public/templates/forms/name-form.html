@@ -69,7 +69,7 @@
         </ng-form>
 
 
-        <div ng-repeat="obj in parent.names">
+        <div ng-repeat="(index, obj) in parent.names track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -91,7 +91,7 @@
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid=name-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
@@ -105,14 +105,14 @@
                             <multi-view-edit obj= "obj" field = "domains" cv = "NAME_DOMAIN"></multi-view-edit>
                         </div>
                         <div class="col-md-2">
-                            <form-selector referenceobj ="obj" parent = "parent" type = "nameOrgs" divid={{obj.$$hashKey}}></form-selector>
+                            <form-selector referenceobj ="obj" parent = "parent" type = "nameOrgs" divid=name-{{index}}></form-selector>
                         </div>
                         <div class="col-md-2 err-check">
                             <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION" label ="Jurisdiction"></multi-view-edit>
                         </div>
                     </div>
                 </div>
-            <div class = {{obj.$$hashKey}}></div>
+            <div class = name-{{index}}></div>
         </div>
     </div>
 </div>

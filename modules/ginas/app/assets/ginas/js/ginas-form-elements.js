@@ -669,7 +669,8 @@
             scope: {
                 obj: '=ngModel',
                 field: '@',
-                name: '='
+                name: '=',
+                label: '@'
             }
         };
     });

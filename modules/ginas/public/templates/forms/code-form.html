@@ -36,7 +36,7 @@
             <submit-buttons submit="code" form="codeForm" path="codes"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.codes track by $index">
+        <div ng-repeat="(index,obj) in parent.codes track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -55,7 +55,7 @@
                     <text-view-edit obj="obj" field="url"></text-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid=code-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "obj" parent = "parent" edit = "true"></reference-modal-button>
@@ -65,10 +65,10 @@
             <div class = "row">
                 <div class="col-md-6 col-md-offset-1">
                     <form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"
-                                   type="textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                                   type="textbox" divid=code-{{index}} mode="edit"></form-selector>
                 </div>
             </div>
-            <div class={{obj.$$hashKey}}></div>
+            <div class=code-{{index}}></div>
         </div>
     </div>
 </div>

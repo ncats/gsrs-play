@@ -3,11 +3,11 @@
         <form-header type="moieties" name="moietyForm" id ="addMoietyForm" parent="parent"></form-header>
     </div>
         <div class="col-md-12">
-            <div ng-repeat="obj in parent.moieties">
+            <div ng-repeat="(index, obj) in parent.moieties track by $index">
                 <div class ="row">
                     <hr>
                     <div class="col-md-2">
-                        <label for={{obj.id}}>Moiety Structure</label>
+                        <label>Moiety Structure</label>
                         <rendered id= {{obj.id}}></rendered>
                     </div>
                     <div class = "col-md-10">
@@ -25,9 +25,6 @@
                                 <text-view-edit obj = "obj" field = "formula" id = "formula"></text-view-edit>
                             </div>
                     <div class="col-md-2">
-<!--
-                        <span class="badge" ng-click ="show = true">{{obj.stereochemistry.display || obj.stereochemistry}}</span>
--->
                         <dropdown-view-edit obj= "obj" field = "stereochemistry" label="Stereochemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
                     </div>
                     <div class="col-md-2">
@@ -54,12 +51,12 @@
                         <span id ="charge" class="badge">{{obj.charge}}</span>
                     </div>
                             <div class="col-md-2">
-                                <form-selector referenceobj= "obj" formname="moietyForm" field ="stereoComments" parent = parent type = "textbox" divid={{obj.$$hashKey}} mode="edit" id = "comments"></form-selector>
+                                <form-selector referenceobj= "obj" formname="moietyForm" field ="stereoComments" label="Stereo Comments" parent = parent type = "textbox" divid=moiety-{{index}} mode="edit" id = "comments"></form-selector>
                             </div>
                             </div>
                         </div>
                 </div>
-                <div class = {{obj.$$hashKey}}></div>
+                <div class = moiety-{{index}}></div>
             </div>
         </div>
 

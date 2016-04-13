@@ -20,7 +20,7 @@
             <submit-buttons submit="note" form="noteForm" path="notes"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.notes">
+        <div ng-repeat="(index, obj) in parent.notes track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -30,13 +30,13 @@
                     <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid=note-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "note" parent = "parent" edit ="true"></reference-modal-button>
                 </div>
             </div>
-            <div class = {{obj.$$hashKey}}></div>
+            <div class = note-{{index}}></div>
         </div>
     </div>
 </div>

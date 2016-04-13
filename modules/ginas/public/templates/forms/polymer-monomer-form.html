@@ -19,23 +19,23 @@
             <submit-buttons submit="component" form="monomerForm" path="polymer.monomers"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.polymer.monomers" >
+        <div ng-repeat="(index, obj) in parent.polymer.monomers track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
                     <delete-button delete="obj" path="monomers"></delete-button>
                 </div>
                 <div class="col-md-3">
-                    <substance-chooser-selector referenceobj ="obj" field ="monomerSubstance" name ="monomerSubstance" formname ={{obj.$$hashKey}} label ="Monomer Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="obj" field ="monomerSubstance" name ="monomerSubstance" formname =monomer-{{index}} label ="Monomer Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="monomerForm" type = "amount" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj= "obj" formname="monomerForm" type = "amount" divid=monomer-{{index}}></form-selector>
                 </div>
             </div>
-            <div class = "{{obj.$$hashKey}}"></div>
+            <div class = "monomer-{{index}}"></div>
         </div>
     </div>
 </div>

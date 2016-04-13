@@ -39,14 +39,14 @@
             <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.relationships">
+        <div ng-repeat="(index, obj) in parent.relationships track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
                     <delete-button delete="obj" path="relationships" ng-if = "parent.definitionType.value !='ALTERNATIVE'"></delete-button>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector referenceobj ="obj" field ="relatedSubstance" name ="relatedSubstance" formname = {{obj.$$hashKey}} label ="Related Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="obj" field ="relatedSubstance" name ="relatedSubstance" formname = relationship-{{index}} label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
@@ -58,7 +58,7 @@
                     <substance-chooser-view-edit obj = "obj" field ="mediatorSubstance" label = "Mediator Substance"></substance-chooser-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid=relationship-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
@@ -70,13 +70,13 @@
                     <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid=relationship-{{index}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid=relationship-{{index}}></form-selector>
                 </div>
             </div>
-            <div class = {{obj.$$hashKey}}></div>
+            <div class = relationship-{{index}}></div>
         </div>
     </div>
 </div>
