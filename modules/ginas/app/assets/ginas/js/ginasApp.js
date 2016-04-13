@@ -182,6 +182,7 @@
         };
 
         substance.$$getClass = function () {
+            console.log(substance.substanceClass);
             return substance.substanceClass;
         };
 

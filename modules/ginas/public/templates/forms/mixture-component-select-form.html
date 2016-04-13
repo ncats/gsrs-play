@@ -16,20 +16,20 @@
             <submit-buttons submit="component" form="componentForm" path="mixture.components"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.mixture.components" >
+        <div ng-repeat="(index, obj) in parent.mixture.components track by $index" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
                     <delete-button delete="obj" path="mixture.components"></delete-button>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector referenceobj = "obj" field ="substance" name ="substance" formname = {{obj.$$hashKey}}  type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj = "obj" field ="substance" name ="substance" formname = component-{{index}} type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
                 </div>
             </div>
-            <div class = {{obj.$$hashKey}}></div>
+            <div class = component-{{index}}></div>
         </div>
     </div>
 </div>

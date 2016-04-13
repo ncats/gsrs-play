@@ -279,6 +279,9 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                scope.print = function(obj){
+        console.log(obj);
+    };
             }
         };
     });
@@ -733,6 +736,7 @@
                 }
 
                 scope.toggle = function () {
+                    console.log("edit)");
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
                 };
                 scope.stage = true;
@@ -810,17 +814,17 @@
                         formHolder = '<access-form referenceobj = referenceobj parent = parent></access-form>';
                         break;
                     case "textbox":
-                        if (attrs.mode == "edit") {
+/*                        if (attrs.mode == "edit") {
                             template = angular.element('<div><label for="comments" class="text-capitalize">{{label || field}}</label><a ng-click ="toggle()"><comment value = "referenceobj[field]" id="comment-directive"></comment></a></div>');
                             element.append(template);
                             $compile(template)(scope);
-                        } else {
+                        } else {*/
                             $templateRequest(baseurl + "assets/templates/selectors/comment-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
                             });
-                        }
+                    //    }
                         formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field name = name ></comment-form>';
                         break;
                 }
@@ -2170,11 +2174,12 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.numbers = true;
                 scope.parent.$$subunitDisplay = [];
-                scope.substanceClass = scope.parent.substanceClass;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                           var template = angular.element(html);
+                            scope.substanceClass = scope.parent.$$getClass();
+                            var template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
                         });
