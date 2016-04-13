@@ -182,6 +182,7 @@
         };
 
         substance.$$getClass = function () {
+            console.log(substance.substanceClass);
             return substance.substanceClass;
         };
 
@@ -1385,7 +1386,7 @@
                 parent: '=?',
                 obj: '=?',
                 uuid: '=',
-                index: '=',
+                index: '@',
                 view: '@',
                 numbers: '='
             },

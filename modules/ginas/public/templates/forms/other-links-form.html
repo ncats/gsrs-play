@@ -19,7 +19,7 @@
         </form>
 
 
-        <div ng-repeat="obj in parent.protein.otherLinks">
+        <div ng-repeat="(index, obj) in parent.protein.otherLinks track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -31,13 +31,13 @@
                                         label="Linkage Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="parent" type="site" field="sites" divid={{obj.$$hashKey}} formtype="pair"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="site" field="sites" divid=other-link-{{index}} formtype="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid=other-link-{{index}}></form-selector>
                 </div>
             </div>
-            <div class={{obj.$$hashKey}}></div>
+            <div class=other-link-{{index}}></div>
         </div>
     </div>
 </div>

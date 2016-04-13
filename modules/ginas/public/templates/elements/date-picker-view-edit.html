@@ -1,6 +1,6 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
-    <a href="#" ng-click="open($event);" id ={{field}}>{{obj[field] | date:'longDate' }}</a>
+    <label for="{{::field}}" class="text-capitalize">{{label || field}}</label>
+    <a href="#" ng-click="open($event);" id ={{::field}}>{{obj[field] | date:'longDate' }}</a>
         <uib-datepicker-popup datepicker-append-to-body="true" ng-model="obj[field]"
                is-open="status.opened" ng-required="true"></uib-datepicker-popup>
 </div>

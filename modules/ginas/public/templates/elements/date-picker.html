@@ -1,8 +1,8 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">Date</label>
+    <label for="{{::field}}" class="text-capitalize">Date</label>
     <p class="input-group">
         <input type="text" class="form-control" uib-datepicker-popup='longDate' ng-model=object is-open="status.opened"
-               ng-required="true" id="{{field}}"/>
+               ng-required="true" id="{{::field}}"/>
          <span class="input-group-btn">
     <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
 </span>

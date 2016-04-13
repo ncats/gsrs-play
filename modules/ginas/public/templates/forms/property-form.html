@@ -11,9 +11,6 @@
                 <div class="col-md-2">
                     <dropdown-select ng-model="property.type" field="type" cv = "PROPERTY_TYPE" ></dropdown-select>
                 </div>
-<!--                <div class="col-md-2">
-                    <text-input ng-model="property.propertyType" field="propertyType" ></text-input>
-                </div>-->
                 <div class="col-md-2">
                     <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount"></form-selector>
                 </div>
@@ -34,7 +31,7 @@
             <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.properties">
+        <div ng-repeat="(index, obj) in parent.properties track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -46,26 +43,23 @@
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
                 </div>
-<!--                <div class="col-md-2">
-                    <text-view-edit obj = "obj" field="propertyType" ></text-view-edit>
-                </div>-->
                 <div class="col-md-2">
-                    <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid=property-{{index}}></form-selector>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj= "obj" formname="propertyForm" type = "parameter" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="propertyForm" type = "parameter" divid=property-{{index}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid=property-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "name" parent = "parent" edit ="true"></reference-modal-button>
                 </div>
             </div>
-            <div class = {{obj.$$hashKey}}></div>
+            <div class = property-{{index}}></div>
         </div>
     </div>
 </div>

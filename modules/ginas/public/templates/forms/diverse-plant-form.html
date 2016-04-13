@@ -14,7 +14,7 @@
                     ng-options="r.display for r in values track by r.display">
             </select>-->
 <h3>{{values.length}}</h3>
-            <div class="col-md-3" ng-if="::parent.structurallyDiverse.organismFamily">
+            <div class="col-md-3" ng-if="parent.structurallyDiverse.organismFamily">
                 {{parent.structurallyDiverse}}
                 <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= "parent.structurallyDiverse" field="organismGenus"  label="Organism Genus" filteredcv></dropdown-select>
             </div>
