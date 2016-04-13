@@ -1,5 +1,5 @@
 <div>
-    <label for={{type}} class="text-capitalize">Amount</label>
+    <label for={{type}} class="text-capitalize">{{label || 'Amount'}}</label>
         <a ng-show="referenceobj[field]" ng-click="toggle();" role="button"><amount value = "referenceobj[field]"></amount></a>
     <div class="text-center">
         <a ng-hide="referenceobj[field]" ng-click="toggle();" role="button" aria-label="Add an amount" uib-tooltip="Add an amount" id="{{name}}-{{type}}"><i

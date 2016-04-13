@@ -41,17 +41,19 @@
          //   }
         };
 
-        this.toggle = function (scope, element, newForm) {
+        this.toggle = function (scope, element, template) {
             var result = document.getElementsByClassName(element);
             var elementResult = angular.element(result);
             if (scope.stage === true) {
                 scope.stage = false;
                 childScope = scope.$new();
-                var compiledDirective = $compile(newForm);
+                var compiledDirective = $compile(template);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
             } else {
-                childScope.$destroy();
+                if(childScope) {
+                    childScope.$destroy();
+                }
                 elementResult.empty();
                 scope.stage = true;
             }
