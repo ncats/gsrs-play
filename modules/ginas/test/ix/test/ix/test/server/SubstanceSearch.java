@@ -1,5 +1,7 @@
 package ix.test.ix.test.server;
 
+
+
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import java.io.IOException;
@@ -18,68 +20,7 @@ public class SubstanceSearch {
     private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9]+)\"");
 
     private static final Pattern ROW_PATTERN = Pattern.compile("(un)?checked\\s+(\\S+(\\s+\\S+)?)\\s+(\\d+)");
-    /*
-     <script>
-	        filters['ec02c577e23436c4a3d5d9dd48272b41796ec06c'] = {
-	           checked: false,
-                   name: 'Molecular+Weight',
-	           value: '200%3A400'
-	        };
-	     </script>
 
-
-            <td>200:400</td>
-
-	 <td>
-
-              <span class="badge" style="float:right;">10</span>
-
-	 </td>
-        </tr>
-     */
-   // private static final Pattern FACET_PATTERN = Pattern.compile("<script>\\s+filters.+?name:\\s*'(.+)?'.+<td>(.+)?</td>\\s+<span class=\"badge\" style=\"float:right;\">(\\d+)</span>");
-
-    /*
-    Record Status
-
- unchecked 	Validated (UNII)	 17
-
-
- Substance Class
-
- unchecked 	Chemical	 17
-
-
- Molecular Weight
-
- unchecked 	200:400	 10
-unchecked 	0:200	 9
-unchecked 	400:600	 2
-unchecked 	>1000	 2
-unchecked 	800:1000	 1
-
-
- GInAS Tag
-
- unchecked 	NOMEN	 17
-unchecked 	WARNING	 17
-unchecked 	WHO-DD	 6
-unchecked 	MI	 6
-unchecked 	INCI	 2
-unchecked 	INN	 1
-unchecked 	HSDB	 1
-unchecked 	MART.	 1
-unchecked 	FCC	 1
-unchecked 	FHFI	 1
-
-
-
- ×
-Substructure Query:  C1=CC=CC=C1
-     */
-    private static final Pattern FACET_PATTERN = Pattern.compile("(Record\\s+Status.+?)Substructure Query:");
-
-    private static final Pattern FACET_LINE_PATTERN = Pattern.compile("unchecked\\s+(.+)?\\s+(\\d+)");
     public SubstanceSearch(BrowserSession session) {
         Objects.requireNonNull(session);
 

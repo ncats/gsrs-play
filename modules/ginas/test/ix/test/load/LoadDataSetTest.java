@@ -3,6 +3,7 @@ package ix.test.load;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import ix.test.ix.test.server.*;
 import ix.test.util.TestNamePrinter;
+import ix.test.util.TestUtil;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -10,6 +11,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 
+import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -20,7 +22,7 @@ import static org.junit.Assert.*;
 /**
  * Created by katzelda on 4/4/16.
  */
-public class LoadDataSet {
+public class LoadDataSetTest {
 
 
     @Rule
@@ -43,14 +45,7 @@ public class LoadDataSet {
     public static void assertFacetsMatch(Map<String, Map<String, Integer>> expectedFacets, SubstanceSearch.SearchResult actualResults){
         Map<String, Map<String, Integer>> actual = actualResults.getAllFacets();
 
-        for(Map.Entry<String, Map<String, Integer>> expectedEntry : expectedFacets.entrySet()){
-            String key=expectedEntry.getKey();
-            System.out.println(key);
 
-            Map<String, Integer> actualSubMap = actual.get(key);
-            System.out.println("\t" + expectedEntry.getValue());
-            System.out.println("\t" + actualSubMap);
-        }
         assertEquals(expectedFacets, actual);
     }
 
@@ -106,7 +101,30 @@ public class LoadDataSet {
                     put("FCC", 1);
                     put("FHFI", 1);
                 }});
-        return expectedFacets;
+
+        //Stereochemistry={ACHIRAL=13, ABSOLUTE=3, RACEMIC=1},
+        expectedFacets.put("Stereochemistry", new HashMap<String, Integer>(){{
+
+                put("ACHIRAL", 13);
+                put("ABSOLUTE", 3);
+                put("RACEMIC", 1);
+            }});
+        //Structure Hash={NNQ793F142LD=5, 1GMA5YNPSNF6=1, 9QJCPY53NHZV=1, L6RUGLWCMMP4=1, NNQ1X6A91CVX=1, NV2AC53S72NK=1, PA437XKNCWR2=1, VU8BQZFPPYTZ=1, YPCZM11BTJ54=1, Z3T91W4NXAHP=1 }
+        expectedFacets.put("Structure Hash", new HashMap<String, Integer>(){{
+            put("NNQ793F142LD", 5);
+            put("1GMA5YNPSNF6", 1);
+            put("9QJCPY53NHZV", 1);
+            put("L6RUGLWCMMP4", 1);
+            put("NNQ1X6A91CVX", 1);
+            put("NV2AC53S72NK", 1);
+            put("PA437XKNCWR2", 1);
+            put("VU8BQZFPPYTZ", 1);
+            put("YPCZM11BTJ54", 1);
+            put("Z3T91W4NXAHP", 1);
+
+        }});
+
+            return expectedFacets;
     }
 
     @Test
@@ -169,7 +187,7 @@ public class LoadDataSet {
         }
     }
 
-    //Delete the ginas.ix/text, ginas.ix/sequence and ginas.ix/structure folders
+
     @Test
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
@@ -182,5 +200,36 @@ public class LoadDataSet {
         assertEquals(Collections.emptyMap(), results.getAllFacets());
     }
 
+    @Test
+    public void deleteLuceneIndexesButNOTDatabaseShouldReturnZeroResults() throws IOException{
+        try(BrowserSession session = ts.newBrowserSession(admin)) {
+
+            SubstanceLoader loader = new SubstanceLoader(session);
+
+            File f = new File("test/testdumps/rep90.ginas");
+
+            loader.loadJson(f);
+
+        }
+
+        ts.stop(true);
+
+        File home = ConfigUtil.getValueAsFile("ix.home");
+        //Delete the ginas.ix/text, ginas.ix/sequence and ginas.ix/structure folders
+        TestUtil.tryToDeleteRecursively(new File(home, "text"));
+        TestUtil.tryToDeleteRecursively(new File(home, "sequence"));
+        TestUtil.tryToDeleteRecursively(new File(home, "structure"));
+
+        ts.start();
+        try(BrowserSession session = ts.newBrowserSession(admin)){
+
+            SubstanceSearch searcher = new SubstanceSearch(session);
+
+            SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+
+            assertEquals(0, results.numberOfResults());
+            assertTrue(results.getAllFacets().isEmpty());
+        }
+    }
 
 }
