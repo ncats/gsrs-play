@@ -53,7 +53,7 @@
 
         </form>
 
-        <div ng-repeat="reference in parent.references">
+        <div ng-repeat="(index, reference) in parent.references track by $index">
             <div class="row">
             <hr>
             <div class="col-md-1">
@@ -86,7 +86,7 @@
             </div>
             <div class="col-md-1 pull-right">
                 <form-selector referenceobj="reference" parent="parent" formname="refOnlyForm" type="access"
-                               divid={{obj.$$hashKey}}></form-selector>
+                               divid=reference-only-{{index}}></form-selector>
             </div>
         </div>
         <div class ="row form-row" >
@@ -99,7 +99,7 @@
                 <button ng-hide ="reference.uploadedFile || !reference.$$uploadFile" class ="btn btn-default" ng-click ="submitFile(reference);"><i class="fa fa-upload"></i></button>
             </div>
         </div>
-        <div class={{obj.$$hashKey}}></div>
+        <div class=reference-only-{{index}}></div>
     </div>
 </div>
     </div>

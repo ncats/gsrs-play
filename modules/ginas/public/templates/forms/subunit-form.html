@@ -1,6 +1,6 @@
 <div class="row info">
     <div class="row">
-        <form-header type="subunits" path={{substanceClass}}.subunits parent = parent
+        <form-header type="subunits" path={{::substanceClass}}.subunits parent = parent
                      iscollapsed="iscollapsed"></form-header>
 
         <div class ="col-md-3 col-md-offset-5 text-right" id ="formSwitch">
@@ -8,9 +8,9 @@
             </div>
     </div>
     <div uib-collapse="iscollapsed">
-        <div ng-repeat="obj in parent[substanceClass].subunits">
+        <div ng-repeat="(index, obj) in parent[substanceClass].subunits track by $index">
             <div class="col-md-12">
-                <subunit obj=obj parent=parent numbers = numbers></subunit>
+                <subunit obj=obj parent=parent numbers = numbers index = {{index+1}}></subunit>
             </div>
         </div>
         <div class="col-md-12">

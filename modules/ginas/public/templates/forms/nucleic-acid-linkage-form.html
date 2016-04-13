@@ -26,7 +26,7 @@
         </ng-form>
 
 
-        <div ng-repeat="obj in parent.nucleicAcid.linkages">
+        <div ng-repeat="(index, obj) in parent.nucleicAcid.linkages track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -39,18 +39,18 @@
                     <rendered smiles= {{obj.linkage.fragmentStructure}}></rendered>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid=linkage-{{index}}></form-selector>
                 </div>
                 <div class="col-md-2">
                     <label for= "num">Number of Sites</label>
                     <div id = "num">{{obj.sites.length}} of {{getAllSites()-1}}</div>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid=linkage-{{index}}></form-selector>
                 </div>
 
             </div>
-            <div class={{obj.$$hashKey}}></div>
+            <div class=linkage-{{index}}></div>
         </div>
     </div>
 </div>

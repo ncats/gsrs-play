@@ -1386,7 +1386,7 @@
                 parent: '=?',
                 obj: '=?',
                 uuid: '=',
-                index: '=',
+                index: '@',
                 view: '@',
                 numbers: '='
             },

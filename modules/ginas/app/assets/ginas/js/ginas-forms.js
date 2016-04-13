@@ -2120,11 +2120,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
-            link: function(scope, element){
-                scope.getClass = function(obj){
-
-                }
-            }
         };
     });
 
