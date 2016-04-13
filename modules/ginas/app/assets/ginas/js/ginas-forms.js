@@ -675,9 +675,6 @@
                 };
 
                 scope.updateCV = function(obj){
-                	//TODO: Shouldn't use popup javascript here
-                	var r = confirm("Are you sure you want to update this CV?");
-                    if (r == true) {
                         if(obj){
                             _.forEach(obj.fields, function(value, key) {
                                 if(!value.value){
@@ -690,7 +687,6 @@
                         }else {
                             CVFields.updateCV(scope.domain);
                         }
-                    }
                 };
 
                 scope.showTerms= function(obj, divid){
