@@ -1,6 +1,9 @@
 package ix.test;
 
+import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.*;
+
+import java.io.File;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -13,11 +16,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
+import util.json.JsonUtil;
 
 public class ChemicalApiTest {
 	@Rule
     public GinasTestServer ts = new GinasTestServer(9001);
-
+	
+	final File resource=new File("test/testJSON/racemic-unicode.json");
+	
     @Rule
     public TestRule watcher = new TestWatcher() {
         protected void starting(Description description) {
@@ -26,7 +32,7 @@ public class ChemicalApiTest {
     };
     
     @Test
-    public void testMolfileMoietyDecompose() throws Exception {
+    public void testMolfileMoietyDecomposeGetsWriteCounts() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
     			"\n" + 
@@ -85,7 +91,24 @@ public class ChemicalApiTest {
         }else{
         	assertEquals(moi1.at("/count").asInt(),2);
         }
-        
-        
+    }
+    
+    @Test
+   	public void testFlexMatch() throws Exception {
+        JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            ensurePass( api.submitSubstance(entered));
+            String html=api.getFlexMatchHTML("ClCC1CO1");
+            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span class=\"label label-default\">1</span>"));
+        }
+   	}
+    
+    
+    public JsonNode parseJsonFile(String path){
+		return parseJsonFile(new File(path));
+	}
+    public JsonNode parseJsonFile(File resource){
+    	return SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
     }
 }

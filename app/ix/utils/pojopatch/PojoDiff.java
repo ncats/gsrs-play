@@ -267,7 +267,6 @@ public class PojoDiff {
 
 			@Override
 			public int compare(JsonNode o1, JsonNode o2) {
-				// TODO Auto-generated method stub
 				String path1=o1.at("/path").asText();
 				String op1=o1.at("/op").asText();
 				
@@ -279,32 +278,39 @@ public class PojoDiff {
 				if(diff!=0){
 					return diff;
 				}
-				path1.replaceAll("/_([0-9][0-9]*)", "/#$1");
-				path2.replaceAll("/_([0-9][0-9]*)", "/#$1");
+				//System.out.println(path1);
+				
+				path1=path1.replaceAll("/_([0-9][0-9]*)", "/#$1!");
+				path2=path2.replaceAll("/_([0-9][0-9]*)", "/#$1!");
+				//System.out.println("now:" + path1);
 				String newpath1="";
 				String newpath2="";
 				String[] paths1=path1.split("#");
 				String[] paths2=path2.split("#");
-				for(int i=0;i<paths1.length;i++){
-					if(paths1[i].startsWith("#")){
-						int k=Integer.parseInt(paths1[i].substring(1));
+				for(int i=1;i<paths1.length;i++){
+					//if(paths1[i].startsWith("#")){
+						int k=Integer.parseInt(paths1[i].split("!")[0]);
 						String np=String.format("%05d", k);
 						newpath1+=np;
-					}
+					//}
 				}
-				for(int i=0;i<paths2.length;i++){
-					if(paths2[i].startsWith("#")){
-						int k=Integer.parseInt(paths2[i].substring(1));
+				for(int i=1;i<paths2.length;i++){
+					//if(paths2[i].startsWith("#")){
+						int k=Integer.parseInt(paths2[i].split("!")[0]);
 						String np=String.format("%05d", k);
 						newpath2+=np;
-					}
+					//}
 				}
+				
 				int d=newpath1.compareTo(newpath2);
+				if(op1.equals("remove")){
+					d=-d;
+				}
 				
 				return d;
 			}
-			
 		});
+
 	}
 	private static ArrayNode canonicalizeDiff(JsonNode diffs){
 		List<JsonNode> mynodes=new ArrayList<JsonNode>();
@@ -723,6 +729,8 @@ public class PojoDiff {
 					m.invoke(instance, set);
 					return null;
 				}catch(Exception e){
+					System.err.println(instance.getClass() + " set to:" + set + " using " + m);
+					System.err.println(set.getClass());
 					throw new IllegalStateException(e);
 				}
 			}
@@ -885,7 +893,7 @@ public class PojoDiff {
 			if(g!=null){
 				return g.get(o);
 			}else{
-				throw new IllegalArgumentException("No getter for '" + prop + "'");
+				throw new IllegalArgumentException("No getter for '" + prop + "' in " + o.getClass().getName() );
 			}
 		}
 		private static TypeRegistry.Setter getSetterDirect(Object o, final String prop){
@@ -1014,7 +1022,7 @@ public class PojoDiff {
 				int cind=getCollectionPostion(col,prop,true);
 				
 				if(cind>=col.size()){
-					cind=col.size()-1;
+					cind=-1;
 				}
 				
 				final int c=cind;

@@ -856,7 +856,7 @@ public class App extends Authentication {
 
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
-        throws Exception {
+    throws Exception {
         return IxCache.getOrElse(modified, key, callable);
     }
 
@@ -1016,30 +1016,33 @@ public class App extends Authentication {
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
-        if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED && struc.opticalActivity!=null){
-                if(struc.definedStereo>0){
-                        if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
-                                if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
-                                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
-                                }
-                        }
+        if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED
+           && struc.opticalActivity!=null){
+            if(struc.definedStereo>0){
+                if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
+                    if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC
+                       ||struc.stereoChemistry==struc.stereoChemistry.RACEMIC
+                       ||struc.stereoChemistry==struc.stereoChemistry.MIXED){
+                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
+                    }
                 }
-                if(struc.opticalActivity==struc.opticalActivity.PLUS){
-                        mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
-                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
-                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+            }
+            if(struc.opticalActivity==struc.opticalActivity.PLUS){
+                mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
+                if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                    newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
                 }
-                }else if(struc.opticalActivity==struc.opticalActivity.MINUS){
-                        mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
-                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
-                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+            } else if(struc.opticalActivity==struc.opticalActivity.MINUS) {
+                mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
+                if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                    newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
                 }
-                }               
+            }               
         }
-
+        
         if(size>250){
-                        if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
-                                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+            if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
+                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
         if(newDisplay.size()==0)newDisplay=null;
         return render (mol, format, size, amap,newDisplay);
@@ -1202,7 +1205,6 @@ public class App extends Authentication {
             return context.getCount();
         }
         
-        //public abstract int process (int max) throws Exception;
         protected abstract Object instrument (T r) throws Exception;
     }
 
@@ -1225,7 +1227,7 @@ public class App extends Authentication {
         SearchResultContext () {
         }
 
-        SearchResultContext (SearchResult result) {
+        public SearchResultContext (SearchResult result) {
             start = result.getTimestamp();          
             if (result.finished()) {
                 status = Status.Done;
@@ -1551,27 +1553,21 @@ public class App extends Authentication {
                 i = 0;
             }
             pages = paging (rows, page, count);
-
-            /*
-            for (int j = 0; j < rows && i < count; ++j, ++i) 
-                results.add((T)result.get(i));
-            */
             result.copyTo(results, i, rows);
-        
             facets.addAll(result.getFacets());
 
             if (result.finished()) {
-                final String k = getKey (context);
+                final String k = getKey (context) + "result";
                 final int _page = page;
                 final int _rows = rows;
                 final int _count = count;
                 final int[] _pages = pages;
-            
+
                 // result is cached
                 return getOrElse(result.getStopTime(),
                                  k, new Callable<Result> () {
-                        public Result call () throws Exception {
-                            Logger.debug("Cache misses: "+k+" count="+_count
+                            public Result call () throws Exception {
+                                Logger.debug("Cache misses: "+k+" count="+_count
                                          +" rows="+_rows+" page="+_page);
                             return renderer.render
                                 (context, _page, _rows, _count, _pages,
@@ -1716,7 +1712,7 @@ public class App extends Authentication {
                     node.put("structure", mapper.valueToTree(struc));
                     node.put("moieties", mapper.valueToTree(moieties));
                 } catch (Exception e) {
-                	e.printStackTrace();
+                        e.printStackTrace();
                 }
                 try {
                     Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()

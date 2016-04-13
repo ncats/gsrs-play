@@ -26,9 +26,6 @@ import ix.ginas.models.utils.JSONEntity;
 @Table(name = "ix_ginas_moiety")
 public class Moiety extends CommonDataElementOfCollection {
 	
-//	add getters and setters to convert integers to amounts
-//	add getters and setters to accept amounts
-//	change form to send amount.
 	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
@@ -68,10 +65,16 @@ public class Moiety extends CommonDataElementOfCollection {
 
 	public void setCountAmount(Amount amnt) {
 		count=amnt;
+		
 	}
 	
 	public Amount getCountAmount() {
 		return count;
+	}
+	
+	
+	public UUID getUUID(){
+		return UUID.fromString(this.innerUuid);
 	}
     
 }

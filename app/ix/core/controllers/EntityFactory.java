@@ -73,7 +73,8 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
-import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
 import ix.utils.Util;
@@ -1470,20 +1471,24 @@ public class EntityFactory extends Controller {
         public void call(Object m, String path);
     }
     public static void recursivelyApply(Model entity,EntityCallable c){
-    	recursivelyApply(entity,"/",c);
+    	recursivelyApply(entity,"",c);
     }
     private static void recursivelyApply(Model entity, String path,
                                            EntityCallable c){
+    	
         try{
+        	
+        	c.call(entity, path);
             for(Field f: entity.getClass().getFields()){
                 Class type= f.getType();
                 Annotation e=type.getAnnotation(Entity.class);
-                
+               
                 if(e!=null){
                     try {
                         Object nextEntity=f.get(entity);
-                        if(nextEntity instanceof Model)
+                        if(nextEntity instanceof Model){
                             recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
+                        }
                     } catch (IllegalArgumentException e1) {
                         e1.printStackTrace();
                     } catch (IllegalAccessException e1) {
@@ -1492,10 +1497,12 @@ public class EntityFactory extends Controller {
                 } else if (Collection.class.isAssignableFrom(type)) {
                     Collection col = (Collection) f.get(entity);
                     if(col!=null){
+                    	
                         int i=0;
                         for(Object nextEntity:col){
-                            if(nextEntity instanceof Model)
+                            if(nextEntity instanceof Model){
                                 recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
+                            }
                             i++;
                         }
                     }
@@ -1504,7 +1511,7 @@ public class EntityFactory extends Controller {
         }catch(Exception e){
             e.printStackTrace();
         }
-        c.call(entity, path);
+        
     }
 
     protected static Result updateEntity (Class<?> type) {
@@ -1576,7 +1583,7 @@ public class EntityFactory extends Controller {
 //	            }
 	            
 	            final List<Object> removed = new ArrayList<Object>();
-	            
+	            //System.out.println("Test");
 	            //Apply the changes, grabbing every change along the way
 	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
 					@Override
@@ -1587,7 +1594,7 @@ public class EntityFactory extends Controller {
 						}
 					}
 	            });
-	            
+	            //System.out.println("Test2");
 	            
 	            
 	        	while(!changeStack.isEmpty()){
@@ -1602,6 +1609,7 @@ public class EntityFactory extends Controller {
 		            	}
 	        		}
 	        	}
+
 	        	//explicitly delete deleted things
 	        	
 	        	//This should ONLY delete objects which "belong"
@@ -1662,6 +1670,7 @@ public class EntityFactory extends Controller {
         catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
+            ex.printStackTrace();
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }

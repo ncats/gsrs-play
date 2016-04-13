@@ -1,8 +1,6 @@
 package ix.test;
 import static org.junit.Assert.*;
 
-import java.io.IOException;
-
 import ix.core.models.Role;
 import ix.test.ix.test.server.ControlledVocab;
 import ix.test.ix.test.server.GinasTestServer;
@@ -10,7 +8,6 @@ import ix.test.ix.test.server.RestSession;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,12 +15,12 @@ import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.rules.ExpectedException;
 
 public class IntegrationTest {
-	
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
+
 	@Rule
 	public GinasTestServer ts = new GinasTestServer(9001);
 
@@ -34,6 +31,25 @@ public class IntegrationTest {
 		}
 	};
 
+
+	@Test
+	public void stopServer(){
+		ts.stop();
+		//play will throw a runtime exception
+		//we won't get a 404
+		expectedException.expect(RuntimeException.class);
+		expectedException.expectMessage("no started application");
+
+		ts.notLoggedInRestSession().get("ginas/app");
+	}
+
+	@Test
+	public void restartedServer(){
+		ts.restart();
+		JsonNode substances = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/substances");
+		assertFalse( SubstanceJsonUtil.isLiteralNull(substances));
+
+	}
 
     @Test
     public void testRestAPISubstance() throws Exception {

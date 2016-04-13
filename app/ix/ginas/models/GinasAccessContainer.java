@@ -18,13 +18,16 @@ import ix.ginas.models.serialization.GroupListSerializer;
 //@Entity
 //@Table(name = "ix_ginas_access")
 public class GinasAccessContainer{
+	
 	@Id
 	public Long id;
-
+	
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JsonSerialize(using = GroupListSerializer.class)
 	@JsonDeserialize(using = GroupListDeserializer.class)
 	private Set<Group> access;
+	
+	
 	public String entityType;
 	
 	public void add(Group p) {

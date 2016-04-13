@@ -4,11 +4,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
@@ -37,6 +35,7 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
+import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
 import ix.utils.TimeProfiler;
@@ -584,21 +583,17 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     
     public void deepreindex(Object bean){
-//    	long start=System.nanoTime();
-//    	final long[] l= new long[]{0};
+    	//reindex(bean);
+    	
     	if(bean instanceof Model){
 	    	EntityFactory.recursivelyApply((Model)bean, new EntityCallable(){
 				@Override
 				public void call(Object m, String path) {
-//					long start2=System.nanoTime();
+						
 					reindex(m);
-//					l[0]+=(System.nanoTime()-start2);
 				}
 	    	});
     	}
-//    	long duration = (System.nanoTime()-start);
-//    	System.out.println("Reindexing took:" + duration + " with " + l[0] + " for actual indexing");
-//    	System.out.println("Basic I/O fraction:" + ((duration-l[0]+0.0)/(duration+0.0)));
     	
     }
     

@@ -1,21 +1,25 @@
 <div>
-    <div class="panel-body">
+    <div class="form-row">
+        <close-button></close-button>
+        <spinner name="subrefSpinner"><loading></loading><br/></spinner>
+<!--
         <loading ng-show="searching"></loading>
-        <div ng-hide="searching" class="row hidden-xs grid">
+-->
+        <div class="row hidden-xs grid">
+            <code ng-if="results.content.length>0">click on substance to select</code>
+            <code ng-if="results.content.length==0">No substances found</code>
             <div class="col-md-3" ng-repeat="item in results.content">
-                <a ng-click="createSubref(item)">
-                    <div>
+                    <div ng-click="createSubref(item)">
                         <rendered id={{item.uuid}}></rendered>
                         <br><code>{{item._name}}</code>
                     </div>
-                </a>
             </div>
         </div>
     </div>
 
         <div class="btn-toolbar" role="toolbar">
             <div class="btn-group" role="group">
-                <h3><span class="label label-default">{{ results.total }}</span></h3>
+                <h3><span class="label label-default">{{ results.total || results.count}}</span></h3>
             </div>
             <div class="btn-group" role="group" ng-if="results.total>4">
                 <ul class="pagination">

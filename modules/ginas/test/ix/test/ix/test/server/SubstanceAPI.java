@@ -3,6 +3,8 @@ package ix.test.ix.test.server;
 import com.fasterxml.jackson.databind.JsonNode;
 import play.libs.ws.WSResponse;
 
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Objects;
 
 import static org.junit.Assert.assertTrue;
@@ -21,47 +23,65 @@ public class SubstanceAPI {
     private static final String API_URL_APPROVE = "ginas/app/api/v1/substances($UUID$)/@approve";
     private static final String API_URL_UPDATE = "ginas/app/api/v1/substances";
 
-    private static final String API_URL_SUBSTANCES_SEARCH="ginas/app/api/v1/substances/search";
+    private static final String API_URL_SUBSTANCES_SEARCH = "ginas/app/api/v1/substances/search";
 
 
+    private static final String UI_URL_SUBSTANCE_SEARCH_FLEX="ginas/app/substances?type=flex&q=$SMILES$";
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
 
     private final RestSession session;
 
     private final long timeout = 10_000L;
+
     public SubstanceAPI(RestSession session) {
         Objects.requireNonNull(session);
         this.session = session;
     }
 
-    public RestSession getSession(){
+    public RestSession getSession() {
         return session;
     }
-    public JsonNode searchJson(){
+
+    public JsonNode searchJson() {
         return session.getAsJson(API_URL_SUBSTANCES_SEARCH);
     }
 
-    public WSResponse search(){
+    public WSResponse search() {
         return session.get(API_URL_SUBSTANCES_SEARCH);
     }
 
 
-    public WSResponse submitSubstance(JsonNode js){
+    public WSResponse submitSubstance(JsonNode js) {
         return session.createRequestHolder(API_URL_SUBMIT).post(js).get(timeout);
     }
-    public JsonNode submitSubstanceJson(JsonNode js){
+
+    public JsonNode submitSubstanceJson(JsonNode js) {
         return session.extractJSON(submitSubstance(js));
     }
 
-    public WSResponse updateSubstance(JsonNode js){
+    public WSResponse updateSubstance(JsonNode js) {
         return session.createRequestHolder(API_URL_UPDATE).put(js).get(timeout);
 
     }
-    public JsonNode updateSubstanceJson(JsonNode js){
+
+    public JsonNode updateSubstanceJson(JsonNode js) {
         return session.extractJSON(updateSubstance(js));
 
     }
+
+    public JsonNode substructureSearch(String smiles) throws IOException{
+
+        WSResponse response = session.createRequestHolder("ginas/app/substances")
+                .setQueryParameter("type", "Substructure")
+                .setQueryParameter("q", smiles)
+                .get()
+                .get(timeout);
+
+    ///ginas/app/substances?type=Substructure&q=C1%3DCC%3DCC%3DC1
+    return session.extractJSON(response);
+}
+
 
     public WSResponse validateSubstance(JsonNode js){
         return session.createRequestHolder(API_URL_VALIDATE).post(js).get(timeout);
@@ -87,6 +107,16 @@ public class SubstanceAPI {
     public WSResponse approveSubstance(String uuid){
         return session.createRequestHolder(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
     }
+
+    public WSResponse getFlexMatch(String smiles){
+        return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_FLEX.replace("$SMILES$", smiles)).get().get(timeout);
+    }
+
+    public String getFlexMatchHTML(String smiles){
+    	WSResponse wsr= getFlexMatch(smiles);
+    	return wsr.getBody();
+    }
+
     public WSResponse instrumentMol(String mol){
         return session.createRequestHolder(API_URL_MOL).post(mol).get(timeout);
     }

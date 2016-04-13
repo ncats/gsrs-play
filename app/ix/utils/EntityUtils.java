@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import ix.core.models.DataVersion;
+import ix.ginas.models.v1.Moiety;
 import play.Logger;
 
 public class EntityUtils {
@@ -50,6 +51,9 @@ public class EntityUtils {
         return fields;
     }
     public static Object getId (Object entity) throws Exception {
+    	if(entity instanceof Moiety){
+    		return ((Moiety)entity).getUUID();
+    	}
         Field f = getIdField (entity);
         Object id = null;
         if (f != null) {

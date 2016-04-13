@@ -1,8 +1,5 @@
 package ix.core.models;
 
-import ix.core.util.TimeUtil;
-import ix.utils.Global;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,8 +23,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import play.db.ebean.Model;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,7 +30,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import ix.core.AbstractValueDeserializer;
+import ix.core.util.TimeUtil;
+import ix.utils.Global;
 
 @MappedSuperclass
 @Entity
@@ -68,12 +68,12 @@ public class Structure extends BaseModel{
     public static final String H_LyChI_L4 = "LyChI_L4";
     public static final String H_InChI_Key = "InChI_Key";
 
-        // stereochemistry
+    // stereochemistry
     public enum Stereo {
         ABSOLUTE, ACHIRAL, RACEMIC, MIXED, EPIMERIC, UNKNOWN;
     }
 
-        // optical activity
+    // optical activity
     public enum Optical {
         PLUS("( + )"),
         MINUS("( - )"),
@@ -158,6 +158,7 @@ public class Structure extends BaseModel{
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     @JoinTable(name = "ix_core_structure_property")
+    @JsonDeserialize(contentUsing=AbstractValueDeserializer.class)
     public List<Value> properties = new ArrayList<Value>();
 
     @ManyToMany(cascade = CascadeType.ALL)
@@ -220,9 +221,16 @@ public class Structure extends BaseModel{
     public void modified() {
         this.lastEdited = TimeUtil.getCurrentDate();
     }
+    
 
+    
     public String getId() {
         return id != null ? id.toString() : null;
+    }
+    
+    @JsonProperty(value="id")
+    public UUID getRealId(){
+    	return this.id;
     }
     
     @JsonIgnore

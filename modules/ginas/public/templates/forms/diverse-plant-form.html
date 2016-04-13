@@ -7,16 +7,22 @@
         <form class="form-horizontal" name="diverseOrganismForm" id="addDiverseOrganismForm" role="form" novalidate>
         <div class="row form-row">
             <div class="col-md-3">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismFamily" label="Organism Family"></text-view-edit>
+                <dropdown-select ng-model = "parent.structurallyDiverse.organismFamily" field="organismFamily" cv="KEW_PLANT_FAMILY" label="Organism Family"></dropdown-select>
+            </div>
+<!--            <select ng-if="::parent.structurallyDiverse.organismFamily"
+                    ng-model="parent.structurallyDiverse.organismGenus"
+                    ng-options="r.display for r in values track by r.display">
+            </select>-->
+<h3>{{values.length}}</h3>
+            <div class="col-md-3" ng-if="::parent.structurallyDiverse.organismFamily">
+                {{parent.structurallyDiverse}}
+                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= "parent.structurallyDiverse" field="organismGenus"  label="Organism Genus" filteredcv></dropdown-select>
+            </div>
+                <div class="col-md-3">
+                <dropdown-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></dropdown-view-edit>
             </div>
             <div class="col-md-3">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismGenus" label="Organism Genus"></text-view-edit>
-            </div>
-            <div class="col-md-3">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></text-view-edit>
-            </div>
-            <div class="col-md-3">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismAuthor" label="Organism Author"></text-view-edit>
+                <dropdown-view-edit obj = "parent.structurallyDiverse" field="organismAuthor" label="Organism Author"></dropdown-view-edit>
             </div>
         </div>
         <p></p>

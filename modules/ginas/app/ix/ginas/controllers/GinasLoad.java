@@ -54,19 +54,35 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasLoad extends App {
-	public static boolean OLD_LOAD = Play.application().configuration()
-			.getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
-	public static boolean ALLOW_LOAD = Play.application().configuration()
-			.getBoolean("ix.ginas.allowloading", true);
-	public static boolean ALLOW_REBUILD = Play.application().configuration()
-			.getBoolean("ix.ginas.allowindexrebuild", true);
+	public static boolean OLD_LOAD;
+	public static boolean ALLOW_LOAD;
+	public static boolean ALLOW_REBUILD;
 
 	public static final String[] ALL_FACETS = { "Job Status" };
 
-	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin = Play
-			.application().plugin(GinasRecordProcessorPlugin.class);
-	static final PayloadPlugin payloadPlugin = Play.application().plugin(
-			PayloadPlugin.class);
+	static GinasRecordProcessorPlugin ginasRecordProcessorPlugin;
+	static PayloadPlugin payloadPlugin ;
+
+
+
+	static{
+		init();
+	}
+
+	public static void init(){
+		OLD_LOAD = Play.application().configuration()
+				.getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
+		ALLOW_LOAD = Play.application().configuration()
+				.getBoolean("ix.ginas.allowloading", true);
+		ALLOW_REBUILD = Play.application().configuration()
+				.getBoolean("ix.ginas.allowindexrebuild", true);
+
+		ginasRecordProcessorPlugin = Play
+				.application().plugin(GinasRecordProcessorPlugin.class);
+
+		payloadPlugin = Play.application().plugin(
+				PayloadPlugin.class);
+	}
 
 	public static Result error(int code, String mesg) {
 		return ok(ix.ginas.views.html.error.render(code, mesg));

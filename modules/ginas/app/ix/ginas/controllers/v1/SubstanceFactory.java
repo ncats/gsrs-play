@@ -187,7 +187,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getSubstanceByApprovalID(String approvalID) {
-		List<Substance> list = GinasApp.resolve(finder, approvalID);
+		List<Substance> list = finder.where().ieq("approvalID", approvalID).findList();
 		if (list != null && list.size() > 0) {
 			return list.get(0);
 		}
@@ -367,27 +367,14 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	//silly test
-	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
-		//System.out.println("Dupe chack");
-		String hash4 = cs.structure.getLychiv4Hash();
-		//String hash3 = cs.structure.getLychiv3Hash();
-		List<Substance> dupeSubs =  new ArrayList<Substance>();
-		
-		List dupeListIds= new ArrayList();
-		dupeListIds= StructureFactory.finder.where().eq("properties.term", hash4).setFirstRow(skip).setMaxRows(top).findIds();;
-		if(!dupeListIds.isEmpty()){
-			for(Object id:dupeListIds){
-				Substance s =finder.where().eq("structure.id",id).findUnique();
-				if(s!=null){
-					dupeSubs.add(s);
-				}
-			}
+	//silly test
+		public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
+			//System.out.println("Dupe chack");
+			String hash = cs.structure.getLychiv4Hash();
+			List<Substance> dupeList= new ArrayList<Substance>();
+			dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+			return dupeList;
 		}
-		//TODO: Pretty sure this will break on Oracle instances
-		//dupeList = finder.where().eq("structure.properties.term", hash4).setFirstRow(skip).setMaxRows(top).findList();
-		
-		return dupeSubs;
-	}
 	//TODO
 	/*
 	 * This filter isn't quite sufficient for what we need, though it's a good start

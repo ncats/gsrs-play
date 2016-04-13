@@ -167,15 +167,37 @@
                      'Content-Type': 'application/json'
                      }
                      }).success(function(data){
-
+                        console.log(data);
                    //  alert('update was performed.');
                      });
                 });
             },
 
+            addTerms: function(cv){
+                CV.getCV(cv.domain).then(function(response) {
+                    console.log(response);
+                   var t2 = response.data.content[0].terms.concat(cv.terms);
+                    var cv2=  response.data.content[0];
+                    cv2.terms = t2;
+                    console.log(cv2);
+                    $http.put(baseurl + 'api/v1/vocabularies', cv2, {
+                     headers: {
+                     'Content-Type': 'application/json'
+                     }
+                     }).success(function(data){
+
+                     alert('update was performed.');
+                     });
+                });
+            },
+
             addDomain: function(cv){
-                console.log("adding domain");
-                var promise = $http.post(baseurl + 'api/v1/vocabularies', cv, {
+                console.log("adding domain");console.log(cv);
+                var c = {
+                    domain: cv.domain
+                        //terms: []
+                };
+                var promise = $http.post(baseurl + 'api/v1/vocabularies', c, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -245,7 +267,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name.toUpperCase() + "'", {cache: true}, {
+            return $http.get(url + name + "'", {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -361,7 +383,7 @@
         };
     });
 
-    ginasFormElements.directive('dropdownSelect', function (CVFields) {
+    ginasFormElements.directive('dropdownSelect', function (CVFields, filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/dropdown-select.html",
@@ -369,14 +391,98 @@
             scope: {
                 obj: '=ngModel',
                 field: '@',
-                label: '@'
+                label: '@',
+                values:'=?',
+                filter:'=',
+                filterName:'@filter'
             },
             link: function (scope, element, attrs) {
-                scope.values =[];
-                CVFields.getCV(attrs.cv).then(function (data) {
-                    scope.values = _.concat(_.orderBy(data.data.content[0].terms, ['display'],['asc']),[{display:"Other", value:'Other'}]);
-               //     console.log(scope.values);
-                });
+/*
+                console.log(attrs);
+*/
+                scope.filterFunction= function(){
+                var filtered = [];
+ var family = scope.filter;
+ if (!_.isUndefined(family)) {
+ console.log(scope);
+ _.forEach(scope.values, function (value) {
+ if (_.isEqual(family, value.filter.split('=')[1])) {
+ filtered.push(value);
+ }
+ });
+ scope.values = filtered;
+ console.log(filtered);
+ }
+                };
+
+/*
+
+                console.log(scope);
+                console.log(scope.field);
+                */
+/*
+                console.log(scope.filter);
+                console.log(scope.filterName);
+*/
+
+                if(scope.filter) {
+                    console.log("there's a filter");
+                    console.log(scope.filter);
+                    console.log(scope.field);
+                    filterService._register(scope.filterName, attrs.ngModel, scope.filter);
+
+                    scope.$watch(scope.filter, function(newNames, oldNames) {
+                        console.log(scope.filter);
+                        console.log(newNames);
+                        console.log(oldNames);
+                    });
+
+                }
+
+                if(attrs.cv) {
+                    CVFields.getCV(attrs.cv).then(function (response) {
+                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                        if(response.data.content[0].editable==true) {
+                            scope.values.push(
+                                {
+                                    display: "Other",
+                                    value: "Other",
+                                    filter:" = "
+                                });
+                        }
+                        if(scope.filter) {
+                          scope.filterFunction();
+
+                            //   scope.filterCV(scope[filter]);
+                        }
+
+/*                        scope.$watch(scope.filter, function handleFooChange( newValue, oldValue ) {
+                            console.log(scope.filterName);
+                            console.log(attrs);
+                            console.log( "vm.new:", newValue );
+                                console.log( "vm.old:", oldValue );
+                            });*/
+                    /*    if (response.data.content[0].filterable) {
+                            var filtered = [];
+                            var family = scope.filter;
+                            if (!_.isUndefined(family)) {
+                                _.forEach(scope.values, function (value) {
+                                    if (_.isEqual(family, value.filter.split('=')[1])) {
+                                        filtered.push(value);
+                                        console.log(filtered.length);
+                                    }
+                                });
+                                scope.values = filtered;
+                                console.log(scope.values);
+                            }
+*/
+
+                        //}
+
+                    });
+                }
+
+
 
                 scope.makeNewCV = function(){
                     console.log(scope);
@@ -414,14 +520,22 @@
                 formname: '=',
                 obj: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                values:'=?'
             },
             link: function (scope, element, attrs) {
-                scope.values =[];
-                CVFields.getCV(attrs.cv).then(function (data) {
-                    scope.values = _.concat(_.orderBy(data.data.content[0].terms, ['display'],['asc']),[{display:"Other", value:'Other'}]);
-                    //     console.log(scope.values);
-                });
+                if(attrs.cv) {
+                    CVFields.getCV(attrs.cv).then(function (response) {
+                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                        if(response.data.content[0].editable==true) {
+                            scope.values.push(
+                                {
+                                    display: "Other",
+                                    value: 'Other'
+                                });
+                        }
+                    });
+                }
 
                 scope.makeNewCV = function(){
                     console.log(scope);
@@ -715,20 +829,32 @@
         return resolver;
     });
 
-ginasFormElements.directive('substanceViewer', function(molChanger, spinnerService){
+ginasFormElements.directive('substanceViewer', function(molChanger, CVFields){
     return{
         restrict: 'E',
         scope:{
             data: '=',
-            parent: '='
+            parent: '=',
+            format: '@'
         },
         templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
         link: function(scope,element, attrs) {
+            console.log(scope);
+            if(scope.data.content){
+                scope.subs= scope.data.content;
+            }else{
+                scope.subs = scope.data;
+            }
             scope.select = function (selected) {
-                molChanger.setMol(selected.value.molfile);
-                scope.data = [];
+                console.log(selected);
+                if(selected.value && selected.value.molfile) {
+                    molChanger.setMol(selected.value.molfile);
+                }
+                if(scope.format =="subref"){
+                    console.log("passing");
+                    scope.$parent.createSubref(selected);
+                }
             };
-
         }
 }
 });
@@ -738,13 +864,18 @@ ginasFormElements.directive('substanceViewer', function(molChanger, spinnerServi
         replace: true,
         restrict: 'E',
         scope:{
-            ref: '='
+            ref: '=',
+            format: '='
         },
         link: function(scope,element, attrs) {
-/*
-*/
+            console.log(scope);
             var template;
-            if(scope.ref.uuid){
+            if(scope.format == "subref"){
+                template = angular.element('<div>' +
+                    '<rendered id= {{ref.uuid}} size="200"></rendered><br><code>{{ref.source}}</code><br>' +
+                    '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Select</button>' +
+                    '</div>');
+            }else if(scope.ref.uuid){
                 var url = baseurl+'substance/' + scope.ref.uuid.split('-')[0];
                 template =  angular.element('<div>' +
                     '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>Ginas Duplicate</code><br/>' +
