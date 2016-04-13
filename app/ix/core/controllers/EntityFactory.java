@@ -1624,7 +1624,12 @@ public class EntityFactory extends Controller {
         	
             String newJSON=mapper.toJson(newValue);
             
-            //granular parts not working yet
+            
+            //Should this be here?
+            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
+            
+            tx.commit();
+          //granular parts not working yet
             if (newValue != null) {
             	    Object id = EntityUtils.getId (newValue);
 	                eh.edit.refid = id != null ? id.toString() : null;
@@ -1639,10 +1644,6 @@ public class EntityFactory extends Controller {
 	                }
 	                Logger.debug("** New edit history "+eh.edit.id);
             }
-            //Should this be here?
-            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
-            
-            tx.commit();
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {

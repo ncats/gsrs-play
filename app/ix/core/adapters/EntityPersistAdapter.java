@@ -461,7 +461,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     	
     	InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
         final Object bean = request.getBean();
-        final Object oldValues = request.getBean();
+        final Object oldValues = request.getOldValues();
         it.addPostCommitCall(new Callable(){
 			@Override
 			public Object call() throws Exception {

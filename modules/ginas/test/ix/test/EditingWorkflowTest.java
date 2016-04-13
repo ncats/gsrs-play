@@ -475,8 +475,10 @@ public class EditingWorkflowTest {
 
             ensurePass( api.submitSubstance(entered));
             ensureFailure(api.submitSubstance(entered));
+            //TODO: Add test case to make sure no new facets are introduced
         }
    	}
+    
 
     @Test
    	public void lookupSubstanceBeforeRegisiteringItFails() throws Exception {

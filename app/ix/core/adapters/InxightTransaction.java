@@ -129,6 +129,7 @@ public class InxightTransaction {
 				e.printStackTrace();
 			}
 		}
+		afterCommit.clear();
 	}
 	
 	public void destroy(){
