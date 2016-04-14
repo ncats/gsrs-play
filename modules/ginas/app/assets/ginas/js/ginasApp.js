@@ -263,7 +263,18 @@
             }
 
 
-            if (_.has(sub, 'nucleicAcid')) {
+            if (_.has(sub, 'modifications')) {
+                console.log("nucleic setting");
+                if (_.has(sub.modifications, 'structuralModifications')) {
+                    _.forEach(sub.modifications.structuralModifications, function (mod) {
+                        if (mod.$$residueModified) {
+                            mod.residueModified = _.join(mod.$$residueModified, ';');
+                        }
+                    });
+                }
+            }
+
+                if (_.has(sub, 'nucleicAcid')) {
                 console.log("nucleic setting");
                 if (_.has(sub.nucleicAcid, 'sugars')) {
                     _.forEach(sub.nucleicAcid.sugars, function (sugar) {
@@ -1247,6 +1258,7 @@
                         scope.referenceobj.sites.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if (scope.field) {
+                            console.log(scope);
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         } else {
                             /*
@@ -1877,8 +1889,6 @@
 
     ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
         return {
-            /*            restrict: 'AE',
-             replace: 'true',*/
             scope: {
                 type: '=',
                 structureid: '=',
@@ -1953,18 +1963,43 @@
                     });
                 };
 
-
                 scope.getExport = function () {
+                    if(_.isUndefined(scope.structureid)){
                         var url = baseurl + 'structure';
-                        $http.post(url, molChanger.getMol(), {
+                        var mol = molChanger.getMol();
+                        $http.post(url, mol, {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
                         }).then(function (response) {
-                                scope.exportData = response.data.structure.molfile;
-                                scope.exportSmiles = response.data.structure.smiles;
+                            scope.exportData = response.data.structure.molfile;
+                            scope.exportSmiles = response.data.structure.smiles;
+                            scope.open();
                         });
-                       scope.open();
+                    }else {
+                        var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
+                        $http.get(url, {
+                            headers: {
+                                'Content-Type': 'text/plain'
+                            }
+                        }).success(function (response) {
+                            console.log(response);
+                            scope.exportData = response;
+                            if(scope.format != 'fas') {
+                                url = baseurl + 'export/' + scope.structureid + '.smiles';
+                                $http.get(url, {
+                                    headers: {
+                                        'Content-Type': 'text/plain'
+                                    }
+                                }).success(function (response) {
+                                    scope.exportSmiles = response;
+                                });
+                            }
+//                           var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                            //                          scope.warnings = JSON.parse(warnHead);
+                            scope.open();
+                        });
+                    }
                 };
 
                 scope.close = function () {

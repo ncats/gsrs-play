@@ -395,29 +395,33 @@
                 label: '@',
                 values: '=?',
                 filter: '=',
-                filterName: '@filter'
+                filterName: '@filter',
+                filterFunction: '&'
             },
             link: function (scope, element, attrs) {
-                /*
-                 console.log(attrs);
-                 */
+                scope.getValue = function(obj){
+                    console.log(obj);
+                };
+
+                scope.selectOptions = "r.display for r in values track by r.display";
                 if(_.isUndefined(scope.obj)){
                     scope.obj={};
                 }
-                scope.filterFunction = function () {
-                    var filtered = [];
-                    var family = scope.filter;
-                    if (!_.isUndefined(family)) {
-                        console.log(scope);
-                        _.forEach(scope.values, function (value) {
-                            if (_.isEqual(family, value.filter.split('=')[1])) {
-                                filtered.push(value);
-                            }
-                        });
-                        scope.values = filtered;
-                        console.log(filtered);
-                    }
-                };
+                // scope.filterFunction = function () {
+                //     var filtered = [];
+                //     var family = scope.filter;
+                //     if (!_.isUndefined(family)) {
+                //         console.log(scope);
+                //         _.forEach(scope.values, function (value) {
+                //             if (_.isEqual(family, value.filter.split('=')[1])) {
+                //                 filtered.push(value);
+                //             }
+                //         });
+                //         scope.values = filtered;
+                //         console.log(filtered);
+                //     }
+                // };
+                /*};
                 if (scope.filter) {
                     console.log("there's a filter");
                     console.log(scope.filter);
@@ -431,7 +435,7 @@
                     });
 
                 }
-
+*/
                 if (attrs.cv) {
                     CVFields.getCV(attrs.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -444,8 +448,16 @@
                                     selected: false
                                 });
                         }
-                        if (scope.filter) {
-                            scope.filterFunction();
+                        if (scope.filterFunction) {
+                            //if there is a filter object
+                            //pass that object to the filter registerer
+                                //watch for that object to change
+                                    //if it changes, trigger cv loading function
+                                  //      cv is filtered by filter
+                            /*
+console.log(scope);
+                            console.log("filtering");*/
+                            scope.filterFunction(scope.filter);
 
                             //   scope.filterCV(scope[filter]);
                         }
@@ -456,6 +468,7 @@
                             }
                         });
 
+                       // scope.selectOptions = "r.display for r in values track by r.display";
 
                     });
                 }
@@ -483,11 +496,9 @@
                 scope.filterCV = function (field) {
                     console.log('filter by ' + field);
                 };
-
-
             }
-        }
-    });
+    };
+});
 
     ginasFormElements.directive('dropdownViewEdit', function (CVFields) {
         return {

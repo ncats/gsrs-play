@@ -11,6 +11,9 @@
                 <div class="col-md-2">
                     <form-selector referenceobj= "physicalModification" divid="physicalModForm" field = "physicalParameter" type = "physicalParameter"></form-selector>
                 </div>
+                <div class = "col-md-1">
+                    <text-input ng-model="physicalModification.group" field="group" name ="group" form="physicalModForm"></text-input>
+                </div>
             </div>
             <div class="physicalModForm"></div>
             <submit-buttons submit="physicalModification" form="physicalModForm" path="modifications.physicalModifications"></submit-buttons>
@@ -28,8 +31,8 @@
                 <div class="col-md-2">
                     <form-selector referenceobj= "obj" formname="physicalModForm" type = "physicalParameter" divid=physical-mod-{{index}} field = "physicalParameter" mode="edit"></form-selector>
                 </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="physicalModForm" type = "access" divid=physical-mod-{{index}}></form-selector>
+                <div class="col-md-1">
+                    <text-view-edit obj = "obj" field = "group"></text-view-edit>
                 </div>
             </div>
             <div class = physical-mod-{{index}}></div>
