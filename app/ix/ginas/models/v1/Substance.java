@@ -375,6 +375,9 @@ public class Substance extends GinasCommonData {
 	@PrePersist
 	@PreUpdate
 	public void tidy() {
+		if (!REMOVE_INVALID_RELATIONSHIPS){
+			return;
+		}
 		// preform any validation prior to persistence
 		List<Relationship> remove = new ArrayList<Relationship>();
 		for (Relationship rel : relationships) {
@@ -386,7 +389,7 @@ public class Substance extends GinasCommonData {
 		}
 
 		if (!remove.isEmpty()) {
-			if (REMOVE_INVALID_RELATIONSHIPS)
+
 				for (Relationship rel : remove)
 					relationships.remove(rel);
 			Logger.warn("Substance " + approvalID + " has " + remove.size()

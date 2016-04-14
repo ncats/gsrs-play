@@ -64,24 +64,37 @@ public class Statistics implements Serializable{
 		public void applyChange(CHANGE c){
 			if(c!=null){
 				this.lastChangeAction=c;
+
+				//DO NOT REORDER CASE STATEMENTS
+				//the order of the case statements
+				//is in the same order as the declarations in the enum
+				//this should compile to a jump table instead of a table switch
+				//which is an O(1) switch instead of a O(n)
+				//so it should be faster.
+                //if we ever add new values to the enum
+                //make sure they get put here in the same order
+                //enum values that shouldn't be processed
+                //should either be the first or last values
+                //so we have a continuous block
 				switch(c){
-					case ADD_EX_BAD:
-						recordsExtractedFailed++;
-						break;
+
 					case ADD_EX_GOOD:
 						recordsExtractedSuccess++;
 						break;
-					case ADD_PE_BAD:
-						recordsPersistedFailed++;
+					case ADD_EX_BAD:
+						recordsExtractedFailed++;
 						break;
-					case ADD_PE_GOOD:
-						recordsPersistedSuccess++;
+					case ADD_PR_GOOD:
+						recordsProcessedSuccess++;
 						break;
 					case ADD_PR_BAD:
 						recordsProcessedFailed++;
 						break;
-					case ADD_PR_GOOD:
-						recordsProcessedSuccess++;
+					case ADD_PE_GOOD:
+						recordsPersistedSuccess++;
+						break;
+					case ADD_PE_BAD:
+						recordsPersistedFailed++;
 						break;
 					case MARK_EXTRACTION_DONE:
 						this.markExtractionDone();
