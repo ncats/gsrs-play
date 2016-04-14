@@ -36,7 +36,12 @@ public final class SubstanceJsonUtil {
 
 	public static void ensurePass(WSResponse response){
 		int status = response.getStatus();
-		assertTrue("Expected pass code, got:" + status, status == 200 || status == 201);
+		try{
+			assertTrue("Expected pass code, got:" + status, status == 200 || status == 201);
+		}catch(Throwable e){
+			System.err.println(response.getBody());
+			throw e;
+		}
 	}
 
 

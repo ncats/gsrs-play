@@ -271,7 +271,7 @@ public class GinasApp extends App {
             if ("approved".equalsIgnoreCase(n))
                 return "Last Approved";
             if("LyChI_L4".equalsIgnoreCase(n)){
-            	return "Structure Hash";
+                return "Structure Hash";
             }
             return n.trim();
         }
@@ -423,11 +423,11 @@ public class GinasApp extends App {
                                 + cutoff + "\"!"));
             }else if (type.equalsIgnoreCase("flex") || type.equalsIgnoreCase("exact")) {
                try {
-            	   if(type.equalsIgnoreCase("flex")){
-            		   return lychimatch(q, rows, page, false);
-            	   }else{
-            		   return lychimatch(q, rows, page, true);
-            	   }
+                   if(type.equalsIgnoreCase("flex")){
+                           return lychimatch(q, rows, page, false);
+                   }else{
+                           return lychimatch(q, rows, page, true);
+                   }
                } catch (Exception ex) {
                    ex.printStackTrace();
                }
@@ -508,6 +508,7 @@ public class GinasApp extends App {
                                   now.getTimeInMillis()};
         editedRange.add("aToday", range);
         approvedRange.add("aToday", range);
+        now = (Calendar)cal.clone();
 
         cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
         range = new long[]{cal.getTimeInMillis(),
@@ -593,7 +594,7 @@ public class GinasApp extends App {
     }
 
     static Result _substances(final String q, final int rows, final int page) throws Exception{
-    	return _substances(q,rows,page,ALL_FACETS);
+        return _substances(q,rows,page,ALL_FACETS);
     }
     
     /**
@@ -657,7 +658,7 @@ public class GinasApp extends App {
     }
     static Result createSubstanceResult(TextIndexer.SearchResult result,
             int rows, int page) throws Exception{
-    	return createSubstanceResult(result,rows,page,ALL_FACETS);
+        return createSubstanceResult(result,rows,page,ALL_FACETS);
     }
     
     static Result createSubstanceResult(TextIndexer.SearchResult result,
@@ -806,11 +807,10 @@ public class GinasApp extends App {
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
                         String hash=null;
                         if(exact){
-                        	hash=struc2.getLychiv3Hash();
+                                hash=struc2.getLychiv3Hash();
                         }else{
-                        	hash=struc2.getLychiv4Hash();
+                                hash=struc2.getLychiv4Hash();
                         }
-                        System.out.println("Looking for:" + hash);
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
                         
@@ -1125,8 +1125,8 @@ public class GinasApp extends App {
         return (SequenceIndexer.Result)IxCache.get("Alignment/"+context+"/"+id);
     }
     public static Double
-    	getChemSimilarity (String context, String id) {
-    	return (Double)IxCache.get("Similarity/"+context+"/"+id);
+        getChemSimilarity (String context, String id) {
+        return (Double)IxCache.get("Similarity/"+context+"/"+id);
     }
 
     static public Substance resolve(Relationship rel) {

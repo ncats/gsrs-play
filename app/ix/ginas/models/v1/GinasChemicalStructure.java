@@ -201,15 +201,10 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     
     
     public void setId(UUID uuid){
-    	System.out.println("Setting id from:" + id + " to " + uuid);
     	this.id=uuid;
     }
     
-    @PostPersist
-    @PostUpdate
-    public void test(){
-    	System.out.println("Saved structure");
-    }
+    
     
     public String getHash(){
     	String hash = null;
