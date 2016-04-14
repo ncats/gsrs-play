@@ -539,7 +539,6 @@
                 parent: '='
             },
             templateUrl: function (scope) {
-                console.log(scope);
                return baseurl + "assets/templates/forms/diverse-organism-form.html";
             }
         };
@@ -1669,10 +1668,7 @@ console.log(scope);
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/property-form.html",
-            link: function (scope) {
-                console.log(scope);
-            }
+            templateUrl: baseurl + "assets/templates/forms/property-form.html"
         };
     });
 
@@ -2113,6 +2109,13 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
+            link: function(scope){
+                console.log(scope);
+                scope.getType = function(){
+                    console.log("type");
+                    console.log(scope.mod.modificationType);
+                }
+            }
         };
     });
 
