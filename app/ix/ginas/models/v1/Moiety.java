@@ -50,17 +50,21 @@ public class Moiety extends CommonDataElementOfCollection {
     }
     
     public void setCount(Integer i){
-    	count=new Amount();
-    	if(i!=null){
-    		count.average=i.doubleValue();
-    	}
-    	count.type="MOL RATIO";
-    	count.units="MOL RATIO";
+    	count=intToAmount(i);
     }
     public Integer getCount(){
     	if(count==null)return null;
     	if(count.average == null)return null;
     	return (int) count.average.longValue();
+    }
+    public static Amount intToAmount(Integer i){
+    	Amount count=new Amount();
+    	if(i!=null){
+    		count.average=i.doubleValue();
+    	}
+    	count.type="MOL RATIO";
+    	count.units="MOL RATIO";
+    	return count;
     }
 
 	public void setCountAmount(Amount amnt) {
