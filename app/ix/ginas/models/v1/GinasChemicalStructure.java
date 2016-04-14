@@ -36,8 +36,8 @@ import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasReferenceContainer;
-import ix.ginas.models.serialization.GroupListDeserializer;
-import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.GroupDeserializer;
+import ix.ginas.models.serialization.GroupSerializer;
 import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.serialization.ReferenceSetDeserializer;
@@ -115,7 +115,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     }
 
     @JsonProperty("access")
-    @JsonDeserialize(using = GroupListDeserializer.class)
+    @JsonDeserialize(contentUsing = GroupDeserializer.class)
     public void setAccess(Set<Group> access){
     	GinasAccessContainer recordAccess=this.getRecordAccess();
     	if(recordAccess==null){
@@ -126,7 +126,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     }
     
     @JsonProperty("access")
-    @JsonSerialize(using = GroupListSerializer.class)
+    @JsonSerialize(contentUsing = GroupSerializer.class)
     public Set<Group> getAccess(){
     	GinasAccessContainer gac=getRecordAccess();
     	if(gac!=null){

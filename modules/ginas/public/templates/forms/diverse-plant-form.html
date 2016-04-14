@@ -9,14 +9,14 @@
             <div class="col-md-3">
                 <dropdown-select ng-model = "parent.structurallyDiverse.organismFamily" field="organismFamily" cv="KEW_PLANT_FAMILY" label="Organism Family"></dropdown-select>
             </div>
-<!--            <select ng-if="::parent.structurallyDiverse.organismFamily"
+<!--           <select ng-if="::parent.structurallyDiverse.organismFamily"
                     ng-model="parent.structurallyDiverse.organismGenus"
                     ng-options="r.display for r in values track by r.display">
             </select>-->
 <h3>{{values.length}}</h3>
-            <div class="col-md-3" ng-if="parent.structurallyDiverse.organismFamily">
+            <div class="col-md-3" ng-if="parent.structurallyDiverse.organismFamily.value">
                 {{parent.structurallyDiverse}}
-                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= "parent.structurallyDiverse" field="organismGenus"  label="Organism Genus" filteredcv></dropdown-select>
+                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filterFunction= "getValue(parent.structurallyDiverse.organismFamily)" field="organismGenus"  label="Organism Genus"></dropdown-select>
             </div>
                 <div class="col-md-3">
                 <dropdown-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></dropdown-view-edit>

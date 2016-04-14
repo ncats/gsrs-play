@@ -15,7 +15,7 @@ import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
-import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.GroupSerializer;
 import ix.ginas.models.serialization.PrincipalDeserializer;
 
 @SuppressWarnings("serial")
@@ -60,7 +60,7 @@ public class GinasCommonSimplifiedSubData extends GinasCommonSubData implements 
 	 	
 	 	
 	 	@JsonIgnore
-	 	 @JsonSerialize(using = GroupListSerializer.class)
+	 	 @JsonSerialize(contentUsing = GroupSerializer.class)
 	     public Set<Group> getAccess(){
 	     	return super.getAccess();
 	     }

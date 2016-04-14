@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.models.Indexable;
 import ix.core.models.IxModel;
 import ix.core.models.Keyword;
-import ix.ginas.models.serialization.KeywordListDeserializer;
+import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 
 
@@ -50,7 +50,7 @@ public class ControlledVocabulary extends IxModel {
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonSerialize(using = KeywordListSerializer.class)
-    @JsonDeserialize(using = KeywordListDeserializer.class)
+    @JsonDeserialize(contentUsing = KeywordDeserializer.class)
     @Indexable(name = "Field")
     public List<Keyword> fields = new ArrayList<Keyword>();
 

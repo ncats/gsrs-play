@@ -85,7 +85,9 @@ public class PrincipalFactory extends EntityFactory {
         //System.out.println("########## "+ uname);
         Principal p = justRegisteredCache.get(uname);
         if (p != null) return p;
-        return finder.where().eq("username", uname).findUnique();
+        p =  finder.where().eq("username", uname).findUnique();
+        if(p!=null)justRegisteredCache.put(p.username, p);
+        return p;
     }
 
     public static synchronized Principal registerIfAbsent(Principal org) {

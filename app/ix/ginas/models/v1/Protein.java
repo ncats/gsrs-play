@@ -2,6 +2,8 @@ package ix.ginas.models.v1;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -154,6 +157,22 @@ public class Protein extends GinasCommonSubData {
     	return _modifiedCache;
     }
     
+    @PostLoad
+    /**
+     * 
+     */
+    public void sortSubunits(){
+    	Collections.sort(subunits, new Comparator<Subunit>(){
+			@Override
+			public int compare(Subunit o1, Subunit o2) {
+				return o1.subunitIndex-o2.subunitIndex;
+			}
+    	});
+    }
+    
+    public List<Subunit> getSubunits(){
+    	return this.subunits;
+    }
     @Override
     public void update(){
     	

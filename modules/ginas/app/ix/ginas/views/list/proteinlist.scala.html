@@ -31,9 +31,11 @@
                                 <modal-button type= "export" structureid ="'@prot.uuid'" format="fas" ></modal-button>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search">
+                            
+                                <span ng-click="subunitsearch=!subunitsearch" uib-tooltip="Sequence Search" aria-label="Structure Search">
                                     <span class="sr-only">Sequence Search</span>
-                                    <i class="fa fa-search fa-2x success"></i></a>
+                                    <i class="fa fa-search fa-2x success"></i>
+                                </span>
                             </li>
                             <li>
                                 <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance">
@@ -41,6 +43,15 @@
                                     <i class="fa fa-pencil fa-2x success"></i></a>
                             </li>
                         </ul>
+                        <div ng-show="subunitsearch">
+                        		@for(subunit <- prot.protein.getSubunits()) {
+                        			<div>
+		                               	<a href="@ix.ginas.controllers.routes.GinasFactory.sequence(subunit.uuid.toString())" target="_self" uib-tooltip="Sequence Subunit @subunit.subunitIndex Search" aria-label="Structure Subunit @subunit.subunitIndex Search">
+	                                    	<span>Subunit <code>@subunit.subunitIndex</code> (@subunit.sequence.length) Similarity Search</span>
+	                                	</a>
+                                	</div>
+                                }
+                        </div>
                     </div>
                 </div>
             </div>

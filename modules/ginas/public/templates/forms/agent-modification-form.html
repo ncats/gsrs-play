@@ -1,8 +1,9 @@
 <div class="row info">
     <div class="row">
-        <form-header type="agentModifications" path ="modifications.agentModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="agentModifications" path="modifications.agentModifications" parent="parent"
+                     iscollapsed="iscollapsed"></form-header>
     </div>
-    <div class="col-md-12" uib-collapse ="iscollapsed">
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="agentModForm" id="addAgentModForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -18,15 +19,21 @@
                                      cv="ROLE" label="Modification Role"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector referenceobj ="agentMod" field ="agentSubstance" name ="agentSubstance" formname ="agentModForm" label ="Agent Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj="agentMod" field="agentSubstance" name="agentSubstance"
+                                                formname="agentModForm" label="Agent Substance"
+                                                type="search"></substance-chooser-selector>
                 </div>
-                                <div class="col-md-1">
+                <div class="col-md-1">
                     <form-selector referenceobj="agentMod" parent="parent" divid="agentModForm"
                                    type="amount"></form-selector>
                 </div>
+                <div class = "col-md-1">
+                    <text-input ng-model="agentMod.group" field="group" name ="group" form="agentModForm"></text-input>
+                </div>
             </div>
             <div class="agentModForm"></div>
-            <submit-buttons submit="agentMod" form="agentModForm" path="modifications.agentModifications"></submit-buttons>
+            <submit-buttons submit="agentMod" form="agentModForm"
+                            path="modifications.agentModifications"></submit-buttons>
         </form>
 
 
@@ -52,14 +59,16 @@
                                         label="Modification Role"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector referenceobj ="obj" field ="agentSubstance" name ="agentSubstance" formname =agent-{{index}} label ="Agent Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj="obj" field="agentSubstance" name="agentSubstance"
+                                                formname=agent-{{index}} label="Agent Substance"
+                                                type="search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj="obj.extentAmount" parent="parent" type="amount" divid=agent-{{index}}
                                    mode="edit"></form-selector>
                 </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid=agent-{{index}}></form-selector>
+                <div class="col-md-1">
+                    <text-view-edit obj = "obj" field = "group"></text-view-edit>
                 </div>
             </div>
             <div class=agent-{{index}}></div>

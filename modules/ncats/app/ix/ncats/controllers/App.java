@@ -36,6 +36,7 @@ import akka.routing.SmallestMailboxRouter;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import ix.core.search.TextIndexer;
+
 import ix.seqaln.SequenceIndexer;
 import static ix.core.search.TextIndexer.*;
 import tripod.chem.indexer.StructureIndexer;
@@ -89,6 +90,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.ehcache.Element;
 import ix.ncats.controllers.auth.*;
 import ix.ncats.resolvers.*;
+import ix.ginas.models.v1.Amount;
+import ix.ginas.models.v1.Moiety;
 
 /**
  * Basic plumbing for an App
@@ -891,6 +894,10 @@ public class App extends Authentication {
         return result;
     }
 
+    public static Result renderParam (final String value, final int size) {
+        return render(value, size);
+    }
+
     public static Result render (final String value, final int size) {
         String key = Util.sha1(value)+"::"+size;
         try {
@@ -1691,26 +1698,33 @@ public class App extends Authentication {
         // String mime = request().getHeader("Content-Type");
         // Logger.debug("molinstrument: content-type: "+mime);
 
-        ObjectMapper mapper = EntityFactory.getEntityMapper();
+        ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         ObjectNode node = mapper.createObjectNode();
         try {
-            String payload = request().body().asText();
+        	String payload = request().body().asText();
             payload = ChemCleaner.getCleanMolfile(payload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
-
+                
+                
                 try {
                     Structure struc = StructureProcessor.instrument
                         (payload, moieties, false); // don't standardize!
                     // we should be really use the PersistenceQueue to do this
                     // so that it doesn't block
                     struc.save();
-                    
-
-                    for (Structure m : moieties)
+                    ArrayNode an = mapper.createArrayNode();
+                    for (Structure m : moieties){
+                    	
                         m.save();
+                        ObjectNode on = mapper.valueToTree(m);
+                        Amount c1=Moiety.intToAmount(m.count);
+                        JsonNode amt=mapper.valueToTree(c1);
+                        on.set("countAmount", amt);
+                        an.add(on);
+                    }
                     node.put("structure", mapper.valueToTree(struc));
-                    node.put("moieties", mapper.valueToTree(moieties));
+                    node.put("moieties", an);
                 } catch (Exception e) {
                         e.printStackTrace();
                 }
@@ -1732,6 +1746,7 @@ public class App extends Authentication {
                 }
             }
         } catch (Exception ex) {
+        	ex.printStackTrace();
             Logger.error("Can't process payload", ex);
             return internalServerError("Can't process mol payload");
         }

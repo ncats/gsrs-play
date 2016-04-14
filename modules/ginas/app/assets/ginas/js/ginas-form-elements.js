@@ -395,29 +395,33 @@
                 label: '@',
                 values: '=?',
                 filter: '=',
-                filterName: '@filter'
+                filterName: '@filter',
+                filterFunction: '&'
             },
             link: function (scope, element, attrs) {
-                /*
-                 console.log(attrs);
-                 */
+                scope.getValue = function(obj){
+                    console.log(obj);
+                };
+
+                scope.selectOptions = "r.display for r in values track by r.display";
                 if(_.isUndefined(scope.obj)){
                     scope.obj={};
                 }
-                scope.filterFunction = function () {
-                    var filtered = [];
-                    var family = scope.filter;
-                    if (!_.isUndefined(family)) {
-                        console.log(scope);
-                        _.forEach(scope.values, function (value) {
-                            if (_.isEqual(family, value.filter.split('=')[1])) {
-                                filtered.push(value);
-                            }
-                        });
-                        scope.values = filtered;
-                        console.log(filtered);
-                    }
-                };
+                // scope.filterFunction = function () {
+                //     var filtered = [];
+                //     var family = scope.filter;
+                //     if (!_.isUndefined(family)) {
+                //         console.log(scope);
+                //         _.forEach(scope.values, function (value) {
+                //             if (_.isEqual(family, value.filter.split('=')[1])) {
+                //                 filtered.push(value);
+                //             }
+                //         });
+                //         scope.values = filtered;
+                //         console.log(filtered);
+                //     }
+                // };
+                /*};
                 if (scope.filter) {
                     console.log("there's a filter");
                     console.log(scope.filter);
@@ -431,7 +435,7 @@
                     });
 
                 }
-
+*/
                 if (attrs.cv) {
                     CVFields.getCV(attrs.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -444,8 +448,16 @@
                                     selected: false
                                 });
                         }
-                        if (scope.filter) {
-                            scope.filterFunction();
+                        if (scope.filterFunction) {
+                            //if there is a filter object
+                            //pass that object to the filter registerer
+                                //watch for that object to change
+                                    //if it changes, trigger cv loading function
+                                  //      cv is filtered by filter
+                            /*
+console.log(scope);
+                            console.log("filtering");*/
+                            scope.filterFunction(scope.filter);
 
                             //   scope.filterCV(scope[filter]);
                         }
@@ -456,6 +468,7 @@
                             }
                         });
 
+                       // scope.selectOptions = "r.display for r in values track by r.display";
 
                     });
                 }
@@ -483,11 +496,9 @@
                 scope.filterCV = function (field) {
                     console.log('filter by ' + field);
                 };
-
-
             }
-        }
-    });
+    };
+});
 
     ginasFormElements.directive('dropdownViewEdit', function (CVFields) {
         return {
@@ -753,7 +764,7 @@
         };
     });
 
-    ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
+    /*ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
         return {
             restrict: 'E',
             scope: {
@@ -764,8 +775,8 @@
             link: function (scope, element, attrs) {
                 scope.stage = true;
                 scope.resolve = function (name) {
-                    /*                    var result = document.getElementsByClassName(attrs.divid);
-                     var elementResult = angular.element(result);*/
+                    /!*                    var result = document.getElementsByClassName(attrs.divid);
+                     var elementResult = angular.element(result);*!/
                     resolver.resolve(name).then(function (data) {
                         console.log(data.data);
                         _.set(scope, 'data', data.data);
@@ -775,8 +786,8 @@
                             template = angular.element('<div><h3>Name: ' + name + ' does not resolve to existing structure</h3></div>');
                         }
                         toggler.toggle(scope, attrs.divid, template);
-                        /*                        elementResult.append(template);
-                         $compile(template)(scope);*/
+                        /!*                        elementResult.append(template);
+                         $compile(template)(scope);*!/
                     });
 
                     scope.close = function () {
@@ -786,7 +797,7 @@
             }
         };
     });
-
+*/
     ginasFormElements.service('resolver', function ($http, spinnerService) {
         var resolver = {};
 
@@ -813,7 +824,7 @@
         return resolver;
     });
 
-    ginasFormElements.directive('substanceViewer', function (molChanger, CVFields) {
+    ginasFormElements.directive('substanceViewer', function (molChanger, UUID) {
         return {
             restrict: 'E',
             scope: {
@@ -831,6 +842,17 @@
                 }
                 scope.select = function (selected) {
                     console.log(selected);
+                    if(scope.parent) {
+                        var reference = {
+                            uuid: UUID.newID(),
+                            apply: true,
+                            docType: {value: selected.source},
+                            citation: "resolver lookup",
+                            documentDate: moment()._d
+                        };
+                        console.log(reference);
+                        scope.parent.references.push(reference);
+                    }
                     if (selected.value && selected.value.molfile) {
                         molChanger.setMol(selected.value.molfile);
                     }
@@ -852,7 +874,6 @@
                 format: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var template;
                 if (scope.format == "subref") {
                     template = angular.element('<div>' +

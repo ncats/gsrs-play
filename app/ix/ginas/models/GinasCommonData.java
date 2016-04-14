@@ -33,8 +33,8 @@ import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.util.TimeUtil;
-import ix.ginas.models.serialization.GroupListDeserializer;
-import ix.ginas.models.serialization.GroupListSerializer;
+import ix.ginas.models.serialization.GroupDeserializer;
+import ix.ginas.models.serialization.GroupSerializer;
 import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.utils.Global;
@@ -160,7 +160,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     }
 
     @JsonProperty("access")
-    @JsonDeserialize(using = GroupListDeserializer.class)
+    @JsonDeserialize(contentUsing = GroupDeserializer.class)
     public void setAccess(Set<Group> access){
     	GinasAccessContainer recordAccess=this.getRecordAccess();
     	if(recordAccess==null){
@@ -171,7 +171,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     }
     
     @JsonProperty("access")
-    @JsonSerialize(using = GroupListSerializer.class)
+    @JsonSerialize(contentUsing = GroupSerializer.class)
     public Set<Group> getAccess(){
     	GinasAccessContainer gac=getRecordAccess();
     	if(gac!=null){
@@ -252,11 +252,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
         
     }
     
-//    @PostLoad
-//    public void test2(){
-//    	System.out.println(this.getClass() + " fetched with " + this.defhash + " to " + s1);
-//		
-//    }
     
     @JsonIgnore
     public String getDefinitionalHash(){
