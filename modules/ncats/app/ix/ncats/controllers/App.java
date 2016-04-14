@@ -891,6 +891,10 @@ public class App extends Authentication {
         return result;
     }
 
+    public static Result renderParam (final String value, final int size) {
+        return render(value, size);
+    }
+
     public static Result render (final String value, final int size) {
         String key = Util.sha1(value)+"::"+size;
         try {

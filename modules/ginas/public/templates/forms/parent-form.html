@@ -5,7 +5,7 @@
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="parentForm" id="addParentForm" role="form" novalidate>
         <div class="row form-row">
-                <div class="col-md-3">
+                <div class="col-md-3" ng-if="parent.$$diverseType=='part'">
                     <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="parentSubstance" name ="parentSubstance" label ="Parent Substance" formname ="parentForm" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">

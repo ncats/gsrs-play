@@ -1626,6 +1626,7 @@
 
                 scope.createSubref = function (selectedItem) {
                     console.log(scope);
+                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
@@ -1862,12 +1863,10 @@
                 }
 
                 if (structureid) {
-                    $http({
-                        method: 'GET',
-                        url: baseurl + 'api/v1/structures/' + structureid
-                    }).success(function (data) {
-                        scope.sketcher.setMolfile(data.molfile);
-                        _.set(scope.parent, 'q', data.smiles);
+                    var url = baseurl + 'api/v1/structures/' + structureid;
+                    $http.get( url, {cache: true}).then(function (response) {
+                        scope.sketcher.setMolfile(response.data.molfile);
+                        _.set(scope.parent, 'q', response.data.smiles);
                         localStorageService.remove('structureid');
                     });
                 }

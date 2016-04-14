@@ -753,7 +753,7 @@
         };
     });
 
-    ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
+    /*ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
         return {
             restrict: 'E',
             scope: {
@@ -764,8 +764,8 @@
             link: function (scope, element, attrs) {
                 scope.stage = true;
                 scope.resolve = function (name) {
-                    /*                    var result = document.getElementsByClassName(attrs.divid);
-                     var elementResult = angular.element(result);*/
+                    /!*                    var result = document.getElementsByClassName(attrs.divid);
+                     var elementResult = angular.element(result);*!/
                     resolver.resolve(name).then(function (data) {
                         console.log(data.data);
                         _.set(scope, 'data', data.data);
@@ -775,8 +775,8 @@
                             template = angular.element('<div><h3>Name: ' + name + ' does not resolve to existing structure</h3></div>');
                         }
                         toggler.toggle(scope, attrs.divid, template);
-                        /*                        elementResult.append(template);
-                         $compile(template)(scope);*/
+                        /!*                        elementResult.append(template);
+                         $compile(template)(scope);*!/
                     });
 
                     scope.close = function () {
@@ -786,7 +786,7 @@
             }
         };
     });
-
+*/
     ginasFormElements.service('resolver', function ($http, spinnerService) {
         var resolver = {};
 
@@ -813,7 +813,7 @@
         return resolver;
     });
 
-    ginasFormElements.directive('substanceViewer', function (molChanger, CVFields) {
+    ginasFormElements.directive('substanceViewer', function (molChanger, UUID) {
         return {
             restrict: 'E',
             scope: {
@@ -831,6 +831,17 @@
                 }
                 scope.select = function (selected) {
                     console.log(selected);
+                    if(scope.parent) {
+                        var reference = {
+                            uuid: UUID.newID(),
+                            apply: true,
+                            docType: {value: selected.source},
+                            citation: "resolver lookup",
+                            documentDate: moment()._d
+                        };
+                        console.log(reference);
+                        scope.parent.references.push(reference);
+                    }
                     if (selected.value && selected.value.molfile) {
                         molChanger.setMol(selected.value.molfile);
                     }
@@ -852,7 +863,6 @@
                 format: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var template;
                 if (scope.format == "subref") {
                     template = angular.element('<div>' +

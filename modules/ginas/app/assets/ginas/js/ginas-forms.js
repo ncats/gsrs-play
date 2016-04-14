@@ -1036,7 +1036,7 @@
 
 
                 scope.checkDuplicateChemicalSubstance = function () {
-                    var sub = scope.$parent.fromFormSubstance(scope.parent);
+                    var sub = scope.parent.$$flattenSubstance(angular.copy(scope.parent));
                     scope.structureErrorsArray = [];
                     $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
                         var arr = [];
@@ -1116,7 +1116,7 @@
                                 if(_.isEmpty(scope.data)){
                                     scope.data.push("empty");
                                 }
-                                template = angular.element('<substance-viewer data = data></substance-viewer>');
+                                template = angular.element('<substance-viewer data = data parent = parent></substance-viewer>');
                             toggler.refresh(scope, 'nameForm', template);
                         });
                     }else {
@@ -1124,9 +1124,6 @@
                     }
                 };
 
-                scope.select = function(item){
-                    console.log(item);
-                };
             }
         };
     });
