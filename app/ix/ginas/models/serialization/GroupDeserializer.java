@@ -26,7 +26,6 @@ public class GroupDeserializer extends JsonDeserializer<Group> {
 
     	String name=parser.getValueAsString();
     	Group grp = AdminFactory.registerGroupIfAbsent(new Group(name));
-    	
         return grp;
     }
 }
