@@ -2,6 +2,8 @@ package ix.ginas.models.v1;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,7 +155,16 @@ public class Protein extends GinasCommonSubData {
     	}
     	return _modifiedCache;
     }
-    
+    public List<Subunit> getSubunits(){
+    	Collections.sort(subunits, new Comparator<Subunit>(){
+			@Override
+			public int compare(Subunit o1, Subunit o2) {
+				return o1.subunitIndex-o2.subunitIndex;
+			}
+    		
+    	});
+    	return this.subunits;
+    }
     @Override
     public void update(){
     	
