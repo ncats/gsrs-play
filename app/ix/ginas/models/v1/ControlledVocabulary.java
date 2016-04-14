@@ -19,7 +19,6 @@ import ix.core.models.Indexable;
 import ix.core.models.IxModel;
 import ix.core.models.Keyword;
 import ix.ginas.models.serialization.KeywordDeserializer;
-import ix.ginas.models.serialization.KeywordListDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 
 
