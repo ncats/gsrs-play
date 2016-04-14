@@ -252,11 +252,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
         
     }
     
-//    @PostLoad
-//    public void test2(){
-//    	System.out.println(this.getClass() + " fetched with " + this.defhash + " to " + s1);
-//		
-//    }
     
     @JsonIgnore
     public String getDefinitionalHash(){
