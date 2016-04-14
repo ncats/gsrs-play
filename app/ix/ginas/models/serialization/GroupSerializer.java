@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 
-public class GroupListSerializer extends JsonSerializer<Collection<Group>> {
-    public GroupListSerializer () {}
+public class GroupSerializer extends JsonSerializer<Collection<Group>> {
+    public GroupSerializer () {}
 
     public void serialize (Collection<Group> groups, JsonGenerator jgen,
                            SerializerProvider provider)
