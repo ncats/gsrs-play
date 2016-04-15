@@ -551,7 +551,9 @@
                 tags: '=?',
                 field: '@',
                 cv: '@',
-                label: '@'
+                label: '@',
+                filter: '=',
+                filterFunction: '&'
             },
             link: function (scope, element, attrs) {
                 if (attrs.max) {
@@ -559,22 +561,43 @@
                 } else {
                     scope.max = 'MAX_SAFE_INTEGER';
                 }
+                
+                //this allows the switching of cv depending on an external value
+                if (scope.filter) {
+                    scope.$watch('filter', function (newValue) {
+                        if(!_.isUndefined(newValue)) {
+                            var cv = scope.filterFunction({type: newValue});
+                            CVFields.getCV(cv).then(function (response) {
+                                scope.obj = [];
+                                scope.tags = response.data.content[0].terms;
+                            });
+                        }
+                    });
+                }
+
                 if (attrs.cv) {
                     scope.tags = [];
-                    CVFields.getCV(attrs.cv).then(function (data) {
-                        if (scope.cv == 'LANGUAGE') {
-                            var values = _.orderBy(data.data.content[0].terms, function (cv) {
+                    CVFields.getCV(attrs.cv).then(function (response) {
+                        scope.tags = response.data.content[0].terms;
+                        _.forEach(scope.tags, function (term) {
+                            if (term.selected == true) {
+                                if(_.isUndefined(scope.obj)){
+                                    scope.obj=[];
+                                }
+                                scope.obj.push(term);
+                            }
+                        });
+                        /*if (scope.cv == 'LANGUAGE') {
+                            var values = _.orderBy(response.data.content[0].terms, function (cv) {
                                 return cv.display == 'English';
                             }, ['desc']);
                             scope.tags = values;
-                        } else {
-                            scope.tags = data.data.content[0].terms;
-                        }
-
+                        } else {*/
+                            scope.tags = response.data.content[0].terms;
+                        //}
                     });
-                }else{
-                    console.log(scope);
                 }
+                
                 scope.loadItems = function ($query) {
                     var filtered = _.filter(scope.tags, function (cv) {
                         return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
@@ -584,11 +607,6 @@
                     }, ['desc']);
                     return sorted;
                 };
-
-                scope.print = function(){
-                    console.log(scope.tags);
-                    console.log(scope.obj);
-                }
             }
         };
     });
@@ -602,8 +620,11 @@
                 obj: '=',
                 values: '=?',
                 field: '@',
+                tags: '=?',
                 cv: '@',
-                label: '@'
+                label: '@',
+                filter: '=',
+                filterFunction: '&'
             },
             link: function (scope, element, attrs) {
                 scope.tags = [];
@@ -614,14 +635,32 @@
                     scope.max = 'MAX_SAFE_INTEGER';
                 }
 
-                CVFields.getCV(scope.cv).then(function (data) {
-                    var values = _.orderBy(data.data.content[0].terms, function (cv) {
-                        return cv.display == 'English';
-                    }, ['desc']);
-                    scope.tags = values;
+                if (scope.filter) {
+                    scope.$watch('filter', function (newValue, oldValue) {
+                        if(!_.isUndefined(newValue)) {
+                            var cv = scope.filterFunction({type: newValue});
+                            if (!_.isNull(cv)) {
+                                CVFields.getCV(cv).then(function (response) {
+                                    if (!_.isEqual(newValue, oldValue)) {
+                                        scope.obj[scope.field] = [];
+                                    }
+                                    // scope.obj[scope.field] = [];
+                                    scope.tags = response.data.content[0].terms;
+                                });
+                            }
+                        }
+                    });
+                }
 
-                });
+                if(scope.cv) {
+                    CVFields.getCV(scope.cv).then(function (data) {
+                        var values = _.orderBy(data.data.content[0].terms, function (cv) {
+                            return cv.display == 'English';
+                        }, ['desc']);
+                        scope.tags = values;
 
+                    });
+                }
                 scope.loadItems = function ($query) {
                     var filtered = _.filter(scope.tags, function (cv) {
                         return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;

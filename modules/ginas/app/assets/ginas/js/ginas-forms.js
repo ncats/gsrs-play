@@ -501,7 +501,7 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
             link: function (scope) {
 
-                console.log(scope);
+//                console.log(scope);
 
 
                /* scope.filterCV = function (sent) {
@@ -2086,7 +2086,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
         };
     });
 
-    ginasForms.directive('structuralModificationForm', function () {
+    ginasForms.directive('structuralModificationForm', function (CVFields) {
         return {
             restrict: 'E',
             replace: true,
@@ -2097,10 +2097,15 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
             link: function(scope){
                 console.log(scope);
-                scope.getType = function(){
-                    console.log("type");
-                    console.log(scope.mod.modificationType);
-                }
+                scope.getCV = function(mod){
+                    if(mod =="AMINO_ACID_SUBSTITUTION"){
+                        return "AMINO_ACID_RESIDUE";
+                    }else if(mod =="NUCLEOSIDE_SUBSTITUTION"){
+                        return "NUCLEIC_ACID_BASE";
+                    }else{
+                        return null;
+                    }
+                };
             }
         };
     });

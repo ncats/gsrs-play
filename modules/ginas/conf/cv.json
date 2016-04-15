@@ -9985,7 +9985,7 @@
         "origin": null,
         "filters": null,
         "hidden": false,
-        "selected": false,
+        "selected": true,
         "_namespace": null
       },
       {
