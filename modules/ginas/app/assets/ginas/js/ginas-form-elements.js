@@ -404,9 +404,7 @@
                 };
 
                 scope.selectOptions = "r.display for r in values track by r.display";
-                if(_.isUndefined(scope.obj)){
-                    scope.obj={};
-                }
+
                 // scope.filterFunction = function () {
                 //     var filtered = [];
                 //     var family = scope.filter;
@@ -474,6 +472,9 @@ console.log(scope);
                 }
 
                 scope.makeNewCV = function () {
+                    if(_.isUndefined(scope.obj)){
+                        scope.obj={};
+                    }
                     console.log(scope);
                     console.log(scope.obj.new);
                     var exists = _.find(scope.values, function (cv) {
