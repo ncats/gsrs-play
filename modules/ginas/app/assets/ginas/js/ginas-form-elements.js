@@ -398,11 +398,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-
-                if(_.isUndefined(scope.obj)){
-                    scope.obj={};
-                }
-
                 if (attrs.cv) {
                     CVFields.getCV(attrs.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -459,6 +454,9 @@
                 }
 
                 scope.makeNewCV = function () {
+                    if(_.isUndefined(scope.obj)){
+                        scope.obj={};
+                    }
                     console.log(scope);
                     console.log(scope.obj.new);
                     var exists = _.find(scope.values, function (cv) {
