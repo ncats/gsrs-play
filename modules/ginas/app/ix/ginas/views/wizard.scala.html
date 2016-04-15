@@ -45,9 +45,9 @@
 @*
                 <diverse-plant-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value == 'PLANT'" parent = substance></diverse-plant-form>
 *@
-@*
+
                 <diverse-plant-form parent = substance></diverse-plant-form>
-*@
+
                 <parent-form parent = substance></parent-form>
                 <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
             </div>

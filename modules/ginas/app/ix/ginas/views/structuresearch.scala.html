@@ -1,23 +1,18 @@
 @ginas("Structure Search: ", null) {
     @menu()
 }{
-    <div class = "panel-default">
+    <div class = "row info">
         <form class="form-inline"
         method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()" novalidate>
-            <div class= "panel-body">
-                <div class="row">
-                    <div class="col-md-12">
+            <div class="row">
+            <div class="col-md-12">
                         <sketcher parent = substance ng-model=parent.structure.molfile></sketcher>
                         </div>
                     </div>
-                </div>
-            <div class="panel-footer">
                 <div class="row">
-                    <div class="col-md-10">
-
-                        <div class="form-group col-md-2">
+                    <div class="col-md-6">
                             <label class="sr-only" for="search-selection">Search Type</label>
-                            <select class="form-control" id="search-selection" name="type" ng-model = "type" >
+                            <select class="form-control col-md-2" id="search-selection" name="type" ng-model = "type" >
                                 <option value="Substructure" selected>Substructure</option>
                                 <option value="Similarity">Similarity</option>
                                 <option value="Exact">Exact</option>
@@ -52,17 +47,29 @@
                             ng-model="substance.q"
                             id="structure">
                         </div>
-                        <button type="submit"
+                        <div class ="col-md-2">
+                            <button
                         class="btn btn-primary" id="search-btn">Search</button>
+                            </div>
                     </div>
-                    <div class="col-md-2 pull-right">
+            <ng-form novalidate>
+            <div class ="col-md-2">
+                        <text-input ng-model="nameres" field="nameres" label="Name"></text-input>
+                    </div>
+                    <div class ="col-md-2">
+                        <a class="btn btn-primary" ng-click="resolveName(nameres, 'structureSearch')">Resolve Name</a>
+                    </div>
+            </ng-form>
+
+            <div class="col-md-2 pull-right">
                         <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
                     </div>
-                </div>
-            </div>
-        </form>
-    </div>
+</form>
+    <spinner name="structureSearchSpinner"><loading></loading><br/></spinner>
+    <div class = "structureSearch"></div>
+
+
     <div class="modal fade" tabindex="-1" role="dialog" id="spinModal"
     aria-label="mySmallModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-sm">
