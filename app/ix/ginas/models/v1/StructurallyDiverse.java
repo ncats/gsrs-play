@@ -14,7 +14,6 @@ import ix.core.models.Keyword;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.KeywordDeserializer;
-import ix.ginas.models.serialization.KeywordListDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONEntity;
 
