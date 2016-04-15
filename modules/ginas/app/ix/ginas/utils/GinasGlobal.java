@@ -1,11 +1,11 @@
 package ix.ginas.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ix.core.models.UserProfile;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
-import ix.ginas.models.v1.CodeSystemVocabularyTerm;
-import ix.ginas.models.v1.ControlledVocabulary;
-import ix.ginas.models.v1.VocabularyTerm;
 import ix.ncats.controllers.auth.Authentication;
 import ix.utils.Global;
 import play.Application;
@@ -17,6 +17,9 @@ import play.mvc.Http;
 import play.mvc.Result;
 
 public class GinasGlobal extends Global {
+	private static List<Runnable> startRunners = new ArrayList<Runnable>();
+	private static boolean isRunning=false;
+	
 	public class LoginWrapper extends Action.Simple {
 	    public LoginWrapper(Action<?> action) {
 	    	this.delegate = action;
@@ -56,41 +59,60 @@ public class GinasGlobal extends Global {
 		    }
 		  );
 	}
+	
+	
 
 	public void onStart(Application app) {
 		super.onStart(app);
+		
 		if (!ControlledVocabularyFactory.isloaded()) {
 		//	ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
 			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv.json"));
 			//ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv2.json"));
-			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
-			if(codeSystem!= null){
-				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
-				boolean addNew=true;
-				for(VocabularyTerm vt1 : cvv.terms){
-					if(vt1.value.equals(codeSystem)){
-						addNew=false;
-						break;
-					}
-				}
-				if(addNew){
-					CodeSystemVocabularyTerm vt = new CodeSystemVocabularyTerm();
-					vt.display=codeSystem;
-					vt.value=codeSystem;
-					vt.hidden=true;
-					vt.save();
-					cvv.addTerms(vt);
-					cvv.save();
-				}
-			}
+//			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
+//			if(codeSystem!= null){
+//				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
+//				boolean addNew=true;
+//				for(VocabularyTerm vt1 : cvv.terms){
+//					if(vt1.value.equals(codeSystem)){
+//						addNew=false;
+//						break;
+//					}
+//				}
+//				if(addNew){
+//					CodeSystemVocabularyTerm vt = new CodeSystemVocabularyTerm();
+//					vt.display=codeSystem;
+//					vt.value=codeSystem;
+//					vt.hidden=true;
+//					vt.save();
+//					cvv.addTerms(vt);
+//					cvv.save();
+//				}
+//			}
 			if(!Play.isTest()){
 				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
 			}
 		}else{
 			//System.out.println("CV already loaded:" + ControlledVocabularyFactory.size());
 		}
-		
+		for(Runnable r:startRunners){
+			r.run();
+		}
+		startRunners.clear();
+		isRunning=true;
 		
     }
-	
+	@Override
+	public void onStop(Application app){
+		startRunners.clear();
+		isRunning=false;
+	}
+	public static void runAfterStart(Runnable r){
+		if(isRunning){
+			r.run();
+		}else{
+			startRunners.add(r);
+		}
+		
+	}
 }

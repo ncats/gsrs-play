@@ -22,7 +22,7 @@ import ix.utils.Util;
 @Table(name="ix_core_backup")
 public class BackupEntity extends IxModel{
 	
-	EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
+	EntityMapper em = EntityMapper.INTERNAL_ENTITY_MAPPER();
 	
 	@Id
 	private Long id;
