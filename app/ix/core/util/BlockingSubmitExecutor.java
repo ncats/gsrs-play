@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.core.util;
 
 import java.util.concurrent.*;
 
@@ -12,6 +12,35 @@ import java.util.concurrent.*;
 public class BlockingSubmitExecutor extends ThreadPoolExecutor{
 
     /**
+     * Create a new instance that will have a fixed number of threads.
+     *
+     * @param numThreads the number of threads in the thread pool.
+     * @param blockingQueueCapacity the capacity of the blocking queue for jobs to be run.  Once the number of waiting
+     *                              jobs exceeds this capacity, the submit() calls will block until one of the threads
+     *                              completes its currently running task.
+     * @return a new ExecutorService; will never be null.
+     */
+    public static ExecutorService newFixedThreadPool(int numThreads, int blockingQueueCapacity){
+        return new BlockingSubmitExecutor(numThreads, numThreads, 0, TimeUnit.MILLISECONDS, blockingQueueCapacity);
+    }
+    /**
+     * Create a new instance that will have a variable number of threads in the pool.
+     *
+     * @param corePoolSize the minimum number of threads always in the thread pool.
+     * @param maximumPoolSize the maximum number of threads that can be in the threadpool.
+     * @param keepAliveTime the amount of time an idle thread should be kept alive in the threadpool
+     *                      when the pool size is above core.
+     * @param unit the time unit of keep alive time.
+     * @param blockingQueueCapacity the capacity of the blocking queue for jobs to be run.  Once the number of waiting
+     *                              jobs exceeds this capacity, the submit() calls will block until one of the threads
+     *                              completes its currently running task.
+     *
+     * @return a new ExecutorService; will never be null.
+     */
+    public static ExecutorService newThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, int blockingQueueCapacity) {
+        return new BlockingSubmitExecutor(corePoolSize,maximumPoolSize, keepAliveTime, unit, blockingQueueCapacity);
+    }
+    /**
      * Create a new instance
      * @param corePoolSize the minimum number of threads always in the thread pool.
      * @param maximumPoolSize the maximum number of threads that can be in the threadpool.
@@ -22,7 +51,7 @@ public class BlockingSubmitExecutor extends ThreadPoolExecutor{
      *                              jobs exceeds this capacity, the submit() calls will block until one of the threads
      *                              completes its currently running task.
      */
-    public BlockingSubmitExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, int blockingQueueCapacity) {
+    private BlockingSubmitExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, int blockingQueueCapacity) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, new BlockingOfferQueue<Runnable>(blockingQueueCapacity));
     }
 

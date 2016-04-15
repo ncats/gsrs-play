@@ -1,19 +1,21 @@
 package ix.core.stats;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Statistics implements Serializable{
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = -5730152930484560692L;
-		public int recordsExtractedSuccess=0;
-		public int recordsProcessedSuccess=0;
-		public int recordsPersistedSuccess=0;
+		public AtomicInteger recordsExtractedSuccess= new AtomicInteger();
+		public AtomicInteger recordsProcessedSuccess=new AtomicInteger();
+		public AtomicInteger recordsPersistedSuccess=new AtomicInteger();
 		
-		public int recordsExtractedFailed=0;
-		public int recordsProcessedFailed=0;
-		public int recordsPersistedFailed=0;
+		public AtomicInteger recordsExtractedFailed=new AtomicInteger();
+		public AtomicInteger recordsProcessedFailed=new AtomicInteger();
+		public AtomicInteger recordsPersistedFailed=new AtomicInteger();
 		
 		private long start=System.currentTimeMillis();
 		
@@ -28,13 +30,13 @@ public class Statistics implements Serializable{
 		public Estimate totalRecords=null;
 		
 		private CHANGE lastChangeAction=null;
-		private long lastChangeVersion=0;
+		private AtomicLong lastChangeVersion = new AtomicLong();
 		
 		
 		public String toString(){
-			String msg = "Extracted: " + recordsExtractedSuccess + " (" + recordsExtractedFailed + " failed)\n";
-			msg += "Processed: " + recordsProcessedSuccess + " (" + recordsProcessedFailed + " failed)\n";
-			msg += "Persisted: " + recordsPersistedSuccess + " (" + recordsPersistedFailed + " failed)\n";
+			String msg = "Extracted: " + recordsExtractedSuccess.get() + " (" + recordsExtractedFailed.get() + " failed)\n";
+			msg += "Processed: " + recordsProcessedSuccess.get() + " (" + recordsProcessedFailed.get() + " failed)\n";
+			msg += "Persisted: " + recordsPersistedSuccess.get() + " (" + recordsPersistedFailed.get() + " failed)\n";
 			if(totalRecords!=null)
 				msg += "Total rec: " + totalRecords.getCount() + " (" + totalRecords.getType().toString() + ")\n";
 			return msg;			
@@ -42,11 +44,11 @@ public class Statistics implements Serializable{
 		 
 		
 		public int totalFailedAndPersisted() {
-			return recordsExtractedFailed+recordsProcessedFailed+recordsPersistedFailed+recordsPersistedSuccess;
+			return recordsExtractedFailed.get()+recordsProcessedFailed.get()+recordsPersistedFailed.get()+recordsPersistedSuccess.get();
 		}
 		
 		public void markExtractionDone(){
-			totalRecords= new Estimate(recordsExtractedSuccess+recordsExtractedFailed, Estimate.TYPE.EXACT);
+			totalRecords= new Estimate(recordsExtractedSuccess.get()+recordsExtractedFailed.get(), Estimate.TYPE.EXACT);
 		}
 		
 		public boolean _isDone(){
@@ -58,7 +60,7 @@ public class Statistics implements Serializable{
 
 
 		public long getAverageTimeToPersistMS(long end){
-			return (end-start)/recordsPersistedSuccess;
+			return (end-start)/recordsPersistedSuccess.get();
 		}
 		
 		public void applyChange(CHANGE c){
@@ -79,22 +81,22 @@ public class Statistics implements Serializable{
 				switch(c){
 
 					case ADD_EX_GOOD:
-						recordsExtractedSuccess++;
+						recordsExtractedSuccess.getAndIncrement();
 						break;
 					case ADD_EX_BAD:
-						recordsExtractedFailed++;
+						recordsExtractedFailed.getAndIncrement();
 						break;
 					case ADD_PR_GOOD:
-						recordsProcessedSuccess++;
+						recordsProcessedSuccess.getAndIncrement();
 						break;
 					case ADD_PR_BAD:
-						recordsProcessedFailed++;
+						recordsProcessedFailed.getAndIncrement();
 						break;
 					case ADD_PE_GOOD:
-						recordsPersistedSuccess++;
+						recordsPersistedSuccess.getAndIncrement();
 						break;
 					case ADD_PE_BAD:
-						recordsPersistedFailed++;
+						recordsPersistedFailed.getAndIncrement();
 						break;
 					case MARK_EXTRACTION_DONE:
 						this.markExtractionDone();
@@ -103,7 +105,7 @@ public class Statistics implements Serializable{
 						break;
 				}
 			}
-			lastChangeVersion++;			
+			lastChangeVersion.getAndIncrement();
 		}
 
 
@@ -113,7 +115,8 @@ public class Statistics implements Serializable{
 
 
 		public boolean isNewer(Statistics st) {
-			return this.lastChangeVersion > st.lastChangeVersion;
+
+            return this.lastChangeVersion.get() > st.lastChangeVersion.get();
 		}
 		
 	}
