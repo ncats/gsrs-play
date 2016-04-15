@@ -881,7 +881,9 @@
                     objKeys: [],
                     terms:[]
                 };*/
-                scope.cv={};
+                scope.cv={
+                   // dependencyfil
+                };
 
                 scope.getPos = function(item,arr){
                     if (scope.cv.domains.indexOf(item) == -1
@@ -924,37 +926,20 @@
                     };
                     var tempTerms=[];
                     _.forEach(scope.data.substanceNames, function(term){
-                   //    console.log(term);
                         var t = {
                             value: term[scope.cv.domain.display],
-                            display: term[scope.cv.domain.display]
+                            display: term[scope.cv.domain.display],
+                            filters: []
                         };
                         if(scope.cv.dependencyField){
-                            t.filter= scope.cv.dependencyField.display+'='+term[scope.cv.dependencyField.display];
+                            var filter = scope.cv.dependencyField.display+'='+term[scope.cv.dependencyField.display];
+                            t.filters.push(filter);
                         }
                       //  console.log(t);
                         tempTerms.push(t);
-  /*                      var CV = {
-                            domain: "KEW_PLANT_"+ _.toUpper(domain),
-                            terms: []
-                        };
-                        var domains = _.uniq( _.map(scope.data.substanceNames, domain));
-                        _.forEach(domains, function(t){
-                            var term = {
-                                value: t,
-                                display: t
-                            };
-                          //  CVFields.addCV(CV.domain, term);
-                            CV.terms.push(term);
-                        });
-                        console.log(CV);*/
-                      //
-                       // cvs.push(CV);
                     });
-                   // console.log(tempTerms);
 
                     controlledVocab.terms = _.uniqWith(tempTerms, _.isEqual);
-                 //   console.log(cvs);
                     console.log(controlledVocab);
                     CVFields.addTerms(controlledVocab);
                 };
@@ -1214,6 +1199,7 @@ console.log(scope);
 
         //string to array
         this.siteList = function (slist) {
+            console.log(slist);
             var toks = slist.split(";");
             var sites = [];
             for (var i in toks) {
