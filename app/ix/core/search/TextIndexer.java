@@ -106,7 +106,7 @@ public class TextIndexer implements Closeable{
     static final String SORTER_CONFIG_FILE = "sorter_conf.json";
     static final String DIM_CLASS = "ix.Class";
 
-    static final ThreadLocal<DateFormat> YEAR_DATE_FORMAT = new ThreadLocal<>() {
+    static final ThreadLocal<DateFormat> YEAR_DATE_FORMAT = new ThreadLocal<DateFormat>() {
         @Override
         protected DateFormat initialValue() {
             return new SimpleDateFormat ("yyyy");
