@@ -20,6 +20,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import com.avaje.ebean.event.BeanPersistAdapter;
+import com.avaje.ebean.event.BeanPersistListener;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
@@ -46,7 +47,7 @@ import play.db.ebean.Model;
 import tripod.chem.indexer.StructureIndexer;
 //import javax.annotation.PreDestroy;
 
-public class EntityPersistAdapter extends BeanPersistAdapter {
+public class EntityPersistAdapter extends BeanPersistAdapter{
    
 	private static EntityPersistAdapter _instance =null;
 	
@@ -113,6 +114,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     	if(e!=null){
     		editMap.remove(s1);
     	}
+    	
     	return e;
     }
     public static int getEditUpdateCount(){
@@ -713,5 +715,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static void doneReindexing(){
         alreadyLoaded.clear();
     }
+
+
+
+
 
 }

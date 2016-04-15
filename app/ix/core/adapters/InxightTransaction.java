@@ -3,6 +3,7 @@ package ix.core.adapters;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,15 +33,31 @@ public class InxightTransaction {
 	public static InxightTransaction getTransaction(Transaction t){
 		
 		InxightTransaction it=_instances.get(t);
+		//cleanupTransactions();
 		if(it!=null){
 			//System.out.println("Found transaction" + t);
 			return it;
 		}else{
 			//System.out.println("Can't find transaction" + t);
 			it= new InxightTransaction(t);
-			it.enhanced=false;
-			it.waitAndDestroy();
+			it.setEnhanced(false);
+			//it.waitAndDestroy();
 			return it;
+		}
+	}
+	
+	public static void cleanupTransactions(){
+		//System.out.println("Looking at:" + _instances.size() + " stored transactions");
+		List<InxightTransaction> toRemove = new ArrayList<InxightTransaction>();
+		Iterator<Transaction> trans= _instances.keySet().iterator();
+		while(trans.hasNext()){
+			Transaction t1=trans.next();
+			if(!t1.isActive()){
+				toRemove.add(_instances.get(t1));
+			}
+		}
+		for(InxightTransaction it: toRemove){
+			it.destroy();
 		}
 	}
 	
@@ -51,15 +68,15 @@ public class InxightTransaction {
 	private List<Callable> afterCommit=new ArrayList<Callable>();
 	
 	public void addPostCommitCall(Callable c){
-		if(enhanced){
+//		if(enhanced){
 			afterCommit.add(c);
-		}else{
-			try{
-				c.call();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
+//		}else{
+//			try{
+//				c.call();
+//			}catch(Exception e){
+//				e.printStackTrace();
+//			}
+//		}
 	}
 	
 	public void waitAndDestroy(){
@@ -133,7 +150,6 @@ public class InxightTransaction {
 	}
 	
 	public void destroy(){
-		this.afterCommit.clear();
 		_instances.remove(t);
 		//System.out.println("destroying transaction:" + t.isActive());
 	}
@@ -200,6 +216,12 @@ public class InxightTransaction {
 
 	public void setReadOnly(boolean arg0) {
 		t.setReadOnly(arg0);
+	}
+	public boolean isEnhanced() {
+		return enhanced;
+	}
+	public void setEnhanced(boolean enhanced) {
+		this.enhanced = enhanced;
 	}
 	
 

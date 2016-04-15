@@ -539,7 +539,6 @@
                 parent: '='
             },
             templateUrl: function (scope) {
-                console.log(scope);
                return baseurl + "assets/templates/forms/diverse-organism-form.html";
             }
         };
@@ -675,9 +674,6 @@
                 };
 
                 scope.updateCV = function(obj){
-                	//TODO: Shouldn't use popup javascript here
-                	var r = confirm("Are you sure you want to update this CV?");
-                    if (r == true) {
                         if(obj){
                             _.forEach(obj.fields, function(value, key) {
                                 if(!value.value){
@@ -690,7 +686,6 @@
                         }else {
                             CVFields.updateCV(scope.domain);
                         }
-                    }
                 };
 
                 scope.showTerms= function(obj, divid){
@@ -1040,7 +1035,7 @@
 
 
                 scope.checkDuplicateChemicalSubstance = function () {
-                    var sub = scope.$parent.fromFormSubstance(scope.parent);
+                    var sub = scope.parent.$$flattenSubstance(angular.copy(scope.parent));
                     scope.structureErrorsArray = [];
                     $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
                         var arr = [];
@@ -1120,7 +1115,7 @@
                                 if(_.isEmpty(scope.data)){
                                     scope.data.push("empty");
                                 }
-                                template = angular.element('<substance-viewer data = data></substance-viewer>');
+                                template = angular.element('<substance-viewer data = data parent = parent></substance-viewer>');
                             toggler.refresh(scope, 'nameForm', template);
                         });
                     }else {
@@ -1128,9 +1123,6 @@
                     }
                 };
 
-                scope.select = function(item){
-                    console.log(item);
-                };
             }
         };
     });
@@ -1676,10 +1668,7 @@ console.log(scope);
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/property-form.html",
-            link: function (scope) {
-                console.log(scope);
-            }
+            templateUrl: baseurl + "assets/templates/forms/property-form.html"
         };
     });
 
@@ -2120,6 +2109,13 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
+            link: function(scope){
+                console.log(scope);
+                scope.getType = function(){
+                    console.log("type");
+                    console.log(scope.mod.modificationType);
+                }
+            }
         };
     });
 

@@ -385,9 +385,11 @@ public class GinasUtils {
 				//which is what String.split() does
 				String[] toks = TOKEN_SPLIT_PATTERN.split(line);
 				// Logger.debug("extracting:"+ toks[1]);
-				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes(StandardCharsets.UTF_8));
+//				ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes(StandardCharsets.UTF_8));
+//
+//				return mapper.readTree(bis);
 
-				return mapper.readTree(bis);
+				return mapper.readTree(toks[2]);
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw e;

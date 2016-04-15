@@ -19,9 +19,12 @@
                                      label="Location Type"></dropdown-select>
                 </div>
                 <div class ="col-md-2" ng-if="mod.locationType && mod.locationType.value=='RESIDUE_SPECIFIC'">
+                        <multi-select ng-model="mod.$$residueModified" field="$$residueModified" label = "Residue Modified" cv = "AMINO_ACID_RESIDUE" ></multi-select>
+<!--
                 <text-input ng-model="mod.residueModified" field="residueModified" name ="residueModified" label="Residue Modified" form="strucModForm"></text-input>
+-->
                     </div>
-                <div class="col-md-1" ng-if="mod.locationType && mod.locationType.value!='RESIDUE_SPECIFIC'">
+                <div class="col-md-1" ng-if="mod.locationType.value && mod.locationType.value!='RESIDUE_SPECIFIC'">
                     <form-selector referenceobj="mod" parent="parent" field = "sites" divid="strucModForm"
                                    type="site"></form-selector>
                     <!--<input type="text" class="form-control" ng-model="structuralModification._displaySites"
@@ -35,9 +38,12 @@
                     <dropdown-select ng-model="mod.extent" field="extent" cv="EXTENT_TYPE"
                                      label="Extent"></dropdown-select>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <form-selector referenceobj="mod" parent="parent" field="extentAmount" divid="strucModForm"
                                    type="amount"></form-selector>
+                </div>
+                <div class = "col-md-1">
+                    <text-input ng-model="mod.group" field="group" name ="group" form="strucModForm"></text-input>
                 </div>
             </div>
             <div class="strucModForm"></div>
@@ -76,8 +82,8 @@
                 <div class="col-md-1">
                     <form-selector referenceobj="obj" parent="parent" field="extentAmount" type="amount" divid=struc-mod-{{index}}></form-selector>
                 </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid=struc-mod-{{index}}></form-selector>
+                <div class="col-md-1">
+                    <text-view-edit obj = "obj" field = "group"></text-view-edit>
                 </div>
             </div>
             <div class=struc-mod-{{index}}></div>

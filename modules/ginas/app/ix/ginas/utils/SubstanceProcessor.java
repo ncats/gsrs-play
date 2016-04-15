@@ -64,6 +64,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	        for(Code c:s.codes){
 	        	if(c.codeSystem.equals(seqGen.getCodeSystem())){
 	        		hasCode=true;
+	        		break;
 	        	}
 	        }
 	        if(!hasCode){
