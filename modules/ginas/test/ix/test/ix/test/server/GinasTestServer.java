@@ -373,15 +373,8 @@ public class GinasTestServer extends ExternalResource{
         //This cleans out the old eh-cache
         //and forces us to use a new one with each test
         CacheManager.getInstance().shutdown();
-        System.out.println("After clean db");
-        ts = testServer(port);
-        System.out.println("start server");
-        ts.start();
-        initializeControllers();
-        //we have to wait to create the users until after Play has started.
-        createInitialFakeUsers();
         start();
-    }
+   }
 
     private void initializeControllers() {
 
@@ -470,7 +463,7 @@ public class GinasTestServer extends ExternalResource{
                }
             }
 
-            PreparedStatement ps1 = con.prepareStatement("select SEQUENCE_NAME from dba_sequences where SEQUENCE_OWNER = 'IXGINAS_ADMIN'");
+            PreparedStatement ps1 = con.prepareStatement("select SEQUENCE_NAME from dba_sequences where SEQUENCE_OWNER = '" + ds.getUsername() +"'");
             ResultSet rs1 = ps1.executeQuery();
             while(rs1.next())
             {
