@@ -67,6 +67,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
@@ -113,7 +114,9 @@ public class TextIndexer implements Closeable{
     }
     };
     static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
-    
+
+    private static final Pattern SUGGESTION_WHITESPACE_PATTERN = Pattern.compile("[\\s/]");
+
     public static class FV {
         String label;
         Integer count;
@@ -858,7 +861,7 @@ public class TextIndexer implements Closeable{
         SuggestLookup lookup = lookups.get(field);
         if (lookup == null) {
             Logger.debug("Unknown suggest field \""+field+"\"");
-            return new ArrayList ();
+            return Collections.emptyList();
         }
         
         return lookup.suggest(key, max);
@@ -1693,7 +1696,8 @@ public class TextIndexer implements Closeable{
 
     void suggestField (String name, String value) {
         try {
-            name = name.replaceAll("[\\s/]","_");
+
+            name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
             SuggestLookup lookup = lookups.get(name);
             if (lookup == null) {
                 lookups.put(name, lookup = new SuggestLookup (name));
