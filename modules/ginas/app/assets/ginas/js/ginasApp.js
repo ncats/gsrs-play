@@ -1272,6 +1272,9 @@
                     } else {
                         if (scope.field) {
                             console.log(scope);
+                            if(_.isUndefined(scope.referenceobj[scope.field])){
+                                _.set(scope.referenceobj, scope.field, {});
+                            }
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         } else {
                             /*
@@ -1440,7 +1443,7 @@
 
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
-                        return 'D-';
+                        return '-';
                     }
                     else {
                         return 'L-';

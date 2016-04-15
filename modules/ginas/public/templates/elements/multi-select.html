@@ -1,6 +1,5 @@
 <div>
     <label id ="tags-label" for="{{::label}}" class="text-capitalize">{{label || field}}</label>
-    <h1>{{tags.length}}</h1>
     <tags-input custom-class="form-control" title="{{::field}}" placeholder="{{label || field}}" id="{{::field}}" name="{{::label}}"
                 ng-model="obj" ng-blur="editing(obj[field]); print()"ng-change = "print()" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true" max-tags={{::max}}>

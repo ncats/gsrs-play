@@ -415,7 +415,6 @@
                             if (term.selected == true) {
                                 scope.obj = term;
                             }
-                            //     scope.backup = angular.copy(scope.values);
                         });
 
                         if (scope.filter) {

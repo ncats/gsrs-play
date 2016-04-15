@@ -52,13 +52,16 @@
                         class="btn btn-primary" id="search-btn">Search</button>
                             </div>
                     </div>
-    <div class ="col-md-2">
-                        <text-input ng-model="name" field="name" name ="name" label="Name"></text-input>
+            <ng-form novalidate>
+            <div class ="col-md-2">
+                        <text-input ng-model="nameres" field="nameres" label="Name"></text-input>
                     </div>
                     <div class ="col-md-2">
-                        <a class="btn btn-primary" ng-click="resolveName(name, 'structureSearch')">Resolve Name</a>
+                        <a class="btn btn-primary" ng-click="resolveName(nameres, 'structureSearch')">Resolve Name</a>
                     </div>
-                    <div class="col-md-2 pull-right">
+            </ng-form>
+
+            <div class="col-md-2 pull-right">
                         <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
                     </div>

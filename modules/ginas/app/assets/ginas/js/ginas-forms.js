@@ -1199,6 +1199,7 @@ console.log(scope);
 
         //string to array
         this.siteList = function (slist) {
+            console.log(slist);
             var toks = slist.split(";");
             var sites = [];
             for (var i in toks) {

@@ -1,7 +1,6 @@
 <div ng-cloak>
     <div>
         <label id ="{{::field}}-label" class="text-capitalize">{{label || field}}</label>
-        <h3>{{values.length}}</h3>
         <select ng-hide = "obj.display =='Other'" class="form-control" title="{{::field}}" name="{{::field}}" aria-labelledby="{{::field}}-label" id="{{::field}}" ng-model= obj
                 ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
             <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
