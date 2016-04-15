@@ -37,7 +37,6 @@ public class AdminFactory extends Controller {
     
 
     private static Map<String,Group> alreadyRegistered;
-    
     private static Map<Long, Group> groupCache;
 
     
@@ -444,11 +443,15 @@ public class AdminFactory extends Controller {
     	if(g!=null)return g;
         g=groupfinder.byId(id);
         if(g!=null){
-        	groupCache.put(id, g);
+        	cacheGroup(g);
         }
         return g;
     }
 
+    private static void cacheGroup(Group g){
+    	alreadyRegistered.put(g.name, g);
+    	groupCache.put(g.id, g);
+    }
 
     public static synchronized Group registerGroupIfAbsent(Group org) {
     	Group grp=alreadyRegistered.get(org.name);
@@ -458,14 +461,7 @@ public class AdminFactory extends Controller {
         if (grp == null) {
             try {
                 org.save();
-                // For some reason, there is a race condition
-                // that seems to happen only with oracle,
-                // where the result can be null, and there's still enough
-                // time between registration and being query-able
-                // The hashmap is a temporary measure to fix this.
-                // But still doesn't seem to fix it
-                alreadyRegistered.put(org.name, org);
-
+                cacheGroup(org);
                 return org;
             } catch (Exception ex) {
                 Logger.trace("Can't register Group: " + org.name, ex);

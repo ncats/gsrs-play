@@ -6,6 +6,7 @@
     <div class="col-md-12">
         <ng-form name="termForm" id = "addCVTermForm" novalidate>
             <div class="row form-row">
+                <div class="col-md-1"></div>
                 <div class="col-md-2">
                     <text-input ng-model="term.value" field="value" name ="value"></text-input>
                 </div>
@@ -21,6 +22,15 @@
                 <div class="col-md-1">
                     <check-box ng-model="term.hidden" field="hidden"></check-box>
                 </div>
+                <div class="col-md-1">
+                    <check-box ng-model="term.selected" field="selected"></check-box>
+                </div>
+                <div class  = "col-md-1">
+                    <label>Filters</label><br>
+                    <i class = "fa fa-filter fa-2x success" ng-click = "" uib-tooltip="Add filters"></i>
+                </div>
+                </div>
+            <div class ="row">
                 <div class  = "col-md-1 pull-right">
                     <label>Save</label><br>
                     <i class = "fa fa-floppy-o fa-2x success" ng-click = "addCV(term);" uib-tooltip="Update Term to database"></i>
@@ -28,7 +38,7 @@
             </div>
         </ng-form>
 
-        <div ng-repeat="obj in domain.terms track by $index">
+        <div ng-repeat="(index, obj) in domain.terms track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -49,10 +59,15 @@
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="hidden" label="Hidden"></check-box-view-edit>
                 </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="selected" label="Selected"></check-box-view-edit>
+                </div>
                 <div class  = "col-md-1">
                     <label>Filters</label><br>
-                    <i class = "fa fa-filter fa-2x success" ng-click = "" uib-tooltip="Update Term to database"></i>
+                    <i class = "fa fa-filter fa-2x success" ng-click = "" uib-tooltip="Add filters"></i>
                 </div>
+                </div>
+            <div class ="row">
                 <div class  = "col-md-1 pull-right">
                     <label>Save</label><br>
                     <i class = "fa fa-floppy-o fa-2x success" ng-click = "updateCV();" uib-tooltip="Update Term to database"></i>

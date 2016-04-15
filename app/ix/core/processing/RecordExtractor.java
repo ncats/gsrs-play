@@ -4,11 +4,12 @@ import ix.core.controllers.PayloadFactory;
 import ix.core.models.Payload;
 import ix.core.stats.Estimate;
 
+import java.io.Closeable;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.Iterator;
 
-public abstract class RecordExtractor<K>{
+public abstract class RecordExtractor<K> implements Closeable {
 		
 		public InputStream is;
 		public RecordExtractor(InputStream is){

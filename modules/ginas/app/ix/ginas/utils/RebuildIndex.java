@@ -1,5 +1,4 @@
 package ix.ginas.utils;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -7,17 +6,11 @@ import javax.persistence.Entity;
 
 import com.avaje.ebean.Page;
 import com.avaje.ebean.PagingList;
-import ix.core.controllers.EntityFactory;
+import ix.core.util.BlockingSubmitExecutor;
 import org.reflections.Reflections;
 
-import com.avaje.ebean.Query;
-import com.avaje.ebean.QueryIterator;
-
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.BackupEntity;
-import ix.utils.EntityUtils;
-import play.Logger;
 import play.db.ebean.Model;
 
 public class RebuildIndex  {
@@ -39,7 +32,7 @@ public class RebuildIndex  {
         Objects.requireNonNull(listener);
         this.pageSize = pageSize;
         this.listener = listener;
-        this.executor =  new BlockingSubmitExecutor(5, 5, 1L, TimeUnit.MINUTES, pageSize);
+        this.executor =  BlockingSubmitExecutor.newFixedThreadPool(5,pageSize);
     }
 
     public void reindex(Class<?> type){

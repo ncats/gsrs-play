@@ -11,19 +11,14 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 
-public class GroupListSerializer extends JsonSerializer<Collection<Group>> {
-    public GroupListSerializer () {}
+public class GroupSerializer extends JsonSerializer<Group> {
+    public GroupSerializer () {}
 
-    public void serialize (Collection<Group> groups, JsonGenerator jgen,
+    public void serialize (Group group, JsonGenerator jgen,
                            SerializerProvider provider)
             throws IOException, JsonProcessingException {
-        jgen.writeStartArray();
-        if(groups!=null){
-	        for(Group grp : groups) {
-	            provider.defaultSerializeValue(grp.name, jgen);
-	        }
+        if(group!=null){
+        	provider.defaultSerializeValue(group.name, jgen);
         }
-
-        jgen.writeEndArray();
     }
 }

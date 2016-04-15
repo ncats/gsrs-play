@@ -20,6 +20,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import com.avaje.ebean.event.BeanPersistAdapter;
+import com.avaje.ebean.event.BeanPersistListener;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
@@ -46,7 +47,7 @@ import play.db.ebean.Model;
 import tripod.chem.indexer.StructureIndexer;
 //import javax.annotation.PreDestroy;
 
-public class EntityPersistAdapter extends BeanPersistAdapter {
+public class EntityPersistAdapter extends BeanPersistAdapter{
    
 	private static EntityPersistAdapter _instance =null;
 	
@@ -113,6 +114,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     	if(e!=null){
     		editMap.remove(s1);
     	}
+    	
     	return e;
     }
     public static int getEditUpdateCount(){
@@ -562,11 +564,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         return true;
     }
-
-    @Override
-    public void postDelete (BeanPersistRequest<?> request) {
-        Object bean = request.getBean();
-        String name = bean.getClass().getName();
+    
+    public void postDeleteBeanDirect (Object bean) {
+    	String name = bean.getClass().getName();
 
         List<Hook> methods = postDeleteCallback.get(name);
         if (methods != null) {
@@ -587,6 +587,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         catch (Exception ex) {
             Logger.trace("Can't remove bean "+bean+" from index!", ex);
         }
+    }
+
+    @Override
+    public void postDelete (BeanPersistRequest<?> request) {
+    	
+    	InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
+        final Object bean = request.getBean();
+        it.addPostCommitCall(new Callable(){
+			@Override
+			public Object call() throws Exception {
+				postDeleteBeanDirect(bean);
+				return null;
+			}
+        });
+        
     }
 
     @Override
@@ -700,5 +715,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public static void doneReindexing(){
         alreadyLoaded.clear();
     }
+
+
+
+
 
 }

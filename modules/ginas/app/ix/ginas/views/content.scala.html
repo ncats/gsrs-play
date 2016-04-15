@@ -59,7 +59,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src=@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)>"><code>@request().getQueryString("q")</code></a></h4>
+                                data-content="<img src='@ix.ncats.controllers.routes.App.renderParam(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case "Similarity" => {
@@ -70,7 +70,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src=@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                data-content="<img src='@ix.ncats.controllers.routes.App.renderParam(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
                                 </span> <div id="searching"></div>
                             }
                             case _ => {
