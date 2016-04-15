@@ -12,6 +12,7 @@ import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
+import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
 import ix.utils.TimeProfiler;
@@ -21,6 +22,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import play.Application;
 import play.Logger;
@@ -63,20 +66,19 @@ public class GinasRecordProcessorPlugin extends Plugin {
     //of extracted records not yet transformed
     private static Map<String,Long> queueStatistics = new ConcurrentHashMap<String,Long>();
     private static Map<String,Statistics> jobCacheStatistics = new ConcurrentHashMap<String,Statistics>();
-    private static final String GINAS_RECORD_PROCESSOR = "GinasRecordProcessor";
+
     private static int MAX_EXTRACTION_QUEUE = 100;
         
-          
+
+    private Set<ExecutorService> executorServices = new HashSet<>();
+
 
         
-        
     private final Application app;
-    private StructureIndexer indexer;
+
     private PersistenceQueue PQ;
     private IxContext ctx;
-    private ActorSystem system;         // 
-    private ActorRef processor;         // Not quite sure, needed
-    private Inbox inbox;                        // where things are submitted
+
     static final Random rand = new Random();
         
     private static GinasRecordProcessorPlugin _instance;
@@ -179,20 +181,18 @@ public class GinasRecordProcessorPlugin extends Plugin {
         public final V theRecordToPersist;
         public final ProcessingRecord rec;
         final K theRecord;
-        public final StructureIndexer indexer;
 
         public TransformedRecord(V persistRecord, K record,
-                                 ProcessingRecord rec, StructureIndexer indexer) {
+                                 ProcessingRecord rec) {
             this.theRecordToPersist = persistRecord;
             this.rec = rec;
             this.theRecord = record;
-            this.indexer = indexer;
         }
                 
         @Transactional
         public void persists() {
         	
-            getInstance().decrementExtractionQueue();
+
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             
             //Set the user for use in later persist information
@@ -323,128 +323,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
    
 
-    public static class Processor extends UntypedActor {
-        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-        ActorRef reporter = context().actorFor("/user/reporter");
-        StructureIndexer indexer;
 
-        public Processor(StructureIndexer indexer) {
-            this.indexer = indexer;
-        }
-
-        public void onReceive(Object mesg) {
-        	if (mesg instanceof PayloadProcessor) {
-                PayloadProcessor payload = (PayloadProcessor) mesg;
-                log.info("Received payload " + payload.id);
-                                
-
-                // now spawn child processor to process the payload stream
-                ActorRef child = null;
-                Collection<ActorRef> children = JavaConverters
-                    .asJavaCollectionConverter(context().children())
-                    .asJavaCollection();
-                for (ActorRef ref : children) {
-                    if (ref.path().name()
-                        .indexOf(payload.payload.id.toString()) >= 0) {
-                        // this child is current running
-                        child = ref;
-                    }
-                }
-
-                if (child != null) {
-                    // the given payload is currently processing
-                    // at the moment!
-                    Logger.debug("Job already exists");
-                    ProcessingJob job = new ProcessingJob();
-                    job.start = job.stop = TimeUtil.getCurrentTimeMillis();
-                    job.keys.add(new Keyword(GinasRecordProcessorPlugin.class
-                                             .getName(), payload.key));
-                    job.status = ProcessingJob.Status.NOT_RUN;
-                    job.message = "Payload " + payload.payload.id + " is "
-                        + "currently being processed.";
-                    job.payload = payload.payload;
-                    log.info("About to persist payload job, I think:" + payload.id);
-                    Logger.debug("Job already exists, still gonna persist.");
-                    reporter.tell(PersistModel.Save(job), self());
-                } else {
-                    child = context()
-                        .actorOf(
-                                 Props.create(Processor.class, indexer)
-                                 .withRouter(
-                                             new FromConfig()
-                                             .withFallback(new SmallestMailboxRouter(
-                                                                                     2))),
-                                 payload.id);
-                    context().watch(child);
-                    try {
-                        ProcessingJob job = process(reporter, 
-                        							child, 
-                        							self(),
-                                                    payload);
-                        Logger.debug("Processed Job");
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                                        
-                    child.tell(new Broadcast(PoisonPill.getInstance()), self());
-                }
-            } else if (mesg instanceof PayloadExtractedRecord) {
-
-//            	TRY_STUFF_TS++;
-//                System.out.println("Starting Transform:" + TRY_STUFF_TS);
-//                
-                PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
-                                
-                ProcessingRecord rec = new ProcessingRecord();
-                String k=pr.jobKey;
-                try{
-                    Payload pay=pr.job.payload;
-                    RecordTransformer rt=pr.job.getTransformer();
-                    Object trans = rt.transform(pr, rec);
-                    
-                    if(trans==null){
-                        throw new IllegalStateException("Transform error");
-                    }
-                    
-                    applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
-                    reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
-                                        
-                }catch(Throwable e){
-                	
-                    getInstance().decrementExtractionQueue();
-                    Logger.error(e.getMessage() + ":" + rec.message);
-                    
-                    ObjectMapper om = new ObjectMapper();
-                    
-                    Global.TransformFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
-                    applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
-                    try{
-                		updateJobIfNecessary(pr.job);
-                	}catch(Exception e2){
-                		e.printStackTrace();
-                	}
-                }finally{
-                	
-                }
-                //TRY_STUFF_TF++;
-                //System.out.println("Ending Transform:" + TRY_STUFF_TF);
-                                
-            } else if (mesg instanceof Terminated) {
-                ActorRef actor = ((Terminated) mesg).actor();
-
-                String id = actor.path().name();
-                int pos = id.indexOf(':');
-                if (pos > 0) {
-                   
-                } else {
-                   
-                }
-                context().unwatch(actor);
-            } else {
-                unhandled(mesg);
-            }
-        }
-    }
 
     public GinasRecordProcessorPlugin(Application app) {
         this.app = app;
@@ -462,62 +341,35 @@ public class GinasRecordProcessorPlugin extends Plugin {
         
         MAX_EXTRACTION_QUEUE=play.Play.application().configuration()
                 .getInt("ix.ginas.maxrecordqueue", MAX_EXTRACTION_QUEUE);
-               
-        
-       
-        
-        
+
+
+
+
         ctx = app.plugin(IxContext.class);
         if (ctx == null)
             throw new IllegalStateException("IxContext plugin is not loaded!");
 
-        StructureIndexerPlugin plugin = app
-            .plugin(StructureIndexerPlugin.class);
-        if (plugin == null)
-            throw new IllegalStateException(
-                                            "StructureIndexerPlugin is not loaded!");
-        indexer = plugin.getIndexer();
+
 
         PQ = app.plugin(PersistenceQueue.class);
         if (PQ == null)
             throw new IllegalStateException(
                                             "Plugin PersistenceQueue is not laoded!");
 
-        system = ActorSystem.create(GinasRecordProcessorPlugin.GINAS_RECORD_PROCESSOR);
-        Logger.info("Plugin " + getClass().getName()
-                    + " initialized; Akka version " + system.Version());
-        RouterConfig config = new SmallestMailboxRouter(2);
-        processor = system
-            .actorOf(
-                     Props.create(Processor.class, indexer).withRouter(
-                                                                       new FromConfig().withFallback(config)),
-                     "processor");
-        system.actorOf(Props.create(Reporter.class, PQ), "reporter");
+
                 
         long start= System.currentTimeMillis();
-        while(true){
-            try{
-                inbox = Inbox.create(system);
-                break;
-            }catch(Exception e){
-                Logger.error(e.getMessage() + " retrying");
-            }
-            if(System.currentTimeMillis()>start+GinasRecordProcessorPlugin.AKKA_TIMEOUT){
-                throw new IllegalStateException("Couldn't start akka");
-            }
-            try{
-                Thread.sleep(10);
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-        }
+
         _instance=this;
     }
 
     @Override
     public void onStop() {
-        if (system != null)
-            system.shutdown();
+        //TODO shutdownNow() which will kill currently running threads??
+        for(ExecutorService s : executorServices){
+            s.shutdownNow();
+        }
+      //  executorService.shutdown();
         Logger.info("Plugin " + getClass().getName() + " stopped!");
     }
 
@@ -525,17 +377,15 @@ public class GinasRecordProcessorPlugin extends Plugin {
         return true;
     }
 
-    //  public String submit(Payload payload) {
-    //          return submit(payload, _recordExtractor.getClass());
-    //  }
-    public String submit(Payload payload, Class extractor, Class persister) {
+
+    public String submit(final Payload payload, Class extractor, Class persister) {
         // first see if this payload has already processed..
     	
     	
-        PayloadProcessor pp = new PayloadProcessor(payload);
+        final PayloadProcessor pp = new PayloadProcessor(payload);
                 
                 
-        ProcessingJob job = new ProcessingJob();
+        final ProcessingJob job = new ProcessingJob();
         job.start = TimeUtil.getCurrentTimeMillis();
         job.keys.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
         job.setExtractor(extractor);
@@ -548,194 +398,91 @@ public class GinasRecordProcessorPlugin extends Plugin {
         job.save();
         storeStatisticsForJob(pp.key, new Statistics());
         pp.jobId=job.id;
-        inbox.send(processor, pp);
-                
-        
-        
+
+        final ExecutorService executorService = BlockingSubmitExecutor.newFixedThreadPool(3, MAX_EXTRACTION_QUEUE);
+
+        executorServices.add(executorService);
+        new Thread() {
+            @Override
+            public void run() {
+
+
+
+
+
+                try(RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
+
+            Estimate es= extractorInstance.estimateRecordCount(pp.payload);
+            {
+                Logger.debug("Counted records");
+                Statistics stat = getStatisticsForJob(pp.key);
+                if(stat==null){
+                    stat = new Statistics();
+                }
+                stat.totalRecords=es;
+                stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
+                storeStatisticsForJob(pp.key, stat);
+                Logger.debug(stat.toString());
+            }
+            job.status = ProcessingJob.Status.RUNNING;
+            job.payload = pp.payload;
+                Object record;
+                do {
+                    try {
+                        record = extractorInstance.getNextRecord();
+                        final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
+
+                        if (record != null) {
+                            executorService.submit(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ProcessingRecord rec = new ProcessingRecord();
+                                    Object trans = job.getTransformer().transform(prg, rec);
+
+                                    if (trans == null) {
+                                        throw new IllegalStateException("Transform error");
+                                    }
+                                    new TransformedRecord(trans, prg.theRecord, rec).persists();
+                                }
+                            });
+                        }
+                    } catch (Exception e) {
+                        Statistics stat = getStatisticsForJob(pp.key);
+                        stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
+                        storeStatisticsForJob(pp.key, stat);
+                        Global.ExtractFailLogger.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
+                        //hack to keep iterator going...
+                        record = new Object();
+                    }
+                } while (record != null);
+                executorService.shutdown();
+                Statistics stat = getStatisticsForJob(pp.key);
+                stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
+
+        }
+        try {
+            executorService.awaitTermination(2, TimeUnit.DAYS);
+            executorServices.remove(executorService);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        job.save();
+
+            }
+        }.start();
+
+
         return pp.key;
     }
 
 
-    /**
-     * This is so as to give the user access to the same persistence queue as
-     * the processor to prevent deadlocks
-     */
-    /*
-      public void submit(StructureReceiver receiver) {
-      inbox.send(processor, new ReceiverProcessor(null, receiver, indexer));
-      }
-    */
 
-    /**
-     * batch processing
-     * 
-     * One issue here is that this is designed to only
-     * have 1 job per payload. In practice, it might not
-     * be done this way.
-     * 
-     */
-    static ProcessingJob process(ActorRef reporter, ActorRef proc,
-                                 ActorRef sender, PayloadProcessor pp) throws Exception {
-        List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(pp.payload.id.toString());
-        Logger.debug("Okay, where are these jobs?");
-        ProcessingJob job = null;
-        if (jobs.isEmpty()) {
-            job = new ProcessingJob();
-            job.start = TimeUtil.getCurrentTimeMillis();
-            job.keys.add(new Keyword(
-                                     GinasRecordProcessorPlugin.class.getName(), pp.key));
-            job.status = ProcessingJob.Status.PENDING;
-            job.payload = pp.payload;
-        }else{
-            job = jobs.iterator().next();
-        }
-        Logger.debug(job.status.toString());
-        //If the job hasn't started yet, then start it
-        if (job.status==ProcessingJob.Status.PENDING || job.status==ProcessingJob.Status.COMPLETE) {
-            try {
-                Logger.debug("Counting records");
-                RecordExtractor rec = job.getExtractor();
-                Estimate es= rec.estimateRecordCount(pp.payload);
-                {
-                    Logger.debug("Counted records");
-                    Statistics stat = getStatisticsForJob(pp.key);
-                    if(stat==null){
-                        stat = new Statistics();
-                    }
-                    stat.totalRecords=es;
-                    stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
-                    storeStatisticsForJob(pp.key, stat);
-                    Logger.debug(stat.toString());
-                }
-                job.status = ProcessingJob.Status.RUNNING;
-                job.payload = pp.payload;
-                                
-                Logger.debug("Making extractor");
-                RecordExtractor extract = rec.makeNewExtractor(pp.payload);
-                                
-                Logger.debug("Made extractor:" + extract.getClass().getName());
-                for (Object m; ;) {
-                	m=null;
-                	try{
-                		m=extract.getNextRecord();
-                		if(m==null)break;
-                		Statistics stat = getStatisticsForJob(pp.key);
-                        stat.applyChange(Statistics.CHANGE.ADD_EX_GOOD);
-                        storeStatisticsForJob(pp.key, stat);
-                        getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
-                        PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
-                        getInstance().incrementExtractionQueue();
-                        proc.tell(prg, sender);
-                	}catch(Exception e){
-                		Statistics stat = getStatisticsForJob(pp.key);
-                        stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
-                        storeStatisticsForJob(pp.key, stat);
-                        Global.ExtractFailLogger.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
-                	}
-                	
-                    
-                }
-                extract.close();
-                Statistics stat = getStatisticsForJob(pp.key);
-                stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
-                storeStatisticsForJob(pp.key, stat);
-            } catch (Throwable t) {
-                job.message = t.getMessage();
-                job.status = ProcessingJob.Status.FAILED;
-                job.stop = TimeUtil.getCurrentTimeMillis();
-                t.printStackTrace();
-                Logger.trace("Failed to process payload " + pp.payload.id, t);
-            } finally {
-                reporter.tell(PersistModel.Save(job), sender);
-            }
-        } else {
-            job.keys.add(new Keyword(
-                                     GinasRecordProcessorPlugin.class.getName(), pp.key));
-            reporter.tell(PersistModel.Update(job), sender);
-        }
-        //fail the processing job that was intended by this
-        if(job.id!=pp.jobId){
-            for(ProcessingJob jb2:jobs){
-                if(jb2.id==pp.jobId){
-                    Logger.debug("The job already exists, but isn't selected");
-                    jb2.status=ProcessingJob.Status.FAILED;
-                    jb2.message="Payload job already exists";
-                    PersistModel.Update(jb2).persists();
-                }
-            }
-        }
-        return job;
-    }
-        
-        
-        
-        
-        
-        
-        
-        
         
         
         
 
-        
-        
-    /*
-     * The following is a hack to guard against out-of-memory errors.
-     * 
-     * Essentially, if the extraction step happens much faster than the
-     * transform step, there will be a pile up of new extracted records
-     * due to the non-blocking nature of the "tell" command in AKKA.
-     * 
-     * Instead, we keep a count of what's been processed,
-     * and call waitForProcessingRecordsCount in order to block for 
-     * some upper-bound before continuing a process.
-     * 
-     * 
-     */
-    /**
-     * Gets the total number of records extracted, but not
-     * transformed yet.
-     * @return
-     */
-    public long getRecordsProcessing(){
-        Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
-        if(l==null)return 0;
-        return l;
-    }
     
-    private synchronized void incrementExtractionQueue(){
-        
-        Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
-        if(l==null)l=(long) 0;
-        l++;
-        queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
 
-//        System.out.println("Incrementing Total Records:" + l);
-        //return l;
-        //Logger.debug("Total Records:" + _extractedButNotTransformed);
-    }
-    private synchronized void decrementExtractionQueue(){
-        
-        Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
-        if(l==null)l=(long) 0;
-        l--;
-        
-        queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
-//        System.out.println("Decrementing Total Records:" + l);
-    }
-    private void waitForProcessingRecordsCount(int max){
-    	int t=0;
-        while(getRecordsProcessing()>=max){
-        	try {
-            	Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            t++;
-            if(t>8000)break;
-        }
-    }
     
     public static Statistics getStatisticsForJob(String jobTerm){
         return jobCacheStatistics.get(jobTerm);
@@ -760,7 +507,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
     public static Statistics applyStatisticsChangeForJob(String jobTerm, Statistics.CHANGE change){
         Statistics stat = getStatisticsForJob(jobTerm);
         stat.applyChange(change);
-        return storeStatisticsForJob(jobTerm, stat);
+        return stat;
     }
     
 
