@@ -1541,7 +1541,7 @@ public class GinasApp extends App {
         public void recordReIndexed(Object o) {
             currentRecordsIndexed++;
 
-            if(currentRecordsIndexed %10 ==0){
+            if(currentRecordsIndexed %50 ==0){
                 updateMessage();
             }
         }
@@ -1554,12 +1554,15 @@ public class GinasApp extends App {
 
 
         private void updateMessage() {
-            long currentTime = System.currentTimeMillis();
 
-
-            long totalTimeSerializing = currentTime - startTime;
 
             int numProcessedThisTime = currentRecordsIndexed - recordsIndexedLastUpdate;
+            if(numProcessedThisTime < 1){
+                return;
+            }
+            long currentTime = System.currentTimeMillis();
+
+            long totalTimeSerializing = currentTime - startTime;
 
             String toAppend="\n" + numProcessedThisTime + " more records Processed: " + currentRecordsIndexed + " of " + recordsToIndex + " in " + ((currentTime - lastUpdateTime))+ "ms (" +totalTimeSerializing + "ms serializing)";
             Logger.debug("REINDEXING:" + toAppend);

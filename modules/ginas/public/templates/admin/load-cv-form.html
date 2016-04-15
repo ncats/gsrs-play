@@ -29,7 +29,7 @@
             <input type="checkbox" ng-model="dependency">
         </div>
         <div class="col-md-3" ng-if="dependency==true">
-            <dropdown-select ng-model="cv.dependencyField" field="dependencyField" values = values name = "dependencyField"></dropdown-select>
+            <multi-select ng-model="cv.dependencyField" field="dependencyField" tags = values name = "Dependency Field" max="666"></multi-select>
         </div>
     <div class = "col-md-2">
         <button class = "btn btn-primary" ng-click="makeCV();">Make CV</button>

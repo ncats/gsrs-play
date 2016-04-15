@@ -15,6 +15,7 @@ import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -66,6 +67,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
@@ -105,9 +107,16 @@ public class TextIndexer implements Closeable{
     static final String SORTER_CONFIG_FILE = "sorter_conf.json";
     static final String DIM_CLASS = "ix.Class";
 
-    static final DateFormat YEAR_DATE_FORMAT = new SimpleDateFormat ("yyyy");
+    static final ThreadLocal<DateFormat> YEAR_DATE_FORMAT = new ThreadLocal<DateFormat>() {
+        @Override
+        protected DateFormat initialValue() {
+            return new SimpleDateFormat ("yyyy");
+    }
+    };
     static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
-    
+
+    private static final Pattern SUGGESTION_WHITESPACE_PATTERN = Pattern.compile("[\\s/]");
+
     public static class FV {
         String label;
         Integer count;
@@ -852,7 +861,7 @@ public class TextIndexer implements Closeable{
         SuggestLookup lookup = lookups.get(field);
         if (lookup == null) {
             Logger.debug("Unknown suggest field \""+field+"\"");
-            return new ArrayList ();
+            return Collections.emptyList();
         }
         
         return lookup.suggest(key, max);
@@ -1664,10 +1673,13 @@ public class TextIndexer implements Closeable{
                         Object value = m.invoke(entity);
                         if (value != null) {
                             String name = m.getName();
-                            if (name.startsWith("get"))
+                            if (name.startsWith("get")) {
                                 name = name.substring(3);
+                            }
+                            LinkedList<String> l = new LinkedList<>();
+                            l.add(name);
                             indexField (ixFields, indexable, 
-                                        Arrays.asList(name), value);
+                                        l, value);
                         }
                     }
                     else {
@@ -1684,7 +1696,8 @@ public class TextIndexer implements Closeable{
 
     void suggestField (String name, String value) {
         try {
-            name = name.replaceAll("[\\s/]","_");
+
+            name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
             SuggestLookup lookup = lookups.get(name);
             if (lookup == null) {
                 lookups.put(name, lookup = new SuggestLookup (name));
@@ -1695,24 +1708,19 @@ public class TextIndexer implements Closeable{
             Logger.trace("Can't create Lookup!", ex);
         }
     }
-    
-    void indexField (List<IndexableField> fields, 
-                     Collection<String> path, Object value) {
-        indexField (fields, null, path, value, NO);
-    }
 
-    void indexField (List<IndexableField> fields, Indexable indexable, 
-                     Collection<String> path, Object value) {
+
+    void indexField (List<IndexableField> fields, Indexable indexable,
+                     LinkedList<String> path, Object value) {
         indexField (fields, indexable, path, value, NO);
     }
 
     void indexField (List<IndexableField> fields, Indexable indexable, 
-                     Collection<String> path, Object value, 
+                     LinkedList<String> path, Object value,
                      org.apache.lucene.document.Field.Store store) {
-        String name = path.iterator().next();
+        String name = path.getFirst();
         String full = toPath (path);
-        String fname =
-            "".equals(indexable.name()) ? name : indexable.name();
+        String fname =indexable.name().isEmpty() ? name : indexable.name();
         
         boolean asText = true;
         if (value instanceof Long) {
@@ -1797,7 +1805,7 @@ public class TextIndexer implements Closeable{
                 sorters.put(full, SortField.Type.LONG);
             asText = indexable.facet();
             if (asText) {
-                value = YEAR_DATE_FORMAT.format(date);
+                value = YEAR_DATE_FORMAT.get().format(date);
             }
         }
 
@@ -1805,7 +1813,7 @@ public class TextIndexer implements Closeable{
             String text = value.toString();
             String dim = indexable.name();
             if ("".equals(dim))
-                dim = toPath (path, true);
+                dim = toPath (path);
 
             if (indexable.facet() || indexable.taxonomy()) {
                 facetsConfig.setMultiValued(dim, true);
@@ -1896,29 +1904,15 @@ public class TextIndexer implements Closeable{
             (IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
     }
 
-    static String toPath (Collection<String> path) {
-        return toPath (path, /*false*/true);
-    }
 
-    static String toPath (Collection<String> path, boolean noindex) {
-        StringBuilder sb = new StringBuilder ();
-        List<String> rev = new ArrayList<String>(path);
-        Collections.reverse(rev);
+    private static String toPath (LinkedList<String> path) {
+        StringBuilder sb = new StringBuilder (256);
 
-        for (Iterator<String> it = rev.iterator(); it.hasNext(); ) {
+        for (Iterator<String> it = path.descendingIterator(); it.hasNext(); ) {
             String p = it.next();
 
-            boolean append = true;
-            if (noindex) {
-                try {
-                    Integer.parseInt(p);
-                    append = false;
-                }
-                catch (NumberFormatException ex) {
-                }
-            }
 
-            if (append) {
+            if (!StringUtils.isNumeric(p)) {
                 sb.append(p);
                 if (it.hasNext())
                     sb.append('_');
