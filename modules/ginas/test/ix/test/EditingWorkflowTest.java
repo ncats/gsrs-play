@@ -447,7 +447,7 @@ public class EditingWorkflowTest {
                
                String uuid = entered.get("uuid").asText();
                ensurePass(api.submitSubstance(entered));
-               
+               System.out.println("about to add reference");
                testAddReferenceNameServer(api, uuid);
            }
    	}
@@ -755,6 +755,25 @@ public class EditingWorkflowTest {
 		return fetched;
     }
     
+    @Test
+    public void validateGeneratedCodeAddition(){
+    	try(RestSession session = ts.newRestSession(fakeUser1)) {
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+
+            ensurePass(api.submitSubstance(entered));
+            JsonNode fetched=api.fetchSubstanceJsonByUuid(uuid);
+            System.out.println("$$$$$$$$$$$");
+            for(JsonNode code:fetched.at("/codes")){
+            	System.out.println("CodeSystem:" + code.at("/codeSystem"));
+            }
+            System.out.println("done$$$$$$$$$$$");
+            
+        }
+    }
+    
     public JsonNode addNameOrgServer(SubstanceAPI api, String uuid, String nameorg){
     	
     	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
@@ -862,9 +881,12 @@ public class EditingWorkflowTest {
     	
     	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
     
-    	String ref=fetched.at("/references/5/uuid").asText();
+    	String ref=fetched.at("/references/4/uuid").asText();
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/names/0/references/-", ref).build();
+    	
+    	System.out.println("updating...");
 		api.updateSubstanceJson(updated);
+		System.out.println("updated");
 		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		
 		System.out.println(updated.at("/names/0/references/1"));

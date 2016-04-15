@@ -1,5 +1,6 @@
 package ix.core.adapters;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -120,7 +121,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     public static int getEditUpdateCount(){
     	return editMap.size();
     }
-    
+
     public EntityPersistAdapter () {
     	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
     	if(ls!=null){
@@ -129,12 +130,26 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 	    			Map m = (Map)o;
 	    			String entityClass=(String) m.get("class");
 	    			String processorClass=(String) m.get("processor");
+	    			Map params=(Map) m.get("with");
 	    			String debug="Setting up processors for [" + entityClass + "] ... ";
 	    			try {
 	    				
-						Class entityCls = Class.forName(entityClass);
-						Class processorCls = Class.forName(processorClass);
-						extraProcessors.put(entityCls, (EntityProcessor) processorCls.newInstance());
+						Class<?> entityCls = Class.forName(entityClass);
+						Class<?> processorCls = Class.forName(processorClass);
+						
+						EntityProcessor ep=null;
+						if(params!=null){
+							try{
+								Constructor c=processorCls.getConstructor(Map.class);
+								ep= (EntityProcessor) c.newInstance(params);
+							}catch(Exception e){
+								Logger.warn("No Map constructor for " + processorClass);
+							}
+						}
+						if(ep==null){
+							ep = (EntityProcessor) processorCls.newInstance();
+						}
+						extraProcessors.put(entityCls, ep);
 						Logger.info(debug + "done");
 					} catch (Exception e) {
 						Logger.info(debug + "failed");

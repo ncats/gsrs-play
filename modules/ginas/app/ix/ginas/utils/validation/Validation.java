@@ -51,11 +51,11 @@ import play.Play;
 import play.mvc.Call;
 
 public class Validation {
-	
-	private static CodeSequentialGenerator seqGen=null;
-	public static CodeSequentialGenerator getCodeGenerator(){
-		return seqGen;
-	}
+//	
+//	private static CodeSequentialGenerator seqGen=null;
+//	public static CodeSequentialGenerator getCodeGenerator(){
+//		return seqGen;
+//	}
 
     static PayloadPlugin _payload =null;
     public static boolean extractLocators=true;
@@ -66,13 +66,13 @@ public class Validation {
 
     public static void init() {
     	Configuration conf=Play.application().configuration();
-        String codeSystem = 		conf.getString("ix.ginas.generatedcode.codesystem", null);
-        String codeSystemSuffix = 	conf.getString("ix.ginas.generatedcode.suffix", null);
-        int length = 				conf.getInt("ix.ginas.generatedcode.length", 10);
-        boolean padding = 			conf.getBoolean("ix.ginas.generatedcode.padding", true);
-        if(codeSystem!=null){
-            seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
-        }
+//        String codeSystem = 		conf.getString("ix.ginas.generatedcode.codesystem", null);
+//        String codeSystemSuffix = 	conf.getString("ix.ginas.generatedcode.suffix", null);
+//        int length = 				conf.getInt("ix.ginas.generatedcode.length", 10);
+//        boolean padding = 			conf.getBoolean("ix.ginas.generatedcode.padding", true);
+//        if(codeSystem!=null){
+//            seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
+//        }
         _payload = Play.application().plugin(PayloadPlugin.class);
         extractLocators=			conf.getBoolean("ix.ginas.prepare.extractlocators", true);
     }
@@ -336,7 +336,7 @@ public class Validation {
 	            }
 	        }
 	        if(display==0){
-	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) display name, Default to using:" + s.getName()).appliableChange(true);
+	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have exactly one (1) display name, Default to using:" + s.getName()).appliableChange(true);
 	            gpm.add(mes);
 	            strat.processMessage(mes);
 	            if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
@@ -348,7 +348,7 @@ public class Validation {
 	            }
 	        }
 	        if(display>1){
-	        	 GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Substance can't have more than one (1) display name. Found " + display );
+	        	 GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Substance should not have more than one (1) display name. Found " + display );
 		         gpm.add(mes);
 		         strat.processMessage(mes);
 	        }
