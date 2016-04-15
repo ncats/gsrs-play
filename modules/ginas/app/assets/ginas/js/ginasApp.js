@@ -535,7 +535,7 @@
     }]);
 
     ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
-                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler) {
+                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver, spinnerService) {
         // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
@@ -569,6 +569,19 @@
         };
         $scope.viewToggle = function () {
             $scope.submitSubstanceView = angular.fromJson(angular.toJson($scope.substance.$$flattenSubstance()));
+        };
+
+        $scope.resolveName = function(name, div){
+            resolver.resolve(name, 'structureSearchSpinner').then(function (response) {
+                if (response.data.length > 0) {
+                    $scope.structureSearchResolve = response.data;
+                }
+                $scope.name = null;
+                var template = angular.element('<substance-viewer data=structureSearchResolve></substance-viewer>');
+                toggler.refresh($scope, div, template);
+                spinnerService.hideAll();
+            });
+            console.log(div);
         };
 
         $scope.toggleGrid = function () {

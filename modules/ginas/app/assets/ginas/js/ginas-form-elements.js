@@ -551,29 +551,33 @@
             replace: true,
             scope: {
                 obj: '=ngModel',
+                tags: '=?',
                 field: '@',
                 cv: '@',
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                scope.tags = [];
                 if (attrs.max) {
                     scope.max = attrs.max;
                 } else {
                     scope.max = 'MAX_SAFE_INTEGER';
                 }
-                CVFields.getCV(scope.cv).then(function (data) {
-                    if (scope.cv == 'LANGUAGE') {
-                        var values = _.orderBy(data.data.content[0].terms, function (cv) {
-                            return cv.display == 'English';
-                        }, ['desc']);
-                        scope.tags = values;
-                    } else {
-                        scope.tags = data.data.content[0].terms;
-                    }
+                if (attrs.cv) {
+                    scope.tags = [];
+                    CVFields.getCV(attrs.cv).then(function (data) {
+                        if (scope.cv == 'LANGUAGE') {
+                            var values = _.orderBy(data.data.content[0].terms, function (cv) {
+                                return cv.display == 'English';
+                            }, ['desc']);
+                            scope.tags = values;
+                        } else {
+                            scope.tags = data.data.content[0].terms;
+                        }
 
-                });
-
+                    });
+                }else{
+                    console.log(scope);
+                }
                 scope.loadItems = function ($query) {
                     var filtered = _.filter(scope.tags, function (cv) {
                         return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
@@ -583,6 +587,11 @@
                     }, ['desc']);
                     return sorted;
                 };
+
+                scope.print = function(){
+                    console.log(scope.tags);
+                    console.log(scope.obj);
+                }
             }
         };
     });
@@ -594,6 +603,7 @@
             replace: true,
             scope: {
                 obj: '=',
+                values: '=?',
                 field: '@',
                 cv: '@',
                 label: '@'
@@ -783,9 +793,9 @@
         var resolver = {};
 
         resolver.resolve = function (name, loading) {
-            /*            if(loading){
+                        if(loading){
              spinnerService.show(loading);
-             }*/
+             }
             var url = baseurl + "resolve/" + name;
             return $http.get(url, {cache: true}, {
                 headers: {

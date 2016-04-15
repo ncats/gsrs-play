@@ -42,6 +42,7 @@ public class VocabularyTerm extends IxModel{
 @JsonDeserialize(contentUsing=KeywordDeserializer.DomainDeserializer.class)
 @Basic(fetch=FetchType.LAZY)
 public EmbeddedKeywordList filters = new EmbeddedKeywordList();
+
     public boolean hidden=false;
     public boolean selected=false;
 
