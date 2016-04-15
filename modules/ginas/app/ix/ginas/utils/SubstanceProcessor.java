@@ -33,6 +33,10 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	public static StructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     
+	public SubstanceProcessor(){
+		//System.out.println("Made processor");
+	}
+	
 	
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
@@ -56,31 +60,10 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 		postPersist(obj);
 	}
 	
-	public void generateCodeIfNecessary(Substance s){
-		CodeSequentialGenerator seqGen = Validation.getCodeGenerator();
-		
-		if(seqGen!=null && s.isPrimaryDefinition()){
-	        boolean hasCode = false;
-	        for(Code c:s.codes){
-	        	if(c.codeSystem.equals(seqGen.getCodeSystem())){
-	        		hasCode=true;
-	        		break;
-	        	}
-	        }
-	        if(!hasCode){
-	        	try{
-		        	Code c=seqGen.addCode(s);
-		        	//System.out.println("Generating new code:" + c.code);
-	        	}catch(Exception e){
-	        		e.printStackTrace();
-	        	}
-	        }
-        }
-	}
+	
 	@Override
 	public void prePersist(Substance s) {
 		
-		generateCodeIfNecessary(s);
 		
 		Logger.debug("Persisting substance:" + s);
 		if (s.isAlternativeDefinition()) {

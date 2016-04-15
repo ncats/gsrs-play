@@ -19,10 +19,12 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.SingleParent;
+import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.EmbeddedKeywordList;
@@ -49,6 +51,12 @@ public class Name extends CommonDataElementOfCollection {
     @Basic(fetch=FetchType.EAGER)
     @JsonIgnore
     public String fullName;
+    
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
+    @JsonView(BeanViews.Internal.class)
+    public String stdName;
+    
     
     @JSONEntity(title = "Name Type", format = JSONConstants.CV_NAME_TYPE, values = "JSONConstants.ENUM_NAMETYPE")
     @Column(length=32)

@@ -1562,10 +1562,12 @@ public class GinasApp extends App {
             }
             long currentTime = System.currentTimeMillis();
 
-
             long totalTimeSerializing = currentTime - startTime;
-            message.append("\n").append(numProcessedThisTime).append(" more records Processed: ").append(currentRecordsIndexed).append(" of ").append(recordsToIndex)
-                    .append(" in ").append((currentTime - lastUpdateTime)).append("ms (").append(totalTimeSerializing).append("ms serializing)");
+
+            String toAppend="\n" + numProcessedThisTime + " more records Processed: " + currentRecordsIndexed + " of " + recordsToIndex + " in " + ((currentTime - lastUpdateTime))+ "ms (" +totalTimeSerializing + "ms serializing)";
+            Logger.debug("REINDEXING:" + toAppend);
+            
+            message.append(toAppend);
 
             lastUpdateTime = currentTime;
 

@@ -43,6 +43,7 @@ import com.avaje.ebean.Transaction;
 import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.bean.EntityBean;
 import com.avaje.ebean.bean.EntityBeanIntercept;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.Version;
@@ -235,6 +236,9 @@ public class EntityFactory extends Controller {
         public static EntityMapper FULL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Full.class);
         }
+        public static EntityMapper INTERNAL_ENTITY_MAPPER(){
+        	return new EntityMapper(BeanViews.Internal.class);
+        }
 
 		public static EntityMapper COMPACT_ENTITY_MAPPER() {
 			return new EntityMapper(BeanViews.Compact.class);
@@ -243,7 +247,9 @@ public class EntityFactory extends Controller {
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+            this.setSerializationInclusion(Include.NON_NULL);
             _serializationConfig = getSerializationConfig();
+            
             for (Class v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
             }
