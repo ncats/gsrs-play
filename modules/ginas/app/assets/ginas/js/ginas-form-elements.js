@@ -394,48 +394,15 @@
                 field: '@',
                 label: '@',
                 values: '=?',
-                filter: '=',
-                filterName: '@filter',
-                filterFunction: '&'
+                filter: '@',
+                parent: '='
             },
             link: function (scope, element, attrs) {
-                scope.getValue = function(obj){
-                    console.log(obj);
-                };
 
-                scope.selectOptions = "r.display for r in values track by r.display";
                 if(_.isUndefined(scope.obj)){
                     scope.obj={};
                 }
-                // scope.filterFunction = function () {
-                //     var filtered = [];
-                //     var family = scope.filter;
-                //     if (!_.isUndefined(family)) {
-                //         console.log(scope);
-                //         _.forEach(scope.values, function (value) {
-                //             if (_.isEqual(family, value.filter.split('=')[1])) {
-                //                 filtered.push(value);
-                //             }
-                //         });
-                //         scope.values = filtered;
-                //         console.log(filtered);
-                //     }
-                // };
-                /*};
-                if (scope.filter) {
-                    console.log("there's a filter");
-                    console.log(scope.filter);
-                    console.log(scope.field);
-                    filterService._register(scope.filterName, attrs.ngModel, scope.filter);
 
-                    scope.$watch(scope.filter, function (newNames, oldNames) {
-                        console.log(scope.filter);
-                        console.log(newNames);
-                        console.log(oldNames);
-                    });
-
-                }
-*/
                 if (attrs.cv) {
                     CVFields.getCV(attrs.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -448,28 +415,46 @@
                                     selected: false
                                 });
                         }
-                        if (scope.filterFunction) {
-                            //if there is a filter object
-                            //pass that object to the filter registerer
-                                //watch for that object to change
-                                    //if it changes, trigger cv loading function
-                                  //      cv is filtered by filter
-                            /*
-console.log(scope);
-                            console.log("filtering");*/
-                            scope.filterFunction(scope.filter);
 
-                            //   scope.filterCV(scope[filter]);
-                        }
-                        _.forEach(scope.values, function(term){
-                            if(term.selected == true){
-                                console.log(scope);
-                                scope.obj  = term;
+                        _.forEach(scope.values, function (term) {
+                            if (term.selected == true) {
+                                scope.obj = term;
                             }
+                            //     scope.backup = angular.copy(scope.values);
                         });
 
-                       // scope.selectOptions = "r.display for r in values track by r.display";
-
+                        if (scope.filter) {
+                            console.log("filter");
+                            scope.$watch(function (scope) {
+                                return _.get(scope.parent, scope.filter)
+                            }, function (newValue, oldValue) {
+                                var filtered = [];
+                                var cv = [];
+                                CVFields.getCV(attrs.cv).then(function (response) {
+                                    cv = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                                    if (response.data.content[0].editable == true) {
+                                        cv.push(
+                                            {
+                                                display: "Other",
+                                                value: "Other",
+                                                filter: " = ",
+                                                selected: false
+                                            });
+                                    }
+                                    _.forEach(cv, function (term) {
+                                        if (_.isEqual(newValue, term.filter.split('=')[1])) {
+                                            filtered.push(term);
+                                        }
+                                    });
+                                    scope.values = filtered;
+                                    if(scope.values.length == 1){
+                                        scope.obj = scope.values[0];
+                                    }
+                                    console.log(filtered);
+                                    console.log(scope);
+                                });
+                            });
+                        }
                     });
                 }
 
@@ -491,10 +476,6 @@ console.log(scope);
                         alert(scope.obj.new + ' exists in the cv');
                         scope.obj = {};
                     }
-                };
-
-                scope.filterCV = function (field) {
-                    console.log('filter by ' + field);
                 };
             }
     };

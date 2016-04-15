@@ -2,11 +2,12 @@ angular.module('filterListener', [])
     .factory('filterService', function ($rootScope) {
         var filters = [];
         return {
-            _register: function (watch, change, value, parent) {
+            _register: function (watch, change, value, scope) {
                 console.log("registering a field to watch");
                 console.log(watch);
                 console.log(change);
                 console.log(value);
+                console.log(scope);
 /*                if (!data.hasOwnProperty('field')) {
                     throw new Error("Filter must specify a field when registering with the filter service.");
                 }*/
@@ -18,7 +19,7 @@ angular.module('filterListener', [])
                 filters.push(filter);
                 console.log(filters);
                 console.log($rootScope);
-                $rootScope.$watchCollection(filter, function(newNames, oldNames) {
+                $rootScope.$watchCollection(filters, function(newNames, oldNames) {
                     console.log(filter);
                    console.log(newNames);
                    console.log(oldNames);

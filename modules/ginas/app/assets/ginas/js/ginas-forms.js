@@ -930,7 +930,8 @@
                             display: term[scope.cv.domain.display]
                         };
                         if(scope.cv.dependencyField){
-                            t.filter= scope.cv.dependencyField.display+'='+term[scope.cv.dependencyField.display];
+                            var filter = scope.cv.dependencyField.display+'='+term[scope.cv.dependencyField.display];
+                            t.filters.push(filter);
                         }
                       //  console.log(t);
                         tempTerms.push(t);
