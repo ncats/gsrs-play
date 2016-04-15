@@ -15,6 +15,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -155,14 +156,21 @@ public class Protein extends GinasCommonSubData {
     	}
     	return _modifiedCache;
     }
-    public List<Subunit> getSubunits(){
+    
+    @PostLoad
+    /**
+     * 
+     */
+    public void sortSubunits(){
     	Collections.sort(subunits, new Comparator<Subunit>(){
 			@Override
 			public int compare(Subunit o1, Subunit o2) {
 				return o1.subunitIndex-o2.subunitIndex;
 			}
-    		
     	});
+    }
+    
+    public List<Subunit> getSubunits(){
     	return this.subunits;
     }
     @Override
