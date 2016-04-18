@@ -166,19 +166,13 @@ public class SubstanceFactory extends EntityFactory {
 
 	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
 		try{
-			System.out.println("######################################");
-			System.out.println("Fetching:" + uuid + " or " + approvalID);
 			Substance s = getSubstance(uuid);
 			
 			if (s == null){
-				System.out.println("didn't get by uuid");
 				s=getSubstanceByApprovalID(approvalID);
-			}else{
-				System.out.println("got by uuid");
 			}
 			return s;
 		}catch(Exception e){
-			System.out.println("error fetching");
 			e.printStackTrace();
 			
 		}
