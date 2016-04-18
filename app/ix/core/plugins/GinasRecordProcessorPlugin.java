@@ -437,11 +437,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
                                 @Override
                                 public void run() {
                                     ProcessingRecord rec = new ProcessingRecord();
+                                    job.getStatistics().applyChange(Statistics.CHANGE.ADD_EX_GOOD);
                                     Object trans = job.getTransformer().transform(prg, rec);
 
                                     if (trans == null) {
                                         throw new IllegalStateException("Transform error");
                                     }
+                                    job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
                                     new TransformedRecord(trans, prg.theRecord, rec).persists();
                                 }
                             });
@@ -456,12 +458,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     }
                 } while (record != null);
                 executorService.shutdown();
-                Statistics stat = getStatisticsForJob(pp.key);
-                stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
+
 
         }
         try {
             executorService.awaitTermination(2, TimeUnit.DAYS);
+            Statistics stat = getStatisticsForJob(pp.key);
+            stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
             executorServices.remove(executorService);
         } catch (InterruptedException e) {
             e.printStackTrace();
