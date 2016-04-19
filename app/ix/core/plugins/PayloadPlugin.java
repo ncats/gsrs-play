@@ -66,7 +66,7 @@ public class PayloadPlugin extends Plugin {
         Payload payload = new Payload();
 
         try(OutputStream fos = new BufferedOutputStream(new FileOutputStream (tmp));
-            InputStream in = new BufferedInputStream(new DigestInputStream (is, md))) {
+            InputStream in = new DigestInputStream (new BufferedInputStream(is), md)) {
             //default buffersize of BufferedOutputStream is 8K
             byte[] buf = new byte[8192];
 
