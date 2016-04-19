@@ -6,13 +6,13 @@
         <form class="form-horizontal" name="propertyForm" id="addPropertyForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME" ng-change="filterCV(property.name)"></dropdown-select>
+                    <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="property.type" field="type" cv = "PROPERTY_TYPE" ></dropdown-select>
+                    <dropdown-select ng-model="property.type" field="type" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount"></form-selector>
+                    <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount" filter= "property.type"></form-selector>
                 </div>
                 <div class="col-md-2">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "parameter"></form-selector>

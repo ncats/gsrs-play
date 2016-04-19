@@ -10,7 +10,7 @@
                 <dropdown-select ng-model = "parent.structurallyDiverse.organismFamily" field="organismFamily" cv="KEW_PLANT_FAMILY" label="Organism Family"></dropdown-select>
             </div>
             <div class="col-md-3" ng-if="parent.structurallyDiverse.organismFamily.value">
-                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= "structurallyDiverse.organismFamily.value" parent = parent field="organismGenus"  label="Organism Genus"></dropdown-select>
+                <dropdown-select ng-model = "parent.structurallyDiverse.organismGenus" cv="KEW_PLANT_GENUS" filter= "structurallyDiverse.organismFamily" label="Organism Genus"></dropdown-select>
             </div>
                 <div class="col-md-3">
                 <dropdown-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></dropdown-view-edit>

@@ -264,9 +264,16 @@
                 amount: '=',
                 referenceobj: '=',
                 parent: '=',
-                field: '='
+                field: '=',
+                filter:'='
             },
-            templateUrl: baseurl + "assets/templates/forms/amount-form.html"
+            templateUrl: baseurl + "assets/templates/forms/amount-form.html",
+            link: function(scope){
+                if(scope.filter){
+                    console.log(scope);
+                }
+
+    }
         };
     });
 
@@ -716,6 +723,7 @@
                 referenceobj: '=',
                 type:'@',
                 parent: '=',
+                filter:'=',
                 field: '@',
                 label: '@',
                 divid: '@',
@@ -728,6 +736,10 @@
                 if (_.isUndefined(scope.referenceobj)) {
                     var x = {};
                     _.set(scope, 'referenceobj', x);
+                }
+
+                if(scope.filter){
+                    console.log(scope);
                 }
 
                 scope.toggle = function () {
@@ -747,7 +759,7 @@
                                 $compile(template)(scope);
 
                             });
-                        formHolder = '<amount-form referenceobj = referenceobj parent = parent field=field amount=referenceobj.amount></amount-form>';
+                        formHolder = '<amount-form referenceobj = referenceobj parent = parent field=field amount=referenceobj.amount filter = filter></amount-form>';
                         break;
                     case "site":
                         scope.formtype = attrs.formtype;
@@ -1990,7 +2002,10 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/relationship-form.html"
+            templateUrl: baseurl + "assets/templates/forms/relationship-form.html",
+            link: function(scope){
+              //  scope.filter = {};
+            }
         };
     });
 
