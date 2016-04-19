@@ -7,7 +7,7 @@
         <form class="form-horizontal" name="amountForm" id="addAmountForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <dropdown-select ng-model="referenceobj[field].type" field="type" cv="AMOUNT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="referenceobj[field].type" field="type" cv="AMOUNT_TYPE" filter = filter></dropdown-select>
                 </div>
                 <div class="col-md-1">
                     <text-input ng-model="referenceobj[field].average" field="average"></text-input>
@@ -25,7 +25,7 @@
                     <text-input ng-model="referenceobj[field].highLimit" field="highLimit"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="referenceobj[field].units" field="units" cv="AMOUNT_UNIT"></dropdown-select>
+                    <dropdown-select ng-model="referenceobj[field].units" field="units" cv="AMOUNT_UNIT" filter = "referenceobj[field].type"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <text-input ng-model="referenceobj[field].nonNumericValue" field="nonNumericValue"></text-input>

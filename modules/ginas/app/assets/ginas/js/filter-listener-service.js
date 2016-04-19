@@ -1,28 +1,56 @@
 angular.module('filterListener', [])
-    .factory('filterService', function ($rootScope) {
+    .factory('filterService', function (CVFields) {
         var filters = [];
         return {
-            _register: function (watch, change, value, scope) {
+            _register: function (scope) {
                 console.log("registering a field to watch");
-                console.log(watch);
-                console.log(change);
-                console.log(value);
                 console.log(scope);
-/*                if (!data.hasOwnProperty('field')) {
-                    throw new Error("Filter must specify a field when registering with the filter service.");
-                }*/
-                var filter ={
-                    watchField: watch,
-                    changeField: change,
-                    currentValue: value
-                };
-                filters.push(filter);
-                console.log(filters);
-                console.log($rootScope);
-                $rootScope.$watchCollection(filters, function(newNames, oldNames) {
-                    console.log(filter);
-                   console.log(newNames);
-                   console.log(oldNames);
+                var filter = scope.filter;
+                scope.$watch('filter', function (newValue) {
+                    console.log(newValue);
+                    if (!_.isUndefined(newValue)) {
+                        if (scope.filterFunction) {
+                            var cv = scope.filterFunction({type: newValue});
+                            CVFields.getCV(cv).then(function (response) {
+                                scope.obj = [];
+                                scope.values = response.data.content[0].terms;
+                                if (scope.values.length == 1) {
+                                    console.log("setting");
+                                    console.log(scope);
+                                    scope.obj = scope.values[0];
+                                }
+                            });
+                        } else {
+                            CVFields.getCV(scope.cv).then(function (response) {
+                                var filtered = [];
+                                var cv = response.data.content[0].terms;
+                                _.forEach(cv, function (term) {
+                                    if (!_.isNull(term.filters)) {
+                                        _.forEach(term.filters, function (filter) {
+                                            if (_.isEqual(newValue.value, filter.split('=')[1])) {
+                                                filtered.push(term);
+                                            }
+                                        });
+                                    }
+                                });
+                                if (filtered.length > 0) {
+                                    scope.values = filtered;
+                                } else {
+                                    scope.obj = {};
+                                    if (response.data.content[0].editable == true) {
+                                        cv = _.union(cv, other);
+                                    }
+                                    scope.values = cv;
+                                }
+                                if (scope.values.length == 1) {
+                                    console.log("setting");
+                                    console.log(scope);
+                                    scope.obj = scope.values[0];
+                                }
+                            });
+                        }
+
+                    }
                 });
             },
             _unregister: function (field) {

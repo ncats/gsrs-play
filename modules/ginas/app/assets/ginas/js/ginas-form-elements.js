@@ -384,6 +384,10 @@
         };
     });
 
+
+
+    //filterFunction allows for choosing which cv to be loaded for each dropdown. Foe example, displaying amino acid vs nucleic acid bases based on input.
+    //filter is an object that a $watch is set on. when that object changes, the currently loaded cv is filtered based on the value. these filtering options are set in the cv
     ginasFormElements.directive('dropdownSelect', function (CVFields, filterService) {
         return {
             restrict: 'E',
@@ -391,24 +395,72 @@
             replace: true,
             scope: {
                 obj: '=ngModel',
+                cv:'@',
                 field: '@',
                 label: '@',
                 values: '=?',
-                filter: '@',
+                filter: '=',
+                filterFunction: '&?',
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                if (attrs.cv) {
-                    CVFields.getCV(attrs.cv).then(function (response) {
+                var other = [{
+                display: "Other",
+                    value: "Other",
+                    filter: " = ",
+                    selected: false
+            }];
+                if (scope.cv) {
+                    CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+
+                        if (response.data.content[0].filterable == true) {
+                            //if (scope.filter) {
+                            console.log(response);
+                            console.log("filter");
+                            filterService._register(scope);
+                            /*scope.$watch('filter', function (newValue) {
+                                console.log(newValue);
+                                if (!_.isUndefined(newValue)) {
+                                    if (scope.filterFunction) {
+                                        var cv = scope.filterFunction({type: newValue});
+                                        CVFields.getCV(cv).then(function (response) {
+                                            scope.obj = [];
+                                            scope.values = response.data.content[0].terms;
+                                        });
+                                    } else {
+                                        var filtered = [];
+                                        var cv = response.data.content[0].terms;
+
+                                        _.forEach(cv, function (term) {
+                                            if (!_.isNull(term.filters)) {
+                                                _.forEach(term.filters, function (filter) {
+                                                    if (_.isEqual(newValue.value, filter.split('=')[1])) {
+                                                        filtered.push(term);
+                                                    }
+                                                });
+                                            }
+                                        });
+                                        if(filtered.length > 0) {
+                                            scope.values = filtered;
+                                        }else{
+                                            scope.obj={};
+                                            if (response.data.content[0].editable == true) {
+                                                cv = _.union(cv, other);
+                                            }
+                                            scope.values = cv;
+                                        }
+                                    }
+                                    if (scope.values.length == 1) {
+                                        scope.obj = scope.values[0];
+                                    }
+                                }
+                            });*/
+
+                        }
+
                         if (response.data.content[0].editable == true) {
-                            scope.values.push(
-                                {
-                                    display: "Other",
-                                    value: "Other",
-                                    filter: " = ",
-                                    selected: false
-                                });
+                           scope.values =  _.union(scope.values, other);
                         }
 
                         _.forEach(scope.values, function (term) {
@@ -416,39 +468,6 @@
                                 scope.obj = term;
                             }
                         });
-
-                        if (scope.filter) {
-                            console.log("filter");
-                            scope.$watch(function (scope) {
-                                return _.get(scope.parent, scope.filter)
-                            }, function (newValue, oldValue) {
-                                var filtered = [];
-                                var cv = [];
-                                CVFields.getCV(attrs.cv).then(function (response) {
-                                    cv = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-                                    if (response.data.content[0].editable == true) {
-                                        cv.push(
-                                            {
-                                                display: "Other",
-                                                value: "Other",
-                                                filter: " = ",
-                                                selected: false
-                                            });
-                                    }
-                                    _.forEach(cv, function (term) {
-                                        if (_.isEqual(newValue, term.filter.split('=')[1])) {
-                                            filtered.push(term);
-                                        }
-                                    });
-                                    scope.values = filtered;
-                                    if(scope.values.length == 1){
-                                        scope.obj = scope.values[0];
-                                    }
-                                    console.log(filtered);
-                                    console.log(scope);
-                                });
-                            });
-                        }
                     });
                 }
 
