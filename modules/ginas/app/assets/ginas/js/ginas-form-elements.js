@@ -157,62 +157,11 @@
         };
         return CV;
     });
-    /*
-
-     ginasFormElements.directive('duplicate', function (isDuplicate) {
-     return {
-     restrict: 'A',
-     require: 'ngModel',
-     link: function (scope, element, attrs, ngModel) {
-     // console.log(ngModel);
-     //  console.log(scope);
-     ngModel.$asyncValidators.duplicate = isDuplicate;
-     }
-     };
-     });
-     */
-
-    /*    ginasFormElements.directive('duplicate', function (substanceFactory) {
-     return {
-     restrict: 'A',
-     require: 'ngModel',
-     link: function (scope, element, attrs, ngModel) {
-     console.log(ngModel);
-     console.log(scope);
-     console.log(scope.name.name);
-     if(!_.isUndefined(scope.name.name)) {
-     substanceFactory.getSubstances(scope.name.name).then(function (response) {
-     console.log(response);
-     ngModel.$asyncValidators.duplicate = (response.count >= 1);
-     });
-     }
-     }
-     };
-     });*/
-    /*
-     ginasFormElements.factory('isDuplicate', function ($q, substanceFactory) {
-     return function dupCheck(modelValue) {
-     var deferred = $q.defer();
-     if(!_.isUndefined(modelValue)) {
-     substanceFactory.getSubstances(modelValue)
-     .success(function (response) {
-     if (response.count >= 1) {
-     deferred.reject();
-     } else {
-     deferred.resolve();
-     }
-     });
-     }else {
-     deferred.resolve();
-     }
-     return deferred.promise;
-     };
-     });
-     */
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances?filter=names.name='";
+        var url = baseurl + "api/v1/substances";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
+        	console.log("getting substance:" + name);
             return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
@@ -756,40 +705,6 @@
         };
     });
 
-    /*ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
-        return {
-            restrict: 'E',
-            scope: {
-                name: '=',
-                parent: '='
-            },
-            template: '<div class ="col-md-1 pull-left"><button class="btn btn-primary" ng-click="resolve(name);">Resolve Name</button></div>',
-            link: function (scope, element, attrs) {
-                scope.stage = true;
-                scope.resolve = function (name) {
-                    /!*                    var result = document.getElementsByClassName(attrs.divid);
-                     var elementResult = angular.element(result);*!/
-                    resolver.resolve(name).then(function (data) {
-                        console.log(data.data);
-                        _.set(scope, 'data', data.data);
-                        if (data.data.length > 0) {
-                            var template = angular.element('<substance-viewer data= data parent = parent></substance-viewer>');
-                        } else {
-                            template = angular.element('<div><h3>Name: ' + name + ' does not resolve to existing structure</h3></div>');
-                        }
-                        toggler.toggle(scope, attrs.divid, template);
-                        /!*                        elementResult.append(template);
-                         $compile(template)(scope);*!/
-                    });
-
-                    scope.close = function () {
-                        toggler.toggle(scope, attrs.divid, template);
-                    }
-                }
-            }
-        };
-    });
-*/
     ginasFormElements.service('resolver', function ($http, spinnerService) {
         var resolver = {};
 

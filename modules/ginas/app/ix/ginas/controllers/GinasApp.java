@@ -98,7 +98,7 @@ public class GinasApp extends App {
         "Substance Class", 
         "SubstanceStereochemistry", 
         "Molecular Weight",
-        "LyChI_L4",
+        //"LyChI_L4",
         "GInAS Tag"
     };
     
