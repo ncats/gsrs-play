@@ -409,10 +409,10 @@
     }]);
 
     ginasApp.service('substanceRetriever', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances?filter=names.name='";
+        var url = baseurl + "api/v1/substances";
         var substanceRet = {
             getSubstances: function (name) {
-                var promise = $http.get(url + name.toUpperCase() + "'", {cache: true}, {
+                var promise = $http.get(url, {params: {"filter": "names.name='" + name.toUpperCase() + "'"}, cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }

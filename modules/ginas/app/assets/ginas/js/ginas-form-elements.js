@@ -2,32 +2,16 @@
     var ginasFormElements = angular.module('ginasFormElements', []);
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
-
-        var load = function () {
-            return $http.get(baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'", {cache: true}, {
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            }).success(function (data) {
-                return data;
-            });
-        };
-
-
-        var url = baseurl + "api/v1/vocabularies?filter=domain='";
+        var vocabulariesUrl = baseurl + "api/v1/vocabularies";
         var CV = {
-
-
+            //used for expanding a cv
             getByField: function (path) {
-                var ret;
-                /*             return load().then(function(data){
-                 var terms = data.data.content[0].terms;*/
                 var patharr = path.split('.');
                 if (patharr.length > 2) {
                     patharr = _.takeRight(patharr, 2);
                 }
                 var pathString = _.join(patharr, '.');
-                return $http.get(baseurl + "api/v1/vocabularies?filter=fields.term='" + pathString + "'", {cache: true}, {
+                return $http.get(vocabulariesUrl,{params: {"filter": "fields.term ='"+pathString+"'"}, cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -38,18 +22,10 @@
                         return 0;
                     }
                 });
-                /* var domain = _.find(terms, function(cv) {
-                 return cv.value == pathString;
-                 });
-                 if(!_.isUndefined(domain)){
-                 ret = domain.display;
-                 }
-                 return ret;*/
-                //       });
             },
-
+            //used to load cv in form elements
             getCV: function (domain) {
-                return $http.get(url + domain.toUpperCase() + "'", {cache: true}, {
+                return $http.get(vocabulariesUrl, {params: {"filter": "domain='" + domain.toUpperCase() + "'"}, cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -57,10 +33,9 @@
                     return data;
                 });
             },
-
+            //used in admin for cv count
             count: function () {
-                var counturl = baseurl + "api/v1/vocabularies";
-                return $http.get(counturl, {cache: true}, {
+                return $http.get(vocabulariesUrl, {cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -68,7 +43,7 @@
                     return data;
                 });
             },
-
+            //used to download cv
             all: function () {
                 var allurl = baseurl + "api/v1/vocabularies?top=999";
                 return $http.get(allurl, {cache: true}, {
@@ -79,37 +54,7 @@
                     return data;
                 });
             },
-
-            load: function (field) {
-                // console.log(lookup);
-                if (!_.has(CV, field)) {
-                    var promise = $http.get(url + field.toUpperCase() + "'&top=999", {cache: true}, {
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        }
-                    }).success(function (data) {
-                        CV[field] = data.content[0].terms;
-                        return CV[field];
-                    });
-                    return promise;
-                }
-            },
-
-            fetch: function (field) {
-                // console.log(lookup);
-                //if (!_.has(CV, field)) {
-                return $http.get(url + field.toUpperCase() + "'", {cache: true}, {
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (data) {
-                    //CV[field] = data.content[0].terms;
-                    //  console.log(data);
-                    return data;
-                });
-                //  }
-            },
-
+            //not currently used, but may become useful
             search: function (field, query) {
                 return _.chain(CV[field])
                     .filter(function (x) {
@@ -117,7 +62,7 @@
                     })
                     .sortBy('display').value();
             },
-
+            //not currently used, but may become useful
             searchTags: function (domain, query) {
                 CV.getCV(domain).then(function (data) {
                     console.log(data);
@@ -268,7 +213,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name + "'", {cache: true}, {
+            return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -400,6 +345,7 @@
                 label: '@',
                 values: '=?',
                 filter: '=',
+                filterField:'@filter',
                 filterFunction: '&?',
                 parent: '='
             },

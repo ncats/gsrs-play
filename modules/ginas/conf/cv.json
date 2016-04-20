@@ -2548,7 +2548,8 @@
         "display": "WEIGHT RATIO",
         "description": null,
         "origin": null,
-        "filters": ["PROPERTY_TYPE=PHYSICAL","RELATIONSHIP_TYPE=ACTIVE MOIETY","PROPERTY_NAME=COLOR"],
+        //"filters": ["PROPERTY_TYPE=PHYSICAL","RELATIONSHIP_TYPE=ACTIVE MOIETY","PROPERTY_NAME=COLOR"],
+        "filters": null,
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -2590,7 +2591,8 @@
         "display": "DEGREE OF POLYMERIZATION",
         "description": null,
         "origin": null,
-        "filters": ["PROPERTY_TYPE=PHYSICAL","PROPERTY_NAME=COLOR"],
+        //"filters": ["substanceClass=polymer","PROPERTY_TYPE=PHYSICAL","PROPERTY_NAME=COLOR"],
+        "filters": null,
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -2621,7 +2623,8 @@
         "display": "g/mL",
         "description": null,
         "origin": null,
-        "filters": ["PROPERTY_TYPE=PHYSICAL","AMOUNT_TYPE=ACTIVE MOIETY","PROPERTY_NAME=COLOR","AMOUNT_TYPE=WEIGHT RATIO","AMOUNT_TYPE=MOL RATIO"],
+        //"filters": ["PROPERTY_TYPE=PHYSICAL","AMOUNT_TYPE=ACTIVE MOIETY","PROPERTY_NAME=COLOR","AMOUNT_TYPE=WEIGHT RATIO","AMOUNT_TYPE=MOL RATIO"],
+        "filters": null,
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -17725,7 +17728,8 @@
         "display": "PHYSICAL",
         "description": null,
         "origin": null,
-        "filters": ["PROPERTY_NAME=PHYSICAL STATE","PROPERTY_NAME=HARDNESS","PROPERTY_NAME=SOLUBILITY"],
+        //"filters": ["PROPERTY_NAME=PHYSICAL STATE","PROPERTY_NAME=HARDNESS","PROPERTY_NAME=SOLUBILITY"],
+        "filters": null,
         "hidden": false,
         "selected": false,
         "_namespace": null
