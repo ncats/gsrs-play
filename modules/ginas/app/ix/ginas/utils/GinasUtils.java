@@ -450,6 +450,16 @@ public class GinasUtils {
 
 		@Override
 		public void close() {
+            if(is ==null){
+                return;
+            }
+            try{
+                is.close();
+            }catch(IOException e){
+                e.printStackTrace();
+                //ignore exception
+            }
+            is = null;
 		}
 
 		@Override

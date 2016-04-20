@@ -8,7 +8,7 @@
     "domain": "ACCESS_GROUP",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": false,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -95,7 +95,7 @@
     "domain": "CV_DOMAIN",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -1118,7 +1118,7 @@
     "domain": "AGENT_MODIFICATION_PROCESS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -1849,7 +1849,7 @@
     "domain": "AGENT_MODIFICATION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -2202,7 +2202,7 @@
     "domain": "AMINO_ACID_RESIDUE",
     "vocabularyTermType": "ix.ginas.models.v1.FragmentControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "fields": [],
     "terms": [
       {
@@ -2537,7 +2537,7 @@
     "domain": "AMOUNT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": true,
     "terms": [
       {
         "version": 1,
@@ -2548,7 +2548,7 @@
         "display": "WEIGHT RATIO",
         "description": null,
         "origin": null,
-        "filters": null,
+        "filters": ["PROPERTY_TYPE=PHYSICAL","RELATIONSHIP_TYPE=ACTIVE MOIETY","PROPERTY_NAME=COLOR"],
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -2590,7 +2590,7 @@
         "display": "DEGREE OF POLYMERIZATION",
         "description": null,
         "origin": null,
-        "filters": null,
+        "filters": ["PROPERTY_TYPE=PHYSICAL","PROPERTY_NAME=COLOR"],
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -2610,7 +2610,7 @@
     "domain": "AMOUNT_UNIT",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": true,
     "terms": [
       {
         "version": 1,
@@ -2621,7 +2621,7 @@
         "display": "g/mL",
         "description": null,
         "origin": null,
-        "filters": null,
+        "filters": ["PROPERTY_TYPE=PHYSICAL","AMOUNT_TYPE=ACTIVE MOIETY","PROPERTY_NAME=COLOR","AMOUNT_TYPE=WEIGHT RATIO","AMOUNT_TYPE=MOL RATIO"],
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -2879,7 +2879,7 @@
     "domain": "ATROPISOMERISM",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -2938,7 +2938,7 @@
     "domain": "CODE_SYSTEM",
     "vocabularyTermType": "ix.ginas.models.v1.CodeSystemControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "fields": [
       "codes.codeSystem"
     ],
@@ -3579,7 +3579,7 @@
     "domain": "CODE_SYSTEM_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -3678,7 +3678,7 @@
     "domain": "CODE_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -3793,7 +3793,7 @@
     "domain": "CONSTITUENT_ROLE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -3880,7 +3880,7 @@
     "domain": "DEFINITION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -3923,7 +3923,7 @@
     "domain": "DEVELOPMENTAL_STAGE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -4122,7 +4122,7 @@
     "domain": "DOCUMENT_COLLECTION",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -4307,7 +4307,7 @@
     "domain": "DOCUMENT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -4576,7 +4576,7 @@
     "domain": "EXTENT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -4621,7 +4621,7 @@
     "domain": "FRACTION",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -5898,7 +5898,7 @@
     "domain": "FRACTION_MATERIAL_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6097,7 +6097,7 @@
     "domain": "MIXTURE_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6156,7 +6156,7 @@
     "domain": "MOLECULAR_WEIGHT_METHOD",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6339,7 +6339,7 @@
     "domain": "MOLECULAR_WEIGHT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6620,7 +6620,7 @@
     "domain": "MONOMER_AMOUNT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6719,7 +6719,7 @@
     "domain": "MONOMER_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6792,7 +6792,7 @@
     "domain": "NAME_DOMAIN",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6851,7 +6851,7 @@
     "domain": "NAME_ORG",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -6938,7 +6938,7 @@
     "domain": "NAME_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -7025,7 +7025,7 @@
     "domain": "NUCLEIC_ACID_BASE",
     "vocabularyTermType": "ix.ginas.models.v1.FragmentControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "fields": [],
     "terms": [
       {
@@ -7136,7 +7136,7 @@
     "domain": "NUCLEIC_ACID_LINKAGE",
     "vocabularyTermType": "ix.ginas.models.v1.FragmentControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "fields": [
       "linkages.linkage"
     ],
@@ -7249,7 +7249,7 @@
     "domain": "NUCLEIC_ACID_SEQUENCE_ORIGIN",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -7308,7 +7308,7 @@
     "domain": "NUCLEIC_ACID_SUBTYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -7367,7 +7367,7 @@
     "domain": "GLYCOSYLATION_SITE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -7426,7 +7426,7 @@
     "domain": "GLYCOSYLATION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -7597,7 +7597,7 @@
     "domain": "INFRA_SPECIFIC_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -7698,7 +7698,7 @@
     "domain": "INTERACTION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -8093,7 +8093,7 @@
     "domain": "JURISDICTION",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -8600,7 +8600,7 @@
     "domain": "LANGUAGE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -9985,7 +9985,7 @@
         "origin": null,
         "filters": null,
         "hidden": false,
-        "selected": false,
+        "selected": true,
         "_namespace": null
       },
       {
@@ -11095,7 +11095,7 @@
     "domain": "LOCATION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -11210,7 +11210,7 @@
     "domain": "LOCATORS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -11617,7 +11617,7 @@
     "domain": "NUCLEIC_ACID_SUGAR",
     "vocabularyTermType": "ix.ginas.models.v1.FragmentControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "fields": [
       "sugars.sugar"
     ],
@@ -12162,7 +12162,7 @@
     "domain": "NUCLEIC_ACID_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -12277,7 +12277,7 @@
     "domain": "OPTICAL_ACTIVITY",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -12364,7 +12364,7 @@
     "domain": "OTHER_LINKAGE_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -12493,7 +12493,7 @@
     "domain": "PART",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -15898,7 +15898,7 @@
     "domain": "PART_LOCATION",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -16685,7 +16685,7 @@
     "domain": "PHYSICAL_FORM",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -16770,7 +16770,7 @@
     "domain": "PHYSICAL_MODIFICATION_ROLE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -16855,7 +16855,7 @@
     "domain": "PHYSICAL_PARAMETERS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -16884,7 +16884,7 @@
     "domain": "PHYSICAL_STATE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -16969,7 +16969,7 @@
     "domain": "POLYMER_CLASS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17014,7 +17014,7 @@
     "domain": "POLYMER_GEOMETRY",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17087,7 +17087,7 @@
     "domain": "POLYMER_REACTANT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17158,7 +17158,7 @@
     "domain": "POLYMER_SOURCE_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17203,7 +17203,7 @@
     "domain": "POLYMER_SRU_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17288,7 +17288,7 @@
     "domain": "POLYMER_SUBCLASS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17361,7 +17361,7 @@
     "domain": "PROPERTY_NAME",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -17700,7 +17700,7 @@
     "domain": "PROPERTY_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": true,
     "terms": [
       {
         "version": 1,
@@ -17725,7 +17725,7 @@
         "display": "PHYSICAL",
         "description": null,
         "origin": null,
-        "filters": null,
+        "filters": ["PROPERTY_NAME=PHYSICAL STATE","PROPERTY_NAME=HARDNESS","PROPERTY_NAME=SOLUBILITY"],
         "hidden": false,
         "selected": false,
         "_namespace": null
@@ -17759,7 +17759,7 @@
     "domain": "PROTEIN_SUBTYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -19204,7 +19204,7 @@
     "domain": "PROTEIN_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -19459,7 +19459,7 @@
     "domain": "QUALIFICATION",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -19672,7 +19672,7 @@
     "domain": "RELATIONSHIP_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -20501,7 +20501,7 @@
     "domain": "RELATIONSHIP_UNIT",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -20698,7 +20698,7 @@
     "domain": "ROLE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -21863,7 +21863,7 @@
     "domain": "SEQUENCE_ORIGIN",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -21992,7 +21992,7 @@
     "domain": "SEQUENCE_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -22052,7 +22052,7 @@
     "domain": "SOURCE_MATERIAL_CLASS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -22097,7 +22097,7 @@
     "domain": "SOURCE_MATERIAL_STATE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -22198,7 +22198,7 @@
     "domain": "SOURCE_MATERIAL_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -22803,7 +22803,7 @@
     "domain": "SRU_AMOUNT_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -22916,7 +22916,7 @@
     "domain": "STEREOCHEMISTRY_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": false,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -23017,7 +23017,7 @@
     "domain": "STRUCTURAL_MODIFICATION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -23174,7 +23174,7 @@
     "domain": "SUBSTANCE_CLASS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": false,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
@@ -23301,7 +23301,7 @@
     "domain": "KEW_PLANT_FAMILY",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": true,
+    "filterable": true,
     "terms": [],
     "fields": [],
     "_namespace": null
@@ -23315,7 +23315,7 @@
     "domain": "KEW_PLANT_GENUS",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filtersable": true,
+    "filterable": true,
     "terms": [],
     "fields": [],
     "_namespace": null

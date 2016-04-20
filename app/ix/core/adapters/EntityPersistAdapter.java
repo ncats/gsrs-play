@@ -69,7 +69,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     private Map<String, List<Hook>> postLoadCallback = 
         new HashMap<String, List<Hook>>();
     
-    private Map<Class, EntityProcessor> extraProcessors=new HashMap<Class,EntityProcessor>();
+    private Map<Class, List<EntityProcessor>> extraProcessors=new HashMap<Class,List<EntityProcessor>>();
     
     
     
@@ -143,13 +143,19 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 								Constructor c=processorCls.getConstructor(Map.class);
 								ep= (EntityProcessor) c.newInstance(params);
 							}catch(Exception e){
+								e.printStackTrace();
 								Logger.warn("No Map constructor for " + processorClass);
 							}
 						}
 						if(ep==null){
 							ep = (EntityProcessor) processorCls.newInstance();
 						}
-						extraProcessors.put(entityCls, ep);
+						List<EntityProcessor> eplist=extraProcessors.get(entityCls);
+						if(eplist==null){
+							eplist=new ArrayList<EntityProcessor>();
+							extraProcessors.put(entityCls, eplist);
+						}
+						eplist.add(ep);
 						Logger.info(debug + "done");
 					} catch (Exception e) {
 						Logger.info(debug + "failed");
@@ -270,9 +276,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
         for(Class c:extraProcessors.keySet()){
         	if(c.isAssignableFrom(cls)){
-        		EntityProcessor ep =extraProcessors.get(c);
-        		Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
-        		addEntityProcessor(cls,ep);
+        		for(EntityProcessor ep :extraProcessors.get(c)){
+        			Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
+        			addEntityProcessor(cls,ep);
+        		}
         	}
         }
         if(cls.isAnnotationPresent(Backup.class)){

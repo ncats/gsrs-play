@@ -33,6 +33,10 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	public static StructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     
+	public SubstanceProcessor(){
+		//System.out.println("Made processor");
+	}
+	
 	
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
@@ -59,7 +63,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 	@Override
 	public void prePersist(Substance s) {
-		
 		
 		
 		Logger.debug("Persisting substance:" + s);
