@@ -1766,7 +1766,6 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
-                        console.log(data);
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;

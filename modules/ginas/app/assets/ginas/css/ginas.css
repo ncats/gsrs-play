@@ -1114,3 +1114,7 @@ ul.tree-list {
 .smallcaps{
     font-variant: small-caps;
 }
+
+a#resolverButton {
+    margin-top: 25px;
+}

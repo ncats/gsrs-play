@@ -767,6 +767,7 @@
                         console.log("passing");
                         scope.$parent.createSubref(selected);
                     }
+                    delete scope.subs;
                 };
             }
         }
