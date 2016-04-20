@@ -273,6 +273,9 @@ public class GinasApp extends App {
             if("LyChI_L4".equalsIgnoreCase(n)){
                 return "Structure Hash";
             }
+            if("Substance Class".equalsIgnoreCase(n)){
+                return "Substance Type";
+            }
             return n.trim();
         }
         

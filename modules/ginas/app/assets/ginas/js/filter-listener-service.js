@@ -1,6 +1,5 @@
 angular.module('filterListener', [])
     .factory('filterService', function (CVFields) {
-        var filters = [];
         return {
             _register: function (scope) {
                 console.log("registering a field to watch");
@@ -26,8 +25,13 @@ angular.module('filterListener', [])
                                 var cv = response.data.content[0].terms;
                                 _.forEach(cv, function (term) {
                                     if (!_.isNull(term.filters)) {
-                                        _.forEach(term.filters, function (filter) {
-                                            if (_.isEqual(newValue.value, filter.split('=')[1])) {
+                                        console.log(term.filters);
+                                        console.log(filter);
+                                        _.forEach(term.filters, function (f) {
+                                            //this will capture one filter hit
+                                            //need to figure out how to run compound filtering
+
+                                            if (_.isEqual(newValue.value, f.split('=')[1])) {
                                                 filtered.push(term);
                                             }
                                         });
@@ -62,20 +66,6 @@ angular.module('filterListener', [])
                 for (var field in filters) {
                     delete filters[field];
                 }
-            },
-            show: function (field) {
-                var filter = filters[field];
-                if (!filter) {
-                    throw new Error("No filter named '" + field + "' is registered.");
-                }
-                filter.show();
-            },
-            hide: function (field) {
-                var filter = filters[field];
-                if (!filter) {
-                    throw new Error("No filter named '" + field + "' is registered.");
-                }
-                filter.hide();
             }
         };
     });
