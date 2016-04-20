@@ -304,11 +304,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }
     }
 
-    static class PersistRecordWorker implements
+    static class PersistRecordWorker<K,V> implements
                                          PersistenceQueue.PersistenceContext {
-        TransformedRecord record;
+        TransformedRecord<K,V> record;
 
-        PersistRecordWorker(TransformedRecord record) {
+        PersistRecordWorker(TransformedRecord<K,V> record) {
             this.record = record;
         }
 
@@ -378,102 +378,96 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
 
 
-    public String submit(final Payload payload, Class extractor, Class persister) {
-        // first see if this payload has already processed..
-    	
-    	
-        final PayloadProcessor pp = new PayloadProcessor(payload);
-                
-                
-        final ProcessingJob job = new ProcessingJob();
-        job.start = TimeUtil.getCurrentTimeMillis();
-        job.keys.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
-        job.setExtractor(extractor);
-        job.setPersister(persister);
-                
-        job.status = ProcessingJob.Status.PENDING;
-        job.payload = pp.payload;
-        job.message="Preparing payload for processing";
-        job.owner=UserFetcher.getActingUser();
-        job.save();
-        storeStatisticsForJob(pp.key, new Statistics());
-        pp.jobId=job.id;
+	public String submit(final Payload payload, Class extractor, Class persister) {
+		// first see if this payload has already processed..
 
-        final ExecutorService executorService = BlockingSubmitExecutor.newFixedThreadPool(3, MAX_EXTRACTION_QUEUE);
+		final PayloadProcessor pp = new PayloadProcessor(payload);
 
-        executorServices.add(executorService);
-        new Thread() {
-            @Override
-            public void run() {
+		final ProcessingJob job = new ProcessingJob();
+		job.start = TimeUtil.getCurrentTimeMillis();
+		job.keys.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
+		job.setExtractor(extractor);
+		job.setPersister(persister);
 
+		job.status = ProcessingJob.Status.PENDING;
+		job.payload = pp.payload;
+		job.message = "Preparing payload for processing";
+		job.owner = UserFetcher.getActingUser();
+		job.save();
+		storeStatisticsForJob(pp.key, new Statistics());
+		pp.jobId = job.id;
 
+		final ExecutorService executorService = BlockingSubmitExecutor.newFixedThreadPool(3, MAX_EXTRACTION_QUEUE);
 
+		executorServices.add(executorService);
+		new Thread() {
+			@Override
+			public void run() {
 
+				try (RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
 
-                try(RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
+					Estimate es = extractorInstance.estimateRecordCount(pp.payload);
+					{
+						Logger.debug("Counted records");
+						Statistics stat = getStatisticsForJob(pp.key);
+						if (stat == null) {
+							stat = new Statistics();
+						}
+						stat.totalRecords = es;
+						stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
+						storeStatisticsForJob(pp.key, stat);
+						Logger.debug(stat.toString());
+					}
+					job.status = ProcessingJob.Status.RUNNING;
+					job.payload = pp.payload;
+					Object record;
+					do {
+						try {
+							record = extractorInstance.getNextRecord();
+							final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
 
-            Estimate es= extractorInstance.estimateRecordCount(pp.payload);
-            {
-                Logger.debug("Counted records");
-                Statistics stat = getStatisticsForJob(pp.key);
-                if(stat==null){
-                    stat = new Statistics();
-                }
-                stat.totalRecords=es;
-                stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
-                storeStatisticsForJob(pp.key, stat);
-                Logger.debug(stat.toString());
-            }
-            job.status = ProcessingJob.Status.RUNNING;
-            job.payload = pp.payload;
-                Object record;
-                do {
-                    try {
-                        record = extractorInstance.getNextRecord();
-                        final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
+							if (record != null) {
+								executorService.submit(new Runnable() {
+									@Override
+									public void run() {
+										ProcessingRecord rec = new ProcessingRecord();
+										Object trans = job.getTransformer().transform(prg, rec);
 
-                        if (record != null) {
-                            executorService.submit(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ProcessingRecord rec = new ProcessingRecord();
-                                    Object trans = job.getTransformer().transform(prg, rec);
+										if (trans == null) {
+											throw new IllegalStateException("Transform error");
+										}
+										new TransformedRecord(trans, prg.theRecord, rec).persists();
+									}
+								});
+							}
+						} catch (Exception e) {
+							Statistics stat = getStatisticsForJob(pp.key);
+							stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
+							storeStatisticsForJob(pp.key, stat);
+							Global.ExtractFailLogger
+									.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
+							// hack to keep iterator going...
+							record = new Object();
+						}
+					} while (record != null);
+					executorService.shutdown();
+					Statistics stat = getStatisticsForJob(pp.key);
+					stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
 
-                                    if (trans == null) {
-                                        throw new IllegalStateException("Transform error");
-                                    }
-                                    new TransformedRecord(trans, prg.theRecord, rec).persists();
-                                }
-                            });
-                        }
-                    } catch (Exception e) {
-                        Statistics stat = getStatisticsForJob(pp.key);
-                        stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
-                        storeStatisticsForJob(pp.key, stat);
-                        Global.ExtractFailLogger.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
-                        //hack to keep iterator going...
-                        record = new Object();
-                    }
-                } while (record != null);
-                executorService.shutdown();
-                Statistics stat = getStatisticsForJob(pp.key);
-                stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
+				}
+				try {
+					executorService.awaitTermination(2, TimeUnit.DAYS);
+					executorServices.remove(executorService);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				job.save();
 
-        }
-        try {
-            executorService.awaitTermination(2, TimeUnit.DAYS);
-            executorServices.remove(executorService);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        job.save();
+			}
+		}.start();
 
-            }
-        }.start();
-
-
-        return pp.key;
-    }
+		return pp.key;
+	}
 
 
 

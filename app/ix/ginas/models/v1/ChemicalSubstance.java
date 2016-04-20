@@ -37,7 +37,7 @@ public class ChemicalSubstance extends Substance  {
     @JSONEntity(isRequired = true)
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
-    @JsonSerialize(using=StructureSerializer.class)
+    //@JsonSerialize(using=StructureSerializer.class)
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Chemical Moieties", isRequired = true, minItems = 1)

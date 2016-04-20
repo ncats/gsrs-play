@@ -1,9 +1,7 @@
 package ix.ginas.processors;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import ix.core.EntityProcessor;
 import ix.ginas.models.v1.Name;

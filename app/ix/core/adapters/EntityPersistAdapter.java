@@ -210,36 +210,29 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 		}
     }
     public static class EntityProcessorHook implements Hook{
-    	private EntityProcessor ep;
+    	private EntityProcessor<?> ep;
     	private Method useMethod;
-    	public EntityProcessorHook(EntityProcessor ep, Class<?> hookAnnotation){
+    	public EntityProcessorHook(EntityProcessor<?> ep, Class<?> hookAnnotation){
     		this.ep=ep;
     		try{
 	    		if(hookAnnotation.equals(PrePersist.class)){
 					useMethod=ep.getClass().getMethod("prePersist",Object.class);
-					
 	    		}else if(hookAnnotation.equals(PostPersist.class)){
 					useMethod=ep.getClass().getMethod("postPersist",Object.class);
-					
 	    		}else if(hookAnnotation.equals(PreUpdate.class)){
 					useMethod=ep.getClass().getMethod("preUpdate",Object.class);
-					
 	    		}else if(hookAnnotation.equals(PostUpdate.class)){
 					useMethod=ep.getClass().getMethod("postUpdate",Object.class);
-					
 	    		}else if(hookAnnotation.equals(PreRemove.class)){
 					useMethod=ep.getClass().getMethod("preRemove",Object.class);
-					
 	    		}else if(hookAnnotation.equals(PostRemove.class)){
 					useMethod=ep.getClass().getMethod("postRemove",Object.class);
-					
 	    		}else if(hookAnnotation.equals(PostLoad.class)){
 					useMethod=ep.getClass().getMethod("postLoad",Object.class);
 	    		}
     		}catch(Exception e){
     			e.printStackTrace();
     		}
-    		
     	} 
     	
 		@Override
@@ -274,6 +267,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 register (PostLoad.class, cls, m, postLoadCallback);
             }
         }
+        
         for(Class c:extraProcessors.keySet()){
         	if(c.isAssignableFrom(cls)){
         		for(EntityProcessor ep :extraProcessors.get(c)){
@@ -288,6 +282,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         
         return registered;
     }
+    
     private void addEntityProcessor(Class cls, EntityProcessor ep){
     	registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
 		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
@@ -298,7 +293,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
     }
     
-    void registerProcessor(Class cls, EntityProcessor ep, Map<String, List<Hook>> registry, Class<?> hookAnnotation){
+    void registerProcessor(Class cls, EntityProcessor<?> ep, Map<String, List<Hook>> registry, Class<?> hookAnnotation){
     	List<Hook> methods = registry.get(cls.getName());
     	if (methods == null) {
             registry.put(cls.getName(), methods = new ArrayList<Hook>());
@@ -368,7 +363,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 }
             }
             makeIndexOnBean(bean);
-            
         }
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
