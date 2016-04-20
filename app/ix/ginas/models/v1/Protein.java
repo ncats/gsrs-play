@@ -15,7 +15,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -89,6 +89,7 @@ public class Protein extends GinasCommonSubData {
     
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_protein_subunit")
+    @OrderBy("subunitIndex asc")
     public List<Subunit> subunits = new ArrayList<Subunit>();
     
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
@@ -157,20 +158,29 @@ public class Protein extends GinasCommonSubData {
     	return _modifiedCache;
     }
     
-    @PostLoad
-    /**
-     * 
-     */
-    public void sortSubunits(){
+//    @PostLoad
+//    public void sortSubunits(){
+////    	System.out.println("called" + this.uuid);
+//    	int i = (int)(Math.random() * 1000);
+//    	System.out.println("starting");
+//    	System.out.println("start sort" + this.uuid + " " + subunits.size() + " " + i);
+////    	List<Subunit> mysubunits=this.subunits;
+////    	Collections.sort(mysubunits, new Comparator<Subunit>(){
+////			@Override
+////			public int compare(Subunit o1, Subunit o2) {
+////				return o1.subunitIndex-o2.subunitIndex;
+////			}
+////    	});
+////    	System.out.println("end sort" + this.uuid + " " + subunits.size() + " " + i);
+//    }
+    
+    public List<Subunit> getSubunits(){
     	Collections.sort(subunits, new Comparator<Subunit>(){
 			@Override
 			public int compare(Subunit o1, Subunit o2) {
 				return o1.subunitIndex-o2.subunitIndex;
 			}
     	});
-    }
-    
-    public List<Subunit> getSubunits(){
     	return this.subunits;
     }
     @Override

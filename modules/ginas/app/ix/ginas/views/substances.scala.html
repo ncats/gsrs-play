@@ -20,6 +20,7 @@ current, rows, total, pages, facets, searchFacets) {
     <div class= "panel-body">
         <div class = "row in" ng-show="!gridView" id ="list">
         @for(sub <- substancesList) {
+        
             @sub match {
                 case chem: ChemicalSubstance => {
                     @list.chemlist(chem, ctx)
