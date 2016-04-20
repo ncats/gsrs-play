@@ -6,6 +6,7 @@ import javax.persistence.Entity;
 
 import com.avaje.ebean.Page;
 import com.avaje.ebean.PagingList;
+import com.avaje.ebean.QueryIterator;
 import ix.core.util.BlockingSubmitExecutor;
 import org.reflections.Reflections;
 
@@ -42,24 +43,15 @@ public class RebuildIndex  {
         listener.newReindex();
         Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
 
-        PagingList<BackupEntity> pagingList = finder.query()
-                //.setFirstRow(pageSize * page)
-                //.setMaxRows(pageSize)
-                .findPagingList(pageSize);
+        listener.totalRecordsToIndex(finder.findRowCount());
 
 
-        Future<Integer> futureRowCount = pagingList.getFutureRowCount();
-        List<BackupEntity> l;
-        Page<BackupEntity> currentPage;
-        int page = 0;
+        //QueryIterator must be in try-wtih-resource
+        //so it is properly closed if it errors out early.
+        try (QueryIterator<BackupEntity> iter = finder.findIterate()){
+              while (iter.hasNext()) {
+                    BackupEntity o = iter.next();
 
-        boolean computedTotalAlready=false;
-        try {
-            do {
-
-                currentPage = pagingList.getPage(page);
-                l = currentPage.getList();
-                for (BackupEntity o : l) {
                     //TODO: make part of query
                     if (!o.isOfType(type)) continue;
                     if (since != null) {
@@ -67,25 +59,21 @@ public class RebuildIndex  {
                             continue;
                         }
                     }
+                  //this temp variable is because we have to
+                  //make sure the data array is eagerly fetched.
+                  //For some reason ebean isn't properly lazy loading
+                  //this when we try to use it and get NullPointerExceptions downstream
+                  //if we don't also fetch it here...
+                  byte[] tmp = o.data;
 
                     executor.submit(new Worker(o, listener));
 
                 }
 
-                //this ugliness is so we don't call get() before we
-                //to most other ways to write this will invoke get() before
-                //we want which will cause it to block.
-                if(!computedTotalAlready && futureRowCount.isDone()){
-                    computedTotalAlready = true;
-                    listener.totalRecordsToIndex(futureRowCount.get());
-                }
-
-                page++;
-            } while (! l.isEmpty());
 
             executor.shutdown();
             executor.awaitTermination(1, TimeUnit.DAYS);
-        }catch(InterruptedException | ExecutionException  e){
+        }catch(InterruptedException e){
             listener.error(e);
         }finally{
             listener.doneReindex();

@@ -18,8 +18,8 @@
                     <dropdown-select ng-model="mod.locationType" field="locationType" cv="LOCATION_TYPE"
                                      label="Location Type"></dropdown-select>
                 </div>
-                <div class ="col-md-2" ng-if="mod.locationType && mod.locationType.value=='RESIDUE_SPECIFIC'">
-                        <multi-select ng-model="mod.$$residueModified" field="$$residueModified" label = "Residue Modified" cv = "AMINO_ACID_RESIDUE" ></multi-select>
+                <div class ="col-md-2" ng-if="mod.structuralModificationType && mod.locationType.value=='RESIDUE_SPECIFIC'">
+                        <multi-select ng-model="mod.$$residueModified" field="$$residueModified" label = "Residue Modified" filter= "mod.structuralModificationType" filter-function="getCV(mod.structuralModificationType.value)"></multi-select>
 <!--
                 <text-input ng-model="mod.residueModified" field="residueModified" name ="residueModified" label="Residue Modified" form="strucModForm"></text-input>
 -->
@@ -70,7 +70,10 @@
                                         label="Location Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2" ng-if="obj.locationType && obj.locationType.value=='RESIDUE_SPECIFIC'">
+                    <multi-view-edit obj="obj" field="$$residueModified" label = "Residue Modified" filter= "obj.structuralModificationType" filter-function="getCV(obj.structuralModificationType.value)"></multi-view-edit>
+<!--
                     <text-view-edit obj = "obj" field = "residueModified"></text-view-edit>
+-->
                 </div>
                 <div class="col-md-1" ng-if="obj.locationType && obj.locationType.value!='RESIDUE_SPECIFIC'">
                         <form-selector referenceobj="obj" parent="parent" field="sites" type="site" divid=struc-mod-{{index}}></form-selector>

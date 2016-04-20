@@ -65,9 +65,9 @@ public class BackupEntity extends IxModel{
 	@JsonIgnore
 	private byte[] getBytes() throws Exception{
 		if(compressed){
-			return Util.decompress(data);
+			return Util.decompress(this.data);
 		}else{
-			return data;
+			return this.data;
 		}
 	}
 	
@@ -88,7 +88,7 @@ public class BackupEntity extends IxModel{
 			throw new IllegalStateException("Kind is not set for object");
 		}
 		
-		Object inst=em.readValue(asStream(), cls);
+		Object inst=em.readValue(getBytes(), cls);
 		return inst;
 	}
 	@JsonIgnore

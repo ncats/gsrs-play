@@ -158,6 +158,8 @@ public class BuildInfo {
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(marvin).aggregate(marvin)
 
+
+ // val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("config")).getOrElse("application.conf")
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -173,6 +175,7 @@ public class BuildInfo {
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions ++= javaBuildOptions,
       javaOptions in Test += "-Dconfig.file=conf/ginas.conf",
+    //javaOptions in Test += ginasTestOptions,
     cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ncats).aggregate(ncats)
 

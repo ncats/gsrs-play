@@ -435,7 +435,7 @@ public class GinasApp extends App {
                        (400, "Invalid search parameters: type=\""
                                + type + "\"; q=\"" + q + "\"!"));
             }
-
+            System.out.println("Getting subs");
             return _substances (q, rows, page);
         }
         catch (Exception ex) {
@@ -646,12 +646,17 @@ public class GinasApp extends App {
                                              (total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
 
+                        System.out.println("Fetching me some subs");
                         List<Substance> substances = SubstanceFactory
                             .getSubstances(nrows, (page - 1) * rows, null);
-
-                        return ok(ix.ginas.views.html.substances.render
+                        
+                        
+                        System.out.println("Got list");
+                        Status s= ok(ix.ginas.views.html.substances.render
                                   (page, nrows, total, pages, decorate(facets),
                                    substances, null, null));
+                        System.out.println("Got Rendered");
+                        return s;
                     }
                 });
         }
@@ -1531,6 +1536,10 @@ public class GinasApp extends App {
 
         @Override
         public void doneReindex() {
+            if(!currentlyRunning){
+                return;
+            }
+            updateMessage();
             currentlyRunning = false;
 
             EntityPersistAdapter.doneReindexing();
