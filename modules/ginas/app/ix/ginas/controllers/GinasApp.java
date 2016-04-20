@@ -1534,6 +1534,10 @@ public class GinasApp extends App {
 
         @Override
         public void doneReindex() {
+            if(!currentlyRunning){
+                return;
+            }
+            updateMessage();
             currentlyRunning = false;
 
             EntityPersistAdapter.doneReindexing();

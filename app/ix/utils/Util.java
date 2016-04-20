@@ -201,7 +201,11 @@ public class Util {
 
     }  
     public static byte[] decompress(byte[] data) throws IOException, DataFormatException {
+        if(data ==null ){
+            return new byte[0];
+        }
         Inflater inflater = new Inflater();
+
         inflater.setInput(data);
 
         //initialize to 10x the compressed size

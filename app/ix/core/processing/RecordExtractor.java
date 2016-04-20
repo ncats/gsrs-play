@@ -22,7 +22,7 @@ public abstract class RecordExtractor<K> implements Closeable {
 		 * @return
 		 */
 		abstract public K getNextRecord() throws Exception;
-		abstract public void close(); 
+		abstract public void close();
 		
 		public Iterator<K> getRecordIterator(){
 			return new Iterator<K>(){
