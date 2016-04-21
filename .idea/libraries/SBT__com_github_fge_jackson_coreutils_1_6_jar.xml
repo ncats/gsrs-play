@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.github.fge:jackson-coreutils:1.6:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.fge/jackson-coreutils/jars/jackson-coreutils-1.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.fge/jackson-coreutils/srcs/jackson-coreutils-1.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
