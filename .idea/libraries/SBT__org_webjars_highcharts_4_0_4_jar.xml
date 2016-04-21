@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="SBT: org.webjars:highcharts:4.0.4:jar">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/highcharts/jars/highcharts-4.0.4.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
