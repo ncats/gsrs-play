@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:html5shiv:3.7.2:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/html5shiv/jars/html5shiv-3.7.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

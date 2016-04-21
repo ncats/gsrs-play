@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.github.fge:btf:1.2:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.fge/btf/jars/btf-1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.github.fge/btf/srcs/btf-1.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
