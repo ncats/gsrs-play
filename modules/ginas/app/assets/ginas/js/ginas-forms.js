@@ -1027,15 +1027,7 @@
                 }else{
                     scope.structure = scope.parent.structure;
                 }
-
-                // scope.$watch('structure', function(newval, oldval){
-                //     console.log(newval);
-                //     console.log(oldval);
-                //     molChanger.setMol(scope.structure.molfile);
-                // });
-
-
-
+                
                 scope.checkDuplicateChemicalSubstance = function () {
                     var sub = scope.parent.$$flattenSubstance(angular.copy(scope.parent));
                     scope.structureErrorsArray = [];

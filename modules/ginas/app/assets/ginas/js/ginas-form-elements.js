@@ -715,8 +715,8 @@
                         var reference = {
                             uuid: UUID.newID(),
                             apply: true,
-                            docType: {value: selected.source},
-                            citation: "resolver lookup",
+                            docType: {value: "resolver", display: "resolver"},
+                            citation: selected.source,
                             documentDate: moment()._d
                         };
                         console.log(reference);

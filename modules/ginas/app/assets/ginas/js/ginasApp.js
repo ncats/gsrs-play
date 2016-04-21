@@ -1673,11 +1673,7 @@
                         scope.referenceobj = {};
                     }
                     spinnerService.show('subrefSpinner');
-                    /*                    var url = baseurl + "api/v1/substances?filter=names.name='" +
-                     // var url = baseurl + "api/v1/substances/search?q=" +
-                     cap + "'&top=" + scope.top + "&skip=" + skip;*/
                     substanceFactory.getSubstances(scope.q).then(function (response) {
-                        /*                 $http.get(url, {cache: true}).then(function (response, status, headers, config) {*/
                         console.log(response);
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
