@@ -6,6 +6,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlPreformattedText;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import ix.test.ix.test.server.BrowserSession;
+import ix.test.util.TestNamePrinter;
 import play.twirl.api.Html;
 
 import java.io.IOException;
@@ -27,16 +28,8 @@ import org.junit.runner.Description;
 public class SequenceSearchAPI {
 	
 	@Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-        
-        @Override
-        protected void finished(Description description) {
-            System.out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-    };
+    public TestRule watcher = new TestNamePrinter().setPrintEnd(true);
+
     private static final Pattern IDENTITY_PRE_PATTERN = Pattern.compile("identity = (\\d+(\\.\\d+)?)");
 ///ginas/app/substance/4cf9ca84
     private static final Pattern PARTIAL_UUID_PATTERN = Pattern.compile("/ginas/app/substance/(\\S+)");

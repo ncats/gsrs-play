@@ -2,32 +2,16 @@
     var ginasFormElements = angular.module('ginasFormElements', []);
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
-
-        var load = function () {
-            return $http.get(baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'", {cache: true}, {
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            }).success(function (data) {
-                return data;
-            });
-        };
-
-
-        var url = baseurl + "api/v1/vocabularies?filter=domain='";
+        var vocabulariesUrl = baseurl + "api/v1/vocabularies";
         var CV = {
-
-
+            //used for expanding a cv
             getByField: function (path) {
-                var ret;
-                /*             return load().then(function(data){
-                 var terms = data.data.content[0].terms;*/
                 var patharr = path.split('.');
                 if (patharr.length > 2) {
                     patharr = _.takeRight(patharr, 2);
                 }
                 var pathString = _.join(patharr, '.');
-                return $http.get(baseurl + "api/v1/vocabularies?filter=fields.term='" + pathString + "'", {cache: true}, {
+                return $http.get(vocabulariesUrl,{params: {"filter": "fields.term ='"+pathString+"'"}, cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -38,18 +22,10 @@
                         return 0;
                     }
                 });
-                /* var domain = _.find(terms, function(cv) {
-                 return cv.value == pathString;
-                 });
-                 if(!_.isUndefined(domain)){
-                 ret = domain.display;
-                 }
-                 return ret;*/
-                //       });
             },
-
+            //used to load cv in form elements
             getCV: function (domain) {
-                return $http.get(url + domain.toUpperCase() + "'", {cache: true}, {
+                return $http.get(vocabulariesUrl, {params: {"filter": "domain='" + domain.toUpperCase() + "'"}, cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -57,10 +33,9 @@
                     return data;
                 });
             },
-
+            //used in admin for cv count
             count: function () {
-                var counturl = baseurl + "api/v1/vocabularies";
-                return $http.get(counturl, {cache: true}, {
+                return $http.get(vocabulariesUrl, {cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -68,7 +43,7 @@
                     return data;
                 });
             },
-
+            //used to download cv
             all: function () {
                 var allurl = baseurl + "api/v1/vocabularies?top=999";
                 return $http.get(allurl, {cache: true}, {
@@ -79,37 +54,7 @@
                     return data;
                 });
             },
-
-            load: function (field) {
-                // console.log(lookup);
-                if (!_.has(CV, field)) {
-                    var promise = $http.get(url + field.toUpperCase() + "'&top=999", {cache: true}, {
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        }
-                    }).success(function (data) {
-                        CV[field] = data.content[0].terms;
-                        return CV[field];
-                    });
-                    return promise;
-                }
-            },
-
-            fetch: function (field) {
-                // console.log(lookup);
-                //if (!_.has(CV, field)) {
-                return $http.get(url + field.toUpperCase() + "'", {cache: true}, {
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (data) {
-                    //CV[field] = data.content[0].terms;
-                    //  console.log(data);
-                    return data;
-                });
-                //  }
-            },
-
+            //not currently used, but may become useful
             search: function (field, query) {
                 return _.chain(CV[field])
                     .filter(function (x) {
@@ -117,7 +62,7 @@
                     })
                     .sortBy('display').value();
             },
-
+            //not currently used, but may become useful
             searchTags: function (domain, query) {
                 CV.getCV(domain).then(function (data) {
                     console.log(data);
@@ -212,63 +157,12 @@
         };
         return CV;
     });
-    /*
-
-     ginasFormElements.directive('duplicate', function (isDuplicate) {
-     return {
-     restrict: 'A',
-     require: 'ngModel',
-     link: function (scope, element, attrs, ngModel) {
-     // console.log(ngModel);
-     //  console.log(scope);
-     ngModel.$asyncValidators.duplicate = isDuplicate;
-     }
-     };
-     });
-     */
-
-    /*    ginasFormElements.directive('duplicate', function (substanceFactory) {
-     return {
-     restrict: 'A',
-     require: 'ngModel',
-     link: function (scope, element, attrs, ngModel) {
-     console.log(ngModel);
-     console.log(scope);
-     console.log(scope.name.name);
-     if(!_.isUndefined(scope.name.name)) {
-     substanceFactory.getSubstances(scope.name.name).then(function (response) {
-     console.log(response);
-     ngModel.$asyncValidators.duplicate = (response.count >= 1);
-     });
-     }
-     }
-     };
-     });*/
-    /*
-     ginasFormElements.factory('isDuplicate', function ($q, substanceFactory) {
-     return function dupCheck(modelValue) {
-     var deferred = $q.defer();
-     if(!_.isUndefined(modelValue)) {
-     substanceFactory.getSubstances(modelValue)
-     .success(function (response) {
-     if (response.count >= 1) {
-     deferred.reject();
-     } else {
-     deferred.resolve();
-     }
-     });
-     }else {
-     deferred.resolve();
-     }
-     return deferred.promise;
-     };
-     });
-     */
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances?filter=names.name='";
+        var url = baseurl + "api/v1/substances";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name + "'", {cache: true}, {
+        	console.log("getting substance:" + name);
+            return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -400,6 +294,7 @@
                 label: '@',
                 values: '=?',
                 filter: '=',
+                filterField:'@filter',
                 filterFunction: '&?',
                 parent: '='
             },
@@ -810,40 +705,6 @@
         };
     });
 
-    /*ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
-        return {
-            restrict: 'E',
-            scope: {
-                name: '=',
-                parent: '='
-            },
-            template: '<div class ="col-md-1 pull-left"><button class="btn btn-primary" ng-click="resolve(name);">Resolve Name</button></div>',
-            link: function (scope, element, attrs) {
-                scope.stage = true;
-                scope.resolve = function (name) {
-                    /!*                    var result = document.getElementsByClassName(attrs.divid);
-                     var elementResult = angular.element(result);*!/
-                    resolver.resolve(name).then(function (data) {
-                        console.log(data.data);
-                        _.set(scope, 'data', data.data);
-                        if (data.data.length > 0) {
-                            var template = angular.element('<substance-viewer data= data parent = parent></substance-viewer>');
-                        } else {
-                            template = angular.element('<div><h3>Name: ' + name + ' does not resolve to existing structure</h3></div>');
-                        }
-                        toggler.toggle(scope, attrs.divid, template);
-                        /!*                        elementResult.append(template);
-                         $compile(template)(scope);*!/
-                    });
-
-                    scope.close = function () {
-                        toggler.toggle(scope, attrs.divid, template);
-                    }
-                }
-            }
-        };
-    });
-*/
     ginasFormElements.service('resolver', function ($http, spinnerService) {
         var resolver = {};
 
@@ -906,6 +767,7 @@
                         console.log("passing");
                         scope.$parent.createSubref(selected);
                     }
+                    delete scope.subs;
                 };
             }
         }

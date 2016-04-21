@@ -10,17 +10,17 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.serialization.MoietyDeserializer;
-import ix.ginas.models.serialization.MoietySerializer;
 import ix.ginas.models.utils.JSONEntity;
 
 
 @JsonDeserialize(using = MoietyDeserializer.class)
-@JsonSerialize(using = MoietySerializer.class)
 @JSONEntity(name = "moiety", title = "Moiety")
 @Entity
 @Table(name = "ix_ginas_moiety")
@@ -29,6 +29,7 @@ public class Moiety extends CommonDataElementOfCollection {
 	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
+    @JsonUnwrapped
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Count")
@@ -38,6 +39,7 @@ public class Moiety extends CommonDataElementOfCollection {
     public Moiety () {}
     
     @Column(unique=true)
+    @JsonIgnore
     public String innerUuid;
     
     @PrePersist
@@ -68,8 +70,7 @@ public class Moiety extends CommonDataElementOfCollection {
     }
 
 	public void setCountAmount(Amount amnt) {
-		count=amnt;
-		
+		count=amnt;	
 	}
 	
 	public Amount getCountAmount() {
@@ -81,4 +82,8 @@ public class Moiety extends CommonDataElementOfCollection {
 		return UUID.fromString(this.innerUuid);
 	}
 	
+	@JsonProperty("id")
+	public String getId(){
+		return null;
+	}
 }

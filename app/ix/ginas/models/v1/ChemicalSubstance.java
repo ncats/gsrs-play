@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
-import ix.ginas.models.serialization.StructureSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -37,7 +36,7 @@ public class ChemicalSubstance extends Substance  {
     @JSONEntity(isRequired = true)
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
-    @JsonSerialize(using=StructureSerializer.class)
+    //@JsonSerialize(using=StructureSerializer.class)
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Chemical Moieties", isRequired = true, minItems = 1)

@@ -47,6 +47,55 @@ import ix.ginas.models.serialization.ReferenceSetSerializer;
 @DiscriminatorValue("GSRS")
 public class GinasChemicalStructure extends Structure implements GinasAccessReferenceControlled {
 
+	/**
+	 
+        if (struc == null) {
+            provider.defaultSerializeNull(jgen);
+            return;
+        }
+        
+        provider.defaultSerializeField("id", struc.id, jgen);
+        provider.defaultSerializeField("created", struc.created, jgen);
+        provider.defaultSerializeField("lastEdited", struc.lastEdited, jgen);
+        provider.defaultSerializeField("deprecated", struc.deprecated, jgen);
+        provider.defaultSerializeField("digest", struc.digest, jgen);
+        provider.defaultSerializeField("molfile", struc.molfile, jgen);
+        provider.defaultSerializeField("smiles", struc.smiles, jgen);
+        provider.defaultSerializeField("formula", struc.formula, jgen);
+        provider.defaultSerializeField
+            ("stereochemistry", struc.stereoChemistry, jgen);
+        provider.defaultSerializeField
+            ("opticalActivity", struc.opticalActivity, jgen);
+        provider.defaultSerializeField
+            ("atropisomerism", struc.atropisomerism, jgen);
+        provider.defaultSerializeField
+            ("stereoComments", struc.stereoComments, jgen);
+        provider.defaultSerializeField
+            ("stereoCenters", struc.stereoCenters, jgen);
+        provider.defaultSerializeField
+            ("definedStereo", struc.definedStereo, jgen);
+        provider.defaultSerializeField("ezCenters", struc.ezCenters, jgen);
+        provider.defaultSerializeField("charge", struc.charge, jgen);
+        provider.defaultSerializeField("mwt", struc.mwt, jgen);
+        
+        provider.defaultSerializeField("properties", struc.properties, jgen);
+        if(struc.createdBy!=null)
+        	provider.defaultSerializeField("createdBy", struc.createdBy.username, jgen);
+        if(struc.lastEditedBy!=null)
+        	provider.defaultSerializeField("lastEditedBy", struc.lastEditedBy.username, jgen);
+        provider.defaultSerializeField("references", struc.getReferencesString(), jgen);      
+        provider.defaultSerializeField("access", struc.getAccessString(), jgen);
+        
+        
+       
+        
+        for (Value val : struc.properties) {
+            if (Structure.H_LyChI_L4.equals(val.label)) {
+                Keyword kw = (Keyword)val;
+                provider.defaultSerializeField("hash", kw.term, jgen);
+            }
+        } 
+	 */
 	
     public Date created=null;
     
@@ -88,6 +137,11 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		this.stereoChemistry=s.stereoChemistry;
 		this.version=s.version;
 	}
+	
+	
+	
+	
+	
 	
 	@JsonIgnore
 //	@OneToOne(cascade = CascadeType.ALL)

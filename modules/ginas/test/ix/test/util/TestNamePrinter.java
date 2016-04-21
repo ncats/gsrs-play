@@ -40,6 +40,9 @@ public class TestNamePrinter extends TestWatcher{
 
     private PrintStream out;
 
+    private boolean printStart = true;
+    private boolean printEnd = false;
+
     /**
      * Write the test names to {@code System.out}.
      */
@@ -60,7 +63,35 @@ public class TestNamePrinter extends TestWatcher{
         this.out = out;
     }
 
+    @Override
     protected void starting(Description description) {
-        out.println("Starting test: " + description.getMethodName());
+        if(printStart) {
+            out.println("Starting test: " + description.getMethodName());
+        }
+    }
+
+    @Override
+    protected void finished(Description description) {
+        if(printEnd) {
+            out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+        }
+    }
+
+    public boolean shouldPrintStart() {
+        return printStart;
+    }
+
+    public TestNamePrinter setPrintStart(boolean printStart) {
+        this.printStart = printStart;
+        return this;
+    }
+
+    public boolean shouldPrintEnd() {
+        return printEnd;
+    }
+
+    public TestNamePrinter setPrintEnd(boolean printEnd) {
+        this.printEnd = printEnd;
+        return this;
     }
 }

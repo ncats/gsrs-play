@@ -13,8 +13,8 @@
 <div class="panel panel-default" >
   <div class="panel-heading" ng-click="toggleFacet('@f.name.replace(' ', '-')-iscollapsed')">
     <h3 class="panel-title" >
-        <i ng-show="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-right"></i>
-        <i ng-hide="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-down"></i>
+        <i ng-cloak ="" ng-show="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-right"></i>
+        <i ng-cloak ="" ng-hide="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-down"></i>
     @if(f.raw) {
       @HtmlFormat.raw(f.name())
     } else {

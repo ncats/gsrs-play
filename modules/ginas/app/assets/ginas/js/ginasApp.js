@@ -409,10 +409,10 @@
     }]);
 
     ginasApp.service('substanceRetriever', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances?filter=names.name='";
+        var url = baseurl + "api/v1/substances";
         var substanceRet = {
             getSubstances: function (name) {
-                var promise = $http.get(url + name.toUpperCase() + "'", {cache: true}, {
+                var promise = $http.get(url, {params: {"filter": "names.name='" + name.toUpperCase() + "'"}, cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -1703,82 +1703,6 @@
         };
     });
 
-    /*ginasApp.directive('substanceSearchForm', function (CVFields, toggler, substanceFactory, spinnerService) {
-     return {
-     restrict: 'E',
-     replace: true,
-     scope: {
-     referenceobj: '=',
-     field: '=',
-     q: '=',
-     formname:'='
-     },
-     templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
-     link: function (scope, element, attrs) {
-
-     console.log(scope);
-
-
-     scope.results = {};
-     scope.top = 8;
-     scope.testb = 0;
-     scope.createSubref = function (selectedItem) {
-     var temp = {};
-     temp.refuuid = selectedItem.uuid;
-     temp.refPname = selectedItem._name;
-     temp.approvalID = selectedItem.approvalID;
-     temp.substanceClass = "reference";
-     if (attrs.definition) {
-     var r = {relatedSubstance: temp};
-     CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
-     var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
-     r.type = type;
-     });
-     /!*
-     var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
-     *!/
-     if (!_.has(scope.referenceobj, 'relationships')) {
-     _.set(scope.referenceobj, 'relationships', []);
-     }
-     scope.referenceobj.relationships.push(r);
-     }
-     _.set(scope.referenceobj, scope.field, angular.copy(temp));
-     scope.q = null;
-     scope.$parent.$parent.toggle();
-     };
-
-     scope.fetch = function (term, skip) {
-     spinnerService.show('subrefSpinner');
-     var url = baseurl + "api/v1/substances?filter=names.name='" +
-     // var url = baseurl + "api/v1/substances/search?q=" +
-     term + "'&top=" + scope.top + "&skip=" + skip;
-     substanceFactory.getSubstances(scope.q).then(function (response) {
-     /!*                 $http.get(url, {cache: true}).then(function (response, status, headers, config) {*!/
-     console.log(response);
-     scope.data = response.data.content;
-     spinnerService.hide('subrefSpinner');
-     var template = angular.element('<substance-viewer data = data format="subref"></substance-viewer>');
-     toggler.refresh(scope, scope.formname, template);
-     });
-     /!*
-     responsePromise.error(function (data, status, headers, config) {
-     scope.searching = false;
-     });*!/
-     };
-
-     scope.fetch(scope.q, 0);
-
-     scope.nextPage = function () {
-     scope.fetch(scope.term, scope.results.skip + scope.results.top);
-     };
-     scope.prevPage = function () {
-     scope.fetch(scope.term, scope.results.skip - scope.results.top);
-     };
-
-     }
-     };
-     });
-     */
     ginasApp.directive('substanceView', function ($compile) {
         return {
             replace: true,
@@ -1842,7 +1766,6 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
-                        console.log(data);
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;

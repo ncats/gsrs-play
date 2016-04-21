@@ -156,13 +156,13 @@ public class Structure extends BaseModel{
     public Double mwt; // molecular weight
     
     @ManyToMany(cascade = CascadeType.ALL)
-    @JsonView(BeanViews.Full.class)
+    @JsonView(BeanViews.Internal.class)
     @JoinTable(name = "ix_core_structure_property")
     @JsonDeserialize(contentUsing=AbstractValueDeserializer.class)
     public List<Value> properties = new ArrayList<Value>();
 
     @ManyToMany(cascade = CascadeType.ALL)
-    @JsonView(BeanViews.Full.class)
+    @JsonView(BeanViews.Internal.class)
     @JoinTable(name = "ix_core_structure_link")
     public List<XRef> links = new ArrayList<XRef>();
 

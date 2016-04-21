@@ -1678,12 +1678,12 @@ console.log(scope);
                 parent: '='
             },
             link: function(scope){
-                var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
+               /* var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
                 _.forEach(fields, function(field){
                    if(!_.isNull(scope.parent.protein[field])){
                        scope.iscollapsed=false;
                    }
-                });
+                });*/
             },
             templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
         };
