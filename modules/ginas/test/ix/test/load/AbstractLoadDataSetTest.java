@@ -1,5 +1,6 @@
 package ix.test.load;
 
+import ix.ginas.controllers.GinasApp;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceSearch;
 import ix.test.util.TestNamePrinter;
@@ -38,8 +39,31 @@ public abstract class AbstractLoadDataSetTest {
     protected void assertFacetsMatch(Map<String, Map<String, Integer>> expectedFacets, SubstanceSearch.SearchResult actualResults){
         Map<String, Map<String, Integer>> actual = actualResults.getAllFacets();
 
+        Map<String, Map<String, Integer>> filteredExpected = filterVisibleFacets(expectedFacets);
 
-        assertEquals(expectedFacets, actual);
+        assertEquals(filteredExpected, actual);
+    }
+
+    /**
+     * Sometimes, we change which facets are calculated and how they are named by modifying
+     * code in {@code GinasApp } so this method checks that class to remove any facets
+     * that are currently not computed and translates the name accordingly.
+     *
+     * This way, we don't have to change our test code everytime we change production code.
+     *
+     * * @param expectedFacets the expected facet counts.
+     * @return a new Map where some of the facets might be filtered out.  The original map is not modified.
+     */
+    private Map<String,Map<String,Integer>> filterVisibleFacets(Map<String, Map<String, Integer>> expectedFacets) {
+
+        Map<String,Map<String,Integer>> filtered = new HashMap<>();
+        for(String name : GinasApp.CHEMICAL_FACETS){
+            String translatedName = GinasApp.translateFacetName(name);
+
+            filtered.put(translatedName, expectedFacets.get(translatedName));
+        }
+
+        return filtered;
     }
 
     protected Map<String, Map<String, Integer>> createExpectedRep90Facets() {
@@ -48,7 +72,7 @@ public abstract class AbstractLoadDataSetTest {
         expectedFacets.put("Record Status", new HashMap<String, Integer>(){{
             put("Validated (UNII)", 17);
         }});
-        expectedFacets.put("Substance Class", new HashMap<String, Integer>(){{
+        expectedFacets.put("Substance Type", new HashMap<String, Integer>(){{
             put("Chemical", 17);
         }});
         expectedFacets.put("Molecular Weight", new HashMap<String, Integer>(){{

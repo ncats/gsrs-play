@@ -1,13 +1,11 @@
 package ix.ginas.controllers;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
-import be.objectify.deadbolt.java.actions.SubjectPresent;
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
-import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
@@ -19,7 +17,6 @@ import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.controllers.v1.SubstanceFactory.SubstanceFilter;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -32,7 +29,6 @@ import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.NucleicAcid;
-import ix.ginas.models.v1.Polymer;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.Protein;
@@ -52,17 +48,15 @@ import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
-import ix.utils.Global;
 import ix.utils.Util;
 
 
 import play.Play;
-import java.io.ByteArrayOutputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -70,18 +64,13 @@ import java.util.concurrent.Callable;
 import org.springframework.util.StringUtils;
 
 import play.Logger;
-import play.Play;
 import play.db.ebean.Model;
-import play.libs.F;
-import play.libs.ws.WS;
-import play.libs.ws.WSResponse;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 import chemaxon.struc.MolAtom;
-import controllers.Assets;
 import ix.seqaln.SequenceIndexer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -98,7 +87,7 @@ public class GinasApp extends App {
         "Substance Class", 
         "SubstanceStereochemistry", 
         "Molecular Weight",
-        //"LyChI_L4",
+       // "LyChI_L4",
         "GInAS Tag"
     };
     
@@ -240,7 +229,21 @@ public class GinasApp extends App {
         return new CV();
     }
 
-    
+    public static String translateFacetName(String n){
+        if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
+            return "Stereochemistry";
+        if ("modified".equalsIgnoreCase(n))
+            return "Last Edited";
+        if ("approved".equalsIgnoreCase(n))
+            return "Last Approved";
+        if("LyChI_L4".equalsIgnoreCase(n)){
+            return "Structure Hash";
+        }
+        if("Substance Class".equalsIgnoreCase(n)){
+            return "Substance Type";
+        }
+        return n.trim();
+    }
     static FacetDecorator[] decorate(Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
@@ -260,23 +263,13 @@ public class GinasApp extends App {
         GinasFacetDecorator(Facet facet) {
             super(facet, true, 10);
         }
-        
+
+
+
         @Override
         public String name() {
-            String n = super.name();
-            if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
-                return "Stereochemistry";
-            if ("modified".equalsIgnoreCase(n))
-                return "Last Edited";
-            if ("approved".equalsIgnoreCase(n))
-                return "Last Approved";
-            if("LyChI_L4".equalsIgnoreCase(n)){
-                return "Structure Hash";
-            }
-            if("Substance Class".equalsIgnoreCase(n)){
-                return "Substance Type";
-            }
-            return n.trim();
+            return translateFacetName( super.name());
+
         }
         
         @Override
