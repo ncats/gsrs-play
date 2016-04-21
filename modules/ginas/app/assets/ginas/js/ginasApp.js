@@ -3,9 +3,22 @@
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
         'angularSpinners', 'filterListener'
-    ]).run(['$anchorScroll', function ($anchorScroll) {
+    ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
-        }])
+       /*   var windowElement = angular.element($window);
+            console.log($location);
+        var u = $location.path().split('/');
+        var inter = _.intersection(u, ["edit","wizard"]);
+        console.log(inter);
+        if(inter.length > 0) {
+            console.log("wizard)");
+            windowElement.on('beforeunload', function (event) {
+                // event.preventDefault();
+                // console.log(event);
+                return "Navigating away from this page will lose all unsaved changed.";
+            });
+        }*/
+    })
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
@@ -534,11 +547,13 @@
         };
     }]);
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
+    ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver, spinnerService) {
         // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
+        $scope.updateNav = false;
+
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
@@ -557,6 +572,18 @@
                 $scope.substance = Substance.$$setClass(substanceClass);
             }
         }
+
+        var windowElement = angular.element($window);
+        var u = $location.path().split('/');
+        var inter = _.intersection(u, ["edit","wizard"]);
+        if(inter.length > 0){
+            $scope.updateNav = true;
+        }
+            windowElement.on('beforeunload', function (event) {
+                if($scope.updateNav == true) {
+                    return $scope.updateNav + "Navigating away from this page will lose all unsaved changed.";
+                }
+            });
 
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
@@ -790,6 +817,7 @@
                     }
                 }).then(function (response) {
                     console.log(response);
+                    $scope.updateNav = false;
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
@@ -807,6 +835,7 @@
                     }
                 }).then(function (response) {
                     //console.log(response);
+                    $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
@@ -900,6 +929,7 @@
 
         $scope.viewSubstance = function () {
             console.log("new");
+            $scope.updateNav = false;
             $window.location.search = null;
             console.log($window.location);
             console.log($location);
@@ -921,6 +951,10 @@
             $scope.substanceClass = $location.$$search.kind;
             Substance.$$setSubstance(JSON.parse(input)).then(function (data) {
                 $scope.substance = data;
+                console.log($scope.substance);
+                if($scope.substance.substanceClass =="chemical"){
+                    molChanger.setMol($scope.substance.structure.molfile);
+                }
                 if ($scope.substance.substanceClass != $scope.substanceClass) {
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
@@ -1755,6 +1789,12 @@
                 if (!_.isUndefined(scope.parent.structure)) {
                     scope.mol = scope.parent.structure.molfile;
                 }
+
+/*                scope.$watch('mol', function(newval){
+                    console.log(newval);
+                    scope.sketcher.setMolfile(newval);
+                });*/
+
                 var template = angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
                 element.append(template);
                 $compile(template)(scope);
@@ -2020,7 +2060,7 @@
     ginasApp.directive('deleteButton', function () {
         return {
             restrict: 'E',
-            template: '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>',
+            template: '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 scope.deleteObj = function () {
                     if (scope.parent) {

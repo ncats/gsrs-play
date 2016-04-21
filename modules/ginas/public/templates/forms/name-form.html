@@ -37,9 +37,6 @@
             </div>
             <div class="row form-row">
                 <div class = "col-md-2">
-<!--
-                    <resolve-button name="name.name" parent = "parent" divid="nameForm"></resolve-button>
--->
                     <button class="btn btn-primary" ng-click="duplicateCheck(name.name)">Resolve Name</button>
                 </div>
                 <div ng-if="name.type.value=='of'">
@@ -56,10 +53,6 @@
                 </div>
                 </div>
             </div>
-
-<!--
-            <h4 ng-if="name.name">Results for <code>{{name.name}}</code>:</h4>
--->
             <div class = "row">
                 <spinner name="nameSpinner"><loading></loading><br/></spinner>
                 <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>

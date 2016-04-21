@@ -314,44 +314,6 @@
                             console.log(response);
                             console.log("filter");
                             filterService._register(scope);
-                            /*scope.$watch('filter', function (newValue) {
-                                console.log(newValue);
-                                if (!_.isUndefined(newValue)) {
-                                    if (scope.filterFunction) {
-                                        var cv = scope.filterFunction({type: newValue});
-                                        CVFields.getCV(cv).then(function (response) {
-                                            scope.obj = [];
-                                            scope.values = response.data.content[0].terms;
-                                        });
-                                    } else {
-                                        var filtered = [];
-                                        var cv = response.data.content[0].terms;
-
-                                        _.forEach(cv, function (term) {
-                                            if (!_.isNull(term.filters)) {
-                                                _.forEach(term.filters, function (filter) {
-                                                    if (_.isEqual(newValue.value, filter.split('=')[1])) {
-                                                        filtered.push(term);
-                                                    }
-                                                });
-                                            }
-                                        });
-                                        if(filtered.length > 0) {
-                                            scope.values = filtered;
-                                        }else{
-                                            scope.obj={};
-                                            if (response.data.content[0].editable == true) {
-                                                cv = _.union(cv, other);
-                                            }
-                                            scope.values = cv;
-                                        }
-                                    }
-                                    if (scope.values.length == 1) {
-                                        scope.obj = scope.values[0];
-                                    }
-                                }
-                            });*/
-
                         }
 
                         if (response.data.content[0].editable == true) {

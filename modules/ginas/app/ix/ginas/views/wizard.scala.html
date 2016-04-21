@@ -185,11 +185,11 @@
 	        	
                 var loadjson = @Html(json);
                 @if(!"{}".equals(json) && json != null) {
-	        		$(window).load(function(){
+	        		/*$(window).load(function(){
 			        	$(window).bind('beforeunload', function(){
 				                    return 'Navigating away from this page will lose all unsaved changed. Are you sure?';
-			            });
-			        }); 
+			            });*/
+			       // });
 	        		window.setInterval(function(){
 	        			$.ajax({
 	        				url: baseurl + "lock?uuid=" + loadjson.uuid, 

@@ -1007,7 +1007,7 @@
         };
     });
 
-    ginasForms.directive('structureForm', function ($http, $templateRequest, $compile) {
+    ginasForms.directive('structureForm', function ($http, $templateRequest, $compile, molChanger) {
         return {
             restrict: 'E',
             replace: true,
@@ -1028,6 +1028,11 @@
                     scope.structure = scope.parent.structure;
                 }
 
+                // scope.$watch('structure', function(newval, oldval){
+                //     console.log(newval);
+                //     console.log(oldval);
+                //     molChanger.setMol(scope.structure.molfile);
+                // });
 
 
 
