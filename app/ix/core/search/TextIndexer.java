@@ -1678,8 +1678,32 @@ public class TextIndexer implements Closeable{
                             }
                             LinkedList<String> l = new LinkedList<>();
                             l.add(name);
-                            indexField (ixFields, indexable, 
-                                        l, value);
+                            
+                            Class type = value.getClass();
+                            if (Collection.class.isAssignableFrom(type)) {
+                                Iterator it = ((Collection)value).iterator();
+                                for (int i = 0; it.hasNext(); ++i) {
+                                    l.push(String.valueOf(i));
+                                    indexField (ixFields, indexable,
+                                                l, it.next());
+                                    l.pop();
+                                }
+                            }
+                            else if (type.isArray()) {
+                                int len = Array.getLength(value);
+                                // recursively evaluate each element in
+                                //  the array
+                                for (int i = 0; i < len; ++i) {
+                                    l.push(String.valueOf(i));
+                                    indexField (ixFields, indexable,
+                                                l, Array.get(value, i)); 
+                                    l.pop();
+                                }
+                            }
+                            else {
+                                indexField (ixFields, indexable, 
+                                            l, value);
+                            }
                         }
                     }
                     else {

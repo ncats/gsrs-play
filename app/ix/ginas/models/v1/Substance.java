@@ -718,4 +718,24 @@ public class Substance extends GinasCommonData {
 		return thisID.equals(thatID);
 	}
 	
+	@JsonIgnore
+	@Indexable(facet=true, name="Modifications")
+	public List<String> getModifiedCategory(){
+		List<String> mods = new ArrayList<String>();
+		if(this.getModificationCount()<=0){
+			mods.add("No Modifications");
+		}else{
+			mods.add("Any Modification");
+			if(!this.getModifications().structuralModifications.isEmpty()){
+				mods.add("Structural Modification");
+			}
+			if(!this.getModifications().structuralModifications.isEmpty()){
+				mods.add("Agent Modification");
+			}
+			if(!this.getModifications().structuralModifications.isEmpty()){
+				mods.add("Physical Modification");
+			}
+		}
+		return mods;
+	}
 }
