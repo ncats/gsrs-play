@@ -3,12 +3,12 @@
         <form-header type="moieties" name="moietyForm" id ="addMoietyForm" parent="parent"></form-header>
     </div>
         <div class="col-md-12">
-            <div ng-repeat="(index, obj) in parent.moieties track by $index">
+            <div ng-repeat="obj in parent.moieties track by obj.id">
                 <div class ="row">
                     <hr>
                     <div class="col-md-2">
                         <label>Moiety Structure</label>
-                        <rendered id= {{obj.id}}></rendered>
+                        <rendered id="{{obj.id}}"></rendered>
                     </div>
                     <div class = "col-md-10">
                         <div class ="row">

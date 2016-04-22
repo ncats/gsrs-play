@@ -147,7 +147,7 @@
                 case "chemical":
                     substance.substanceClass = substanceClass;
                     substance.structure = {};
-                    _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
+                    _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
                     substance.moieties = [];
                     break;
                 case "protein":
@@ -1795,6 +1795,33 @@
                 element.append(template);
                 $compile(template)(scope);
 
+				scope.merge = function(oldStructure, newStructure){
+					var definitionalChange=(oldStructure["hash"] !== newStructure["hash"]);
+					_.forIn(newStructure, function(value, key){
+						var cvname=null;
+						switch(key){
+							case "stereochemistry":
+								cvname="STEREOCHEMISTRY_TYPE";
+								break;
+							case "opticalActivity":
+								cvname="OPTICAL_ACTIVITY";
+								break;
+							default:
+								oldStructure[key]=value;
+						}
+						if(cvname!==null){
+							CVFields.searchTags(cvname, value).then(function(response){
+									console.log(response[0]);
+									oldStructure[key]=response[0];
+									console.log("The key is:" + key);
+									console.log(oldStructure);
+								});
+						}
+
+					});
+					return definitionalChange;
+				}
+
                 scope.updateMol = function () {
                     var url = baseurl + 'structure';
                     $http.post(url, scope.mol, {
@@ -1802,6 +1829,7 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
+                    	console.log(data);
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;
@@ -1816,14 +1844,22 @@
                         }
                         if(scope.parent.structure){
 	                        data.structure.id=scope.parent.structure.id;
+                        }else{
+                        	scope.parent.structure={};
                         }
-                        scope.parent.structure = data.structure;
+                        var defChange=scope.merge(scope.parent.structure, data.structure);
                         
-                        scope.parent.moieties = [];
-                        _.forEach(data.moieties, function (m) {
-                        	m["$$new"]=true;
-                        	scope.parent.moieties.push(m);
-                        });
+                        if(defChange){
+                        	scope.parent.moieties = [];
+                        	_.forEach(data.moieties, function (m) {
+                        		m["$$new"]=true;
+                        		var moi={};
+                        		scope.merge(moi, m)
+                        		scope.parent.moieties.push(moi);
+                        	});
+                        }
+                        
+                        
                         if (data.structure) {
                             _.set(scope.parent, 'q', data.structure.smiles);
                         }
