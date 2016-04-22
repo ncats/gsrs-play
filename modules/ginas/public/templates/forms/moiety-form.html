@@ -3,7 +3,7 @@
         <form-header type="moieties" name="moietyForm" id ="addMoietyForm" parent="parent"></form-header>
     </div>
         <div class="col-md-12">
-            <div ng-repeat="obj in parent.moieties track by obj.id">
+            <div ng-repeat="(index, obj) in parent.moieties track by obj.id">
                 <div class ="row">
                     <hr>
                     <div class="col-md-2">
@@ -16,7 +16,7 @@
 <!--
                         <label for="count">Count</label>
 -->
-                        <form-selector referenceobj=obj field="countAmount" label = "Count Amount" divid="{{obj.$$hashKey}}" type="amount"></form-selector>
+                        <form-selector referenceobj=obj field="countAmount" label = "Count Amount" divid=moiety-{{index}} type="amount"></form-selector>
 <!--
                         <span class="badge badge-primary" id = "count">{{obj.countAmount.average || obj.count}}</span>
 -->

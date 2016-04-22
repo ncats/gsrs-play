@@ -659,7 +659,6 @@
         };
     });
 
-
     ginasFormElements.directive('closeButton', function () {
         return {
             restrict: 'E',
@@ -699,6 +698,7 @@
             scope: {
                 data: '=',
                 parent: '=',
+                obj: '=',
                 format: '@'
             },
             templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
@@ -719,14 +719,29 @@
                             citation: selected.source,
                             documentDate: moment()._d
                         };
-                        console.log(reference);
+                        if (scope.obj) {
+                            console.log(scope.obj);
+                            if (_.isUndefined(scope.obj.references)) {
+                                _.set(scope.obj, 'references', []);
+                            }
+                            scope.obj.references.push(reference.uuid);
+                        }
                         scope.parent.references.push(reference);
                     }
                     if (selected.value && selected.value.molfile) {
                         molChanger.setMol(selected.value.molfile);
                     }
+
+                    if (!_.isUndefined(scope.parent.structure)) {
+                        console.log("adding to structure");
+                        if (_.isUndefined(scope.parent.structure.references)) {
+                            _.set(scope.parent.structure, 'references', []);
+                        }
+                        scope.parent.structure.references.push(reference.uuid);
+                        console.log(scope);
+                    }
+
                     if (scope.format == "subref") {
-                        console.log("passing");
                         scope.$parent.createSubref(selected);
                     }
                     delete scope.subs;
