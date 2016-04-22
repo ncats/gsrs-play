@@ -2,11 +2,8 @@ angular.module('filterListener', [])
     .factory('filterService', function (CVFields) {
         return {
             _register: function (scope) {
-                console.log("registering a field to watch");
-                console.log(scope);
                 var filter = scope.filter;
                 scope.$watch('filter', function (newValue) {
-                    console.log(newValue);
                     if (!_.isUndefined(newValue)) {
                         if (scope.filterFunction) {
                             var cv = scope.filterFunction({type: newValue});
@@ -14,8 +11,6 @@ angular.module('filterListener', [])
                                 scope.obj = [];
                                 scope.values = response.data.content[0].terms;
                                 if (scope.values.length == 1) {
-                                    console.log("setting");
-                                    console.log(scope);
                                     scope.obj = scope.values[0];
                                 }
                             });
@@ -25,8 +20,6 @@ angular.module('filterListener', [])
                                 var cv = response.data.content[0].terms;
                                 _.forEach(cv, function (term) {
                                     if (!_.isNull(term.filters)) {
-                                        console.log(term.filters);
-                                        console.log(filter);
                                         _.forEach(term.filters, function (f) {
                                             //this will capture one filter hit
                                             //need to figure out how to run compound filtering
@@ -47,13 +40,24 @@ angular.module('filterListener', [])
                                     scope.values = cv;
                                 }
                                 if (scope.values.length == 1) {
-                                    console.log("setting");
-                                    console.log(scope);
                                     scope.obj = scope.values[0];
                                 }
                             });
                         }
 
+                    }
+                });
+            },
+
+            _registerText: function(scope){
+                console.log("registering a filter on a text field");
+                var filter = scope.filter;
+                scope.$watch('filter', function (newValue) {
+                    if (!_.isUndefined(newValue)) {
+                        if (scope.filterFunction) {
+                            console.log(newValue);
+                            scope.filterFunction({model: newValue});
+                        }
                     }
                 });
             },

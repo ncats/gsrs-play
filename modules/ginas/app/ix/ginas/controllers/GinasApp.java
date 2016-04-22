@@ -236,9 +236,12 @@ public class GinasApp extends App {
         if ("modified".equalsIgnoreCase(n))
             return "Last Edited";
         if ("approved".equalsIgnoreCase(n))
-            return "Last Approved";
+            return "Last Validated";
         if("LyChI_L4".equalsIgnoreCase(n)){
             return "Structure Hash";
+        }
+        if("Approved By".equalsIgnoreCase(n)){
+            return "Validated By";
         }
         if("Substance Class".equalsIgnoreCase(n)){
             return "Substance Type";

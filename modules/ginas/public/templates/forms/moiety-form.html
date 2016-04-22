@@ -1,8 +1,8 @@
 <div class = "row info">
     <div class="row">
-        <form-header type="moieties" name="moietyForm" id ="addMoietyForm" parent="parent"></form-header>
+        <form-header type="moieties" name="moietyForm" id ="addMoietyForm" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
-        <div class="col-md-12">
+        <div class="col-md-12" uib-collapse="iscollapsed">
             <div ng-repeat="(index, obj) in parent.moieties track by obj.id">
                 <div class ="row">
                     <hr>
