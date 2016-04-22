@@ -1109,7 +1109,7 @@
                                 if(_.isEmpty(scope.data)){
                                     scope.data.push("empty");
                                 }
-                                template = angular.element('<substance-viewer data = data parent = parent></substance-viewer>');
+                                template = angular.element('<substance-viewer data = data parent = parent obj = name></substance-viewer>');
                             toggler.refresh(scope, 'nameForm', template);
                         });
                     }else {
