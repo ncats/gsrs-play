@@ -64,7 +64,7 @@
             },
             //not currently used, but may become useful
             searchTags: function (domain, query) {
-                CV.getCV(domain).then(function (data) {
+                return CV.getCV(domain).then(function (data) {
                     console.log(data);
                     return _.chain(data.data.content[0].terms)
                         .filter(function (x) {

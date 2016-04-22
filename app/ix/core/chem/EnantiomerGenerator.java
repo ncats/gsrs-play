@@ -224,7 +224,7 @@ public class EnantiomerGenerator {
                     throw new IllegalStateException
                         ("Something's rotten in the state of Maryland!");
                 }
-                else if (optical == Optical.UNKNOWN) {
+                else if (optical == Optical.NONE) {
                     // do nothing
                     return;
                 }
@@ -265,7 +265,7 @@ public class EnantiomerGenerator {
             break;
 
         case MIXED: {
-            if (optical == Optical.UNKNOWN) {
+            if (optical == Optical.NONE) {
                 return;
             }
 
