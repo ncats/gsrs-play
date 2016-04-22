@@ -65,7 +65,7 @@
             //not currently used, but may become useful
             searchTags: function (domain, query) {
                 return CV.getCV(domain).then(function (data) {
-                    console.log(data);
+//                    console.log(data);
                     return _.chain(data.data.content[0].terms)
                         .filter(function (x) {
                             return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
@@ -310,9 +310,6 @@
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
 
                         if (response.data.content[0].filterable == true) {
-                            //if (scope.filter) {
-                            console.log(response);
-                            console.log("filter");
                             filterService._register(scope);
                         }
 
@@ -619,7 +616,7 @@
         };
     });
 
-    ginasFormElements.directive('textInput', function () {
+    ginasFormElements.directive('textInput', function (filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/text-input.html",
@@ -630,11 +627,24 @@
                 field: '@',
                 label: '@',
                 form: '@',
+                filter: '=',
+              //  filterFunction: '&',
                 validator: '&'
             },
             link: function (scope, elem, attrs, ngModel) {
                 scope.validatorFunction = function () {
-                    scope.validator({name: scope.obj});
+                    console.log(scope);
+                    scope.validator({model: scope.obj});
+                };
+
+                if (scope.filter){
+                    var filter = scope.filter;
+                    console.lof(filter);
+                    scope.$watch('filter', function (newValue) {
+                        if(!_.isUndefined(newValue)) {
+                         scope.validator({model:scope.obj});
+                        }
+                    });
                 }
             }
         };

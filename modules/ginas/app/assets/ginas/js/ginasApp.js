@@ -2,7 +2,7 @@
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
-        'angularSpinners', 'filterListener'
+        'angularSpinners', 'filterListener', 'validatorListener'
     ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
        /*   var windowElement = angular.element($window);
@@ -359,7 +359,7 @@
                 regex.lastIndex = 0;
                 var res = regex.exec(con);
                 if (res == null) {
-                    throw "Connection '" + con + "' is not properly formatted";
+                  //  throw "Connection '" + con + "' is not properly formatted";
                 } else {
                     if (!map[res[1]]) {
                         map[res[1]] = [];
@@ -581,7 +581,7 @@
         }
             windowElement.on('beforeunload', function (event) {
                 if($scope.updateNav == true) {
-                    return $scope.updateNav + "Navigating away from this page will lose all unsaved changed.";
+                    return "Navigating away from this page will lose all unsaved changed.";
                 }
             });
 
@@ -1811,16 +1811,13 @@
 						}
 						if(cvname!==null){
 							CVFields.searchTags(cvname, value).then(function(response){
-									console.log(response[0]);
 									oldStructure[key]=response[0];
-									console.log("The key is:" + key);
-									console.log(oldStructure);
 								});
 						}
 
 					});
 					return definitionalChange;
-				}
+				};
 
                 scope.updateMol = function () {
                     var url = baseurl + 'structure';
@@ -1829,7 +1826,7 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
-                    	console.log(data);
+                        console.log(data);
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;
@@ -1854,7 +1851,7 @@
                         	_.forEach(data.moieties, function (m) {
                         		m["$$new"]=true;
                         		var moi={};
-                        		scope.merge(moi, m)
+                        		scope.merge(moi, m);
                         		scope.parent.moieties.push(moi);
                         	});
                         }
@@ -1881,7 +1878,11 @@
                 }
 
                 if (scope.parent.substanceClass === 'polymer' && scope.parent.polymer.displayStructure) {
-                    scope.mol = scope.parent.polymer.displayStructure.molfile;
+                    console.log("polymer");
+                    console.log(scope.parent);
+                    scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
+                }else {
+                    scope.mol = scope.parent.polymer.idealizedStructure.molfile;
                     scope.updateMol();
                 }
 
