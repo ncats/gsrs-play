@@ -57,6 +57,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.chem.EnantiomerGenerator;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
+import ix.core.search.FieldFacet;
 import ix.core.search.SearchOptions;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
@@ -1227,14 +1228,17 @@ public class App extends Authentication {
         String mesg;
         Long start;
         Long stop;
+        List<FieldFacet> fieldFacets=null;
         List results = new CopyOnWriteArrayList ();
         String id = randvar (10);
         Integer total;
 
         SearchResultContext () {
         }
-
+        
         public SearchResultContext (SearchResult result) {
+        	fieldFacets=result.getFieldFacets();
+        	
             start = result.getTimestamp();          
             if (result.finished()) {
                 status = Status.Done;
@@ -1250,6 +1254,10 @@ public class App extends Authentication {
             }
             results = result.getMatches();
             total = result.count();
+        }
+        
+        public List<FieldFacet> getFieldFacets(){
+        	return fieldFacets;
         }
 
         public String getId () { return id; }
@@ -1892,14 +1900,14 @@ public class App extends Authentication {
 
     public static Result resolve (final String name) {
         final String key = "resolve/"+name;
+        
         try {
             return getOrElse (key, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _resolve (name);
                     }
                 });
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't resolve \""+name+"\"!", ex);
         }

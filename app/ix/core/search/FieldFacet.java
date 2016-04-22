@@ -18,7 +18,6 @@ public class FieldFacet {
 	}
 
 	public String getDisplayField() {
-		
 		return getDisplayField(field);
 	}
 	public static String getDisplayField(String field){
@@ -29,8 +28,9 @@ public class FieldFacet {
 	}
 	
 	public String getIndexedField() {
-		String[] fs = field.split("\\.");
-		return fs[fs.length - 1];
+		return field.replace(".", "_");
+//		String[] fs = field.split("\\.");
+//		return fs[fs.length - 1];
 	}
 	public String getLuceneQuery(){
 		if(matchType==MATCH_TYPE.WORD)

@@ -1,14 +1,5 @@
 package ix.core.search;
 
-import ix.core.models.Keyword;
-import ix.core.search.FieldFacet.MATCH_TYPE;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.Note;
-import ix.ginas.models.v1.Reference;
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.models.v1.Substance;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -26,8 +17,6 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.Query;
 
-import play.Logger;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -36,6 +25,15 @@ import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+
+import ix.core.search.FieldFacet.MATCH_TYPE;
+import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Note;
+import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Substance;
+import play.Logger;
 
 public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	private static final String NULL_FIELD = "{NULL}";
@@ -141,7 +139,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	
 	public static void updateFieldQueryFacets(Substance o, Set<Term> realterms,
 			Map<String, FieldFacet> ffacet) throws Exception {
-		
+		System.out.println("Updating facets for" + o.getName());
 		
 		if(realterms == null || realterms.size()<=0)throw new IllegalStateException("Need unspecified field queiries");
 		
@@ -195,6 +193,8 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			}
 		}
 		
+		
+		
 //		{
 //			int i=0;
 //			for(Keyword n: o.tags){
@@ -216,12 +216,15 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			if(ignoreField(realkey))continue;
 			
 			for(Term t:realterms){
-				MATCH_TYPE match = getMatchType(m2.get(key),t.text());
+				String q = t.text();
+				MATCH_TYPE match = getMatchType(m2.get(key),q);
+				
 				if(match==MATCH_TYPE.NO_MATCH)continue;
 				if(match==MATCH_TYPE.CONTAINS)continue;
 				if(match==MATCH_TYPE.WORD_STARTS_WITH)continue;
+				System.out.println("##########" + realkey + match);
 				
-				String q = t.text();
+				
 				if (matchedFields.contains(realkey + match))continue;
 				FieldFacet ff = ffacet.get(realkey + match);
 				if (ff == null) {
@@ -238,8 +241,8 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		if(tterm==null) return MATCH_TYPE.NO_MATCH;
 		String term = tterm.toUpperCase().trim();
 		
+		//System.out.println(term + "?=" + q);
 		if (term.equals(q)){
-			
 			return MATCH_TYPE.FULL;
 		}
 		
