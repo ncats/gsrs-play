@@ -927,12 +927,7 @@ public class TextIndexer implements Closeable{
         //this is a quick and dirty way to have a cleaner-looking
         //query for display
         String qtext =text;
-        if (qtext!=null){
-            qtext= text.replace(TextIndexer.GIVEN_START_WORD,
-                                TextIndexer.START_WORD);
-            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
-                                  TextIndexer.STOP_WORD);
-        }
+        
         SearchResult searchResult = new SearchResult (options, text);
 
         
