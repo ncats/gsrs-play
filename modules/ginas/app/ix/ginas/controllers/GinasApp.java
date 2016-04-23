@@ -1101,10 +1101,6 @@ public class GinasApp extends App {
     
     @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
     public static Result interpretMolfile() {
-        // String mime = request().getHeader("Content-Type");
-        // Logger.debug("molinstrument: content-type: "+mime);
-
-    	System.out.println("Interpretting");
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         ObjectNode node = mapper.createObjectNode();
         try {
