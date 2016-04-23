@@ -94,7 +94,8 @@ public class GinasApp extends App {
     public static final String[] PROTEIN_FACETS = {
         "Sequence Type",
         "Substance Class", 
-        "Status" 
+        "Status" ,
+        "Modifications"
     };
     
     public static final String[] ALL_FACETS = {
@@ -105,7 +106,8 @@ public class GinasApp extends App {
         "GInAS Tag", 
         "Molecular Weight",
         "Relationships",
-        "Sequence Type", 
+        "Sequence Type",
+        "Modifications",
         "Material Class", 
         "Material Type",
         "Family", 
@@ -136,10 +138,11 @@ public class GinasApp extends App {
             (SearchResultContext context, int page, int rows, int total,
              int[] pages, List<TextIndexer.Facet> facets,
              List<Substance> substances) {
+        	
             return ok(ix.ginas.views.html.substances.render
                       (page, rows, total, pages,
                        decorate(filter(facets, this.facets)),
-                       substances, context.getId(), null));
+                       substances, context.getId(), context.getFieldFacets()));
         }
     }
 
@@ -235,9 +238,12 @@ public class GinasApp extends App {
         if ("modified".equalsIgnoreCase(n))
             return "Last Edited";
         if ("approved".equalsIgnoreCase(n))
-            return "Last Approved";
+            return "Last Validated";
         if("LyChI_L4".equalsIgnoreCase(n)){
             return "Structure Hash";
+        }
+        if("Approved By".equalsIgnoreCase(n)){
+            return "Validated By";
         }
         if("Substance Class".equalsIgnoreCase(n)){
             return "Substance Type";
@@ -603,16 +609,35 @@ public class GinasApp extends App {
      * @return
      * @throws Exception
      */
-    static Result _substances(final String q, final int rows, final int page, final String[] facets)
+    static Result _substances(String q, final int rows, final int page, final String[] facets)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
         final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
         
         final String[] searchFacets = facets;
+        
+        //Special piece to show deprecated records
+        String showDeprecated = request().getQueryString("showDeprecated");
+        
+        if(showDeprecated!=null){
+        	
+        	
+        }else{
+        	if(q!=null){
+        		q=q + " AND SubstanceDeprecated:false";
+        	}else{
+        		q="SubstanceDeprecated:false";
+        	}
+        }
+        
+       
+        
+        
+        
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if (request().queryString().containsKey("facet") || q != null) {
+        if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
                 getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="

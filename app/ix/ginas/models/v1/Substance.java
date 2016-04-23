@@ -738,4 +738,14 @@ public class Substance extends GinasCommonData {
 		}
 		return mods;
 	}
+	
+	
+	
+	
+	@Indexable(facet=true)
+	public String getSubstanceDeprecated(){
+		//System.out.println("Found deprecated record");
+		return ""+this.deprecated;
+	}
+	
 }

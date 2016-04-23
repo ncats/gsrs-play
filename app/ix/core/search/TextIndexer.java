@@ -31,6 +31,7 @@ import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.index.*;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
 import org.apache.lucene.queries.TermsFilter;
+import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -80,6 +81,7 @@ public class TextIndexer implements Closeable{
     protected static final String START_WORD = "THE_START ";
     protected static final String GIVEN_STOP_WORD = "$";
     protected static final String GIVEN_START_WORD = "^";
+    private static final String ROOT = "root";
 
     @Indexable
     static final class DefaultIndexable {}
@@ -215,6 +217,10 @@ public class TextIndexer implements Closeable{
     public static class SearchResult {
         SearchContextAnalyzer searchAnalyzer = new GinasSearchAnalyzer();
 
+        public List<FieldFacet> getFieldFacets(){
+        	return searchAnalyzer.getFieldFacets();
+        }
+        
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
@@ -313,8 +319,6 @@ public class TextIndexer implements Closeable{
 
         protected void add (Object obj) {
             matches.add(obj);
-            //Logger.debug("added" + matches.size());
-            //          long start=System.currentTimeMillis();
             if(query!=null && query.length()>0){
                 if (matches.size() < Play.application().configuration()
                     .getInt("ix.ginas.maxanalyze", 100)) {
@@ -324,7 +328,6 @@ public class TextIndexer implements Closeable{
                     }
                 }
             }
-            //          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }
         
         protected void done () {
@@ -890,27 +893,50 @@ public class TextIndexer implements Closeable{
         return search (options, text, null);
     }
     
+    public static class IxQueryParser extends QueryParser{
+
+		
+
+		protected IxQueryParser(CharStream charStream) {
+			super(charStream);
+		}
+		
+		public IxQueryParser(String string, Analyzer indexAnalyzer) {
+			super(string,indexAnalyzer);
+		}
+
+		@Override
+		public Query parse(String qtext) throws ParseException{
+			if (qtext!=null){
+	            qtext= qtext.replace(TextIndexer.GIVEN_START_WORD,
+	                                TextIndexer.START_WORD);
+	            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
+	                                  TextIndexer.STOP_WORD);
+	        }
+			//add ROOT prefix to all term queries (containing '_') where not
+			//otherwise specified
+			qtext=qtext.replaceAll("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])", ROOT + "_$1");
+			Query q = super.parse(qtext);
+			return q;
+		}
+    }
+    
     public SearchResult search 
         (SearchOptions options, String text, Collection subset)
         throws IOException {
         //this is a quick and dirty way to have a cleaner-looking
         //query for display
         String qtext =text;
-        if (qtext!=null){
-            qtext= text.replace(TextIndexer.GIVEN_START_WORD,
-                                TextIndexer.START_WORD);
-            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
-                                  TextIndexer.STOP_WORD);
-        }
+        
         SearchResult searchResult = new SearchResult (options, text);
 
+        
         Query query = null;
         if (text == null) {
             query = new MatchAllDocsQuery ();
-        }
-        else {
+        }else {
             try {
-                QueryParser parser = new QueryParser
+                QueryParser parser = new IxQueryParser
                     ("text", indexAnalyzer);
                 query = parser.parse(qtext);
             }
@@ -920,6 +946,8 @@ public class TextIndexer implements Closeable{
             }
         }
 
+        System.out.println(query);
+        
         if (query != null) {
             Filter f = null;
             if (subset != null) {
@@ -1676,11 +1704,15 @@ public class TextIndexer implements Closeable{
                             if (name.startsWith("get")) {
                                 name = name.substring(3);
                             }
+                            if(!indexable.name().equals("")){
+                            	name=indexable.name();
+                            }
                             LinkedList<String> l = new LinkedList<>();
                             l.add(name);
                             
                             Class type = value.getClass();
                             if (Collection.class.isAssignableFrom(type)) {
+                            	
                                 Iterator it = ((Collection)value).iterator();
                                 for (int i = 0; it.hasNext(); ++i) {
                                     l.push(String.valueOf(i));
@@ -1931,7 +1963,9 @@ public class TextIndexer implements Closeable{
 
     private static String toPath (LinkedList<String> path) {
         StringBuilder sb = new StringBuilder (256);
-
+        //TP: Maybe do this?
+        sb.append(ROOT+"_");
+        
         for (Iterator<String> it = path.descendingIterator(); it.hasNext(); ) {
             String p = it.next();
 

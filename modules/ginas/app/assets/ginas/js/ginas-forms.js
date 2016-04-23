@@ -277,7 +277,7 @@
         };
     });
 
-    ginasForms.directive('codeForm', function ($compile, $templateRequest, toggler) {
+    ginasForms.directive('codeForm', function ($compile, $templateRequest, toggler, validatorFactory) {
         return {
             restrict: 'E',
             replace: true,
@@ -286,9 +286,24 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                scope.print = function(obj){
-        console.log(obj);
-    };
+                scope.errors = [];
+                scope.parse = function(code){
+                    console.log(code);
+                    if(scope.code.codeSystem) {
+                        scope.errors = [];
+                        var valid = validatorFactory.validate(scope.code.codeSystem.value, code);
+                        console.log(valid);
+                        if(valid == false){
+                            scope.errors.push({message:'invalid', class: 'danger'});
+                        }else{
+                            scope.errors.push({message:'valid', class: 'success'});
+                        }
+                    }else {
+                        if (scope.errors.length < 1) {
+                            scope.errors.push({message: 'no code system yet', class: 'warning'});
+                        }
+                    }
+                }
             }
         };
     });
@@ -1004,7 +1019,7 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/moiety-form.html"
-        };
+        }
     });
 
     ginasForms.directive('structureForm', function ($http, $templateRequest, $compile, molChanger) {

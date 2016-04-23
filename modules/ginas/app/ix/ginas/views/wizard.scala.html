@@ -20,7 +20,7 @@
             *@
             <structure-form parent = substance type="structure" path ="parent.structure"></structure-form>
 
-            <moiety-form parent = substance ng-cloak></moiety-form>
+            <moiety-form ng-if="substance.moieties.length>1" parent = substance ng-cloak></moiety-form>
         }
         case "mixture" => {
             <mixture-details-form parent = substance></mixture-details-form>
