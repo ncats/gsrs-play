@@ -114,7 +114,7 @@ public class GinasApp extends App {
         "Parts", 
         "Code System",
         "Last Edited By",
-        "modified", //"Last Edited Date",
+        "modified", 	   //"Last Edited Date"
         "Reference Type",
         "Approved By",
         "approved"         //"Approved Date"
@@ -388,7 +388,6 @@ public class GinasApp extends App {
    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
-        //System.out.println("Test");
         String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
 
@@ -437,7 +436,6 @@ public class GinasApp extends App {
                        (400, "Invalid search parameters: type=\""
                                + type + "\"; q=\"" + q + "\"!"));
             }
-            System.out.println("Getting subs");
             return _substances (q, rows, page);
         }
         catch (Exception ex) {
@@ -620,10 +618,7 @@ public class GinasApp extends App {
         //Special piece to show deprecated records
         String showDeprecated = request().getQueryString("showDeprecated");
         
-        if(showDeprecated!=null){
-        	
-        	
-        }else{
+        if(showDeprecated==null){
         	if(q!=null){
         		q=q + " AND SubstanceDeprecated:false";
         	}else{
@@ -640,6 +635,7 @@ public class GinasApp extends App {
         if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
                 getSubstanceSearchResult (q, total);
+            
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
@@ -667,16 +663,13 @@ public class GinasApp extends App {
                                              (total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
 
-                        System.out.println("Fetching me some subs");
                         List<Substance> substances = SubstanceFactory
                             .getSubstances(nrows, (page - 1) * rows, null);
                         
                         
-                        System.out.println("Got list");
                         Status s= ok(ix.ginas.views.html.substances.render
                                   (page, nrows, total, pages, decorate(facets),
                                    substances, null, null));
-                        System.out.println("Got Rendered");
                         return s;
                     }
                 });
@@ -689,8 +682,8 @@ public class GinasApp extends App {
     
     static Result createSubstanceResult(TextIndexer.SearchResult result,
                                         int rows, int page, String[] facets) throws Exception{
-        SearchResultContext src= new SearchResultContext(result);
-        return fetchResult (src, rows, page, new SubstanceResultRenderer (facets));
+       
+        return fetchResultImmediate (result, rows, page, new SubstanceResultRenderer (facets));
     }
     
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
@@ -970,13 +963,10 @@ public class GinasApp extends App {
         }
 
         if (values.isEmpty()) {
-                System.out.println("looking for approvalID");
             values = finder.where().ieq("approvalID", name).findList();
             if (values.isEmpty()) {
-                System.out.println("looking for name");
                 values = finder.where().ieq("names.name", name).findList(); //this is a problem for oracle
-                if (values.isEmpty()){ 
-                        System.out.println("looking for codes");
+                if (values.isEmpty()){
                     values = finder.where().ieq("codes.code", name).findList();// last resort..
                 }
             }

@@ -89,6 +89,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.sf.ehcache.Element;
+import ix.ncats.controllers.App.SearchResultContext;
 import ix.ncats.controllers.auth.*;
 import ix.ncats.resolvers.*;
 import ix.ginas.models.v1.Amount;
@@ -607,9 +608,16 @@ public class App extends Authentication {
         
         List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
-            for (Facet f : facets)
-                if (n.equals(f.getName()))
+        	boolean found=false;
+            for (Facet f : facets){
+                if (n.equals(f.getName())){
                     filtered.add(f);
+                    found=true;
+                }
+            }
+            if(!found){
+            	//System.out.println("Didn't find:" + n);
+            }
         }
         return filtered.toArray(new Facet[0]);
     }
@@ -1511,13 +1519,22 @@ public class App extends Authentication {
         return "fetchResult/"+context.getId()
             +"/"+Util.sha1(request (), params);
     }
-
+    public static <T> Result fetchResultImmediate
+    (final TextIndexer.SearchResult result, int rows,
+     int page, final ResultRenderer<T> renderer) throws Exception {
+    	 SearchResultContext src= new SearchResultContext(result);
+         
+         int[] pages = paging (rows, page, src.getCount());
+    	
+    	 return renderer.render(src, page, rows, src.getCount(),
+    			 pages, result.getFacets(), src.getResults());
+    }
     public static <T> Result fetchResult
         (final SearchResultContext context, int rows,
          int page, final ResultRenderer<T> renderer) throws Exception {
 
         final String key = getKey (context, "facet");
-
+        
         /**
          * we need to connect context.id with this key to have
          * the results of structure/sequence search context merged

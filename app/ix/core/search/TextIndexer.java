@@ -946,7 +946,6 @@ public class TextIndexer implements Closeable{
             }
         }
 
-        System.out.println(query);
         
         if (query != null) {
             Filter f = null;

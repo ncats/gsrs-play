@@ -93,11 +93,14 @@ public class Substance extends GinasCommonData {
 	public enum SubstanceDefinitionLevel{
 		COMPLETE,
 		INCOMPLETE,
+		INVALID,
 		REPRESENTATIVE
 	}
 	
+	@Indexable(facet=true)
 	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
 	
+	@Indexable(facet=true)
 	public SubstanceDefinitionLevel definitionLevel = SubstanceDefinitionLevel.COMPLETE;
 	
 	
@@ -729,10 +732,10 @@ public class Substance extends GinasCommonData {
 			if(!this.getModifications().structuralModifications.isEmpty()){
 				mods.add("Structural Modification");
 			}
-			if(!this.getModifications().structuralModifications.isEmpty()){
+			if(!this.getModifications().agentModifications.isEmpty()){
 				mods.add("Agent Modification");
 			}
-			if(!this.getModifications().structuralModifications.isEmpty()){
+			if(!this.getModifications().physicalModifications.isEmpty()){
 				mods.add("Physical Modification");
 			}
 		}
@@ -741,7 +744,7 @@ public class Substance extends GinasCommonData {
 	
 	
 	
-	
+	@JsonIgnore
 	@Indexable(facet=true)
 	public String getSubstanceDeprecated(){
 		//System.out.println("Found deprecated record");

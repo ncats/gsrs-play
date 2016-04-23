@@ -139,7 +139,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	
 	public static void updateFieldQueryFacets(Substance o, Set<Term> realterms,
 			Map<String, FieldFacet> ffacet) throws Exception {
-		System.out.println("Updating facets for" + o.getName());
 		
 		if(realterms == null || realterms.size()<=0)throw new IllegalStateException("Need unspecified field queiries");
 		
@@ -226,6 +225,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 				
 				
 				if (matchedFields.contains(realkey + match))continue;
+				
 				FieldFacet ff = ffacet.get(realkey + match);
 				if (ff == null) {
 					ff = new FieldFacet(realkey, q, match);
