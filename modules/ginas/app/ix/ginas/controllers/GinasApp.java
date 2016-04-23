@@ -1,22 +1,53 @@
 package ix.ginas.controllers;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+
+import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import be.objectify.deadbolt.java.actions.Dynamic;
-import gov.nih.ncgc.chemical.Chemical;
+import chemaxon.struc.MolAtom;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.PolymerDecode;
+import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
-import ix.core.models.*;
+import ix.core.models.Keyword;
+import ix.core.models.Payload;
+import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
-import ix.core.search.TextIndexer;
-import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
+import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
+import ix.core.search.TextIndexer.SearchResult;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -27,52 +58,44 @@ import ix.ginas.models.v1.Glycosylation;
 import ix.ginas.models.v1.Linkage;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
+import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.NucleicAcid;
-import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
-import ix.ginas.models.v1.Sugar;
-import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.Sugar;
+import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
-
-
-import play.Play;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import org.springframework.util.StringUtils;
-
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalAtom;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.chemical.ChemicalRenderer;
+import gov.nih.ncgc.chemical.DisplayParams;
+import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import tripod.chem.indexer.StructureIndexer;
-import chemaxon.struc.MolAtom;
-import ix.seqaln.SequenceIndexer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
     static final Model.Finder<UUID, Substance> SUBFINDER =
@@ -1075,7 +1098,69 @@ public class GinasApp extends App {
         return count;
 
     }
+    
+    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
+    public static Result interpretMolfile() {
+        // String mime = request().getHeader("Content-Type");
+        // Logger.debug("molinstrument: content-type: "+mime);
 
+    	System.out.println("Interpretting");
+        ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+        ObjectNode node = mapper.createObjectNode();
+        try {
+                String payload = request().body().asText();
+            payload = ChemCleaner.getCleanMolfile(payload);
+            if (payload != null) {
+                List<Structure> moieties = new ArrayList<Structure>();
+                
+                
+                try {
+                    Structure struc = StructureProcessor.instrument
+                        (payload, moieties, false); // don't standardize!
+                    // we should be really use the PersistenceQueue to do this
+                    // so that it doesn't block
+                    struc.save();
+                    ArrayNode an = mapper.createArrayNode();
+                    for (Structure m : moieties){
+                        
+                        m.save();
+                        ObjectNode on = mapper.valueToTree(m);
+                        Amount c1=Moiety.intToAmount(m.count);
+                        JsonNode amt=mapper.valueToTree(c1);
+                        on.set("countAmount", amt);
+                        an.add(on);
+                    }
+                    node.put("structure", mapper.valueToTree(struc));
+                    node.put("moieties", an);
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+                try {
+                    Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+                        .createChemical(payload, Chemical.FORMAT_AUTO);
+
+                    Collection<StructuralUnit> o = PolymerDecode
+                        .DecomposePolymerSU(c, true);
+                    for (StructuralUnit su : o) {
+                        Structure struc = StructureProcessor.instrument
+                            (su.structure, null, false);
+                        struc.save();
+                        su._structure = struc;
+                    }
+                    node.put("structuralUnits", mapper.valueToTree(o));
+                } catch (Exception e) {
+                    Logger.error("Can't enumerate polymer", e);
+                }
+            }
+        } catch (Exception ex) {
+                ex.printStackTrace();
+            Logger.error("Can't process payload", ex);
+            return internalServerError("Can't process mol payload");
+        }
+        return ok(node);
+    }
+    
+    
     // sigh ... this is the best of a bunch of bad options now
 
     public static class GinasSearchResultProcessor

@@ -93,11 +93,6 @@ import ix.ncats.controllers.App.SearchResultContext;
 import ix.ncats.controllers.auth.*;
 import ix.ncats.resolvers.*;
 
-/*
- * sigh.. why do these classes leaked in here?
- */
-import ix.ginas.models.v1.Amount;
-import ix.ginas.models.v1.Moiety;
 
 /**
  * Basic plumbing for an App
@@ -1744,12 +1739,8 @@ public class App extends Authentication {
                     struc.save();
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                        
                         m.save();
                         ObjectNode on = mapper.valueToTree(m);
-                        Amount c1=Moiety.intToAmount(m.count);
-                        JsonNode amt=mapper.valueToTree(c1);
-                        on.set("countAmount", amt);
                         an.add(on);
                     }
                     node.put("structure", mapper.valueToTree(struc));
