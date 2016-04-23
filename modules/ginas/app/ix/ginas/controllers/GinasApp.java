@@ -94,7 +94,8 @@ public class GinasApp extends App {
     public static final String[] PROTEIN_FACETS = {
         "Sequence Type",
         "Substance Class", 
-        "Status" 
+        "Status" ,
+        "Modifications"
     };
     
     public static final String[] ALL_FACETS = {
@@ -105,7 +106,8 @@ public class GinasApp extends App {
         "GInAS Tag", 
         "Molecular Weight",
         "Relationships",
-        "Sequence Type", 
+        "Sequence Type",
+        "Modifications",
         "Material Class", 
         "Material Type",
         "Family", 

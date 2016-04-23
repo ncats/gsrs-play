@@ -1704,11 +1704,15 @@ public class TextIndexer implements Closeable{
                             if (name.startsWith("get")) {
                                 name = name.substring(3);
                             }
+                            if(!indexable.name().equals("")){
+                            	name=indexable.name();
+                            }
                             LinkedList<String> l = new LinkedList<>();
                             l.add(name);
                             
                             Class type = value.getClass();
                             if (Collection.class.isAssignableFrom(type)) {
+                            	
                                 Iterator it = ((Collection)value).iterator();
                                 for (int i = 0; it.hasNext(); ++i) {
                                     l.push(String.valueOf(i));
