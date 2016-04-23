@@ -7,7 +7,7 @@ import ix.utils.Util;
 
 public class NCIStructureResolver extends AbstractStructureResolver {
     public static final String NCI_RESOLVER1 =
-        "http://cactus.nci.nih.gov/chemical/structure";
+        "https://cactus.nci.nih.gov/chemical/structure";
     public static final String NCI_RESOLVER2 =
         "https://tripod.nih.gov/chemical/structure";
     

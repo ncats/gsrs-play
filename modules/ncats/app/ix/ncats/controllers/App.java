@@ -92,6 +92,10 @@ import net.sf.ehcache.Element;
 import ix.ncats.controllers.App.SearchResultContext;
 import ix.ncats.controllers.auth.*;
 import ix.ncats.resolvers.*;
+
+/*
+ * sigh.. why do these classes leaked in here?
+ */
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.Moiety;
 
@@ -1726,7 +1730,7 @@ public class App extends Authentication {
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         ObjectNode node = mapper.createObjectNode();
         try {
-        	String payload = request().body().asText();
+                String payload = request().body().asText();
             payload = ChemCleaner.getCleanMolfile(payload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
@@ -1740,7 +1744,7 @@ public class App extends Authentication {
                     struc.save();
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                    	
+                        
                         m.save();
                         ObjectNode on = mapper.valueToTree(m);
                         Amount c1=Moiety.intToAmount(m.count);
@@ -1771,7 +1775,7 @@ public class App extends Authentication {
                 }
             }
         } catch (Exception ex) {
-        	ex.printStackTrace();
+                ex.printStackTrace();
             Logger.error("Can't process payload", ex);
             return internalServerError("Can't process mol payload");
         }
