@@ -288,7 +288,6 @@ public class SequenceIndexer {
     private ExecutorService threadPool;
     private boolean localThreadPool = false;
     private SearcherManager kmerSearchManager;
-    private final ScheduledExecutorService threadDaemon;
     
     private AtomicLong lastModified = new AtomicLong (0);
     
@@ -343,17 +342,6 @@ public class SequenceIndexer {
             kmerSearchManager = new SearcherManager (kmerDir, null);
         }
 
-        threadDaemon = Executors.newSingleThreadScheduledExecutor();
-        threadDaemon.scheduleAtFixedRate(new Runnable () {
-                public void run () {
-                    try {
-                        kmerSearchManager.maybeRefresh();
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            }, 0, 1000, TimeUnit.MILLISECONDS);
         this.baseDir = dir;
         this.threadPool = threadPool;
     }
@@ -417,7 +405,6 @@ public class SequenceIndexer {
 
             if (localThreadPool)
                 threadPool.shutdown();
-            threadDaemon.shutdown();
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -506,7 +493,13 @@ public class SequenceIndexer {
     protected void search (BlockingQueue<Result> results,
                            CharSequence query, double identity, int gap)
         throws Exception {
-        
+
+        /*
+         * this can be expensive if we call search often. having a daemon
+         * thread to performed this in the background on a regular interval
+         * is recommended but it'll fail the test cases.
+         */
+        kmerSearchManager.maybeRefresh();
         IndexSearcher searcher = kmerSearchManager.acquire();
         try {
             search (searcher, results, query, identity, gap);
@@ -525,7 +518,7 @@ public class SequenceIndexer {
         Kmers kmers = Kmers.create(query);
         final int K = kmers.getK();
         
-        int ndocs = searcher.getIndexReader().numDocs();
+        int ndocs = Math.max(1, searcher.getIndexReader().numDocs());
         final Map<String, List<HSP>> hsp = new TreeMap<String, List<HSP>>();
         for (String kmer : kmers.kmers()) {
             TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
