@@ -208,6 +208,9 @@ public class App extends Authentication {
      * 
      * The middle pages are the pages around the current page
      * 
+     * 
+     * There will always be at least 1 page.
+     * 
      * @param rowsPerPage
      * @param page
      * @param total
@@ -216,9 +219,10 @@ public class App extends Authentication {
     public static int[] paging (int rowsPerPage, int page, int total) {
         
         //last page
-        int max = (total+ rowsPerPage-1)/rowsPerPage;
+        int max = Math.max(1,(total+ rowsPerPage-1)/rowsPerPage);
+        //System.out.println("Max is:" + max);
         if (page < 0 || page > max) {
-            throw new IllegalArgumentException ("Bogus page "+page);
+            throw new IllegalArgumentException ("Bogus page " + page);
         }
         
         int[] pages;

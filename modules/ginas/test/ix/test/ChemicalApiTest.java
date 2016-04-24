@@ -153,6 +153,7 @@ public class ChemicalApiTest {
             
             String html=api.getFlexMatchHTML("CCCOC1=CC=CC=C1");
             assertTrue("Should have no matches, but found some",html.contains("There are no results to show."));
+            
         }
    	}
     

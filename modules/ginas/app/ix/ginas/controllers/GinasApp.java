@@ -845,6 +845,8 @@ public class GinasApp extends App {
     }
     
         public static Result lychimatch(final String query, int rows, int page, boolean exact) {
+        	
+        		//System.out.println("Page is:" + page);
                 try{
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
                         String hash=null;
@@ -855,7 +857,7 @@ public class GinasApp extends App {
                         }
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
-                        
+                        e.printStackTrace();
                 }
                 return internalServerError
                     (ix.ginas.views.html.error.render
