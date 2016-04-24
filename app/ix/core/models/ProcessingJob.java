@@ -1,14 +1,6 @@
 package ix.core.models;
 
-import ix.core.plugins.GinasRecordProcessorPlugin;
-import ix.core.processing.RecordExtractor;
-import ix.core.processing.RecordPersister;
-import ix.core.processing.RecordTransformer;
-import ix.core.stats.Statistics;
-import ix.utils.Global;
-
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,17 +16,23 @@ import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Version;
-
-import play.Logger;
-import play.db.ebean.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.plugins.GinasRecordProcessorPlugin;
+import ix.core.processing.RecordExtractor;
+import ix.core.processing.RecordPersister;
+import ix.core.processing.RecordTransformer;
+import ix.core.stats.Statistics;
+import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_procjob")
@@ -80,7 +78,10 @@ public class ProcessingJob extends LongBaseModel {
     public Payload payload;
     
     @Version
-    public Timestamp lastUpdate; // here
+    public Long version;
+    
+    
+    public Date lastUpdate; // here
 
     public ProcessingJob () {
     }
@@ -198,4 +199,10 @@ public class ProcessingJob extends LongBaseModel {
 	public void setPersister(Class persister) {
 		this.keys.add(new Keyword(PERSISTER_KEYWORD, persister.getName()));
 	}
+    
+    @PreUpdate
+    @PrePersist
+    private void updateTime(){
+    	lastUpdate=new Date();
+    }
 }
