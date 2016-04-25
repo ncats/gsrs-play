@@ -629,7 +629,8 @@ create table ix_core_procjob (
   statistics                clob,
   owner_id                  bigint,
   payload_id                varchar(40),
-  last_update               timestamp not null,
+  last_update               timestamp,
+  version                   bigint not null,
   constraint ck_ix_core_procjob_status check (status in (0,1,2,3,4,5,6)),
   constraint pk_ix_core_procjob primary key (id))
 ;
@@ -920,7 +921,7 @@ create table ix_ginas_substance (
   structurally_diverse_uuid varchar(40),
   nucleic_acid_uuid         varchar(40),
   constraint ck_ix_ginas_substance_definition_type check (definition_type in (0,1)),
-  constraint ck_ix_ginas_substance_definition_level check (definition_level in (0,1,2)),
+  constraint ck_ix_ginas_substance_definition_level check (definition_level in (0,1,2,3)),
   constraint ck_ix_ginas_substance_class check (class in (0,1,2,3,4,5,6,7,8,9,10,11,12)),
   constraint pk_ix_ginas_substance primary key (uuid))
 ;
