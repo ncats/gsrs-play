@@ -68,6 +68,42 @@ public class SubstanceSearch {
         }
         return results;
     }
+    /**
+     * Get the UUIDs of all the loaded substances
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     * @throws IOException if there is a problem parsing the results.
+     */
+    public SearchResult all() throws IOException {
+
+        String rootUrl = "ginas/app/substances?";
+        int page=1;
+
+        Set<String> substances = new LinkedHashSet<>();
+
+        Set<String> temp;
+        HtmlPage firstPage=null;
+        do {
+
+            HtmlPage htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+            temp = getSubstancesFrom(htmlPage);
+            if(firstPage ==null){
+                firstPage = htmlPage;
+            }
+            page++;
+            //we check the return value of the add() call
+            //because when we get to the page beyond the end of the results
+            //it returns the first page again
+            //so we can check to see if we've already added these
+            //records (so add() will return false)
+            //which will break us out of the loop.
+        }while(substances.addAll(temp));
+
+        SearchResult results = new SearchResult(substances);
+        if(results.numberOfResults() >0){
+            parseFacets(results, firstPage);
+        }
+        return results;
+    }
 
     private void parseFacets(SearchResult results, HtmlPage html) throws IOException{
 
