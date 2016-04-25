@@ -34,15 +34,49 @@ import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import play.Logger;
+import play.Play;
 
 public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	private static final String NULL_FIELD = "{NULL}";
+	
+	
 	Map<String, FieldFacet> ffacet = new HashMap<String, FieldFacet>();
 
 	public Set<Term> POISON=new HashSet<Term>();
 	public Map<String, Set<Term>> translationCache = new HashMap<String,Set<Term>>();
 	
+	private int recordsToAnalyze=100;
+	private boolean enabled=true;
+	private int recordsAnalyzed=0;
+	
+	public GinasSearchAnalyzer(){
+		recordsToAnalyze=Play.application().configuration()
+                .getInt("ix.ginas.maxanalyze", 100);
+		enabled=Play.application().configuration()
+        .getBoolean("ix.ginas.textanalyzer", false);
+	}
+	public GinasSearchAnalyzer(Map m){
+		
+		if(m!=null){
+			Object enabled=m.get("enabled");
+			Object maxanalyze=m.get("maxanalyze");
+			if(enabled!=null){
+				this.enabled=(Boolean)enabled;
+			}
+			if(maxanalyze!=null){
+				this.recordsToAnalyze=((Number)maxanalyze).intValue();
+			}
+		}   
+	}
+	
+	/**
+	 * Update statistics for FieldFacets, to be used for
+	 * context of text search results. 
+	 */
 	public void updateFieldQueryFacets(Substance o, String q) {
+		if(!enabled)return;
+		if(recordsAnalyzed>=recordsToAnalyze)return;
+		if(o==null || !(o instanceof Substance))return;
 		Set<Term> qterms=null;
 		try{
 			qterms=translationCache.get(q);
@@ -64,6 +98,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			Logger.error(e.getMessage());
 			e.printStackTrace();
 		}
+		recordsAnalyzed++;
 	}
 	
 	@Override

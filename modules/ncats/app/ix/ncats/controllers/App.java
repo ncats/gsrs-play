@@ -1531,7 +1531,10 @@ public class App extends Authentication {
     	 if (result.count() > 0) {
     	             rows = Math.min(result.count(), Math.max(1, rows));
     	             pages = paging(rows, page, result.count());
-    	             result.copyTo(resultList, (page-1)*rows, rows);
+    	             System.out.println("Copying:" + rows);
+    	             //block for search results
+    	             result.copyTo(resultList, (page-1)*rows, rows, true);
+    	             System.out.println("Copied:" + resultList.size());
     	             
     	 }
     	 return renderer.render(src, page, rows, result.count(),

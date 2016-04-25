@@ -280,4 +280,12 @@ public class Util {
     public static InputStream getFile(String file) throws Exception{
     	return getFile(file,null);
     }
+    
+    
+    //only here for testing purposes
+    public static void debugSpin(int milliseconds) {
+        long sleepTime = milliseconds*1000000L; // convert to nanoseconds
+        long startTime = System.nanoTime();
+        while ((System.nanoTime() - startTime) < sleepTime) {}
+    }
 }
