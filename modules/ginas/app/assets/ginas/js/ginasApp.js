@@ -2,10 +2,23 @@
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
-        'angularSpinners', 'filterListener'
-    ]).run(['$anchorScroll', function ($anchorScroll) {
+        'angularSpinners', 'filterListener', 'validatorListener'
+    ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
-        }])
+       /*   var windowElement = angular.element($window);
+            console.log($location);
+        var u = $location.path().split('/');
+        var inter = _.intersection(u, ["edit","wizard"]);
+        console.log(inter);
+        if(inter.length > 0) {
+            console.log("wizard)");
+            windowElement.on('beforeunload', function (event) {
+                // event.preventDefault();
+                // console.log(event);
+                return "Navigating away from this page will lose all unsaved changed.";
+            });
+        }*/
+    })
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
@@ -134,7 +147,7 @@
                 case "chemical":
                     substance.substanceClass = substanceClass;
                     substance.structure = {};
-                    _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
+                    _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
                     substance.moieties = [];
                     break;
                 case "protein":
@@ -346,7 +359,7 @@
                 regex.lastIndex = 0;
                 var res = regex.exec(con);
                 if (res == null) {
-                    throw "Connection '" + con + "' is not properly formatted";
+                  //  throw "Connection '" + con + "' is not properly formatted";
                 } else {
                     if (!map[res[1]]) {
                         map[res[1]] = [];
@@ -534,11 +547,13 @@
         };
     }]);
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
+    ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver, spinnerService) {
         // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
+        $scope.updateNav = false;
+
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
@@ -557,6 +572,18 @@
                 $scope.substance = Substance.$$setClass(substanceClass);
             }
         }
+
+        var windowElement = angular.element($window);
+        var u = $location.path().split('/');
+        var inter = _.intersection(u, ["edit","wizard"]);
+        if(inter.length > 0){
+            $scope.updateNav = true;
+        }
+            windowElement.on('beforeunload', function (event) {
+                if($scope.updateNav == true) {
+                    return "Navigating away from this page will lose all unsaved changed.";
+                }
+            });
 
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
@@ -790,6 +817,7 @@
                     }
                 }).then(function (response) {
                     console.log(response);
+                    $scope.updateNav = false;
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
@@ -807,6 +835,7 @@
                     }
                 }).then(function (response) {
                     //console.log(response);
+                    $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.open(url);
@@ -900,6 +929,7 @@
 
         $scope.viewSubstance = function () {
             console.log("new");
+            $scope.updateNav = false;
             $window.location.search = null;
             console.log($window.location);
             console.log($location);
@@ -921,6 +951,10 @@
             $scope.substanceClass = $location.$$search.kind;
             Substance.$$setSubstance(JSON.parse(input)).then(function (data) {
                 $scope.substance = data;
+                console.log($scope.substance);
+                if($scope.substance.substanceClass =="chemical"){
+                    molChanger.setMol($scope.substance.structure.molfile);
+                }
                 if ($scope.substance.substanceClass != $scope.substanceClass) {
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
@@ -1639,11 +1673,7 @@
                         scope.referenceobj = {};
                     }
                     spinnerService.show('subrefSpinner');
-                    /*                    var url = baseurl + "api/v1/substances?filter=names.name='" +
-                     // var url = baseurl + "api/v1/substances/search?q=" +
-                     cap + "'&top=" + scope.top + "&skip=" + skip;*/
                     substanceFactory.getSubstances(scope.q).then(function (response) {
-                        /*                 $http.get(url, {cache: true}).then(function (response, status, headers, config) {*/
                         console.log(response);
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
@@ -1755,9 +1785,39 @@
                 if (!_.isUndefined(scope.parent.structure)) {
                     scope.mol = scope.parent.structure.molfile;
                 }
+
+/*                scope.$watch('mol', function(newval){
+                    console.log(newval);
+                    scope.sketcher.setMolfile(newval);
+                });*/
+
                 var template = angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
                 element.append(template);
                 $compile(template)(scope);
+
+				scope.merge = function(oldStructure, newStructure){
+					var definitionalChange=(oldStructure["hash"] !== newStructure["hash"]);
+					_.forIn(newStructure, function(value, key){
+						var cvname=null;
+						switch(key){
+							case "stereochemistry":
+								cvname="STEREOCHEMISTRY_TYPE";
+								break;
+							case "opticalActivity":
+								cvname="OPTICAL_ACTIVITY";
+								break;
+							default:
+								oldStructure[key]=value;
+						}
+						if(cvname!==null){
+							CVFields.searchTags(cvname, value).then(function(response){
+									oldStructure[key]=response[0];
+								});
+						}
+
+					});
+					return definitionalChange;
+				};
 
                 scope.updateMol = function () {
                     var url = baseurl + 'structure';
@@ -1766,6 +1826,7 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
+                        console.log(data);
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;
@@ -1780,14 +1841,22 @@
                         }
                         if(scope.parent.structure){
 	                        data.structure.id=scope.parent.structure.id;
+                        }else{
+                        	scope.parent.structure={};
                         }
-                        scope.parent.structure = data.structure;
+                        var defChange=scope.merge(scope.parent.structure, data.structure);
                         
-                        scope.parent.moieties = [];
-                        _.forEach(data.moieties, function (m) {
-                        	m["$$new"]=true;
-                        	scope.parent.moieties.push(m);
-                        });
+                        if(defChange){
+                        	scope.parent.moieties = [];
+                        	_.forEach(data.moieties, function (m) {
+                        		m["$$new"]=true;
+                        		var moi={};
+                        		scope.merge(moi, m);
+                        		scope.parent.moieties.push(moi);
+                        	});
+                        }
+                        
+                        
                         if (data.structure) {
                             _.set(scope.parent, 'q', data.structure.smiles);
                         }
@@ -1809,7 +1878,11 @@
                 }
 
                 if (scope.parent.substanceClass === 'polymer' && scope.parent.polymer.displayStructure) {
-                    scope.mol = scope.parent.polymer.displayStructure.molfile;
+                    console.log("polymer");
+                    console.log(scope.parent);
+                    scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
+                }else {
+                    scope.mol = scope.parent.polymer.idealizedStructure.molfile;
                     scope.updateMol();
                 }
 
@@ -2020,7 +2093,7 @@
     ginasApp.directive('deleteButton', function () {
         return {
             restrict: 'E',
-            template: '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>',
+            template: '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 scope.deleteObj = function () {
                     if (scope.parent) {

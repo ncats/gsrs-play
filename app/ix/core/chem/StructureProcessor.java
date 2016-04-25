@@ -359,9 +359,11 @@ public class StructureProcessor {
         int total = struc.stereoCenters, defined = struc.definedStereo;
         if (total == 0) {
             struc.stereoChemistry = Structure.Stereo.ACHIRAL;
+            struc.opticalActivity = Structure.Optical.NONE;
         }
         else if (total == defined) {
             struc.stereoChemistry = Structure.Stereo.ABSOLUTE;
+            struc.opticalActivity = Structure.Optical.UNSPECIFIED;
         }
         else if (total == 1 && defined == 0) {
             struc.stereoChemistry = Structure.Stereo.RACEMIC;
@@ -369,9 +371,11 @@ public class StructureProcessor {
         }
         else if ((total - defined) == 1) {
             struc.stereoChemistry = Structure.Stereo.EPIMERIC;
+            struc.opticalActivity = Structure.Optical.UNSPECIFIED;
         }
         else if ((total - defined) > 1) {
             struc.stereoChemistry = Structure.Stereo.MIXED;
+            struc.opticalActivity = Structure.Optical.UNSPECIFIED;
         }
     }
 

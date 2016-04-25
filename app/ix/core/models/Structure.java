@@ -79,7 +79,7 @@ public class Structure extends BaseModel{
         MINUS("( - )"),
         PLUS_MINUS("( + / - )"),
         UNSPECIFIED("UNSPECIFIED"),
-        UNKNOWN("NONE");
+        NONE("NONE");
         
         final String value;
 
@@ -104,7 +104,7 @@ public class Structure extends BaseModel{
                 return UNSPECIFIED;
             if (value.equalsIgnoreCase("none")
                 || value.equalsIgnoreCase("unknown"))
-                return UNKNOWN;
+                return NONE;
             return null;
         }
     }
@@ -268,4 +268,17 @@ public class Structure extends BaseModel{
 		if(this.id==null)return null;
 		return id.toString();
 	}
+	
+
+    
+    public String getHash(){
+    	String hash = null;
+    	for (Value val : this.properties) {
+            if (Structure.H_LyChI_L4.equals(val.label)) {
+                Keyword kw = (Keyword)val;
+                hash = kw.term;
+            }
+        }
+    	return hash;
+    }
 }

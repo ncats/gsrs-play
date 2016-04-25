@@ -8,12 +8,15 @@ import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
+import ix.core.plugins.StructureProcessorPlugin.PersistRecord;
+import ix.core.plugins.StructureProcessorPlugin.PersistRecordWorker;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.TimeUtil;
+import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.Global;
 import ix.utils.TimeProfiler;
 import ix.utils.Util;
@@ -31,7 +34,6 @@ import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
 import scala.collection.JavaConverters;
-import tripod.chem.indexer.StructureIndexer;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Inbox;
@@ -191,25 +193,25 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
+        	//System.out.println("Trying to persist");
         	
-
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             
             //Set the user for use in later persist information
             UserFetcher.setLocalThreadUser(rec.job.owner);
 			try {
 				try {
-
+					
 					TimeProfiler.addGlobalTime("persist");
 					
 					long start=TimeUtil.getCurrentTimeMillis();
 					rec.job.getPersister().persist(this);
 					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
 					long done=TimeUtil.getCurrentTimeMillis()-start;
-					System.out.println(     "Persisted at \t" + 
-							System.currentTimeMillis() + "\t" + 
-							this.theRecordToPersist.getClass().getName() + "\t" + 
-							done);
+//					System.out.println(     "Persisted at \t" + 
+//							System.currentTimeMillis() + "\t" + 
+//							this.theRecordToPersist.getClass().getName() + "\t" + 
+//							done);
 					
 					
 					TimeProfiler.stopGlobalTime("persist");
@@ -224,6 +226,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
 					ObjectMapper om = new ObjectMapper();
+					
 					Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t"
 							+ om.valueToTree(theRecord).toString().replace("\n", ""));
 				}
@@ -247,6 +250,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
     	Statistics stat = getStatisticsForJob(job);
         if (stat != null) {
             if (stat._isDone()) {
+            	//Does commenting this out actually make tests fail?
+            	//System.out.println("I think it's done, with:" + stat.totalRecords.getCount() + " but " + stat.recordsExtractedSuccess);
             	updateJob(job,stat);
             }
         }
@@ -263,46 +268,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
 
         
-    /**
-     * This actor runs in a bounded queue to ensure we don't have issues with
-     * locking due to database persistence
-     */
-    public static class Reporter extends UntypedActor {
-        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-        final PersistenceQueue PQ;
-
-        public Reporter(PersistenceQueue PQ) {
-            this.PQ = PQ;
-        }
-
-        public void onReceive(Object mesg) {
-            if (mesg instanceof PersistModel) {
-                PQ.submit(new PersistModelWorker((PersistModel) mesg));
-            } else if (mesg instanceof TransformedRecord) {
-                PQ.submit(new PersistRecordWorker((TransformedRecord) mesg));
-            } else {
-                log.info("unhandled mesg: sender=" + sender() + " mesg=" + mesg);
-                unhandled(mesg);
-            }
-        }
-    }
-
-    static class PersistModelWorker implements
-                                        PersistenceQueue.PersistenceContext {
-        PersistModel model;
-
-        PersistModelWorker(PersistModel model) {
-            this.model = model;
-        }
-
-        public void persists() throws Exception {
-            model.persists();
-        }
-
-        public Priority priority() {
-            return Priority.MEDIUM;
-        }
-    }
 
     static class PersistRecordWorker implements
                                          PersistenceQueue.PersistenceContext {
@@ -444,7 +409,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
                                         throw new IllegalStateException("Transform error");
                                     }
                                     job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
-                                    new TransformedRecord(trans, prg.theRecord, rec).persists();
+                                    TransformedRecord tr= new TransformedRecord(trans, prg.theRecord, rec);
+                                    //tr.persists();
+                                    PQ.submit(new PersistRecordWorker((TransformedRecord) tr));
                                 }
                             });
                         }

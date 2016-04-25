@@ -259,17 +259,6 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     }
     
     
-    
-    public String getHash(){
-    	String hash = null;
-    	for (Value val : this.properties) {
-            if (Structure.H_LyChI_L4.equals(val.label)) {
-                Keyword kw = (Keyword)val;
-                hash = kw.term;
-            }
-        }
-    	return hash;
-    }
 
 	public void addReference(String refUUID){
 		GinasReferenceContainer grc=getRecordReference();

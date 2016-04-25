@@ -18,7 +18,9 @@ public class SubstanceSearch {
     private final BrowserSession session;
 
     private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9]+)\"");
+    private static final Pattern TOTAL_PATTERN = Pattern.compile("[^0-9]([0-9][0-9]*)[^0-9]*h3[^0-9]*pagination");
 
+    
     private static final Pattern ROW_PATTERN = Pattern.compile("(un)?checked\\s+(\\S+(\\s+\\S+)?)\\s+(\\d+)");
 
     public SubstanceSearch(BrowserSession session) {
@@ -53,6 +55,8 @@ public class SubstanceSearch {
             if(firstPage ==null){
                 firstPage = htmlPage;
             }
+            
+            
             page++;
             //we check the return value of the add() call
             //because when we get to the page beyond the end of the results
@@ -62,6 +66,62 @@ public class SubstanceSearch {
             //which will break us out of the loop.
         }while(substances.addAll(temp));
 
+        SearchResult results = new SearchResult(substances);
+        if(results.numberOfResults() >0){
+            parseFacets(results, firstPage);
+        }
+        return results;
+    }
+    /**
+     * Get the UUIDs of all the loaded substances
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     * @throws IOException if there is a problem parsing the results.
+     */
+    public SearchResult all() throws IOException {
+
+        String rootUrl = "ginas/app/substances?";
+        int page=1;
+
+        Set<String> substances = new LinkedHashSet<>();
+
+        Set<String> temp;
+        HtmlPage firstPage=null;
+        do {
+        	 HtmlPage htmlPage=null;
+        	 try{
+        		 htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+        	 }catch(Exception e){
+             	break;
+             }
+            //stop if the paging throws an error
+           
+            	temp = getSubstancesFrom(htmlPage);
+            
+            if(firstPage ==null){
+                firstPage = htmlPage;
+            }
+            page++;
+            System.out.println("Got:" + temp.size());
+            
+            Matcher m=TOTAL_PATTERN.matcher(htmlPage.asXml());
+            String total = null;
+            if(m.find()){
+            	total=m.group(1);
+            	System.out.println("Total reported as:" + total + " on page " + (page-1));
+            	//System.out.println("from " + m.group(0));
+            }
+            
+            //we check the return value of the add() call
+            //because when we get to the page beyond the end of the results
+            //it returns the first page again
+            //so we can check to see if we've already added these
+            //records (so add() will return false)
+            //which will break us out of the loop.
+        }while(substances.addAll(temp));
+        System.out.println("Finished with:" + substances.size());
+        
+        
+        
         SearchResult results = new SearchResult(substances);
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);

@@ -93,11 +93,14 @@ public class Substance extends GinasCommonData {
 	public enum SubstanceDefinitionLevel{
 		COMPLETE,
 		INCOMPLETE,
+		INVALID,
 		REPRESENTATIVE
 	}
 	
+	@Indexable(facet=true)
 	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
 	
+	@Indexable(facet=true)
 	public SubstanceDefinitionLevel definitionLevel = SubstanceDefinitionLevel.COMPLETE;
 	
 	
@@ -716,6 +719,36 @@ public class Substance extends GinasCommonData {
 		String thisID= (this.getUuid() + this.version);
 		String thatID= (((Substance)o).getUuid() + ((Substance)o).version);
 		return thisID.equals(thatID);
+	}
+	
+	@JsonIgnore
+	@Indexable(facet=true, name="Modifications")
+	public List<String> getModifiedCategory(){
+		List<String> mods = new ArrayList<String>();
+		if(this.getModificationCount()<=0){
+			mods.add("No Modifications");
+		}else{
+			mods.add("Any Modification");
+			if(!this.getModifications().structuralModifications.isEmpty()){
+				mods.add("Structural Modification");
+			}
+			if(!this.getModifications().agentModifications.isEmpty()){
+				mods.add("Agent Modification");
+			}
+			if(!this.getModifications().physicalModifications.isEmpty()){
+				mods.add("Physical Modification");
+			}
+		}
+		return mods;
+	}
+	
+	
+	
+	@JsonIgnore
+	@Indexable(facet=true)
+	public String getSubstanceDeprecated(){
+		//System.out.println("Found deprecated record");
+		return ""+this.deprecated;
 	}
 	
 }

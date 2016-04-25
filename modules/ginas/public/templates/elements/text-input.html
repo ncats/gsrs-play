@@ -2,6 +2,9 @@
         <label id="{{::field}}-label" class="text-capitalize">{{label || field}}</label>
     <input type="text" class="form-control" ng-model= obj ng-change="validatorFunction()" title="{{::field}}" id="{{::field}}" placeholder = "{{label || field}}"
            name="{{::field}}" aria-labelledby="{{::field}}-label">
+    		<span style="color:red" ng-repeat="err in errors" >
+			{{err}}
+		</span>
 </div>
 
 

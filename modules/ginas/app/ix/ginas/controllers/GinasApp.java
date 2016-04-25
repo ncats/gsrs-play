@@ -1,22 +1,53 @@
 package ix.ginas.controllers;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+
+import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import be.objectify.deadbolt.java.actions.Dynamic;
-import gov.nih.ncgc.chemical.Chemical;
+import chemaxon.struc.MolAtom;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.PolymerDecode;
+import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
-import ix.core.models.*;
+import ix.core.models.Keyword;
+import ix.core.models.Payload;
+import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
-import ix.core.search.TextIndexer;
-import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
+import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
+import ix.core.search.TextIndexer.SearchResult;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -27,52 +58,44 @@ import ix.ginas.models.v1.Glycosylation;
 import ix.ginas.models.v1.Linkage;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
+import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.NucleicAcid;
-import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
-import ix.ginas.models.v1.Sugar;
-import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.Sugar;
+import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
-
-
-import play.Play;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import org.springframework.util.StringUtils;
-
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalAtom;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.chemical.ChemicalRenderer;
+import gov.nih.ncgc.chemical.DisplayParams;
+import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import tripod.chem.indexer.StructureIndexer;
-import chemaxon.struc.MolAtom;
-import ix.seqaln.SequenceIndexer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
     static final Model.Finder<UUID, Substance> SUBFINDER =
@@ -94,7 +117,8 @@ public class GinasApp extends App {
     public static final String[] PROTEIN_FACETS = {
         "Sequence Type",
         "Substance Class", 
-        "Status" 
+        "Status" ,
+        "Modifications"
     };
     
     public static final String[] ALL_FACETS = {
@@ -105,14 +129,15 @@ public class GinasApp extends App {
         "GInAS Tag", 
         "Molecular Weight",
         "Relationships",
-        "Sequence Type", 
+        "Sequence Type",
+        "Modifications",
         "Material Class", 
         "Material Type",
         "Family", 
         "Parts", 
         "Code System",
         "Last Edited By",
-        "modified", //"Last Edited Date",
+        "modified", 	   //"Last Edited Date"
         "Reference Type",
         "Approved By",
         "approved"         //"Approved Date"
@@ -136,10 +161,11 @@ public class GinasApp extends App {
             (SearchResultContext context, int page, int rows, int total,
              int[] pages, List<TextIndexer.Facet> facets,
              List<Substance> substances) {
+        	
             return ok(ix.ginas.views.html.substances.render
                       (page, rows, total, pages,
                        decorate(filter(facets, this.facets)),
-                       substances, context.getId(), null));
+                       substances, context.getId(), context.getFieldFacets()));
         }
     }
 
@@ -235,9 +261,12 @@ public class GinasApp extends App {
         if ("modified".equalsIgnoreCase(n))
             return "Last Edited";
         if ("approved".equalsIgnoreCase(n))
-            return "Last Approved";
+            return "Last Validated";
         if("LyChI_L4".equalsIgnoreCase(n)){
             return "Structure Hash";
+        }
+        if("Approved By".equalsIgnoreCase(n)){
+            return "Validated By";
         }
         if("Substance Class".equalsIgnoreCase(n)){
             return "Substance Type";
@@ -382,7 +411,6 @@ public class GinasApp extends App {
    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
-        //System.out.println("Test");
         String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
 
@@ -431,7 +459,6 @@ public class GinasApp extends App {
                        (400, "Invalid search parameters: type=\""
                                + type + "\"; q=\"" + q + "\"!"));
             }
-            System.out.println("Getting subs");
             return _substances (q, rows, page);
         }
         catch (Exception ex) {
@@ -603,18 +630,35 @@ public class GinasApp extends App {
      * @return
      * @throws Exception
      */
-    static Result _substances(final String q, final int rows, final int page, final String[] facets)
+    static Result _substances(String q, final int rows, final int page, final String[] facets)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
         final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
         
         final String[] searchFacets = facets;
+        
+        //Special piece to show deprecated records
+        String showDeprecated = request().getQueryString("showDeprecated");
+        
+        if(showDeprecated==null){
+        	if(q!=null){
+        		q=q + " AND SubstanceDeprecated:false";
+        	}else{
+        		q="SubstanceDeprecated:false";
+        	}
+        }
+        
+       
+        
+        
+        
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if (request().queryString().containsKey("facet") || q != null) {
+        if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
                 getSubstanceSearchResult (q, total);
+            
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
@@ -642,16 +686,13 @@ public class GinasApp extends App {
                                              (total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
 
-                        System.out.println("Fetching me some subs");
                         List<Substance> substances = SubstanceFactory
                             .getSubstances(nrows, (page - 1) * rows, null);
                         
                         
-                        System.out.println("Got list");
                         Status s= ok(ix.ginas.views.html.substances.render
                                   (page, nrows, total, pages, decorate(facets),
                                    substances, null, null));
-                        System.out.println("Got Rendered");
                         return s;
                     }
                 });
@@ -664,8 +705,8 @@ public class GinasApp extends App {
     
     static Result createSubstanceResult(TextIndexer.SearchResult result,
                                         int rows, int page, String[] facets) throws Exception{
-        SearchResultContext src= new SearchResultContext(result);
-        return fetchResult (src, rows, page, new SubstanceResultRenderer (facets));
+    	
+        return fetchResultImmediate (result, rows, page, new SubstanceResultRenderer (facets));
     }
     
     public static class SubstanceVersionFetcher extends GetResult<Substance>{
@@ -804,6 +845,8 @@ public class GinasApp extends App {
     }
     
         public static Result lychimatch(final String query, int rows, int page, boolean exact) {
+        	
+        		//System.out.println("Page is:" + page);
                 try{
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
                         String hash=null;
@@ -814,7 +857,7 @@ public class GinasApp extends App {
                         }
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
-                        
+                        e.printStackTrace();
                 }
                 return internalServerError
                     (ix.ginas.views.html.error.render
@@ -945,13 +988,10 @@ public class GinasApp extends App {
         }
 
         if (values.isEmpty()) {
-                System.out.println("looking for approvalID");
             values = finder.where().ieq("approvalID", name).findList();
             if (values.isEmpty()) {
-                System.out.println("looking for name");
                 values = finder.where().ieq("names.name", name).findList(); //this is a problem for oracle
-                if (values.isEmpty()){ 
-                        System.out.println("looking for codes");
+                if (values.isEmpty()){
                     values = finder.where().ieq("codes.code", name).findList();// last resort..
                 }
             }
@@ -1060,7 +1100,65 @@ public class GinasApp extends App {
         return count;
 
     }
+    
+    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
+    public static Result interpretMolfile() {
+        ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+        ObjectNode node = mapper.createObjectNode();
+        try {
+                String payload = request().body().asText();
+            payload = ChemCleaner.getCleanMolfile(payload);
+            if (payload != null) {
+                List<Structure> moieties = new ArrayList<Structure>();
+                
+                
+                try {
+                    Structure struc = StructureProcessor.instrument
+                        (payload, moieties, false); // don't standardize!
+                    // we should be really use the PersistenceQueue to do this
+                    // so that it doesn't block
+                    struc.save();
+                    ArrayNode an = mapper.createArrayNode();
+                    for (Structure m : moieties){
+                        
+                        m.save();
+                        ObjectNode on = mapper.valueToTree(m);
+                        Amount c1=Moiety.intToAmount(m.count);
+                        JsonNode amt=mapper.valueToTree(c1);
+                        on.set("countAmount", amt);
+                        an.add(on);
+                    }
+                    node.put("structure", mapper.valueToTree(struc));
+                    node.put("moieties", an);
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+                try {
+                    Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+                        .createChemical(payload, Chemical.FORMAT_AUTO);
 
+                    Collection<StructuralUnit> o = PolymerDecode
+                        .DecomposePolymerSU(c, true);
+                    for (StructuralUnit su : o) {
+                        Structure struc = StructureProcessor.instrument
+                            (su.structure, null, false);
+                        struc.save();
+                        su._structure = struc;
+                    }
+                    node.put("structuralUnits", mapper.valueToTree(o));
+                } catch (Exception e) {
+                    Logger.error("Can't enumerate polymer", e);
+                }
+            }
+        } catch (Exception ex) {
+                ex.printStackTrace();
+            Logger.error("Can't process payload", ex);
+            return internalServerError("Can't process mol payload");
+        }
+        return ok(node);
+    }
+    
+    
     // sigh ... this is the best of a bunch of bad options now
 
     public static class GinasSearchResultProcessor

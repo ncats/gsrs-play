@@ -1,43 +1,104 @@
 package ix.core.search;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static org.apache.lucene.document.Field.Store.NO;
+import static org.apache.lucene.document.Field.Store.YES;
 
-import ix.core.controllers.EntityFactory;
-import ix.core.models.DynamicFacet;
-import ix.core.models.Indexable;
-import ix.core.models.Principal;
-import ix.core.plugins.IxCache;
-import ix.core.util.TimeUtil;
-import ix.utils.EntityUtils;
-import ix.utils.Global;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.*;
-import org.apache.lucene.facet.*;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.DoubleField;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.FloatField;
+import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.facet.DrillDownQuery;
+import org.apache.lucene.facet.DrillSideways;
+import org.apache.lucene.facet.FacetField;
+import org.apache.lucene.facet.FacetResult;
+import org.apache.lucene.facet.Facets;
+import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.LabelAndValue;
+import org.apache.lucene.facet.range.LongRange;
+import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
-import org.apache.lucene.facet.range.LongRange;
-import org.apache.lucene.facet.range.LongRangeFacetCounts;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.IndexableFieldType;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.ChainedFilter;
 import org.apache.lucene.queries.TermsFilter;
+import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.*;
-import org.apache.lucene.search.FieldCacheRangeFilter;
-import org.apache.lucene.queries.BooleanFilter;
-import org.apache.lucene.queries.ChainedFilter;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.FieldCacheRangeFilter;
+import org.apache.lucene.search.FieldCacheTermsFilter;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
@@ -49,28 +110,22 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.reflections.Reflections;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import ix.core.models.DynamicFacet;
+import ix.core.models.Indexable;
+import ix.core.plugins.IxCache;
+import ix.core.util.TimeUtil;
+import ix.utils.EntityUtils;
+import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-import java.io.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
-
-import static org.apache.lucene.document.Field.Store.NO;
-import static org.apache.lucene.document.Field.Store.YES;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -80,6 +135,7 @@ public class TextIndexer implements Closeable{
     protected static final String START_WORD = "THE_START ";
     protected static final String GIVEN_STOP_WORD = "$";
     protected static final String GIVEN_START_WORD = "^";
+    private static final String ROOT = "root";
 
     @Indexable
     static final class DefaultIndexable {}
@@ -212,9 +268,32 @@ public class TextIndexer implements Closeable{
         }
     }
 
+    public static SearchContextAnalyzer getDefaultSearchAnalyzerFor(Class<?> cls){
+    	SearchContextAnalyzerGenerator gen=defaultSearchAnalyzers.get(cls);
+    	if(gen!=null){
+    		return gen.create();
+    	}
+    	return null;
+    	
+    }
+    
     public static class SearchResult {
-        SearchContextAnalyzer searchAnalyzer = new GinasSearchAnalyzer();
+    	
+        SearchContextAnalyzer searchAnalyzer;
 
+        /**
+         * Returns a list of FieldFacets which help to explain why and how
+         * matches were done for this particular query.
+         * 
+         * @return
+         */
+        public List<FieldFacet> getFieldFacets(){
+        	if(searchAnalyzer!=null)
+        		return searchAnalyzer.getFieldFacets();
+        	return new ArrayList<FieldFacet>();
+        	
+        }
+        
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
@@ -226,10 +305,15 @@ public class TextIndexer implements Closeable{
         final long timestamp = TimeUtil.getCurrentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
-        SearchResult () {}
+        SearchResult () {
+        	
+        }
+        
         SearchResult (SearchOptions options, String query) {
+        	this();
             this.options = options;
             this.query = query;
+            searchAnalyzer=getDefaultSearchAnalyzerFor(this.options.kind);
         }
 
         void setRank (final Map<Object, Integer> rank) {
@@ -268,13 +352,66 @@ public class TextIndexer implements Closeable{
             throw new UnsupportedOperationException
                 ("get(index) is no longer supported; please use copyTo()");
         }
-        // fill the given list with value starting at start up to start+count
-        public int copyTo (List list, int start, int count) {
-            if (start >= matches.size()) {
+        
+        /**
+         * Copies from the search results to the specified list
+         * with specified offset (for the master results), and
+         * total count of records to be copied.
+         * 
+         * Note: This method will block and wait for the "correct" 
+         * answer only if the final <pre>wait</pre> parameter is 
+         * <pre>true</pre>. Otherwise it will return whatever
+         * is available.
+         * 
+          * @param list 
+         * 	Destination list to copy into
+         * @param start
+         * 	Offset starting location from master list
+         * @param count
+         * 	Total number of records to be copied
+         * @param wait
+         * 	set to true for blocking for correct answer,
+         *  false will return available records immediately
+         * @return
+         */
+        public int copyTo (List list, int start, int count, boolean wait) {
+
+        	//Does this ever cause a problem if we're searching for
+        	//something that starts beyond where we've gotten to?
+        	//Like if we try to page before getting all results?
+        	if (start >= matches.size()) {
                 return 0;
             }
+        	
+        	
+        	// It may be that the page that is being fetched is not yet
+        	// complete. There are 2 options here then. The first is to
+        	// return whatever is ready now immediately, and report the
+        	// number of results (that is what had been done before).
+        	
+        	// The second way is to wait for the fetching to be completed
+        	// which is what is demonstrated below. 
+        	
+        	if(wait){
+	        	int lastRecord=start+count;
+	        	
+	        	if(!this.finished() && matches.size()<lastRecord){
+	        		int missing = lastRecord - matches.size();
+	        		System.out.print("Waiting for `" + missing + "` missing records" );
+		        	while (!this.finished() && matches.size()<lastRecord){
+		        		System.out.print(".");
+		        		try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+		        	}
+		        	System.out.println("done");
+	        	}
+        	}
 
             Iterator it = getMatches().iterator();
+            
             for (int i = 0; i < start && it.hasNext(); ++i)
                 it.next(); // skip
             
@@ -282,11 +419,39 @@ public class TextIndexer implements Closeable{
             for (; i < count && it.hasNext(); ++i) {
                 list.add(it.next());
             }
+            
             return i;
+        	
+        }
+        /**
+         * Copies from the search results to the specified list
+         * with specified offset (for the master results), and
+         * total count of records to be copied.
+         * 
+         * Note: It may be that the search is still running, 
+         * and haven't fully returned yet. In that case, this 
+         * method will not wait for the results, but will return
+         * immediately with any records that are ready so far.
+         * 
+         * To have a blocking search which waits for the "correct"
+         * answer, use: <pre>copyTo(list,start,count, true)</pre>
+         *
+         * 
+         * @param list 
+         * 	Destination list to copy into
+         * @param start
+         * 	Offset starting location from master list
+         * @param count
+         * 	Total number of records to be copied
+         * @return
+         */
+        // fill the given list with value starting at start up to start+count
+        public int copyTo (List list, int start, int count) {
+            return copyTo (list,start,count,false);
         }
         
         public List getMatches () {
-            if (result != null) return result;
+        	if (result != null) return result;
             
             List list = new ArrayList (matches);
             if (matches instanceof PriorityBlockingQueue) {
@@ -313,19 +478,19 @@ public class TextIndexer implements Closeable{
 
         protected void add (Object obj) {
             matches.add(obj);
-            //Logger.debug("added" + matches.size());
-            //          long start=System.currentTimeMillis();
-            if(query!=null && query.length()>0){
-                if (matches.size() < Play.application().configuration()
-                    .getInt("ix.ginas.maxanalyze", 100)) {
-                    if (Play.application().configuration()
-                        .getBoolean("ix.ginas.textanalyzer", false)) {
-                        searchAnalyzer.updateFieldQueryFacets(obj, query);
-                    }
-                }
+            if(searchAnalyzer!=null && query!=null && query.length()>0){
+            	searchAnalyzer.updateFieldQueryFacets(obj, query);
             }
-            //          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
+            //If you see this in the code base, erase it
+            //it's only here for debugging
+            //Specifically, we are testing if delayed adding
+            //of objects causes a problem for accurate paging.
+//            if(Math.random()>.9){
+//            	Util.debugSpin(2000);
+//            }
         }
+        
+        
         
         protected void done () {
             stop.set(System.currentTimeMillis());
@@ -680,11 +845,81 @@ public class TextIndexer implements Closeable{
     private File indexFileDir, facetFileDir;
 
     private boolean isShutDown=false;
+    
+    private static Map<Class,SearchContextAnalyzerGenerator> defaultSearchAnalyzers = new HashMap<Class,SearchContextAnalyzerGenerator>();
+    
     static{
         init();
     }
     public static void init(){
         indexers = new ConcurrentHashMap<File, TextIndexer>();
+        registerDefaultAnalyzers();
+    }
+    
+    public static interface SearchContextAnalyzerGenerator{
+    	public SearchContextAnalyzer create();
+    }
+    public static class DefaultSearchContextAnalyzerGenerator implements SearchContextAnalyzerGenerator{
+
+    	Class<?> entityCls;
+		Class<?> analyzerCls;
+		Map params;
+		
+    	public DefaultSearchContextAnalyzerGenerator(Class<?> entityCls, Class<?> analyzerCls, Map with){
+    		this.entityCls=entityCls;
+    		this.analyzerCls=analyzerCls;
+    		this.params=with;
+    		
+    	}
+		@Override
+		public SearchContextAnalyzer create() {
+			SearchContextAnalyzer analyzer=null;
+			if(params!=null){
+				try{
+					Constructor c=analyzerCls.getConstructor(Map.class);
+					analyzer= (SearchContextAnalyzer) c.newInstance(params);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+			if(analyzer==null){
+				try {
+					analyzer = (SearchContextAnalyzer) analyzerCls.newInstance();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			return analyzer;
+		}
+    	
+    }
+    
+    public static void registerDefaultAnalyzers(){
+    	List<Object> ls= Play.application().configuration().getList("ix.core.searchanalyzers",null);
+    	if(ls!=null){
+    		for(Object o:ls){
+    			if(o instanceof Map){
+	    			Map m = (Map)o;
+	    			String entityClass=(String) m.get("class");
+	    			String analyzerClass=(String) m.get("analyzer");
+	    			Map params=(Map) m.get("with");
+	    			String debug="Setting up analyzer for [" + entityClass + "] ... ";
+	    			try {
+	    				
+						Class<?> entityCls = Class.forName(entityClass);
+						Class<?> analyzerCls = Class.forName(analyzerClass);
+						
+						SearchContextAnalyzerGenerator generator = 
+								new DefaultSearchContextAnalyzerGenerator(entityCls,analyzerCls,params);
+						defaultSearchAnalyzers.put(entityCls, generator);
+						Logger.info(debug + "done");
+					} catch (Exception e) {
+						Logger.info(debug + "failed");
+						e.printStackTrace();
+					}
+    			}
+    		}
+    	}
     }
 
     public synchronized static TextIndexer getInstance (File baseDir) throws IOException {
@@ -890,27 +1125,50 @@ public class TextIndexer implements Closeable{
         return search (options, text, null);
     }
     
+    public static class IxQueryParser extends QueryParser{
+
+		
+
+		protected IxQueryParser(CharStream charStream) {
+			super(charStream);
+		}
+		
+		public IxQueryParser(String string, Analyzer indexAnalyzer) {
+			super(string,indexAnalyzer);
+		}
+
+		@Override
+		public Query parse(String qtext) throws ParseException{
+			if (qtext!=null){
+	            qtext= qtext.replace(TextIndexer.GIVEN_START_WORD,
+	                                TextIndexer.START_WORD);
+	            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
+	                                  TextIndexer.STOP_WORD);
+	        }
+			//add ROOT prefix to all term queries (containing '_') where not
+			//otherwise specified
+			qtext=qtext.replaceAll("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])", ROOT + "_$1");
+			Query q = super.parse(qtext);
+			return q;
+		}
+    }
+    
     public SearchResult search 
         (SearchOptions options, String text, Collection subset)
         throws IOException {
         //this is a quick and dirty way to have a cleaner-looking
         //query for display
         String qtext =text;
-        if (qtext!=null){
-            qtext= text.replace(TextIndexer.GIVEN_START_WORD,
-                                TextIndexer.START_WORD);
-            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
-                                  TextIndexer.STOP_WORD);
-        }
+        
         SearchResult searchResult = new SearchResult (options, text);
 
+        
         Query query = null;
         if (text == null) {
             query = new MatchAllDocsQuery ();
-        }
-        else {
+        }else {
             try {
-                QueryParser parser = new QueryParser
+                QueryParser parser = new IxQueryParser
                     ("text", indexAnalyzer);
                 query = parser.parse(qtext);
             }
@@ -920,6 +1178,7 @@ public class TextIndexer implements Closeable{
             }
         }
 
+        
         if (query != null) {
             Filter f = null;
             if (subset != null) {
@@ -1676,10 +1935,38 @@ public class TextIndexer implements Closeable{
                             if (name.startsWith("get")) {
                                 name = name.substring(3);
                             }
+                            if(!indexable.name().equals("")){
+                            	name=indexable.name();
+                            }
                             LinkedList<String> l = new LinkedList<>();
                             l.add(name);
-                            indexField (ixFields, indexable, 
-                                        l, value);
+                            
+                            Class type = value.getClass();
+                            if (Collection.class.isAssignableFrom(type)) {
+                            	
+                                Iterator it = ((Collection)value).iterator();
+                                for (int i = 0; it.hasNext(); ++i) {
+                                    l.push(String.valueOf(i));
+                                    indexField (ixFields, indexable,
+                                                l, it.next());
+                                    l.pop();
+                                }
+                            }
+                            else if (type.isArray()) {
+                                int len = Array.getLength(value);
+                                // recursively evaluate each element in
+                                //  the array
+                                for (int i = 0; i < len; ++i) {
+                                    l.push(String.valueOf(i));
+                                    indexField (ixFields, indexable,
+                                                l, Array.get(value, i)); 
+                                    l.pop();
+                                }
+                            }
+                            else {
+                                indexField (ixFields, indexable, 
+                                            l, value);
+                            }
                         }
                     }
                     else {
@@ -1907,7 +2194,9 @@ public class TextIndexer implements Closeable{
 
     private static String toPath (LinkedList<String> path) {
         StringBuilder sb = new StringBuilder (256);
-
+        //TP: Maybe do this?
+        sb.append(ROOT+"_");
+        
         for (Iterator<String> it = path.descendingIterator(); it.hasNext(); ) {
             String p = it.next();
 
@@ -2082,7 +2371,6 @@ public class TextIndexer implements Closeable{
         try {
             fetchQueue.put(POISON_PAYLOAD);
             scheduler.shutdown();
-            //System.out.println("waiting for termination");
             scheduler.awaitTermination(1, TimeUnit.MINUTES);
             //System.out.println("done waiting for termination");
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);

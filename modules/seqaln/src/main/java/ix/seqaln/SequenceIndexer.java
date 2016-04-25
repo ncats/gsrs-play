@@ -18,6 +18,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -33,6 +35,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
@@ -54,8 +57,8 @@ public class SequenceIndexer {
     static CacheManager CACHE_MANAGER;
     static Ehcache CACHE;
 
-    static{
-        init();
+    static {
+        init ();
     }
 
     public static void init(){
@@ -227,9 +230,9 @@ public class SequenceIndexer {
         ResultEnumeration (BlockingQueue<Result> queue) {
             this.queue = queue;
             if(queue==null){
-            	next=POISON_RESULT;
+                next=POISON_RESULT;
             }else{
-            	next ();
+                next ();
             }
         }
 
@@ -253,6 +256,17 @@ public class SequenceIndexer {
             return current;
         }
     }
+
+    class SearchRefresher implements Runnable {
+        public void run () {
+            try {
+                kmerSearchManager.maybeRefresh();
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
     
     public static final String FIELD_KMER = "_KMER";
     public static final String FIELD_ID = "_ID";
@@ -273,8 +287,8 @@ public class SequenceIndexer {
 
     private ExecutorService threadPool;
     private boolean localThreadPool = false;
+    private SearcherManager kmerSearchManager;
     
-
     private AtomicLong lastModified = new AtomicLong (0);
     
     public static SequenceIndexer openReadOnly (File dir) throws IOException {
@@ -285,21 +299,16 @@ public class SequenceIndexer {
         return new SequenceIndexer (dir, false);
     }
 
-
     
     private SequenceIndexer (File dir, boolean readOnly) throws IOException {
         this (dir, readOnly, Executors.newCachedThreadPool());
         localThreadPool = true;
     }
-    
-  
 
     public SequenceIndexer (File dir, boolean readOnly,
                             ExecutorService threadPool) throws IOException {
-    	init();
-    	
-    	
-    	
+        init();
+        
         if (!readOnly) {
             dir.mkdirs();
         }
@@ -323,22 +332,22 @@ public class SequenceIndexer {
             kmerWriter = new IndexWriter
                 (kmerDir, new IndexWriterConfig
                  (LUCENE_VERSION, indexAnalyzer));
+            kmerSearchManager = new SearcherManager (kmerWriter, true, null);
             _kmerReader = DirectoryReader.open(kmerWriter, true);
             _indexReader = DirectoryReader.open(indexWriter, true);
         }
         else {
             _kmerReader = DirectoryReader.open(kmerDir);
             _indexReader = DirectoryReader.open(indexDir);
+            kmerSearchManager = new SearcherManager (kmerDir, null);
         }
-        
+
         this.baseDir = dir;
-        this.threadPool = threadPool;   
-        
-       
+        this.threadPool = threadPool;
     }
 
     @SuppressWarnings("deprecation")
-	static Analyzer createIndexAnalyzer () {
+    static Analyzer createIndexAnalyzer () {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put(FIELD_ID, new KeywordAnalyzer ());
         fields.put(FIELD_KMER, new KeywordAnalyzer ());
@@ -364,31 +373,24 @@ public class SequenceIndexer {
         }
         return _indexReader;
     }
-
-    
     
     protected IndexSearcher getIndexSearcher () throws IOException {
         return new IndexSearcher (getIndexReader ());
     }
     
-    protected IndexSearcher getKmerSearcher () throws IOException {
-        return new IndexSearcher (getKmerReader ());
-    }
-
     public File getBasePath () { return baseDir; }
     
     public long getSize(){
-    	if(indexWriter==null) return 0;
-    	try{
-    		return indexWriter.numDocs();
-    	}catch(AlreadyClosedException e){
-    		Logger.trace("Index already closed",e);
-    		return 0;
-    	}
+        if(indexWriter==null) return 0;
+        try{
+                return indexWriter.numDocs();
+        }catch(AlreadyClosedException e){
+                Logger.trace("Index already closed",e);
+                return 0;
+        }
     }
     
     public void shutdown () {
-    	
         try {
             if (_kmerReader != null)
                 _kmerReader.close();
@@ -410,8 +412,8 @@ public class SequenceIndexer {
     }
 
     public void remove(String id) throws IOException{
-    	indexWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
-    	kmerWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
+        indexWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
+        kmerWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
     }
     
     public void add (String id, CharSequence seq)
@@ -461,25 +463,25 @@ public class SequenceIndexer {
     
     public ResultEnumeration search (final CharSequence query,
                                      final double identity, final int gap) {
-    	if(getSize()<=0){
-    		return new ResultEnumeration(null);
-    	}
+        if(getSize()<=0){
+            return new ResultEnumeration(null);
+        }
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
         threadPool.submit(new Runnable () {
                 public void run () {
                     try {
-                    	
+                        
                         search (out, query, identity, gap);
                     }
                     catch (Exception ex) {
-                    	ex.printStackTrace();
+                        ex.printStackTrace();
                     }
                     finally{
-                    	try {
-							out.put(POISON_RESULT);// finish
-						} catch (InterruptedException e) {
-							Logger.error(e.getMessage(), e);
-						} 
+                        try {
+                            out.put(POISON_RESULT);// finish
+                        } catch (InterruptedException e) {
+                            Logger.error(e.getMessage(), e);
+                        } 
                     }
                     
                 }
@@ -492,11 +494,31 @@ public class SequenceIndexer {
                            CharSequence query, double identity, int gap)
         throws Exception {
 
-        final IndexSearcher searcher = getKmerSearcher ();
+        /*
+         * this can be expensive if we call search often. having a daemon
+         * thread to performed this in the background on a regular interval
+         * is recommended but it'll fail the test cases.
+         */
+        kmerSearchManager.maybeRefresh();
+        IndexSearcher searcher = kmerSearchManager.acquire();
+        try {
+            search (searcher, results, query, identity, gap);
+        }
+        finally {
+            kmerSearchManager.release(searcher);
+        }
+        searcher = null;
+    }
+    
+    protected void search (IndexSearcher searcher,
+                           BlockingQueue<Result> results,
+                           CharSequence query, double identity, int gap)
+        throws Exception {
+
         Kmers kmers = Kmers.create(query);
         final int K = kmers.getK();
         
-        int ndocs = searcher.getIndexReader().numDocs();
+        int ndocs = Math.max(1, searcher.getIndexReader().numDocs());
         final Map<String, List<HSP>> hsp = new TreeMap<String, List<HSP>>();
         for (String kmer : kmers.kmers()) {
             TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
@@ -714,7 +736,7 @@ public class SequenceIndexer {
     }
 
     @SuppressWarnings("unchecked")
-	static <T> T getOrElse (String key, Callable<T> generator)
+        static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
         Object value = CACHE.get(key);
         if (value == null) {
@@ -792,13 +814,13 @@ public class SequenceIndexer {
         }
     }
 
-	public boolean isClosed() {
-		try{
-    		indexWriter.numDocs();
-    		return false;
-    	}catch(AlreadyClosedException e){
-    		System.out.println("Already closed");
-    	}
-		return true;
-	}
+        public boolean isClosed() {
+                try{
+                indexWriter.numDocs();
+                return false;
+        }catch(AlreadyClosedException e){
+                System.out.println("Already closed");
+        }
+                return true;
+        }
 }

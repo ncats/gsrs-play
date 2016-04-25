@@ -64,8 +64,8 @@
             },
             //not currently used, but may become useful
             searchTags: function (domain, query) {
-                CV.getCV(domain).then(function (data) {
-                    console.log(data);
+                return CV.getCV(domain).then(function (data) {
+//                    console.log(data);
                     return _.chain(data.data.content[0].terms)
                         .filter(function (x) {
                             return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
@@ -310,48 +310,7 @@
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
 
                         if (response.data.content[0].filterable == true) {
-                            //if (scope.filter) {
-                            console.log(response);
-                            console.log("filter");
                             filterService._register(scope);
-                            /*scope.$watch('filter', function (newValue) {
-                                console.log(newValue);
-                                if (!_.isUndefined(newValue)) {
-                                    if (scope.filterFunction) {
-                                        var cv = scope.filterFunction({type: newValue});
-                                        CVFields.getCV(cv).then(function (response) {
-                                            scope.obj = [];
-                                            scope.values = response.data.content[0].terms;
-                                        });
-                                    } else {
-                                        var filtered = [];
-                                        var cv = response.data.content[0].terms;
-
-                                        _.forEach(cv, function (term) {
-                                            if (!_.isNull(term.filters)) {
-                                                _.forEach(term.filters, function (filter) {
-                                                    if (_.isEqual(newValue.value, filter.split('=')[1])) {
-                                                        filtered.push(term);
-                                                    }
-                                                });
-                                            }
-                                        });
-                                        if(filtered.length > 0) {
-                                            scope.values = filtered;
-                                        }else{
-                                            scope.obj={};
-                                            if (response.data.content[0].editable == true) {
-                                                cv = _.union(cv, other);
-                                            }
-                                            scope.values = cv;
-                                        }
-                                    }
-                                    if (scope.values.length == 1) {
-                                        scope.obj = scope.values[0];
-                                    }
-                                }
-                            });*/
-
                         }
 
                         if (response.data.content[0].editable == true) {
@@ -657,7 +616,7 @@
         };
     });
 
-    ginasFormElements.directive('textInput', function () {
+    ginasFormElements.directive('textInput', function (filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/text-input.html",
@@ -668,11 +627,24 @@
                 field: '@',
                 label: '@',
                 form: '@',
+                filter: '=',
+              //  filterFunction: '&',
                 validator: '&'
             },
             link: function (scope, elem, attrs, ngModel) {
                 scope.validatorFunction = function () {
-                    scope.validator({name: scope.obj});
+                    console.log(scope);
+                    scope.validator({model: scope.obj});
+                };
+
+                if (scope.filter){
+                    var filter = scope.filter;
+                    console.lof(filter);
+                    scope.$watch('filter', function (newValue) {
+                        if(!_.isUndefined(newValue)) {
+                         scope.validator({model:scope.obj});
+                        }
+                    });
                 }
             }
         };
@@ -696,7 +668,6 @@
             }
         };
     });
-
 
     ginasFormElements.directive('closeButton', function () {
         return {
@@ -737,6 +708,7 @@
             scope: {
                 data: '=',
                 parent: '=',
+                obj: '=',
                 format: '@'
             },
             templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
@@ -753,18 +725,33 @@
                         var reference = {
                             uuid: UUID.newID(),
                             apply: true,
-                            docType: {value: selected.source},
-                            citation: "resolver lookup",
+                            docType: {value: "resolver", display: "resolver"},
+                            citation: selected.source,
                             documentDate: moment()._d
                         };
-                        console.log(reference);
+                        if (scope.obj) {
+                            console.log(scope.obj);
+                            if (_.isUndefined(scope.obj.references)) {
+                                _.set(scope.obj, 'references', []);
+                            }
+                            scope.obj.references.push(reference.uuid);
+                        }
                         scope.parent.references.push(reference);
                     }
                     if (selected.value && selected.value.molfile) {
                         molChanger.setMol(selected.value.molfile);
                     }
+
+                    if (!_.isUndefined(scope.parent.structure)) {
+                        console.log("adding to structure");
+                        if (_.isUndefined(scope.parent.structure.references)) {
+                            _.set(scope.parent.structure, 'references', []);
+                        }
+                        scope.parent.structure.references.push(reference.uuid);
+                        console.log(scope);
+                    }
+
                     if (scope.format == "subref") {
-                        console.log("passing");
                         scope.$parent.createSubref(selected);
                     }
                     delete scope.subs;

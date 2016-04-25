@@ -57,6 +57,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.chem.EnantiomerGenerator;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
+import ix.core.search.FieldFacet;
 import ix.core.search.SearchOptions;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
@@ -88,10 +89,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.sf.ehcache.Element;
+import ix.ncats.controllers.App.SearchResultContext;
 import ix.ncats.controllers.auth.*;
 import ix.ncats.resolvers.*;
-import ix.ginas.models.v1.Amount;
-import ix.ginas.models.v1.Moiety;
+
 
 /**
  * Basic plumbing for an App
@@ -207,6 +208,9 @@ public class App extends Authentication {
      * 
      * The middle pages are the pages around the current page
      * 
+     * 
+     * There will always be at least 1 page.
+     * 
      * @param rowsPerPage
      * @param page
      * @param total
@@ -215,9 +219,10 @@ public class App extends Authentication {
     public static int[] paging (int rowsPerPage, int page, int total) {
         
         //last page
-        int max = (total+ rowsPerPage-1)/rowsPerPage;
+        int max = Math.max(1,(total+ rowsPerPage-1)/rowsPerPage);
+        //System.out.println("Max is:" + max);
         if (page < 0 || page > max) {
-            throw new IllegalArgumentException ("Bogus page "+page);
+            throw new IllegalArgumentException ("Bogus page " + page);
         }
         
         int[] pages;
@@ -606,9 +611,16 @@ public class App extends Authentication {
         
         List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
-            for (Facet f : facets)
-                if (n.equals(f.getName()))
+        	boolean found=false;
+            for (Facet f : facets){
+                if (n.equals(f.getName())){
                     filtered.add(f);
+                    found=true;
+                }
+            }
+            if(!found){
+            	//System.out.println("Didn't find:" + n);
+            }
         }
         return filtered.toArray(new Facet[0]);
     }
@@ -1227,14 +1239,17 @@ public class App extends Authentication {
         String mesg;
         Long start;
         Long stop;
+        List<FieldFacet> fieldFacets=null;
         List results = new CopyOnWriteArrayList ();
         String id = randvar (10);
         Integer total;
 
         SearchResultContext () {
         }
-
+        
         public SearchResultContext (SearchResult result) {
+        	fieldFacets=result.getFieldFacets();
+        	
             start = result.getTimestamp();          
             if (result.finished()) {
                 status = Status.Done;
@@ -1250,6 +1265,10 @@ public class App extends Authentication {
             }
             results = result.getMatches();
             total = result.count();
+        }
+        
+        public List<FieldFacet> getFieldFacets(){
+        	return fieldFacets;
         }
 
         public String getId () { return id; }
@@ -1503,13 +1522,30 @@ public class App extends Authentication {
         return "fetchResult/"+context.getId()
             +"/"+Util.sha1(request (), params);
     }
-
+    public static <T> Result fetchResultImmediate
+    (final TextIndexer.SearchResult result, int rows,
+     int page, final ResultRenderer<T> renderer) throws Exception {
+    	 SearchResultContext src= new SearchResultContext(result);
+    	 List<T> resultList = new ArrayList<T>();
+    	 int[] pages = new int[0];
+    	 if (result.count() > 0) {
+    	             rows = Math.min(result.count(), Math.max(1, rows));
+    	             pages = paging(rows, page, result.count());
+    	             System.out.println("Copying:" + rows);
+    	             //block for search results
+    	             result.copyTo(resultList, (page-1)*rows, rows, true);
+    	             System.out.println("Copied:" + resultList.size());
+    	             
+    	 }
+    	 return renderer.render(src, page, rows, result.count(),
+    			 pages, result.getFacets(), resultList);
+    }
     public static <T> Result fetchResult
         (final SearchResultContext context, int rows,
          int page, final ResultRenderer<T> renderer) throws Exception {
 
         final String key = getKey (context, "facet");
-
+        
         /**
          * we need to connect context.id with this key to have
          * the results of structure/sequence search context merged
@@ -1701,7 +1737,7 @@ public class App extends Authentication {
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         ObjectNode node = mapper.createObjectNode();
         try {
-        	String payload = request().body().asText();
+                String payload = request().body().asText();
             payload = ChemCleaner.getCleanMolfile(payload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
@@ -1715,12 +1751,8 @@ public class App extends Authentication {
                     struc.save();
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                    	
                         m.save();
                         ObjectNode on = mapper.valueToTree(m);
-                        Amount c1=Moiety.intToAmount(m.count);
-                        JsonNode amt=mapper.valueToTree(c1);
-                        on.set("countAmount", amt);
                         an.add(on);
                     }
                     node.put("structure", mapper.valueToTree(struc));
@@ -1746,7 +1778,7 @@ public class App extends Authentication {
                 }
             }
         } catch (Exception ex) {
-        	ex.printStackTrace();
+                ex.printStackTrace();
             Logger.error("Can't process payload", ex);
             return internalServerError("Can't process mol payload");
         }
@@ -1892,14 +1924,14 @@ public class App extends Authentication {
 
     public static Result resolve (final String name) {
         final String key = "resolve/"+name;
+        
         try {
             return getOrElse (key, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _resolve (name);
                     }
                 });
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't resolve \""+name+"\"!", ex);
         }

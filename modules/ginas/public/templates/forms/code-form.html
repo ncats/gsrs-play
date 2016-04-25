@@ -13,7 +13,14 @@
                     <dropdown-select ng-model="code.type" field="type" cv="CODE_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <text-input ng-model="code.code" field="code"></text-input>
+                    <text-input ng-model="code.code" field="code" filter = code.codeSystem validator="parse(model)"></text-input>
+                    		<div ng-repeat="err in errors">
+			<span class={{err.class}}>{{err.message}}</span>
+		</div>
+                    <ng-messages for="codeForm.code.$error" ng-if="codeForm.code.$touched">
+                        <ng-message when="invalid" class="help-block"></ng-message>
+                        <ng-message when="required" class="help-block">code is required</ng-message>
+                    </ng-messages>
                 </div>
                 <div class="col-md-2">
                     <text-input ng-model="code.url" field="url"></text-input>
