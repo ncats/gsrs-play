@@ -705,7 +705,7 @@ public class GinasApp extends App {
     
     static Result createSubstanceResult(TextIndexer.SearchResult result,
                                         int rows, int page, String[] facets) throws Exception{
-       
+    	
         return fetchResultImmediate (result, rows, page, new SubstanceResultRenderer (facets));
     }
     

@@ -1526,11 +1526,16 @@ public class App extends Authentication {
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
-         
-         int[] pages = paging (rows, page, src.getCount());
-    	
-    	 return renderer.render(src, page, rows, src.getCount(),
-    			 pages, result.getFacets(), src.getResults());
+    	 List<T> resultList = new ArrayList<T>();
+    	 int[] pages = new int[0];
+    	 if (result.count() > 0) {
+    	             rows = Math.min(result.count(), Math.max(1, rows));
+    	             pages = paging(rows, page, result.count());
+    	             result.copyTo(resultList, (page-1)*rows, rows);
+    	             
+    	 }
+    	 return renderer.render(src, page, rows, result.count(),
+    			 pages, result.getFacets(), resultList);
     }
     public static <T> Result fetchResult
         (final SearchResultContext context, int rows,

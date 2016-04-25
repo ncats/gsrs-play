@@ -221,7 +221,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 				if(match==MATCH_TYPE.NO_MATCH)continue;
 				if(match==MATCH_TYPE.CONTAINS)continue;
 				if(match==MATCH_TYPE.WORD_STARTS_WITH)continue;
-				System.out.println("##########" + realkey + match);
+				//System.out.println("##########" + realkey + match);
 				
 				
 				if (matchedFields.contains(realkey + match))continue;

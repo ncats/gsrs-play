@@ -193,7 +193,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
-        	System.out.println("Trying to persist");
+        	//System.out.println("Trying to persist");
         	
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             
@@ -208,10 +208,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					rec.job.getPersister().persist(this);
 					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
 					long done=TimeUtil.getCurrentTimeMillis()-start;
-					System.out.println(     "Persisted at \t" + 
-							System.currentTimeMillis() + "\t" + 
-							this.theRecordToPersist.getClass().getName() + "\t" + 
-							done);
+//					System.out.println(     "Persisted at \t" + 
+//							System.currentTimeMillis() + "\t" + 
+//							this.theRecordToPersist.getClass().getName() + "\t" + 
+//							done);
 					
 					
 					TimeProfiler.stopGlobalTime("persist");
@@ -250,6 +250,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
     	Statistics stat = getStatisticsForJob(job);
         if (stat != null) {
             if (stat._isDone()) {
+            	//Does commenting this out actually make tests fail?
+            	//System.out.println("I think it's done, with:" + stat.totalRecords.getCount() + " but " + stat.recordsExtractedSuccess);
             	updateJob(job,stat);
             }
         }
@@ -408,6 +410,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                                     }
                                     job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
                                     TransformedRecord tr= new TransformedRecord(trans, prg.theRecord, rec);
+                                    //tr.persists();
                                     PQ.submit(new PersistRecordWorker((TransformedRecord) tr));
                                 }
                             });
