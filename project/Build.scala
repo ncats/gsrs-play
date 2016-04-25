@@ -160,7 +160,7 @@ public class BuildInfo {
   ).dependsOn(marvin).aggregate(marvin)
 
 
-  val ginasTestOptions = "-Dconfig.file=conf/" + Option(System.getProperty("testconfig")).getOrElse("application.conf")
+  val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("testconfig")).getOrElse("application.conf")
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
