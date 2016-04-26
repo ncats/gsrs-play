@@ -9,8 +9,8 @@
 		@if(lock!=null){
 			<span class="warning" id="lockmessage">This record is currently being edited by another user, you may have difficulty saving changes.</span>
 		}
-@*        <header-form kind = "substance.substanceClass" parent = substance></header-form>
-        <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>*@
+        <header-form kind = "substance.substanceClass" parent = substance></header-form>
+        <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
 
 
     @kind match {
@@ -91,10 +91,10 @@
             <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
         </div>
         <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
-@*        <relationship-form parent = substance ng-cloak></relationship-form>
+        <relationship-form parent = substance ng-cloak></relationship-form>
         <note-form parent = substance ng-cloak></note-form>
         <property-form parent = substance ng-cloak></property-form>
-        <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>*@
+        <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
     }
 
     @ginas("Register", kind) {
