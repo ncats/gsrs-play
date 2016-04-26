@@ -287,22 +287,38 @@
             },
             link: function (scope, element, attrs) {
                 scope.errors = [];
-                scope.parse = function(code){
+                scope.parse = function(code) {
+                    console.log(scope);
                     console.log(code);
-                    if(scope.code.codeSystem) {
-                        scope.errors = [];
-                        var valid = validatorFactory.validate(scope.code.codeSystem.value, code);
-                        console.log(valid);
-                        if(valid == false){
-                            scope.errors.push({message:'invalid', class: 'danger'});
-                        }else{
-                            scope.errors.push({message:'valid', class: 'success'});
+                    if (!_.isUndefined(code) || !_.isNull(code)) {
+                        if (_.isEmpty(code)) {
+                            scope.errors.push({text: 'no code system yet', class: 'warning'});
                         }
-                    }else {
+
+                        var codeSystem;
+                        var codeValue;
+                        //this is for adding a new code
+                        if (scope.code &&!_.isEmpty(scope.code.codeSystem)) {
+                            codeSystem = scope.code.codeSystem.value;
+                            codeValue = code;
+                        } else{
+                            //this is for editing one
+                            codeSystem = code.codeSystem.value || code.codeSystem;
+                            codeValue = code.code;
+                        }
+                        scope.errors = [];
+                        var valid = validatorFactory.validate(codeSystem, codeValue);
+                        if (valid == false) {
+                            scope.errors.push({text: 'invalid', class: 'danger'});
+                        } else {
+                            scope.errors.push({text: 'valid', class: 'success'});
+                        }
+                    } else {
                         if (scope.errors.length < 1) {
-                            scope.errors.push({message: 'no code system yet', class: 'warning'});
+                            scope.errors.push({text: 'no code system yet', class: 'warning'});
                         }
                     }
+                    return scope.errors;
                 }
             }
         };
@@ -2151,6 +2167,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function (scope, element, attrs) {
                 scope.validate = function () {
+                    console.log(scope);
                     if (!scope.$parent.validate) {
                         if (scope.$parent.$parent.validate(scope.obj, scope.form, scope.path)) {
                             scope.reset();

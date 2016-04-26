@@ -107,6 +107,7 @@
                                         if (_.isUndefined(newcv)) {
                                             newcv = {};
                                             _.set(newcv, 'display', value + ' (not in CV)');
+                                            _.set(newcv, 'value', value + ' (not in CV)');
                                         }
                                         sub[field][key] = newcv;
 
@@ -129,6 +130,8 @@
                                 if (_.isUndefined(newcv)) {
                                     newcv = {};
                                     _.set(newcv, 'display', sub[field] + ' (not in CV)');
+                                    _.set(newcv, 'value', sub[field] + ' (not in CV)');
+
                                 }
                                 sub[field] = newcv;
                             }
@@ -1877,13 +1880,17 @@
                     structureid = false;
                 }
 
-                if (scope.parent.substanceClass === 'polymer' && scope.parent.polymer.displayStructure) {
+                if (scope.parent.substanceClass === 'polymer' && (scope.parent.polymer.displayStructure)) {
                     console.log("polymer");
                     console.log(scope.parent);
                     scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
                 }else {
-                    scope.mol = scope.parent.polymer.idealizedStructure.molfile;
-                    scope.updateMol();
+                    if(!_.isUndefined(scope.parent.idealizedStructure)) {
+                        scope.mol = scope.parent.polymer.idealizedStructure.molfile;
+                        if (!_.isNull(scope.mol)) {
+                            scope.updateMol();
+                        }
+                    }
                 }
 
                 if (structureid) {

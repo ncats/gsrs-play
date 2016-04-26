@@ -47,6 +47,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		fragmentDomains.add("AMINO_ACID_RESIDUE");
 		Set<String> codeSystemDomains = new HashSet<String>();
 		codeSystemDomains.add("CODE_SYSTEM");
+		codeSystemDomains.add("DOCUMENT_TYPE");
 
 		if(fragmentDomains.contains(domain)){
 			return FragmentControlledVocabulary.class;

@@ -295,8 +295,7 @@
                 values: '=?',
                 filter: '=',
                 filterField:'@filter',
-                filterFunction: '&?',
-                parent: '='
+                filterFunction: '&?'
             },
             link: function (scope, element, attrs) {
                 var other = [{
@@ -305,6 +304,9 @@
                     filter: " = ",
                     selected: false
             }];
+                if(_.isUndefined(scope.obj)){
+                    scope.obj={};
+                }
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -351,31 +353,40 @@
     };
 });
 
-    ginasFormElements.directive('dropdownViewEdit', function (CVFields) {
+    ginasFormElements.directive('dropdownViewEdit', function (CVFields, filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/dropdown-view-edit.html",
             replace: true,
             scope: {
                 formname: '=',
+                cv:'@',
                 obj: '=',
                 field: '@',
                 label: '@',
-                values: '=?'
+                values: '=?',
+                filter: '=',
+                filterField:'@filter',
+                filterFunction: '&?'
             },
             link: function (scope, element, attrs) {
-                if (attrs.cv) {
-                    CVFields.getCV(attrs.cv).then(function (response) {
+                if (scope.cv) {
+                    CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-                        if (response.data.content[0].editable == true) {
-                            scope.values.push(
-                                {
-                                    display: "Other",
-                                    value: 'Other',
-                                    filter: " = ",
-                                    selected: false
-                                });
+
+                        if (response.data.content[0].filterable == true) {
+                            filterService._register(scope, true);
                         }
+
+                        if (response.data.content[0].editable == true) {
+                            scope.values =  _.union(scope.values, other);
+                        }
+
+                        _.forEach(scope.values, function (term) {
+                            if (term.selected == true) {
+                                scope.obj = term;
+                            }
+                        });
                     });
                 }
 
@@ -626,23 +637,22 @@
                 obj: '=ngModel',
                 field: '@',
                 label: '@',
-                form: '@',
-                filter: '=',
-              //  filterFunction: '&',
-                validator: '&'
+                form: '=?',
+                filter: '=?',
+                filterFunction: '&?',
+                validator: '&?'
             },
             link: function (scope, elem, attrs, ngModel) {
+
                 scope.validatorFunction = function () {
-                    console.log(scope);
-                    scope.validator({model: scope.obj});
+                    scope.errorMessages = scope.validator({model:scope.obj});
                 };
 
-                if (scope.filter){
+                if (scope.filter &&!_.isEmpty(scope.filter)){
                     var filter = scope.filter;
-                    console.lof(filter);
                     scope.$watch('filter', function (newValue) {
                         if(!_.isUndefined(newValue)) {
-                         scope.validator({model:scope.obj});
+                         scope.errorMessages = scope.validator({model:scope.obj});
                         }
                     });
                 }
@@ -658,13 +668,29 @@
             scope: {
                 obj: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                form: '=?',
+                filter: '=',
+                filterFunction: '&',
+                validator: '&'
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.edit = false;
                 scope.editing = function () {
                     scope.edit = !scope.edit;
                 };
+                scope.validatorFunction = function () {
+                    scope.errorMessages = scope.validator({model:scope.obj});
+                };
+
+                if (scope.filter){
+                    var filter = scope.filter;
+                    scope.$watch('filter', function (newValue) {
+                        if(!_.isUndefined(newValue)) {
+                            scope.errorMessages = scope.validator({model:scope.obj});
+                        }
+                    });
+                }
             }
         };
     });
