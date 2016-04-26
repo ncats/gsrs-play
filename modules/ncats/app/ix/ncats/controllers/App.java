@@ -607,7 +607,7 @@ public class App extends Authentication {
 
     public static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
-            return facets.toArray(new Facet[0]);
+            return facets.toArray(new Facet[facets.size()]);
         
         List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
@@ -622,7 +622,7 @@ public class App extends Authentication {
             	//System.out.println("Didn't find:" + n);
             }
         }
-        return filtered.toArray(new Facet[0]);
+        return filtered.toArray(new Facet[filtered.size()]);
     }
 
     public static TextIndexer.Facet[] getFacets (final Class<?> cls,

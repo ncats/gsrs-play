@@ -61,7 +61,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
     
 //    
-    
+    /**
+     * Lock object to synchronize persistance calls
+     * so only 1 object is persisted at a time.
+     * Not using this causes problems with MySQL.
+     */
+    private final Object persistanceLock = new Object();
         
     private static final String KEY_PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
     //Hack variable for resisting buildup
@@ -78,7 +83,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
         
     private final Application app;
 
-    private PersistenceQueue PQ;
     private IxContext ctx;
 
     static final Random rand = new Random();
@@ -269,24 +273,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
         
 
-    static class PersistRecordWorker implements
-                                         PersistenceQueue.PersistenceContext {
-        TransformedRecord record;
-
-        PersistRecordWorker(TransformedRecord record) {
-            this.record = record;
-        }
-
-        public void persists() throws Exception {
-            record.persists();
-        }
-
-        public Priority priority() {
-            return Priority.MEDIUM;
-        }
-    }
-
-   
 
 
 
@@ -316,10 +302,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
 
 
-        PQ = app.plugin(PersistenceQueue.class);
-        if (PQ == null)
-            throw new IllegalStateException(
-                                            "Plugin PersistenceQueue is not laoded!");
 
 
                 
@@ -410,8 +392,14 @@ public class GinasRecordProcessorPlugin extends Plugin {
                                     }
                                     job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
                                     TransformedRecord tr= new TransformedRecord(trans, prg.theRecord, rec);
-                                    //tr.persists();
-                                    PQ.submit(new PersistRecordWorker((TransformedRecord) tr));
+                                    //MySQL seems to have problems with multiple threads
+                                    //persisting objects so we will
+                                    //use a synchronized block to only allow
+                                    //one object to persist at a time
+                                    synchronized (persistanceLock) {
+                                        tr.persists();
+                                    }
+                                   // PQ.submit(new PersistRecordWorker((TransformedRecord) tr));
                                 }
                             });
                         }

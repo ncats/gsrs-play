@@ -1675,7 +1675,7 @@ public class TextIndexer implements Closeable{
         fields.add(new StringField
                    (FIELD_KIND, entity.getClass().getName(), YES));
 
-        instrument (new LinkedList<String>(), entity, fields);
+        instrument (new LinkedList<String>(), entity, fields,null);
 
         Document doc = new Document ();
         for (IndexableField f : fields) {
@@ -1791,8 +1791,23 @@ public class TextIndexer implements Closeable{
 
     protected void instrument (LinkedList<String> path,
                                Object entity, 
-                               List<IndexableField> ixFields) {
+                               List<IndexableField> ixFields,
+                               LinkedList<Object> entities
+    							) {
+    	//This is a problem because of infinite recursion. It
+    	//can actually happen really easily on ManyToOne
+    	//JPA annotations.
+    	if(entities==null){
+    		entities= new LinkedList<Object>();
+    	}
+    	// This is to avoid infinite recurse. If this object has already been 
+    	// seen here, then things would explode.
+    	if(entities.contains(entity)){
+    		return;
+    	}
         try {
+        	
+        	entities.push(entity);
             Class cls = entity.getClass();
             ixFields.add(new FacetField (DIM_CLASS, cls.getName()));
 
@@ -1812,7 +1827,9 @@ public class TextIndexer implements Closeable{
                 int mods = f.getModifiers();
                 if (!indexable.indexed()
                     || Modifier.isStatic(mods)
-                    || Modifier.isTransient(mods)) {
+                    || Modifier.isTransient(mods)
+                    
+                		) {
                     //Logger.debug("** skipping field "+f.getName()+"["+cls.getName()+"]");
                     continue;
                 }
@@ -1874,7 +1891,7 @@ public class TextIndexer implements Closeable{
                         // recursively evaluate each element in the array
                         for (int i = 0; i < len; ++i) {
                             path.push(String.valueOf(i));
-                            instrument (path, Array.get(value, i), ixFields); 
+                            instrument (path, Array.get(value, i), ixFields,entities); 
                             path.pop();
                         }
                     }
@@ -1882,7 +1899,7 @@ public class TextIndexer implements Closeable{
                         Iterator it = ((Collection)value).iterator();
                         for (int i = 0; it.hasNext(); ++i) {
                             path.push(String.valueOf(i));
-                            instrument (path, it.next(), ixFields);
+                            instrument (path, it.next(), ixFields,entities);
                             path.pop();
                         }
                     }
@@ -1890,7 +1907,7 @@ public class TextIndexer implements Closeable{
                     else if (value.getClass()
                              .isAnnotationPresent(Entity.class)) {
                         // composite type; recurse
-                        instrument (path, value, ixFields);
+                        instrument (path, value, ixFields,entities);
                         Indexable ind=f.getAnnotation(Indexable.class);
                         if (ind != null) {
                             indexField (ixFields, indexable, path, value);
@@ -1978,6 +1995,9 @@ public class TextIndexer implements Closeable{
         }
         catch (Exception ex) {
             Logger.trace("Fetching entity fields", ex);
+        }
+        finally{
+        	entities.pop();
         }
     }
 
