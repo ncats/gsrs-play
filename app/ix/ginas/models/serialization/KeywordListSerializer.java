@@ -22,6 +22,7 @@ public class KeywordListSerializer extends JsonSerializer<List<Keyword>> {
                            SerializerProvider provider)
         throws IOException, JsonProcessingException {
         jgen.writeStartArray();
+        //System.out.println("Keywords:" + keywords);
         for (Keyword kw : keywords) {
             provider.defaultSerializeValue(kw.term, jgen);
         }
