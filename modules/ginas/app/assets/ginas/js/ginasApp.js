@@ -1037,9 +1037,12 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
+                    console.log(attrs.smiles);
                     url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}";
+                    console.log(url);
                 }
-                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image" class="tooltip-img" ng-cloak>');
+                var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
+                console.log(template);
                 element.append(template);
                 $compile(template)(scope);
             }
