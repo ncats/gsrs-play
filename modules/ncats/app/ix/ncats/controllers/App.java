@@ -19,6 +19,7 @@ import play.libs.ws.*;
 import play.libs.F;
 import play.libs.Akka;
 import play.mvc.Http;
+import play.mvc.Http.Request;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -972,9 +973,20 @@ public class App extends Authentication {
                                  int size, int[] amap, Map newDisplay)
         throws Exception {
         Chemical chem = new Jchemical (mol);
+        Request r=request();
+        if(r!=null){
+        	if("true".equals(r.getQueryString("standardize"))){
+        		chem.dearomatize();
+        		chem.removeNonDescriptHydrogens();
+        	}
+        }
+        
         DisplayParams dp = DisplayParams.DEFAULT();
         if(newDisplay!=null)
         dp.changeSettings(newDisplay);
+       
+        
+        
         
         //chem.reduceMultiples();
         boolean highlight=false;
@@ -1001,8 +1013,10 @@ public class App extends Authentication {
         
         ChemicalRenderer render = new NchemicalRenderer (displayParams);
         */
+        
        
         ChemicalRenderer render = new NchemicalRenderer ();
+        
         render.setDisplayParams(dp);
         render.addDisplayProperty("TOP_TEXT");
         render.addDisplayProperty("BOTTOM_TEXT");

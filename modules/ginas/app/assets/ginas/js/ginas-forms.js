@@ -1047,14 +1047,12 @@
                 type: '@'
             },
             link: function(scope, element){
-                console.log(scope);
                 if(scope.parent.substanceClass ==='polymer'){
                     if(_.has(scope.parent.polymer.idealizedStructure)){
                         _.set(scope.parent, 'structure',scope.parent.polymer.idealizedStructure );
                     }else{
                         _.set(scope.parent, 'structure',scope.parent.polymer.displayStructure );
                     }
-                    console.log(scope);
                 }else{
                     scope.structure = scope.parent.structure;
                 }
@@ -1102,7 +1100,6 @@
             templateUrl: baseurl + "assets/templates/forms/name-form.html",
             link: function(scope){
                 scope.stage=true;
-                console.log(scope);
                 scope.duplicateCheck = function(name) {
                     var result = angular.element(document.getElementsByClassName('nameForm'));
                     result.empty();
@@ -1124,7 +1121,6 @@
                             return duplicate;
                         });
                     if (!_.isUndefined(name) && name!=="") {
-                        console.log("opening");
                         spinnerService.show('nameSpinner');
                         var template;
                         $q.all([resolve, duplicate]).then(function(results) {
@@ -1162,7 +1158,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/name-org-form.html",
             link:function (scope){
-console.log(scope);
                 scope.validate = function(){
                     if (_.has(scope.referenceobj, 'nameOrgs')) {
                         var temp = _.get(scope.referenceobj, 'nameOrgs');

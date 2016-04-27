@@ -1331,13 +1331,13 @@ public class GinasApp extends App {
                     }else{
                         return placeHolderImage(s);
                     }
-                
             }else{
                 try{
                         UUID uuid=UUID.fromString(id);
-                        //Unit u=new Unit();
                         Unit u=GinasFactory.unitFinder.byId(uuid);
-                        return App.render(u.structure,size);
+                        if(u!=null){
+                        	return App.render(u.structure,size);
+                        }
                 }catch(Exception e){
                         e.printStackTrace();
                 }
