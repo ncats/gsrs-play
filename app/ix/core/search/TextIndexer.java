@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -25,20 +26,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
@@ -277,6 +269,61 @@ public class TextIndexer implements Closeable{
     	
     }
     
+    public static class SearchResultFuture extends FutureTask<List>{
+    	public SearchResultFuture(final SearchResult result){
+    		super(new WaitForSearchCallable(result));
+    	}
+        public SearchResultFuture(final SearchResult result, int numberOfRecords){
+            super(new WaitForSearchCallable(result, numberOfRecords));
+        }
+    }
+    
+    private static class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
+
+    	private final SearchResult result;
+    	
+    	private final CountDownLatch latch;
+    	private boolean waitForAll;
+
+    	public WaitForSearchCallable(final SearchResult result){
+    		Objects.requireNonNull(result);
+    		this.result = result;
+    		this.result.addListener(this);
+            waitForAll = true;
+            latch = new CountDownLatch(1);
+    	}
+        public WaitForSearchCallable(final SearchResult result, int numberOfRecords){
+            Objects.requireNonNull(result);
+            this.result = result;
+            this.result.addListener(this);
+            //can't have negative counts
+            int count = Math.max(0, numberOfRecords - result.matches.size());
+            latch = new CountDownLatch(count);
+            waitForAll = false;
+        }
+		@Override
+		public List call() throws Exception {
+			if(latch.getCount()>0 && !result.finished()){
+				latch.await();
+			}
+            result.removeListener(this);
+			return result.getMatches();
+		}
+		@Override
+		public void searchIsDone() {
+			while(latch.getCount()>0){
+                latch.countDown();
+            }
+		}
+
+        @Override
+        public void added(Object o) {
+            if(!waitForAll){
+                latch.countDown();
+            }
+        }
+    }
+    
     public static class SearchResult {
     	
         SearchContextAnalyzer searchAnalyzer;
@@ -305,6 +352,8 @@ public class TextIndexer implements Closeable{
         final long timestamp = TimeUtil.getCurrentTimeMillis();
         AtomicLong stop = new AtomicLong ();
 
+        private List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
+        
         SearchResult () {
         	
         }
@@ -335,6 +384,24 @@ public class TextIndexer implements Closeable{
                 });
         }
 
+        public void addListener(SearchResultDoneListener listener){
+        	listeners.add(new SoftReference<>(listener));
+        }
+        
+        public void removeListener(SearchResultDoneListener listener){
+        	Iterator<SoftReference<SearchResultDoneListener>> iter =listeners.iterator();
+        	while(iter.hasNext()){
+        		SoftReference<SearchResultDoneListener> l = iter.next();
+        		SearchResultDoneListener actualListener = l.get();
+        		//if get() returns null then the object was garbage collected
+        		if(actualListener ==null || listener.equals(actualListener)){
+        			iter.remove();
+        			//keep checking in the unlikely event that
+        			//a listener was added twice?
+        		}
+        	}
+        }
+        
         public String getKey() { return key; }
         public void setKey(String key) { this.key = key; }
         public String getQuery () { return query; }
@@ -391,8 +458,9 @@ public class TextIndexer implements Closeable{
         	
         	// The second way is to wait for the fetching to be completed
         	// which is what is demonstrated below. 
-        	
+        	List matches;
         	if(wait){
+        		/*
 	        	int lastRecord=start+count;
 	        	
 	        	if(!this.finished() && matches.size()<lastRecord){
@@ -408,9 +476,19 @@ public class TextIndexer implements Closeable{
 		        	}
 		        	System.out.println("done");
 	        	}
+	        	*/
+                try {
+                    matches =this.getMatchesFuture(start+count).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                    //interrupted...make empty list?
+                    matches = Collections.emptyList();
+                }
+            }else{
+        		matches = getMatches();
         	}
 
-            Iterator it = getMatches().iterator();
+            Iterator it = matches.iterator();
             
             for (int i = 0; i < start && it.hasNext(); ++i)
                 it.next(); // skip
@@ -449,6 +527,53 @@ public class TextIndexer implements Closeable{
         public int copyTo (List list, int start, int count) {
             return copyTo (list,start,count,false);
         }
+        /**
+         * Get the result of {@link #getMatches()}}
+         * as a Future which runs in a background thread
+         * and will block the call to Future#get() until
+         * at the list is fully populated.
+         *
+         * @return a Future will never be null.
+         */
+        public Future<List> getMatchesFuture(){
+            SearchResultFuture future= new SearchResultFuture(this);
+            new Thread(future).start();
+            return future;
+        }
+
+        /**
+         * Get the result of {@link #getMatches()}}
+         * as a Future which runs in a background thread
+         * and will block the call to Future#get() until
+         * at least numberOfRecords is fetched.
+         * @param numberOfRecords the minimum number of records (or the list is done populating)
+         *                        in the List to wait to get populated
+         *                        before Future#get() unblocks.
+         * @return a Future will never be null.
+         */
+        public Future<List> getMatchesFuture(int numberOfRecords){
+            SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
+            new Thread(future).start();
+            return future;
+        }
+
+        /**
+         * Get the result of {@link #getMatches()}}
+         * as a Future which runs in a background thread
+         * and will block the call to Future#get() until
+         * at least numberOfRecords is fetched.
+         * @param numberOfRecords the minimum number of records (or the list is done populating)
+         *                        in the List to wait to get populated
+         *                        before Future#get() unblocks.
+         *
+         * @param executorService the ExecutorService to submit the Future to.
+         * @return a Future will never be null.
+         */
+        public Future<List> getMatchesFuture(int numberOfRecords, ExecutorService executorService){
+            SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
+            executorService.submit(future);
+            return future;
+        }
         
         public List getMatches () {
         	if (result != null) return result;
@@ -478,6 +603,8 @@ public class TextIndexer implements Closeable{
 
         protected void add (Object obj) {
             matches.add(obj);
+            notifyAdd(obj);
+
             if(searchAnalyzer!=null && query!=null && query.length()>0){
             	searchAnalyzer.updateFieldQueryFacets(obj, query);
             }
@@ -489,21 +616,53 @@ public class TextIndexer implements Closeable{
 //            	Util.debugSpin(2000);
 //            }
         }
-        
+
+        private void notifyAdd(Object o){
+            Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
+            while(iter.hasNext()){
+                SearchResultDoneListener l = iter.next().get();
+                if(l ==null){
+                    iter.remove();
+                }else{
+                    l.added(o);
+                }
+
+            }
+        }
         
         
         protected void done () {
             stop.set(System.currentTimeMillis());
+            //notify listeners
+            
+            Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
+            while(iter.hasNext()){
+            	SearchResultDoneListener l = iter.next().get();
+            	if(l ==null){
+            		iter.remove();
+            	}else{
+            		l.searchIsDone();
+            	}
+            	
+            }
         }
     }
 
+    interface SearchResultDoneListener{
+    	void searchIsDone();
+        void added(Object o);
+    }
+    
     public static class SuggestResult {
         CharSequence key, highlight;
+        
+        
         SuggestResult (CharSequence key, CharSequence highlight) {
             this.key = key;
             this.highlight = highlight;
         }
 
+        
         public CharSequence getKey () { return key; }
         public CharSequence getHighlight () { return highlight; }
     }
