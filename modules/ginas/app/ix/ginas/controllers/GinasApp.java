@@ -582,15 +582,17 @@ public class GinasApp extends App {
     }
 
     public static SearchResult getSubstanceSearchResult
-        (final String q, final int total) {
-        final Map<String, String[]> params = App.getRequestQuery();     
-        final String sha1 = signature (q, params);
-
+        (final String q, final int total, String qcache) {
+        final Map<String, String[]> params = App.getRequestQuery(); 
+        
+        
+        final String sha1 = signature (qcache, params);
         try {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse
                 (sha1, new Callable<SearchResult>() {
                         public SearchResult call () throws Exception {
+                        	
                             SearchOptions options = new SearchOptions
                             (Substance.class, total, 0, FACET_DIM);
                             options.parse(params);
@@ -640,7 +642,7 @@ public class GinasApp extends App {
         
         //Special piece to show deprecated records
         String showDeprecated = request().getQueryString("showDeprecated");
-        
+        String oq=q;
         if(showDeprecated==null){
         	if(q!=null){
         		q=q + " AND SubstanceDeprecated:false";
@@ -657,14 +659,13 @@ public class GinasApp extends App {
         // do a text search
         if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
-                getSubstanceSearchResult (q, total);
+                getSubstanceSearchResult (q, total, oq);
             
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
             if (result.finished()) {
-                final String k = key + "/result";
-                
+                final String k = key + "/result"; 
                 return getOrElse(k, new Callable<Result>() {
                         public Result call() throws Exception {
                                 Logger.debug("Cache missed: " + k);
@@ -672,8 +673,7 @@ public class GinasApp extends App {
                         }
                     });
             }
-
-            return createSubstanceResult(result, rows, page);
+            return createSubstanceResult(result, rows, page,facets);
                         
             //otherwise, just show the first substances
         } else {

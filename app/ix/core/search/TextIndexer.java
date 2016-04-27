@@ -376,12 +376,7 @@ public class TextIndexer implements Closeable{
          */
         public int copyTo (List list, int start, int count, boolean wait) {
 
-        	//Does this ever cause a problem if we're searching for
-        	//something that starts beyond where we've gotten to?
-        	//Like if we try to page before getting all results?
-        	if (start >= matches.size()) {
-                return 0;
-            }
+        	
         	
         	
         	// It may be that the page that is being fetched is not yet
@@ -397,18 +392,25 @@ public class TextIndexer implements Closeable{
 	        	
 	        	if(!this.finished() && matches.size()<lastRecord){
 	        		int missing = lastRecord - matches.size();
-	        		System.out.print("Waiting for `" + missing + "` missing records" );
+	        		//System.out.print("Waiting for `" + missing + "` missing records" );
 		        	while (!this.finished() && matches.size()<lastRecord){
-		        		System.out.print(".");
+		        		//System.out.print(".");
 		        		try {
 							Thread.sleep(100);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
 		        	}
-		        	System.out.println("done");
+		        	//System.out.println("done");
 	        	}
         	}
+        	
+        	//Does this ever cause a problem if we're searching for
+        	//something that starts beyond where we've gotten to?
+        	//Like if we try to page before getting all results?
+        	if (start >= matches.size()) {
+                return 0;
+            }
 
             Iterator it = getMatches().iterator();
             
@@ -477,7 +479,7 @@ public class TextIndexer implements Closeable{
         }
 
         protected void add (Object obj) {
-            matches.add(obj);
+        	matches.add(obj);
             if(searchAnalyzer!=null && query!=null && query.length()>0){
             	searchAnalyzer.updateFieldQueryFacets(obj, query);
             }
@@ -486,7 +488,7 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
 //            if(Math.random()>.9){
-//            	Util.debugSpin(2000);
+            	//Util.debugSpin(100);
 //            }
         }
         
@@ -1520,6 +1522,7 @@ public class TextIndexer implements Closeable{
                 payload.fetch();
             }
             else {
+            	
                 // we first block until we have enough result to show; simulate
                 //  with a random number of fetch
                 int fetch = 20 + new Random().nextInt(options.fetch);

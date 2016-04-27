@@ -730,7 +730,6 @@ public class App extends Authentication {
                 args.add(f);
         }
         Collections.sort(args);
-        
         return Util.sha1(args.toArray(new String[0]));
     }
 
@@ -1352,7 +1351,7 @@ public class App extends Authentication {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
 
-        Logger.debug("checkStatus: q="+query+" type="+type);
+        Logger.debug("checkStatus: q=" + query + " type=" + type);
         if (type != null && query != null) {
             try {
                 String key = null;
@@ -1399,9 +1398,9 @@ public class App extends Authentication {
             String key = signature (query, getRequestQuery ());
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
-            
             if (value != null) {
                 SearchResult result = (SearchResult)value;
+                
                 SearchResultContext ctx = new SearchResultContext (result);
                 Logger.debug("status: key="+key+" finished="+ctx.finished());
 
@@ -1540,15 +1539,16 @@ public class App extends Authentication {
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
+    	 
     	 List<T> resultList = new ArrayList<T>();
     	 int[] pages = new int[0];
     	 if (result.count() > 0) {
     	             rows = Math.min(result.count(), Math.max(1, rows));
     	             pages = paging(rows, page, result.count());
-    	             System.out.println("Copying:" + rows);
-    	             //block for search results
-    	             result.copyTo(resultList, (page-1)*rows, rows, true);
-    	             System.out.println("Copied:" + resultList.size());
+    	             
+    	             //This no longer blocks for search results
+    	             
+    	             result.copyTo(resultList, (page-1)*rows, rows, false);
     	             
     	 }
     	 return renderer.render(src, page, rows, result.count(),
