@@ -1038,7 +1038,7 @@
                 }
                 if (attrs.smiles) {
                     console.log(attrs.smiles);
-                    url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}";
+                    url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}&standardize=true";
                     console.log(url);
                 }
                 var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
