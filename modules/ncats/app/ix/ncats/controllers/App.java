@@ -1188,7 +1188,7 @@ public class App extends Authentication {
     /**
      * Structure searching
      */
-    public static abstract class SearchResultProcessor<T> {
+    public static abstract class SearchResultProcessor<T, R> {
         protected Enumeration<T> results;
         final SearchResultContext context = new SearchResultContext ();
         
@@ -1224,7 +1224,7 @@ public class App extends Authentication {
                 T r = results.nextElement();
                 try {
                     long start = System.currentTimeMillis();
-                    Object obj = instrument (r);
+                    R obj = instrument (r);
                     if (obj != null) {
                         context.add(obj);
                     }
@@ -1237,7 +1237,7 @@ public class App extends Authentication {
             return context.getCount();
         }
         
-        protected abstract Object instrument (T r) throws Exception;
+        protected abstract R instrument (T r) throws Exception;
     }
 
     public static class SearchResultContext {

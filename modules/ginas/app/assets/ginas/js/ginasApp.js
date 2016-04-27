@@ -5,20 +5,7 @@
         'angularSpinners', 'filterListener', 'validatorListener'
     ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
-       /*   var windowElement = angular.element($window);
-            console.log($location);
-        var u = $location.path().split('/');
-        var inter = _.intersection(u, ["edit","wizard"]);
-        console.log(inter);
-        if(inter.length > 0) {
-            console.log("wizard)");
-            windowElement.on('beforeunload', function (event) {
-                // event.preventDefault();
-                // console.log(event);
-                return "Navigating away from this page will lose all unsaved changed.";
-            });
-        }*/
-    })
+     })
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
@@ -28,33 +15,6 @@
                 requireBase: true
             });
         });
-
-
-    ginasApp.filter('dependency', function () {
-        function smartCV(incItems, value) {
-            console.log(incItems);
-            console.log(value);
-            if (value) {
-                console.log(value);
-                return incItems;
-            }
-            return incItems;
-        }
-
-        return smartCV;
-        /*var out = [{}];
-
-         if(value){
-         for(x=0; x<incItems.length; x++){
-         if(incItems[x].Value == value)
-         out.push(incItems[x]);
-         }
-         return out;
-         }
-         else if(!value){
-         return incItems
-         }*/
-    });
 
     ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils) {
 
@@ -198,7 +158,6 @@
         };
 
         substance.$$getClass = function () {
-            console.log(substance.substanceClass);
             return substance.substanceClass;
         };
 
@@ -226,28 +185,23 @@
                     _.forEach(sub.protein.disulfideLinks, function (value, key) {
                         var disulfideLink = {};
                         var sites = _.toArray(value.sites);
-                        //   console.log(sites.length % 2);
                         if (sites.length % 2 != 0) {
                             sites = _.dropRight(sites);
                         }
                         disulfideLink.sites = sites;
                         sub.protein.disulfideLinks[key] = disulfideLink;
-                        //    console.log(sub.protein.disulfideLinks);
                     });
                 }
                 if (_.has(sub.protein, 'otherLinks')) {
-                    //     console.log(sub.protein.otherLinks);
                     _.forEach(sub.protein.otherLinks, function (value, key) {
                         var otherLink = {};
                         var sites = _.toArray(value.sites);
-                        console.log(sites.length % 2);
                         if (sites.length % 2 != 0) {
                             sites = _.dropRight(sites);
                         }
                         sub.protein.otherLinks[key].sites = sites;
                     });
                 }
-                console.log(JSON.stringify(sub.protein.otherLinks));
             }
 
             sub = flattenCV(sub);
@@ -262,7 +216,7 @@
                 //apparently needs to be reset as well
                 if (!_.has(sub, '$$update')) {
 					var nid=UUID.newID();
-                    console.log("Was :" + sub.structure.id + " is " + nid);
+                   // console.log("Was :" + sub.structure.id + " is " + nid);
                     sub.structure.id = nid;
                 }
                 //sub.structure.id = UUID.newID();
@@ -273,15 +227,12 @@
             }
 
             if (_.has(sub, 'polymer')) {
-                console.log("Polymer setting");
-                console.log(sub.polymer.structuralUnits);
                 polymerUtils.setSRUFromConnectivityDisplay(sub.polymer.structuralUnits);
             }
 
 
             if (_.has(sub, 'modifications')) {
-                console.log("nucleic setting");
-                if (_.has(sub.modifications, 'structuralModifications')) {
+               if (_.has(sub.modifications, 'structuralModifications')) {
                     _.forEach(sub.modifications.structuralModifications, function (mod) {
                         if (mod.$$residueModified) {
                             mod.residueModified = _.join(mod.$$residueModified, ';');
@@ -291,12 +242,9 @@
             }
 
                 if (_.has(sub, 'nucleicAcid')) {
-                console.log("nucleic setting");
                 if (_.has(sub.nucleicAcid, 'sugars')) {
                     _.forEach(sub.nucleicAcid.sugars, function (sugar) {
                         if (sugar.sitesShorthand) {
-                            console.log(sugar.sitesShorthand);
-                            // sugar.sitesShorthand = null;//
                             _.unset(sugar, 'sitesShorthand');
 
                         }
@@ -305,8 +253,6 @@
                 if (_.has(sub.nucleicAcid, 'linkages')) {
                     _.forEach(sub.nucleicAcid.linkages, function (linkage) {
                         if (linkage.sitesShorthand) {
-                            console.log(linkage.sitesShorthand);
-                            //   linkage.sitesShorthand = null;
                             _.unset(linkage, 'sitesShorthand');
                         }
                     });
@@ -611,7 +557,6 @@
                 toggler.refresh($scope, div, template);
                 spinnerService.hideAll();
             });
-            console.log(div);
         };
 
         $scope.toggleGrid = function () {
@@ -649,7 +594,6 @@
             if ($scope.substance.status === "approved") {
                 return false;
             }
-            //console.log(session.username);
             if (lastEdit === session.username) {
                 return false;
             }
@@ -779,7 +723,7 @@
 
         $scope.validateSubstance = function (callback) {
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-            console.log(sub);
+          //  console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
@@ -809,23 +753,19 @@
              if (r != true) {
              return;
              }*/
-            console.log($scope);
             if (_.has($scope.substance, '$$update')) {
             	
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
-                console.log(JSON.stringify(sub));
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    console.log(response);
                     $scope.updateNav = false;
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
                     $scope.open(url);
                 }, function (response) {
-                    console.log(response);
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.open(url);
@@ -837,7 +777,6 @@
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
-                    //console.log(response);
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
@@ -931,11 +870,8 @@
         };
 
         $scope.viewSubstance = function () {
-            console.log("new");
             $scope.updateNav = false;
             $window.location.search = null;
-            console.log($window.location);
-            console.log($location);
             $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0];
             //  $window.location.search =null;
         };
@@ -954,7 +890,6 @@
             $scope.substanceClass = $location.$$search.kind;
             Substance.$$setSubstance(JSON.parse(input)).then(function (data) {
                 $scope.substance = data;
-                console.log($scope.substance);
                 if($scope.substance.substanceClass =="chemical"){
                     molChanger.setMol($scope.substance.structure.molfile);
                 }
@@ -967,7 +902,6 @@
         };
 
         $scope.bugSubmit = function (bugForm) {
-            //console.log(bugForm);
         };
 
         $scope.setEditId = function (editid) {
@@ -1037,12 +971,9 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
-                    console.log(attrs.smiles);
                     url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}&standardize=true";
-                    console.log(url);
                 }
                 var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
-                console.log(template);
                 element.append(template);
                 $compile(template)(scope);
             }
@@ -1311,7 +1242,6 @@
                         scope.referenceobj.sites.$$displayString = siteList.siteString(scope.referenceobj.sites);
                     } else {
                         if (scope.field) {
-                            console.log(scope);
                             if(_.isUndefined(scope.referenceobj[scope.field])){
                                 _.set(scope.referenceobj, scope.field, {});
                             }
@@ -1680,7 +1610,6 @@
                     }
                     spinnerService.show('subrefSpinner');
                     substanceFactory.getSubstances(scope.q).then(function (response) {
-                        console.log(response);
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
                         template = angular.element('<substance-viewer data = data format= "subref"></substance-viewer>');
@@ -1689,8 +1618,6 @@
                 };
 
                 scope.createSubref = function (selectedItem) {
-                    console.log(scope);
-                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
@@ -1748,7 +1675,6 @@
                 size: '='
             },
             link: function (scope, element) {
-                console.log(scope);
                 var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);
@@ -1791,12 +1717,6 @@
                 if (!_.isUndefined(scope.parent.structure)) {
                     scope.mol = scope.parent.structure.molfile;
                 }
-
-/*                scope.$watch('mol', function(newval){
-                    console.log(newval);
-                    scope.sketcher.setMolfile(newval);
-                });*/
-
                 var template = angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
                 element.append(template);
                 $compile(template)(scope);
@@ -1832,7 +1752,6 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
-                        console.log(data);
                         if (scope.parent.substanceClass === "polymer") {
                             scope.parent.idealizedStructure = data.structure;
                             scope.structure = data.structure;
@@ -1873,7 +1792,6 @@
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
                 scope.sketcher.options.ondatachange = function () {
-                    //console.log("DATA CHANGED");
                     scope.mol = scope.sketcher.getMolfile();
                     scope.updateMol();
                 };
@@ -1884,8 +1802,6 @@
                 }
 
                 if (scope.parent.substanceClass === 'polymer' && (scope.parent.polymer.displayStructure)) {
-                    console.log("polymer");
-                    console.log(scope.parent);
                     scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
                 }else {
                     if(!_.isUndefined(scope.parent.idealizedStructure)) {
@@ -2005,7 +1921,6 @@
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function (response) {
-                            console.log(response);
                             scope.exportData = response;
                             if(scope.format != 'fas') {
                                 url = baseurl + 'export/' + scope.structureid + '.smiles';

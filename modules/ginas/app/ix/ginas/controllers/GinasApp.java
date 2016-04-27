@@ -1162,13 +1162,13 @@ public class GinasApp extends App {
     // sigh ... this is the best of a bunch of bad options now
 
     public static class GinasSearchResultProcessor
-        extends SearchResultProcessor<StructureIndexer.Result> {
+        extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
         
         GinasSearchResultProcessor() {
         }
 
         int index;
-        protected Object instrument(StructureIndexer.Result r)
+        protected ChemicalSubstance instrument(StructureIndexer.Result r)
             throws Exception {
             List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
@@ -1199,16 +1199,16 @@ public class GinasApp extends App {
     }
 
     public static class GinasSequenceResultProcessor
-        extends SearchResultProcessor<SequenceIndexer.Result> {
+        extends SearchResultProcessor<SequenceIndexer.Result, ProteinSubstance> {
         GinasSequenceResultProcessor () {}
         
         @Override
-        protected Object instrument (SequenceIndexer.Result r)
+        protected ProteinSubstance instrument (SequenceIndexer.Result r)
             throws Exception {
             List<ProteinSubstance> proteins = SubstanceFactory.protfinder
                 .where().eq("protein.subunits.uuid", r.id).findList();
             ProteinSubstance protein =
-                proteins.isEmpty() ? null : proteins.iterator().next();
+                proteins.isEmpty() ? null : proteins.get(0);
             if (protein != null) {
                 IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
             }
