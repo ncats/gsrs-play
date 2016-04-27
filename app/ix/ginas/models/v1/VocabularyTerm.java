@@ -25,7 +25,7 @@ public class VocabularyTerm extends IxModel{
 	 */
 	
 	@ManyToOne(cascade = CascadeType.PERSIST)
-	ControlledVocabulary owner;
+	private ControlledVocabulary owner;
 	
     @JsonIgnore
     public Long getId(){
@@ -38,10 +38,11 @@ public class VocabularyTerm extends IxModel{
     public String description;
     public String origin;
 //    public String filter;
-@JsonSerialize(using=KeywordListSerializer.class)
-@JsonDeserialize(contentUsing=KeywordDeserializer.DomainDeserializer.class)
-@Basic(fetch=FetchType.LAZY)
-public EmbeddedKeywordList filters = new EmbeddedKeywordList();
+    
+    @JsonSerialize(using=KeywordListSerializer.class)
+    @JsonDeserialize(contentUsing=KeywordDeserializer.DomainDeserializer.class)
+    @Basic(fetch=FetchType.LAZY)
+    public EmbeddedKeywordList filters = new EmbeddedKeywordList();
 
     public boolean hidden=false;
     public boolean selected=false;

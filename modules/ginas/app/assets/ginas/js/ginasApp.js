@@ -971,7 +971,7 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
-                    url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}";
+                    url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}&standardize=true";
                 }
                 var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
                 element.append(template);
