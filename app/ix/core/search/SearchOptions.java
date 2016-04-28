@@ -109,6 +109,7 @@ public class SearchOptions {
                 for (String s : me.getValue()) {
                     try {
                         fetch = Integer.parseInt(s);
+                        
                     }
                     catch (NumberFormatException ex) {
                         Logger.error("Not a valid number: "+s);

@@ -582,15 +582,17 @@ public class GinasApp extends App {
     }
 
     public static SearchResult getSubstanceSearchResult
-        (final String q, final int total) {
-        final Map<String, String[]> params = App.getRequestQuery();     
-        final String sha1 = signature (q, params);
-
+        (final String q, final int total, String qcache) {
+        final Map<String, String[]> params = App.getRequestQuery(); 
+        
+        
+        final String sha1 = signature (qcache, params);
         try {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse
                 (sha1, new Callable<SearchResult>() {
                         public SearchResult call () throws Exception {
+                        	
                             SearchOptions options = new SearchOptions
                             (Substance.class, total, 0, FACET_DIM);
                             options.parse(params);
@@ -640,7 +642,7 @@ public class GinasApp extends App {
         
         //Special piece to show deprecated records
         String showDeprecated = request().getQueryString("showDeprecated");
-        
+        String oq=q;
         if(showDeprecated==null){
         	if(q!=null){
         		q=q + " AND SubstanceDeprecated:false";
@@ -657,14 +659,13 @@ public class GinasApp extends App {
         // do a text search
         if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
-                getSubstanceSearchResult (q, total);
+                getSubstanceSearchResult (q, total, oq);
             
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
             if (result.finished()) {
-                final String k = key + "/result";
-                
+                final String k = key + "/result"; 
                 return getOrElse(k, new Callable<Result>() {
                         public Result call() throws Exception {
                                 Logger.debug("Cache missed: " + k);
@@ -672,8 +673,7 @@ public class GinasApp extends App {
                         }
                     });
             }
-
-            return createSubstanceResult(result, rows, page);
+            return createSubstanceResult(result, rows, page,facets);
                         
             //otherwise, just show the first substances
         } else {
@@ -1162,13 +1162,13 @@ public class GinasApp extends App {
     // sigh ... this is the best of a bunch of bad options now
 
     public static class GinasSearchResultProcessor
-        extends SearchResultProcessor<StructureIndexer.Result> {
+        extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
         
         GinasSearchResultProcessor() {
         }
 
         int index;
-        protected Object instrument(StructureIndexer.Result r)
+        protected ChemicalSubstance instrument(StructureIndexer.Result r)
             throws Exception {
             List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
@@ -1199,16 +1199,16 @@ public class GinasApp extends App {
     }
 
     public static class GinasSequenceResultProcessor
-        extends SearchResultProcessor<SequenceIndexer.Result> {
+        extends SearchResultProcessor<SequenceIndexer.Result, ProteinSubstance> {
         GinasSequenceResultProcessor () {}
         
         @Override
-        protected Object instrument (SequenceIndexer.Result r)
+        protected ProteinSubstance instrument (SequenceIndexer.Result r)
             throws Exception {
             List<ProteinSubstance> proteins = SubstanceFactory.protfinder
                 .where().eq("protein.subunits.uuid", r.id).findList();
             ProteinSubstance protein =
-                proteins.isEmpty() ? null : proteins.iterator().next();
+                proteins.isEmpty() ? null : proteins.get(0);
             if (protein != null) {
                 IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
             }
@@ -1331,13 +1331,13 @@ public class GinasApp extends App {
                     }else{
                         return placeHolderImage(s);
                     }
-                
             }else{
                 try{
                         UUID uuid=UUID.fromString(id);
-                        //Unit u=new Unit();
                         Unit u=GinasFactory.unitFinder.byId(uuid);
-                        return App.render(u.structure,size);
+                        if(u!=null){
+                        	return App.render(u.structure,size);
+                        }
                 }catch(Exception e){
                         e.printStackTrace();
                 }
