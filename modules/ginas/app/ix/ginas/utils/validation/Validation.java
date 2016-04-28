@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -59,6 +61,7 @@ public class Validation {
 
     static PayloadPlugin _payload =null;
     public static boolean extractLocators=true;
+	static Config validationConf = null;
 
     static{
         init();
@@ -66,13 +69,7 @@ public class Validation {
 
     public static void init() {
     	Configuration conf=Play.application().configuration();
-//        String codeSystem = 		conf.getString("ix.ginas.generatedcode.codesystem", null);
-//        String codeSystemSuffix = 	conf.getString("ix.ginas.generatedcode.suffix", null);
-//        int length = 				conf.getInt("ix.ginas.generatedcode.length", 10);
-//        boolean padding = 			conf.getBoolean("ix.ginas.generatedcode.padding", true);
-//        if(codeSystem!=null){
-//            seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
-//        }
+		validationConf = ConfigFactory.load("validation.conf");
         _payload = Play.application().plugin(PayloadPlugin.class);
         extractLocators=			conf.getBoolean("ix.ginas.prepare.extractlocators", true);
     }
@@ -91,7 +88,10 @@ public class Validation {
 	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
 	        }
 	        if(s.definitionType == SubstanceDefinitionType.PRIMARY){
-		        validateNames(s,gpm,strat);
+				boolean requireName = validationConf.getBoolean("requireNames");
+				if(requireName) {
+					validateNames(s, gpm, strat);
+				}
 		        validateCodes(s,gpm,strat);
 		        validateRelationships(s,gpm,strat);
 		        validateNotes(s,gpm,strat);
@@ -787,7 +787,7 @@ public class Validation {
         try {
 			ix.ginas.utils.validation.PeptideInterpreter.Protein p=PeptideInterpreter.getAminoAcidSequence(cs.structure.molfile);
 			if(p!=null && p.subunits.size()>=1 && p.subunits.get(0).sequence.length()>2){
-				GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substance may be represented as protein as well. Seqence:[" +p.toString() + "]");
+				GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substance may be represented as protein as well. Sequence:[" +p.toString() + "]");
 				gpm.add(mes);
 	            strat.processMessage(mes);
 			}
