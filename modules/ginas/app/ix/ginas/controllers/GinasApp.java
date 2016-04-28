@@ -1333,8 +1333,7 @@ public class GinasApp extends App {
                     }
             }else{
                 try{
-                        UUID uuid=UUID.fromString(id);
-                        Unit u=GinasFactory.unitFinder.byId(uuid);
+                        Unit u=GinasFactory.findUnitById(id);
                         if(u!=null){
                         	return App.render(u.structure,size);
                         }

@@ -24,35 +24,41 @@ import play.mvc.Result;
 
 
 public class GinasFactory extends EntityFactory {
-        public static final Model.Finder<Long, Principal> finder = new Model.Finder(
-                        Long.class, Principal.class);
-        public static final Model.Finder<UUID, Unit> unitFinder = new Model.Finder(
-                UUID.class, Unit.class);
+        private static Model.Finder<Long, Principal> finder;
+        private static Model.Finder<UUID, Unit> unitFinder;
 
         private static final long EXPIRE_LOCK_TIME_MS = 1*60*1000; //one minute
         private static ConcurrentHashMap<String,EditLock> currentlyEditing;
         
         public static void init(){
-        	currentlyEditing =  new ConcurrentHashMap<String,EditLock>();
+
+            finder = new Model.Finder(Long.class, Principal.class);
+            unitFinder = new Model.Finder(UUID.class, Unit.class);
+            currentlyEditing =  new ConcurrentHashMap<String,EditLock>();
         }
-        
+
+    public static Unit findUnitById(String uuidString){
+        return findUnitById(UUID.fromString(uuidString));
+    }
+        public static Unit findUnitById(UUID uuid){
+            return unitFinder.byId(uuid);
+        }
+        static{
+            init();
+        }
         private static void addEditLock(EditLock el){
-        	if(currentlyEditing==null){
-        		currentlyEditing=  new ConcurrentHashMap<String,EditLock>();
-        	}
+
         	currentlyEditing.put(el.id, el);
         }
         private static EditLock getEditLock(String id){
-        	if(currentlyEditing==null){
-        		currentlyEditing=  new ConcurrentHashMap<String,EditLock>();
-        	}
+
         	EditLock elock= currentlyEditing.get(id);
         	if(elock==null || elock.isExpired()){
         		currentlyEditing.remove(id);
         		return null;
-        	}else{
-        		return elock;
         	}
+            return elock;
+
         	
         }
         public static class EditLock{
@@ -65,20 +71,13 @@ public class GinasFactory extends EntityFactory {
         	}
         	public boolean isExpired(){
         		long expiretime = lockTime +EXPIRE_LOCK_TIME_MS;
-        		if(TimeUtil.getCurrentTimeMillis()>expiretime){
-        			return true;
-        		}
-        		return false;
+        		return TimeUtil.getCurrentTimeMillis()>expiretime;
         	}
         	public void updateLock(){
         		lockTime=TimeUtil.getCurrentTimeMillis();
         	}
 			public boolean isUser(UserProfile up) {
-				if(this.user.getIdentifier().equals(up.getIdentifier())){
-					return true;
-				}else{
-					return false;
-				}
+				return this.user.getIdentifier().equals(up.getIdentifier());
 			}
         }
         public static Result index() {          
@@ -183,12 +182,14 @@ public class GinasFactory extends EntityFactory {
                         		Substance s=substances.get(0);
                         		UUID uuid=s.getUuid();
                         		EditLock elock = getEditLock(uuid.toString());
-                        		if(elock==null){
-                        			EditLock newelock = new EditLock(UserFetcher.getActingUserProfile(false),uuid.toString());
+
+                            UserProfile up =UserFetcher.getActingUserProfile(false);
+
+                            if(elock==null){
+                        			EditLock newelock = new EditLock(up,uuid.toString());
                         			GinasFactory.addEditLock(newelock);
                         		}else{
-                        			UserProfile up =UserFetcher.getActingUserProfile(false);
-                        			
+
                         			if(up!=null && elock.user.getIdentifier().equals(up.getIdentifier())){
                         				elock=null;
                         			}
