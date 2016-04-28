@@ -348,6 +348,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
         final ExecutorService executorService = BlockingSubmitExecutor.newFixedThreadPool(3, MAX_EXTRACTION_QUEUE);
 
+        final PersistRecordWorkerFactory factory = getPersistRecordWorkerFactory();
+
         executorServices.add(executorService);
         new Thread() {
             @Override
@@ -380,28 +382,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
                         final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
 
                         if (record != null) {
-                            executorService.submit(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ProcessingRecord rec = new ProcessingRecord();
-                                    job.getStatistics().applyChange(Statistics.CHANGE.ADD_EX_GOOD);
-                                    Object trans = job.getTransformer().transform(prg, rec);
 
-                                    if (trans == null) {
-                                        throw new IllegalStateException("Transform error");
-                                    }
-                                    job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
-                                    TransformedRecord tr= new TransformedRecord(trans, prg.theRecord, rec);
-                                    //MySQL seems to have problems with multiple threads
-                                    //persisting objects so we will
-                                    //use a synchronized block to only allow
-                                    //one object to persist at a time
-                                    synchronized (persistanceLock) {
-                                        tr.persists();
-                                    }
-                                   // PQ.submit(new PersistRecordWorker((TransformedRecord) tr));
-                                }
-                            });
+                            executorService.submit(factory.newWorkerFor(prg));
+
                         }
                     } catch (Exception e) {
                         Statistics stat = getStatisticsForJob(pp.key);
@@ -433,13 +416,53 @@ public class GinasRecordProcessorPlugin extends Plugin {
         return pp.key;
     }
 
+    private PersistRecordWorkerFactory getPersistRecordWorkerFactory() {
+      try {
+          Class<?> clazz = Class.forName(app.configuration().getString("ix.ginas.PersistRecordWorkerFactoryImpl"));
+          return (PersistRecordWorkerFactory) clazz.newInstance();
+      }catch (IllegalAccessException | InstantiationException |ClassNotFoundException e) {
+          throw new IllegalStateException("error creating PersistRecordWorkerFactory instance", e);
+      }
+    }
 
 
-        
-        
+    public static abstract class PersistRecordWorker implements Runnable{
+
+        private final PayloadExtractedRecord prg;
+
+        public PersistRecordWorker(PayloadExtractedRecord prg){
+            Objects.requireNonNull(prg);
+            this.prg = prg;
+        }
+        @Override
+        public void run() {
+            ProcessingRecord rec = new ProcessingRecord();
+            ProcessingJob job = prg.job;
+            job.getStatistics().applyChange(Statistics.CHANGE.ADD_EX_GOOD);
+            Object trans = job.getTransformer().transform(prg, rec);
+
+            if (trans == null) {
+                throw new IllegalStateException("Transform error");
+            }
+            job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
+            TransformedRecord tr= new TransformedRecord(trans, prg.theRecord, rec);
+            doPersist(tr);
+        }
+
+        protected abstract void doPersist(TransformedRecord tr);
+    }
         
 
-    
+
+
+
+
+    public interface PersistRecordWorkerFactory{
+        PersistRecordWorker newWorkerFor(PayloadExtractedRecord prg);
+    }
+
+
+
 
     
     public static Statistics getStatisticsForJob(String jobTerm){
