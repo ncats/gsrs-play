@@ -11,14 +11,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ix.core.models.Keyword;
 
 
-public class EmbeddedKeywordList extends ArrayList<Keyword>{
+public class EmbeddedKeywordList implements List<Keyword>{
 	@JsonIgnore
 	private List<Keyword> keywords = new ArrayList<Keyword>();
 	
 
 	public EmbeddedKeywordList(Collection<Keyword> col){
-		keywords= new ArrayList<Keyword>(col);
+		keywords= new ArrayList<Keyword>();
+		for(Keyword k:col){
+			this.add(k);
+		}
 	}
+	
 	public EmbeddedKeywordList(){
 		
 	}
@@ -81,6 +85,10 @@ public class EmbeddedKeywordList extends ArrayList<Keyword>{
 	}
 
 	public boolean equals(Object o) {
+		//Test for immutable scalar tests
+		if(true)return false;
+		
+		
 		return keywords.equals(o);
 	}
 

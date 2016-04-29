@@ -6,13 +6,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
-import javax.persistence.PostPersist;
-import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -31,11 +28,11 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
-import ix.core.models.Value;
 import ix.core.util.TimeUtil;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.GinasReferenceContainer;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.GroupDeserializer;
 import ix.ginas.models.serialization.GroupSerializer;
 import ix.ginas.models.serialization.PrincipalDeserializer;
@@ -47,55 +44,8 @@ import ix.ginas.models.serialization.ReferenceSetSerializer;
 @DiscriminatorValue("GSRS")
 public class GinasChemicalStructure extends Structure implements GinasAccessReferenceControlled {
 
-	/**
-	 
-        if (struc == null) {
-            provider.defaultSerializeNull(jgen);
-            return;
-        }
-        
-        provider.defaultSerializeField("id", struc.id, jgen);
-        provider.defaultSerializeField("created", struc.created, jgen);
-        provider.defaultSerializeField("lastEdited", struc.lastEdited, jgen);
-        provider.defaultSerializeField("deprecated", struc.deprecated, jgen);
-        provider.defaultSerializeField("digest", struc.digest, jgen);
-        provider.defaultSerializeField("molfile", struc.molfile, jgen);
-        provider.defaultSerializeField("smiles", struc.smiles, jgen);
-        provider.defaultSerializeField("formula", struc.formula, jgen);
-        provider.defaultSerializeField
-            ("stereochemistry", struc.stereoChemistry, jgen);
-        provider.defaultSerializeField
-            ("opticalActivity", struc.opticalActivity, jgen);
-        provider.defaultSerializeField
-            ("atropisomerism", struc.atropisomerism, jgen);
-        provider.defaultSerializeField
-            ("stereoComments", struc.stereoComments, jgen);
-        provider.defaultSerializeField
-            ("stereoCenters", struc.stereoCenters, jgen);
-        provider.defaultSerializeField
-            ("definedStereo", struc.definedStereo, jgen);
-        provider.defaultSerializeField("ezCenters", struc.ezCenters, jgen);
-        provider.defaultSerializeField("charge", struc.charge, jgen);
-        provider.defaultSerializeField("mwt", struc.mwt, jgen);
-        
-        provider.defaultSerializeField("properties", struc.properties, jgen);
-        if(struc.createdBy!=null)
-        	provider.defaultSerializeField("createdBy", struc.createdBy.username, jgen);
-        if(struc.lastEditedBy!=null)
-        	provider.defaultSerializeField("lastEditedBy", struc.lastEditedBy.username, jgen);
-        provider.defaultSerializeField("references", struc.getReferencesString(), jgen);      
-        provider.defaultSerializeField("access", struc.getAccessString(), jgen);
-        
-        
-       
-        
-        for (Value val : struc.properties) {
-            if (Structure.H_LyChI_L4.equals(val.label)) {
-                Keyword kw = (Keyword)val;
-                provider.defaultSerializeField("hash", kw.term, jgen);
-            }
-        } 
-	 */
+	private EmbeddedKeywordList internalReferences = new EmbeddedKeywordList();
+	
 	
     public Date created=null;
     
@@ -147,12 +97,6 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 //	@OneToOne(cascade = CascadeType.ALL)
 	@Basic(fetch=FetchType.LAZY)
 	GinasAccessContainer recordAccess;
-
-
-	@JsonIgnore
-	//@Basic(fetch=FetchType.LAZY)
-	@OneToOne(cascade = CascadeType.ALL)
-	private GinasReferenceContainer recordReference;
 
 
     @JsonIgnore
@@ -210,68 +154,37 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 
 
-    @JsonSerialize(using = ReferenceSetSerializer.class)
-    public Set<Keyword> getReferences(){
-    	if(recordReference!=null){
-    		return recordReference.getReferences();
-    	}
-    	return new LinkedHashSet<Keyword>();
-    }
-    
-    @JsonIgnore
-    public Set<String> getReferencesString(){
-    	Set<String> keyset=new LinkedHashSet<String>();
-    	for(Keyword k:getReferences()){
-    		keyset.add(k.term);
-    	}
-    	return keyset;
-    }
-
-    @JsonProperty("references")    
-    @JsonDeserialize(using = ReferenceSetDeserializer.class)
-	@Override
-	public void setReferences(Set<Keyword> references) {
-    	GinasReferenceContainer grc=getRecordReference();
-    	if(grc==null){
-    		grc=new GinasReferenceContainer(this);
-    	}
-    	grc.setReferences(references);
-    	setRecordReference(grc);
-	}
     
    
-
-    @JsonIgnore
-	public GinasReferenceContainer getRecordReference() {
-		return recordReference;
-	}
-
-    @JsonIgnore
-	public void setRecordReference(GinasReferenceContainer recordReference) {
-    	GinasReferenceContainer grc=new GinasReferenceContainer(this);
-    	grc.setReferences(recordReference.references);
-		this.recordReference = grc;
-	}
-    
     
     public void setId(UUID uuid){
     	this.id=uuid;
     }
     
     
+    @JsonSerialize(using = ReferenceSetSerializer.class)
+    public Set<Keyword> getReferences(){
+    	return new LinkedHashSet<Keyword>(internalReferences);
+    }
 
-	public void addReference(String refUUID){
-		GinasReferenceContainer grc=getRecordReference();
-    	if(grc==null){
-    		grc=new GinasReferenceContainer(this);
-    	}
-    	grc.addReference(refUUID);
-    	setRecordReference(grc);
+    @JsonProperty("references")    
+    @JsonDeserialize(using = ReferenceSetDeserializer.class)
+	@Override
+	public void setReferences(Set<Keyword> references) {
+    	this.internalReferences = new EmbeddedKeywordList(references);
+	}
+    
+    public void addReference(String refUUID){
+		this.internalReferences.add(new Keyword(GinasCommonSubData.REFERENCE,
+				refUUID
+		));
+		setReferences(new LinkedHashSet<Keyword>(this.internalReferences));
 	}
 	
 	public void addReference(Reference r){
 		addReference(r.getOrGenerateUUID().toString());
 	}
+	
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
 		this.addReference(r);

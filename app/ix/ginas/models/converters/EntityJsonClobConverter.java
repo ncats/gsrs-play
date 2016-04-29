@@ -25,9 +25,4 @@ public abstract class EntityJsonClobConverter<K> extends EntityClobConverter<K> 
 		if(bytes==null)return null;
 		return em.readValue(bytes, cls);
 	}
-	
-	    
-
-
-    
 }

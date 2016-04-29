@@ -586,7 +586,31 @@ public class Validation {
         		}
         	}
         	if(cs.polymer.idealizedStructure==null || cs.polymer.idealizedStructure.molfile==null){
-        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Polymer substance must have an idealized structure"));
+        		if(cs.polymer.displayStructure!=null && cs.polymer.displayStructure.molfile!=null){
+        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using idealized Structure").appliableChange(true);
+        			gpm.add(gpmwarn);
+        			strat.processMessage(gpmwarn);
+        			switch(gpmwarn.actionType){
+						case APPLY_CHANGE:
+							try{
+								cs.polymer.idealizedStructure= cs.polymer.displayStructure.copy();
+							}catch(Exception e){
+								gpm.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
+							}
+							break;
+						case DO_NOTHING:
+							break;
+						case FAIL:
+							break;
+						case IGNORE:
+							break;
+						default:
+							break;
+        			}
+        		}else{
+        			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("No idealized structure found for polymer");
+        			gpm.add(gpmerr);
+        		}
         	}
         	if(cs.polymer.structuralUnits==null || cs.polymer.structuralUnits.size()<=0){
         		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have structural units"));
