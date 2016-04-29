@@ -75,7 +75,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         }
     }
 
-    //@Ignore
     @Test
     public void loadedDataPersistedAcrossRestarts() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)) {
@@ -95,7 +94,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
     }
 
-    @Ignore
     @Test
     public void nonAdminCanNotLoad() throws IOException{
         GinasTestServer.User normalUser = ts.createNormalUser("peon", "pass");
@@ -112,7 +110,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
 
-    @Ignore
     @Test
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
@@ -125,7 +122,6 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         assertEquals(Collections.emptyMap(), results.getAllFacets());
     }
 
-    @Ignore
     @Test
     public void deleteLuceneIndexesButNOTDatabaseShouldReturnZeroResults() throws IOException{
         try(BrowserSession session = ts.newBrowserSession(admin)) {
