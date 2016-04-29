@@ -94,6 +94,7 @@ object ApplicationBuild extends Build {
 
   val javaBuildOptions = Seq(
     "-encoding", "UTF-8"
+  , "-source", "1.7", "-target", "1.7"
       //,"-Xlint:-options"
       //,"-Xlint:deprecation"
   )
@@ -240,19 +241,4 @@ public class BuildInfo {
       libraryDependencies += "com.typesafe" % "config" % "1.2.0",
       mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
   ).dependsOn(ginas).aggregate(ginas)
-
-
- /* val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
- //   .settings(assemblySettings: _*)
-    .settings(
-      libraryDependencies += "org.avaje.ebeanorm" % "avaje-ebeanorm" % "3.3.4",
-      libraryDependencies += "com.typesafe" % "config" % "1.2.0",
-      libraryDependencies += "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-      libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive (),
-      unmanagedResources in Compile +=  file("conf/sql/post/ginas-oracle.sql"),
-      unmanagedResources in Compile +=  file("modules/ginas/conf/evolutions/default/1.sql"),
-      unmanagedJars in Compile += file("lib/ojdbc6.jar"),
-      //unmanagedSourceDirectories in Compile += file("app/ix/ginas"),
-      mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
-    )*/
 }
