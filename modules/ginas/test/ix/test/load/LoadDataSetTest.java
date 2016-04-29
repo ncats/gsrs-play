@@ -40,7 +40,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         assertEquals(17, results.numberOfResults());
         SubstanceSearch.SearchResult all = searcher.all();
         assertEquals(90, all.numberOfResults());
-        assertFacetsMatch(createExpectedRep90Facets(), results);
+        TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
     }
     
     @Test
