@@ -35,8 +35,6 @@ public class ApprovalWorkflowTest {
         }
     };
     
-
-    
 	@Test
 	public void testApprovalRoundTrip() throws Exception {
         String uuid;

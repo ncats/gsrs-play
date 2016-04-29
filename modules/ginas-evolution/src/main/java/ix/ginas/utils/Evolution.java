@@ -159,6 +159,7 @@ public class Evolution {
 
     boolean write (String sql, boolean override) throws IOException {
         if (override || !ddl.exists()) {
+            ddl.getParentFile().mkdirs();
             PrintStream ps = new PrintStream (new FileOutputStream (ddl));
             ps.print(sql);
             ps.close();

@@ -61,7 +61,6 @@ public class SubstanceSubmitTest {
         @Rule
         public GinasTestServer ts = new GinasTestServer();
 
-
         public SubstanceSubmitTest(File f, String onlyUsedForParameterName){
             this.resource=f;
         }

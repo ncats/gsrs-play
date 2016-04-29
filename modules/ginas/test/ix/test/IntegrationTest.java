@@ -1,21 +1,23 @@
 package ix.test;
-import static org.junit.Assert.*;
-
-import ix.core.models.Role;
-import ix.test.ix.test.server.ControlledVocab;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import org.junit.Rule;
-import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ix.core.controllers.EntityFactory;
+import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
+import ix.test.ix.test.server.ControlledVocab;
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+
+import static org.junit.Assert.*;
 
 public class IntegrationTest {
 	@Rule
@@ -23,6 +25,13 @@ public class IntegrationTest {
 
 	@Rule
 	public GinasTestServer ts = new GinasTestServer(9001);
+
+	@Rule
+	public TestRule watcher = new TestWatcher() {
+		protected void starting(Description description) {
+			System.out.println("Starting test: " + description.getMethodName());
+		}
+	};
 
 
 	@Test

@@ -65,8 +65,7 @@ public class SubstanceValidateFailTest extends WithApplication {
     @Rule
     public GinasTestServer ts = new GinasTestServer();
 
-
-    public SubstanceValidateFailTest(File f, String dummy){
+   public SubstanceValidateFailTest(File f, String dummy){
     	this.resource=f;
     }
 
