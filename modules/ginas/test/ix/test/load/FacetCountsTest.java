@@ -80,7 +80,7 @@ public class FacetCountsTest {
 
             SubstanceSearch.SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
 
-
+            assertEquals(17, results2.numberOfResults());
             TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results2);
         }
     }
