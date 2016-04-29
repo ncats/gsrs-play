@@ -5,6 +5,8 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
 
 /**
@@ -16,8 +18,52 @@ import java.util.Objects;
  */
 public final class ConfigUtil {
 
+
+    private static final ConfigUtil DEFAULT = new ConfigUtil();
+
+    private final Config config;
+
+
+    public static ConfigUtil getDefault(){
+        return DEFAULT;
+
+    }
+
     private ConfigUtil(){
-        //can not instantiate
+        this(ConfigFactory.load());
+    }
+    private ConfigUtil(Config config){
+        Objects.requireNonNull(config);
+        this.config = config;
+    }
+
+    public Config getConfig(){
+        return config;
+    }
+
+
+    public String getValueFromPath(String...path){
+        if(path.length ==0){
+            return null;
+        }
+        if(path.length ==1){
+            return getValueAsString(path[0]);
+        }
+        Iterator<String> iter = Arrays.asList(path).iterator();
+        Config currentConf = config;
+
+        while(iter.hasNext()) {
+            String p = iter.next();
+            if (iter.hasNext()) {
+                currentConf = currentConf.getConfig(p);
+            } else {
+                //leaf
+                return currentConf.getString(p);
+            }
+        }
+        //shouldn't be possible
+        //but makes compiler happy
+        return null;
     }
     /**
      * Get the value of the given key as a File object
@@ -29,7 +75,7 @@ public final class ConfigUtil {
      * the key is not in the config.  The path to the returned
      * File object may not exist.
      */
-    public static File getValueAsFile(String key){
+    public File getValueAsFile(String key){
         return getValueAsFile(key, null);
     }
     /**
@@ -43,7 +89,7 @@ public final class ConfigUtil {
      * the key is not in the config.  The path to the returned
      * File object may not exist.
      */
-    public static File getValueAsFile(String key, File defaultValue){
+    public File getValueAsFile(String key, File defaultValue){
         String path = getValueAsString(key);
         if(path ==null){
             return defaultValue;
@@ -62,7 +108,7 @@ public final class ConfigUtil {
      * @return the value of the key as a String, or the {@code null} if
      * the key is not in the config.
      */
-    public static String getValueAsString(String key){
+    public String getValueAsString(String key){
         return getValueAsString(key, null);
     }
     /**
@@ -73,12 +119,11 @@ public final class ConfigUtil {
      * @return the value of the key as a String, or the defaultValue if
      * the key is not in the config.
      */
-    public static String getValueAsString(String key, String defaultValue){
+    public String getValueAsString(String key, String defaultValue){
         Objects.requireNonNull(key);
 
-        Config load = ConfigFactory.load();
         try{
-            return load.getString(key);
+            return config.getString(key);
         }catch(ConfigException.Missing e){
             return defaultValue;
         }

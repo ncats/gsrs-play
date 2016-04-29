@@ -346,17 +346,8 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public boolean isOracleDB(){
-        boolean isOracle = false;
-        Config confFile = ConfigFactory.load();
-        String source = "default";
-        Config dbconf = confFile.getConfig("db");
-        Config db = dbconf.getConfig(source);
-        String dbUrl = db.getString("url");
-        if(dbUrl.contains("jdbc:oracle:thin")){
-            isOracle = true;
-        }
-        System.out.println("db oracle:" + isOracle);
-        return isOracle;
+        String dbUrl = ConfigUtil.getDefault().getValueAsString("db.default.url");
+        return dbUrl.contains("jdbc:oracle:thin");
     }
 
 
@@ -407,18 +398,14 @@ public class GinasTestServer extends ExternalResource{
     }
 
     private void deleteH2Db() throws IOException {
-        Config load = ConfigFactory.load();
-        //System.out.println(load.entrySet());
-        //Path path = new File(load.getString("ix.home")).toPath();
-
-        File home = ConfigUtil.getValueAsFile("ix.home");
+        File home = ConfigUtil.getDefault().getValueAsFile("ix.home");
         TestUtil.tryToDeleteRecursively(home);
     }
 
 
 
     public void dropOracleDb() throws IOException {
-        Config confFile = ConfigFactory.load();
+        Config confFile = ConfigUtil.getDefault().getConfig();
         String source = "default";
         Config dbconf = confFile.getConfig("db");
         Config db = dbconf.getConfig(source);

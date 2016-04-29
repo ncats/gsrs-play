@@ -136,7 +136,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
         ts.stop(true);
 
-        File home = ConfigUtil.getValueAsFile("ix.home");
+        File home = ConfigUtil.getDefault().getValueAsFile("ix.home");
         //Delete the ginas.ix/text, ginas.ix/sequence and ginas.ix/structure folders
         TestUtil.tryToDeleteRecursively(new File(home, "text"));
         TestUtil.tryToDeleteRecursively(new File(home, "sequence"));
