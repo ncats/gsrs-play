@@ -82,11 +82,28 @@ public class EmbeddedKeywordList implements List<Keyword>{
 		keywords.clear();
 	}
 
+	/**
+	 * This method always returns false. It does this to force EBean to think
+	 * that it's a new immutable object, and persist the changes to the database.
+	 * 
+	 * 
+	 * 
+	 */
 	public boolean equals(Object o) {
+		System.err.println("Equals method on EmbeddedKeywordList always returns false, to force EBean to think it's a new immutable object");
 		//Test for immutable scalar tests
-		if(true)return false;
+		return false;
 		
 		
+		//return keywords.equals(o);
+	}
+	
+	/**
+	 * this is the actual equals method. 
+	 * @param o
+	 * @return
+	 */
+	public boolean realEquals(Object o){
 		return keywords.equals(o);
 	}
 

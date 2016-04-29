@@ -79,7 +79,7 @@ public class SubstanceSearch {
      */
     public SearchResult all() throws IOException {
 
-        String rootUrl = "ginas/app/substances?";
+        String rootUrl = "ginas/app/substances?wait=true";
         int page=1;
 
         Set<String> substances = new LinkedHashSet<>();

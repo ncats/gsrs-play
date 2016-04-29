@@ -1539,16 +1539,19 @@ public class App extends Authentication {
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
-    	 
+    	 String wait=request().getQueryString("wait");
     	 List<T> resultList = new ArrayList<T>();
     	 int[] pages = new int[0];
     	 if (result.count() > 0) {
     	             rows = Math.min(result.count(), Math.max(1, rows));
     	             pages = paging(rows, page, result.count());
     	             
-    	             //This no longer blocks for search results
-    	             
-    	             result.copyTo(resultList, (page-1)*rows, rows, false);
+    	             //block for results only if the request specifies this
+    	             if(wait!=null && wait.equalsIgnoreCase("true")){
+    	            	 result.copyTo(resultList, (page-1)*rows, rows, true);
+    	             }else{
+    	            	 result.copyTo(resultList, (page-1)*rows, rows, false);
+    	             }
     	             
     	 }
     	 return renderer.render(src, page, rows, result.count(),
