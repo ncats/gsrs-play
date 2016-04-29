@@ -32,8 +32,6 @@ angular.module('validatorListener', [])
 				codeSystemValidators[codeSystemValidators.makeKey(codeSystem)] = fun;
 			},
 			validate: function (codeSystem, code) {
-				console.log(codeSystem);
-				console.log(code);
 				return codeSystemValidators.getValidatorFor(codeSystem)(code);
 			}
 		};

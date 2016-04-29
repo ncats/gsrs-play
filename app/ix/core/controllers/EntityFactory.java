@@ -396,34 +396,7 @@ public class EntityFactory extends Controller {
         Query<T> query = finder.query();
         
         query=options.applyToQuery(query);
-        /*
-        for (String path : options.expand) {
-            Logger.debug("  -> fetch "+path);
-            query = query.fetch(path);
-        }
-        query = query.where(options.filter);
-
-        if (!options.order.isEmpty()) {
-            for (String order : options.order) {
-                Logger.debug("  -> order "+order);
-                char ch = order.charAt(0);
-                if (ch == '$') { // desc
-                    query = query.order(order.substring(1)+" desc");
-                }
-                else {
-                    if (ch == '^') {
-                        order = order.substring(1);
-                    }
-                // default to asc
-                    query = query.order(order+" asc");
-                }
-            }
-        }
-        else {
-            //query = query.orderBy("id asc");
-        }
-        */
-
+    
         try {
             long start = System.currentTimeMillis();
             List<T> results = query

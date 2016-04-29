@@ -10,10 +10,6 @@
                      <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validator="duplicateCheck(name)"></text-input>
 -->
                      <text-input ng-model="name.name" field="name" name ="name" form="nameForm"></text-input>
-                    <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
-                        <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
-                        <ng-message when="required" class="help-block">parent name is required</ng-message>
-                    </ng-messages>
                     </div>
 
                 <div class="col-md-2 ">

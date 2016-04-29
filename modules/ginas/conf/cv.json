@@ -2955,7 +2955,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -2971,7 +2971,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "GENERAL INSTATEATION",
         "regex": null,
         "_namespace": null
       },
@@ -2987,7 +2987,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3003,7 +3003,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "ORGANISM",
         "regex": null,
         "_namespace": null
       },
@@ -3019,7 +3019,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3035,7 +3035,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3051,7 +3051,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "ORGANISM",
         "regex": null,
         "_namespace": null
       },
@@ -3067,7 +3067,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "ORGANISM",
         "regex": null,
         "_namespace": null
       },
@@ -3083,7 +3083,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3099,7 +3099,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "FOOD ADDITIVE",
         "regex": null,
         "_namespace": null
       },
@@ -3115,7 +3115,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3131,7 +3131,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3147,7 +3147,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3163,7 +3163,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3179,7 +3179,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3195,7 +3195,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3211,7 +3211,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3227,7 +3227,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3243,7 +3243,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": "^[0-9][0-9]*[-][0-9][0-9]-[0-9]$",
         "_namespace": null
       },
@@ -3259,7 +3259,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3275,7 +3275,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "ORGANISM",
         "regex": null,
         "_namespace": null
       },
@@ -3291,7 +3291,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3307,7 +3307,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3323,23 +3323,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
-        "regex": null,
-        "_namespace": null
-      },
-      {
-        "version": 1,
-        "created": 1458157135073,
-        "modified": 1460555145541,
-        "deprecated": false,
-        "value": "BDNUM",
-        "display": "BDNUM",
-        "description": null,
-        "origin": null,
-        "filters": null,
-        "hidden": true,
-        "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3355,7 +3339,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "REGULATORY",
         "regex": null,
         "_namespace": null
       },
@@ -3371,7 +3355,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "FOOD ADDITIVE",
         "regex": null,
         "_namespace": null
       },
@@ -3387,7 +3371,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "GENERAL INSTATEATION",
         "regex": null,
         "_namespace": null
       },
@@ -3403,23 +3387,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
-        "regex": null,
-        "_namespace": null
-      },
-      {
-        "version": 1,
-        "created": 1457983681876,
-        "modified": 1460555145522,
-        "deprecated": false,
-        "value": "BDNUM",
-        "display": "BDNUM",
-        "description": null,
-        "origin": null,
-        "filters": null,
-        "hidden": true,
-        "selected": false,
-        "systemCategory": null,
+        "systemCategory": "GENERAL INSTATEATION",
         "regex": null,
         "_namespace": null
       },
@@ -3435,7 +3403,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3451,7 +3419,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3467,7 +3435,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3483,7 +3451,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "FOOD ADDITIVE",
         "regex": null,
         "_namespace": null
       },
@@ -3499,7 +3467,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "FOOD ADDITIVE",
         "regex": null,
         "_namespace": null
       },
@@ -3515,7 +3483,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "FOOD ADDITIVE",
         "regex": null,
         "_namespace": null
       },
@@ -3531,7 +3499,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "PHARMCLASS",
         "regex": null,
         "_namespace": null
       },
@@ -3547,7 +3515,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "CHEMICAL",
         "regex": null,
         "_namespace": null
       },
@@ -3563,7 +3531,7 @@
         "filters": null,
         "hidden": false,
         "selected": false,
-        "systemCategory": null,
+        "systemCategory": "GENERAL INSTATEATION",
         "regex": null,
         "_namespace": null
       }
@@ -3579,7 +3547,7 @@
     "domain": "CODE_SYSTEM_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filterable": false,
+    "filterable": true,
     "terms": [
       {
         "version": 1,
@@ -4305,7 +4273,7 @@
     "modified": 1460555145650,
     "deprecated": false,
     "domain": "DOCUMENT_TYPE",
-    "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
+    "vocabularyTermType": "ix.ginas.models.v1.CodeSystemControlledVocabulary",
     "editable": true,
     "filterable": false,
     "terms": [
@@ -17678,6 +17646,34 @@
         "deprecated": false,
         "value": "ABSORBING POWER",
         "display": "ABSORBING POWER",
+        "description": null,
+        "origin": null,
+        "filters": null,
+        "hidden": false,
+        "selected": false,
+        "_namespace": null
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1460555146971,
+        "deprecated": false,
+        "value": "MOL_WEIGHT:NUMBER AVERAGE",
+        "display": "MOL_WEIGHT:NUMBER AVERAGE",
+        "description": null,
+        "origin": null,
+        "filters": null,
+        "hidden": false,
+        "selected": false,
+        "_namespace": null
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1460555146971,
+        "deprecated": false,
+        "value": "MOL_WEIGHT:WEIGHT AVERAGE",
+        "display": "MOL_WEIGHT:WEIGHT AVERAGE",
         "description": null,
         "origin": null,
         "filters": null,

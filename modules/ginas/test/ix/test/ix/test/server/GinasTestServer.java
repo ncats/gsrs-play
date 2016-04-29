@@ -17,6 +17,7 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.utils.validation.Validation;
@@ -400,6 +401,7 @@ public class GinasTestServer extends ExternalResource{
         SequenceIndexer.init();
 
         GinasLoad.init();
+        GinasFactory.init();
         //our APIs
        // SubstanceLoader.init();
     }

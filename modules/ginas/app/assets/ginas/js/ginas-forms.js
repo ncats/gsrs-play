@@ -287,22 +287,38 @@
             },
             link: function (scope, element, attrs) {
                 scope.errors = [];
-                scope.parse = function(code){
+                scope.parse = function(code) {
+                    console.log(scope);
                     console.log(code);
-                    if(scope.code.codeSystem) {
-                        scope.errors = [];
-                        var valid = validatorFactory.validate(scope.code.codeSystem.value, code);
-                        console.log(valid);
-                        if(valid == false){
-                            scope.errors.push({message:'invalid', class: 'danger'});
-                        }else{
-                            scope.errors.push({message:'valid', class: 'success'});
+                    if (!_.isUndefined(code) || !_.isNull(code)) {
+                        if (_.isEmpty(code)) {
+                            scope.errors.push({text: 'no code system yet', class: 'warning'});
                         }
-                    }else {
+
+                        var codeSystem;
+                        var codeValue;
+                        //this is for adding a new code
+                        if (scope.code &&!_.isEmpty(scope.code.codeSystem)) {
+                            codeSystem = scope.code.codeSystem.value;
+                            codeValue = code;
+                        } else{
+                            //this is for editing one
+                            codeSystem = code.codeSystem.value || code.codeSystem;
+                            codeValue = code.code;
+                        }
+                        scope.errors = [];
+                        var valid = validatorFactory.validate(codeSystem, codeValue);
+                        if (valid == false) {
+                            scope.errors.push({text: 'invalid', class: 'danger'});
+                        } else {
+                            scope.errors.push({text: 'valid', class: 'success'});
+                        }
+                    } else {
                         if (scope.errors.length < 1) {
-                            scope.errors.push({message: 'no code system yet', class: 'warning'});
+                            scope.errors.push({text: 'no code system yet', class: 'warning'});
                         }
                     }
+                    return scope.errors;
                 }
             }
         };
@@ -1031,14 +1047,12 @@
                 type: '@'
             },
             link: function(scope, element){
-                console.log(scope);
                 if(scope.parent.substanceClass ==='polymer'){
                     if(_.has(scope.parent.polymer.idealizedStructure)){
                         _.set(scope.parent, 'structure',scope.parent.polymer.idealizedStructure );
                     }else{
                         _.set(scope.parent, 'structure',scope.parent.polymer.displayStructure );
                     }
-                    console.log(scope);
                 }else{
                     scope.structure = scope.parent.structure;
                 }
@@ -1086,7 +1100,6 @@
             templateUrl: baseurl + "assets/templates/forms/name-form.html",
             link: function(scope){
                 scope.stage=true;
-                console.log(scope);
                 scope.duplicateCheck = function(name) {
                     var result = angular.element(document.getElementsByClassName('nameForm'));
                     result.empty();
@@ -1108,7 +1121,6 @@
                             return duplicate;
                         });
                     if (!_.isUndefined(name) && name!=="") {
-                        console.log("opening");
                         spinnerService.show('nameSpinner');
                         var template;
                         $q.all([resolve, duplicate]).then(function(results) {
@@ -1146,7 +1158,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/name-org-form.html",
             link:function (scope){
-console.log(scope);
                 scope.validate = function(){
                     if (_.has(scope.referenceobj, 'nameOrgs')) {
                         var temp = _.get(scope.referenceobj, 'nameOrgs');
@@ -2151,6 +2162,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function (scope, element, attrs) {
                 scope.validate = function () {
+                    console.log(scope);
                     if (!scope.$parent.validate) {
                         if (scope.$parent.$parent.validate(scope.obj, scope.form, scope.path)) {
                             scope.reset();

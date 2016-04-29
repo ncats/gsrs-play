@@ -65,7 +65,6 @@
             //not currently used, but may become useful
             searchTags: function (domain, query) {
                 return CV.getCV(domain).then(function (data) {
-//                    console.log(data);
                     return _.chain(data.data.content[0].terms)
                         .filter(function (x) {
                             return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
@@ -76,7 +75,6 @@
             },
 
             updateCV: function (domainobj) {
-                console.log(domainobj);
                 var url;
                 var promise;
                 if (domainobj.id) {
@@ -94,7 +92,6 @@
                             'Content-Type': 'application/json'
                         }
                     }).success(function (response) {
-                        console.log(response);
                         alert("new domain added");
                         return response;
                     });
@@ -104,15 +101,12 @@
 
             addCV: function (field, newcv) {
                 CV.getCV(field).then(function (response) {
-                    console.log(response);
                     response.data.content[0].terms.push(newcv);
-                    console.log(response);
                     $http.put(baseurl + 'api/v1/vocabularies', response.data.content[0], {
                         headers: {
                             'Content-Type': 'application/json'
                         }
                     }).success(function (data) {
-                        console.log(data);
                         //  alert('update was performed.');
                     });
                 });
@@ -120,11 +114,9 @@
 
             addTerms: function (cv) {
                 CV.getCV(cv.domain).then(function (response) {
-                    console.log(response);
                     var t2 = response.data.content[0].terms.concat(cv.terms);
                     var cv2 = response.data.content[0];
                     cv2.terms = t2;
-                    console.log(cv2);
                     $http.put(baseurl + 'api/v1/vocabularies', cv2, {
                         headers: {
                             'Content-Type': 'application/json'
@@ -137,8 +129,6 @@
             },
 
             addDomain: function (cv) {
-                console.log("adding domain");
-                console.log(cv);
                 var c = {
                     domain: cv.domain
                     //terms: []
@@ -148,7 +138,6 @@
                         'Content-Type': 'application/json'
                     }
                 }).success(function (response) {
-                    console.log(response);
                     alert("new domain added");
                     return response;
                 });
@@ -161,7 +150,6 @@
         var url = baseurl + "api/v1/substances";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-        	console.log("getting substance:" + name);
             return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
@@ -295,8 +283,7 @@
                 values: '=?',
                 filter: '=',
                 filterField:'@filter',
-                filterFunction: '&?',
-                parent: '='
+                filterFunction: '&?'
             },
             link: function (scope, element, attrs) {
                 var other = [{
@@ -305,6 +292,9 @@
                     filter: " = ",
                     selected: false
             }];
+                if(_.isUndefined(scope.obj)){
+                  //  scope.obj={};
+                }
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -351,37 +341,38 @@
     };
 });
 
-    ginasFormElements.directive('dropdownViewEdit', function (CVFields) {
+    ginasFormElements.directive('dropdownViewEdit', function (CVFields, filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/dropdown-view-edit.html",
             replace: true,
             scope: {
                 formname: '=',
+                cv:'@',
                 obj: '=',
                 field: '@',
                 label: '@',
-                values: '=?'
+                values: '=?',
+                filter: '=',
+                filterField:'@filter',
+                filterFunction: '&?'
             },
             link: function (scope, element, attrs) {
-                if (attrs.cv) {
-                    CVFields.getCV(attrs.cv).then(function (response) {
+                if (scope.cv) {
+                    CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+
+                        if (response.data.content[0].filterable == true) {
+                            filterService._register(scope, true);
+                        }
+
                         if (response.data.content[0].editable == true) {
-                            scope.values.push(
-                                {
-                                    display: "Other",
-                                    value: 'Other',
-                                    filter: " = ",
-                                    selected: false
-                                });
+                            scope.values =  _.union(scope.values, other);
                         }
                     });
                 }
 
                 scope.makeNewCV = function () {
-                    console.log(scope);
-                    console.log(scope.obj[scope.field].new);
                     var exists = _.find(scope.values, function (cv) {
                         return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj[scope.field].new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj[scope.field].new));
                     });
@@ -391,7 +382,6 @@
                         cv.value = scope.obj[scope.field].new;
                         scope.values.push(cv);
                         CVFields.updateCV(attrs.cv, cv);
-                        console.log(cv);
                         scope.obj[scope.field] = cv;
                     } else {
                         alert(scope.obj[scope.field].new + ' exists in the cv');
@@ -626,23 +616,22 @@
                 obj: '=ngModel',
                 field: '@',
                 label: '@',
-                form: '@',
-                filter: '=',
-              //  filterFunction: '&',
-                validator: '&'
+                form: '=?',
+                filter: '=?',
+                filterFunction: '&?',
+                validator: '&?'
             },
             link: function (scope, elem, attrs, ngModel) {
+
                 scope.validatorFunction = function () {
-                    console.log(scope);
-                    scope.validator({model: scope.obj});
+                    scope.errorMessages = scope.validator({model:scope.obj});
                 };
 
-                if (scope.filter){
+                if (scope.filter &&!_.isEmpty(scope.filter)){
                     var filter = scope.filter;
-                    console.lof(filter);
                     scope.$watch('filter', function (newValue) {
                         if(!_.isUndefined(newValue)) {
-                         scope.validator({model:scope.obj});
+                         scope.errorMessages = scope.validator({model:scope.obj});
                         }
                     });
                 }
@@ -658,13 +647,29 @@
             scope: {
                 obj: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                form: '=?',
+                filter: '=',
+                filterFunction: '&',
+                validator: '&'
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.edit = false;
                 scope.editing = function () {
                     scope.edit = !scope.edit;
                 };
+                scope.validatorFunction = function () {
+                    scope.errorMessages = scope.validator({model:scope.obj});
+                };
+
+                if (scope.filter){
+                    var filter = scope.filter;
+                    scope.$watch('filter', function (newValue) {
+                        if(!_.isUndefined(newValue)) {
+                            scope.errorMessages = scope.validator({model:scope.obj});
+                        }
+                    });
+                }
             }
         };
     });
@@ -713,14 +718,12 @@
             },
             templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if (scope.data.content) {
                     scope.subs = scope.data.content;
                 } else {
                     scope.subs = scope.data;
                 }
                 scope.select = function (selected) {
-                    console.log(selected);
                     if(scope.parent) {
                         var reference = {
                             uuid: UUID.newID(),
@@ -730,7 +733,6 @@
                             documentDate: moment()._d
                         };
                         if (scope.obj) {
-                            console.log(scope.obj);
                             if (_.isUndefined(scope.obj.references)) {
                                 _.set(scope.obj, 'references', []);
                             }
@@ -743,12 +745,10 @@
                     }
 
                     if (!_.isUndefined(scope.parent.structure)) {
-                        console.log("adding to structure");
                         if (_.isUndefined(scope.parent.structure.references)) {
                             _.set(scope.parent.structure, 'references', []);
                         }
                         scope.parent.structure.references.push(reference.uuid);
-                        console.log(scope);
                     }
 
                     if (scope.format == "subref") {
@@ -809,21 +809,17 @@
             link: function (scope, element, attrs) {
 
                 scope.createSubref = function (selectedItem) {
-                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
-                    console.log(temp);
                     scope.subref = angular.copy(temp);
-                    console.log(scope);
 
                 };
 
                 scope.loadSubstances = function ($query) {
                     var results = nameFinder.search($query);
-                    console.log(results);
                     return results;
                 };
             }
@@ -841,7 +837,6 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.loadSubstances = function ($query) {
                     return nameFinder.search($query);
                 };
@@ -880,7 +875,6 @@
                 scope.make = function () {
                     if (_.isUndefined(scope.data)) {
                         download.fetch().then(function (data) {
-                            console.log(data);
                             json = JSON.stringify(data.data);
                             var b = new Blob([json], {type: "application/json"});
                             scope.url = URL.createObjectURL(b);

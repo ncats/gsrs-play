@@ -1,20 +1,57 @@
 angular.module('filterListener', [])
     .factory('filterService', function (CVFields) {
         return {
-            _register: function (scope) {
+            //this covers setting a variable based off of the codeSystemVocabularyTerm class
+            _registerSystemCategoryFilter: function(scope, edit) {
+                scope.$watch('filter', function (newValue) {
+                    if (!_.isUndefined(newValue)) {
+                        var obj = {};
+                        if (!_.isUndefined(newValue.systemCategory)) {
+                            CVFields.searchTags(scope.cv, newValue.systemCategory).then(function (response) {
+                                obj = response[0];
+                                if (edit) {
+                                    scope.obj[scope.field] = obj;
+                                } else {
+                                    scope.obj = obj;
+                                }
+                            });
+                        }
+                    }
+                });
+            },
+
+            _registerText: function(scope){
+                console.log("registering a filter on a text field");
                 var filter = scope.filter;
                 scope.$watch('filter', function (newValue) {
                     if (!_.isUndefined(newValue)) {
                         if (scope.filterFunction) {
+                            scope.filterFunction({model: newValue});
+                        }
+                    }
+                });
+            },
+
+            _register: function (scope, edit) {
+                if (scope.field == "$$systemCategory") {
+                    this._registerSystemCategoryFilter(scope, edit);
+                }
+                var filter = scope.filter;
+                scope.$watch('filter', function (newValue) {
+                    if (!_.isUndefined(newValue)) {
+                        var obj = {};
+                        //this returns the object to be filtered by the form
+                        if (scope.filterFunction) {
                             var cv = scope.filterFunction({type: newValue});
                             CVFields.getCV(cv).then(function (response) {
-                                scope.obj = [];
+                                //obj = [];
                                 scope.values = response.data.content[0].terms;
                                 if (scope.values.length == 1) {
-                                    scope.obj = scope.values[0];
+                                    obj = scope.values[0];
                                 }
                             });
                         } else {
+                            //this filters within the VocabularyTerm object
                             CVFields.getCV(scope.cv).then(function (response) {
                                 var filtered = [];
                                 var cv = response.data.content[0].terms;
@@ -33,34 +70,26 @@ angular.module('filterListener', [])
                                 if (filtered.length > 0) {
                                     scope.values = filtered;
                                 } else {
-                                    scope.obj = {};
+                                    // obj = {};
                                     if (response.data.content[0].editable == true) {
                                         cv = _.union(cv, other);
                                     }
                                     scope.values = cv;
                                 }
                                 if (scope.values.length == 1) {
-                                    scope.obj = scope.values[0];
+                                    obj = scope.values[0];
                                 }
                             });
                         }
-
-                    }
-                });
-            },
-
-            _registerText: function(scope){
-                console.log("registering a filter on a text field");
-                var filter = scope.filter;
-                scope.$watch('filter', function (newValue) {
-                    if (!_.isUndefined(newValue)) {
-                        if (scope.filterFunction) {
-                            console.log(newValue);
-                            scope.filterFunction({model: newValue});
+                        if(edit){
+                            scope.obj[scope.field]= obj;
+                        }else{
+                            scope.obj = obj;
                         }
                     }
                 });
             },
+
             _unregister: function (field) {
                 if (filters.hasOwnProperty(field)) {
                     delete filters[field];

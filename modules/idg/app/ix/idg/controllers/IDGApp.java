@@ -61,7 +61,7 @@ public class IDGApp extends App implements Commons {
     }
 
     static class IDGSearchResultProcessor
-        extends SearchResultProcessor<StructureIndexer.Result> {
+        extends SearchResultProcessor<StructureIndexer.Result, Ligand> {
         final public Set<Long> processed = new HashSet<Long>();
         int count;
 
@@ -69,7 +69,7 @@ public class IDGApp extends App implements Commons {
         }
 
         @Override
-        protected Object instrument (StructureIndexer.Result r)
+        protected Ligand instrument (StructureIndexer.Result r)
             throws Exception {
             List<Ligand> ligands = LigandFactory.finder
                 .where(Expr.and(Expr.eq("links.refid", r.getId()),
@@ -77,7 +77,7 @@ public class IDGApp extends App implements Commons {
                                         Structure.class.getName())))
                 .findList();
             if (!ligands.isEmpty()) {
-                Ligand lig = ligands.iterator().next();
+                Ligand lig = ligands.get(0);
                 //Logger.debug("matched ligand: "+ligand.id+" "+r.getId());
                 if (!processed.contains(lig.id)) {
                     processed.add(lig.id);
@@ -103,12 +103,12 @@ public class IDGApp extends App implements Commons {
     }
 
     public static class IDGSequenceResultProcessor
-        extends SearchResultProcessor<SequenceIndexer.Result> {
+        extends SearchResultProcessor<SequenceIndexer.Result, Target> {
         
         IDGSequenceResultProcessor() {
         }
             
-        protected Object instrument(SequenceIndexer.Result r)
+        protected Target instrument(SequenceIndexer.Result r)
             throws Exception {
             List<Target> targets = TargetFactory.finder.where
                 (Expr.and(Expr.eq("properties.label", UNIPROT_SEQUENCE),
@@ -117,7 +117,7 @@ public class IDGApp extends App implements Commons {
             
             Target target = null;
             if (!targets.isEmpty()) {
-                target = targets.iterator().next();
+                target = targets.get(0);
                 // cache this alignment for show later
                 Logger.debug("alignment "+getContext().getId()+" => "+r.id);
                 IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
@@ -2829,9 +2829,9 @@ public class IDGApp extends App implements Commons {
         try {
             SearchResultContext context = batch
                 (q, rows, new PayloadTokenizer (),
-                 new SearchResultProcessor<String> () {
+                 new SearchResultProcessor<String, Target> () {
                         Map<Long, Target> found = new HashMap<Long, Target>();
-                        protected Object instrument (String token)
+                        protected Target instrument (String token)
                             throws Exception {
                             // assume for now we're only batch search on
                             // targets.. will need to generalize it to other
@@ -2840,7 +2840,7 @@ public class IDGApp extends App implements Commons {
                                 TargetFactory.finder.where().eq
                                 ("synonyms.term", token).findList();
                             if (!targets.isEmpty()) {
-                                Target t = targets.iterator().next();
+                                Target t = targets.get(0);
                                 if (!found.containsKey(t.id)) {
                                     found.put(t.id, t);
                                     return t;

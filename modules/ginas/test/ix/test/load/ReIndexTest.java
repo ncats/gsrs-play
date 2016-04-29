@@ -53,7 +53,7 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
                 SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
                 assertEquals(17, results.numberOfResults());
-                assertFacetsMatch(createExpectedRep90Facets(), results);
+                TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
             }
 
     }

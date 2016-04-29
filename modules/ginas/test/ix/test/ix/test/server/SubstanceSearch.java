@@ -101,14 +101,12 @@ public class SubstanceSearch {
                 firstPage = htmlPage;
             }
             page++;
-            System.out.println("Got:" + temp.size());
-            
+
             Matcher m=TOTAL_PATTERN.matcher(htmlPage.asXml());
             String total = null;
             if(m.find()){
             	total=m.group(1);
-            	System.out.println("Total reported as:" + total + " on page " + (page-1));
-            	//System.out.println("from " + m.group(0));
+
             }
             
             //we check the return value of the add() call
@@ -118,7 +116,6 @@ public class SubstanceSearch {
             //records (so add() will return false)
             //which will break us out of the loop.
         }while(substances.addAll(temp));
-        System.out.println("Finished with:" + substances.size());
         
         
         

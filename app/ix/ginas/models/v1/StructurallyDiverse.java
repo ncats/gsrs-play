@@ -82,4 +82,9 @@ public class StructurallyDiverse extends GinasCommonSubData {
         }
         return ret;
     }
+    @PreUpdate
+	public void updateImmutables(){
+		super.updateImmutables();
+		this.part= new EmbeddedKeywordList(this.part);
+	}
 }

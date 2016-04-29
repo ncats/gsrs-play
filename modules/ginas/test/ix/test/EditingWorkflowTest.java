@@ -452,7 +452,23 @@ public class EditingWorkflowTest {
            }
    	}
     
-    //This test, however, passes. It also checks for the new access group
+    @Test
+   	public void testAddLanguageToExistingProtein() throws Exception {
+        try(RestSession session = ts.newRestSession(fakeUser1)) {
+               SubstanceAPI api = new SubstanceAPI(session);
+               JsonNode entered = parseJsonFile("test/testJSON/toedit.json");
+               
+               String uuid = entered.get("uuid").asText();
+               ensurePass(api.submitSubstance(entered));
+               System.out.println("about to add reference");
+               testAddLanguageNameServer(api, uuid);
+           }
+   	}
+    
+    
+    
+    
+    
     @Test
    	public void testAddAccessGroupToNewProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
@@ -885,12 +901,49 @@ public class EditingWorkflowTest {
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/names/0/references/-", ref).build();
     	
     	System.out.println("updating...");
-		api.updateSubstanceJson(updated);
+		JsonNode flashUpdate=api.updateSubstanceJson(updated);
 		System.out.println("updated");
 		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
 		
-		System.out.println(updated.at("/names/0/references/1"));
-		System.out.println(updateFetched.at("/names/0/references/1"));
+		
+		System.out.println("u:"+updated.at("/names/0/references/1"));
+		
+		System.out.println("fu:"+flashUpdate.at("/names/0/references/1"));
+		System.out.println("uf:"+updateFetched.at("/names/0/references/1"));
+		
+		System.out.println(updated.at("/notes").toString());
+		System.out.println(updateFetched.at("/notes").toString());
+		
+		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+				
+								.replace("/version")
+								.replace("/lastEdited")
+								.replace("/names/0/lastEdited")
+								
+								
+								.build();
+		
+		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
+    public JsonNode testAddLanguageNameServer(SubstanceAPI api, String uuid){
+    	
+    	JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
+    
+    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/names/0/languages/-", "sp").build();
+    	
+    	System.out.println("updating... language");
+		JsonNode flashUpdate=api.updateSubstanceJson(updated);
+		System.out.println("updated ");
+		JsonNode updateFetched = api.fetchSubstanceJsonByUuid(uuid);
+		
+		
+		System.out.println("u:"+updated.at("/names/0/languages/1"));
+		
+		System.out.println("fu:"+flashUpdate.at("/names/0/languages/1"));
+		System.out.println("uf:"+updateFetched.at("/names/0/languages/1"));
 		
 		System.out.println(updated.at("/notes").toString());
 		System.out.println(updateFetched.at("/notes").toString());

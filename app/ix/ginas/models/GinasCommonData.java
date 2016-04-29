@@ -41,7 +41,7 @@ import ix.utils.Global;
 import ix.utils.Util;
 
 @MappedSuperclass
-public class GinasCommonData extends BaseModel implements GinasAccessControlled,ForceUpdatableModel{
+public class GinasCommonData extends BaseModel implements GinasAccessControlled, ForceUpdatableModel{
     static public final String REFERENCE = "GInAS Reference";
     static public final String TAG = "GInAS Tag";
 	public static final String LANGUAGE = "GInAS Language";
@@ -204,6 +204,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     }
     
     
+    
     @PrePersist
     public void beforeCreate () {
         
@@ -248,7 +249,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
         	this.uuid=UUID.randomUUID();
         }
         //if(this instanceof Subunit)
-        //System.out.println("saving:" + this.getClass() + "\t" + this.uuid);
         
     }
     

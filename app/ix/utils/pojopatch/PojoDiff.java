@@ -31,6 +31,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.utils.EntityUtils;
 import ix.utils.Util;
 import play.Logger;
@@ -470,11 +471,15 @@ public class PojoDiff {
     			}
             	
         	}
+        	
         	//System.out.println("============");
+        	
         	Stack<Object> changeStack = new Stack<Object>();
+        	
         	for(Object o:changedContainers){
         		changeStack.push(o);
         	}
+        	
         	return changeStack;
 	}
 	private static class TypeRegistry{
@@ -487,6 +492,28 @@ public class PojoDiff {
 			getters=getGetters(cls);
 			setters=getSetters(cls);
 		}
+		
+		public Setter getSetter(String prop){
+			final Setter oset=setters.get(prop);
+			return oset;
+//			
+//			return new Setter(){
+//
+//				@Override
+//				public Object set(Object instance, Object set) {
+//					if(set != null && set instanceof EmbeddedKeywordList){
+//						System.out.println("###############Changing an embedded kwl");
+//						set = new EmbeddedKeywordList((EmbeddedKeywordList)set);
+//					}
+//					return oset.set(instance, set);
+//				}
+//
+//				@Override
+//				public boolean isIgnored() {return false;}
+//				
+//			};
+		}
+		
 		
 		public static Map<String,Getter> getGetters(Class cls){
 			// You may wonder why this is concurrent. That's because it's
@@ -685,7 +712,6 @@ public class PojoDiff {
 			public boolean isIgnored();
 		}
 		public static interface Setter{
-			
 			public Object set(Object instance, Object set);
 			public boolean isIgnored();
 		}
@@ -729,6 +755,7 @@ public class PojoDiff {
 					m.invoke(instance, set);
 					return null;
 				}catch(Exception e){
+					e.getCause().printStackTrace();
 					System.err.println(instance.getClass() + " set to:" + set + " using " + m);
 					System.err.println(set.getClass());
 					throw new IllegalStateException(e);
@@ -955,11 +982,7 @@ public class PojoDiff {
 			if(o instanceof Map){
 				return new TypeRegistry.MapSetter(prop);
 			}
-			if(tr.setters.containsKey(prop)){
-				return tr.setters.get(prop);
-			}
-			
-			return null;
+			return tr.getSetter(prop);
 		}
 		private static TypeRegistry.Setter getRemoverDirect(Object o, final String prop){
 			addClassToRegistry(o.getClass());
@@ -1144,7 +1167,7 @@ public class PojoDiff {
 			
 			//this is the container for that object
 			Object fetched=getObjectAt(src,subPath,visited);
-			
+			visited.add(fetched);
 			
 			//This gets the setter for the object 
 			TypeRegistry.Setter s=getAdderDirect(fetched,lastPath);

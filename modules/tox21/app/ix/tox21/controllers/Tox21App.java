@@ -52,14 +52,14 @@ public class Tox21App extends App {
         Play.application().plugin(StructureProcessorPlugin.class);
 
     static class Tox21SearchResultProcessor
-        extends SearchResultProcessor<StructureIndexer.Result> {
+        extends SearchResultProcessor<StructureIndexer.Result, QCSample> {
         int count;
 
         Tox21SearchResultProcessor () throws IOException {
         }
 
         @Override
-        protected Object instrument (StructureIndexer.Result r)
+        protected QCSample instrument (StructureIndexer.Result r)
             throws Exception {
             List<QCSample> samples = Tox21Factory.finder
                 .where().eq("structure.id", r.getId()).findList();
@@ -78,7 +78,7 @@ public class Tox21App extends App {
                     IxCache.set("AtomMaps/"+getContext().getId()+"/"
                                 +r.getId(), amap);
                 }
-                return samples.iterator().next();
+                return samples.get(0);
             }
             
             return null;

@@ -2,9 +2,15 @@
         <label id="{{::field}}-label" class="text-capitalize">{{label || field}}</label>
     <input type="text" class="form-control" ng-model= obj ng-change="validatorFunction()" title="{{::field}}" id="{{::field}}" placeholder = "{{label || field}}"
            name="{{::field}}" aria-labelledby="{{::field}}-label">
-    		<span style="color:red" ng-repeat="err in errors" >
-			{{err}}
-		</span>
+<!--
+	<ng-messages for="form[name].$error" ng-if="form.name.$touched">
+-->
+		<div ng-repeat="errorMessage in errorMessages">
+			<!-- use ng-message-exp for a message whose key is given by an expression -->
+			<!--<div ng-message-exp="errorMessage.class" class="errorMessage.class">{{ errorMessage.text }}</div>-->
+			<div ng-class="errorMessage.class">{{ errorMessage.text }}</div>
+		</div>
+	<!--</ng-messages>-->
 </div>
 
 
