@@ -755,6 +755,7 @@ public class PojoDiff {
 					m.invoke(instance, set);
 					return null;
 				}catch(Exception e){
+					e.getCause().printStackTrace();
 					System.err.println(instance.getClass() + " set to:" + set + " using " + m);
 					System.err.println(set.getClass());
 					throw new IllegalStateException(e);

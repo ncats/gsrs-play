@@ -18,9 +18,7 @@ public class EmbeddedKeywordList implements List<Keyword>{
 
 	public EmbeddedKeywordList(Collection<Keyword> col){
 		keywords= new ArrayList<Keyword>();
-		for(Keyword k:col){
-			this.add(k);
-		}
+		this.addAll(col);
 	}
 	
 	public EmbeddedKeywordList(){
