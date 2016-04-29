@@ -17652,6 +17652,34 @@
         "hidden": false,
         "selected": false,
         "_namespace": null
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1460555146971,
+        "deprecated": false,
+        "value": "MOL_WEIGHT:NUMBER AVERAGE",
+        "display": "MOL_WEIGHT:NUMBER AVERAGE",
+        "description": null,
+        "origin": null,
+        "filters": null,
+        "hidden": false,
+        "selected": false,
+        "_namespace": null
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1460555146971,
+        "deprecated": false,
+        "value": "MOL_WEIGHT:WEIGHT AVERAGE",
+        "display": "MOL_WEIGHT:WEIGHT AVERAGE",
+        "description": null,
+        "origin": null,
+        "filters": null,
+        "hidden": false,
+        "selected": false,
+        "_namespace": null
       }
     ],
     "fields": [
