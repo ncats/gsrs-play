@@ -6,6 +6,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
+import javax.persistence.PreUpdate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -35,4 +36,11 @@ public class PolymerClassification extends GinasCommonSubData {
     public SubstanceReference parentSubstance;
 
     public PolymerClassification () {}
+    
+    
+    @PreUpdate
+	public void updateImmutables(){
+		super.updateImmutables();
+		this.polymerSubclass= new EmbeddedKeywordList(this.polymerSubclass);
+	}
 }

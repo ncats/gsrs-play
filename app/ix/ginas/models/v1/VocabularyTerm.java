@@ -50,5 +50,9 @@ public class VocabularyTerm extends IxModel{
     public VocabularyTerm(){};
     
     
+    @PreUpdate
+   	public void updateImmutables(){
+   		this.filters= new EmbeddedKeywordList(this.filters);
+   	}
     
 }

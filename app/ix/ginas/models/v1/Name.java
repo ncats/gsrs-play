@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -19,6 +20,7 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -27,8 +29,8 @@ import ix.core.SingleParent;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
-import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.CommonDataElementOfCollection;
+import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
@@ -248,5 +250,12 @@ public class Name extends CommonDataElementOfCollection {
 	}
 	
 	
+	@PreUpdate
+	public void updateImmutables(){
+		super.updateImmutables();
+		this.languages= new EmbeddedKeywordList(this.languages);
+		this.domains= new EmbeddedKeywordList(this.domains);
+		this.nameJurisdiction= new EmbeddedKeywordList(this.nameJurisdiction);
+	}
 	
 }

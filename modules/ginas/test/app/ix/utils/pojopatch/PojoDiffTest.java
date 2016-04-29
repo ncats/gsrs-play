@@ -1,13 +1,12 @@
 package app.ix.utils.pojopatch;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -17,9 +16,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.models.Author;
+import ix.core.models.Keyword;
+import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
-import ix.utils.pojopatch.Change;
+import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
@@ -28,6 +29,8 @@ import ix.utils.pojopatch.PojoPatch;
  */
 public class PojoDiffTest {
 
+    
+    
     private List<UUID> uuids = new ArrayList<>();
     private int uuidIndex=0;
     ObjectMapper mapper = new ObjectMapper();
@@ -196,6 +199,24 @@ public class PojoDiffTest {
 
         JsonMatches(update, prop);
 
+    }
+    
+    @Test 
+    public void EmbedListTest() throws Exception{
+    	Substance s = new Substance();
+    	Name n = new Name();
+    	n.languages.add(new Keyword(null,"sp"));
+    	s.names.add(n);
+    	
+    	Substance s2 = new Substance();
+    	Name n2 = new Name();
+    	s2.names.add(n2);
+    	
+    	PojoPatch<Substance> patch = PojoDiff.getDiff(s, s2);
+
+    	Stack changes =patch.apply(s);
+    	
+    	
     }
 
     @Test

@@ -1,28 +1,29 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.SingleParent;
 import ix.core.models.Indexable;
-import ix.core.models.Principal;
-import ix.core.models.Keyword;
-import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.utils.JSONConstants;
-import ix.ginas.models.*;
+import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity(title = "Reference", isFinal = true)
 @Entity
@@ -83,4 +84,10 @@ public class Reference extends GinasCommonData {
 		r.docType="SYSTEM";
 		return r;
     }
+    
+    @PreUpdate
+   	public void updateImmutables(){
+   		
+   		this.tags= new EmbeddedKeywordList(this.tags);
+   	}
 }
