@@ -1,5 +1,7 @@
 package ix.ginas.utils.validation;
 
+import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +64,7 @@ public class Validation {
     static PayloadPlugin _payload =null;
     public static boolean extractLocators=true;
 	static Config validationConf = null;
+	static boolean requireName = true;
 
     static{
         init();
@@ -69,9 +72,13 @@ public class Validation {
 
     public static void init() {
     	Configuration conf=Play.application().configuration();
-		validationConf = ConfigFactory.load("validation.conf");
+		URL validationUrl = Play.application().classloader().getResource("validation.conf");
+		if(validationUrl != null) {
+			validationConf = ConfigFactory.load("validation.conf");
+			requireName = validationConf.getBoolean("requireNames");
+		}
         _payload = Play.application().plugin(PayloadPlugin.class);
-        extractLocators=			conf.getBoolean("ix.ginas.prepare.extractlocators", true);
+        extractLocators=conf.getBoolean("ix.ginas.prepare.extractlocators", true);
     }
 
     static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
@@ -88,7 +95,6 @@ public class Validation {
 	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
 	        }
 	        if(s.definitionType == SubstanceDefinitionType.PRIMARY){
-				boolean requireName = validationConf.getBoolean("requireNames");
 				if(requireName) {
 					validateNames(s, gpm, strat);
 				}
