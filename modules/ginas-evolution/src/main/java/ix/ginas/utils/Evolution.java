@@ -40,18 +40,20 @@ public class Evolution {
         System.out.println("=============================");
 
         String postSQL=null;    
-        try {
-            File postsqlfile = new File ("conf/sql/post/ginas-oracle.sql");
-            if (postsqlfile.exists()) {
-                postSQL = new Scanner(postsqlfile).useDelimiter("\\Z").next();
-            }
-            else {
-                postSQL = new Scanner
-                    (getClass().getResourceAsStream("ginas-oracle.sql"))
-                    .useDelimiter("\\Z").next();
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+        if(source.equals("default")){
+	        try {
+	            File postsqlfile = new File ("conf/sql/post/ginas-oracle.sql");
+	            if (postsqlfile.exists()) {
+	                postSQL = new Scanner(postsqlfile).useDelimiter("\\Z").next();
+	            }
+	            else {
+	                postSQL = new Scanner
+	                    (getClass().getResourceAsStream("ginas-oracle.sql"))
+	                    .useDelimiter("\\Z").next();
+	            }
+	        }catch(Exception e){
+	            e.printStackTrace();
+	        }
         }
         System.out.println("postSQL:" + postSQL);
         
@@ -309,8 +311,19 @@ public class Evolution {
     
     public static void main (String[] argv) throws Exception {
         String file = System.getProperty("config.file");
+        String evo = System.getProperty("db");
         System.err.println("config.file="+file);
-
-        new Evolution (file, "default");
+        List<String> dbs = new ArrayList<String>();
+        if(evo==null || evo.equals("")){
+        	dbs.add("default");
+        }else{
+        	for(String s:evo.split(",")){
+        		dbs.add(s);
+        	}
+        }
+        
+        for(String db:dbs){
+        	new Evolution (file, db);
+        }
     }
 }

@@ -90,7 +90,7 @@ public class EmbeddedKeywordList implements List<Keyword>{
 	 * 
 	 */
 	public boolean equals(Object o) {
-		System.err.println("Equals method on EmbeddedKeywordList always returns false, to force EBean to think it's a new immutable object");
+		//System.err.println("Equals method on EmbeddedKeywordList always returns false, to force EBean to think it's a new immutable object");
 		//Test for immutable scalar tests
 		return false;
 		
