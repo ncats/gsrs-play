@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import ix.core.util.TimeUtil;
+
 public class Statistics implements Serializable{
 		/**
 		 * 
@@ -58,9 +60,31 @@ public class Statistics implements Serializable{
 			return false;
 		}
 
+		public long getAverageTimeToPersist(){
+			return this.getAverageTimeToPersistMS(TimeUtil.getCurrentTimeMillis());
+		}
+		
+		public long getEstimatedTimeLeft(){
+			long totalDone= totalFailedAndPersisted();
+			long total=1;
+			if(this.totalRecords!=null){
+				total = this.totalRecords.getCount();
+			}
+			
+			long totalRemaining=total-totalDone;
+			long timeSoFar=TimeUtil.getCurrentTimeMillis()-start;
+			
+			double avg=timeSoFar/totalDone;
+			return (long) (totalRemaining*avg);
+			
+		}
 
 		public long getAverageTimeToPersistMS(long end){
-			return (end-start)/recordsPersistedSuccess.get();
+			long totalPersist=recordsPersistedSuccess.get();
+			if(totalPersist==0){
+				totalPersist=1;
+			}
+			return (end-start)/totalPersist;
 		}
 		
 		public void applyChange(CHANGE c){

@@ -43,11 +43,13 @@
                 </div>
                 </div>
             <div class = "col-md-7">
-		<div class = "row">
-			@job.message
-		</div>
+				
                 <div class = "row">
+	                 
                      <div ng-controller="ProgressJobController" ng-init="init(@job.id, @poll, '@job.status')">
+                            <div class = "row">
+								{{message}}
+							</div>
                             <hr/>
                             <h3><em>Progress</em></h3>
                             
@@ -111,9 +113,20 @@
                             
                             </uib-progress>
                             </div>
+                            <div>
+                            Total time running: <code uib-tooltip="{{humanTimeTotal.full}}">{{humanTimeTotal.simple}}</code>
+                            </div>
+                            <div ng-show="!isDone()">
+                            Estimated time left: <code uib-tooltip="{{humanTimeLeft.full}}">{{humanTimeLeft.simple}}</code>
+                            </div>
+                             <div ng-show="!isDone()">
+                            Estimated total time: <code uib-tooltip="{{humanTimeEstimate.full}}">{{humanTimeEstimate.simple}}</code>
+                            </div>
+                            
                             <div class = "col-md-10">
                             {{mess}}
                             </div>
+                            
                             <div class = "col-md-2">
                             <button ng-hide="monitor" type="button" class="btn btn-sm btn-primary" ng-click="refresh(@job.id,true)">Update</button>
                             <button ng-show="monitor" type="button" class="btn btn-sm btn-primary" ng-click="stopMonitor()">Stop Updating</button>
@@ -132,6 +145,7 @@
                         Date ended: <h6>@job._getStoppedAsDate()</h6>
                     </div>
                 </div>
+                
             </div>
         </div>
     </div>

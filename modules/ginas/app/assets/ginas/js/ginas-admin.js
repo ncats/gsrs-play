@@ -10,6 +10,7 @@
         $scope.max = 100;
         $scope.monitor = false;
         $scope.mess = "";
+        $scope.message = "";
         $scope.dynamic = 0;
         $scope.status = "UNKNOWN";
         $scope.stat = {
@@ -17,6 +18,37 @@
             recordsProcessedSuccess: 0,
             recordsExtractedSuccess: 0
         };
+        $scope.isDone= function(){
+        	return $scope.status==="COMPLETE";
+        	
+        }
+        $scope.humanTimeLeft= {};
+        $scope.humanTimeTotal= {};
+        $scope.humanTimeEstimate = {};
+        $scope.toFullHumanTime= function(v){
+        	
+        	var ret="";
+        	if(v.years()>0){
+        		ret+=v.years() + " years ";
+        	}
+        	if(v.months()>0 || ret!== ""){
+        		ret+=v.months() + " months ";
+        	}
+        	if(v.days()>0 || ret!== ""){
+        		ret+=v.days() + " days ";
+        	}
+        	if(v.hours()>0  || ret!== ""){
+        		ret+=v.hours() + " hours ";
+        	}
+        	if(v.minutes()>0  || ret!== ""){
+        		ret+=v.minutes() + " minutes ";
+        	}
+        	if(v.seconds()>0  || ret!== ""){
+        		ret+=v.seconds() + " seconds";
+        	}
+        	return ret;
+        };
+        
         $scope.init = function (id, pollin, status) {
             $scope.status = status;
             $scope.details = pollin;
@@ -27,10 +59,10 @@
             $scope.monitor = pollin;
             var responsePromise = $http.get(baseurl + "api/v1/jobs/" + id + "/");
             responsePromise.success(function (data, status, headers, config) {
-                //$scope.myData.fromServer = data.title;
-                if ($scope.status != data.status) {
-                    //alert($scope.status + "!=" + data.status);
-                    //location.reload();
+            	//$scope.myData.fromServer = data.title;
+                if ($scope.status !== data.status && $scope.status!=="UNKNOWN") {
+                	location.reload();
+                	return;
                 }
                 if (data.status == "RUNNING" || data.status == "PENDING") {
                     $scope.mclass = "progress-striped active";
@@ -43,17 +75,35 @@
                         $scope.stopnext = true;
                     }
                 }
-                $scope.max = data.statistics.totalRecords.count;
-                $scope.dynamic = data.statistics.recordsPersistedSuccess +
-                    data.statistics.recordsPersistedFailed +
-                    data.statistics.recordsProcessedFailed +
-                    data.statistics.recordsExtractedFailed;
-                $scope.max = data.statistics.totalRecords.count;
-                $scope.stat = data.statistics;
-                $scope.allExtracted = $scope.max;
-                $scope.allPersisted = $scope.max;
-                $scope.allProcessed = $scope.max;
-
+                if(data.statistics){
+                	$scope.message = data.message;
+	                $scope.stat = data.statistics;
+	                $scope.max = data.statistics.totalRecords.count;
+	                $scope.dynamic = data.statistics.recordsPersistedSuccess +
+	                    data.statistics.recordsPersistedFailed +
+	                    data.statistics.recordsProcessedFailed +
+	                    data.statistics.recordsExtractedFailed;
+	                $scope.max = data.statistics.totalRecords.count;
+	                
+	                $scope.allExtracted = $scope.max;
+	                $scope.allPersisted = $scope.max;
+	                $scope.allProcessed = $scope.max;
+	                var dur=moment.duration($scope.stat.estimatedTimeLeft,"milliseconds");
+	                $scope.humanTimeLeft.simple = dur.humanize();
+	                $scope.humanTimeLeft.full = $scope.toFullHumanTime(dur);
+	                var end=data.stop;
+	                if(!end){
+	                	end=new Date()-0;
+	                }
+	                
+	                dur=moment.duration(end-data.start,"milliseconds");
+	                $scope.humanTimeTotal.simple = dur.humanize();
+	                $scope.humanTimeTotal.full = $scope.toFullHumanTime(dur);
+	                
+	                dur=moment.duration((end-data.start)+$scope.stat.estimatedTimeLeft,"milliseconds");
+	                $scope.humanTimeEstimate.simple = dur.humanize();
+	                $scope.humanTimeEstimate.full = $scope.toFullHumanTime(dur);
+                }
                 if ($scope.monitor) {
                     $scope.monitor = true;
                     $scope.mess = "Polling ... " + data.status;

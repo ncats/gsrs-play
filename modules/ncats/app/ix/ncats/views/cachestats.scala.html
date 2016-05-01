@@ -67,6 +67,10 @@
 	       <td>Max Memory</td>
 	       <td>@{"%.2f Mb".format(rt.maxMemory/(1024.0*1024.0))}</td>
 	     </tr>
+	     <tr>
+	       <td>JRE Version</td>
+	       <td>@{System.getProperty("java.version")}</td>
+	     </tr>
 	   </table>
 	  }
 	</div>

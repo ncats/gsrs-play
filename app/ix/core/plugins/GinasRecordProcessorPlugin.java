@@ -254,18 +254,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
     	Statistics stat = getStatisticsForJob(job);
         if (stat != null) {
             if (stat._isDone()) {
-            	//Does commenting this out actually make tests fail?
-            	//System.out.println("I think it's done, with:" + stat.totalRecords.getCount() + " but " + stat.recordsExtractedSuccess);
             	updateJob(job,stat);
             }
         }
     }
     public synchronized static void updateJob(ProcessingJob job,Statistics stat) {
-    	Logger.debug("I think it's done:" + stat.toString());
-        ObjectMapper om = new ObjectMapper();
+    	ObjectMapper om = new ObjectMapper();
         job.stop = TimeUtil.getCurrentTimeMillis();
         job.status = ProcessingJob.Status.COMPLETE;
         job.statistics = om.valueToTree(stat).toString();
+        job.message="Job complete";
         PersistModel pm = PersistModel.Update(job);
         pm.persists();
         TimeProfiler.stopGlobalTime("full submit");
@@ -351,66 +349,65 @@ public class GinasRecordProcessorPlugin extends Plugin {
         final PersistRecordWorkerFactory factory = getPersistRecordWorkerFactory();
 
         executorServices.add(executorService);
-        new Thread() {
-            @Override
-            public void run() {
+		new Thread() {
+			@Override
+			public void run() {
 
+				try (RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
 
+					Estimate es = extractorInstance.estimateRecordCount(pp.payload);
+					{
+						Logger.debug("Counted records");
+						Statistics stat = getStatisticsForJob(pp.key);
+						if (stat == null) {
+							stat = new Statistics();
+						}
+						stat.totalRecords = es;
+						stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
+						storeStatisticsForJob(pp.key, stat);
+						Logger.debug(stat.toString());
+					}
+					job.status = ProcessingJob.Status.RUNNING;
+					job.payload = pp.payload;
+					job.message="Loading data";
+					job.save();
+					
+					Object record;
+					do {
+						try {
+							record = extractorInstance.getNextRecord();
+							final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
 
+							if (record != null) {
 
+								executorService.submit(factory.newWorkerFor(prg));
 
-                try(RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
+							}
+						} catch (Exception e) {
+							Statistics stat = getStatisticsForJob(pp.key);
+							stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
+							storeStatisticsForJob(pp.key, stat);
+							Global.ExtractFailLogger
+									.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
+							// hack to keep iterator going...
+							record = new Object();
+						}
+					} while (record != null);
+					executorService.shutdown();
 
-            Estimate es= extractorInstance.estimateRecordCount(pp.payload);
-            {
-                Logger.debug("Counted records");
-                Statistics stat = getStatisticsForJob(pp.key);
-                if(stat==null){
-                    stat = new Statistics();
-                }
-                stat.totalRecords=es;
-                stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
-                storeStatisticsForJob(pp.key, stat);
-                Logger.debug(stat.toString());
-            }
-            job.status = ProcessingJob.Status.RUNNING;
-            job.payload = pp.payload;
-                Object record;
-                do {
-                    try {
-                        record = extractorInstance.getNextRecord();
-                        final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
+				}
+				try {
+					executorService.awaitTermination(2, TimeUnit.DAYS);
+					Statistics stat = getStatisticsForJob(pp.key);
+					stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
+					executorServices.remove(executorService);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
 
-                        if (record != null) {
-
-                            executorService.submit(factory.newWorkerFor(prg));
-
-                        }
-                    } catch (Exception e) {
-                        Statistics stat = getStatisticsForJob(pp.key);
-                        stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
-                        storeStatisticsForJob(pp.key, stat);
-                        Global.ExtractFailLogger.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
-                        //hack to keep iterator going...
-                        record = new Object();
-                    }
-                } while (record != null);
-                executorService.shutdown();
-
-
-        }
-        try {
-            executorService.awaitTermination(2, TimeUnit.DAYS);
-            Statistics stat = getStatisticsForJob(pp.key);
-            stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
-            executorServices.remove(executorService);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        job.save();
-
-            }
-        }.start();
+			}
+		}.start();
 
 
         return pp.key;

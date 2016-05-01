@@ -32,6 +32,7 @@ import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Statistics;
+import ix.core.util.TimeUtil;
 import ix.utils.Global;
 
 @Entity
@@ -57,6 +58,7 @@ public class ProcessingJob extends LongBaseModel {
     
     @Column(name="job_start")
     public Long start;
+    
     @Column(name="job_stop")
     public Long stop;
 
@@ -157,6 +159,13 @@ public class ProcessingJob extends LongBaseModel {
     	return new Date(stop);
     }
     
+    @JsonIgnore
+    public Long _getDurationAsMs(){
+    	if(stop!=null){
+    		return stop-start;
+    	}
+    	return TimeUtil.getCurrentTimeMillis()-start;
+    }
     
     public String getName(){
     	if(payload!=null){
