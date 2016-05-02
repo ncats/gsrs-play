@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import controllers.Default$;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
@@ -30,6 +31,7 @@ import net.sf.ehcache.CacheManager;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.w3c.dom.Document;
+import play.api.Application;
 import play.db.ebean.Model;
 import play.libs.ws.WSCookie;
 import play.libs.ws.WSResponse;
@@ -51,6 +53,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
 
+import static play.test.Helpers.fakeApplication;
 import static play.test.Helpers.testServer;
 
 /**
@@ -130,6 +133,9 @@ public class GinasTestServer extends ExternalResource{
    private Model.Finder<Long, Principal> principleFinder;
 
 
+    private Map<String, Object> originalAdditionalConfiguration = new HashMap<>();
+    private Map<String, Object> additionalConfiguration = new HashMap<>();
+    private Map<String, Object> testSpecificAdditionalConfiguration = new HashMap<>();
     private File storage;
 
     public static class User{
@@ -160,8 +166,40 @@ public class GinasTestServer extends ExternalResource{
     public GinasTestServer(){
         this(DEFAULT_PORT);
     }
-    public GinasTestServer(int port){
-       this.port = port;
+
+    /**
+     * Create a new GinasTestServer instance using the default port, with the given additional
+     * default configuration.
+     * @param additionalConfiguration additional config key-value pairs to add
+     *                                to the application config before the server is started.
+     *                                This can be further modified using the modifyConfig methods.
+     */
+    public GinasTestServer( Map<String, Object> additionalConfiguration){
+        this(DEFAULT_PORT, additionalConfiguration);
+    }
+
+    /**
+     * Create a new GinasTestServer instance using the given port.
+     * @param port the port number to use.
+     */
+    public GinasTestServer(int port) {
+        this(port, null);
+    }
+    /**
+     * Create a new GinasTestServer instance using the given port, with the given additional
+     * default configuration.
+     * @param port the port number to use.
+     * @param additionalConfiguration additional config key-value pairs to add
+     *                                to the application config before the server is started.
+     *                                This can be further modified using the modifyConfig methods.
+     */
+    public GinasTestServer(int port, Map<String, Object> additionalConfiguration){
+        this.port = port;
+        if(additionalConfiguration !=null) {
+            this.originalAdditionalConfiguration.putAll(additionalConfiguration);
+            this.additionalConfiguration.putAll(additionalConfiguration);
+        }
+
         defaultBrowserSession = new BrowserSession(port){
             @Override
             protected WSResponse doLogout() {
@@ -354,6 +392,8 @@ public class GinasTestServer extends ExternalResource{
 
     @Override
     protected void before() throws Throwable {
+        testSpecificAdditionalConfiguration.clear();
+
        if(isOracleDB()){
            System.out.println("in the Oracle db loop");
            dropOracleDb();
@@ -489,6 +529,7 @@ public class GinasTestServer extends ExternalResource{
     @Override
     protected void after() {
         stop();
+        additionalConfiguration = new HashMap<>(originalAdditionalConfiguration);
     }
 
     /**
@@ -513,12 +554,20 @@ public class GinasTestServer extends ExternalResource{
         start();
     }
 
+    public Application getApplication(){
+        return ts.application();
+    }
+
     public void start() {
         if(running){
             return;
         }
         running = true;
-        ts = testServer(port);
+
+        Map<String,Object> map = new HashMap<>(additionalConfiguration);
+        map.putAll(testSpecificAdditionalConfiguration);
+
+        ts = new TestServer(port, fakeApplication(map));
         ts.start();
 
         principleFinder =
@@ -527,6 +576,51 @@ public class GinasTestServer extends ExternalResource{
         initializeControllers();
         //we have to wait to create the users until after Play has started.
         createInitialFakeUsers();
+    }
+
+    /**
+     * Remove the given configuration property from the application
+     * config.  This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     * @param key the key to remove
+     * @return this
+     */
+    public GinasTestServer removeConfigProperty(String key){
+        testSpecificAdditionalConfiguration.remove(key);
+        additionalConfiguration.remove(key);
+        return this;
+    }
+
+    /**
+     * Add the given key value pair to the application config.
+     * This change will take affect the next time
+     * the app is Started.  Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * @param key the key to add
+     * @param value the value for this key.
+     * @return this
+     */
+    public GinasTestServer modifyConfig(String key, Object value){
+        testSpecificAdditionalConfiguration.put(key, value);
+        return this;
+    }
+    /**
+     * Add the multiple key value pairs to the application config.
+     * This change will take affect the next time
+     * the app is Started.   Any changes performed to the config
+     * are restored before the next test is run.
+     *
+     * This is the same as calling {@link #modifyConfig(String, Object)}
+     * multiple times, once for each entry in the map.
+     *
+     * @param confData a map of key-value pairs to add to the config.
+     * @return this
+     */
+    public GinasTestServer modifyConfig(Map<String, Object> confData){
+        testSpecificAdditionalConfiguration.putAll(confData);
+        return this;
     }
 
     /**
