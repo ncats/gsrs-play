@@ -51,7 +51,14 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 						vt.display=codeSystem;
 						vt.value=codeSystem;
 						vt.hidden=true;
-						vt.save();
+						
+						//*************************************
+						// This causes problems if done first
+						// may have ramifications elsewhere
+						//*************************************
+						//vt.save();
+						
+						
 						cvv.addTerms(vt);
 						cvv.save();
 					}
