@@ -13,6 +13,7 @@
         $scope.message = "";
         $scope.dynamic = 0;
         $scope.status = "UNKNOWN";
+        $scope.averagePersistRate=0;
         $scope.stat = {
             recordsPersistedSuccess: 0,
             recordsProcessedSuccess: 0,
@@ -94,6 +95,9 @@
 	                var end=data.stop;
 	                if(!end){
 	                	end=new Date()-0;
+	                	$scope.averagePersistRate=1000.0/$scope.stat.averageTimeToPersist;
+	                }else{
+	                	$scope.averagePersistRate=$scope.recordsPersistedSuccess*1000/(end-data.start);
 	                }
 	                
 	                dur=moment.duration(end-data.start,"milliseconds");

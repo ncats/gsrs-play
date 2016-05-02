@@ -116,6 +116,9 @@
                             <div>
                             Total time running: <code uib-tooltip="{{humanTimeTotal.full}}">{{humanTimeTotal.simple}}</code>
                             </div>
+                            <div>
+                            Average Records per second: <code>{{averagePersistRate | number}}</code>
+                            </div>
                             <div ng-show="!isDone()">
                             Estimated time left: <code uib-tooltip="{{humanTimeLeft.full}}">{{humanTimeLeft.simple}}</code>
                             </div>

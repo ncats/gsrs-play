@@ -60,7 +60,7 @@ public class Statistics implements Serializable{
 			return false;
 		}
 
-		public long getAverageTimeToPersist(){
+		public double getAverageTimeToPersist(){
 			return this.getAverageTimeToPersistMS(TimeUtil.getCurrentTimeMillis());
 		}
 		
@@ -76,15 +76,14 @@ public class Statistics implements Serializable{
 			
 			double avg=timeSoFar/totalDone;
 			return (long) (totalRemaining*avg);
-			
 		}
 
-		public long getAverageTimeToPersistMS(long end){
+		public double getAverageTimeToPersistMS(long end){
 			long totalPersist=recordsPersistedSuccess.get();
 			if(totalPersist==0){
 				totalPersist=1;
 			}
-			return (end-start)/totalPersist;
+			return (end-start)/(totalPersist + 0.0);
 		}
 		
 		public void applyChange(CHANGE c){
