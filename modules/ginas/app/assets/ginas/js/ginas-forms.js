@@ -925,7 +925,6 @@
                     terms:[]
                 };*/
                 scope.cv={
-                   // dependencyfil
                 };
 
                 scope.getPos = function(item,arr){
@@ -943,8 +942,11 @@
                 scope.loadCVFile = function (file) {
                     var tempValues = [];
                     scope.values=[];
+                    console.log(file);
                         FileReader.readAsText(file, scope).then(function(response){
+                            console.log(response);
                             scope.data = angular.fromJson(response);
+                            console.log(scope);
                             for(var i=0; i<10; i++){
                                 var keys = _.keys(scope.data.substanceNames[i]);
                               tempValues = _.union(keys, tempValues);
@@ -1960,9 +1962,9 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
 
 
                 scope.validate = function () {
-                    scope.saveReference(scope.ref, scope.parent);
-                    scope.ref = {};
-                    scope.ref.apply = true;
+                    scope.saveReference(scope.reference, scope.parent);
+                    scope.reference = {};
+                    scope.reference.apply = true;
                     scope.refForm.$setPristine();
                 };
 

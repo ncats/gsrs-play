@@ -475,7 +475,6 @@
 
             var reader = getReader(deferred, scope);
             reader.readAsText(file, 'UTF-8');
-
             return deferred.promise;
         };
 
