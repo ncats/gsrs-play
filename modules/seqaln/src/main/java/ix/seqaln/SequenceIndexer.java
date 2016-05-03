@@ -288,6 +288,7 @@ public class SequenceIndexer {
     private ExecutorService threadPool;
     private boolean localThreadPool = false;
     private SearcherManager kmerSearchManager;
+    private SearcherManager searchManager;
     
     private AtomicLong lastModified = new AtomicLong (0);
     
@@ -333,6 +334,7 @@ public class SequenceIndexer {
                 (kmerDir, new IndexWriterConfig
                  (LUCENE_VERSION, indexAnalyzer));
             kmerSearchManager = new SearcherManager (kmerWriter, true, null);
+            searchManager = new SearcherManager (indexWriter, true, null);
             _kmerReader = DirectoryReader.open(kmerWriter, true);
             _indexReader = DirectoryReader.open(indexWriter, true);
         }
@@ -340,6 +342,7 @@ public class SequenceIndexer {
             _kmerReader = DirectoryReader.open(kmerDir);
             _indexReader = DirectoryReader.open(indexDir);
             kmerSearchManager = new SearcherManager (kmerDir, null);
+            searchManager = new SearcherManager (indexDir, null);
         }
 
         this.baseDir = dir;
@@ -380,18 +383,22 @@ public class SequenceIndexer {
     
     public File getBasePath () { return baseDir; }
     
-    public long getSize(){
-        if(indexWriter==null) return 0;
+    public long getSize() {
+        if (indexWriter == null)
+            return _indexReader.numDocs();
         try{
-                return indexWriter.numDocs();
-        }catch(AlreadyClosedException e){
-                Logger.trace("Index already closed",e);
-                return 0;
+            return indexWriter.numDocs();
+        } catch(AlreadyClosedException e){
+            Logger.trace("Index already closed",e);
+            return 0;
         }
     }
     
     public void shutdown () {
         try {
+            kmerSearchManager.close();
+            searchManager.close();
+
             if (_kmerReader != null)
                 _kmerReader.close();
             if (_indexReader != null)
@@ -400,6 +407,7 @@ public class SequenceIndexer {
                 indexWriter.close();
             if (kmerWriter != null)
                 kmerWriter.close();
+            
             kmerDir.close();
             indexDir.close();
 
@@ -429,7 +437,6 @@ public class SequenceIndexer {
             doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
             doc.add(new StoredField (FIELD_SEQ, seq.toString()));
             indexWriter.addDocument(doc);
-            
             
             Kmers kmers = Kmers.create(seq);
             for (String kmer : kmers.kmers()) {
@@ -629,22 +636,31 @@ public class SequenceIndexer {
 
     public String getSeq (final String id) {
         try {
-            final IndexSearcher indexer = getIndexSearcher ();
             return getOrElse
-                (getClass().getName()+"/"+FIELD_SEQ+"/"
-                 +id, new Callable<String> () {
-                         public String call () throws Exception {
-                             //System.err.println("Cache missed: "+id);
-                             TopDocs docs = indexer.search
+                (getClass().getName()+"/"+FIELD_SEQ+"/"+id,
+                 new Callable<String> () {
+                     public String call () throws Exception {
+                         searchManager.maybeRefresh();
+                         
+                         IndexSearcher searcher = searchManager.acquire();
+                         String seq = null;
+                         try {
+                             TopDocs docs = searcher.search
                                  (new TermQuery (new Term (FIELD_ID, id)), 1);
                              if (docs.totalHits > 0) {
-                                 Document d = indexer.doc
+                                 Document d = searcher.doc
                                      (docs.scoreDocs[0].doc);
-                                 return d.get(FIELD_SEQ);
+                                 seq = d.get(FIELD_SEQ);
                              }
-                             return null;
                          }
-                     });
+                         finally {
+                             searchManager.release(searcher);
+                         }
+                         searcher = null;
+                         
+                         return seq;
+                     }
+                 });
         }
         catch (Exception ex) {
             ex.printStackTrace();
