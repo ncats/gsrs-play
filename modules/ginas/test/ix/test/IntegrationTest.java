@@ -2,6 +2,8 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
@@ -16,6 +18,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import play.Configuration;
+
+import java.io.File;
 
 import static org.junit.Assert.*;
 
@@ -58,6 +63,25 @@ public class IntegrationTest {
         JsonNode substances = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/substances");
         assertFalse( SubstanceJsonUtil.isLiteralNull(substances));
     }
+
+
+    @Test
+	public void testRestAPIBDNUMProcessor() throws Exception {
+
+		ts.stop(true);
+		ts.modifyConfig("ix.core.entityprocessors.class", "ix.ginas.models.v1.Substance");
+		ts.modifyConfig("ix.core.entityprocessors.processor", "ix.ginas.processors.UniqueCodeGenerator");
+		ts.modifyConfig("ix.core.entityprocessors.codesystem", "BDNUM");
+		ts.modifyConfig("ix.core.entityprocessors.suffix", "AB");
+		ts.modifyConfig("ix.core.entityprocessors.length", 10);
+		ts.modifyConfig("ix.core.entityprocessors.padding", true);
+
+		ts.start();
+		//play.api.Configuration config = ts.getApplication().configuration();
+		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/search?q=terms_value:BDNUM");
+		assertFalse( SubstanceJsonUtil.isLiteralNull(result));
+		//assertFalse( result.get("total").asInt() == 0);
+	}
 
 
     @Test
@@ -303,7 +327,4 @@ public class IntegrationTest {
     	}
     	
     }
-    
-    
-
 }
