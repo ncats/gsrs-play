@@ -74,7 +74,7 @@ public class Statistics implements Serializable{
 			long totalRemaining=total-totalDone;
 			long timeSoFar=TimeUtil.getCurrentTimeMillis()-start;
 			
-			double avg=timeSoFar/totalDone;
+			double avg=timeSoFar/Math.max(totalDone,1);
 			return (long) (totalRemaining*avg);
 		}
 
