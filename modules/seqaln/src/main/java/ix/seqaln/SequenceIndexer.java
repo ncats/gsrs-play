@@ -470,7 +470,7 @@ public class SequenceIndexer {
     
     public ResultEnumeration search (final CharSequence query,
                                      final double identity, final int gap) {
-        if(getSize()<=0){
+        if (getSize()<=0 || query == null || query.length() == 0) {
             return new ResultEnumeration(null);
         }
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
@@ -781,7 +781,7 @@ public class SequenceIndexer {
     }
     
     public static void main (String[] argv) throws Exception {
-        SequenceIndexer seqidx = SequenceIndexer.openReadOnly(new File ("seqidx"));
+        SequenceIndexer seqidx = SequenceIndexer.open(new File ("seqidx"));
         try {
             seqidx.add("1", "abcdefghijklmnabcdef");
             seqidx.add("2", "bcefgjklabc");
