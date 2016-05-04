@@ -13,7 +13,7 @@
 
 @substancedetails(sub) {
     <li role="presentation"><a href="#subunits">Subunits
-        <span class= "badge pull-right">@sub.protein.subunits.length</span></a>
+        <span class= "badge pull-right">@sub.protein.getSubunits.length</span></a>
     </li>
     @defining(sub.protein.getDisulfideLinks().length) { count =>
         @if(count > 0 ){
