@@ -129,7 +129,6 @@
             },
 
             addDomain: function (domain) {
-                console.log(domain);
                 return CV.getCV(domain.domain).then(function (response) {
                     if (response.data.count == 0) {
                         $http.post(baseurl + 'api/v1/vocabularies', domain, {
@@ -319,8 +318,6 @@
                     if(_.isUndefined(scope.obj)){
                         scope.obj={};
                     }
-                    console.log(scope);
-                    console.log(scope.obj.new);
                     var exists = _.find(scope.values, function (cv) {
                         return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
                     });
@@ -330,7 +327,6 @@
                         cv.value = scope.obj.new;
                         scope.values.push(cv);
                         CVFields.updateCV(attrs.cv, cv);
-                        console.log(cv);
                         scope.obj = cv;
                     } else {
                         alert(scope.obj.new + ' exists in the cv');
@@ -592,13 +588,11 @@
 
                 if (!scope.validator) {
                     scope.validator = function () {
-                        //console.log("default validating");
                     };
                 }
 
                 if (!scope.changeValidator) {
                     scope.changeValidator = function () {
-                        //console.log("default validating");
                     };
                 }
 
@@ -741,18 +735,17 @@
                             scope.obj.references.push(reference.uuid);
                         }
                         scope.parent.references.push(reference);
-                    }
-                    if (selected.value && selected.value.molfile) {
-                        molChanger.setMol(selected.value.molfile);
-                    }
-
-                    if (!_.isUndefined(scope.parent.structure)) {
-                        if (_.isUndefined(scope.parent.structure.references)) {
-                            _.set(scope.parent.structure, 'references', []);
+                        if (selected.value && selected.value.molfile) {
+                            molChanger.setMol(selected.value.molfile);
                         }
-                        scope.parent.structure.references.push(reference.uuid);
-                    }
 
+                        if (!_.isUndefined(scope.parent.structure)) {
+                            if (_.isUndefined(scope.parent.structure.references)) {
+                                _.set(scope.parent.structure, 'references', []);
+                            }
+                            scope.parent.structure.references.push(reference.uuid);
+                        }
+                    }
                     if (scope.format == "subref") {
                         scope.$parent.createSubref(selected);
                     }

@@ -2,18 +2,15 @@ package ix.ginas.models.v1;
 
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_ssg1")
 public class SpecifiedSubstanceGroup1 extends GinasCommonSubData {
-	@OneToMany(cascade=CascadeType.ALL)
-	//@JoinTable(name="ix_ginas_substance_ss_comp")
+	@ManyToMany(cascade=CascadeType.ALL)
+	@JoinTable(name="ix_ginas_substance_ss_comp")
 	public List<SpecifiedSubstanceComponent> constituents;
 	
 //	@OneToOne(cascade=CascadeType.ALL)

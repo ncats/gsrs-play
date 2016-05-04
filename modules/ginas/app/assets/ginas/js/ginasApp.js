@@ -893,6 +893,7 @@
                     molChanger.setMol($scope.substance.structure.molfile);
                 }
                 if ($scope.substance.substanceClass != $scope.substanceClass) {
+
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
                 }
@@ -1563,7 +1564,6 @@
                 var display = [];
                 if (_.isUndefined(scope.parent)) {
                     APIFetcher.fetch(scope.uuid).then(function (data) {
-                        console.log(data);
                         scope.parent = data;
                         if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
@@ -1614,7 +1614,7 @@
                     substanceFactory.getSubstances(scope.q).then(function (response) {
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
-                        template = angular.element('<substance-viewer data = data format= "subref"></substance-viewer>');
+                        template = angular.element('<substance-viewer data = data obj =referenceobj format= "subref"></substance-viewer>');
                         toggler.refresh(scope, scope.formname, template);
                     });
                 };
@@ -1661,7 +1661,6 @@
                         if (attrs.definition) {
                             scope.definition = attrs.definition;
                         }
-                        //     formHolder = '<substance-search-form referenceobj = referenceobj formname =formname field =field q=q  definition={{definition}}></substance-search-form>';
                         break;
                 }
             }
@@ -2017,17 +2016,11 @@
         };
     });
 
-    ginasApp.directive('deleteButton', function ($compile) {
+    ginasApp.directive('deleteButton', function () {
         return {
             restrict: 'E',
+            template: '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
-                var template;
-                console.log(attrs);
-                if(attrs.showlabel==='false'){
-                    template = '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>';
-                }else{
-                    template = '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>';
-                }
                 scope.deleteObj = function () {
                     if (scope.parent) {
                         var arr = _.get(scope.parent, attrs.path);
@@ -2036,8 +2029,6 @@
                         scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
                     }
                 };
-                element.append(angular.element(template));
-                $compile(template)(scope);
             }
         };
     });

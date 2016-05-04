@@ -270,7 +270,6 @@
             templateUrl: baseurl + "assets/templates/forms/amount-form.html",
             link: function(scope){
                 if(scope.filter){
-                    console.log(scope);
                 }
 
     }
@@ -288,8 +287,6 @@
             link: function (scope, element, attrs) {
                 scope.errors = [];
                 scope.parse = function(code) {
-                    console.log(scope);
-                    console.log(code);
                     if (!_.isUndefined(code) || !_.isNull(code)) {
                         if (_.isEmpty(code)) {
                             scope.errors.push({text: 'no code system yet', class: 'warning'});
@@ -333,7 +330,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
 
                 scope.iscollapsed = false;
                 if(scope.parent.uuid){
@@ -343,36 +339,8 @@
                 scope.changeClass = function (newClass) {
                     var upgradeSub= scope.parent.$$setClass(newClass);
                     _.set(upgradeSub, 'update', true);
-                    console.log(upgradeSub);
                     localStorageService.set('tempsubstance', upgradeSub);
                    $window.location.href = $window.location.origin + baseurl + "wizard?kind=" +newClass;
-   /*                 scope.parent.$$setSubstance(scope.parent.$$changeClass(newClass)).then(function(response){
-                       var upgradeSub= response;
-                        console.log(upgradeSub);*/
-
-                  /* console.log(scope);
-                    _.set(upgradeSub, 'update', true);
-                    console.log(upgradeSub);
-                    if (_.has(upgradeSub, 'update')) {
-                        var postSub = angular.toJson(upgradeSub);
-                        $http.put(baseurl + 'api/v1/substances', postSub, {
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        }).success(function(data){
-                                alert('Load was performed.');
-                            console.log(data);
-                            });
-                    } else {
-                        $http.post(baseurl + 'api/v1/substances', postSub).success(function () {
-                            console.log("success");
-                            alert("submitted!");
-                            $location.path('app/substance/{{editid}}/edit');
-                          //  $location.replace();
-                        });
-                    }
-*/
-                  //  });
                 };
             }
         };
@@ -424,7 +392,6 @@
                 scope.download = function () {
                     scope.cv={};
                     CVFields.all(false).then(function (response) {
-                        console.log(response);
                         scope.cv = response.data.content;
                         formHolder = '<save-cv-form cv = cv></save-cv-form>';
                         scope.toggleStage();
@@ -520,33 +487,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
             link: function (scope) {
-
-//                console.log(scope);
-
-
-               /* scope.filterCV = function (sent) {
-                    console.log("get cv");
-                    console.log(sent);
-                    console.log(scope);
-                    CVFields.getCV('KEW_PLANT_GENUS').then(function (response) {
-                        console.log(response);
-                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-                        if (response.data.content[0].filterable) {
-                            var filtered = [];
-                            var family = scope.parent.structurallyDiverse.organismFamily;
-                            if (!_.isUndefined(family)) {
-                                _.forEach(scope.values, function (value) {
-                                    if (_.isEqual(family, value.filter.split('=')[1])) {
-                                        filtered.push(value);
-                                        console.log(filtered.length);
-                                    }
-                                });
-                                scope.values = filtered;
-                            }
-                        }
-                    });
-                return scope.values;
-                };*/
             }
         };
     });
@@ -586,7 +526,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.parent.$$diverseType = "whole";
 
                 if(scope.parent.structurallyDiverse.displayParts ==='WHOLE'){
@@ -617,25 +556,6 @@
             },*/
             templateUrl: baseurl + "assets/templates/admin/cv-terms.html",
             link: function(scope){
-                console.log(scope);
-
-               /* scope.deleteCV = function(obj){
-                    var r = confirm("Are you sure you want to delete this CV?");
-                    if (r == true) {
-                        console.log(obj);
-                        console.log(scope.terms);
-                        console.log(scope.terms.indexOf(obj));
-                        var terms = scope.terms.splice(scope.terms.indexOf(obj), 1);
-                        CVFields.updateCV(obj);
-                    }
-                };
-
-                scope.updateCV = function(obj){
-                    var r = confirm("Are you sure you want to update this CV?");
-                    if (r == true) {
-                        CVFields.updateCV(obj);
-                    }
-                };*/
             }
         };
     });
@@ -670,7 +590,6 @@
                 };
 
                 scope.getValues = function () {
-                    console.log(scope);
                     CVFields.getCV(scope.vocab.display).then(function (data) {
                         scope.domain = data.data.content[0];
                     });
@@ -689,13 +608,11 @@
                 };
 
                 scope.addCV = function(term){
-                    console.log('add');
                         scope.domain.terms.push(term);
                     if(scope.domain.fields){
                         scope.domain.fields = scope.flattenFields(scope.domain.fields);
                     }
                         CVFields.updateCV(scope.domain).then(function(response){
-                            console.log(response);
                         scope.domain.terms = response.data.terms;
                             scope.term={};
                         });
@@ -709,18 +626,15 @@
                     }
                    domain.fields = scope.flattenFields(domain.fields);
                         CVFields.addDomain(domain).then(function(response){
-                            console.log(response);
                            // scope.domains.push(response.data);
                         });
                     scope.domain={};
                 };
 
                 scope.updateCV = function(obj){
-                    console.log('update');
                         if(obj){
                             obj.fields = scope.flattenFields(obj.fields);
                             CVFields.updateCV(obj).then(function(response) {
-                                console.log(response);
                                 _.forEach(response.data.fields, function (value, key) {
                                     obj.fields[key] = {'value': value, 'display': value};
                                 });
@@ -730,7 +644,6 @@
                                 scope.domain.fields = scope.flattenFields(scope.domain.fields);
                             }
                             CVFields.updateCV(scope.domain).then(function(response) {
-                                console.log(response);
                                 _.forEach(response.data.fields, function (value, key) {
                                     scope.domain.fields[key] = {'value': value, 'display': value};
                                 });
@@ -783,11 +696,9 @@
                 }
 
                 if(scope.filter){
-                    console.log(scope);
                 }
 
                 scope.toggle = function () {
-                    console.log("edit)");
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
                 };
                 scope.stage = true;
@@ -930,8 +841,7 @@
             replace: true,
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
-                
+
                 scope.cv={
                 };
 
@@ -950,11 +860,8 @@
                 scope.loadCVFile = function (file) {
                     var tempValues = [];
                     scope.values=[];
-                    console.log(file);
                         FileReader.readAsText(file, scope).then(function(response){
-                            console.log(response);
                             scope.data = angular.fromJson(response);
-                            console.log(scope);
                             for(var i=0; i<10; i++){
                                 var keys = _.keys(scope.data.substanceNames[i]);
                               tempValues = _.union(keys, tempValues);
@@ -963,16 +870,10 @@
                                 scope.values.push({display: v });
                             });
                             //  scope.values = tempValues;
-                            console.log(scope);
                         });
                 };
 
                 scope.makeCV= function(){
-                    console.log(scope);
-                    console.log(scope.cv);
-                  //  var cvs = [];
-/*                    var map = _.map(scope.data.substanceNames, scope.cv.domain.display);
-                    console.log(map);*/
                     var controlledVocab = {
                         domain: scope.cv.domainName,
                         terms:[]
@@ -988,12 +889,10 @@
                             var filter = scope.cv.dependencyField.display+'='+term[scope.cv.dependencyField.display];
                             t.filters.push(filter);
                         }
-                      //  console.log(t);
                         tempTerms.push(t);
                     });
 
                     controlledVocab.terms = _.uniqWith(tempTerms, _.isEqual);
-                    console.log(controlledVocab);
                     CVFields.addTerms(controlledVocab);
                 };
             }
@@ -1244,7 +1143,6 @@
 
         //string to array
         this.siteList = function (slist) {
-            console.log(slist);
             var toks = slist.split(";");
             var sites = [];
             for (var i in toks) {
@@ -1432,7 +1330,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
-                console.log(scope);
                 scope.sugar = {};
 
                 if (!scope.parent.nucleicAcid.sugars) {
@@ -1536,8 +1433,6 @@
             link: function (scope, element, attrs) {
 
                 scope.validate = function () {
-                    console.log(scope);
-                    console.log(JSON.stringify(scope.otherLink));
                     if (!scope.parent.protein.otherLinks) {
                         scope.parent.protein.otherLinks = [];
                     }
@@ -1628,10 +1523,8 @@
             },
             templateUrl: baseurl + "assets/templates/forms/physical-parameter-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
 
                 scope.validate = function () {
-                    console.log(scope.referenceobj);
                     if (_.has(scope.referenceobj, 'parameters')) {
                         var temp = _.get(scope.referenceobj, 'parameters');
                         temp.push(scope.physicalParameter);
@@ -1683,9 +1576,7 @@
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
-                console.log(scope);
                 scope.validateConnectivity=function(obj){
-                	console.log("nonsense function of obj: ");
                 	var map=polymerUtils.sruDisplayToConnectivity(obj._displayConnectivity);
                 }
             }
@@ -1860,12 +1751,9 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             },
             templateUrl: baseurl + "assets/templates/modals/reference-modal-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.reference={};
 
-                if(scope.edit){
-                    console.log("edit");
-                    console.log(scope);
+                if(scope.edit){;
                     scope.active = 2;
                 }
 
@@ -2060,7 +1948,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
 
                 if (scope.formtype == "pair") {
                     $templateRequest(baseurl + "assets/templates/forms/site-dropdown-form.html").then(function (html) {
-                        console.log(scope);
                         template = angular.element(html);
                         element.append(template);
                         $compile(template)(scope);
@@ -2083,7 +1970,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                         var ret = scope.parent[scope.parent.substanceClass].subunits[su - 1].$$cysteineIndices;
                         if (_.has(scope.parent.protein, 'disulfideLinks')) {
                             _.forEach(scope.parent.protein.disulfideLinks, function (siteList) {
-//                                console.log(siteList);
                                 _.forEach(siteList.sites, function (site) {
                                     var v;
                                     if (site.subunitIndex == (su)) {
@@ -2106,7 +1992,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 };
 
                 scope.makeSiteList = function () {
-                    console.log(scope);
                         var temp= angular.copy(scope.referenceobj[scope.field].$$displayString);
                         _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
                         scope.referenceobj[scope.field].$$displayString = temp;
@@ -2144,7 +2029,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             },
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
             link: function(scope){
-                console.log(scope);
                 scope.getCV = function(mod){
                     if(mod =="AMINO_ACID_SUBSTITUTION"){
                         return "AMINO_ACID_RESIDUE";
@@ -2172,7 +2056,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function (scope, element, attrs) {
                 scope.validate = function () {
-                    console.log(scope);
                     if (!scope.$parent.validate) {
                         if (scope.$parent.$parent.validate(scope.obj, scope.form, scope.path)) {
                             scope.reset();
@@ -2205,7 +2088,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.numbers = true;
                 scope.parent.$$subunitDisplay = [];
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {

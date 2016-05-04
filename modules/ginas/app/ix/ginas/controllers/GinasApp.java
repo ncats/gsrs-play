@@ -1543,6 +1543,9 @@ public class GinasApp extends App {
     
 
     public static String getAsJson(Object o){
+        if(o == null){
+            return null;
+        }
         ObjectMapper om = new ObjectMapper();
         return om.valueToTree(o).toString();
     }

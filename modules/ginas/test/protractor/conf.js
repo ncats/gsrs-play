@@ -49,7 +49,7 @@ exports.config = {
         chemical: [ //'StructureFormTest.js'
                     //,'MoietyFormTest.js'
         ],
-        protein: [ //'ProteinDetailsFormTest.js'
+        protein: [ 'ProteinDetailsFormTest.js'
                   //, 'SubunitFormTest.js'
                   //, 'GlycosylationFormTest.js'
         ],

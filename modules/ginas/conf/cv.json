@@ -6111,7 +6111,8 @@
       }
     ],
     "fields": [
-      "components.type"
+      "components.type",
+      "constituents.type"
     ],
     "_namespace": null
   },
