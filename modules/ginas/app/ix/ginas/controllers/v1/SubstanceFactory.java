@@ -94,7 +94,15 @@ public class SubstanceFactory extends EntityFactory {
 		//System.out.println("Looking for history, this is likely broken");
 		List<Edit> edits = new ArrayList<Edit>();
     	Class oclass=null;
-    	
+
+		List<Substance> slist = resolve(id);
+		if(slist!=null && !slist.isEmpty() && slist.size()==1){
+			Substance current = slist.get(0);
+			if(current.version.equals(version)){
+				return current;
+			}
+		}
+
         for (Class<?> c : Substance.getAllClasses()) {
         	Query q=EditFactory.finder.where
                     (andAll(
