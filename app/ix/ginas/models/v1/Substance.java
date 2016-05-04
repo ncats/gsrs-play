@@ -188,6 +188,17 @@ public class Substance extends GinasCommonData {
 		tags.add(tag);
 	}
 	
+	public void addTagString(String tag){
+		this.addTag(new Keyword(GinasCommonData.TAG,tag));
+	}
+	
+	public boolean hasTagString(String tag){
+		for(Keyword k:tags){
+			if(k.getValue().equals(tag))return true;
+		}
+		return false;
+	}
+	
 
 	@Transient
 	protected transient ObjectMapper mapper = new ObjectMapper();
@@ -770,6 +781,23 @@ public class Substance extends GinasCommonData {
 	public String getSubstanceDeprecated(){
 		//System.out.println("Found deprecated record");
 		return ""+this.deprecated;
+	}
+
+	/**
+	 * removes keywords with matching value to input
+	 * 
+	 * @param tag
+	 * @return List of Keywords matching criteria
+	 */
+	public List<Keyword> removeTagString(String tag) {
+		List<Keyword> toRemove = new ArrayList<Keyword>();
+		for(Keyword k:tags){
+			if(k.getValue().equals(tag)){
+				toRemove.add(k);
+			}
+		}
+		tags.removeAll(toRemove);
+		return toRemove;
 	}
 	
 }

@@ -87,18 +87,13 @@
                         <code>@sub.getDisplayStatus()  version: @sub.version</code>
                     </div>
                 </div>
-                @if(sub.tags.size() > 0) {
-                    @*  @for(tag <- sub.tags) {
-                    @if(tag.term =="KEW"){*@
-                <div class = "row">
-                    <div class = "col-md-12">
-                        @*<span><img class="img-responsive kew" id="" alt ="Kew approved" uib-tooltip = "Substance has been validated by Kew Gardens" src="@routes.Assets.at("ginas/images/kew.png")" /></span>*@
-                    </div>
-                    }
-                @*}
-                }else{
-                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">@sub.getName()</a></h3>
-                }*@
+                @if(sub.hasTagString("KEW")) {
+                	<div class = "row">
+	                    <div class = "col-md-12">
+	                        <span><img class="img-responsive kew" id="" alt ="Kew approved" uib-tooltip = "Substance has been validated by Kew Gardens" src="@routes.Assets.at("ginas/images/kew.png")" /></span>
+	                    </div>
+	                </div>
+                }
             </div>
         </div>
     </div>

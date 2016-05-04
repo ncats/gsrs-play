@@ -291,7 +291,6 @@ public class GinasUtils {
 				
 			}
 			structure.put("stereochemistry", "UNKNOWN");
-			
 		}
 	}
 	
