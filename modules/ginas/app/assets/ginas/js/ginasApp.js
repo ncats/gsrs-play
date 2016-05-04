@@ -1362,7 +1362,7 @@
         var url = baseurl + "api/v1/substances(";
         var fetcher = {
             fetch: function (uuid) {
-                return $http.get(url + uuid + ")", {
+                return $http.get(url + uuid + ")",{cache: true},{
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -1563,11 +1563,14 @@
                 var display = [];
                 if (_.isUndefined(scope.parent)) {
                     APIFetcher.fetch(scope.uuid).then(function (data) {
+                        console.log(data);
                         scope.parent = data;
                         if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
+                            scope.index = scope.index-1+2;
                         } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
+                            scope.index = scope.index-1+2;
                         }
                         scope.getResidues();
                     });
@@ -2014,11 +2017,17 @@
         };
     });
 
-    ginasApp.directive('deleteButton', function () {
+    ginasApp.directive('deleteButton', function ($compile) {
         return {
             restrict: 'E',
-            template: '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
+                var template;
+                console.log(attrs);
+                if(attrs.showlabel==='false'){
+                    template = '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>';
+                }else{
+                    template = '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>';
+                }
                 scope.deleteObj = function () {
                     if (scope.parent) {
                         var arr = _.get(scope.parent, attrs.path);
@@ -2027,6 +2036,8 @@
                         scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
                     }
                 };
+                element.append(angular.element(template));
+                $compile(template)(scope);
             }
         };
     });
