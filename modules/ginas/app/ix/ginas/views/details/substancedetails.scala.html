@@ -159,7 +159,7 @@
             }
             @if(sub.notes != null && sub.notes.size() > 0) {
                 <div class="row info" id="notes">
-                @properties.notes(sub.notes, sub.uuid.toString)
+                @properties.notes(sub.getDisplayNotes(), sub.uuid.toString)
                 </div>
             }
 

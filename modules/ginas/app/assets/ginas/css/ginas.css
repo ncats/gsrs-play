@@ -1123,3 +1123,7 @@ a#resolverButton {
     max-height: 30px;
     margin-top: 10%;
 }
+
+pre.fixedsize{
+	max-height: 200px;
+}
