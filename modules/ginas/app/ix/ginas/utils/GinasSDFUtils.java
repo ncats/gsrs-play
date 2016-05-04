@@ -16,6 +16,7 @@ import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasUtils.GinasAbstractSubstanceTransformer;
+import ix.ginas.utils.validation.DefaultSubstanceValidator;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -369,7 +370,9 @@ public class GinasSDFUtils {
 
 		@Override
 		public RecordTransformer getTransformer(Payload p) {
-			return new GinasFlatMapTransformer(mappers.get(p.id.toString()));
+			GinasFlatMapTransformer gfmt= new GinasFlatMapTransformer(mappers.get(p.id.toString()));
+			gfmt.useDefaultValidator();
+			return gfmt;
 		}	
 	}
 	
@@ -378,12 +381,13 @@ public class GinasSDFUtils {
 		List<PATH_MAPPER> fieldMaps = new ArrayList<PATH_MAPPER>();
 		
 		public GinasFlatMapTransformer(){
+			super();
 			fieldMaps.add(new PATH_MAPPER(FIELD_NAME,false,PATH_MAPPER.ADD_METHODS.ADD_NAME));
 			fieldMaps.add(new PATH_MAPPER(FIELD_MOLFILE,false,PATH_MAPPER.ADD_METHODS.SET_STRUCTURE));
 			fieldMaps.add(new PATH_MAPPER(".*",false,PATH_MAPPER.ADD_METHODS.NOTE_PROPERTY,true));
 		}
 		public GinasFlatMapTransformer(List<PATH_MAPPER> fieldMaps){
-			this();
+			super();
 			if(fieldMaps!=null){
 				this.fieldMaps=fieldMaps;
 			}
