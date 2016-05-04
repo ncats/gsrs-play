@@ -433,17 +433,29 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }
         @Override
         public void run() {
-            ProcessingRecord rec = new ProcessingRecord();
+        	TransformedRecord tr=null;
+        	ProcessingRecord rec = new ProcessingRecord();
             ProcessingJob job = prg.job;
-            job.getStatistics().applyChange(Statistics.CHANGE.ADD_EX_GOOD);
-            Object trans = job.getTransformer().transform(prg, rec);
-
-            if (trans == null) {
-                throw new IllegalStateException("Transform error");
-            }
-            job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
-            TransformedRecord tr= new TransformedRecord(trans, prg.theRecord, rec);
-            doPersist(tr);
+        	try{
+	            
+	            job.getStatistics().applyChange(Statistics.CHANGE.ADD_EX_GOOD);
+	            
+	            Object trans = job.getTransformer().transform(prg, rec);
+	
+	            if (trans == null) {
+	                throw new IllegalStateException("Transform error");
+	            }
+	            job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
+	            tr= new TransformedRecord(trans, prg.theRecord, rec);
+	           
+        	}catch(Throwable t){
+        		job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_BAD);
+        		Global.TransformFailLogger.info(rec.name + "\t" + t.getMessage() + "\t"
+						+ prg.theRecord.toString().replace("\n", ""));
+        	}
+        	if(tr!=null){
+        		doPersist(tr);
+        	}
         }
 
         protected abstract void doPersist(TransformedRecord tr);

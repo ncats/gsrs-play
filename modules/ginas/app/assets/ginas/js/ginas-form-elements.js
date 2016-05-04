@@ -44,9 +44,9 @@
                 });
             },
             //used to download cv
-            all: function () {
+            all: function (cache) {
                 var allurl = baseurl + "api/v1/vocabularies?top=999";
-                return $http.get(allurl, {cache: true}, {
+                return $http.get(allurl, {cache: cache}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -128,20 +128,20 @@
                 });
             },
 
-            addDomain: function (cv) {
-                var c = {
-                    domain: cv.domain
-                    //terms: []
-                };
-                var promise = $http.post(baseurl + 'api/v1/vocabularies', c, {
-                    headers: {
-                        'Content-Type': 'application/json'
+            addDomain: function (domain) {
+                console.log(domain);
+                return CV.getCV(domain.domain).then(function (response) {
+                    if (response.data.count == 0) {
+                        $http.post(baseurl + 'api/v1/vocabularies', domain, {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).success(function (response) {
+                            alert("new domain added");
+                            return response;
+                        });
                     }
-                }).success(function (response) {
-                    alert("new domain added");
-                    return response;
                 });
-                return promise;
             }
         };
         return CV;
@@ -624,7 +624,9 @@
             link: function (scope, elem, attrs, ngModel) {
 
                 scope.validatorFunction = function () {
-                    scope.errorMessages = scope.validator({model:scope.obj});
+                    if(scope.validator) {
+                        scope.errorMessages = scope.validator({model: scope.obj});
+                    }
                 };
 
                 if (scope.filter &&!_.isEmpty(scope.filter)){

@@ -970,13 +970,13 @@
                     url += '&context={{ctx}}';
                 }
                 if (attrs.smiles) {
-                    url = baseurl + "render?structure=" + attrs.smiles + "&size={{size||150}}&standardize=true";
+                    var smiles = attrs.smiles.replace(';','%3B').replace('#','%23').replace('+','%2B');
+                    url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
                 }
                 var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
                 element.append(template);
                 $compile(template)(scope);
             }
-            //   template: '<img ng-src=\"' + baseurl + 'img/'+id+'.svg?size={{size||150}}&context={{ctx}}\">'
         };
     });
 

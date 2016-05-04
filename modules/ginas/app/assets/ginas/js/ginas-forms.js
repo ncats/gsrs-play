@@ -397,26 +397,7 @@
         return {
             restrict: 'E',
             replace: 'true',
-            scope: {},/*scope.toggleStage = function () {
-                    if (_.isUndefined(scope.referenceobj)) {
-                        var x = {};
-                        _.set(scope, 'referenceobj', x);
-                    }
-                    var result = document.getElementsByClassName(attrs.divid);
-                    var elementResult = angular.element(result);
-                    if (scope.stage === true) {
-                        scope.stage = false;
-                        childScope = scope.$new();
-                        var compiledDirective = $compile(formHolder);
-                        var directiveElement = compiledDirective(childScope);
-                        elementResult.append(directiveElement);
-                    } else {
-                        childScope.$destroy();
-                        elementResult.empty();
-                        scope.stage = true;
-
-                    }
-                };*/
+            scope: {},
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
             link: function (scope, element, attrs) {
                 var formHolder;
@@ -441,7 +422,8 @@
                 };
 
                 scope.download = function () {
-                    CVFields.all().then(function (response) {
+                    scope.cv={};
+                    CVFields.all(false).then(function (response) {
                         console.log(response);
                         scope.cv = response.data.content;
                         formHolder = '<save-cv-form cv = cv></save-cv-form>';
@@ -674,6 +656,18 @@
 
                 scope.stage = true;
 
+                scope.flattenFields = function(fields){
+                    _.forEach(fields, function(value, key) {
+                        if(!value.value && value.display){
+                            fields[key] = value.display;
+                        }else if(!value.value && !value.display) {
+                            fields[key] = value;
+                        }else{
+                            fields[key] = value.value;
+                        }
+                    });
+                    return fields;
+                };
 
                 scope.getValues = function () {
                     console.log(scope);
@@ -687,12 +681,19 @@
                     var r = confirm("Are you sure you want to delete this CV?");
                     if (r == true) {
                         var terms = scope.domain.terms.splice(scope.domain.terms.indexOf(obj), 1);
+                        if(scope.domain.fields){
+                            scope.domain.fields = scope.flattenFields(scope.domain.fields);
+                        }
                         CVFields.updateCV(scope.domain);
                     }
                 };
 
                 scope.addCV = function(term){
+                    console.log('add');
                         scope.domain.terms.push(term);
+                    if(scope.domain.fields){
+                        scope.domain.fields = scope.flattenFields(scope.domain.fields);
+                    }
                         CVFields.updateCV(scope.domain).then(function(response){
                             console.log(response);
                         scope.domain.terms = response.data.terms;
@@ -700,29 +701,41 @@
                         });
                 };
 
-                scope.addDomain = function(cv){
-                    if(!cv.terms) {
-                        _.set(cv, 'terms', []);
+
+
+                scope.addDomain = function(domain){
+                    if(!domain.terms) {
+                        _.set(domain, 'terms', []);
                     }
-                        CVFields.addDomain(cv).then(function(response){
+                   domain.fields = scope.flattenFields(domain.fields);
+                        CVFields.addDomain(domain).then(function(response){
                             console.log(response);
-                            scope.domains.push(response.data);
+                           // scope.domains.push(response.data);
                         });
-                    scope.cv={};
+                    scope.domain={};
                 };
 
                 scope.updateCV = function(obj){
+                    console.log('update');
                         if(obj){
-                            _.forEach(obj.fields, function(value, key) {
-                                if(!value.value){
-                                    obj.fields[key] = value.display;
-                                }else {
-                                    obj.fields[key] = value.value;
-                                }
+                            obj.fields = scope.flattenFields(obj.fields);
+                            CVFields.updateCV(obj).then(function(response) {
+                                console.log(response);
+                                _.forEach(response.data.fields, function (value, key) {
+                                    obj.fields[key] = {'value': value, 'display': value};
+                                });
                             });
-                            CVFields.updateCV(obj);
                         }else {
-                            CVFields.updateCV(scope.domain);
+                            if(scope.domain.fields){
+                                scope.domain.fields = scope.flattenFields(scope.domain.fields);
+                            }
+                            CVFields.updateCV(scope.domain).then(function(response) {
+                                console.log(response);
+                                _.forEach(response.data.fields, function (value, key) {
+                                    scope.domain.fields[key] = {'value': value, 'display': value};
+                                });
+                                scope.domain.terms = response.data.terms;
+                            });
                         }
                 };
 
@@ -733,9 +746,9 @@
                     scope.domain = obj;
 
                     if(!divid){
-                        var divid = obj.$$hashKey;
+                        scope.type = obj.id;
                     }
-                    var formHolder = '<cv-terms-form domain = domain terms = {{terms}} ></cv-terms-form>';
+                   // var formHolder = '<cv-terms-form domain = domain terms = {{terms}} ></cv-terms-form>';
                     var url = baseurl + "assets/templates/admin/cv-terms.html";
                     toggler.show(scope, divid, url);
 
@@ -918,12 +931,7 @@
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
-      /*          scope.cv= {
-                    value:[],
-                    domains: [],
-                    objKeys: [],
-                    terms:[]
-                };*/
+                
                 scope.cv={
                 };
 
@@ -1001,7 +1009,7 @@
             },
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
             link: function (scope, element, attrs) {
-
+                    
 
             }
         };
