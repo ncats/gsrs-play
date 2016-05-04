@@ -40,7 +40,7 @@ import play.mvc.Result;
 import scala.collection.JavaConverters;
 
 public class Global extends GlobalSettings {
-    static final Logger.ALogger AccessLogger = Logger.of("access");
+   // static final Logger.ALogger AccessLogger = Logger.of("access");
     public static final Logger.ALogger PersistFailLogger = Logger.of("persistFail");
     public static final Logger.ALogger TransformFailLogger = Logger.of("transformFail");
     public static final Logger.ALogger ExtractFailLogger = Logger.of("extractFail");
@@ -220,7 +220,7 @@ public class Global extends GlobalSettings {
     public <T extends EssentialFilter> Class<T>[] filters() {
         return new Class[]{GzipFilter.class,julienrf.play.jsonp.JsonpJava.class};
     }  
-    
+    /*
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
         
@@ -242,7 +242,7 @@ public class Global extends GlobalSettings {
                           real != null ? real : "", req.method(), req.uri());
         return h;
     }
-
+*/
     public boolean debug (int level) { 
         return ctx.debug(level); 
     }
