@@ -25,7 +25,7 @@ var ProteinDetailsPage = function () {
         if(r != null){
         r.click();
         }else{
-            ///refresh page afte rlogout?
+            ///refresh page after logout?
             console.log("logout");
             element(by.id('login-button')).click();
         }

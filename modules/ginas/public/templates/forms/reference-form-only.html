@@ -10,8 +10,9 @@
                                      cv="DOCUMENT_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <text-input ng-model="reference.sourceClass" field="sourceClass" label="Source Class"
-                                class="disabled"></text-input>
+                    <dropdown-select ng-model="reference.$$systemCategory" field="$$systemCategory" label="Source Class"
+                                     cv="DOCUMENT_SYSTEM_TYPE" filter="reference.docType"
+                                     class="disabled"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <text-input ng-model="reference.id" label="Source Id" field="id"></text-input>
@@ -75,7 +76,8 @@
                                         cv="DOCUMENT_TYPE"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <text-view-edit obj="obj" field="sourceClass" disabled></text-view-edit>
+                    <dropdown-view-edit obj="obj" field="$$systemCategory" cv="DOCUMENT_SYSTEM_TYPE"
+                                        filter="obj.docType" label="Source Class" class="disabled"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
                     <text-view-edit obj="obj" field="id"></text-view-edit>
