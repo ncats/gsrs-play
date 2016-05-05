@@ -12,6 +12,45 @@ var ProteinDetailsPage = function () {
         element(by.model(name)).click();
     };
 
+    this.login = function() {
+        browser.ignoreSynchronization = true;
+        browser.get("http://localhost:9000/ginas/app");
+        browser.switchTo().alert().then(
+            function (alert) {
+                console.log("there is an alert");
+                alert.accept(); },
+            function (err) { }
+        );
+        var r = element(by.id('login-button'));
+        if(r != null){
+        r.click();
+        }else{
+            ///refresh page afte rlogout?
+            console.log("logout");
+            element(by.id('login-button')).click();
+        }
+
+        expect(browser.getCurrentUrl()).toMatch('/login');
+
+        var uname = element(by.id('username'));
+        var paswd = element(by.id('password'));
+        var submitButton = element(by.tagName('button'));
+
+        uname.sendKeys('admin');
+        paswd.sendKeys('admin');
+
+        expect(uname.getAttribute('value')).toEqual('admin');
+        expect(paswd.getAttribute('value')).toEqual('admin');
+        submitButton.click();
+        expect(browser.getCurrentUrl()).toMatch('/ginas/app');
+    };
+
+    this.logout = function(){
+        browser.ignoreSynchronization = true;
+        element(by.id('logout-button')).click();
+        expect(browser.getCurrentUrl()).toMatch('/login');
+    };
+
     this.formElements = {
         formName: 'detailsForm',
         formObj: 'proteinDetails',
@@ -29,7 +68,7 @@ var ProteinDetailsPage = function () {
             model: 'parent-protein.sequenceType',
             type: 'dropdown-edit'
         }]
-    }
+    };
 
     this.subForms = {
         formName: 'detailsForm',
@@ -49,6 +88,7 @@ describe('Protein Details form test', function () {
 
     var proteinDetailsForm = new ProteinDetailsPage();
     beforeEach(function () {
+        proteinDetailsForm.login();
         proteinDetailsForm.getPage();
     });
 

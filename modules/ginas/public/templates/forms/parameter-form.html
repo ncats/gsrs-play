@@ -6,40 +6,45 @@
     <div class="col-md-12">
         <form class="form-horizontal" name="parameterForm" id="addParameterForm" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <text-input ng-model="parameter.name" field="name"></text-input>
                 </div>
-                <div class="col-md-2">
+<!--                <div class="col-md-2">
                     <text-input ng-model="parameter.type" field="type"></text-input>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj="parameter" field="value" divid="parameterForm" type="amount"></form-selector>
+                </div>-->
+                <div class="col-md-2">
+                    <form-selector referenceobj="parameter" field="value" divid="parameterForm"
+                                   type="amount"></form-selector>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-2 pull-right">
-                    <a ng-click="parameter=null; reset();" aria-label="Clear" uib-tooltip="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="parameter=null; reset();" aria-label="Clear" uib-tooltip="Clear"><i
+                            class="fa fa-eraser fa-2x danger"></i></a>
                     <a ng-click="validate();" uib-tooltip="Save"><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
             </div>
             <div class="parameterForm"></div>
         </form>
-        <div class="row" ng-repeat="(index, param) in referenceobj.parameters track by $index">
-            <hr>
-            <div class="col-md-1">
-                <a ng-click="deleteObj(param, referenceobj.parameters)"><i class="fa fa-times fa-2x danger"></i></a>
+        <div ng-repeat="(index, param) in referenceobj.parameters track by $index">
+            <div class="row">
+                <hr>
+                <div class="col-md-1">
+                    <a ng-click="deleteObj(param, referenceobj.parameters)"><i class="fa fa-times fa-2x danger"></i></a>
+                </div>
+                <div class="col-md-4">
+                    <text-view-edit obj="param" field="name"></text-view-edit>
+                </div>
+<!--                <div class="col-md-2">
+                    <text-view-edit obj="param" field="type"></text-view-edit>
+                </div>-->
+                <div class="col-md-2">
+                    <form-selector referenceobj="param" parent="substance" formname="parameterForm" field="value"
+                                   type="amount"
+                                   divid=parameter-{{index}}></form-selector>
+                </div>
             </div>
-            <div class="col-md-2">
-                <text-view-edit obj="param" field="name"></text-view-edit>
-            </div>
-            <div class="col-md-2">
-                <text-view-edit obj="param" field="type"></text-view-edit>
-            </div>
-            <div class="col-md-1">
-                <form-selector referenceobj="param" parent="substance" formname="parameterForm" field="value" type="amount"
-                               divid=parameter-{{index}}></form-selector>
-            </div>
+            <div class=parameter-{{index}}></div>
         </div>
-        <div class=parameter-{{index}}></div>
     </div>
 </div>

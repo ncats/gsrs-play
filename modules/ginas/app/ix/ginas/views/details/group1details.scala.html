@@ -5,16 +5,16 @@
 
 
 @substancedetails(sub){
-                        @if(sub.specifiedSubstance.size() > 0) {
+                       @* @if(sub.specifiedSubstance.size() > 0) {
                             <li role="presentation"><a href="#components">
                                 Mixture Components <span class="badge pull-right">@sub.specifiedSubstance.size()</span></a></li>
-                        }
+                        }*@
 }{
     <div></div>
     }{
-    <div class="row info" id="components">
-    @properties.specsubcomponents(sub.specifiedSubstance.constituents)
-    </div>
+   @* <div class="row info" id="components">
+  //  @properties.specsubcomponents(sub.specifiedSubstance.constituents)
+    </div>*@
 
  @*   <div class="row info" id="names">
     @properties.names(sub.names)

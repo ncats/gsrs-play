@@ -893,6 +893,7 @@
                     molChanger.setMol($scope.substance.structure.molfile);
                 }
                 if ($scope.substance.substanceClass != $scope.substanceClass) {
+
                     var url = baseurl + "assets/templates/modals/paste-redirect-modal.html";
                     $scope.open(url);
                 }
@@ -1362,7 +1363,7 @@
         var url = baseurl + "api/v1/substances(";
         var fetcher = {
             fetch: function (uuid) {
-                return $http.get(url + uuid + ")", {
+                return $http.get(url + uuid + ")",{cache: true},{
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -1566,8 +1567,10 @@
                         scope.parent = data;
                         if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
+                            scope.index = scope.index-1+2;
                         } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
+                            scope.index = scope.index-1+2;
                         }
                         scope.getResidues();
                     });
@@ -1611,7 +1614,7 @@
                     substanceFactory.getSubstances(scope.q).then(function (response) {
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
-                        template = angular.element('<substance-viewer data = data format= "subref"></substance-viewer>');
+                        template = angular.element('<substance-viewer data = data obj =referenceobj format= "subref"></substance-viewer>');
                         toggler.refresh(scope, scope.formname, template);
                     });
                 };
@@ -1658,7 +1661,6 @@
                         if (attrs.definition) {
                             scope.definition = attrs.definition;
                         }
-                        //     formHolder = '<substance-search-form referenceobj = referenceobj formname =formname field =field q=q  definition={{definition}}></substance-search-form>';
                         break;
                 }
             }

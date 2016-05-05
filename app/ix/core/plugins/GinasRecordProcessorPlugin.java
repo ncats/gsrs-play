@@ -450,8 +450,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	           
         	}catch(Throwable t){
         		job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_BAD);
-        		Global.TransformFailLogger.info(rec.name + "\t" + t.getMessage() + "\t"
+        		//t.printStackTrace();
+        		
+        		Global.TransformFailLogger.info(rec.name + "\t" + t.getMessage().replace("\n", "") + "\t"
 						+ prg.theRecord.toString().replace("\n", ""));
+        		updateJobIfNecessary(rec.job);
         	}
         	if(tr!=null){
         		doPersist(tr);

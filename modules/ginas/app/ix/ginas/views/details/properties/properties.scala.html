@@ -1,7 +1,7 @@
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.Property
 
-@(properties: List[Property], id:String)
+@(properties: List[Property], id: String)
 
 <button class="btn btn-primary label-offset det">Properties&nbsp;<span class="badge"> @properties.length</span></button>
 <div class="col-md-12">
@@ -25,28 +25,34 @@
                 <td><amount value="@GinasApp.getAsJson(n.getValue())"></amount></td>
                 @if(n.isDefining == true) {
                     <td>
-                    <i class="fa fa-check fa-2x success"></i>
+                        <i class="fa fa-check fa-2x success"></i>
                     </td>
-                } else {<td></td>}
+                } else {
+                    <td></td>
+                }
                 @if(n.getParameters().size > 0) {
+                <td>
+                @for(pr <- n.getParameters()) {
+                @pr.getName() <br>
+                @pr.getType() <br>
+
+                <amount value="@GinasApp.getAsJson(pr.getValue())"></amount>
+
+                }
+                </td>
+                } else {
+                <td></td>
+                }
+                @if(n.getReferences.size > 0) {
                     <td>
-                    @for(pr <- n.getParameters()) {
-                            @pr.getName() <br>
-                            @pr.getType()<br>
-                        <amount value="@GinasApp.getAsJson(pr.getValue())"></amount>
-                    }
+                        <referencesmanager indices substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
                     </td>
-                }else{<td></td>}
-        @if(n.getReferences.size > 0){
-            <td>
-                <referencesmanager indices substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
-            </td>
-            </tr>
+                </tr>
             <tr><td class = "'@n.getUuid'" colspan = "7"></td></tr>
         }else{
             <td>0</td>
-                </tr>
-        }
+            </tr>
+            }
         }
     </table>
 </div>
