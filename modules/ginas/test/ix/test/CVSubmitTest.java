@@ -47,7 +47,7 @@ public class CVSubmitTest {
         }
 
         @Test
-        public void testAPIValidateSubstance() throws Exception {
+        public void testAPIValidateCVSubmit() throws Exception {
         	ObjectMapper om = new ObjectMapper();
         	String raw="{\"domain\":\"ADASDAS\",\"terms\":[]}";
         	JsonNode newCD=om.readTree(raw);
