@@ -174,6 +174,9 @@ public class Validation {
 		        case protein:
 		        	gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s,strat));
 		            break;
+		        case structurallyDiverse:
+		        	//TODO: NEED SOMETHING
+		            break;
 		        case reference:
 		            break;
 		        case specifiedSubstanceG1:
@@ -184,8 +187,7 @@ public class Validation {
 		            break;
 		        case specifiedSubstanceG4:
 		            break;
-		        case structurallyDiverse:
-		            break;
+		        
 		        case unspecifiedSubstance:
 		            break;
 		        default:
