@@ -2,19 +2,23 @@ package ix.ginas.models.v1;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.models.BaseModel;
 import ix.core.models.Indexable;
 import ix.core.models.IxModel;
 import ix.core.models.Keyword;
@@ -30,13 +34,16 @@ public class ControlledVocabulary extends IxModel {
 
     private static final long serialVersionUID = 5455592961232451608L;
 
-    //@JsonIgnore
+    //We need to keep this JsonIgnore
+    //so when we generate the cv.json file
+    //the ids aren't included.  This causes a problem
+    //on import because then the ids get re-used by ebean
+    //since it prefetches them before we load!!
+    @JsonIgnore
     public Long getId() {
         return this.id;
     }
-
-    ;
-
+	
     @Column(unique = true)
     @Indexable(name = "Domain", facet = true)
     public String domain;
@@ -46,7 +53,7 @@ public class ControlledVocabulary extends IxModel {
         this.terms = terms;
     }
 
-    private String vocabularyTermType = VocabularyTerm.class.getName();
+    private String vocabularyTermType = ControlledVocabulary.class.getName();
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonSerialize(using = KeywordListSerializer.class)
@@ -89,6 +96,8 @@ public class ControlledVocabulary extends IxModel {
     public String getVocabularyTermType() {
         return vocabularyTermType;
     }
+    
+    
 
 
 }

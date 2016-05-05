@@ -25,6 +25,7 @@ import ix.core.controllers.EntityFactory;
 public class ControlledVocabularyFactory extends EntityFactory {
 	static public final Model.Finder<Long, ControlledVocabulary> finder = new Model.Finder(
 			Long.class, ControlledVocabulary.class);
+	
 
 /*	private static Class<? extends VocabularyTerm> getTermClass (String domain){
 
@@ -265,19 +266,27 @@ public class ControlledVocabularyFactory extends EntityFactory {
     }
 
     public static Result create () {
-		if (!request().method().equalsIgnoreCase("POST")) {
-			return badRequest ("Only POST is accepted!");
-		}
-		String content = request().getHeader("Content-Type");
-		if (content == null || (content.indexOf("application/json") < 0
-				&& content.indexOf("text/json") < 0)) {
-			return badRequest ("Mime type \""+content+"\" not supported!");
-		}
-		JsonNode json = request().body().asJson();
-		String str = json.get("vocabularyTermType").asText();
+    	
 		try {
-			Class <ControlledVocabulary> c = (Class<ControlledVocabulary>)Class.forName(str);
+			if (!request().method().equalsIgnoreCase("POST")) {
+				return badRequest ("Only POST is accepted!");
+			}
+			String content = request().getHeader("Content-Type");
+			if (content == null || (content.indexOf("application/json") < 0
+					&& content.indexOf("text/json") < 0)) {
+				return badRequest ("Mime type \""+content+"\" not supported!");
+			}
+			JsonNode json = request().body().asJson();
+			
+			Class <ControlledVocabulary> c =ControlledVocabulary.class;
 
+			
+			JsonNode vocabType = json.get("vocabularyTermType");
+			if(vocabType!=null && !vocabType.isNull() && !vocabType.isMissingNode()){
+				c = (Class<ControlledVocabulary>)Class.forName(vocabType.asText());
+			}
+			
+		
 			return create (c, finder);
 		}catch(Exception e){
 			e.printStackTrace();
