@@ -3,6 +3,7 @@ package ix.ginas.processors;
 import java.util.Map;
 
 import ix.core.EntityProcessor;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.CodeSystemVocabularyTerm;
@@ -60,7 +61,13 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 						
 						
 						cvv.addTerms(vt);
-						cvv.save();
+						cvv.update();
+						
+						//Needed because update doesn't necessarily
+						//trigger the update hooks
+						
+						EntityPersistAdapter.getInstance().reindex(cvv);
+						
 					}
 				}
 				//System.out.println("Done adding code system");
