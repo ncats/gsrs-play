@@ -269,6 +269,7 @@
             },
             templateUrl: baseurl + "assets/templates/forms/amount-form.html",
             link: function(scope){
+                console.log(scope);
                 if(scope.filter){
                 }
 

@@ -496,11 +496,13 @@
     }]);
 
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
-                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver, spinnerService) {
+                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
+                                                     spinnerService) {
         // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
+        $scope.validating = false;
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
@@ -668,7 +670,8 @@
             $scope.modalInstance = $uibModal.open({
                 templateUrl: url,
                 scope: $scope,
-                size: 'lg'
+                size: 'lg',
+                backdrop: 'static'
             });
         };
 
@@ -677,11 +680,12 @@
         };
 
         $scope.submitSubstanceConfirm = function () {
-            var f = function () {
+            $scope.validating =true;
+           // var f = function () {
                 var url = baseurl + "assets/templates/modals/substance-submission.html";
                 $scope.open(url);
-            };
-            $scope.validateSubstance(f);
+           // };
+            $scope.validateSubstance();
         };
 
         $scope.dismissAll = function () {
@@ -725,11 +729,12 @@
           //  console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
+                $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
-                if (callback) {
-                    callback();
-                }
+                // if (callback) {
+                //     callback();
+                // }
             });
         };
 
