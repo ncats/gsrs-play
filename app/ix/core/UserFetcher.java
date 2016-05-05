@@ -1,5 +1,6 @@
 package ix.core;
 
+import controllers.Default$;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.models.Principal;
@@ -10,7 +11,11 @@ public class UserFetcher {
 	
 	private static final String DEFAULT_USERNAME = "GUEST";
     private static ThreadLocal<Principal> localUser = new ThreadLocal<Principal>();
-    
+
+	public static String getDefaultUsername(){
+		return DEFAULT_USERNAME;
+	}
+
 	public static Principal getActingUser(boolean allowGuest){
 		try {
 			Principal p = Authentication.getUser();
