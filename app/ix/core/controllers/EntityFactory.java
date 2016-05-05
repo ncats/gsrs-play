@@ -955,7 +955,6 @@ public class EntityFactory extends Controller {
 		            	return badRequest(validationResponse(vr));
 		            }
             }
-            System.out.println("About to save");
             inst.save();
             tx.commit();
             Status s=created (mapper.toJson(inst));
