@@ -12,6 +12,7 @@ import ix.core.chem.Chem;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.datasource.KewControlledPlantDataSet;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
@@ -32,8 +33,15 @@ import tripod.chem.indexer.StructureIndexer;
 public class SubstanceProcessor implements EntityProcessor<Substance>{
 	public static StructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
-    
+	KewControlledPlantDataSet kewData;
+	
+	
 	public SubstanceProcessor(){
+		try{
+			kewData= new KewControlledPlantDataSet("kew.json");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		//System.out.println("Made processor");
 	}
 	
@@ -114,8 +122,28 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 				Logger.error("Persist error. Alternative definition has no primary relationship");
 			}
 		}
-		//System.out.print("pp\t" + System.currentTimeMillis() + "\t");
+		addKewIfPossible(s);
+		
 	}
+	
+	/**
+	 * Adds/remove Kew tag for controlled kew substances
+	 * @param s
+	 */
+	public void addKewIfPossible(Substance s){
+		if(kewData!=null){
+			if(s.approvalID!=null && s.isPrimaryDefinition()){
+				if(kewData.contains(s.approvalID)){
+					s.addTagString("KEW");
+				}else{
+					if(s.hasTagString("KEW")){
+						s.removeTagString("KEW");
+					}
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void preUpdate(Substance obj) {
 		prePersist(obj);

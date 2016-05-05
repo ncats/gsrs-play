@@ -1118,3 +1118,12 @@ ul.tree-list {
 a#resolverButton {
     margin-top: 25px;
 }
+
+.kew {
+    max-height: 30px;
+    margin-top: 10%;
+}
+
+pre.fixedsize{
+	max-height: 200px;
+}

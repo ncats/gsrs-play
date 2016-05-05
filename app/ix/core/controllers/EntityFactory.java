@@ -965,7 +965,7 @@ public class EntityFactory extends Controller {
         	System.out.println(ex.getMessage());
         	ex.printStackTrace();
         	tx.rollback(ex);
-            return internalServerError (ex.getMessage());
+            return internalServerError ("Problem creating record:" + ex.getMessage());
         } finally{
         	tx.end();
         }

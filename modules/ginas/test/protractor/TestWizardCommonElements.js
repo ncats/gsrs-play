@@ -3,6 +3,11 @@ var WizardCommonElements = function () {
 
     this.getPage = function () {
         browser.get(browser.params.url);
+        browser.switchTo().alert().then(
+            function (alert) {
+                alert.accept(); },
+            function (err) { }
+        );
     };
 
     this.clickById = function (name) {

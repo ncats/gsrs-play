@@ -17,9 +17,6 @@ import ix.ginas.models.GinasCommonSubData;
 @DiscriminatorValue("COMP")
 @SingleParent
 public class Component extends GinasCommonSubData {
-
-	@ManyToOne(cascade = CascadeType.PERSIST)
-	private Mixture owner;
 	
     public String type;
     

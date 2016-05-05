@@ -1,0 +1,90 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.MixtureSubstance
+
+@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
+
+@(sub: SpecifiedSubstanceGroup1Substance)
+
+<div class="panel panel-default sub-list">
+    <div class="panel-heading sub-title">
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">@sub.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><code>@sub.approvalID</code></a></h4>
+            </div>
+        </div>
+    </div>
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3">
+                <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="Group 1 Specified Substance" src="@routes.Assets.at("ginas/images/chemical.svg")"  />
+                <div class = "row">
+                    <div class = "col-md-12 text-center">
+                        <ul class= "list-inline list-unstyled tools">
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Mixture">
+                                    <span class="sr-only">Edit Mixture</span>
+                                    <span class="fa fa-pencil fa-2x success"></span></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class = "col-md-7">
+            @if(sub.names.size()>0) {
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5>Other Names:</h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
+                    </div>
+                </div>
+            }
+                @if(sub.codes.size()>0){
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5>Codes:</h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
+                    </div>
+                </div>
+                }
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5>Components:</h5>
+                    </div>
+                    <div class = "col-md-1">
+                    <span class = "label label-primary label-rounded">@sub.specifiedSubstance.size()</span>
+                    </div>
+                    <h5>Relationships: @sub.relationships.size()</h5>
+                </div>
+</div>
+            <div class = "col-md-2">
+
+                <div class = "row">
+                    <div class = "col-md-12">
+                        @if(sub.approved==null){
+                            <h6>Not Approved</h6>
+                        }else{
+                            Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate'}}</h6>
+                        }
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Last modified: <h6>{{moment(@sub.getLastEdited.getTime())}}</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <code>@sub.getDisplayStatus()  version: @sub.version</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

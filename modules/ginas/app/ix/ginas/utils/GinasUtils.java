@@ -16,6 +16,7 @@ import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
@@ -59,6 +60,8 @@ import java.util.Date;
 import java.util.regex.Pattern;
 
 public class GinasUtils {
+	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
+			.ACCEPT_APPLY_ALL_MARK_FAILED();
 	private static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
 	
 
@@ -215,7 +218,15 @@ public class GinasUtils {
 			try {
 				switch (type) {
 				case chemical:
+					
+					ObjectNode structure = (ObjectNode)tree.at("/structure");
+					fixStereoOnStructure(structure);
+					for(JsonNode moiety: tree.at("/moieties")){
+						fixStereoOnStructure((ObjectNode)moiety);
+					}
+					
 					sub = mapper.treeToValue(tree, ChemicalSubstance.class);
+					
 
 					try {
 						((ChemicalSubstance) sub).structure.smiles = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
@@ -256,6 +267,30 @@ public class GinasUtils {
 			}
 		} else {
 			throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
+		}
+	}
+	
+	public static void fixStereoOnStructure(ObjectNode structure){
+		JsonNode jsn=structure.at("/stereochemistry");
+		try{
+			Structure.Stereo str=Structure.Stereo.valueOf(jsn.asText());
+		}catch(Exception e){
+			//e.printStackTrace();
+			//System.out.println("Unknown stereo:'" + jsn.asText() + "'");
+			if(!jsn.asText().equals("")){
+				//System.out.println("Is not nothin");
+				String newStereo=jsn.toString();
+				JsonNode oldnode=structure.get("stereocomments");
+				
+				if(oldnode!=null && !oldnode.isNull() && !oldnode.isMissingNode() &&
+						!oldnode.toString().equals("")){
+					newStereo+=";" +oldnode.toString();
+				}
+				structure.put("stereocomments",newStereo);
+				structure.put("atropisomerism", "Yes");
+				
+			}
+			structure.put("stereochemistry", "UNKNOWN");
 		}
 	}
 	
@@ -343,6 +378,10 @@ public class GinasUtils {
 
 	public static class GinasSubstanceTransformer extends GinasAbstractSubstanceTransformer<JsonNode> {
 
+		public GinasSubstanceTransformer(DefaultSubstanceValidator validator) {
+			super(validator);
+		}
+
 		@Override
 		public String getName(JsonNode theRecord) {
 			return theRecord.get("name").asText();
@@ -355,7 +394,31 @@ public class GinasUtils {
 			return sub;
 		}
 	}
+	/**
+	 * This Extractor is for explicitly testing that failed validation
+	 * records do fail.
+	 * 
+	 * @author peryeata
+	 *
+	 */
+	public static class GinasAlwaysFailTestDumpExtractor extends GinasDumpExtractor {
+		public GinasAlwaysFailTestDumpExtractor(InputStream is) {
+			super(is);
+		}
 
+		@Override
+		public RecordTransformer getTransformer() {
+			return new RecordTransformer<JsonNode, Substance>(){
+				@Override
+				public Substance transform(PayloadExtractedRecord<JsonNode> pr, ProcessingRecord rec) {
+					throw new IllegalStateException("Intentionally failed validation");
+				}
+
+			};
+		}
+
+	}
+	
 	public static class GinasDumpExtractor extends RecordExtractor<JsonNode> {
 		BufferedReader buff;
 
@@ -413,7 +476,8 @@ public class GinasUtils {
 
 		@Override
 		public RecordTransformer getTransformer() {
-			return new GinasSubstanceTransformer();
+			return new GinasSubstanceTransformer(
+					DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
 		}
 
 	}
@@ -469,14 +533,31 @@ public class GinasUtils {
 
 		@Override
 		public RecordTransformer getTransformer() {
-			return new GinasSubstanceTransformer();
+			return new GinasSubstanceTransformer(
+					DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
 		}
 
 	}
 
 	public abstract static class GinasAbstractSubstanceTransformer<K> extends RecordTransformer<K, Substance> {
-		public static GinasProcessingStrategy DEFAULT_STRAT = GinasProcessingStrategy
-				.ACCEPT_APPLY_ALL_MARK_FAILED();
+		
+		
+		DefaultSubstanceValidator validator;
+		
+		public GinasAbstractSubstanceTransformer(){
+			useDefaultValidator();
+		}
+		public GinasAbstractSubstanceTransformer(DefaultSubstanceValidator validator){
+			this.setValidator(validator);
+		}
+		
+		public void setValidator(DefaultSubstanceValidator validator){
+			this.validator=validator;
+		}
+		
+		public void useDefaultValidator(){
+			setValidator(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
+		}
 
 		@Override
 		public Substance transform(PayloadExtractedRecord<K> pr, ProcessingRecord rec) {
@@ -494,23 +575,17 @@ public class GinasUtils {
 			try {
 				sub = transformSubstance(pr.theRecord);
 				sub.addImportReference(rec.job);
-				prepareSubstance(DEFAULT_STRAT, sub);
+				validator.validate(sub);
 				rec.status = ProcessingRecord.Status.ADAPTED;
 			} catch (Throwable t) {
 				rec.stop = System.currentTimeMillis();
 				rec.status = ProcessingRecord.Status.FAILED;
 				rec.message = t.getMessage();
 				Logger.error(t.getMessage());
-				return null;
+				t.printStackTrace();
+				throw new IllegalStateException(t);
 			}
 			return sub;
-		}
-
-		public static ValidationResponse prepareSubstance(GinasProcessingStrategy prc, Substance sub)
-				throws Exception {
-			
-			DefaultSubstanceValidator dsv = DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(prc);
-			return dsv.validate(sub);
 		}
 
 		public abstract String getName(K theRecord);

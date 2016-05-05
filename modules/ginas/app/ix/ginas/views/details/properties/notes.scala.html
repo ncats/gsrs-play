@@ -15,16 +15,18 @@
     </thead>
     @for(n <- notes) {
       <tr>
-        <td>@n.note</td>
+        <td><pre class="fixedsize">@n.note</pre></td>
         @if(n.getReferences.size > 0){
           <td>
-          <referencesmanager indices substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
-        </td>
+          	<referencesmanager indices substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
+          </td>
+          </tr>
+      	  <tr>
+      	  	<td class = "'@n.getUuid'" colspan = "5"></td>
+    	}else{
+          <td>none</td>
+      	}
       </tr>
-      <tr><td class = "'@n.getUuid'" colspan = "5"></td></tr>
-    }else{
-        <td>none</td>
-      }
     }
   </table>
 </div>

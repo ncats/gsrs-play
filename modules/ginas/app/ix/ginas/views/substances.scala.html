@@ -6,6 +6,7 @@
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
 
 @import ix.ginas.models.v1.NucleicAcidSubstance
+@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], substancesList: List[Substance],
 ctx: String = null, searchFacets : List[FieldFacet] = null)
@@ -41,6 +42,10 @@ current, rows, total, pages, facets, searchFacets) {
                 }
                 case polymer: PolymerSubstance => {
                     @list.polymerlist(polymer)
+
+                }
+                case g1ss: SpecifiedSubstanceGroup1Substance => {
+                    @list.g1sslist(g1ss)
 
                 }
                 case concept: Substance => {

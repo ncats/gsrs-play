@@ -5,8 +5,7 @@
                 Subunit {{index}}
             </strong>
             <div ng-if="view !== 'subunits'">
-            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits"
-                           uib-tooltip="Delete sequence"></delete-button>
+            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits" showlabel ="false"></delete-button>
             <a ng-click="cleanSequence()" uib-tooltip="Clean sequence"><i class="fa fa-magic fa-2x success"></i></a>
             <a ng-click="toggleEdit()" uib-tooltip="Edit sequence"><i class="fa fa-pencil fa-2x"></i></a>
         </div>

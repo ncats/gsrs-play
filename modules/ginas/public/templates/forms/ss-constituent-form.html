@@ -6,11 +6,11 @@
         <form class="form-horizontal" name="constituentForm" id="addConstituentForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <substance-chooser-selector ng-model ="component.substance" field ="substance" name ="substance" formname ="constituentForm" label ="Constituent Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="component" field ="substance" name ="substance" formname ="constituentForm" label ="Constituent Substance" type = "search"></substance-chooser-selector>
                 </div>
-                <div class="col-md-3">
+<!--                <div class="col-md-3">
                     <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
-                </div>
+                </div>-->
                 <div class="col-md-3">
                     <dropdown-select ng-model="component.role" field="role" cv = "CONSTITUENT_ROLE"></dropdown-select>
                 </div>
@@ -25,28 +25,28 @@
                 </div>
             </div>
             <div class="constituentForm"></div>
-            <submit-buttons submit="component" form="constituentForm" path="specifiedSubstanceG1.constituents"></submit-buttons>
+            <submit-buttons submit="component" form="constituentForm" path="specifiedSubstance.constituents"></submit-buttons>
         </form>
 
         <div ng-repeat="(index, obj) in parent.specifiedSubstance.constituents track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="relationships"></delete-button>
+                    <delete-button delete="obj" path="constituents"></delete-button>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-view-edit obj = "obj" field ="substance"></substance-chooser-view-edit>
                 </div>
-                <div class="col-md-2">
+<!--                <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
-                </div>
+                </div>-->
                 <div class="col-md-2">
-                    <text-view-edit obj = "obj" field="role"></text-view-edit>
+                    <dropdown-view-edit obj = "obj" field="role" cv = "CONSTITUENT_ROLE"></dropdown-view-edit>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-1 pull-right">
                     <form-selector referenceobj= "obj" formname="constituentForm" type = "amount" divid=constituent-{{index}}></form-selector>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "component" parent = "parent" edit="true"></reference-modal-button>
                 </div>
                 <div class="col-md-1 pull-right">
