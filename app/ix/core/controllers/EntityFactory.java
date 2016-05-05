@@ -1624,9 +1624,13 @@ public class EntityFactory extends Controller {
 	                }
 	                Logger.debug("** New edit history "+eh.edit.id);
             }
+            // This was added because there are times
+            // when the parent entity isn't actually
+            // updated at all, at least from the ebean perspective
+            
+            EntityPersistAdapter.getInstance().deepreindex(newValue);
             return ok (mapper.valueToTree(newValue));          
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
             ex.printStackTrace();
