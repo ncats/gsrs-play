@@ -15,7 +15,8 @@ import static org.junit.Assert.assertTrue;
 public class SubstanceAPI {
 
     private static final String API_URL_VALIDATE = "ginas/app/api/v1/substances/@validate";
-    private static final String API_URL_SUBMIT = "ginas/app/api/v1/substances";
+    private static final String API_URL_SUBMIT_SUBSTANCE = "ginas/app/api/v1/substances";
+    private static final String API_URL_SUBMIT_CV = "ginas/app/api/v1/vocabularies";
     private static final String API_URL_FETCH = "ginas/app/api/v1/substances($UUID$)?view=full";
     private static final String API_URL_HISTORY = "ginas/app/api/v1/substances($UUID$)/@edits";
     private static final String API_URL_MOL = "ginas/app/structure";
@@ -54,7 +55,7 @@ public class SubstanceAPI {
 
 
     public WSResponse submitSubstance(JsonNode js) {
-        return session.createRequestHolder(API_URL_SUBMIT).post(js).get(timeout);
+        return session.createRequestHolder(API_URL_SUBMIT_SUBSTANCE).post(js).get(timeout);
     }
 
     public JsonNode submitSubstanceJson(JsonNode js) {
@@ -186,6 +187,13 @@ public class SubstanceAPI {
 
         return new JsonHistoryResult(edit, oldv, newv);
     }
+
+	public WSResponse submitCVDomain(JsonNode newCV) {
+		return session.createRequestHolder(API_URL_SUBMIT_CV).post(newCV).get(timeout);
+	}
+	public JsonNode submitCVDomainJson(JsonNode newCV) {
+		return this.session.extractJSON(submitCVDomain(newCV));
+	}
 
 
 }

@@ -2,11 +2,13 @@ package ix.ginas.models.v1;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
@@ -15,8 +17,8 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.models.BaseModel;
 import ix.core.models.Indexable;
-import ix.core.models.IxModel;
 import ix.core.models.Keyword;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
@@ -26,17 +28,11 @@ import ix.ginas.models.serialization.KeywordListSerializer;
 @Table(name = "ix_ginas_controlled_vocab")
 @Inheritance
 @DiscriminatorValue("CTLV")
-public class ControlledVocabulary extends IxModel {
+public class ControlledVocabulary extends BaseModel {
 
-    private static final long serialVersionUID = 5455592961232451608L;
-
-    //@JsonIgnore
-    public Long getId() {
-        return this.id;
-    }
-
-    ;
-
+	@Id
+	UUID id;
+	
     @Column(unique = true)
     @Indexable(name = "Domain", facet = true)
     public String domain;
@@ -46,7 +42,7 @@ public class ControlledVocabulary extends IxModel {
         this.terms = terms;
     }
 
-    private String vocabularyTermType = VocabularyTerm.class.getName();
+    private String vocabularyTermType = ControlledVocabulary.class.getName();
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonSerialize(using = KeywordListSerializer.class)
@@ -89,6 +85,16 @@ public class ControlledVocabulary extends IxModel {
     public String getVocabularyTermType() {
         return vocabularyTermType;
     }
+
+	@Override
+	public String fetchGlobalId() {
+		if(id!=null)
+			return id.toString();
+		id=UUID.randomUUID();
+		return id.toString();
+	}
+    
+    
 
 
 }
