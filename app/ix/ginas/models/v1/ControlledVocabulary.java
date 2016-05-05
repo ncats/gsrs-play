@@ -14,11 +14,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.BaseModel;
 import ix.core.models.Indexable;
+import ix.core.models.IxModel;
 import ix.core.models.Keyword;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
@@ -28,10 +30,19 @@ import ix.ginas.models.serialization.KeywordListSerializer;
 @Table(name = "ix_ginas_controlled_vocab")
 @Inheritance
 @DiscriminatorValue("CTLV")
-public class ControlledVocabulary extends BaseModel {
+public class ControlledVocabulary extends IxModel {
 
-	@Id
-	UUID id;
+    private static final long serialVersionUID = 5455592961232451608L;
+
+    //We need to keep this JsonIgnore
+    //so when we generate the cv.json file
+    //the ids aren't included.  This causes a problem
+    //on import because then the ids get re-used by ebean
+    //since it prefetches them before we load!!
+    @JsonIgnore
+    public Long getId() {
+        return this.id;
+    }
 	
     @Column(unique = true)
     @Indexable(name = "Domain", facet = true)
@@ -85,14 +96,6 @@ public class ControlledVocabulary extends BaseModel {
     public String getVocabularyTermType() {
         return vocabularyTermType;
     }
-
-	@Override
-	public String fetchGlobalId() {
-		if(id!=null)
-			return id.toString();
-		id=UUID.randomUUID();
-		return id.toString();
-	}
     
     
 
