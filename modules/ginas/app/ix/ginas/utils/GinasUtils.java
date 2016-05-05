@@ -16,6 +16,7 @@ import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
@@ -217,7 +218,15 @@ public class GinasUtils {
 			try {
 				switch (type) {
 				case chemical:
+					
+					ObjectNode structure = (ObjectNode)tree.at("/structure");
+					fixStereoOnStructure(structure);
+					for(JsonNode moiety: tree.at("/moieties")){
+						fixStereoOnStructure((ObjectNode)moiety);
+					}
+					
 					sub = mapper.treeToValue(tree, ChemicalSubstance.class);
+					
 
 					try {
 						((ChemicalSubstance) sub).structure.smiles = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
@@ -258,6 +267,30 @@ public class GinasUtils {
 			}
 		} else {
 			throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
+		}
+	}
+	
+	public static void fixStereoOnStructure(ObjectNode structure){
+		JsonNode jsn=structure.at("/stereochemistry");
+		try{
+			Structure.Stereo str=Structure.Stereo.valueOf(jsn.asText());
+		}catch(Exception e){
+			//e.printStackTrace();
+			//System.out.println("Unknown stereo:'" + jsn.asText() + "'");
+			if(!jsn.asText().equals("")){
+				//System.out.println("Is not nothin");
+				String newStereo=jsn.toString();
+				JsonNode oldnode=structure.get("stereocomments");
+				
+				if(oldnode!=null && !oldnode.isNull() && !oldnode.isMissingNode() &&
+						!oldnode.toString().equals("")){
+					newStereo+=";" +oldnode.toString();
+				}
+				structure.put("stereocomments",newStereo);
+				structure.put("atropisomerism", "Yes");
+				
+			}
+			structure.put("stereochemistry", "UNKNOWN");
 		}
 	}
 	
@@ -549,6 +582,7 @@ public class GinasUtils {
 				rec.status = ProcessingRecord.Status.FAILED;
 				rec.message = t.getMessage();
 				Logger.error(t.getMessage());
+				t.printStackTrace();
 				throw new IllegalStateException(t);
 			}
 			return sub;

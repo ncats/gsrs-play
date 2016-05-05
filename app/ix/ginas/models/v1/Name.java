@@ -143,7 +143,7 @@ public class Name extends CommonDataElementOfCollection {
     	r.citation=this.name + " [" + loc + "]";
     	r.publicDomain=true;
     	this.addReference(r,sub);
-    	sub.addTag(new Keyword(this.TAG,loc));
+    	sub.addTagString(loc);
     }
     
     /**
