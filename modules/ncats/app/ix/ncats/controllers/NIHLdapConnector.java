@@ -163,7 +163,8 @@ public class NIHLdapConnector implements Authenticator{
         Attribute a = attrs.get(name);
         return a != null ? a.get().toString() : "";
     }
-    
+
+    @Override
     public Principal getUser(String username, String password){
     	return getEmployee(username,password);
     }
