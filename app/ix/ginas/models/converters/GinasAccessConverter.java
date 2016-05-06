@@ -23,7 +23,12 @@ public class GinasAccessConverter implements ScalarTypeConverter<GinasAccessCont
 		
 		try {
 			for(Group g: arg0.getAccess()){
-				bs.set(g.id.intValue());
+				Long lid=g.id;
+				if(lid==null){
+					throw new IllegalStateException(g.name + " not persisted yet?");
+				}else{
+					bs.set(lid.intValue());
+				}
 			}
 			//System.out.println("serializaing access");
 			return bs.toByteArray();
