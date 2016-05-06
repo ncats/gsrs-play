@@ -5,37 +5,14 @@
 
 
 @substancedetails(sub){
-                       @* @if(sub.specifiedSubstance.size() > 0) {
+                        @if(sub.specifiedSubstance.size() > 0) {
                             <li role="presentation"><a href="#components">
-                                Mixture Components <span class="badge pull-right">@sub.specifiedSubstance.size()</span></a></li>
-                        }*@
+                                Constituents<span class="badge pull-right">@sub.specifiedSubstance.size()</span></a></li>
+                        }
 }{
     <div></div>
     }{
-   @* <div class="row info" id="components">
-  //  @properties.specsubcomponents(sub.specifiedSubstance.constituents)
-    </div>*@
-
- @*   <div class="row info" id="names">
-    @properties.names(sub.names)
+  <div class="row info" id="components">
+      @properties.specsubcomponents(sub.specifiedSubstance.constituents)
     </div>
-
-    @if(sub.codes.size() > 0) {
-        <div class="row info" id="codes">
-        @properties.codes(sub.codes)
-        </div>
-    }
-    @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-        <div class="row info" id="relationships">
-        @properties.relationships(sub.relationships)
-        </div>
-    }
-
-
-
-    <div class="row info" id="refs">
-    @properties.references(sub.references)
-    </div>
-*@
-
 }

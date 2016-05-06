@@ -557,6 +557,7 @@
             },*/
             templateUrl: baseurl + "assets/templates/admin/cv-terms.html",
             link: function(scope){
+                console.log(scope);
             }
         };
     });
@@ -706,6 +707,7 @@
 
                 switch (scope.type) {
                     case "amount":
+                        console.log(scope);
                         if(!scope.field){
                             scope.field = 'amount';
                         }
@@ -1926,6 +1928,16 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             },
             templateUrl: baseurl + "assets/templates/forms/relationship-form.html",
             link: function(scope){
+                scope.validate = function (obj, form, path) {
+                    console.log(scope);
+console.log(obj);
+                    if (!scope.parent.relationships) {
+                        scope.parent.relationships = [];
+                    }
+                    scope.parent.relationships.push(obj);
+                    obj = {};
+                    scope.relationshipForm.$setPristine();
+                };
               //  scope.filter = {};
             }
         };
@@ -2058,6 +2070,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             link: function (scope, element, attrs) {
                 scope.validate = function () {
                     if (!scope.$parent.validate) {
+                        console.log(scope);
                         if (scope.$parent.$parent.validate(scope.obj, scope.form, scope.path)) {
                             scope.reset();
                         }

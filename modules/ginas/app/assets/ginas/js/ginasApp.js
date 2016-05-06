@@ -728,13 +728,16 @@
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
           //  console.log(sub);
             $scope.errorsArray = [];
-            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).then(function (response) {
                 $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
                 // if (callback) {
                 //     callback();
                 // }
+            }).finally(function () {
+                $scope.validating = false;
+                console.log($scope.validating);
             });
         };
 
