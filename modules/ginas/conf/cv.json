@@ -3668,7 +3668,7 @@
         "modified": 1462481431533,
         "deprecated": false,
         "value": "PROPERTY_IMPORT",
-        "display": "PROPERTY_IMPORT",
+        "display": "Validation Message",
         "hidden": false,
         "selected": false,
         "systemCategory": "GENERAL INFORMATION",

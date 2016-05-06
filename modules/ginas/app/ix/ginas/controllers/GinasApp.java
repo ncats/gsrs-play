@@ -1106,21 +1106,27 @@ public class GinasApp extends App {
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         ObjectNode node = mapper.createObjectNode();
         try {
-                String payload = request().body().asText();
-            payload = ChemCleaner.getCleanMolfile(payload);
+            String opayload = request().body().asText();
+            String payload = ChemCleaner.getCleanMolfile(opayload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
-                
                 
                 try {
                     Structure struc = StructureProcessor.instrument
                         (payload, moieties, false); // don't standardize!
                     // we should be really use the PersistenceQueue to do this
                     // so that it doesn't block
+                    
+                    // in fact, it probably shouldn't be saving this at all
+                    //
+                    if(payload.contains("\n") && payload.contains("M  END")){
+                    	struc.molfile=payload;
+                    	System.out.println(payload);
+                    }
                     struc.save();
+                    
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                        
                         m.save();
                         ObjectNode on = mapper.valueToTree(m);
                         Amount c1=Moiety.intToAmount(m.count);

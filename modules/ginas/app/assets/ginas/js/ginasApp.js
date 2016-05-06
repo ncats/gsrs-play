@@ -221,7 +221,7 @@
                 }
                 //sub.structure.id = UUID.newID();
                 if (sub.substanceClass === 'polymer') {
-                    _.set(sub, 'polymer.idealizedStructure', sub.structure);
+                    //_.set(sub, 'polymer.idealizedStructure', sub.structure);
                     sub = _.omit(sub, 'structure');
                 }
             }
@@ -872,7 +872,7 @@
                 molChanger.setMol($scope.substance.structure.molfile);
             }
             if ($scope.substance.substanceClass === 'polymer') {
-                molChanger.setMol($scope.substance.idealizedStructure.molfile);
+                molChanger.setMol($scope.substance.polymer.idealizedStructure.molfile);
             }
         };
 
@@ -1772,7 +1772,7 @@
                         }
                     }).success(function (data) {
                         if (scope.parent.substanceClass === "polymer") {
-                            scope.parent.idealizedStructure = data.structure;
+                            scope.parent.polymer.idealizedStructure = data.structure;
                             scope.structure = data.structure;
                             CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
                                 for (var i in data.structuralUnits) {
@@ -1823,7 +1823,7 @@
                 if (scope.parent.substanceClass === 'polymer' && (scope.parent.polymer.displayStructure)) {
                     scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
                 }else {
-                    if(!_.isUndefined(scope.parent.idealizedStructure)) {
+                    if(!_.isUndefined(scope.parent.polymer.idealizedStructure)) {
                         scope.mol = scope.parent.polymer.idealizedStructure.molfile;
                         if (!_.isNull(scope.mol)) {
                             scope.updateMol();
