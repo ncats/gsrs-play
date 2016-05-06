@@ -995,27 +995,37 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
+            	scope.formatValue = function (v){
+            		if (v) {
+                            if(typeof v === "object"){
+                            	if(v.display){
+                            		return v.display;
+                            	}else if(v.value){
+                            		return v.value;
+                            	}else{
+                            		return null;
+                            	}
+                            }else{
+                            	return v;
+                            }
+                    }
+                    return null;
+            	};
+            
                 scope.display = function () {
                     if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
                         var addedunits = false;
-                        var unittext = "";
-                        if (scope.value.units) {
-                            if (scope.value.units.display) {
-                                unittext = scope.value.units.display;
-                            } else {
-                                unittext = scope.value.units;
-                            }
+                        var unittext = scope.formatValue(scope.value.units);
+                        if(!unittext){
+                        	unittext="";
                         }
 
 
                         if (scope.value) {
-                            if (scope.value.type) {
-                                if (scope.value.type.display) {
-                                    ret += scope.value.type.display + "\n";
-                                } else {
-                                    ret += scope.value.type + "\n";
-                                }
+                        	var atype=scope.formatValue(scope.value.type);
+                            if (atype) {
+                                ret += atype + "\n";
                             }
                             if (scope.value.average || scope.value.high || scope.value.low) {
                                 if (scope.value.average) {
