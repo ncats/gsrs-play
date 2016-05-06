@@ -3,6 +3,7 @@ package ix.ncats.controllers.auth;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+import ix.core.auth.AuthenticationCredentials;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
@@ -262,6 +263,8 @@ public class Authentication extends Controller {
     
     public static UserProfile directlogin(String username, String password) throws Exception{
     	Principal cred;
+
+		AuthenticationCredentials credentials = AuthenticationCredentials.create(username, password);
 
     	UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
 
