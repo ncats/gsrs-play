@@ -830,7 +830,7 @@ public class GinasApp extends App {
         try {
             SearchResultContext context = similarity
                 (query, threshold, rows,
-                 page, new GinasSearchResultProcessor());
+                 page, new GinasSearchResultProcessor(isWaitSet()));
             return fetchResult (context, rows, page,
                                 new SubstanceResultRenderer (CHEMICAL_FACETS));
         }
@@ -863,12 +863,15 @@ public class GinasApp extends App {
                     (ix.ginas.views.html.error.render
                      (500, "Unable to perform flex search: " + query));
         }
+       
+   
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
         try {
+        	
             SearchResultContext context = App.substructure
-                (query, rows, page, new GinasSearchResultProcessor());
+                (query, rows, page, new GinasSearchResultProcessor(isWaitSet()));
             
             return App.fetchResult
                 (context, rows, page, 
@@ -1121,7 +1124,6 @@ public class GinasApp extends App {
                     //
                     if(payload.contains("\n") && payload.contains("M  END")){
                     	struc.molfile=payload;
-                    	System.out.println(payload);
                     }
                     struc.save();
                     
@@ -1170,7 +1172,8 @@ public class GinasApp extends App {
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
         
-        GinasSearchResultProcessor() {
+        GinasSearchResultProcessor(boolean wait) {
+        	this.setWait(wait);
         }
 
         int index;
@@ -1200,6 +1203,7 @@ public class GinasApp extends App {
                 }
                 IxCache.set("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
+           
             return chem;
         }
     }

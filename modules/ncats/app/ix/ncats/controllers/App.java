@@ -1191,24 +1191,40 @@ public class App extends Authentication {
     public static abstract class SearchResultProcessor<T, R> {
         protected Enumeration<T> results;
         final SearchResultContext context = new SearchResultContext ();
+        boolean wait=false;
         
         public SearchResultProcessor () {
+        }
+        
+        public void setWait(boolean wait){
+        	this.wait=wait;
         }
 
         public void setResults (int rows, Enumeration<T> results)
             throws Exception {
             this.results = results;
-            // the idea is to generate enough results for 1.5 pages (enough
-            // to show pagination) and return immediately. as the user pages,
-            // the background job will fill in the rest of the results.
-            int count = process (rows+1);
             
-            // while we continue to fetch the rest of the results in the
-            // background
-            ActorRef handler = Akka.system().actorOf
-                (Props.create(SearchResultHandler.class));
-            handler.tell(this, ActorRef.noSender());
-            Logger.debug("## search results submitted: "+handler);
+            if(wait){
+            	context.start = System.currentTimeMillis();
+            	process();
+            	
+            	context.setStatus(SearchResultContext.Status.Done);
+            	context.stop = System.currentTimeMillis();
+                
+            }else{
+
+                // the idea is to generate enough results for 1.5 pages (enough
+                // to show pagination) and return immediately. as the user pages,
+                // the background job will fill in the rest of the results.
+            	int count = process (rows);
+                
+                // while we continue to fetch the rest of the results in the
+                // background
+                ActorRef handler = Akka.system().actorOf
+                    (Props.create(SearchResultHandler.class));
+                handler.tell(this, ActorRef.noSender());
+                Logger.debug("## search results submitted: "+handler);
+            }
         }
         
         public SearchResultContext getContext () { return context; }
@@ -1276,6 +1292,7 @@ public class App extends Authentication {
                     ("Loading...%1$d%%",
                      (int)(100.*result.size()/result.count()+0.5));
             }
+            
             results = result.getMatches();
             total = result.count();
         }
@@ -1300,6 +1317,12 @@ public class App extends Authentication {
         @com.fasterxml.jackson.annotation.JsonIgnore
         public List getResults () { return results; }
         protected void add (Object obj) { results.add(obj); }
+        
+        
+        public String toJson(){
+        	ObjectMapper om = new ObjectMapper();
+        	return om.valueToTree(this).toString();
+        }
     }
     
     static class SearchResultHandler extends UntypedActor {
@@ -1385,7 +1408,7 @@ public class App extends Authentication {
                         break;
                         
                     default:
-                        return routes.App.status(key);
+                    	return routes.App.status(key);
                     }
                     //return routes.App.status(type.toLowerCase(), query);
                 }
@@ -1404,8 +1427,64 @@ public class App extends Authentication {
                 SearchResultContext ctx = new SearchResultContext (result);
                 Logger.debug("status: key="+key+" finished="+ctx.finished());
 
-                if (!ctx.finished())
+                if (!ctx.finished()){
                     return routes.App.status(key);
+                }
+            }
+        }
+        return null;
+    }
+    
+    public static SearchResultContext checkStatusDirect () {
+        String query = request().getQueryString("q");
+        String type = request().getQueryString("type");
+
+        Logger.debug("checkStatus: q=" + query + " type=" + type);
+        if (type != null && query != null) {
+            try {
+                String key = null;
+                if (type.equalsIgnoreCase("substructure")) {
+                    key = "substructure/"+Util.sha1(query);
+                }
+                else if (type.equalsIgnoreCase("similarity")) {
+                    String c = request().getQueryString("cutoff");
+                    key = "similarity/"+getKey (query, Double.parseDouble(c));
+                }
+                else if (type.equalsIgnoreCase("sequence")) {
+                    String iden = request().getQueryString("identity");
+                    if (iden == null) {
+                        iden = "0.5";
+                    }
+                    key = "sequence/"+getKey (query, Double.parseDouble(iden));
+                }
+                else {
+                }
+
+                Logger.debug("status: key="+key);
+                Object value = IxCache.get(key);
+                if (value != null) {
+                    SearchResultContext context = (SearchResultContext)value;
+                    Logger.debug("checkStatus: status="+context.getStatus()
+                                 +" count="+context.getCount()
+                                 +" total="+context.getTotal());
+                    return context;
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        else {
+            String key = signature (query, getRequestQuery ());
+            Object value = IxCache.get(key);
+            Logger.debug("checkStatus: key="+key+" value="+value);
+            if (value != null) {
+                SearchResult result = (SearchResult)value;
+                
+                SearchResultContext ctx = new SearchResultContext (result);
+                Logger.debug("status: key="+key+" finished="+ctx.finished());
+                
+                return ctx;
             }
         }
         return null;
@@ -1535,6 +1614,19 @@ public class App extends Authentication {
         return "fetchResult/"+context.getId()
             +"/"+Util.sha1(request (), params);
     }
+    /**
+     * Check if the current request has a wait parameter included
+     * @return
+     */
+	public static boolean isWaitSet() {
+		String wait = request().getQueryString("wait");
+		if (wait != null && wait.equalsIgnoreCase("true")) {
+			return true;
+		}
+		return false;
+	}
+	
+	
     public static <T> Result fetchResultImmediate
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
@@ -1547,7 +1639,7 @@ public class App extends Authentication {
     	             pages = paging(rows, page, result.count());
     	             
     	             //block for results only if the request specifies this
-    	             if(wait!=null && wait.equalsIgnoreCase("true")){
+    	             if(isWaitSet()){
     	            	 result.copyTo(resultList, (page-1)*rows, rows, true);
     	             }else{
     	            	 result.copyTo(resultList, (page-1)*rows, rows, false);
