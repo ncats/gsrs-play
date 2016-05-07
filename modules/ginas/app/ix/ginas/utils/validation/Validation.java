@@ -265,7 +265,7 @@ public class Validation {
     		do{
     			String loc=m.group(1);
     		
-    			System.out.println("LOCATOR:" + loc);
+    			//System.out.println("LOCATOR:" + loc);
     			locators.add(loc);
     		}while(m.find(m.start(1)));
     	}
@@ -563,42 +563,35 @@ public class Validation {
         if(cs.polymer==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Polymer substance must have a polymer element"));
         }else{
-        	if(cs.polymer.displayStructure==null || cs.polymer.displayStructure.molfile==null){
-        		if(cs.polymer.idealizedStructure!=null && cs.polymer.idealizedStructure.molfile!=null){
-        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using idealized Structure").appliableChange(true);
+        	boolean withDisplay=!isNull(cs.polymer.displayStructure);
+        	boolean withIdealized=!isNull(cs.polymer.idealizedStructure);
+        	if(!withDisplay && !withIdealized){
+        		GinasProcessingMessage gpmwarn=GinasProcessingMessage.ERROR_MESSAGE("No Display Structure or Idealized Structure found");
+    			gpm.add(gpmwarn);
+        	}else if(!withDisplay && withIdealized ){
+        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using Idealized Structure").appliableChange(true);
         			gpm.add(gpmwarn);
         			strat.processMessage(gpmwarn);
         			
         			switch(gpmwarn.actionType){
 					case APPLY_CHANGE:
 						try{
-							cs.polymer.displayStructure= cs.polymer.idealizedStructure.copy();
+							cs.polymer.displayStructure = cs.polymer.idealizedStructure.copy();
 						}catch(Exception e){
 							gpm.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
 						}
 						break;
 					case DO_NOTHING:
-						break;
 					case FAIL:
-						break;
 					case IGNORE:
-						break;
 					default:
 						break;
-        			
         			}
-        		}else{
-        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.ERROR_MESSAGE("No Display structure or idealized structure found");
-        			gpm.add(gpmwarn);
-        			
-        		}
-        	}
-        	if(cs.polymer.idealizedStructure==null || cs.polymer.idealizedStructure.molfile==null){
-        		if(cs.polymer.displayStructure!=null && cs.polymer.displayStructure.molfile!=null){
-        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using idealized Structure").appliableChange(true);
-        			gpm.add(gpmwarn);
-        			strat.processMessage(gpmwarn);
-        			switch(gpmwarn.actionType){
+        	}else if(withDisplay && !withIdealized ){
+	        		GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Idealized Structure found, default to using Display Structure").appliableChange(true);
+	    			gpm.add(gpmwarn);
+	    			strat.processMessage(gpmwarn);
+	    			switch(gpmwarn.actionType){
 						case APPLY_CHANGE:
 							try{
 								cs.polymer.idealizedStructure= cs.polymer.displayStructure.copy();
@@ -607,19 +600,13 @@ public class Validation {
 							}
 							break;
 						case DO_NOTHING:
-							break;
 						case FAIL:
-							break;
 						case IGNORE:
-							break;
 						default:
 							break;
-        			}
-        		}else{
-        			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("No idealized structure found for polymer");
-        			gpm.add(gpmerr);
-        		}
+	    			}
         	}
+        	
         	if(cs.polymer.structuralUnits==null || cs.polymer.structuralUnits.size()<=0){
         		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have structural units"));
         	}else{
@@ -664,7 +651,6 @@ public class Validation {
         		for(String con:connections){
         			String[] c=con.split("-");
         			if(!connections.contains(c[1] +"-" + c[0])){
-        				System.out.println("Missing connection");
         				GinasProcessingMessage gp=GinasProcessingMessage.WARNING_MESSAGE("Connection '" + con + "' does not have inverse connection. This can be created.").appliableChange(true);
         				strat.processMessage(gp);
         				gpm.add(gp);
@@ -711,6 +697,10 @@ public class Validation {
         return gpm;
 	}
     
+    public static boolean isNull(GinasChemicalStructure gcs){
+    	if(gcs==null || gcs.molfile==null)return true;
+    	return false;
+    }
     
     private static List<? extends GinasProcessingMessage> validateAndPrepareNa(
 			NucleicAcidSubstance cs, GinasProcessingStrategy strat) {
