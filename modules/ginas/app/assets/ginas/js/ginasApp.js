@@ -971,20 +971,41 @@
             scope: {
                 id: '@',
                 size: '@',
-                ctx: '@'
+                ctx: '@',
+                smiles: '@'
             },
             link: function (scope, element, attrs) {
-                var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
-                if (!_.isUndefined(scope.ctx)) {
-                    url += '&context={{ctx}}';
-                }
-                if (attrs.smiles) {
-                    var smiles = attrs.smiles.replace(';','%3B').replace('#','%23').replace('+','%2B');
-                    url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
-                }
-                var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
-                element.append(template);
-                $compile(template)(scope);
+                
+                scope.$watch('smiles', function (val) {
+         		  	   if (val) {
+               			   scope.relink();
+              		   }
+          		});
+          		scope.$watch('id', function (val) {
+         		  	   if (val) {
+               			   scope.relink();
+              		   }
+          		});
+          		scope.relink = function(){
+              		var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
+                    if (!_.isUndefined(scope.ctx)) {
+                        url += '&context={{ctx}}';
+                    }
+                    if (attrs.smiles) {
+                        var smiles = attrs.smiles
+                        				.replace(/[;]/g,'%3B')
+                        				.replace(/[#]/g,'%23')
+                        				.replace(/[+]/g,'%2B')
+                        				.replace(/[|]/g,'%7C');
+                        url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
+                    }
+                    var template = angular.element('<img width=height={{size||150}} height={{size||150}} ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
+
+                    element.html(template);
+                    $compile(template)(scope);
+          		};
+          		scope.relink();
+          				
             }
         };
     });
