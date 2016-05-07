@@ -8534,8 +8534,8 @@
         "description": "dier",
         "hidden": false,
         "selected": false,
-        "fragmentStructure": "CCCCCCCC\C=C/CCCCCCCCCCCCOCC(CO[*])OCCCCCCCCCCCC\C=C/CCCCCCCC |$;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92;;;;;;;;;;;;;;;;;;;;;;;$|",
-        "simplifiedStructure": "CCCCCCCC\C=C/CCCCCCCCCCCCOCC(CO[*])OCCCCCCCCCCCC\C=C/CCCCCCCC |$;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92;;;;;;;;;;;;;;;;;;;;;;;$|",
+        "fragmentStructure": "CCCCCCCC\\C=C/CCCCCCCCCCCCOCC(CO[*])OCCCCCCCCCCCC\\C=C/CCCCCCCC |$;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92;;;;;;;;;;;;;;;;;;;;;;;$|",
+        "simplifiedStructure": "CCCCCCCC\\C=C/CCCCCCCCCCCCOCC(CO[*])OCCCCCCCCCCCC\\C=C/CCCCCCCC |$;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92;;;;;;;;;;;;;;;;;;;;;;;$|",
         "filters": []
       },
       {
