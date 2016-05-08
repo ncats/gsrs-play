@@ -1,0 +1,368 @@
+{
+          "modifications": {
+                    "structuralModifications": [],
+                    "physicalModifications": [],
+                    "agentModifications": []
+          },
+          "structurallyDiverse": {
+                    "sourceMaterialType": "PLANT",
+                    "organismFamily": "ASTERACEAE",
+                    "organismGenus": "GUIZOTIA",
+                    "organismSpecies": "ABYSSINICA",
+                    "organismAuthor": "(L.F.) CASS.",
+                    "part": [
+                              "WHOLE"
+                    ]
+          },
+          "approvalID": "02QCV6AU6F",
+          "status": "approved",
+          "approvedBy": "FDA_SRS",
+          "approved": 1441029400994,
+          "substanceClass": "structurallyDiverse",
+          "names": [
+                    {
+                              "name": "GUIZOTIA ABYSSINICA WHOLE",
+                              "type": "of",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": true,
+                              "access": []
+                    },
+                    {
+                              "name": "RAMTILLA WHOLE",
+                              "type": "cn",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "bd86d2be-a671-452d-9412-77b3b88b6cc4"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "NIGER WHOLE",
+                              "type": "cn",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "5153d507-9155-4d2e-a71a-0d66f9f36607"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "WERINNUA WHOLE",
+                              "type": "cn",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "5153d507-9155-4d2e-a71a-0d66f9f36607"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "RAMTIL WHOLE",
+                              "type": "cn",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "5153d507-9155-4d2e-a71a-0d66f9f36607"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "ANTHEMIS MYSORENSIS WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "BIDENS RAMTILLA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "BUPHTHALMUM RAMTILLA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "GUIZOTIA OLEIFERA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "JAEGERIA ABYSSINICA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "GUIZOTIA ABYSSINICA (L. F.) CASS.",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "d2edfaf8-fcad-4d49-8ded-959923a69164"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "POLYMNIA ABYSSINICA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "RAMTILLA OLEIFERA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "TETRAGONOTHECA ABYSSINICA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    },
+                    {
+                              "name": "VERBESINA SATIVA WHOLE",
+                              "type": "sys",
+                              "domains": [],
+                              "languages": [
+                                        "en"
+                              ],
+                              "references": [
+                                        "ba8baea4-cee6-41da-bce7-f1afa51149c7"
+                              ],
+                              "preferred": false,
+                              "access": []
+                    }
+          ],
+          "codes": [
+                    {
+                              "code": "37477",
+                              "codeSystem": "ITIS",
+                              "references": [
+                                        "a0de0805-6420-4be5-b172-8a5044c1ebe7"
+                              ],
+                              "url": "http://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=37477",
+                              "type": "PRIMARY",
+                              "access": []
+                    },
+                    {
+                              "code": "4230",
+                              "codeSystem": "NCBI TAXONOMY",
+                              "references": [
+                                        "a0de0805-6420-4be5-b172-8a5044c1ebe7"
+                              ],
+                              "url": "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=4230",
+                              "type": "PRIMARY",
+                              "access": []
+                    },
+                    {
+                              "code": "GUAB",
+                              "codeSystem": "USDA PLANTS",
+                              "references": [
+                                        "a0de0805-6420-4be5-b172-8a5044c1ebe7"
+                              ],
+                              "url": "http://plants.usda.gov/java/profile?symbol=GUAB",
+                              "type": "PRIMARY",
+                              "access": []
+                    },
+                    {
+                              "code": "18068",
+                              "codeSystem": "GRIN",
+                              "references": [
+                                        "a0de0805-6420-4be5-b172-8a5044c1ebe7"
+                              ],
+                              "url": "http://www.ars-grin.gov/cgi-bin/npgs/html/taxon.pl?18068",
+                              "type": "PRIMARY",
+                              "access": []
+                    }
+          ],
+          "relationships": [
+                    {
+                              "relatedSubstance": {
+                                        "substanceClass": "reference",
+                                        "approvalID": "QX0GL46299",
+                                        "refPname": "GUIZOTIA ABYSSINICA SEED OIL",
+                                        "refuuid": "1d6b6837-d86b-4a5c-952b-764a034aa191"
+                              },
+                              "type": "PART/FRACTION->PARENT ORGANISM",
+                              "comments": "",
+                              "references": [],
+                              "access": []
+                    },
+                    {
+                              "relatedSubstance": {
+                                        "substanceClass": "reference",
+                                        "approvalID": "8245P2PA1A",
+                                        "refPname": "GUIZOTIA ABYSSINICA SEED",
+                                        "refuuid": "ede3f491-a326-4731-a369-7e01b015f643"
+                              },
+                              "type": "PART/FRACTION->PARENT ORGANISM",
+                              "comments": "",
+                              "references": [],
+                              "access": []
+                    }
+          ],
+          "references": [
+                    {
+                              "uuid": "ba8baea4-cee6-41da-bce7-f1afa51149c7",
+                              "citation": "GCC",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "access": []
+                    },
+                    {
+                              "uuid": "bd86d2be-a671-452d-9412-77b3b88b6cc4",
+                              "citation": "ITIS",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "access": []
+                    },
+                    {
+                              "uuid": "5153d507-9155-4d2e-a71a-0d66f9f36607",
+                              "citation": "NCBI",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "access": []
+                    },
+                    {
+                              "uuid": "d2edfaf8-fcad-4d49-8ded-959923a69164",
+                              "citation": "PLANTS",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "access": []
+                    },
+                    {
+                              "uuid": "a0de0805-6420-4be5-b172-8a5044c1ebe7",
+                              "citation": "SRS CODE IMPORT",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "documentDate": "2015-08-31T09:56:40.000-0400",
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "access": []
+                    },
+                    {
+                              "uuid": "7d766247-411e-461d-bb70-6265ab557bc2",
+                              "citation": "SRS import [02QCV6AU6F]",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "documentDate": "2015-08-31T09:56:40.000-0400",
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "url": "http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=02QCV6AU6F",
+                              "access": []
+                    },
+                    {
+                              "uuid": "ba0c0311-7bce-48b2-9faf-5d597b6c0922",
+                              "citation": "Catalogue of Life 2014",
+                              "docType": "SRS",
+                              "publicDomain": true,
+                              "tags": [
+                                        "NOMEN"
+                              ],
+                              "access": []
+                    }
+          ],
+          "properties": [],
+          "notes": [],
+          "tags": [],
+          "uuid": "cf8df6ce-b0c6-4570-a07a-118cd58a4e90",
+          "access": [],
+          "lastEditedBy": "tyler"
+}

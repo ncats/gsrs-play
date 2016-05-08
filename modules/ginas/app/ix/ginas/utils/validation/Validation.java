@@ -38,6 +38,7 @@ import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
@@ -175,8 +176,8 @@ public class Validation {
 		        	gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s,strat));
 		            break;
 		        case structurallyDiverse:
-		        	//TODO: NEED SOMETHING
-		            break;
+		        	gpm.addAll(validateAndPrepareStructurallyDiverse((StructurallyDiverseSubstance)s,strat));
+		        	break;
 		        case reference:
 		            break;
 		        case specifiedSubstanceG1:
@@ -557,6 +558,45 @@ public class Validation {
         }
         return gpm;
 	}
+    private static List<? extends GinasProcessingMessage> validateAndPrepareStructurallyDiverse(
+			StructurallyDiverseSubstance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+        if(cs.structurallyDiverse==null){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse substance must have a structurally diverse element"));
+        }else{
+        	if(cs.structurallyDiverse.sourceMaterialClass==null || cs.structurallyDiverse.sourceMaterialClass.equals("")){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialClass"));
+        	}else{
+        		if(cs.structurallyDiverse.sourceMaterialClass.equals("ORGANISM")){
+        			boolean hasParent=false;
+        			boolean hasTaxon=false;
+        			if(cs.structurallyDiverse.parentSubstance!=null){
+        				hasParent=true;
+        			}
+        			if(cs.structurallyDiverse.organismFamily!=null &&
+        			   !cs.structurallyDiverse.organismFamily.equals("")){
+        				hasTaxon=true;
+        			}
+        			if(cs.structurallyDiverse.part==null || cs.structurallyDiverse.part.isEmpty()){
+        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse organism substance must specify at least one (1) part"));
+        			}
+        			if(!hasParent && !hasTaxon){
+        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse organism substance must specify a parent substance, or a family"));
+        			}
+        			if(hasParent && hasTaxon){
+        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Structurally diverse organism substance typically should not specify both a parent and taxonomic information"));
+        			}
+        		}
+        		
+        	}
+        	if(cs.structurallyDiverse.sourceMaterialType==null || cs.structurallyDiverse.sourceMaterialType.equals("")){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialType"));
+        	}
+        	
+        }
+        return gpm;
+	}
+    
     private static List<? extends GinasProcessingMessage> validateAndPreparePolymer(
 			PolymerSubstance cs, GinasProcessingStrategy strat) {
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
