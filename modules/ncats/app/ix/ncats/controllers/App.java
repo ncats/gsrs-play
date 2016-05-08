@@ -1001,9 +1001,15 @@ public class App extends Authentication {
                     atoms[i].setAtomMap(amap[i]);
                     if(amap[i]!=0){
                         dp = dp.withSubstructureHighlight();
-                        highlight=true;
                     }
                 }
+        }else{
+        	ChemicalAtom[] atoms = chem.getAtomArray();
+            for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
+            	if(atoms[i].getAtomMap()!=0){
+                    dp = dp.withSubstructureHighlight();
+                }
+            }
         }
         
         if(size>250 && !highlight){
@@ -1222,7 +1228,7 @@ public class App extends Authentication {
                 // the idea is to generate enough results for 1.5 pages (enough
                 // to show pagination) and return immediately. as the user pages,
                 // the background job will fill in the rest of the results.
-            	int count = process (rows);
+            	int count = process (rows+1);
                 
                 // while we continue to fetch the rest of the results in the
                 // background
