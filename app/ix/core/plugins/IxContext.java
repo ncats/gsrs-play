@@ -160,6 +160,7 @@ public class IxContext extends Plugin {
                     +((host != null ? host : "") + context+api));
     }
     private void retrieveDatabaseMetaData() throws Exception{
+    	
     	DatabaseMetaData meta = DB.getConnection().getMetaData();
         Logger.info("## Database vendor: "+meta.getDatabaseProductName()
                     +" "+meta.getDatabaseProductVersion());
@@ -180,10 +181,10 @@ public class IxContext extends Plugin {
     	applySQL(sqlRun,PRINT_EXCEPTION_HANDLER);
     }
 	private void applySQL(String sqlRun, ExceptionHandler eh) throws Exception {
-		
 		if (sqlRun != null) {
 			Statement s = DB.getConnection().createStatement();
 			for (String sqlLine : sqlRun.split(";")) {
+				if(sqlLine.trim().equals(""))continue;
 				try {
 					Logger.debug("applying");
 					try{
@@ -246,8 +247,11 @@ public class IxContext extends Plugin {
 
 				@Override
 				public void handleException(Exception e) {
+					//
 					if( e.getMessage().contains("already exists") || 
-						e.getMessage().contains(" name is already used by an existing object")){
+						e.getMessage().contains(" name is already used by an existing object") ||
+						e.getMessage().contains("Duplicate")
+						){
 						System.err.println("Post evolutions already applied:" + e.getMessage());
 					}else{
 						e.printStackTrace();

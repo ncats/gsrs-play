@@ -3,6 +3,7 @@ package ix.ncats.controllers;
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.sql.DatabaseMetaData;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -10,6 +11,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import play.Play;
+import play.db.DB;
 import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -37,6 +39,7 @@ import akka.routing.SmallestMailboxRouter;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import ix.core.search.TextIndexer;
+import java.sql.Connection;
 
 import ix.seqaln.SequenceIndexer;
 import static ix.core.search.TextIndexer.*;
@@ -921,6 +924,7 @@ public class App extends Authentication {
                         if (mol.getDim() < 2) {
                             mol.clean(2, null);
                         }
+                        
                         Logger.info("ok");
                         return ok (render (mol, "svg", size, null));
                     }
@@ -1772,8 +1776,75 @@ public class App extends Authentication {
     }
 
     public static Result cacheSummary () {
-        return ok (ix.ncats.views.html.cachestats.render
+    	return ok (ix.ncats.views.html.cachestats.render
                    (IxCache.getStatistics()));
+    }
+    
+    public static class DBConfig{
+    	private String dbname;
+    	private String dbdriver;
+    	private String dbproduct;
+    	private boolean connected=false;
+    	private long latency=-1;
+    	public DBConfig(String name, String driver, String product, boolean connected, long lat){
+    		this.dbname=name;
+    		this.dbdriver=driver;
+    		this.dbproduct=product;
+    		this.connected=connected;
+    		this.latency=lat;
+    		
+    	}
+    	public String getName(){
+    		return this.dbname;
+    	}
+    	public String getDriver(){
+    		return this.dbdriver;
+    	}
+    	public String getProduct(){
+    		return this.dbproduct;
+    	}
+    	public boolean getConnected(){
+    		return this.connected;
+    	}
+    	public Long getLatency(){
+    		if(latency>=0) return latency;
+    		return null;
+    	}
+    }
+    /**
+     * Returns a list of known databases in the configuration
+     * file, along with basic information about the connection
+     * if one can be made
+     * @return
+     */
+    public static List<DBConfig> getDefinedDatabases(){
+    	Object dbs=play.Play.application().configuration().getObject("db");
+    	List<DBConfig> dblist = new ArrayList<DBConfig>();
+    	if(dbs instanceof Map){
+    		Map<String,Object> databases = (Map<String,Object>)dbs;
+    		for(String dbname:databases.keySet()){
+    			String productName=null;
+    			Map<String,Object> dbconf=(Map<String,Object>)databases.get(dbname);
+    			boolean connectable=false;
+    			String driverName = (String)dbconf.get("driver");
+    			long latency=-1;
+
+    			try(Connection c = DB.getConnection(dbname)){
+    				long start=System.currentTimeMillis();
+	    			DatabaseMetaData meta = c.getMetaData();
+	    			productName=meta.getDatabaseProductName() + " " +meta.getDatabaseProductVersion();
+	    			long end=System.currentTimeMillis();
+	    			//c.
+	    			connectable=true;
+	    			latency=end-start;
+	    			c.close();
+	    		}catch(Exception e){
+	    			e.printStackTrace();
+	    		}
+    			dblist.add(new DBConfig(dbname,driverName,productName,connectable,latency));
+    		}
+    	}
+    	return dblist;
     }
 
     public static Result cacheList (int top, int skip) {
