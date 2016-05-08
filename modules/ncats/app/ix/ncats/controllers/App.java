@@ -36,6 +36,7 @@ import akka.routing.RouterConfig;
 import akka.routing.FromConfig;
 import akka.routing.RoundRobinRouter;
 import akka.routing.SmallestMailboxRouter;
+import be.objectify.deadbolt.java.actions.Dynamic;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import ix.core.search.TextIndexer;
@@ -95,6 +96,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.ehcache.Element;
 import ix.ncats.controllers.App.SearchResultContext;
 import ix.ncats.controllers.auth.*;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.ncats.resolvers.*;
 
 
@@ -1775,6 +1777,7 @@ public class App extends Authentication {
         }
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheSummary () {
     	return ok (ix.ncats.views.html.cachestats.render
                    (IxCache.getStatistics()));
