@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ix.core.UserFetcher;
+import ix.core.auth.AuthenticationCredentials;
 import ix.core.auth.Authenticator;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
@@ -51,7 +52,7 @@ public class GinasGlobal extends Global {
 
 			String real = req.getHeader("X-Real-IP");
 
-            UserProfile p = authenticator.authenticate(ctx);
+            UserProfile p = authenticator.authenticate(AuthenticationCredentials.create(ctx));
 
 
 			if(p ==null && !Authentication.allowNonAuthenticated()){
