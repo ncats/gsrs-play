@@ -5,14 +5,7 @@ import static org.apache.lucene.document.Field.Store.YES;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -35,10 +28,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.SearcherManager;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
@@ -358,28 +348,7 @@ public class SequenceIndexer {
             (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
-    protected synchronized DirectoryReader getKmerReader () throws IOException {
-        DirectoryReader reader = DirectoryReader.openIfChanged(_kmerReader);
-        if (reader != null) {
-            _kmerReader.close();
-            _kmerReader = reader;
-        }
-        return _kmerReader;
-    }
 
-    protected synchronized DirectoryReader getIndexReader ()
-        throws IOException {
-        DirectoryReader reader = DirectoryReader.openIfChanged(_indexReader);
-        if (reader != null) {
-            _indexReader.close();
-            _indexReader = reader;
-        }
-        return _indexReader;
-    }
-    
-    protected IndexSearcher getIndexSearcher () throws IOException {
-        return new IndexSearcher (getIndexReader ());
-    }
     
     public File getBasePath () { return baseDir; }
     
@@ -420,10 +389,13 @@ public class SequenceIndexer {
     }
 
     public void remove(String id) throws IOException{
-        indexWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
-        kmerWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
+        Objects.requireNonNull(id);
+        indexWriter.deleteDocuments(new Term (FIELD_ID, id));
+        kmerWriter.deleteDocuments(new Term (FIELD_ID, id));
     }
-    
+
+
+
     public void add (String id, CharSequence seq)
         throws IOException {
         if (indexWriter == null)
@@ -437,24 +409,77 @@ public class SequenceIndexer {
             doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
             doc.add(new StoredField (FIELD_SEQ, seq.toString()));
             indexWriter.addDocument(doc);
+           // indexWriter.updateDocument(new Term (FIELD_ID, id), doc);
             
             Kmers kmers = Kmers.create(seq);
             for (String kmer : kmers.kmers()) {
                 BitSet positions = kmers.positions(kmer);
                 StringField kmerf = new StringField (FIELD_KMER, kmer, YES);
-                doc = new Document ();
-                doc.add(idf);
-                doc.add(kmerf);
+                Document doc2 = new Document ();
+                doc2.add(idf);
+                doc2.add(kmerf);
                 //System.err.println(kmer+": "+positions);
                 for (int i = positions.nextSetBit(0);
                      i>=0; i = positions.nextSetBit(i+1)) {
-                    doc.add(new IntField (FIELD_POSITION, i, YES));
+                    doc2.add(new IntField (FIELD_POSITION, i, YES));
                 }
-                kmerWriter.addDocument(doc);
+                kmerWriter.addDocument(doc2);
             }
         }
         finally {
             lastModified.set(System.currentTimeMillis());
+        }
+    }
+
+    private class SequenceDocuments{
+        Document indexDoc;
+        List<Document> kmerDocs = new ArrayList<>();
+
+
+        private final String id;
+
+        public SequenceDocuments(String id, CharSequence seq){
+            this.id = id;
+            StringField idf = new StringField (FIELD_ID, id, YES);
+
+            indexDoc = new Document ();
+            indexDoc.add(idf);
+            indexDoc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
+            indexDoc.add(new StoredField (FIELD_SEQ, seq.toString()));
+
+            Kmers kmers = Kmers.create(seq);
+            for (String kmer : kmers.kmers()) {
+                BitSet positions = kmers.positions(kmer);
+
+                Document doc2 = new Document ();
+                doc2.add(idf);
+                doc2.add(new StringField (FIELD_KMER, kmer, YES));
+                //System.err.println(kmer+": "+positions);
+                for (int i = positions.nextSetBit(0);
+                     i>=0; i = positions.nextSetBit(i+1)) {
+                    doc2.add(new IntField (FIELD_POSITION, i, YES));
+                }
+                kmerDocs.add(doc2);
+            }
+        }
+
+        public void addToIndexes() throws IOException{
+            try {
+                indexWriter.addDocument(indexDoc);
+                kmerWriter.addDocuments(kmerDocs);
+            }finally{
+                lastModified.set(System.currentTimeMillis());
+            }
+        }
+
+        public void updateIndexes() throws IOException{
+            Term term = new Term (FIELD_ID, id);
+            try {
+                indexWriter.updateDocument(term, indexDoc);
+                kmerWriter.updateDocuments(term, kmerDocs);
+            }finally{
+                lastModified.set(System.currentTimeMillis());
+            }
         }
     }
 
@@ -556,6 +581,15 @@ public class SequenceIndexer {
         String qs = query.toString();
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
             String seq = getSeq (me.getKey());
+            if(seq ==null){
+                System.err.println("error sequence indexer cache invalid for key " + me.getKey());
+                TermQuery tq = new TermQuery (new Term (FIELD_ID, me.getKey()));
+                TopDocs docs = searcher.search(tq, ndocs);
+                for(ScoreDoc scoreDoc :docs.scoreDocs){
+                    System.err.println(searcher.doc(scoreDoc.doc));
+                }
+                continue;
+            }
             Result result = new Result (me.getKey(), qs, seq);
             /*
               System.err.println(" Query: "+query);
