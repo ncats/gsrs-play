@@ -39,7 +39,12 @@ public class ControlledVocabulary extends IxModel {
     //the ids aren't included.  This causes a problem
     //on import because then the ids get re-used by ebean
     //since it prefetches them before we load!!
-    @JsonIgnore
+    
+    //The above is true, however, updates are broken without this,
+    //as the JSON is used in the forms. Now that the ID is explicitly
+    //ignored in the load, we should be fine. 
+    
+    //@JsonIgnore
     public Long getId() {
         return this.id;
     }

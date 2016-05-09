@@ -1,0 +1,281 @@
+{
+	"modifications": {
+		"structuralModifications": [],
+		"physicalModifications": [],
+		"agentModifications": []
+	},
+	"polymer": {
+		"displayStructure": {
+			"molfile": "\n  Symyx   08281518322D 1   1.00000     0.00000     0\n\n 14 14  0     0  0            999 V2000\n    6.0614  -10.2197    0.0000 O   0  0  0  0  0  0           0  0  0\n    6.0614   -8.2000    0.0000 S   0  0  3  0  0  0           0  0  0\n    4.2668   -8.1915    0.0000 O   0  0  0  0  0  0           0  0  0\n    8.0122   -8.3165    0.0000 O   0  0  0  0  0  0           0  0  0\n    6.0614   -6.1803    0.0000 C   0  0  0  0  0  0           0  0  0\n    4.3503   -5.3976    0.0000 C   0  0  0  0  0  0           0  0  0\n    4.3386   -3.3791    0.0000 C   0  0  0  0  0  0           0  0  0\n    6.0952   -2.3649    0.0000 C   0  0  0  0  0  0           0  0  0\n    7.8441   -3.3753    0.0000 C   0  0  0  0  0  0           0  0  0\n    7.8422   -5.3889    0.0000 C   0  0  0  0  0  0           0  0  0\n    6.0952   -0.3452    0.0000 C   0  0  3  0  0  0           0  0  0\n    7.8443    0.6646    0.0000 C   0  0  0  0  0  0           0  0  0\n    9.5934   -0.3452    0.0000 *   0  0  0  0  0  0           0  0  0\n    4.3461    0.6646    0.0000 *   0  0  0  0  0  0           0  0  0\n  2  1  2  0     0  0\n  2  3  1  0     0  0\n  2  4  2  0     0  0\n  5  2  1  0     0  0\n  6  5  1  0     0  0\n  7  6  2  0     0  0\n  8  7  1  0     0  0\n  9  8  2  0     0  0\n 10  9  1  0     0  0\n  5 10  2  0     0  0\n 11  8  1  0     0  0\n 11 12  1  0     0  0\n 12 13  1  0     0  0\n 14 11  1  0     0  0\nM  STY  1   1 SRU\nM  SLB  1   1   1\nM  SCN  1   1 HT\nM  SAL   1 12   1   2   3   4   5   6   7   8   9  10  11  12\nM  SBL   1  2  13  14\nM  SMT   1 A\nM  SDI   1  4    5.2100   -0.8200    5.2100    1.1600\nM  SDI   1  4    8.7100    1.1600    8.7100   -0.8200\nM  END\n"
+		},
+		"monomers": [{
+			"type": "MONOMER",
+			"amount": {
+				"units": "",
+				"nonNumericValue": "",
+				"type": "MOLE RATIO"
+			},
+			"defining": false,
+			"monomerSubstance": {
+				"substanceClass": "reference",
+				"approvalID": "1D1822L42I",
+				"refPname": "4-STYRENESULFONIC ACID"
+			}
+		}],
+		"structuralUnits": [{
+			"structure": "ZSL2FB6GXN\n  Marvin  08311509462D          \n\n 14 14  0  0  0  0            999 V2000\n    2.4760   -4.1746    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4760   -3.3496    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    1.7429   -3.3461    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.2729   -3.3972    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4760   -2.5246    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.7770   -2.2048    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.7722   -1.3803    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4898   -0.9660    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.2042   -1.3788    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.2034   -2.2013    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4898   -0.1410    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.2043    0.2715    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9187   -0.1410    0.0000 He  0  0  0  0  0  0  0  0  0  0  0  0\n    1.7753    0.2715    0.0000 He  0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  2  0  0  0  0\n  2  3  1  0  0  0  0\n  2  4  2  0  0  0  0\n  5  2  1  0  0  0  0\n  6  5  1  0  0  0  0\n  7  6  2  0  0  0  0\n  8  7  1  0  0  0  0\n  9  8  2  0  0  0  0\n 10  9  1  0  0  0  0\n  5 10  2  0  0  0  0\n 11  8  1  0  0  0  0\n 11 12  1  0  0  0  0\n 12 13  1  0  0  0  0\n 14 11  1  0  0  0  0\nA   13\n_R1\nA   14\n_R2\nM  ISO  2  13   1  14   2\nM  END\n",
+			"type": "HEAD-TAIL",
+			"label": "A",
+			"attachmentMap": {},
+			"attachmentCount": 0,
+			"amount": {
+				"units": "",
+				"nonNumericValue": "",
+				"type": "DEGREE OF POLYMERIZATION"
+			}
+		}],
+		"classification": {
+			"polymerClass": "HOMOPOLYMER",
+			"polymerSubclass": [],
+			"polymerGeometry": "LINEAR"
+		}
+	},
+	"approvalID": "ZSL2FB6GXN",
+	"status": "approved",
+	"approvedBy": "FDA_SRS",
+	"approved": 1441028805376,
+	"substanceClass": "polymer",
+	"names": [{
+		"name": "TOLEVAMER",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["en"],
+		"references": ["65f7446f-f248-4c4b-b7d3-b9e815d86252", "3da5a274-b492-4caa-a935-6d9da468a741", "a0d0d8fc-1079-4bc8-b54e-118b5c757ba8", "9e21d7fb-5cf2-4747-8c8a-f598bd92013c", "114fd78f-269a-4cc2-a1b5-e0f53c923222"],
+		"preferred": true,
+		"access": [],
+		"nameOrgs": [{
+			"deprecated": false,
+			"nameOrg": "INN"
+		}]
+	}, {
+		"name": "BENZENESULFONIC ACID, 4-ETHENYL-, HOMOPOLYMER",
+		"type": "cn",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["3da5a274-b492-4caa-a935-6d9da468a741"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "POLY(P-STYRENESULFONIC ACID)",
+		"type": "cn",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["3da5a274-b492-4caa-a935-6d9da468a741"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "P-STYRENESULFONIC ACID HOMOPOLYMER",
+		"type": "cn",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["3da5a274-b492-4caa-a935-6d9da468a741"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "POLY(4-STYRENESULFONIC ACID)",
+		"type": "cn",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["3da5a274-b492-4caa-a935-6d9da468a741"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "P-STYRENESULFONIC ACID POLYMER",
+		"type": "cn",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["3da5a274-b492-4caa-a935-6d9da468a741"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "P-VINYLBENZENESULFONIC ACID HOMOPOLYMER",
+		"type": "cn",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["3da5a274-b492-4caa-a935-6d9da468a741"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "توليفامار",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["ar"],
+		"nameOrgs": [{
+			"nameOrg": "INN",
+			"deprecated": false
+		}],
+		"references": ["ff3b19ca-3d5e-4440-b13e-98fd94512454"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "tolévamer",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["fr"],
+		"nameOrgs": [{
+			"nameOrg": "INN",
+			"deprecated": false
+		}],
+		"references": ["ff3b19ca-3d5e-4440-b13e-98fd94512454"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "tolevamerum",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["la"],
+		"nameOrgs": [{
+			"nameOrg": "INN",
+			"deprecated": false
+		}],
+		"references": ["ff3b19ca-3d5e-4440-b13e-98fd94512454"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "托来伐姆",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["zh"],
+		"nameOrgs": [{
+			"nameOrg": "INN",
+			"deprecated": false
+		}],
+		"references": ["ff3b19ca-3d5e-4440-b13e-98fd94512454"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "tolevámero",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["es"],
+		"nameOrgs": [{
+			"nameOrg": "INN",
+			"deprecated": false
+		}],
+		"references": ["ff3b19ca-3d5e-4440-b13e-98fd94512454"],
+		"preferred": false,
+		"access": []
+	}, {
+		"name": "толевамер",
+		"type": "of",
+		"domains": ["drug"],
+		"languages": ["ru"],
+		"nameOrgs": [{
+			"nameOrg": "INN",
+			"deprecated": false
+		}],
+		"references": ["ff3b19ca-3d5e-4440-b13e-98fd94512454"],
+		"preferred": false,
+		"access": []
+	}],
+	"codes": [{
+		"code": "28210-41-5",
+		"codeSystem": "CAS",
+		"references": ["818e94c8-a279-4086-bd13-8bdd9024a9b8"],
+		"url": "http://chem.sis.nlm.nih.gov/chemidplus/direct.jsp?regno\u003d28210-41-5\u0026result\u003dadvanced",
+		"type": "PRIMARY",
+		"access": []
+	}, {
+		"code": "8324",
+		"codeSystem": "INN",
+		"references": ["818e94c8-a279-4086-bd13-8bdd9024a9b8"],
+		"url": "https://mednet-communities.net/inn/db/ViewINN.aspx?i\u003d8324",
+		"type": "PRIMARY",
+		"access": []
+	}],
+	"relationships": [],
+	"references": [{
+		"uuid": "3da5a274-b492-4caa-a935-6d9da468a741",
+		"citation": "FDA SRS",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "a0d0d8fc-1079-4bc8-b54e-118b5c757ba8",
+		"citation": "INN",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "65f7446f-f248-4c4b-b7d3-b9e815d86252",
+		"citation": "WHO-DD",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "818e94c8-a279-4086-bd13-8bdd9024a9b8",
+		"citation": "SRS CODE IMPORT",
+		"docType": "SRS",
+		"publicDomain": true,
+		"documentDate": "2015-08-31T09:46:45.000-0400",
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "7e8a6949-c359-4d2c-abb2-23f3bb2fa864",
+		"citation": "SRS import [ZSL2FB6GXN]",
+		"docType": "SRS",
+		"publicDomain": true,
+		"documentDate": "2015-08-31T09:46:45.000-0400",
+		"tags": ["NOMEN"],
+		"url": "http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno\u003dZSL2FB6GXN",
+		"access": []
+	}, {
+		"uuid": "25b98f54-27ae-4068-88b8-aa365780e146",
+		"citation": "FDA_SRS",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "ff3b19ca-3d5e-4440-b13e-98fd94512454",
+		"citation": "INN proposed list:88",
+		"docType": "INN",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"url": "http://www.who.int/entity/medicines/publications/druginformation/innlists/PL88.pdf",
+		"access": []
+	}, {
+		"citation": "TOLEVAMER [INN]",
+		"publicDomain": true,
+		"docType": "SRS_LOCATOR",
+		"uuid": "114fd78f-269a-4cc2-a1b5-e0f53c923222"
+	}, {
+		"citation": "TOLEVAMER [WHO-DD]",
+		"publicDomain": true,
+		"docType": "SRS_LOCATOR",
+		"uuid": "9e21d7fb-5cf2-4747-8c8a-f598bd92013c"
+	}],
+	"properties": [{
+		"name": "MOL_WEIGHT:CALCULATED",
+		"type": "amount",
+		"propertyType": "CHEMICAL",
+		"value": {
+			"lowLimit": 400000.0,
+			"units": "DALTONS",
+			"nonNumericValue": "",
+			"type": "CALCULATED"
+		},
+		"parameters": [],
+		"references": [],
+		"access": [],
+		"defining": false
+	}],
+	"notes": [],
+	"tags": ["INN", "WHO-DD"],
+	"uuid": "53480373-576a-4a73-bf5c-bfe90fc51544",
+	"access": [],
+	"lastEditedBy": "tyler"
+}

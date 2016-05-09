@@ -48,6 +48,9 @@ public class TextIndexerPlugin extends Plugin {
         try {
             storageDir = getStorageDir(ctx);
             indexer = TextIndexer.getInstance(storageDir);
+            if(indexer==null){
+            	throw new IllegalStateException("Trouble getting textindexer");
+            }
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize text indexer", ex);
@@ -88,5 +91,8 @@ public class TextIndexerPlugin extends Plugin {
     
 
     public synchronized boolean enabled () { return !closed; }
-    public synchronized TextIndexer getIndexer () { return indexer; }
+    
+    public synchronized TextIndexer getIndexer () { 
+    	return indexer; 
+    }
 }

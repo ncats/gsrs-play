@@ -4,7 +4,7 @@
 
 @(title: String, kind: String,
         resetAction: String, current: Int, rows: Int, total: Int,
-        pages: Array[Int], facets: Array[FacetDecorator],searchFacets : List[FieldFacet] = null)(header: Html)(content: Html)
+        pages: Array[Int], facets: Array[FacetDecorator], searchFacets : List[FieldFacet] = null)(header: Html)(content: Html)
 
     @ginas(title, kind) {
         @header
@@ -171,14 +171,30 @@ $(document).ready(function () {
     })
 
    @defining(App.checkStatus()) { status =>
+   	
+   
      @if(status != null) {
+    	 @defining(App.checkStatusDirect()) { startstatus =>
+    	 @if(startstatus != null){
+    	 var firststatus=@Html(startstatus.toJson());
+    	 console.log(firststatus);
+    	 }else{
+    		 var firststatus={};
+    		 
+    	 }
+    	 }
+    	 
+    	 if(firststatus.count<@{current*rows}){
+    		 window["needsreload"]=true;
+    	 }
+    	 
          console.log('status=@status');
          $('#searching')
 	     .html('<i class="fa fa-spinner fa-spin"></i> searching...');
 			
          var delay = 0;
          var checkStatus;
-	 var timer;
+	 	 var timer;
 
          $('#loading').on('hidden.bs.modal', function (e) {
 	     console.log('closing load dialog');
@@ -199,27 +215,34 @@ $(document).ready(function () {
              $.ajax(url, {
 	         dataType: 'json',
 	     }).done(function(data) {
+		    	 
                  console.log(data.status + ' '+data.count+' '+data.total);
                  if (data.status == 'Done' || data.status == 'Failed') {
-                       window.clearInterval(timer);
-                       $('#searching').html('');
-                       //$('#loading-progress').html('');
-                       //if(data.count >= @total) {
+                       	   window.clearInterval(timer);
+                       	   $('#searching').html('');
                            $('#loading').modal('hide');
-                           location.reload(true);			   
-                       //}
+                           if(window["needsreload"]){
+                           		location.reload(true);	
+                           }
+                       
                   } else {
 		       // loading vs searhing..
                        if (data.total) {
- 	                   if (data.count < @{current*rows}) {
-  	                      $('#loading').modal('show');
-		           }
+ 	                   		if (data.count < @{current*rows}) {
+  	                      		$('#loading').modal('show');
+  	                      		//window["needsreload"]=true;
+  	                      		console.log("showing search");
+		           			}else{
+		           				if(window["needsreload"]){
+		           					location.reload(true);
+		           				}
+		           			}
 
- 		           var pct = Math.floor(100.0*data.count
-						/ data.total+0.5);
+ 		           		   var pct = Math.floor(100.0*data.count/ data.total+0.5);
+ 		           		   
                            $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
-                       }
-		       else {
+                       }else {
+                    	   window["needsreload"]=true;
                            $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
                        }
                   }

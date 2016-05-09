@@ -830,7 +830,7 @@ public class GinasApp extends App {
         try {
             SearchResultContext context = similarity
                 (query, threshold, rows,
-                 page, new GinasSearchResultProcessor());
+                 page, new GinasSearchResultProcessor(isWaitSet()));
             return fetchResult (context, rows, page,
                                 new SubstanceResultRenderer (CHEMICAL_FACETS));
         }
@@ -863,12 +863,15 @@ public class GinasApp extends App {
                     (ix.ginas.views.html.error.render
                      (500, "Unable to perform flex search: " + query));
         }
+       
+   
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
         try {
+        	
             SearchResultContext context = App.substructure
-                (query, rows, page, new GinasSearchResultProcessor());
+                (query, rows, page, new GinasSearchResultProcessor(isWaitSet()));
             
             return App.fetchResult
                 (context, rows, page, 
@@ -1106,21 +1109,26 @@ public class GinasApp extends App {
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         ObjectNode node = mapper.createObjectNode();
         try {
-                String payload = request().body().asText();
-            payload = ChemCleaner.getCleanMolfile(payload);
+            String opayload = request().body().asText();
+            String payload = ChemCleaner.getCleanMolfile(opayload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
-                
                 
                 try {
                     Structure struc = StructureProcessor.instrument
                         (payload, moieties, false); // don't standardize!
                     // we should be really use the PersistenceQueue to do this
                     // so that it doesn't block
+                    
+                    // in fact, it probably shouldn't be saving this at all
+                    //
+                    if(payload.contains("\n") && payload.contains("M  END")){
+                    	struc.molfile=payload;
+                    }
                     struc.save();
+                    
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                        
                         m.save();
                         ObjectNode on = mapper.valueToTree(m);
                         Amount c1=Moiety.intToAmount(m.count);
@@ -1164,7 +1172,8 @@ public class GinasApp extends App {
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
         
-        GinasSearchResultProcessor() {
+        GinasSearchResultProcessor(boolean wait) {
+        	this.setWait(wait);
         }
 
         int index;
@@ -1194,6 +1203,7 @@ public class GinasApp extends App {
                 }
                 IxCache.set("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
+           
             return chem;
         }
     }

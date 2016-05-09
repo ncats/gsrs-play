@@ -8,9 +8,7 @@
     Components&nbsp;<span class="badge head"> @components.length</span></button>
 <div class="col-md-12">
         @for(c <- components) {
-            <div class="col-md-3 text-center thumb-col">
-                <div class="panel panel-default">
-                    <div class = "panel-body">
+
              @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                 @subref(c.substance)
             } else {
@@ -18,8 +16,5 @@
                 @c.substance.refPname
 
             }
-</div>
-</div>
-                </div>
         }
 </div>

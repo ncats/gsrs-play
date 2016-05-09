@@ -354,6 +354,13 @@
                 filterFunction: '&?'
             },
             link: function (scope, element, attrs) {
+                var other = [{
+                    display: "Other",
+                    value: "Other",
+                    filter: " = ",
+                    selected: false
+                }];
+                
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
