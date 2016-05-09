@@ -17,7 +17,7 @@
             <form class="form-horizontal" name="subunitForm" id="addSubunitForm" role="form" novalidate>
                 <div class="row form-row">
                     <div class="col-md-12">
-                      <h5><em>lower case letters correspond to "</em><span class ="smallcaps">d</span><em>-" amino acids. Capital letters indicate "</em><span class ="smallcaps">l</span><em>-" amino acids</em></h5>
+                      <h5 ng-show="substanceClass=='protein'" ><em>Lower case letters correspond to "</em><span class ="smallcaps">d</span><em>-" amino acids. Capital letters indicate "</em><span class ="smallcaps">l</span><em>-" amino acids</em></h5>
                         <text-box ng-model="subunit.sequence" field="sequence" required></text-box>
                     </div>
                 </div>

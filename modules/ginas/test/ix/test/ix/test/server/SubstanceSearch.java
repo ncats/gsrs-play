@@ -41,7 +41,9 @@ public class SubstanceSearch {
         //TODO have to kekulize
 
 
-        String rootUrl = "ginas/app/substances?type=Substructure&q="+URLEncoder.encode(smiles, "UTF-8");
+    	//Added "wait" so that it doesn't return before it's
+    	//completely ready
+        String rootUrl = "ginas/app/substances?type=Substructure&q="+URLEncoder.encode(smiles, "UTF-8") + "&wait=true";
         int page=1;
 
         Set<String> substances = new LinkedHashSet<>();

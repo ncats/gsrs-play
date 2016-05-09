@@ -30,7 +30,7 @@ import util.json.JsonUtil;
 import static ix.test.SubstanceJsonUtil.*;
 
 @RunWith(Parameterized.class)
-public class SubstanceSubmitTest {
+public class SubstanceValidSubmitTest {
 
     @Rule
     public TestRule watcher = new TestWatcher() {
@@ -61,7 +61,7 @@ public class SubstanceSubmitTest {
         @Rule
         public GinasTestServer ts = new GinasTestServer();
 
-        public SubstanceSubmitTest(File f, String onlyUsedForParameterName){
+        public SubstanceValidSubmitTest(File f, String onlyUsedForParameterName){
             this.resource=f;
         }
 

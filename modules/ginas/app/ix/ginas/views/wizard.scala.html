@@ -38,10 +38,9 @@
         case "structurallyDiverse" => {
             <diverse-type-form parent = substance></diverse-type-form>
             <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
-                <diverse-source-form parent = substance></diverse-source-form>
-                <diverse-organism-form ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
+                <diverse-source-form  parent = substance></diverse-source-form>
+                <diverse-organism-form ng-if="substance.$$diverseType=='whole'" ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
                 <diverse-details-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value !== 'PLANT'" parent = substance></diverse-details-form>
-                <diverse-details-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-details-form>
 @*
                 <diverse-plant-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value == 'PLANT'" parent = substance></diverse-plant-form>
 *@
@@ -117,7 +116,7 @@
                     <div class="col-md-2 pull-right">
                         <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance()">
                             Approve</button>
-                        <button class="btn btn-primary" ng-click="submitSubstanceConfirm()">Submit</button>
+                        <button ng-disabled="validating" class="btn btn-primary" ng-click="submitSubstanceConfirm()">Submit</button>
                     </div>
                 </div>
                 <h1 ng-if ="substanceEqual" >{{substancesEqual}}</h1>

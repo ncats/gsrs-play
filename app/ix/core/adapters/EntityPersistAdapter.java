@@ -20,6 +20,8 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
+import org.apache.lucene.store.AlreadyClosedException;
+
 import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistListener;
 import com.avaje.ebean.event.BeanPersistRequest;
@@ -442,7 +444,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 		String _id = EntityUtils.getIdForBeanAsString(bean);
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {
-			getSequenceIndexer().remove(_id);
+			try{
+				getSequenceIndexer().remove(_id);
+			}catch(AlreadyClosedException e){
+				System.err.println("Unable to remove index, due to concurrent modification, retrying once");
+				getSequenceIndexer().remove(_id);
+			}
 		}
 		List<Field> structureFields = getStructureIndexableField(bean);
 		if (structureFields != null && structureFields.size()>0) {

@@ -38,6 +38,7 @@ import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
@@ -174,6 +175,9 @@ public class Validation {
 		        case protein:
 		        	gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s,strat));
 		            break;
+		        case structurallyDiverse:
+		        	gpm.addAll(validateAndPrepareStructurallyDiverse((StructurallyDiverseSubstance)s,strat));
+		        	break;
 		        case reference:
 		            break;
 		        case specifiedSubstanceG1:
@@ -184,8 +188,7 @@ public class Validation {
 		            break;
 		        case specifiedSubstanceG4:
 		            break;
-		        case structurallyDiverse:
-		            break;
+		        
 		        case unspecifiedSubstance:
 		            break;
 		        default:
@@ -263,7 +266,7 @@ public class Validation {
     		do{
     			String loc=m.group(1);
     		
-    			System.out.println("LOCATOR:" + loc);
+    			//System.out.println("LOCATOR:" + loc);
     			locators.add(loc);
     		}while(m.find(m.start(1)));
     	}
@@ -555,48 +558,80 @@ public class Validation {
         }
         return gpm;
 	}
+    private static List<? extends GinasProcessingMessage> validateAndPrepareStructurallyDiverse(
+			StructurallyDiverseSubstance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+        if(cs.structurallyDiverse==null){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse substance must have a structurally diverse element"));
+        }else{
+        	if(cs.structurallyDiverse.sourceMaterialClass==null || cs.structurallyDiverse.sourceMaterialClass.equals("")){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialClass"));
+        	}else{
+        		if(cs.structurallyDiverse.sourceMaterialClass.equals("ORGANISM")){
+        			boolean hasParent=false;
+        			boolean hasTaxon=false;
+        			if(cs.structurallyDiverse.parentSubstance!=null){
+        				hasParent=true;
+        			}
+        			if(cs.structurallyDiverse.organismFamily!=null &&
+        			   !cs.structurallyDiverse.organismFamily.equals("")){
+        				hasTaxon=true;
+        			}
+        			if(cs.structurallyDiverse.part==null || cs.structurallyDiverse.part.isEmpty()){
+        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse organism substance must specify at least one (1) part"));
+        			}
+        			if(!hasParent && !hasTaxon){
+        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse organism substance must specify a parent substance, or a family"));
+        			}
+        			if(hasParent && hasTaxon){
+        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Structurally diverse organism substance typically should not specify both a parent and taxonomic information"));
+        			}
+        		}
+        		
+        	}
+        	if(cs.structurallyDiverse.sourceMaterialType==null || cs.structurallyDiverse.sourceMaterialType.equals("")){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialType"));
+        	}
+        	
+        }
+        return gpm;
+	}
+    
     private static List<? extends GinasProcessingMessage> validateAndPreparePolymer(
 			PolymerSubstance cs, GinasProcessingStrategy strat) {
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
         if(cs.polymer==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Polymer substance must have a polymer element"));
         }else{
-        	if(cs.polymer.displayStructure==null || cs.polymer.displayStructure.molfile==null){
-        		if(cs.polymer.idealizedStructure!=null && cs.polymer.idealizedStructure.molfile!=null){
-        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using idealized Structure").appliableChange(true);
+        	boolean withDisplay=!isNull(cs.polymer.displayStructure);
+        	boolean withIdealized=!isNull(cs.polymer.idealizedStructure);
+        	if(!withDisplay && !withIdealized){
+        		GinasProcessingMessage gpmwarn=GinasProcessingMessage.ERROR_MESSAGE("No Display Structure or Idealized Structure found");
+    			gpm.add(gpmwarn);
+        	}else if(!withDisplay && withIdealized ){
+        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using Idealized Structure").appliableChange(true);
         			gpm.add(gpmwarn);
         			strat.processMessage(gpmwarn);
         			
         			switch(gpmwarn.actionType){
 					case APPLY_CHANGE:
 						try{
-							cs.polymer.displayStructure= cs.polymer.idealizedStructure.copy();
+							cs.polymer.displayStructure = cs.polymer.idealizedStructure.copy();
 						}catch(Exception e){
 							gpm.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
 						}
 						break;
 					case DO_NOTHING:
-						break;
 					case FAIL:
-						break;
 					case IGNORE:
-						break;
 					default:
 						break;
-        			
         			}
-        		}else{
-        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.ERROR_MESSAGE("No Display structure or idealized structure found");
-        			gpm.add(gpmwarn);
-        			
-        		}
-        	}
-        	if(cs.polymer.idealizedStructure==null || cs.polymer.idealizedStructure.molfile==null){
-        		if(cs.polymer.displayStructure!=null && cs.polymer.displayStructure.molfile!=null){
-        			GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Display Structure found, default to using idealized Structure").appliableChange(true);
-        			gpm.add(gpmwarn);
-        			strat.processMessage(gpmwarn);
-        			switch(gpmwarn.actionType){
+        	}else if(withDisplay && !withIdealized ){
+	        		GinasProcessingMessage gpmwarn=GinasProcessingMessage.WARNING_MESSAGE("No Idealized Structure found, default to using Display Structure").appliableChange(true);
+	    			gpm.add(gpmwarn);
+	    			strat.processMessage(gpmwarn);
+	    			switch(gpmwarn.actionType){
 						case APPLY_CHANGE:
 							try{
 								cs.polymer.idealizedStructure= cs.polymer.displayStructure.copy();
@@ -605,19 +640,13 @@ public class Validation {
 							}
 							break;
 						case DO_NOTHING:
-							break;
 						case FAIL:
-							break;
 						case IGNORE:
-							break;
 						default:
 							break;
-        			}
-        		}else{
-        			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("No idealized structure found for polymer");
-        			gpm.add(gpmerr);
-        		}
+	    			}
         	}
+        	
         	if(cs.polymer.structuralUnits==null || cs.polymer.structuralUnits.size()<=0){
         		gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance should have structural units"));
         	}else{
@@ -662,7 +691,6 @@ public class Validation {
         		for(String con:connections){
         			String[] c=con.split("-");
         			if(!connections.contains(c[1] +"-" + c[0])){
-        				System.out.println("Missing connection");
         				GinasProcessingMessage gp=GinasProcessingMessage.WARNING_MESSAGE("Connection '" + con + "' does not have inverse connection. This can be created.").appliableChange(true);
         				strat.processMessage(gp);
         				gpm.add(gp);
@@ -709,6 +737,10 @@ public class Validation {
         return gpm;
 	}
     
+    public static boolean isNull(GinasChemicalStructure gcs){
+    	if(gcs==null || gcs.molfile==null)return true;
+    	return false;
+    }
     
     private static List<? extends GinasProcessingMessage> validateAndPrepareNa(
 			NucleicAcidSubstance cs, GinasProcessingStrategy strat) {

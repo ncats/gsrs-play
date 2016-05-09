@@ -110,6 +110,15 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				String domain=cvValue.at("/domain").asText();
 				String termType=cvValue.at("/vocabularyTermType").asText();
 				ControlledVocabulary cv =  (ControlledVocabulary) mapper.treeToValue(cvValue, Class.forName(termType));
+				
+				
+				//if there was an ID with this object, get rid of it
+				//it was added by mistake
+				cv.id=null;
+				for(VocabularyTerm vt:cv.terms){
+					vt.id=null;
+				}
+				
 				cv.setVocabularyTermType(getCVClass(domain).getName());
 				cv.save();
 			}

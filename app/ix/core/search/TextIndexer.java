@@ -602,9 +602,9 @@ public class TextIndexer implements Closeable{
             //it's only here for debugging
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
-//            if(Math.random()>.9){
-            	//Util.debugSpin(100);
-//            }
+            //if(Math.random()>.9){
+            //	Util.debugSpin(100);
+            //}
         }
 
         private void notifyAdd(Object o){
@@ -622,7 +622,7 @@ public class TextIndexer implements Closeable{
         
         
         protected void done () {
-            stop.set(System.currentTimeMillis());
+            stop.set(TimeUtil.getCurrentTimeMillis());
             //notify listeners
             
             Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();

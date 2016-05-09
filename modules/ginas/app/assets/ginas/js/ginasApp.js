@@ -221,7 +221,7 @@
                 }
                 //sub.structure.id = UUID.newID();
                 if (sub.substanceClass === 'polymer') {
-                    _.set(sub, 'polymer.idealizedStructure', sub.structure);
+                    //_.set(sub, 'polymer.idealizedStructure', sub.structure);
                     sub = _.omit(sub, 'structure');
                 }
             }
@@ -496,11 +496,13 @@
     }]);
 
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
-                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver, spinnerService) {
+                                                     localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
+                                                     spinnerService) {
         // var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
+        $scope.validating = false;
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
@@ -668,7 +670,8 @@
             $scope.modalInstance = $uibModal.open({
                 templateUrl: url,
                 scope: $scope,
-                size: 'lg'
+                size: 'lg',
+                backdrop: 'static'
             });
         };
 
@@ -677,11 +680,12 @@
         };
 
         $scope.submitSubstanceConfirm = function () {
-            var f = function () {
+            $scope.validating =true;
+           // var f = function () {
                 var url = baseurl + "assets/templates/modals/substance-submission.html";
                 $scope.open(url);
-            };
-            $scope.validateSubstance(f);
+           // };
+            $scope.validateSubstance();
         };
 
         $scope.dismissAll = function () {
@@ -724,12 +728,16 @@
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
           //  console.log(sub);
             $scope.errorsArray = [];
-            $http.post(baseurl + 'api/v1/substances/@validate', sub).success(function (response) {
+            $http.post(baseurl + 'api/v1/substances/@validate', sub).then(function (response) {
+                $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
-                if (callback) {
-                    callback();
-                }
+                // if (callback) {
+                //     callback();
+                // }
+            }).finally(function () {
+                $scope.validating = false;
+                console.log($scope.validating);
             });
         };
 
@@ -864,7 +872,7 @@
                 molChanger.setMol($scope.substance.structure.molfile);
             }
             if ($scope.substance.substanceClass === 'polymer') {
-                molChanger.setMol($scope.substance.idealizedStructure.molfile);
+                molChanger.setMol($scope.substance.polymer.idealizedStructure.molfile);
             }
         };
 
@@ -963,20 +971,41 @@
             scope: {
                 id: '@',
                 size: '@',
-                ctx: '@'
+                ctx: '@',
+                smiles: '@'
             },
             link: function (scope, element, attrs) {
-                var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
-                if (!_.isUndefined(scope.ctx)) {
-                    url += '&context={{ctx}}';
-                }
-                if (attrs.smiles) {
-                    var smiles = attrs.smiles.replace(';','%3B').replace('#','%23').replace('+','%2B');
-                    url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
-                }
-                var template = angular.element('<img ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
-                element.append(template);
-                $compile(template)(scope);
+                
+                scope.$watch('smiles', function (val) {
+         		  	   if (val) {
+               			   scope.relink();
+              		   }
+          		});
+          		scope.$watch('id', function (val) {
+         		  	   if (val) {
+               			   scope.relink();
+              		   }
+          		});
+          		scope.relink = function(){
+              		var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
+                    if (!_.isUndefined(scope.ctx)) {
+                        url += '&context={{ctx}}';
+                    }
+                    if (attrs.smiles) {
+                        var smiles = attrs.smiles
+                        				.replace(/[;]/g,'%3B')
+                        				.replace(/[#]/g,'%23')
+                        				.replace(/[+]/g,'%2B')
+                        				.replace(/[|]/g,'%7C');
+                        url = baseurl + "render?structure=" + smiles + "&size={{size||150}}&standardize=true";
+                    }
+                    var template = angular.element('<img width=height={{size||150}} height={{size||150}} ng-src="' + url + '" alt = "rendered image" class="tooltip-img" ng-cloak>');
+
+                    element.html(template);
+                    $compile(template)(scope);
+          		};
+          		scope.relink();
+          				
             }
         };
     });
@@ -990,27 +1019,37 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
+            	scope.formatValue = function (v){
+            		if (v) {
+                            if(typeof v === "object"){
+                            	if(v.display){
+                            		return v.display;
+                            	}else if(v.value){
+                            		return v.value;
+                            	}else{
+                            		return null;
+                            	}
+                            }else{
+                            	return v;
+                            }
+                    }
+                    return null;
+            	};
+            
                 scope.display = function () {
                     if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
                         var addedunits = false;
-                        var unittext = "";
-                        if (scope.value.units) {
-                            if (scope.value.units.display) {
-                                unittext = scope.value.units.display;
-                            } else {
-                                unittext = scope.value.units;
-                            }
+                        var unittext = scope.formatValue(scope.value.units);
+                        if(!unittext){
+                        	unittext="";
                         }
 
 
                         if (scope.value) {
-                            if (scope.value.type) {
-                                if (scope.value.type.display) {
-                                    ret += scope.value.type.display + "\n";
-                                } else {
-                                    ret += scope.value.type + "\n";
-                                }
+                        	var atype=scope.formatValue(scope.value.type);
+                            if (atype) {
+                                ret += atype + "\n";
                             }
                             if (scope.value.average || scope.value.high || scope.value.low) {
                                 if (scope.value.average) {
@@ -1754,7 +1793,7 @@
                         }
                     }).success(function (data) {
                         if (scope.parent.substanceClass === "polymer") {
-                            scope.parent.idealizedStructure = data.structure;
+                            scope.parent.polymer.idealizedStructure = data.structure;
                             scope.structure = data.structure;
                             CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
                                 for (var i in data.structuralUnits) {
@@ -1805,7 +1844,7 @@
                 if (scope.parent.substanceClass === 'polymer' && (scope.parent.polymer.displayStructure)) {
                     scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
                 }else {
-                    if(!_.isUndefined(scope.parent.idealizedStructure)) {
+                    if(!_.isUndefined(scope.parent.polymer.idealizedStructure)) {
                         scope.mol = scope.parent.polymer.idealizedStructure.molfile;
                         if (!_.isNull(scope.mol)) {
                             scope.updateMol();
