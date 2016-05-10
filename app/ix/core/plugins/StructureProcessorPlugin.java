@@ -380,7 +380,7 @@ public class StructureProcessorPlugin extends Plugin {
                     // at the moment!
                     ProcessingJob job = new ProcessingJob ();
                     job.start = job.stop = TimeUtil.getCurrentTimeMillis();
-                    job.keys.add(new Keyword
+                    job.addKeyword(new Keyword
                                  (StructureProcessorPlugin.class.getName(),
                                   payload.key));
                     job.status = ProcessingJob.Status.NOT_RUN;
@@ -606,7 +606,7 @@ public class StructureProcessorPlugin extends Plugin {
         if (jobs.isEmpty()) {
             job = new ProcessingJob ();
             job.start = TimeUtil.getCurrentTimeMillis();
-            job.keys.add(new Keyword
+            job.addKeyword(new Keyword
                          (StructureProcessorPlugin.class.getName(), pp.key));
             job.status = ProcessingJob.Status.RUNNING;
             job.payload = pp.payload;
@@ -631,7 +631,7 @@ public class StructureProcessorPlugin extends Plugin {
         }
         else {
             job = jobs.iterator().next();
-            job.keys.add(new Keyword
+            job.addKeyword(new Keyword
                          (StructureProcessorPlugin.class.getName(), pp.key));
             reporter.tell(PersistModel.Update(job), sender);
         }

@@ -3,6 +3,7 @@ package ix.core.controllers;
 import java.io.*;
 import java.util.*;
 
+import ix.core.util.Java8Util;
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -26,7 +27,7 @@ public class EditFactory extends EntityFactory {
             Edit edit = finder.byId(id);
             if (edit != null) {
                 ObjectMapper mapper = getEntityMapper ();
-                return ok (mapper.valueToTree(edit));
+                return Java8Util.ok (mapper.valueToTree(edit));
             }
 
             return notFound ("Bad request: "+request().uri());

@@ -11,6 +11,7 @@ import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
+import ix.core.util.Java8Util;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.ChemicalSubstance;
@@ -375,7 +376,7 @@ public class GinasLoad extends App {
 					);
 		}
 		ObjectMapper om = new ObjectMapper();
-		return ok(om.valueToTree(messages));
+		return Java8Util.ok(om.valueToTree(messages));
 	}
 
 	public static String extractSubstanceJSON() {

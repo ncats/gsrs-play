@@ -3,6 +3,8 @@ package ix.core.controllers.search;
 import java.io.*;
 import java.security.*;
 import java.util.*;
+
+import ix.core.util.Java8Util;
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -217,7 +219,7 @@ public class SearchFactory extends EntityFactory {
             if (field != null) {
                 List<TextIndexer.SuggestResult> results = 
                     _indexer.suggest(field, q, max);
-                return ok (mapper.valueToTree(results));
+                return Java8Util.ok (mapper.valueToTree(results));
             }
 
             ObjectNode node = mapper.createObjectNode();
@@ -237,6 +239,6 @@ public class SearchFactory extends EntityFactory {
 
     public static Result suggestFields () {
         ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(_indexer.getSuggestFields()));
+        return Java8Util.ok (mapper.valueToTree(_indexer.getSuggestFields()));
     }
 }

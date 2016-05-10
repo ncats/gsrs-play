@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import ix.core.util.Java8Util;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1274,7 +1275,7 @@ public class GinasApp extends App {
     static public Result relationships(String uuid) {
         List<Relationship> rels = resolveRelationships(uuid);
         ObjectMapper mapper = new ObjectMapper();
-        return ok(mapper.valueToTree(rels));
+        return Java8Util.ok(mapper.valueToTree(rels));
     }
 
     /******************* MIXTURES *************************************************/

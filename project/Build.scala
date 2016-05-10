@@ -93,12 +93,12 @@ object ApplicationBuild extends Build {
 
   val javaBuildOptions = Seq(
     "-encoding", "UTF-8",
-    "-source", "1.7", 
-    "-target", "1.7"
+    "-source", "1.8",
+    "-target", "1.8"
   )
   val javaDocOptions = Seq(
     "-encoding", "UTF-8",
-    "-source", "1.7"
+    "-source", "1.8"
   ) 
 
 

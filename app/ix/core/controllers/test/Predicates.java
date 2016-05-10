@@ -3,6 +3,7 @@ package ix.core.controllers.test;
 import java.io.*;
 import java.util.*;
 
+import ix.core.util.Java8Util;
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -39,7 +40,7 @@ public class Predicates extends Controller {
             .setMaxRows(top)
             .findList();
         ObjectMapper mapper = EntityFactory.getEntityMapper();
-        return ok (mapper.valueToTree(xrefs));
+        return Java8Util.ok (mapper.valueToTree(xrefs));
     }
 
     public static Result index (int size) {

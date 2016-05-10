@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import ix.core.util.Java8Util;
 import play.Play;
 import play.db.DB;
 import play.Logger;
@@ -1520,7 +1521,7 @@ public class App extends Authentication {
                 (" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
             
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(value));
+            return Java8Util.ok (mapper.valueToTree(value));
         }
 
         return notFound ("No key found: "+key+"!");
@@ -1999,7 +2000,7 @@ public class App extends Authentication {
                 });
             if (strucs != null) {
                 ObjectMapper mapper = EntityFactory.getEntityMapper();
-                return ok (mapper.valueToTree(strucs));
+                return Java8Util.ok (mapper.valueToTree(strucs));
             }
             return notFound ("Can't located structure "+id);
         }
