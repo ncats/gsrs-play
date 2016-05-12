@@ -1,5 +1,5 @@
 exports.config = {
-    framework: 'jasmine',
+    framework: 'jasmine2',
     seleniumAddress: 'http://localhost:4444/wd/hub',
     /* specs: [//'TestChemicalWizard.js',
      //'TestProteinWizard.js',
@@ -74,6 +74,9 @@ exports.config = {
         ],
         accessControl:  [//'UserAccessControlTests.js',
                             'RegisterChemicalTest.js'
+        ],
+        publicDomain: [
+            'SubstanceReferencePublicDomainUpdateTest.js'
         ]
 
     },
@@ -88,6 +91,8 @@ exports.config = {
         url:""
     },
     onPrepare: function(){
+        global.EC = protractor.ExpectedConditions;
+
         switch(browser.params.baseUrl) {
             case 'chemical':
                 browser.params.url = 'http://localhost:9000/ginas/app/wizard?kind=chemical';

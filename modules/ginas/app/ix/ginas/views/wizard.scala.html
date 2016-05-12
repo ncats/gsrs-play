@@ -146,7 +146,7 @@
                 Show Raw</button>
             <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
             <json-formatter ng-show="!raw" json=submitSubstanceView open="666"></json-formatter>
-            <pre ng-show="raw==true">{{submitSubstanceView | json }}</pre>
+            <pre id="rawJson" ng-show="raw==true">{{submitSubstanceView | json }}</pre>
             @*
             <pre ng-show="raw">{{subTest}}</pre>
             *@
