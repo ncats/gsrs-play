@@ -1650,7 +1650,12 @@ public class GinasApp extends App {
             currentlyRunning = false;
 
             EntityPersistAdapter.doneReindexing();
-            message.append("\n\nCompleted Substance reindexing.\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
+            if(currentRecordsIndexed >= totalIndexed) {
+                message.append("\n\nCompleted Substance reindexing.");
+            }else{
+                message.append("\n\nError : did not finish indexing all records, only re-indexed ").append(currentRecordsIndexed);
+            }
+            message.append("\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
         }
 
         @Override

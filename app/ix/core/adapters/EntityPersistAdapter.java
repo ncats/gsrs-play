@@ -77,7 +77,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     private TextIndexerPlugin plugin = 
             Play.application().plugin(TextIndexerPlugin.class);
-    //public static SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
     private static StructureIndexerPlugin strucProcessPlugin;
     private static SequenceIndexerPlugin seqProcessPlugin;
     

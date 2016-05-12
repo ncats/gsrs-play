@@ -241,8 +241,12 @@ public class SequenceIndexer {
         }
         
         public Result nextElement () {
+            if(!hasMoreElements()){
+                throw new NoSuchElementException();
+            }
             Result current = next;
             next ();
+            Collections.sort(current.alignments);
             return current;
         }
     }
@@ -396,7 +400,7 @@ public class SequenceIndexer {
 
 
 
-    public void add (String id, CharSequence seq)
+    public void add (String id, String seq)
         throws IOException {
         if (indexWriter == null)
             throw new RuntimeException ("Index is read-only!");
@@ -438,7 +442,7 @@ public class SequenceIndexer {
 
         private final String id;
 
-        public SequenceDocuments(String id, CharSequence seq){
+        public SequenceDocuments(String id, String seq){
             this.id = id;
             StringField idf = new StringField (FIELD_ID, id, YES);
 
@@ -485,15 +489,15 @@ public class SequenceIndexer {
 
     public long lastModified () { return lastModified.get(); }
     
-    public ResultEnumeration search (CharSequence query) {
+    public ResultEnumeration search (String query) {
         return search (query, 0.4);
     }
 
-    public ResultEnumeration search (CharSequence query, double identity) {
+    public ResultEnumeration search (String query, double identity) {
         return search (query, identity, 3);
     }
     
-    public ResultEnumeration search (final CharSequence query,
+    public ResultEnumeration search (final String query,
                                      final double identity, final int gap) {
         if (getSize()<=0 || query == null || query.length() == 0) {
             return new ResultEnumeration(null);
@@ -501,8 +505,10 @@ public class SequenceIndexer {
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
         threadPool.submit(new Runnable () {
                 public void run () {
+
+                    System.out.println("elapsed = " + ix.core.util.StopWatch.timeElaspsed(()->{
                     try {
-                        
+
                         search (out, query, identity, gap);
                     }
                     catch (Exception ex) {
@@ -516,6 +522,7 @@ public class SequenceIndexer {
                         } 
                     }
                     
+                }));
                 }
             });
         
@@ -523,7 +530,7 @@ public class SequenceIndexer {
     }
 
     protected void search (BlockingQueue<Result> results,
-                           CharSequence query, double identity, int gap)
+                           String query, double identity, int gap)
         throws Exception {
 
         /*
@@ -544,7 +551,7 @@ public class SequenceIndexer {
     
     protected void search (IndexSearcher searcher,
                            BlockingQueue<Result> results,
-                           CharSequence query, double identity, int gap)
+                           String query, double identity, int gap)
         throws Exception {
 
         Kmers kmers = Kmers.create(query);
@@ -552,19 +559,17 @@ public class SequenceIndexer {
         
         int ndocs = Math.max(1, searcher.getIndexReader().numDocs());
         final Map<String, List<HSP>> hsp = new TreeMap<String, List<HSP>>();
-        for (String kmer : kmers.kmers()) {
+
+        for (Map.Entry<String, BitSet> entry : kmers.positionEntrySet()) {
+            String kmer = entry.getKey();
             TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
             TopDocs docs = searcher.search(tq, ndocs);
-            BitSet positions = kmers.positions(kmer);
+            BitSet positions = entry.getValue();
             for (int i = 0; i < docs.totalHits; ++i) {
                 Document doc = searcher.doc(docs.scoreDocs[i].doc);
                 final String id = doc.get(FIELD_ID);
-                
-                List<HSP> hits = hsp.get(id);
-                if (hits == null) {
-                    hits = new ArrayList<HSP>();
-                    hsp.put(id, hits);
-                }
+
+                List<HSP> hits = hsp.computeIfAbsent(id, k-> new ArrayList<>());
                 
                 IndexableField[] pos = doc.getFields(FIELD_POSITION);
                 for (int j = 0; j < pos.length; ++j) {
@@ -578,9 +583,9 @@ public class SequenceIndexer {
         }
 
         // process in the background and return immediately
-        String qs = query.toString();
+        String qs = query;
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
-            String seq = getSeq (me.getKey());
+            String seq = getSeq(me.getKey());
             if(seq ==null){
                 System.err.println("error sequence indexer cache invalid for key " + me.getKey());
                 TermQuery tq = new TermQuery (new Term (FIELD_ID, me.getKey()));
@@ -659,11 +664,7 @@ public class SequenceIndexer {
 
             double score = (double)max/Math.min(query.length(), seq.length());
             if (score >= identity) {
-                Collections.sort(result.alignments);
                 results.put(result);
-            }
-            else {
-                //System.err.println(me.getKey()+": "+score);
             }
         }
     }
@@ -684,15 +685,14 @@ public class SequenceIndexer {
                              if (docs.totalHits > 0) {
                                  Document d = searcher.doc
                                      (docs.scoreDocs[0].doc);
-                                 seq = d.get(FIELD_SEQ);
+                                return d.get(FIELD_SEQ);
                              }
                          }
                          finally {
                              searchManager.release(searcher);
                          }
-                         searcher = null;
                          
-                         return seq;
+                         return null;
                      }
                  });
         }
@@ -789,6 +789,7 @@ public class SequenceIndexer {
         static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
         Object value = CACHE.get(key);
+
         if (value == null) {
             value = generator.call();
             CACHE.put(new Element (key, value));
