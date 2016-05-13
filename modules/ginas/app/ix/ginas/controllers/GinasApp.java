@@ -1607,6 +1607,12 @@ public class GinasApp extends App {
 
     private static class SubstanceReIndexListener implements RebuildIndex.ReIndexListener {
 
+        /**
+         * Log of index messages so they are saved to file for later examination
+         * in case of failure.  Previously logs only written to browser.
+         */
+        private static final Logger.ALogger LOG = Logger.of("index-rebuild");
+
         private long startTime;
         private StringBuilder message = new StringBuilder();
 
@@ -1650,12 +1656,18 @@ public class GinasApp extends App {
             currentlyRunning = false;
 
             EntityPersistAdapter.doneReindexing();
+
+            StringBuilder doneMessage = new StringBuilder(100);
+
             if(currentRecordsIndexed >= totalIndexed) {
-                message.append("\n\nCompleted Substance reindexing.");
+                doneMessage.append("\n\nCompleted Substance reindexing.");
             }else{
-                message.append("\n\nError : did not finish indexing all records, only re-indexed ").append(currentRecordsIndexed);
+                doneMessage.append("\n\nError : did not finish indexing all records, only re-indexed ").append(currentRecordsIndexed);
             }
-            message.append("\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
+            doneMessage.append("\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
+
+            message.append(doneMessage);
+            LOG.info(doneMessage.toString());
         }
 
         @Override
@@ -1687,7 +1699,8 @@ public class GinasApp extends App {
 
             String toAppend="\n" + numProcessedThisTime + " more records Processed: " + currentRecordsIndexed + " of " + recordsToIndex + " in " + ((currentTime - lastUpdateTime))+ "ms (" +totalTimeSerializing + "ms serializing)";
             Logger.debug("REINDEXING:" + toAppend);
-            
+            LOG.info(toAppend);
+
             message.append(toAppend);
 
             lastUpdateTime = currentTime;
@@ -1698,7 +1711,10 @@ public class GinasApp extends App {
 
         @Override
         public void error(Throwable t) {
+
             t.printStackTrace();
+
+            LOG.error("error reindexing", t);
         }
     }
 }
