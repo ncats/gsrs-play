@@ -482,6 +482,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
     public static Statistics getStatisticsForJob(ProcessingJob pj){
     	String k=pj.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+        //the Map interface says we should be able to call get(null)
+        //but Concurrenthashmap will throw a null pointer when
+        //computing the hash value, at least in Java 7...
+        if(k ==null){
+            return null;
+        }
         return jobCacheStatistics.get(k);
     }
     

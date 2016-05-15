@@ -2,6 +2,9 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigParseOptions;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
@@ -16,6 +19,13 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import play.Configuration;
+import play.api.test.FakeApplication;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -58,6 +68,39 @@ public class IntegrationTest {
         JsonNode substances = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/substances");
         assertFalse( SubstanceJsonUtil.isLiteralNull(substances));
     }
+
+
+    @Test
+	public void testRestAPIBDNUMProcessor() throws Exception {
+
+		ts.stop(true);
+
+		Map configMap = new HashMap();
+		configMap.put("codesystem", "BDNUM");
+		configMap.put("suffix", "AB");
+		configMap.put("length", 10);
+		configMap.put("padding", true);
+
+		ts.modifyConfig("ix.core.entityprocessors.class", "ix.ginas.models.v1.Substance");
+		ts.modifyConfig("ix.core.entityprocessors.processor", "ix.ginas.processors.UniqueCodeGenerator");
+		ts.modifyConfig("map", configMap);
+
+		/*Config additionalConfig = ConfigFactory.parseFile(new File("conf/fda.conf")).resolve();
+		Configuration additionalConfigurations = new Configuration(additionalConfig);
+		//ts.modifyConfig(additionalConfigurations.asMap());
+		Map test = additionalConfigurations.asMap();
+		System.out.println(test.size());
+		System.out.println(test.keySet().size());
+		for (Object s:test.keySet()){
+			System.out.println(s.toString());
+		}*/
+		ts.start();
+		//JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/?filter=terms.value=%27BDNUM%27");
+		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/search?q=terms_value:BDNUM");
+		assertFalse( SubstanceJsonUtil.isLiteralNull(result));
+		//assertFalse( result.get("total").asInt() == 0);
+		System.out.println("total count:" + result.get("total").asInt());
+	}
 
 
     @Test
@@ -303,7 +346,4 @@ public class IntegrationTest {
     	}
     	
     }
-    
-    
-
 }

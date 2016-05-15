@@ -1,6 +1,6 @@
 <div>
     <label id="{{::field}}-label" class="text-capitalize">{{label || field}}</label><br>
-    <a ng-show="!obj._editing{{::field}}" ng-click="editing(obj, field);"><i
+    <a ng-show="!obj._editing{{::field}}" ng-click="editing(obj, field);" id="{{::field}}"><i
                 class="fa fa-check fa-2x success" ng-show="obj[field]===true"  uib-tooltip="{{::field}}"></i>
             <i class="fa fa-times fa-2x" ng-show="!obj[field]===true" uib-tooltip="Field not Set"></i></a>
         <input type="checkbox" ng-show="obj._editing{{::field}}"  ng-model="obj[field]"

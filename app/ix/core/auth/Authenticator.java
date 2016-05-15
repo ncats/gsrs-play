@@ -8,5 +8,5 @@ import play.mvc.Http;
  */
 public interface Authenticator {
 
-    UserProfile authenticate(Http.Context ctx);
+    UserProfile authenticate(AuthenticationCredentials credentials);
 }
