@@ -3,6 +3,7 @@ package ix.test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.ginas.models.v1.Relationship;
+import ix.ginas.utils.validation.Validation;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 
@@ -14,6 +15,14 @@ public final class SubstanceJsonUtil {
 		//can not instantiate
 	}
 	
+	/**
+	 * Normalizes a substance JSON to be as expected for a typical submission.
+	 * Specifically, removing approval information, changing status to pending,
+	 * and ensuring that the public domain tag is added to the first
+	 * reference.
+	 * @param substance
+	 * @return
+	 */
 	public static JsonNode toUnapproved(JsonNode substance){
 		
 		return new JsonUtil.JsonNodeBuilder(substance)
@@ -22,6 +31,7 @@ public final class SubstanceJsonUtil {
 				.remove("/approvedBy")
 				
 				.set("/status", "pending")
+				.add("/references/0/tags/-", Validation.PUBLIC_DOMAIN_REF)
 				
 				.ignoreMissing()
 				.build();

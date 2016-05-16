@@ -203,6 +203,7 @@ public class JsonUtil {
     			for(int i=changes.size()-1;i>=0;i--){
     				String path=changes.get(i).path;
 	    			JsonNode has=oldJson.at(path);
+	    			if(path.endsWith("-"))continue;
 	    			if(has==null || has.isNull() || has.isMissingNode()){
 	    				changes.remove(i);
 	    			}

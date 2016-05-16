@@ -67,6 +67,7 @@ public class Substance extends GinasCommonData {
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH_IMPORT";
 	public static final String STATUS_APPROVED = "approved";
 	public static final String STATUS_PENDING = "pending";
+	public static final String STATUS_ALTERNATIVE = "alternative";
 	public static final String DEFAULT_ALTERNATIVE_NAME = "ALTERNATIVE DEFINITION";
 
 	
@@ -231,6 +232,7 @@ public class Substance extends GinasCommonData {
 		}
 		return node;
 	}
+	
 
 	@JsonView(BeanViews.Compact.class)
 	@JsonProperty("_references")
@@ -322,6 +324,10 @@ public class Substance extends GinasCommonData {
 			return names.get(0).name;	
 		}
 		if(this.isAlternativeDefinition()){
+			String name1=this.getPrimaryDefinitionReference().getName();
+			if(name1!=null){
+				return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
+			}
 			return Substance.DEFAULT_ALTERNATIVE_NAME;
 		}
 		return Substance.DEFAULT_NO_NAME;
@@ -396,7 +402,13 @@ public class Substance extends GinasCommonData {
 		return names;
 	}
 	
-	
+	@PrePersist
+	@PreUpdate
+	public void fixstatus(){
+		if(this.isAlternativeDefinition()){
+			this.status=Substance.STATUS_ALTERNATIVE;
+		}
+	}
 
 	@PrePersist
 	@PreUpdate
@@ -421,6 +433,7 @@ public class Substance extends GinasCommonData {
 			Logger.warn("Substance " + approvalID + " has " + remove.size()
 					+ " invalid relationship(s)!");
 		}
+		
 	}
 
 	@JsonIgnore
@@ -653,7 +666,7 @@ public class Substance extends GinasCommonData {
 	@JsonIgnore
 	public String getDisplayStatus(){
 		if(STATUS_APPROVED.equalsIgnoreCase(status)){
-			return "Validated (UNII)";
+			return "Validated (UNII)"; //TODO: move this elsewhere
 		}
 		return status;
 	}
