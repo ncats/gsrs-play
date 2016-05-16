@@ -2001,6 +2001,7 @@
             scope: {
                 referenceobj: '=',
                 parent: '=',
+                label: '@?',
                 edit: '=?'
             },
             templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",

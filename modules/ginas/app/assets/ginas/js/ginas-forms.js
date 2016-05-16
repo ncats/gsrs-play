@@ -1748,7 +1748,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             restrict: 'E',
             replace: 'true',
             scope: {
-                referenceobj: '=',
+                referenceobj: '=?',
                 parent: '=',
                 edit: '=?'
             },
@@ -1756,8 +1756,18 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             link: function (scope, element, attrs) {
                 scope.reference={};
 
-                if(scope.edit){;
+                if(scope.edit){
                     scope.active = 2;
+                }
+                
+                if(_.isUndefined(scope.referenceobj)){
+                    var subClass = scope.parent.substanceClass;
+                    if(subClass ==="chemical"){
+                        console.log("chemical");
+                        subClass = "structure"
+                    }
+                    console.log(subClass);
+                      scope.referenceobj = scope.parent[subClass];
                 }
 
                 scope.submitFile = function (obj) {
@@ -1793,9 +1803,11 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
 
 
                     scope.validate = function () {
+                        console.log(scope);
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
+                            console.log("FFFFF");
                             scope.saveReference(scope.reference.uuid, scope.referenceobj);
                             scope.saveReference(_.cloneDeep(scope.reference), scope.parent);
                         } else {
@@ -1810,9 +1822,9 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                 //why is the array fetched, then set?
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
-                        var temp = _.get(parent, 'references');
-                        temp.push(reference);
-                        _.set(parent, 'references', temp);
+                  //      var temp = _.get(parent, 'references');
+                        parent['references'].push(reference);
+                    //    _.set(parent, 'references', temp);
                     } else {
                         var x = [];
                         x.push(_.cloneDeep(reference));

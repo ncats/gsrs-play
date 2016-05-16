@@ -2101,17 +2101,6 @@
         "hidden": false,
         "selected": false,
         "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1462542367719,
-        "modified": 1462542367776,
-        "deprecated": false,
-        "value": "eerere",
-        "display": "erererer",
-        "hidden": false,
-        "selected": false,
-        "filters": []
       }
     ],
     "fields": [

@@ -1,5 +1,5 @@
 <div>
-   <label for={{name}}-{{type}} class="text-capitalize">References</label>
+   <label for={{name}}-{{type}} class="text-capitalize">{{label || 'References'}}</label>
     <a ng-show="referenceobj.references.length>0" ng-click="open()" role="button" uib-tooltip ="{{referenceobj.references.length}} reference(s)">
         <span class="badge">{{referenceobj.references.length}}</span></a>
     <div class="text-center" uib-tooltip="Add a reference">
