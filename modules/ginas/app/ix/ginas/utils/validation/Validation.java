@@ -1,6 +1,5 @@
 package ix.ginas.utils.validation;
 
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +14,11 @@ import java.util.regex.Pattern;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+
+import chemaxon.struc.MolAtom;
+import chemaxon.struc.Molecule;
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.jchemical.Jchemical;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -23,7 +27,6 @@ import ix.core.plugins.PayloadPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
@@ -44,10 +47,11 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.models.v1.Unit;
-import ix.ginas.utils.CodeSequentialGenerator;
+import ix.ginas.utils.ChemUtils;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingMessage.Link;
 import ix.ginas.utils.GinasProcessingStrategy;
+import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.NucleicAcidUtils;
 import ix.ginas.utils.ProteinUtils;
 import play.Configuration;
@@ -965,6 +969,9 @@ public class Validation {
          if(oldstr.charge==null){
         	 oldstr.charge=newstr.charge;
          }
+         
+         
+         ChemUtils.CheckValanace(newstr,gpm);
          
          return gpm;
     }
