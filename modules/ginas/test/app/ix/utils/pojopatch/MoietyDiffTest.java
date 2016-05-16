@@ -8,6 +8,7 @@ import ix.ginas.models.v1.Moiety;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -18,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by katzelda on 5/13/16.
  */
+@Ignore
 public class MoietyDiffTest {
 
     ObjectMapper mapper = new ObjectMapper();
