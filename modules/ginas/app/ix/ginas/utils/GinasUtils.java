@@ -153,6 +153,9 @@ public class GinasUtils {
 	}
 
 	public static Chemical structureToChemical(Structure s, List<GinasProcessingMessage> messages) {
+		if(messages==null){
+			messages=new ArrayList<GinasProcessingMessage>();
+		}
 		Chemical c;
 		String mfile = s.molfile;
 		c = DEFAULT_FACTORY.createChemical(mfile, Chemical.FORMAT_SDF);

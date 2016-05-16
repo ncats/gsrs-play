@@ -67,6 +67,7 @@ public class Substance extends GinasCommonData {
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH_IMPORT";
 	public static final String STATUS_APPROVED = "approved";
 	public static final String STATUS_PENDING = "pending";
+	public static final String DEFAULT_ALTERNATIVE_NAME = "ALTERNATIVE DEFINITION";
 
 	
 	public enum SubstanceClass {
@@ -319,6 +320,9 @@ public class Substance extends GinasCommonData {
 		}
 		if(names!=null && names.size()>0){
 			return names.get(0).name;	
+		}
+		if(this.isAlternativeDefinition()){
+			return Substance.DEFAULT_ALTERNATIVE_NAME;
 		}
 		return Substance.DEFAULT_NO_NAME;
 	}
