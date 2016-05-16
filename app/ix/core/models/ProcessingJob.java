@@ -147,7 +147,6 @@ public class ProcessingJob extends LongBaseModel {
     //    @JsonView(BeanViews.Compact.class)
 //    @JsonProperty("_statistics")
     public Statistics getStatistics(){
-
     	if(this.statistics!=null){
     		try {
 				return om.readValue(statistics, Statistics.class);
