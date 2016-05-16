@@ -428,34 +428,7 @@ public class SubstanceFactory extends EntityFactory {
 		return EntityPersistAdapter.getSequenceIndexer();
 	}
 
-	public static List<Substance> getNearCollsionProteinSubstances(int top, int skip, ProteinSubstance cs) {
-		Set<Substance> dupes = new LinkedHashSet<Substance>();
 
-		for (Subunit subunit : cs.protein.subunits) {
-			try {
-				ResultEnumeration re = getSeqIndexer().search(subunit.sequence,
-						SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
-				int i = 0;
-				while (re.hasMoreElements()) {
-					SequenceIndexer.Result r = re.nextElement();
-					List<ProteinSubstance> proteins = SubstanceFactory.protfinder.where()
-							.eq("protein.subunits.uuid", r.id).findList();
-					if (proteins != null && proteins.size() >= 0) {
-						for (Substance s : proteins) {
-							if (i >= skip)
-								dupes.add(s);
-							i++;
-							if (dupes.size() >= top)
-								break;
-						}
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return new ArrayList<Substance>(dupes);
-	}
 
 	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top, int skip, Subunit subunit) {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();
@@ -465,24 +438,24 @@ public class SubstanceFactory extends EntityFactory {
 			while (re.hasMoreElements()) {
 				SequenceIndexer.Result r = re.nextElement();
 				List<Substance> proteins = SubstanceFactory.finder.where().eq("protein.subunits.uuid", r.id).findList();
-				if (proteins != null && proteins.size() >= 0) {
+				if (proteins != null && !proteins.isEmpty()) {
 
 					for (Substance s : proteins) {
+						if (dupes.size() >= top) {
+							break;
+						}
 						if (i >= skip) {
 							dupes.add(s);
 						}
 						i++;
-						if (dupes.size() >= top) {
-							break;
-						}
+
 					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		List<Substance> slist = new ArrayList<Substance>(dupes);
-		return slist;
+		return new ArrayList<Substance>(dupes);
 	}
 
 	public static Result approve(String substanceId) {

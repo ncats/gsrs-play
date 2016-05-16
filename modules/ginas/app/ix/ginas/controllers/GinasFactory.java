@@ -14,6 +14,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
@@ -178,7 +179,7 @@ public class GinasFactory extends EntityFactory {
                 }
                 EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 
-                return ok(em.valueToTree(resp));
+                return Java8Util.ok(em.valueToTree(resp));
             }
         	
         }

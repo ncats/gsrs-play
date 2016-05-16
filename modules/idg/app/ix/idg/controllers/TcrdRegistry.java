@@ -375,7 +375,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 Text seq = new Text (UNIPROT_SEQUENCE, rset.getString("seq"));
                 seq.save();
                 
-                SEQIDX.add(String.valueOf(seq.id), seq.text);
+                SEQIDX.add(Long.toString(seq.id), seq.text);
                 target.properties.add(seq);
             }
             rset.close();

@@ -75,6 +75,7 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
+import ix.core.util.Java8Util;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.utils.EntityUtils;
@@ -624,7 +625,7 @@ public class EntityFactory extends Controller {
         try {
             T inst = finder.byId(id);
             if (inst != null) {
-                return ok (_textIndexer.getDocJson(inst));
+                return Java8Util.ok (_textIndexer.getDocJson(inst));
             }
             return notFound ("Bad request: "+request().uri());
         }
@@ -653,7 +654,7 @@ public class EntityFactory extends Controller {
 
             T inst = query.setId(id).findUnique();
             if (inst != null) {
-                return ok (mapper.valueToTree(inst));
+                return Java8Util.ok (mapper.valueToTree(inst));
             }else{
             	System.out.println("There's no one here by that name");
             }
@@ -661,7 +662,7 @@ public class EntityFactory extends Controller {
         else {
             T inst = finder.byId(id);
             if (inst != null) {
-                return ok (mapper.valueToTree(inst));
+                return Java8Util.ok (mapper.valueToTree(inst));
             }
         }
         return notFound ("Bad request: "+request().uri());
@@ -869,7 +870,7 @@ public class EntityFactory extends Controller {
                         return isRaw ? noContent () : ok ("null");
                     
                     return isRaw && !node.isContainerNode()
-                        ? ok (node.asText()) : ok (node);
+                        ? ok (node.asText()) : Java8Util.ok (node);
                 }
             }
             catch (Exception ex) {
@@ -900,7 +901,7 @@ public class EntityFactory extends Controller {
             
             return status;
         }
-        return ok (node);
+        return Java8Util.ok (node);
     }
     @Transactional
     protected static <K, T extends Model> 
@@ -1058,7 +1059,7 @@ public class EntityFactory extends Controller {
             ObjectMapper mapper = getEntityMapper ();
             JsonNode node = mapper.valueToTree(inst);
             inst.delete();
-            return ok (node);
+            return Java8Util.ok (node);
         }
         return notFound (request().uri()+" not found");
     }
@@ -1082,7 +1083,7 @@ public class EntityFactory extends Controller {
         }
         if (!edits.isEmpty()) {
             ObjectMapper mapper = getEntityMapper ();
-            return ok (mapper.valueToTree(edits));
+            return Java8Util.ok (mapper.valueToTree(edits));
         }
 
         return notFound (request().uri()+": No edit history found!");
@@ -1414,7 +1415,7 @@ public class EntityFactory extends Controller {
             rootChange[2]=obj;
             changes.add(rootChange);
 
-            return ok (mapper.valueToTree(obj));
+            return Java8Util.ok (mapper.valueToTree(obj));
                     }
                     catch (Exception ex) {
             ex.printStackTrace();
@@ -1423,8 +1424,8 @@ public class EntityFactory extends Controller {
                     }
     } // update ()
     
-    public static interface EntityCallable{
-        public void call(Object m, String path);
+    public interface EntityCallable{
+        void call(Object m, String path);
     }
     public static void recursivelyApply(Model entity,EntityCallable c){
     	recursivelyApply(entity,"",c);
@@ -1628,7 +1629,7 @@ public class EntityFactory extends Controller {
             // updated at all, at least from the ebean perspective
             
             EntityPersistAdapter.getInstance().deepreindex(newValue);
-            return ok (mapper.valueToTree(newValue));          
+            return Java8Util.ok (mapper.valueToTree(newValue));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());

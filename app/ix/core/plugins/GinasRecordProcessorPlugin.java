@@ -74,6 +74,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
     private static Map<String,Long> queueStatistics = new ConcurrentHashMap<String,Long>();
     private static Map<String,Statistics> jobCacheStatistics = new ConcurrentHashMap<String,Statistics>();
 
+    private static ObjectMapper om = new ObjectMapper();
+
     private static int MAX_EXTRACTION_QUEUE = 100;
         
 
@@ -210,7 +212,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					
 					long start=TimeUtil.getCurrentTimeMillis();
 					rec.job.getPersister().persist(this);
-					Statistics stat = applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
+					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
 					long done=TimeUtil.getCurrentTimeMillis()-start;
 //					System.out.println(     "Persisted at \t" + 
 //							System.currentTimeMillis() + "\t" + 
@@ -229,8 +231,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
-					ObjectMapper om = new ObjectMapper();
-					
+
 					Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t"
 							+ om.valueToTree(theRecord).toString().replace("\n", ""));
 				}
@@ -243,29 +244,28 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }
     }
 
-    public synchronized static void updateJobIfNecessary(ProcessingJob job2) {
-    	ProcessingJob job = job2;
+    public static void updateJobIfNecessary(ProcessingJob job2) {
+    	ProcessingJob job;
     	try{
     		job = ProcessingJobFactory.getJob(job2.id);
     	}catch(Exception e){
     		Logger.debug("Error refreshing job from database, using local copy");
+            job = job2;
     	}
     	
     	Statistics stat = getStatisticsForJob(job);
-        if (stat != null) {
-            if (stat._isDone()) {
-            	updateJob(job,stat);
-            }
+        if (stat != null && stat._isDone()) {
+            updateJob(job,stat);
         }
     }
-    public synchronized static void updateJob(ProcessingJob job,Statistics stat) {
-    	ObjectMapper om = new ObjectMapper();
+    public static void updateJob(ProcessingJob job,Statistics stat) {
+
         job.stop = TimeUtil.getCurrentTimeMillis();
         job.status = ProcessingJob.Status.COMPLETE;
         job.statistics = om.valueToTree(stat).toString();
         job.message="Job complete";
-        PersistModel pm = PersistModel.Update(job);
-        pm.persists();
+
+        job.update();
         TimeProfiler.stopGlobalTime("full submit");
     }
 
@@ -332,7 +332,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         final ProcessingJob job = new ProcessingJob();
         job.start = TimeUtil.getCurrentTimeMillis();
-        job.keys.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
+        job.addKeyword(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
         job.setExtractor(extractor);
         job.setPersister(persister);
                 
@@ -436,20 +436,21 @@ public class GinasRecordProcessorPlugin extends Plugin {
         	TransformedRecord tr=null;
         	ProcessingRecord rec = new ProcessingRecord();
             ProcessingJob job = prg.job;
-        	try{
+            Statistics statistics = job.getStatistics();
+            try{
 	            
-	            job.getStatistics().applyChange(Statistics.CHANGE.ADD_EX_GOOD);
+	            statistics.applyChange(Statistics.CHANGE.ADD_EX_GOOD);
 	            
 	            Object trans = job.getTransformer().transform(prg, rec);
 	
 	            if (trans == null) {
 	                throw new IllegalStateException("Transform error");
 	            }
-	            job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_GOOD);
+	            statistics.applyChange(Statistics.CHANGE.ADD_PR_GOOD);
 	            tr= new TransformedRecord(trans, prg.theRecord, rec);
 	           
         	}catch(Throwable t){
-        		job.getStatistics().applyChange(Statistics.CHANGE.ADD_PR_BAD);
+        		statistics.applyChange(Statistics.CHANGE.ADD_PR_BAD);
         		//t.printStackTrace();
         		
         		Global.TransformFailLogger.info(rec.name + "\t" + t.getMessage().replace("\n", "") + "\t"
@@ -491,16 +492,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
         return jobCacheStatistics.get(k);
     }
     
-    public static synchronized Statistics storeStatisticsForJob(String jobTerm, Statistics s){
-        Statistics st=getStatisticsForJob(jobTerm);
-        if(st==s)return s;
-        //More recent, substitute
-        if(st==null || s.isNewer(st)){
-            return jobCacheStatistics.put(jobTerm,s);
-        }else{
-            st.applyChange(s);
-            return jobCacheStatistics.put(jobTerm,st);
-        }
+    public static Statistics storeStatisticsForJob(String jobTerm, Statistics s){
+
+        return jobCacheStatistics.compute(jobTerm, (k, v) ->{
+            if(v ==null || s.isNewer(v)){
+                return s;
+            }
+            v.applyChange(s);
+            return v;
+        });
+
     }
         
     public static Statistics applyStatisticsChangeForJob(String jobTerm, Statistics.CHANGE change){

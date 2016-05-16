@@ -32,39 +32,38 @@ public class Kmers {
         return kmers.get(kmer);
     }
     
-    public Kmers add (String kmer, int pos) {
-        BitSet bs = new BitSet ();
-        BitSet old = kmers.putIfAbsent(kmer, bs);
-        if (old != null)
-            bs = old;
-        bs.set(pos);
+    private Kmers add (String kmer, int pos) {
+        kmers.computeIfAbsent(kmer, (k)-> new BitSet()).set(pos);
         return this;
     }
     
     public Kmers add (String kmer, String neighbor) {
-        Set<String> nb = new TreeSet<String>();
-        Set<String> old = neighbors.putIfAbsent(kmer, nb);
-        if (old != null)
-            nb = old;
-        nb.add(neighbor);
+
+        neighbors.computeIfAbsent(kmer, (k)->new TreeSet<String>()).add(neighbor);
+
         return this;
+    }
+
+    public Set<Map.Entry<String, BitSet>> positionEntrySet(){
+        return kmers.entrySet();
     }
 
     public int getK () { return K; }
 
-    public static Kmers create (CharSequence seq) {
+    public static Kmers create (String seq) {
         return create (seq, 3);
     }
     
-    public static Kmers create (CharSequence seq, int K) {
+    public static Kmers create (String seq, int K) {
         Kmers kmers = new Kmers (K);
+        char[] chars = seq.toUpperCase().toCharArray();
         int len = seq.length() - K+1;
         for (int i = 0; i < len; ++i) {
             char[] kmer = new char[K];
             for (int j = i, k = 0; k < K; ++k) {
-                kmer[k] = seq.charAt(j++);
+                kmer[k] = chars[j++];
             }
-            kmers.add(new String (kmer).toUpperCase(), i);
+            kmers.add(new String (kmer), i);
         }
         return kmers;
     }

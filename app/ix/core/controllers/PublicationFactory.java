@@ -4,6 +4,7 @@ import java.io.*;
 import java.security.*;
 import java.util.*;
 
+import ix.core.util.Java8Util;
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -76,7 +77,7 @@ public class PublicationFactory extends EntityFactory {
                 Publication pub = q.where().eq("pmid", id).findUnique();
                 if (pub != null) {
                     ObjectMapper mapper = getEntityMapper ();
-                    return ok (mapper.valueToTree(pub));
+                    return Java8Util.ok (mapper.valueToTree(pub));
                 }
 
                 return notFound ("Not found: "+request().uri());
@@ -97,7 +98,7 @@ public class PublicationFactory extends EntityFactory {
     
     public static Result relatedByPMID (long pmid) {
         ObjectMapper mapper = getEntityMapper ();
-        return ok (mapper.valueToTree(getRelated (pmid)));
+        return Java8Util.ok (mapper.valueToTree(getRelated (pmid)));
     }
 
     public static Result field (Long id, String path) {

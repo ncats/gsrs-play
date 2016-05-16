@@ -1,25 +1,9 @@
 package ix.core.models;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -53,6 +37,14 @@ public class ProcessingJob extends LongBaseModel {
     @JoinTable(name="ix_core_procjob_key")
     public List<Keyword> keys = new ArrayList<Keyword>();
 
+    @Transient
+    @JsonIgnore
+    private Map<String, Keyword> keywordLabelMap;
+
+    @Transient
+    @JsonIgnore
+    private Map<String, Keyword> keywordTermMap;
+
     @Indexable(facet=true, name="Job Status")
     public Status status = Status.PENDING;
     
@@ -84,6 +76,9 @@ public class ProcessingJob extends LongBaseModel {
     
     
     public Date lastUpdate; // here
+    @Transient
+    @JsonIgnore
+    private static ObjectMapper om = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);;
 
     public ProcessingJob () {
     }
@@ -105,8 +100,6 @@ public class ProcessingJob extends LongBaseModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("statistics")
     public Map getStatisticsForAPI () {
-    	ObjectMapper om = new ObjectMapper();
-    	om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
 			return om.readValue(om.valueToTree(getStatistics())+"",Map.class);
 		} catch (Exception e) {
@@ -116,31 +109,47 @@ public class ProcessingJob extends LongBaseModel {
     }
     
     public String getKeyMatching(String label){
-    	for(Keyword k : keys){
-    		if(label.equals(k.label)){
-    			return k.getValue();
-    		}
-    	}
-    	return null;
+        populateKeywordMapsIfNeeded();
+        Keyword keyword = keywordLabelMap.get(label);
+    	return keyword ==null ? null : keyword.getValue();
     }
     public boolean hasKey(String term){
-    	for(Keyword k : keys){
-    		if(term.equals(k.term)){
-    			return true;
-    		}
-    	}
-    	return false;
+        populateKeywordMapsIfNeeded();
+        return keywordTermMap.containsKey(term);
+
     }
-    
-//    @JsonView(BeanViews.Compact.class)
+
+
+    public void addKeyword(Keyword keyword){
+        Objects.requireNonNull(keyword);
+        populateKeywordMapsIfNeeded();
+
+        keys.add(keyword);
+        keywordLabelMap.put(keyword.label, keyword);
+        keywordTermMap.put(keyword.term, keyword);
+
+    }
+
+    private void populateKeywordMapsIfNeeded() {
+        if(keywordLabelMap !=null) {
+            return;
+        }
+        keywordLabelMap = new HashMap<>();
+        keywordTermMap = new HashMap<>();
+
+        for (Keyword k : keys) {
+            keywordLabelMap.put(k.label, k);
+            keywordTermMap.put(k.term, k);
+        }
+
+    }
+
+    //    @JsonView(BeanViews.Compact.class)
 //    @JsonProperty("_statistics")
     public Statistics getStatistics(){
-    	ObjectMapper om = new ObjectMapper();
-    	om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     	if(this.statistics!=null){
     		try {
-				Statistics s= om.readValue(statistics, Statistics.class);
-				return s;
+				return om.readValue(statistics, Statistics.class);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -201,12 +210,12 @@ public class ProcessingJob extends LongBaseModel {
 
     @JsonIgnore
 	public void setExtractor(Class extractor) {
-		this.keys.add(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
+		this.addKeyword(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
 	}
     
     @JsonIgnore
 	public void setPersister(Class persister) {
-		this.keys.add(new Keyword(PERSISTER_KEYWORD, persister.getName()));
+		this.addKeyword(new Keyword(PERSISTER_KEYWORD, persister.getName()));
 	}
     
     @PreUpdate

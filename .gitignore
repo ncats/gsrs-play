@@ -1,4 +1,6 @@
-/.idea/
+**/.idea/*
 /.settings/
 **/target/
 /ginas.ix/
+/logs/
+**/*-log*.gz

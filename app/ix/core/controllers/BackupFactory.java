@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.NamedResource;
 import ix.core.models.BackupEntity;
+import ix.core.util.Java8Util;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -20,7 +21,7 @@ public class BackupFactory extends EntityFactory {
             BackupEntity backup = finder.byId(id);
             if (backup != null) {
                 ObjectMapper mapper = getEntityMapper ();
-                return ok (mapper.valueToTree(backup));
+                return Java8Util.ok (mapper.valueToTree(backup));
             }
             return notFound ("Bad request: "+request().uri());
         }

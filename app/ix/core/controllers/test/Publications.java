@@ -3,6 +3,7 @@ package ix.core.controllers.test;
 import java.io.*;
 import java.util.*;
 
+import ix.core.util.Java8Util;
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -79,7 +80,7 @@ public class Publications extends Controller {
                 ObjectMapper mapper = new ObjectMapper ();
                 List<Publication> pubs = new ArrayList<Publication>();          
                 process (pubs, arg);
-                return ok (mapper.valueToTree(pubs));
+                return Java8Util.ok (mapper.valueToTree(pubs));
             }
         }
         catch (Exception ex) {

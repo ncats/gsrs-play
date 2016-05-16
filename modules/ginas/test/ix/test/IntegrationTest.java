@@ -23,9 +23,7 @@ import play.Configuration;
 import play.api.test.FakeApplication;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -75,31 +73,31 @@ public class IntegrationTest {
 
 		ts.stop(true);
 
-		Map configMap = new HashMap();
-		configMap.put("codesystem", "BDNUM");
-		configMap.put("suffix", "AB");
-		configMap.put("length", 10);
-		configMap.put("padding", true);
 
-		ts.modifyConfig("ix.core.entityprocessors.class", "ix.ginas.models.v1.Substance");
-		ts.modifyConfig("ix.core.entityprocessors.processor", "ix.ginas.processors.UniqueCodeGenerator");
-		ts.modifyConfig("map", configMap);
+		List<Map<String, ?>> processors = new ArrayList<>();
 
-		/*Config additionalConfig = ConfigFactory.parseFile(new File("conf/fda.conf")).resolve();
-		Configuration additionalConfigurations = new Configuration(additionalConfig);
-		//ts.modifyConfig(additionalConfigurations.asMap());
-		Map test = additionalConfigurations.asMap();
-		System.out.println(test.size());
-		System.out.println(test.keySet().size());
-		for (Object s:test.keySet()){
-			System.out.println(s.toString());
-		}*/
+		processors.add(new HashMap<String, Object>(){{
+				put("class", "ix.ginas.models.v1.Substance");
+				put("processor", "ix.ginas.processors.SubstanceProcessor");
+		}});
+		processors.add( new HashMap<String, Object>(){{
+			put("class", "ix.ginas.models.v1.Substance");
+			put("processor", "ix.ginas.processors.UniqueCodeGenerator");
+			put("with", new HashMap<String, Object>() {{
+
+				put("codesystem","BDNUM");
+				put("suffix","AB");
+				put("length",10);
+				put("padding",true);
+			}});
+		}});
+
+		ts.modifyConfig("ix.core.entityprocessors", processors);
+
 		ts.start();
-		//JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/?filter=terms.value=%27BDNUM%27");
 		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/search?q=terms_value:BDNUM");
 		assertFalse( SubstanceJsonUtil.isLiteralNull(result));
-		//assertFalse( result.get("total").asInt() == 0);
-		System.out.println("total count:" + result.get("total").asInt());
+		assertEquals(1, result.get("total").asInt());
 	}
 
 

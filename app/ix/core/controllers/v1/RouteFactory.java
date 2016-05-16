@@ -34,6 +34,7 @@ import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.core.util.Java8Util;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
@@ -162,7 +163,7 @@ public class RouteFactory extends Controller {
         }
                   
         ObjectMapper mapper = new ObjectMapper ();
-        return ok(mapper.valueToTree(res));
+        return Java8Util.ok(mapper.valueToTree(res));
     }
 
     static Method getMethod (String context, 
@@ -459,7 +460,7 @@ public class RouteFactory extends Controller {
     	UserProfile p=UserFetcher.getActingUserProfile(false);
     	if(p!=null){
     		ObjectMapper om=new ObjectMapper();
-        	return ok(om.valueToTree(p));	
+        	return Java8Util.ok(om.valueToTree(p));
     	}
     	return notFound("No user logged in");
     }
@@ -470,7 +471,7 @@ public class RouteFactory extends Controller {
     		p.regenerateKey();
     		p.save();
     		ObjectMapper om=new ObjectMapper();
-        	return ok(om.valueToTree(p));	
+        	return Java8Util.ok(om.valueToTree(p));
     	}
     	return notFound("No user logged in");
     }
