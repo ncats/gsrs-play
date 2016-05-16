@@ -48,6 +48,7 @@ public class Structure extends BaseModel{
     public UUID id;
 
     @Version
+    @JsonIgnore
     public Long version;
     
     public final Date created = TimeUtil.getCurrentDate();

@@ -1844,11 +1844,13 @@
                 if (scope.parent.substanceClass === 'polymer' && (scope.parent.polymer.displayStructure)) {
                     scope.sketcher.setMolfile(scope.parent.polymer.displayStructure.molfile);
                 }else {
-                    if(!_.isUndefined(scope.parent.polymer.idealizedStructure)) {
-                        scope.mol = scope.parent.polymer.idealizedStructure.molfile;
-                        if (!_.isNull(scope.mol)) {
-                            scope.updateMol();
-                        }
+                	if(!_.isUndefined(scope.parent.polymer)){
+                    	if(!_.isUndefined(scope.parent.polymer.idealizedStructure)) {
+                       		scope.mol = scope.parent.polymer.idealizedStructure.molfile;
+                        	if (!_.isNull(scope.mol)) {
+                            	scope.updateMol();
+                        	}
+                    	}
                     }
                 }
 
