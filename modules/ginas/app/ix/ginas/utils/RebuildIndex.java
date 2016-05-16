@@ -75,6 +75,9 @@ public class RebuildIndex  {
             executor.awaitTermination(1, TimeUnit.DAYS);
         }catch(InterruptedException e){
             listener.error(e);
+        }catch(RuntimeException e){
+            listener.error(e);
+            throw e;
         }finally{
             listener.doneReindex();
         }

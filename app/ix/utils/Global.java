@@ -40,7 +40,6 @@ import play.mvc.Result;
 import scala.collection.JavaConverters;
 
 public class Global extends GlobalSettings {
-   // static final Logger.ALogger AccessLogger = Logger.of("access");
     public static final Logger.ALogger PersistFailLogger = Logger.of("persistFail");
     public static final Logger.ALogger TransformFailLogger = Logger.of("transformFail");
     public static final Logger.ALogger ExtractFailLogger = Logger.of("extractFail");
@@ -134,6 +133,7 @@ public class Global extends GlobalSettings {
         Logger.info("## starting app: secret=\""
                     +app.configuration().getString("application.secret")+"\"");
         */
+
     }
     
     void loadDefaultUsers(){
@@ -220,29 +220,7 @@ public class Global extends GlobalSettings {
     public <T extends EssentialFilter> Class<T>[] filters() {
         return new Class[]{GzipFilter.class,julienrf.play.jsonp.JsonpJava.class};
     }  
-    /*
-    @Override
-    public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
-        
-    	if(Play.application().configuration()
-			.getBoolean("ix.ginas.debug.showheaders", false)){
-	    	Logger.debug("HEADERS ON REQUEST ===================");
-	    	String allheaders="";
-	    	for(String head:req.headers().keySet()){
-	    		allheaders+=head + "\t" + req.getHeader(head) + "\n";
-	    		
-	    	}
-	    	Logger.debug(allheaders);
-    	}
-    	    	
-        String real = req.getHeader("X-Real-IP");
-        play.api.mvc.Handler h = super.onRouteRequest(req);
-        
-        AccessLogger.info("{} {} {} \"{}\"", req.remoteAddress(),
-                          real != null ? real : "", req.method(), req.uri());
-        return h;
-    }
-*/
+
     public boolean debug (int level) { 
         return ctx.debug(level); 
     }

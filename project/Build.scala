@@ -14,7 +14,7 @@ object ApplicationBuild extends Build {
 
   val commonSettings = Seq(
     version := appVersion,    
-    scalaVersion := "2.10.5",
+    scalaVersion := "2.11.7",
 //    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
 //      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
 //      "2.11.5", "2.11.6", "2.11.7"),
@@ -93,12 +93,12 @@ object ApplicationBuild extends Build {
 
   val javaBuildOptions = Seq(
     "-encoding", "UTF-8",
-    "-source", "1.7", 
-    "-target", "1.7"
+    "-source", "1.8",
+    "-target", "1.8"
   )
   val javaDocOptions = Seq(
     "-encoding", "UTF-8",
-    "-source", "1.7"
+    "-source", "1.8"
   ) 
 
 

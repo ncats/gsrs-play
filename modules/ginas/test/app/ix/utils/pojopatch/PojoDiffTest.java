@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.UUID;
 
+import ix.ginas.models.v1.*;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,10 +18,6 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.models.Author;
 import ix.core.models.Keyword;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.Parameter;
-import ix.ginas.models.v1.Property;
-import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
@@ -36,7 +33,7 @@ public class PojoDiffTest {
     ObjectMapper mapper = new ObjectMapper();
 
     private UUID getNextUUID(){
-        if(uuidIndex > uuids.size()){
+        if(uuidIndex == uuids.size()){
             UUID uuid = UUID.randomUUID();
             uuids.add(uuid);
             uuidIndex++;
@@ -601,5 +598,8 @@ public class PojoDiffTest {
         JsonMatches(newProp, old);
 
     }
+
+
+
 
 }

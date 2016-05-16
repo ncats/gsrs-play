@@ -4,6 +4,7 @@ import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
+import ix.core.util.Java8Util;
 import ix.ginas.models.v1.Substance;
 
 import java.util.List;
@@ -69,7 +70,7 @@ public class ProcessingJobFactory extends EntityFactory {
 
     public static Result field (Long id, String path) {
         if (path.equals("records")) {
-            return ok (getEntityMapper().valueToTree(getJobRecords (id)));
+            return Java8Util.ok (getEntityMapper().valueToTree(getJobRecords (id)));
         }
         return field (id, path, finder);
     }

@@ -2,6 +2,7 @@ package ix.core.controllers;
 
 import ix.core.models.*;
 import ix.core.models.Role;
+import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authenticator;
 import ix.utils.Util;
@@ -105,7 +106,7 @@ public class AdminFactory extends Controller {
             pal = mapper.treeToValue(node, Principal.class);
             pal.save();
 
-            return ok(mapper.valueToTree(pal));
+            return Java8Util.ok(mapper.valueToTree(pal));
         } catch (Exception ex) {
             Logger.error("Can't create new user", ex);
             if (pal != null)
@@ -123,7 +124,7 @@ public class AdminFactory extends Controller {
         Principal pal = palFinder.byId(id);
         if (pal != null) {
             ObjectMapper mapper = new ObjectMapper();
-            return ok(mapper.valueToTree(pal));
+            return Java8Util.ok(mapper.valueToTree(pal));
         }
         return notFound("Unknown principal: " + id);
     }
@@ -134,7 +135,7 @@ public class AdminFactory extends Controller {
             try {
                 pal.delete();
                 ObjectMapper mapper = new ObjectMapper();
-                return ok(mapper.valueToTree(pal));
+                return Java8Util.ok(mapper.valueToTree(pal));
             } catch (Exception ex) {
                 return badRequest(ex.getMessage());
             }
@@ -150,7 +151,7 @@ public class AdminFactory extends Controller {
             try {
                 permission.delete();
                 ObjectMapper mapper = new ObjectMapper();
-                return ok(mapper.valueToTree(permission));
+                return Java8Util.ok(mapper.valueToTree(permission));
             } catch (Exception ex) {
                 return badRequest(ex.getMessage());
             }
@@ -190,7 +191,7 @@ public class AdminFactory extends Controller {
         Namespace res = resFinder.byId(id);
         if (res != null) {
             ObjectMapper mapper = new ObjectMapper();
-            return ok(mapper.valueToTree(res));
+            return Java8Util.ok(mapper.valueToTree(res));
         }
         return notFound("Unknown resource: " + id);
     }
@@ -203,7 +204,7 @@ public class AdminFactory extends Controller {
 
                 res.delete();
                 ObjectMapper mapper = new ObjectMapper();
-                return ok(mapper.valueToTree(res));
+                return Java8Util.ok(mapper.valueToTree(res));
             } catch (Exception ex) {
                 Logger.error("Can't delete Resource " + id, ex);
                 return badRequest(ex.getMessage());
@@ -313,7 +314,7 @@ public class AdminFactory extends Controller {
                 .findUnique();
         if (resource != null) {
             ObjectMapper mapper = new ObjectMapper();
-            return ok(mapper.valueToTree(resource));
+            return Java8Util.ok(mapper.valueToTree(resource));
         }
         return badRequest("Unknown resource: " + name);
     }
