@@ -65,6 +65,8 @@ public class Validation {
 //	public static CodeSequentialGenerator getCodeGenerator(){
 //		return seqGen;
 //	}
+	
+	public static String PUBLIC_DOMAIN_REF="PUBLIC_DOMAIN_RELEASE";
 
     static PayloadPlugin _payload =null;
     public static boolean extractLocators=true;
@@ -86,9 +88,17 @@ public class Validation {
         extractLocators=conf.getBoolean("ix.ginas.prepare.extractlocators", true);
     }
 
+    
+    
     static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
     	long start = System.currentTimeMillis();
+    	
+    	
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+    	
+    	
+		
+		
     	try{
 	    	
 	        if(s==null){
