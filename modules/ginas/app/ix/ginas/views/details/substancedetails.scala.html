@@ -59,6 +59,8 @@
                     }
                     <li role="presentation"><a href="#refs" prevent-default="" ng-click="scrollTo('refs')">
                         References <span class="badge pull-right">@sub.references.size()</span></a></li>
+                    <li role="presentation"><a href="#audit" prevent-default="" ng-click="scrollTo('audit')">
+                        Audit Information </a></li>
                 </ul>
             </nav>
         </div>
@@ -169,6 +171,18 @@
                 <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
             </div>
 
+            <div class="row info" id="audit">
+                <button class="btn btn-primary label-offset det">
+                Audit Information</button>
+                    <table class="table table-striped keyvalue">
+                    <tbody>
+                        <tr><td> Approved </td><td>@sub.approved</td></tr>
+                        <tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
+                        <tr><td> Created </td><td>@sub.created</td></tr>
+                        <tr><td> Created By </td><td>@sub.createdBy</td></tr>
+                        <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
+                        <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
+                </tbody></table>
         </div>
-    </div>
+</div></div>
 }
