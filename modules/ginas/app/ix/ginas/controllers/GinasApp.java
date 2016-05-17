@@ -1351,7 +1351,7 @@ public class GinasApp extends App {
                 }catch(Exception e){
                         e.printStackTrace();
                 }
-                
+                return placeHolderImage(null);
             }
         }
         return r1;
@@ -1381,7 +1381,7 @@ public class GinasApp extends App {
                         placeholderFile="polymer.svg";
                 }
         }else{
-        	placeholderFile="concept.svg";
+        	placeholderFile="noimage.svg";
         }
         
         //Assets.at("public/images/",placeholderFile,true).apply();
