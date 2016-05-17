@@ -710,6 +710,7 @@
         };
 
         $scope.parseErrorArray = function (errorArr) {
+            console.log(errorArr);
             _.forEach(errorArr, function (value) {
                 if (value.messageType == "WARNING")
                     value.class = "warning";
@@ -725,12 +726,14 @@
         };
 
         $scope.validateSubstance = function (callback) {
+            console.log("validate");
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-          //  console.log(sub);
+           console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(function (response) {
                 $scope.validating = false;
-                $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
+                console.log(response);
+                $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
                 // if (callback) {
                 //     callback();
