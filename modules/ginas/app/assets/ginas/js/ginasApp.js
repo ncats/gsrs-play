@@ -918,8 +918,6 @@
 
         //method for injecting a large structure image on the browse page//
         $scope.showLarge = function (id, divid, ctx) {
-/*            var result = document.getElementsByClassName(divid);
-            var elementResult = angular.element(result);*/
             var template;
             if (!_.isUndefined(ctx)) {
                 template = angular.element('<rendered size="500" id=' + id + ' ctx=' + ctx + '></rendered>');
@@ -927,18 +925,6 @@
                 template = angular.element('<rendered size="500" id=' + id + '></rendered>');
             }
                 toggler.toggle($scope, divid, template);
-
-/*
-            if ($scope.stage === true) {
-                $scope.stage = false;
-
-
-                var compiledDirective = $compile(rend);
-                elementResult.append(compiledDirective)($scope);
-            } else {
-                elementResult.empty();
-                $scope.stage = true;
-            }*/
         };
 
     });
@@ -1667,7 +1653,8 @@
                     if (attrs.definition) {
                         var r = {relatedSubstance: temp};
                         CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
-                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            //var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            var type = _.find(response.data.content[0].terms, ['value', 'Alternative Definition']);
                             r.type = type;
                         });
                         if (!_.has(scope.referenceobj, 'relationships')) {
@@ -1996,12 +1983,26 @@
         }
     });
 
-    ginasApp.directive('referenceModalButton', function ($uibModal) {
+    ginasApp.directive('referenceModalButton', function ($uibModal, $templateRequest, $compile) {
         return {
             scope: {
-                referenceobj: '=',
+                referenceobj: '=?',
                 parent: '=',
-                edit: '=?'
+                label: '@?',
+                edit: '=?',
+                subclass: '@?'
+            },
+            link: function(scope, element){
+                if(_.isUndefined(scope.referenceobj)){
+                    scope.subClass = scope.parent.substanceClass;
+                    if(scope.subClass ==="chemical"){
+                        scope.subClass = "structure";
+                    }
+                    if(scope.subClass ==="specifiedSubstanceG1"){
+                        scope.subClass = "specifiedSubstance";
+                    }
+                    scope.referenceobj = scope.parent[scope.subClass];
+                }
             },
             templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
             controller: function ($scope) {
