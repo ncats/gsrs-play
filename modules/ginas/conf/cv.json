@@ -6116,6 +6116,17 @@
         "hidden": false,
         "selected": false,
         "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679304,
+        "modified": 1462481431669,
+        "deprecated": false,
+        "value": "EU",
+        "display": "EUROPEAN UNION",
+        "hidden": false,
+        "selected": false,
+        "filters": []
       }
     ],
     "fields": [
@@ -9526,6 +9537,39 @@
         "deprecated": false,
         "value": "food",
         "display": "Food",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679310,
+        "modified": 1462481431619,
+        "deprecated": false,
+        "value": "tobacco",
+        "display": "tobacco",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679310,
+        "modified": 1462481431619,
+        "deprecated": false,
+        "value": "biologic",
+        "display": "biologic",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679310,
+        "modified": 1462481431619,
+        "deprecated": false,
+        "value": "device",
+        "display": "device",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15088,6 +15132,7 @@
         "modified": 1462481431887,
         "deprecated": false,
         "value": "COLONY STIMULATING FACTOR",
+        "display": "COLONY STIMULATING FACTOR",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16424,6 +16469,17 @@
         "value": "PARENT->IMPURITY",
         "display": "PARENT->IMPURITY",
         "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679327,
+        "modified": 1462481431912,
+        "deprecated": false,
+        "value": "Alternative Definition",
+        "display": "Alternative Definition",
+        "hidden": true,
         "selected": false,
         "filters": []
       }

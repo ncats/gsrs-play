@@ -354,6 +354,7 @@
                 filterFunction: '&?'
             },
             link: function (scope, element, attrs) {
+
                 var other = [{
                     display: "Other",
                     value: "Other",
@@ -364,7 +365,6 @@
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-
                         if (response.data.content[0].filterable == true) {
                             filterService._register(scope, true);
                         }

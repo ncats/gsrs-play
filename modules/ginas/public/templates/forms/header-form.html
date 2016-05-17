@@ -14,12 +14,12 @@
                                                 formname="headerForm" label="Primary Substance" type="search"
                                                 definition="true"></substance-chooser-selector>
                 </div>
-            <div class="col-md-1 pull-right">
+            <div class="col-md-1 pull-right text-center">
                 <form-selector referenceobj="parent" parent="parent" divid="headerForm"
                                type="access"></form-selector>
             </div>
-                <div class="col-md-2 pull-right" ng-if="parent.substanceClass!='concept'">
-                    <reference-modal-button parent = "parent" label = "Definition Reference"></reference-modal-button>
+                <div class="col-md-2 pull-right text-center" ng-if="parent.substanceClass!='concept'">
+                    <reference-modal-button subclass = {{subClass}} parent = "parent" label = "Definition Reference"></reference-modal-button>
                 </div>
     </div>
     <div class="headerForm"></div>

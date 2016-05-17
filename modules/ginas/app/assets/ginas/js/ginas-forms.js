@@ -707,7 +707,6 @@
 
                 switch (scope.type) {
                     case "amount":
-                        console.log(scope);
                         if(!scope.field){
                             scope.field = 'amount';
                         }
@@ -1760,15 +1759,6 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                     scope.active = 2;
                 }
                 
-                if(_.isUndefined(scope.referenceobj)){
-                    var subClass = scope.parent.substanceClass;
-                    if(subClass ==="chemical"){
-                        console.log("chemical");
-                        subClass = "structure"
-                    }
-                    console.log(subClass);
-                      scope.referenceobj = scope.parent[subClass];
-                }
 
                 scope.submitFile = function (obj) {
                     //create form data object
@@ -1803,11 +1793,9 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
 
 
                     scope.validate = function () {
-                        console.log(scope);
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
-                            console.log("FFFFF");
                             scope.saveReference(scope.reference.uuid, scope.referenceobj);
                             scope.saveReference(_.cloneDeep(scope.reference), scope.parent);
                         } else {
@@ -1818,13 +1806,9 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                       //  scope.refForm.$setPristine();
                     }
                 };
-                //////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //why is the array fetched, then set?
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
-                  //      var temp = _.get(parent, 'references');
                         parent['references'].push(reference);
-                    //    _.set(parent, 'references', temp);
                     } else {
                         var x = [];
                         x.push(_.cloneDeep(reference));
@@ -2168,7 +2152,7 @@ console.log(obj);
                     scope.name = scope.parent._name;
                 } else {
                     scope.formType ='Registering new';
-                    scope.name = scope.parent.substanceClass;
+                    scope.name = _.startCase(scope.parent.substanceClass);
                 }
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
