@@ -3,14 +3,69 @@
         <form-header type="names" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        
+		<hr>
+		<div ng-if="!parent.names">
+			<i>No names</i>
+			<hr>
+		</div>
+        <div ng-repeat="(index, obj) in parent.names track by $index">
+            <div class ="row">
+               
+                <div class="col-md-3">
+                    <text-view-edit obj = "obj" field = "name" required="true"></text-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE" required="true"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="displayName" label="Display"></check-box-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
+                </div>
+                
+                <div class="col-md-1">
+                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid=name-{{index}}></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <delete-button delete="obj" path="names"></delete-button>
+                </div>
+                 
+                </div>
+                <div class="row form-row">
+                    <div ng-show="obj.type.value=='of'">
+                        <div class="col-md-4">
+                        </div>
+                        <div class="col-md-2 err-check">
+                            <multi-view-edit obj= "obj" field = "domains" cv = "NAME_DOMAIN"></multi-view-edit>
+                        </div>
+                        <div class="col-md-2">
+                            <form-selector referenceobj ="obj" parent = "parent" type = "nameOrgs" divid=name-{{index}}></form-selector>
+                        </div>
+                        <div class="col-md-2 err-check">
+                            <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION" label ="Jurisdiction"></multi-view-edit>
+                        </div>
+                    </div>
+                </div>
+            <div class = name-{{index}}></div>
+            <hr>
+        </div>
+        <div class="addition">
+        <h4>Add a name</h4>
         <ng-form name="nameForm" id = "addNameForm" novalidate isolate-form>
             <div class="row form-row">
                 <div class="col-md-4" >
-<!--
-                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validator="duplicateCheck(name)"></text-input>
--->
                      <text-input ng-model="name.name" field="name" name ="name" form="nameForm" required="true"></text-input>
-                    </div>
+                     <a ng-if="parent.substanceClass==='chemical' && name.name" ng-click="duplicateCheck(name.name)">Resolve name '{{name.name}}' to structure</a>
+                </div>
+
 
                 <div class="col-md-2">
                     <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type" required="true"></dropdown-select>
@@ -32,9 +87,7 @@
                 </div>
             </div>
             <div class="row form-row">
-                <div class = "col-md-2">
-                    <button class="btn btn-primary" ng-click="duplicateCheck(name.name)">Resolve Name</button>
-                </div>
+                
                 <div ng-if="name.type.value=='of'">
                 <div class="col-md-2">
                 </div>
@@ -49,59 +102,14 @@
                 </div>
                 </div>
             </div>
+            <submit-buttons submit="name" form="nameForm" path="names" customSubmit ="clear()" ></submit-buttons>
             <div class = "row">
                 <spinner name="nameSpinner"><loading></loading><br/></spinner>
                 <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>
             </div>
             <div class="nameForm"></div>
-            <submit-buttons submit="name" form="nameForm" path="names" customSubmit ="clear()" ></submit-buttons>
+            
         </ng-form>
-
-
-        <div ng-repeat="(index, obj) in parent.names track by $index">
-            <div class ="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path="names"></delete-button>
-                </div>
-                <div class="col-md-3">
-                    <text-view-edit obj = "obj" field = "name" required="true"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE" required="true"></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="displayName" label="Display"></check-box-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid=name-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
-                </div>
-                </div>
-                <div class="row form-row">
-                    <div ng-show="obj.type.value=='of'">
-                        <div class="col-md-4">
-                        </div>
-                        <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "domains" cv = "NAME_DOMAIN"></multi-view-edit>
-                        </div>
-                        <div class="col-md-2">
-                            <form-selector referenceobj ="obj" parent = "parent" type = "nameOrgs" divid=name-{{index}}></form-selector>
-                        </div>
-                        <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION" label ="Jurisdiction"></multi-view-edit>
-                        </div>
-                    </div>
-                </div>
-            <div class = name-{{index}}></div>
         </div>
     </div>
 </div>

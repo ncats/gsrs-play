@@ -1138,3 +1138,7 @@ pre.fixedsize{
     padding-left: 2%;
     padding-right: 2%;
 }
+.addition {
+    background: rgba(175, 175, 175, 0.15);
+    padding: 10px;
+}

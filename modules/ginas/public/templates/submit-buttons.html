@@ -1,7 +1,10 @@
 <div class = "row">
-    <hr>
-    <div class="col-md-1 pull-right">
-        <a ng-click="reset()" aria-label="Clear" uib-tooltip="Clear Form" id="{{name}}-clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-        <a ng-click="validate()" aria-label="Add" id="{{name}}-save"><i class="fa fa-floppy-o fa-2x success" uib-tooltip="Add to {{::path}}"></i></a>
+    
+    <div class="col-md-12 pull-left">
+        <button class="btn btn-primary"  ng-click="validate()" aria-label="Add" id="{{name}}-save" uib-tooltip="Add to {{::path}}" >Add to {{::path}}</button>
+        
+        <button class="btn btn-primary" ng-click="reset()" aria-label="Clear" uib-tooltip="Clear Form" id="{{name}}-clear">Clear</button>
+        
     </div>
+    <hr>
 </div>
