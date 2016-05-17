@@ -707,7 +707,6 @@
 
                 switch (scope.type) {
                     case "amount":
-                        console.log(scope);
                         if(!scope.field){
                             scope.field = 'amount';
                         }
@@ -1748,7 +1747,7 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             restrict: 'E',
             replace: 'true',
             scope: {
-                referenceobj: '=',
+                referenceobj: '=?',
                 parent: '=',
                 edit: '=?'
             },
@@ -1756,9 +1755,10 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
             link: function (scope, element, attrs) {
                 scope.reference={};
 
-                if(scope.edit){;
+                if(scope.edit){
                     scope.active = 2;
                 }
+                
 
                 scope.submitFile = function (obj) {
                     //create form data object
@@ -1806,13 +1806,9 @@ ginasForms.directive('referenceModalForm', function ($http, UUID) {
                       //  scope.refForm.$setPristine();
                     }
                 };
-                //////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //why is the array fetched, then set?
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
-                        var temp = _.get(parent, 'references');
-                        temp.push(reference);
-                        _.set(parent, 'references', temp);
+                        parent['references'].push(reference);
                     } else {
                         var x = [];
                         x.push(_.cloneDeep(reference));
@@ -2156,7 +2152,7 @@ console.log(obj);
                     scope.name = scope.parent._name;
                 } else {
                     scope.formType ='Registering new';
-                    scope.name = scope.parent.substanceClass;
+                    scope.name = _.startCase(scope.parent.substanceClass);
                 }
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
