@@ -1133,3 +1133,8 @@ pre.fixedsize{
 .row.ng-scope.reftable {
     margin-right: 0px;
 }
+
+.subunitButtons {
+    padding-left: 2%;
+    padding-right: 2%;
+}

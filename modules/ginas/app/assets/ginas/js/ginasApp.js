@@ -2064,8 +2064,12 @@
     ginasApp.directive('deleteButton', function () {
         return {
             restrict: 'E',
-            template: '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
+            template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
+                if(attrs.showlabel){
+                    console.log(attrs);
+                    scope.showlabel= attrs.showlabel;
+                }
                 scope.deleteObj = function () {
                     if (scope.parent) {
                         var arr = _.get(scope.parent, attrs.path);
