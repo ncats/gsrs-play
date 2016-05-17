@@ -1,13 +1,13 @@
 package ix.test;
 
+import static org.junit.Assert.assertTrue;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.utils.validation.Validation;
+import ix.ginas.models.v1.Reference;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
-
-import static org.junit.Assert.assertTrue;
+import util.json.JsonUtil.JsonNodeBuilder;
 
 public final class SubstanceJsonUtil {
 
@@ -25,16 +25,24 @@ public final class SubstanceJsonUtil {
 	 */
 	public static JsonNode toUnapproved(JsonNode substance){
 		
-		return new JsonUtil.JsonNodeBuilder(substance)
+		JsonNodeBuilder jnb=new JsonUtil.JsonNodeBuilder(substance)
 				.remove("/approvalID")
 				.remove("/approved")
 				.remove("/approvedBy")
 				
 				.set("/status", "pending")
-				.add("/references/0/tags/-", Validation.PUBLIC_DOMAIN_REF)
-				
-				.ignoreMissing()
-				.build();
+				.ignoreMissing();
+		boolean hasReferences=false;
+		if(substance.at("/references")!=null){
+			for(JsonNode jsn:substance.at("/references")){
+				hasReferences=true;break;
+			}
+		}
+		if(hasReferences){
+			jnb.add("/references/0/tags/-", Reference.PUBLIC_DOMAIN_REF);
+		}
+		
+		return jnb.build();
 	}
 
 	public static void ensureFailure(WSResponse response){

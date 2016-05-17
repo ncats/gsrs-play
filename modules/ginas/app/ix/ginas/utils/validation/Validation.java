@@ -66,9 +66,7 @@ public class Validation {
 //		return seqGen;
 //	}
 	
-	public static String PUBLIC_DOMAIN_REF="PUBLIC_DOMAIN_RELEASE";
-
-    static PayloadPlugin _payload =null;
+	static PayloadPlugin _payload =null;
     public static boolean extractLocators=true;
 	static Config validationConf = null;
 	static boolean requireName = true;

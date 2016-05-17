@@ -74,7 +74,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 						if (!r.publicDomain)
 							continue;
 						for (Keyword k : r.tags) {
-							if (k.getValue().equals(Validation.PUBLIC_DOMAIN_REF)) {
+							if (k.getValue().equals(Reference.PUBLIC_DOMAIN_REF)) {
 								allowed = true;
 								break;
 							}
@@ -85,7 +85,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 					if (!allowed) {
 						vlad.add(GinasProcessingMessage
 								.ERROR_MESSAGE("Public records must have a PUBLIC DOMAIN reference with a '"
-										+ Validation.PUBLIC_DOMAIN_REF + "' tag"));
+										+ Reference.PUBLIC_DOMAIN_REF + "' tag"));
 					}
 				}
 			}

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.SingleParent;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.KeywordDeserializer;
@@ -66,6 +67,8 @@ public class Reference extends GinasCommonData {
     @Basic(fetch=FetchType.EAGER)
     public String url;
 
+	public static String PUBLIC_DOMAIN_REF="PUBLIC_DOMAIN_RELEASE";
+
     public Reference () {
     	this.setUuid(UUID.randomUUID());
     	
@@ -84,10 +87,12 @@ public class Reference extends GinasCommonData {
 		r.docType="SYSTEM";
 		return r;
     }
+    public void addTag(String tag){
+    	this.tags.add(new Keyword(GinasCommonData.REFERENCE_TAG, tag));
+    }
     
     @PreUpdate
    	public void updateImmutables(){
-   		
    		this.tags= new EmbeddedKeywordList(this.tags);
    	}
 }
