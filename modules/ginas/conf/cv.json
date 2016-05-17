@@ -3451,6 +3451,17 @@
         "hidden": false,
         "selected": false,
         "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679299,
+        "modified": 1462481431523,
+        "deprecated": false,
+        "value": "PUBLIC_DOMAIN_RELEASE",
+        "display": "PUBLIC_DOMAIN_RELEASE",
+        "hidden": false,
+        "selected": false,
+        "filters": []
       }
     ],
     "fields": [
