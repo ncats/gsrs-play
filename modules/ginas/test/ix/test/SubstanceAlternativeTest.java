@@ -88,7 +88,6 @@ public class SubstanceAlternativeTest {
 
     @Test
     public void testAPIAlternativeSubstanceUpdate()   throws Exception {
-
         //submit primary
         resource = new File("test/testJSON/alternative/Prim1.json");
         JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
@@ -100,6 +99,7 @@ public class SubstanceAlternativeTest {
         //submit alternative
         resource = new File("test/testJSON/alternative/PostAlt.json");
         JsonNode jsA = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+       
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
