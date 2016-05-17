@@ -1006,7 +1006,7 @@ public class App extends Authentication {
                 }
         }else{
         	ChemicalAtom[] atoms = chem.getAtomArray();
-            for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
+            for (int i = 0; i < atoms.length; ++i) {
             	if(atoms[i].getAtomMap()!=0){
                     dp = dp.withSubstructureHighlight();
                 }
