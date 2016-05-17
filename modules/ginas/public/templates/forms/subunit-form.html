@@ -10,6 +10,7 @@
     <div uib-collapse="iscollapsed">
         <div ng-repeat="(index, obj) in parent[substanceClass].subunits track by $index">
             <div class="col-md-12">
+
                 <subunit obj=obj parent=parent numbers = numbers index = {{index+1}}></subunit>
             </div>
         </div>
