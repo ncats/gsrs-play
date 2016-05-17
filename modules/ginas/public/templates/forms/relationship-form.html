@@ -48,14 +48,27 @@
                 <div class="col-md-2">
                     <substance-chooser-selector referenceobj ="obj" field ="relatedSubstance" name ="relatedSubstance" formname = relationship-{{index}} label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
-                <div class="col-md-2">
+                <div class ="col-md-5">
+                    <div class ="row">
+                <div class="col-md-6">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-6">
                     <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction Type"></dropdown-view-edit>
                 </div>
+                        </div>
+                    <div class = "row"><br/></div>
+                    <div class = "row">
+                        <div class="col-md-6">
+                            <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
+                        </div>
+                        <div class="col-md-6">
+                            <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid=relationship-{{index}}></form-selector>
+                        </div>
+                    </div>
+                    </div>
                 <div class="col-md-2">
-                    <substance-chooser-view-edit obj = "obj" field ="mediatorSubstance" label = "Mediator Substance"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj = "obj" field ="mediatorSubstance" name ="mediatorSubstance" formname = relationship-{{index}} label = "Mediator Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid=relationship-{{index}}></form-selector>
@@ -66,15 +79,13 @@
             </div>
             <div class ="row">
                 <div class ="col-md-1"></div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid=relationship-{{index}} mode="edit"></form-selector>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid=relationship-{{index}}></form-selector>
-                </div>
+<div class = "col-md-11">
+    <text-box-view-edit obj="obj" field="comments"></text-box-view-edit>
+
+</div>
+                <!--<div class="col-md-2 pull-right text-center">-->
+                    <!--<form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid=relationship-{{index}} mode="edit"></form-selector>-->
+                <!--</div>-->
             </div>
             <div class = relationship-{{index}}></div>
         </div>

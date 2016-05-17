@@ -1,7 +1,7 @@
 <div>
         <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
         <a href="#" ng-hide="obj._editing" ng-click="editing(obj);">
-        <pre>{{obj[field]}}</pre>
+        <pre ng-if = "obj[field]">{{obj[field]}}</pre>
         </a>
         <textarea 
         		ng-change="changeValidator(obj)" 
