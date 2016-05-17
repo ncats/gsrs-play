@@ -1351,6 +1351,7 @@ public class GinasApp extends App {
                 }catch(Exception e){
                         e.printStackTrace();
                 }
+                
             }
         }
         return r1;
@@ -1379,6 +1380,8 @@ public class GinasApp extends App {
                 default:
                         placeholderFile="polymer.svg";
                 }
+        }else{
+        	placeholderFile="concept.svg";
         }
         
         //Assets.at("public/images/",placeholderFile,true).apply();
