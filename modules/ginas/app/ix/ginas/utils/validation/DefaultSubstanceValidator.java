@@ -68,26 +68,34 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 				}else{
 					addNewSubstanceValation(objnew,vlad);
 				}
-				if (objnew.isPublic()){
-					boolean allowed = false;
-					for (Reference r : objnew.references) {
-						if (!r.publicDomain)
-							continue;
-						for (Keyword k : r.tags) {
-							if (k.getValue().equals(Reference.PUBLIC_DOMAIN_REF)) {
-								allowed = true;
-								break;
-							}
-						}
-						if (allowed)
-							break;
+				
+			}
+			if (objnew.isPublic()){
+				boolean allowed = false;
+				for (Reference r : objnew.references) {
+					if(		   r.isPublicDomain() 
+							&& r.isPublicReleaseReference()
+							&& r.isPublic()){
+						allowed=true;
+						break;
 					}
-					if (!allowed) {
+				}
+				
+				if (!allowed) {
+					if(this.method!=METHOD_TYPE.BATCH){
 						vlad.add(GinasProcessingMessage
 								.ERROR_MESSAGE("Public records must have a PUBLIC DOMAIN reference with a '"
 										+ Reference.PUBLIC_DOMAIN_REF + "' tag"));
+					}else{
+						//TODO, fix logic here
+//						for(Reference r:objnew.references){
+//							if(r.isPublic() && r.isPublicDomain()){
+//								r.makePublicReleaseReference();
+//							}
+//						}
 					}
 				}
+				
 			}
 			
 			
