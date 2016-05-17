@@ -1,6 +1,6 @@
 <div>
 
-    <label ng-if ="label" for="{{field}}" class="text-capitalize">{{label}}</label>
+    <label ng-if ="label" for="{{field}}" class="text-capitalize">{{label}}<span ng-if="required==true" class = "danger"> *</span></label>
     <a href = "#" ng-click="editing(obj[field]);">
     <span ng-hide="obj[field]._editing">
       <rendered id = {{obj[field].refuuid}}></rendered><br/><code>{{obj[field].refPname}}</code>

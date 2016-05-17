@@ -1676,74 +1676,7 @@
             }
         };
     });
-
-    ginasForms.directive('referenceForm', function ($http, UUID) {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/reference-form.html",
-            link: function (scope, element, attrs) {
-                scope.submitFile = function (obj) {
-                    //create form data object
-                    var fd = new FormData();
-                    if (obj) {
-                        scope.$$uploadFile = obj.$$uploadFile;
-                    }
-                    //  fd.append('file', scope.$$uploadFile);
-                    fd.append('file-name', scope.$$uploadFile);
-                    fd.append('file-type', scope.$$uploadFile.type);
-                    //send the file / data to your server
-                    $http.post(baseurl + 'upload', fd, {
-                        transformRequest: angular.identity,
-                        headers: {'Content-Type': undefined}
-                    }).success(function (data) {
-                        if (obj) {
-                            _.set(obj, 'uploadedFile', data.url);
-                            _.set(scope, 'uploadDoc', false);
-                            delete obj.$$uploadFile;
-                        } else {
-                            _.set(scope.reference, 'uploadedFile', data.url);
-                        }
-                    }).error(function (err) {
-                    });
-                    _.set(scope, 'uploadDoc', false);
-                    delete scope.$$uploadFile;
-                };
-
-                scope.validate = function () {
-                    if (!_.isUndefined(scope.reference.citation)) {
-                        _.set(scope.reference, "uuid", UUID.newID());
-                        if (scope.reference.apply) {
-                            scope.saveReference(scope.reference.uuid, scope.referenceobj);
-                            scope.saveReference(angular.copy(scope.reference), scope.parent);
-                        } else {
-                            scope.saveReference(scope.reference, scope.parent);
-                        }
-                        scope.reference = {};
-                        scope.reference.apply = true;
-                        scope.refForm.$setPristine();
-                    }
-                };
-                //////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //why is the array fetched, then set?
-                scope.saveReference = function (reference, parent) {
-                    if (_.has(parent, 'references')) {
-                        var temp = _.get(parent, 'references');
-                        temp.push(reference);
-                        _.set(parent, 'references', temp);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(reference));
-                        _.set(parent, 'references', x);
-                    }
-                };
-            }
-        };
-    });
+    
     ginasForms.directive('referenceModalForm', function ($http, UUID) {
         return {
             restrict: 'E',

@@ -1,5 +1,5 @@
 <div>
-    <label for="{{::field}}" class="text-capitalize">{{label || field}}</label>
+    <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
         <textarea class="form-control" rows="7" ng-blur = "stage = !stage" ng-model ="obj" name = "{{::field}}" title="{{::field}}" id="{{::field}}" placeholder = "{{label || field}}"></textarea>
 
 <!--        <ng-messages for="form[name].$error" ng-if="form[name].$touched">

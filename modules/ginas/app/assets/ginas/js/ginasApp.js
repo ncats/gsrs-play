@@ -1215,7 +1215,7 @@
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-                    var templateString = angular.element('<div class ="row"><div class ="col-md-8">' + _.join(links, ', ') + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' + _.join(links, ', ') + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -1242,8 +1242,8 @@
             },
             link: function (scope, element, attrs) {
                 var template;
-                if (!_.isNull(scope.citation.url)) {
-                    template = angular.element('<a href = {{citation.url}} target = "_self"><span>{{citation.citation}}</span></a>');
+                if (!_.isNull(scope.citation.url)&& !_.isUndefined(scope.citation.url)) {
+                    template = angular.element('<a href = {{citation.url}} target = "_blank"><span>{{citation.citation}}</span></a>');
                 } else {
                     template = angular.element('<span>{{citation.citation}}</span>');
                 }
