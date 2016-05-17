@@ -40,6 +40,7 @@ public final class SubstanceJsonUtil {
 		}
 		if(hasReferences){
 			jnb.add("/references/0/tags/-", Reference.PUBLIC_DOMAIN_REF);
+			jnb.set("/references/0/publicDomain", true);
 		}
 		
 		return jnb.build();
