@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -95,4 +96,59 @@ public class Reference extends GinasCommonData {
    	public void updateImmutables(){
    		this.tags= new EmbeddedKeywordList(this.tags);
    	}
+
+    /**
+     * Returns true if the value of any of the tags
+     * equals the supplied string.
+     * @param tag
+     * @return
+     */
+	public boolean containsTag(String tag) {
+		for(Keyword k:this.tags){
+			if(k.getValue().equals(tag)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Adds the appropriate logic to ensure that this reference is 
+	 * associated with the act of making the record public
+	 * 
+	 */
+	public void makePublicReleaseReference(){
+		this.addTag(Reference.PUBLIC_DOMAIN_REF);
+		this.publicDomain=true;
+	}
+
+	/**
+	 * Returns true if the reference is associated with the 
+	 * act of making the record public.
+	 * 
+	 * This is distinct from both "isPublic" and "isPublicDomain".
+	 * @return
+	 */
+	@JsonIgnore
+	public boolean isPublicReleaseReference(){
+		if(this.containsTag(Reference.PUBLIC_DOMAIN_REF)){
+			return true;
+		}
+		return false;
+	}
+	
+	
+	/**
+	 * Returns true if the reference is public domain.
+	 * 
+	 * This is distinct from the "isPublic" method,
+	 * which simply checks if the record has any access
+	 * restrictions. This method, by contrast, ensures that
+	 * the reference is explicitly set to be public domain.
+	 * @return
+	 */
+	public boolean isPublicDomain(){
+		return this.publicDomain;
+	}
+	
 }

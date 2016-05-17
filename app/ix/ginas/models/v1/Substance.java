@@ -817,4 +817,21 @@ public class Substance extends GinasCommonData {
 		return toRemove;
 	}
 	
+	/**
+	 * Returns references which are associated with the act of
+	 * making the record "public".
+	 * 
+	 * 
+	 * @return
+	 */
+	@JsonIgnore
+	public List<Reference> getPublicReleaseReferences(){
+		List<Reference> rlist = new ArrayList<Reference>();
+		for(Reference r: this.references){
+			if(r.isPublicReleaseReference()){
+				rlist.add(r);
+			}
+		}
+		return rlist;
+	}
 }
