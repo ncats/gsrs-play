@@ -2,6 +2,9 @@ package ix.test;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.ginas.models.v1.Reference;
@@ -38,12 +41,19 @@ public final class SubstanceJsonUtil {
 				hasReferences=true;break;
 			}
 		}
+		
 		if(hasReferences){
-			jnb.add("/references/0/tags/-", Reference.PUBLIC_DOMAIN_REF);
-			jnb.set("/references/0/publicDomain", true);
+			jnb=jnb.add("/references/0/tags/-", Reference.PUBLIC_DOMAIN_REF);
+			jnb=jnb.set("/references/0/publicDomain", true);
+		}else{
+			List<String> acc=new ArrayList<String>();
+			acc.add("protected");
+			jnb = jnb.set("/access", acc);
+			
 		}
 		
 		return jnb.build();
+		
 	}
 
 	public static void ensureFailure(WSResponse response){
