@@ -10,7 +10,7 @@
                         </div>
                         <div class="col-md-2">
                             <dropdown-select ng-model="reference.docType" field="docType" label="Source Type"
-                                             cv="DOCUMENT_TYPE"></dropdown-select>
+                                             cv="DOCUMENT_TYPE" required="true" ></dropdown-select>
                         </div>
                         <div class="col-md-2">
                             <dropdown-select ng-model="reference.$$systemCategory" field="$$systemCategory" label="Source Class" cv= "DOCUMENT_SYSTEM_TYPE" filter = "reference.docType" class="disabled"></dropdown-select>
@@ -41,7 +41,7 @@
                     <div class="row form-row">
                         <div class ="col-md-1"></div>
                         <div class="col-md-3 url">
-                            <text-input ng-model="reference.citation" ng-change="print()" field="citation"></text-input>
+                            <text-input ng-model="reference.citation" ng-change="print()" field="citation" required="true"></text-input>
                         </div>
 
                         <div class="col-md-2">
@@ -79,7 +79,7 @@
                         </div>
                         <div class="col-md-2">
                             <dropdown-view-edit obj="obj" field="docType" label="Source Type"
-                                             cv="DOCUMENT_TYPE"></dropdown-view-edit>
+                                             cv="DOCUMENT_TYPE" required="true"></dropdown-view-edit>
                         </div>
                         <div class="col-md-2">
                                 <dropdown-view-edit obj="obj" field="$$systemCategory" cv="DOCUMENT_SYSTEM_TYPE" filter="obj.docType" label="Source Class" class="disabled"></dropdown-view-edit>
@@ -114,7 +114,7 @@
                     <div class="row form-row">
                         <div class ="col-md-1"></div>
                     <div class="col-md-2 url">
-                        <text-view-edit obj="obj" field="citation"></text-view-edit>
+                        <text-view-edit obj="obj" field="citation" required="true"></text-view-edit>
                     </div>
                     <div class="col-md-2">
                         <multi-view-edit obj="obj" field="tags" cv="DOCUMENT_COLLECTION"></multi-view-edit>

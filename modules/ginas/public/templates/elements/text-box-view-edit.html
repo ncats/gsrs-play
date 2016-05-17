@@ -1,5 +1,5 @@
 <div>
-        <label for="{{::field}}" class="text-capitalize">{{label || field}}</label>
+        <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
         <a href="#" ng-hide="obj._editing" ng-click="editing(obj);">
         <pre>{{obj[field]}}</pre>
         </a>
