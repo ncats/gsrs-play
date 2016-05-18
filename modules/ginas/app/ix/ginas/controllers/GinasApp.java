@@ -17,6 +17,10 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import ix.core.util.Java8Util;
+import ix.ginas.utils.reindex.ReIndexListener;
+import ix.ginas.utils.reindex.ReIndexService;
+import ix.ginas.utils.reindex.ReindexQuery;
+import ix.ginas.utils.reindex.ReindexQueryBuilder;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -91,11 +95,7 @@ import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
 import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalAtom;
 import gov.nih.ncgc.chemical.ChemicalFactory;
-import gov.nih.ncgc.chemical.ChemicalRenderer;
-import gov.nih.ncgc.chemical.DisplayParams;
-import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import tripod.chem.indexer.StructureIndexer;
 
 public class GinasApp extends App {
@@ -579,7 +579,7 @@ public class GinasApp extends App {
         SearchOptions options = new SearchOptions (Substance.class);
         options.fdim = fdim;
         instrumentSubstanceSearchOptions (options);
-        return _textIndexer.search(options, null, null).getFacets();
+        return getTextIndexer().search(options, null, null).getFacets();
     }
 
     public static SearchResult getSubstanceSearchResult
@@ -598,7 +598,7 @@ public class GinasApp extends App {
                             (Substance.class, total, 0, FACET_DIM);
                             options.parse(params);
                             instrumentSubstanceSearchOptions (options);
-                            SearchResult result = _textIndexer.search
+                            SearchResult result = getTextIndexer().search
                             (options, q, null);
                             return cacheKey (result, sha1);
                         }
@@ -773,7 +773,7 @@ public class GinasApp extends App {
             }
         }
         else {
-            try(TextIndexer indexer = _textIndexer.createEmptyInstance()) {
+            try(TextIndexer indexer = getTextIndexer().createEmptyInstance()) {
                 for (Substance sub : substances)
                     indexer.add(sub);
 
@@ -1564,7 +1564,7 @@ public class GinasApp extends App {
     private static String updateKey =null;
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result updateIndex(String key){
+    public synchronized static Result updateIndex(String key){
         if(!GinasLoad.ALLOW_REBUILD){
             return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
         }
@@ -1584,17 +1584,20 @@ public class GinasApp extends App {
                 return ok(new Html(new StringBuilder("<h1>Updated indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(call.url()).append("\">Rebuild Index (warning: will take some time)</a>").toString()));
             }
 
-            Runnable r= new Runnable(){
-                @Override
-                public void run() {
+//            ReindexQuery query = new ReindexQueryBuilder()
+//                                        .ofType(Substance.class)
+//                                        .build();
+
+            Runnable r= ()->{
                     try {
-                        new RebuildIndex(listener).reindex(Substance.class);
+                        new ReIndexService(5, 10)
+                                .reindexAll(listener);
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }
-            };
+                };
+
             new Thread(r).start();
             updateKey=UUID.randomUUID().toString();
 
@@ -1605,7 +1608,7 @@ public class GinasApp extends App {
 
 
 
-    private static class SubstanceReIndexListener implements RebuildIndex.ReIndexListener {
+    private static class SubstanceReIndexListener implements ReIndexListener {
 
         /**
          * Log of index messages so they are saved to file for later examination
@@ -1708,6 +1711,10 @@ public class GinasApp extends App {
             recordsIndexedLastUpdate = currentRecordsIndexed;
         }
 
+        @Override
+        public void countSkipped(int numSkipped) {
+            totalIndexed -= numSkipped;
+        }
 
         @Override
         public void error(Throwable t) {

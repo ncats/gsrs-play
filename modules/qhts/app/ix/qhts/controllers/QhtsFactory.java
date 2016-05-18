@@ -33,11 +33,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QhtsFactory extends Controller {
-    static final TextIndexer INDEXER = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
-    static final StructureProcessorPlugin PROCESSOR =
-        Play.application().plugin(StructureProcessorPlugin.class);
 
     static public class SampleStructureReceiver implements StructureReceiver {
         final Sample sample;

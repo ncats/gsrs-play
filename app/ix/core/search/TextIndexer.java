@@ -3,11 +3,7 @@ package ix.core.search;
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -78,19 +74,7 @@ import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.FieldCacheRangeFilter;
-import org.apache.lucene.search.FieldCacheTermsFilter;
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.NumericRangeQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
@@ -164,6 +148,8 @@ public class TextIndexer implements Closeable{
     static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
 
     private static final Pattern SUGGESTION_WHITESPACE_PATTERN = Pattern.compile("[\\s/]");
+
+
 
     public static class FV {
         String label;
@@ -924,6 +910,7 @@ public class TextIndexer implements Closeable{
                 //ex.printStackTrace();
                 Logger.trace(Thread.currentThread()+" stopped", ex);
             }
+
         }
     }
 
@@ -944,6 +931,7 @@ public class TextIndexer implements Closeable{
             if (file.lastModified() < lastModified.get()) {
                 saveSorters (file, sorters);
             }
+
 
             if (indexWriter.hasUncommittedChanges()) {
                 Logger.debug("Committing index changes...");
@@ -967,13 +955,15 @@ public class TextIndexer implements Closeable{
             }
         }
     }
+
+
     
     private File baseDir;
     private File suggestDir;
     private Directory indexDir;
     private Directory taxonDir;
     private IndexWriter indexWriter;
-    private DirectoryReader indexReader;
+   // private DirectoryReader indexReader;
     private Analyzer indexAnalyzer;
     private DirectoryTaxonomyWriter taxonWriter;
     private FacetsConfig facetsConfig;
@@ -981,9 +971,8 @@ public class TextIndexer implements Closeable{
     private ConcurrentMap<String, SortField.Type> sorters;
     private AtomicLong lastModified = new AtomicLong ();
     
-    private ExecutorService threadPool = Executors.newCachedThreadPool();
-    private ScheduledExecutorService scheduler =
-        Executors.newSingleThreadScheduledExecutor();
+    private ExecutorService threadPool;
+    private ScheduledExecutorService scheduler;
     
     private Future[] fetchWorkers;
     private BlockingQueue<SearchResultPayload> fetchQueue =
@@ -996,7 +985,10 @@ public class TextIndexer implements Closeable{
     private boolean isShutDown=false;
     
     private static Map<Class,SearchContextAnalyzerGenerator> defaultSearchAnalyzers = new HashMap<Class,SearchContextAnalyzerGenerator>();
-    
+
+
+    SearcherManager searchManager;
+
     static{
         init();
     }
@@ -1005,8 +997,8 @@ public class TextIndexer implements Closeable{
         registerDefaultAnalyzers();
     }
     
-    public static interface SearchContextAnalyzerGenerator{
-    	public SearchContextAnalyzer create();
+    public interface SearchContextAnalyzerGenerator{
+    	SearchContextAnalyzer create();
     }
     public static class DefaultSearchContextAnalyzerGenerator implements SearchContextAnalyzerGenerator{
 
@@ -1071,26 +1063,32 @@ public class TextIndexer implements Closeable{
     	}
     }
 
-    public synchronized static TextIndexer getInstance (File baseDir) throws IOException {
-        if (indexers.containsKey(baseDir)) 
-            return indexers.get(baseDir);
+    public static TextIndexer getInstance (File baseDir) throws IOException {
 
-        try {
-           TextIndexer indexer = new TextIndexer (baseDir);
-           indexers.put(baseDir, indexer);
-           return indexer;
-        }
-        catch (IOException ex) {
-            ex.printStackTrace();
-            return indexers.get(baseDir);
-        }
+
+        return indexers.computeIfAbsent(baseDir, dir ->{
+            try{
+               return new TextIndexer (dir);
+            }catch(IOException ex){
+                ex.printStackTrace();
+                return null;
+            }
+        });
+
     }
 
     private TextIndexer () {
+        threadPool = Executors.newCachedThreadPool();
+        scheduler =  Executors.newSingleThreadScheduledExecutor();
+        isShutDown = false;
         setFetchWorkers (FETCH_WORKERS);
     }
     
     public TextIndexer (File dir) throws IOException {
+        this.baseDir = dir;
+        threadPool = Executors.newCachedThreadPool();
+        scheduler =  Executors.newSingleThreadScheduledExecutor();
+        isShutDown = false;
         if (!dir.isDirectory())
             throw new IllegalArgumentException ("Not a directory: "+dir);
 
@@ -1099,6 +1097,9 @@ public class TextIndexer implements Closeable{
             indexFileDir.mkdirs();
         indexDir = new NIOFSDirectory 
             (indexFileDir, NoLockFactory.getNoLockFactory());
+
+
+
 
         facetFileDir = new File (dir, "facet");
         if (!facetFileDir.exists())
@@ -1110,7 +1111,11 @@ public class TextIndexer implements Closeable{
         IndexWriterConfig conf = new IndexWriterConfig 
             (LUCENE_VERSION, indexAnalyzer);
         indexWriter = new IndexWriter (indexDir, conf);
-        indexReader = DirectoryReader.open(indexWriter, true);  
+
+        searchManager = new SearcherManager(indexWriter,true, null);
+
+
+        //indexReader = DirectoryReader.open(indexWriter, true);
         taxonWriter = new DirectoryTaxonomyWriter (taxonDir);
 
         facetsConfig = loadFacetsConfig (new File (dir, FACETS_CONFIG_FILE));
@@ -1149,12 +1154,12 @@ public class TextIndexer implements Closeable{
         sorters = loadSorters (new File (dir, SORTER_CONFIG_FILE));
         Logger.info("## "+sorters.size()+" sort fields defined!");
 
-        this.baseDir = dir;
+
         setFetchWorkers (FETCH_WORKERS);
 
         // run daemon every 5s
         scheduler.scheduleAtFixedRate
-            (new FlushDaemon (), 5, 5, TimeUnit.SECONDS);
+            (new FlushDaemon (), 10, 20, TimeUnit.SECONDS);
     }
 
     public void setFetchWorkers (int n) {
@@ -1168,26 +1173,23 @@ public class TextIndexer implements Closeable{
         for (int i = 0; i < fetchWorkers.length; ++i)
             fetchWorkers[i] = threadPool.submit(new FetchWorker ());
     }
-    
-    protected synchronized DirectoryReader getReader () throws IOException {
-       /* if(indexReader.getRefCount() <=0){
+    @FunctionalInterface
+    interface SearcherFunction<R> {
 
-            indexReader = DirectoryReader.open(indexReader.directory());
-            return indexReader;
-        }
-        */
-        DirectoryReader reader = DirectoryReader.openIfChanged(indexReader);
-        if (reader != null) {
-            indexReader.decRef();
-            closeAndIgnore(indexReader);
-            indexReader = reader;
-        }
-        return indexReader;
+        R apply(IndexSearcher indexSearcher) throws IOException;
     }
 
-    protected IndexSearcher getSearcher () throws IOException {
-        return new IndexSearcher (getReader ());
+    private <R> R withSearcher(SearcherFunction<R> worker) throws IOException{
+        searchManager.maybeRefresh();
+        IndexSearcher searcher = searchManager.acquire();
+        try{
+            return worker.apply(searcher);
+        }finally{
+            searchManager.release(searcher);
+        }
     }
+
+
 
     static boolean DEBUG (int level) {
         Global g = Global.getInstance();
@@ -1218,10 +1220,12 @@ public class TextIndexer implements Closeable{
 
     protected TextIndexer config (TextIndexer indexer) throws IOException {
         indexer.indexAnalyzer = createIndexAnalyzer ();
-        IndexWriterConfig conf = new IndexWriterConfig 
+        IndexWriterConfig conf = new IndexWriterConfig
             (LUCENE_VERSION, indexer.indexAnalyzer);
         indexer.indexWriter = new IndexWriter (indexer.indexDir, conf);
-        indexer.indexReader = DirectoryReader.open(indexer.indexWriter, true);
+
+        indexer.searchManager = new SearcherManager(indexer.indexWriter,true, null);
+       // indexer.indexReader = DirectoryReader.open(indexer.indexWriter, true);
         indexer.taxonWriter = new DirectoryTaxonomyWriter (indexer.taxonDir);
         indexer.facetsConfig = new FacetsConfig ();
         for (Map.Entry<String, FacetsConfig.DimConfig> me
@@ -1257,7 +1261,7 @@ public class TextIndexer implements Closeable{
 
     public int size () {
         try {
-            return getReader().numDocs();
+            return withSearcher( s-> s.getIndexReader().numDocs());
         }
         catch (IOException ex) {
             Logger.trace("Can't retrieve NumDocs", ex);
@@ -1397,20 +1401,20 @@ public class TextIndexer implements Closeable{
         Query query = NumericRangeQuery.newIntRange
             (field, min, max, true /* minInclusive?*/, true/*maxInclusive?*/);
         
-        return search (getSearcher (), new SearchResult (options, null),
+        return search (new SearchResult (options, null),
                        query, null);
     }
     
     protected SearchResult filter (SearchOptions options, Filter filter)
         throws IOException {
-        return search (getSearcher (), new SearchResult (options, null),
+        return search (new SearchResult (options, null),
                        new MatchAllDocsQuery (), filter);
     }
 
     protected SearchResult search (SearchResult searchResult, 
                                    Query query, Filter filter)
         throws IOException {
-        return search (getSearcher (), searchResult, query, filter);
+        return withSearcher( searcher -> search (searcher, searchResult, query, filter));
     }
     
     protected SearchResult search (IndexSearcher searcher,
@@ -1748,11 +1752,15 @@ public class TextIndexer implements Closeable{
     public Document getDoc (Object entity) throws Exception {
         Term term = getTerm (entity);
         if (term != null) {
-            IndexSearcher searcher = getSearcher ();
-            TopDocs docs = searcher.search(new TermQuery (term), 1);
-            //Logger.debug("TermQuery: term="+term+" => "+docs.totalHits);
-            if (docs.totalHits > 0)
-                return searcher.doc(docs.scoreDocs[0].doc);
+           // IndexSearcher searcher = getSearcher ();
+            withSearcher( searcher ->{
+                TopDocs docs =  searcher.search(new TermQuery (term), 1);
+                //Logger.debug("TermQuery: term="+term+" => "+docs.totalHits);
+                if (docs.totalHits > 0){
+                    return searcher.doc(docs.scoreDocs[0].doc);
+                }
+                return null;
+        });
         }
         return null;
     }
@@ -2152,16 +2160,26 @@ public class TextIndexer implements Closeable{
     }
 
     void suggestField (String name, String value) {
-        try {
+
 
             name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
-            SuggestLookup lookup = lookups.get(name);
-            if (lookup == null) {
-                lookups.put(name, lookup = new SuggestLookup (name));
+
+        try {
+            SuggestLookup lookup = lookups.computeIfAbsent(name, n -> {
+                        try {
+                            return new SuggestLookup(n);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            Logger.trace("Can't create Lookup!", ex);
+                            return null;
+                        }
+                    }
+            );
+            if(lookup !=null) {
+                lookup.add(value);
             }
-            lookup.add(value);
-        }
-        catch (Exception ex) { // 
+
+        }catch(Exception ex){
             Logger.trace("Can't create Lookup!", ex);
         }
     }
@@ -2445,7 +2463,7 @@ public class TextIndexer implements Closeable{
     static void saveFacetsConfig (File file, FacetsConfig facetsConfig) {
         JsonNode node = setFacetsConfig (facetsConfig);
         ObjectMapper mapper = new ObjectMapper ();
-        try( FileOutputStream out = new FileOutputStream(file)) {
+        try(OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
 
             mapper.writerWithDefaultPrettyPrinter().writeValue(out, node);
 
@@ -2460,7 +2478,7 @@ public class TextIndexer implements Closeable{
         if (file.exists()) {
             ObjectMapper mapper = new ObjectMapper ();
             try {
-                JsonNode conf = mapper.readTree(new FileInputStream (file));
+                JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream (file)));
                 config = getFacetsConfig (conf);
                 Logger.info("## FacetsConfig loaded with "
                             +config.getDimConfigs().size()
@@ -2479,7 +2497,7 @@ public class TextIndexer implements Closeable{
         if (file.exists()) {
             ObjectMapper mapper = new ObjectMapper ();
             try {
-                JsonNode conf = mapper.readTree(new FileInputStream (file));
+                JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream (file)));
                 ArrayNode array = (ArrayNode)conf.get("sorters");
                 if (array != null) {
                     for (int i = 0; i < array.size(); ++i) {
@@ -2512,7 +2530,7 @@ public class TextIndexer implements Closeable{
         }
         conf.put("sorters", node);
 
-        try(FileOutputStream fos = new FileOutputStream (file)) {
+        try(OutputStream fos = new BufferedOutputStream(new FileOutputStream (file))) {
 
             mapper.writerWithDefaultPrettyPrinter().writeValue(fos, conf);
         }
@@ -2540,7 +2558,7 @@ public class TextIndexer implements Closeable{
         //System.out.println("shutting down " + System.identityHashCode(this));
         try {
             fetchQueue.put(POISON_PAYLOAD);
-            scheduler.shutdown();
+            scheduler.shutdownNow();
             scheduler.awaitTermination(1, TimeUnit.MINUTES);
             //System.out.println("done waiting for termination");
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
@@ -2549,8 +2567,14 @@ public class TextIndexer implements Closeable{
             for (SuggestLookup look : lookups.values()) {
                 closeAndIgnore(look);
             }
+            //clear the lookup value map
+            //if we restart without clearing we might
+            //think we have lookups we don't have if we delete the ginas.ix area
+            lookups.clear();
 
-            closeAndIgnore(indexReader);
+
+
+            closeAndIgnore(searchManager);
             closeAndIgnore(indexWriter);
             closeAndIgnore(taxonWriter);
 

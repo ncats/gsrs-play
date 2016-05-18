@@ -33,8 +33,8 @@ import ix.core.search.SearchOptions;
 public class SearchFactory extends EntityFactory {
     static Model.Finder<Long, ETag> etagDb;
 
-    static TextIndexer _indexer;
 
+    private static TextIndexerPlugin textIndexerPlugin;
     static{
         init();
     }
@@ -42,8 +42,12 @@ public class SearchFactory extends EntityFactory {
     public static void init(){
         TextIndexer.init();
         etagDb = new Model.Finder(Long.class, ETag.class);
-    	_indexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
 
+    }
+
+    static TextIndexer getTextIndexer(){
+        return textIndexerPlugin.getIndexer();
     }
 
     public static SearchOptions parseSearchOptions
@@ -58,13 +62,13 @@ public class SearchFactory extends EntityFactory {
     public static SearchResult
         search (Class kind, String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, kind, null, q, top, skip, fdim, queryParams);
+        return search (getTextIndexer(), kind, null, q, top, skip, fdim, queryParams);
     }
 
     public static SearchResult
         search (Collection subset, String q, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, null, subset,
+        return search (getTextIndexer(), null, subset,
                        q, subset != null ? subset.size() : 0,
                        0, fdim, queryParams);
     }
@@ -72,20 +76,20 @@ public class SearchFactory extends EntityFactory {
     public static SearchResult search (int top, int skip, int fdim,
                                        Map<String, String[]> queryParams)
         throws IOException {
-        return search (_indexer, null, null, null,
+        return search (getTextIndexer(), null, null, null,
                        top, skip, fdim, queryParams);
     }
 
     public static SearchResult
         search (String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, null, null, q, top, skip, fdim, queryParams);
+        return search (getTextIndexer(), null, null, q, top, skip, fdim, queryParams);
     }
     
     public static SearchResult
         search (Collection subset, String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
-        return search (_indexer, null, subset, q, top, skip, fdim, queryParams);
+        return search (getTextIndexer(), null, subset, q, top, skip, fdim, queryParams);
     }
     
     public static SearchResult
@@ -217,15 +221,15 @@ public class SearchFactory extends EntityFactory {
         try {
             ObjectMapper mapper = new ObjectMapper ();
             if (field != null) {
-                List<TextIndexer.SuggestResult> results = 
-                    _indexer.suggest(field, q, max);
+                List<TextIndexer.SuggestResult> results =
+                        getTextIndexer().suggest(field, q, max);
                 return Java8Util.ok (mapper.valueToTree(results));
             }
 
             ObjectNode node = mapper.createObjectNode();
-            for (String f : _indexer.getSuggestFields()) {
-                List<TextIndexer.SuggestResult> results = 
-                    _indexer.suggest(f, q, max);
+            for (String f : getTextIndexer().getSuggestFields()) {
+                List<TextIndexer.SuggestResult> results =
+                        getTextIndexer().suggest(f, q, max);
                 if (!results.isEmpty())
                     node.put(f, mapper.valueToTree(results));
             }
@@ -239,6 +243,6 @@ public class SearchFactory extends EntityFactory {
 
     public static Result suggestFields () {
         ObjectMapper mapper = new ObjectMapper ();
-        return Java8Util.ok (mapper.valueToTree(_indexer.getSuggestFields()));
+        return Java8Util.ok (mapper.valueToTree(getTextIndexer().getSuggestFields()));
     }
 }

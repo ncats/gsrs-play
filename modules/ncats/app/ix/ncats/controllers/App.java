@@ -122,7 +122,6 @@ public class App extends Authentication {
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static TextIndexer _textIndexer;
     public static PayloadPlugin _payloader;
     public static IxContext _ix;
     public static PersistenceQueue _pq;
@@ -132,13 +131,16 @@ public class App extends Authentication {
     }
 
     public static void init() {
-        _textIndexer =
-            Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
         _payloader = Play.application().plugin(PayloadPlugin.class);
        _ix = Play.application().plugin(IxContext.class);
        _pq = Play.application().plugin(PersistenceQueue.class);
     }
 
+
+    public static TextIndexer getTextIndexer(){
+        return Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    }
     /**
      * interface for rendering a result page
      */
@@ -582,7 +584,7 @@ public class App extends Authentication {
 
     public static List<Facet> getFacets (SearchOptions options) {
         try {
-            SearchResult result = _textIndexer.search(options, null, null);
+            SearchResult result = getTextIndexer().search(options, null, null);
             return result.getFacets();
         }
         catch (IOException ex) {
@@ -693,13 +695,13 @@ public class App extends Authentication {
     
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
-        return getSearchResult (_textIndexer, kind, q, total);
+        return getSearchResult (getTextIndexer(), kind, q, total);
     }
 
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total,
          Map<String, String[]> query) {
-        return getSearchResult (_textIndexer, kind, q, total, query);
+        return getSearchResult (getTextIndexer(), kind, q, total, query);
     }
     
     public static SearchResult getSearchResult
@@ -786,7 +788,7 @@ public class App extends Authentication {
         try {       
             long start = System.currentTimeMillis();
             SearchResult result;
-            if (indexer != _textIndexer) {
+            if (indexer != getTextIndexer()) {
                 // if it's an ad-hoc indexer, then we don't bother caching
                 //  the results
                 result = SearchFactory.search
@@ -813,10 +815,10 @@ public class App extends Authentication {
                                     SearchOptions options =
                                         new SearchOptions (query);
                                     options.top = total;
-                                    SearchResult result = _textIndexer.range
-                                        (options, field, min.equals("")
+                                    SearchResult result = getTextIndexer().range
+                                        (options, field, min.isEmpty()
                                          ? null : Integer.parseInt(min),
-                                         max.equals("")
+                                         max.isEmpty()
                                          ? null : Integer.parseInt(max));
                                     return cacheKey (result, sha1);
                                 }
@@ -872,7 +874,7 @@ public class App extends Authentication {
     
     public static <T> T getOrElse(String key, Callable<T> callable)
         throws Exception {
-        return getOrElse (_textIndexer.lastModified(), key, callable);
+        return getOrElse (getTextIndexer().lastModified(), key, callable);
     }
 
     public static <T> T getOrElse (long modified,
