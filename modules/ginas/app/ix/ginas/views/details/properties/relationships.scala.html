@@ -113,9 +113,7 @@
                 }else{
                         <td>none</td>
                 }
-            <tr><td colspan = "8"> Created by <b>@r.createdBy</b> on <b>@r.created</b> , Edited by <b>@r.lastEditedBy</b> on <b>@r.lastEdited</b> </td></tr>
-
-
+            <tr><div ng-if="audit==true"><td colspan = "8"> Created by <code>@r.createdBy</code> on <code>@r.created</code> , Edited by <code>@r.lastEditedBy</code> on <code>@r.lastEdited</code> </td></div></tr>
         }
 
     </table>
