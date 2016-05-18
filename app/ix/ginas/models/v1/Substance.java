@@ -325,11 +325,14 @@ public class Substance extends GinasCommonData {
 			return names.get(0).name;	
 		}
 		if(this.isAlternativeDefinition()){
-			String name1=this.getPrimaryDefinitionReference().getName();
-			if(name1!=null){
-				return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
+			SubstanceReference subref=this.getPrimaryDefinitionReference();
+			if(subref!=null){
+				String name1=subref.getName();
+				if(name1!=null){
+					return Substance.DEFAULT_ALTERNATIVE_NAME + " for [" + name1 + "]";
+				}
+				return Substance.DEFAULT_ALTERNATIVE_NAME;
 			}
-			return Substance.DEFAULT_ALTERNATIVE_NAME;
 		}
 		return Substance.DEFAULT_NO_NAME;
 	}
