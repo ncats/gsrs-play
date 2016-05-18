@@ -327,7 +327,8 @@ public class App extends Authentication {
     public static String encode (Facet facet, int i) {
         String value = facet.getValues().get(i).getLabel();
         try {
-            return URLEncoder.encode(value, "utf8");
+        	String newvalue=URLEncoder.encode(value.replace("/", "$$"), "utf8");
+            return newvalue;
         }
         catch (Exception ex) {
             Logger.trace("Can't encode string "+value, ex);
@@ -548,7 +549,7 @@ public class App extends Authentication {
                 if (toks.length == 2) {
                     try {
                         String name = toks[0];
-                        String value = toks[1];
+                        String value = toks[1].replace("$$", "/");
                         /*
                         Logger.debug("Searching facet "+name+"/"+value+"..."
                                      +facet.getName()+"/"
@@ -1436,7 +1437,6 @@ public class App extends Authentication {
         else {
             String key = signature (query, getRequestQuery ());
             
-            System.out.println("Fetching for:" + key);
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             if (value != null) {

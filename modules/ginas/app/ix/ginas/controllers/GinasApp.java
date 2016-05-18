@@ -322,8 +322,9 @@ public class GinasApp extends App {
                 return "Chemical";
             if ("concept".equalsIgnoreCase(label))
                 return "Concept";
-            if (label.contains("->"))
-                return label.split("->")[1] + " of " + label.split("->")[0];
+            if (label.contains("->")){
+                return GinasApp.getCV().getDisplay("RELATIONSHIP_TYPE", label);
+            }
             
             if ("EP".equalsIgnoreCase(label))
                 return "PH. EUR";

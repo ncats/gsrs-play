@@ -161,6 +161,7 @@ public class TextIndexer implements Closeable{
             this.label = label;
             this.count = count;
         }
+        
         public String getLabel () { return label; }
         public Integer getCount () { return count; }
     }
@@ -184,6 +185,7 @@ public class TextIndexer implements Closeable{
         public String getLabel (int index) {
             return values.get(index).getLabel();
         }
+        
         public Integer getCount (int index) {
             return values.get(index).getCount();
         }
@@ -1564,11 +1566,15 @@ public class TextIndexer implements Closeable{
                 DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
                 // the first term is the drilldown dimension
                 for (String dd : options.facets) {
-                    int pos = dd.indexOf('/');
+                	int pos = dd.indexOf('/');
                     if (pos > 0) {
                         String facet = dd.substring(0, pos);
                         String value = dd.substring(pos+1);
-                        ddq.add(facet, value.split("/"));
+                        String[] drill=value.split("/");
+                        for(int i=0;i<drill.length;i++){
+                        	drill[i]=drill[i].replace("$$", "/");
+                        }
+                        ddq.add(facet, drill);
                     }
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);
