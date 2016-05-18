@@ -203,6 +203,8 @@ public class ChemicalApiTest {
     	Name n = new Name();
     	n.name=smiles + " name";
     	Reference r=Reference.SYSTEM_GENERATED();
+    	r.addTag(Reference.PUBLIC_DOMAIN_REF);
+    	r.publicDomain=true;
     	n.addReference(r, cs);
     	cs.structure.addReference(r);
     	cs.names.add(n);

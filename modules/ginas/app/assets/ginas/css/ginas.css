@@ -1126,4 +1126,15 @@ a#resolverButton {
 
 pre.fixedsize{
 	max-height: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.row.ng-scope.reftable {
+    margin-right: 0px;
+}
+
+.subunitButtons {
+    padding-left: 2%;
+    padding-right: 2%;
 }

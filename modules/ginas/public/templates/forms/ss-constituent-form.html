@@ -17,11 +17,11 @@
                 <div class="col-md-1">
                     <form-selector referenceobj= "component" divid="constituentForm" type = "amount"></form-selector>
                 </div>
-                <div class="col-md-1">
-                    <reference-modal-button referenceobj= "component" parent = "parent"></reference-modal-button>
-                </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="component" parent = "parent" divid="constituentForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <reference-modal-button referenceobj= "component" parent = "parent"></reference-modal-button>
                 </div>
             </div>
             <div class="constituentForm"></div>
@@ -47,10 +47,10 @@
                     <form-selector referenceobj= "obj" formname="constituentForm" type = "amount" divid=constituent-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="constituentForm" type = "access" divid=constituent-{{index}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="constituentForm" type = "access" divid=constituent-{{index}}></form-selector>
+                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
                 </div>
             </div>
             <div class = constituent-{{index}}></div>

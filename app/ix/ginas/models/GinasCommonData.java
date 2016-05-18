@@ -342,5 +342,16 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	}
 	
 	
+	@JsonIgnore
+	/**
+	 * This method returns true if the access-control
+	 * group list is empty. This means that the data
+	 * has not been flagged for group-level control.
+	 * @return
+	 */
+	public boolean isPublic(){
+		return this.getAccess().isEmpty();
+	}
+	
 	
 }

@@ -5,9 +5,9 @@
                 Subunit {{index}}
             </strong>
             <div ng-if="view !== 'subunits'">
-            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits" showlabel ="false"></delete-button>
-            <a ng-click="cleanSequence()" uib-tooltip="Clean sequence"><i class="fa fa-magic fa-2x success"></i></a>
-            <a ng-click="toggleEdit()" uib-tooltip="Edit sequence"><i class="fa fa-pencil fa-2x"></i></a>
+            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits" showlabel = "false" class="subunitButtons"></delete-button>
+            <a ng-click="cleanSequence()" uib-tooltip="Clean sequence" class="subunitButtons"><i class="fa fa-magic fa-2x success"></i></a>
+            <a ng-click="toggleEdit()" uib-tooltip="Edit sequence" class="subunitButtons"><i class="fa fa-pencil fa-2x"></i></a>
         </div>
             </div>
     </div>
@@ -17,7 +17,7 @@
             <textarea ng-show="edit" type="text" class="form-control" rows='5' ng-model=obj.sequence
                       ng-blur="parseSubunit(); edit=!edit" aria-label="Edit Subunit"></textarea>
         </div>
-        <div ng-hide="edit" class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay track by $index">
+        <div ng-hide="edit" class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
             <span class = "pull-right count" ng-hide=numbers>{{($index+1)*10}}</span><br>
             <span ng-repeat="(index, aa) in chunk track by $index">
                 <amino-acid acid= aa></amino-acid>

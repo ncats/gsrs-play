@@ -710,6 +710,7 @@
         };
 
         $scope.parseErrorArray = function (errorArr) {
+            console.log(errorArr);
             _.forEach(errorArr, function (value) {
                 if (value.messageType == "WARNING")
                     value.class = "warning";
@@ -725,12 +726,14 @@
         };
 
         $scope.validateSubstance = function (callback) {
+            console.log("validate");
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-          //  console.log(sub);
+           console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(function (response) {
                 $scope.validating = false;
-                $scope.errorsArray = $scope.parseErrorArray(response.validationMessages);
+                console.log(response);
+                $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
                 // if (callback) {
                 //     callback();
@@ -918,8 +921,6 @@
 
         //method for injecting a large structure image on the browse page//
         $scope.showLarge = function (id, divid, ctx) {
-/*            var result = document.getElementsByClassName(divid);
-            var elementResult = angular.element(result);*/
             var template;
             if (!_.isUndefined(ctx)) {
                 template = angular.element('<rendered size="500" id=' + id + ' ctx=' + ctx + '></rendered>');
@@ -927,18 +928,6 @@
                 template = angular.element('<rendered size="500" id=' + id + '></rendered>');
             }
                 toggler.toggle($scope, divid, template);
-
-/*
-            if ($scope.stage === true) {
-                $scope.stage = false;
-
-
-                var compiledDirective = $compile(rend);
-                elementResult.append(compiledDirective)($scope);
-            } else {
-                elementResult.empty();
-                $scope.stage = true;
-            }*/
         };
 
     });
@@ -1226,7 +1215,7 @@
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-                    var templateString = angular.element('<div class ="row"><div class ="col-md-8">' + _.join(links, ', ') + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' + _.join(links, ', ') + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -1253,8 +1242,8 @@
             },
             link: function (scope, element, attrs) {
                 var template;
-                if (!_.isNull(scope.citation.url)) {
-                    template = angular.element('<a href = {{citation.url}} target = "_self"><span>{{citation.citation}}</span></a>');
+                if (!_.isNull(scope.citation.url)&& !_.isUndefined(scope.citation.url)) {
+                    template = angular.element('<a href = {{citation.url}} target = "_blank"><span>{{citation.citation}}</span></a>');
                 } else {
                     template = angular.element('<span>{{citation.citation}}</span>');
                 }
@@ -1667,7 +1656,8 @@
                     if (attrs.definition) {
                         var r = {relatedSubstance: temp};
                         CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
-                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            //var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            var type = _.find(response.data.content[0].terms, ['value', 'Alternative Definition']);
                             r.type = type;
                         });
                         if (!_.has(scope.referenceobj, 'relationships')) {
@@ -1996,12 +1986,26 @@
         }
     });
 
-    ginasApp.directive('referenceModalButton', function ($uibModal) {
+    ginasApp.directive('referenceModalButton', function ($uibModal, $templateRequest, $compile) {
         return {
             scope: {
-                referenceobj: '=',
+                referenceobj: '=?',
                 parent: '=',
-                edit: '=?'
+                label: '@?',
+                edit: '=?',
+                subclass: '@?'
+            },
+            link: function(scope, element){
+                if(_.isUndefined(scope.referenceobj)){
+                    scope.subClass = scope.parent.substanceClass;
+                    if(scope.subClass ==="chemical"){
+                        scope.subClass = "structure";
+                    }
+                    if(scope.subClass ==="specifiedSubstanceG1"){
+                        scope.subClass = "specifiedSubstance";
+                    }
+                    scope.referenceobj = scope.parent[scope.subClass];
+                }
             },
             templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
             controller: function ($scope) {
@@ -2060,8 +2064,12 @@
     ginasApp.directive('deleteButton', function () {
         return {
             restrict: 'E',
-            template: '<label>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
+            template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
+                if(attrs.showlabel){
+                    console.log(attrs);
+                    scope.showlabel= attrs.showlabel;
+                }
                 scope.deleteObj = function () {
                     if (scope.parent) {
                         var arr = _.get(scope.parent, attrs.path);

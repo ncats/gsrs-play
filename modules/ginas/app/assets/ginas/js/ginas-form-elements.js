@@ -191,7 +191,8 @@
             scope: {
                 obj: '=ngModel',
                 field: '@',
-                label: '@'
+                label: '@',
+                required: '=?'
             }
         };
     });
@@ -204,7 +205,8 @@
             scope: {
                 obj: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                required: '=?'
             },
             link: function (scope, element, attrs) {
                 scope.editing = function (obj, field) {
@@ -222,7 +224,8 @@
             replace: true,
             scope: {
                 object: '=ngModel',
-                field: '@'
+                field: '@',
+                required: '=?'
             },
             link: function (scope, element, attrs, ngModel) {
                 //date picker
@@ -250,7 +253,8 @@
             scope: {
                 obj: '=obj',
                 field: '@',
-                label: '@'
+                label: '@',
+                required: '=?'
             },
             link: function (scope, element, attrs, ngModel) {
                 //date picker
@@ -282,7 +286,8 @@
                 values: '=?',
                 filter: '=',
                 filterField:'@filter',
-                filterFunction: '&?'
+                filterFunction: '&?',
+                required: '=?'
             },
             link: function (scope, element, attrs) {
                 var other = [{
@@ -351,9 +356,11 @@
                 values: '=?',
                 filter: '=',
                 filterField:'@filter',
-                filterFunction: '&?'
+                filterFunction: '&?',
+                required: '=?'
             },
             link: function (scope, element, attrs) {
+
                 var other = [{
                     display: "Other",
                     value: "Other",
@@ -364,7 +371,6 @@
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-
                         if (response.data.content[0].filterable == true) {
                             filterService._register(scope, true);
                         }
@@ -419,7 +425,8 @@
                 cv: '@',
                 label: '@',
                 filter: '=',
-                filterFunction: '&'
+                filterFunction: '&',
+                required: '=?'
             },
             link: function (scope, element, attrs) {
                 if (attrs.max) {
@@ -490,7 +497,8 @@
                 cv: '@',
                 label: '@',
                 filter: '=',
-                filterFunction: '&'
+                filterFunction: '&',
+                required: '=?'
             },
             link: function (scope, element, attrs) {
                 scope.tags = [];
@@ -558,7 +566,8 @@
                 obj: '=ngModel',
                 field: '@',
                 name: '=',
-                label: '@'
+                label: '@',
+                required: '=?'
             }
         };
     });
@@ -574,7 +583,8 @@
                 label: '@',
                 name: '=',
                 validator: '&',
-                changeValidator: '&'
+                changeValidator: '&',
+                required: '=?'
             },
             link: function (scope, element, attrs, ngModel) {
 
@@ -620,7 +630,8 @@
                 form: '=?',
                 filter: '=?',
                 filterFunction: '&?',
-                validator: '&?'
+                validator: '&?',
+                required: '=?'
             },
             link: function (scope, elem, attrs, ngModel) {
 
@@ -654,7 +665,8 @@
                 form: '=?',
                 filter: '=',
                 filterFunction: '&',
-                validator: '&'
+                validator: '&',
+                required: '=?'
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.edit = false;
@@ -717,7 +729,8 @@
                 data: '=',
                 parent: '=',
                 obj: '=',
-                format: '@'
+                format: '@',
+                required: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
             link: function (scope, element, attrs) {
@@ -836,7 +849,8 @@
             scope: {
                 obj: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                required: '=?'
             },
             link: function (scope, element, attrs) {
                 scope.loadSubstances = function ($query) {

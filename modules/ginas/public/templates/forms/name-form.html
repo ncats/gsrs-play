@@ -9,11 +9,12 @@
 <!--
                      <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validator="duplicateCheck(name)"></text-input>
 -->
-                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm"></text-input>
-                    </div>
+                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" required="true"></text-input>
+                    <button class="btn btn-default" ng-click="duplicateCheck(name.name)" ng-if="parent.substanceClass=='chemical'">Resolve Name</button>
+                </div>
 
-                <div class="col-md-2 ">
-                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type"></dropdown-select>
+                <div class="col-md-2">
+                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type" required="true"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
@@ -33,13 +34,12 @@
             </div>
             <div class="row form-row">
                 <div class = "col-md-2">
-                    <button class="btn btn-primary" ng-click="duplicateCheck(name.name)">Resolve Name</button>
                 </div>
                 <div ng-if="name.type.value=='of'">
                 <div class="col-md-2">
                 </div>
                 <div class="col-md-2 err-check">
-                    <multi-select ng-model="name.domains" field="domains" cv = "NAME_DOMAIN" ></multi-select>
+                    <multi-select ng-model="name.domains" field="domains" cv = "NAME_DOMAIN" required="true"></multi-select>
                 </div>
                     <div class="col-md-1">
                         <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "nameOrgs"></form-selector>
@@ -65,10 +65,10 @@
                     <delete-button delete="obj" path="names"></delete-button>
                 </div>
                 <div class="col-md-3">
-                    <text-view-edit obj = "obj" field = "name"></text-view-edit>
+                    <text-view-edit obj = "obj" field = "name" required="true"></text-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE"></dropdown-view-edit>
+                    <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE" required="true"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
                     <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
