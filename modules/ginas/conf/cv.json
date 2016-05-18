@@ -16269,7 +16269,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "SUB_ALTERNATE->SUBSTANCE",
-        "display": "SUB_ALTERNATE-> SUBSTANCE",
+        "display": "Primary Definition",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16280,7 +16280,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "SUBSTANCE->SUB_ALTERNATE",
-        "display": "SUBSTANCE-> SUB_ALTERNATE",
+        "display": "Alternative Definition",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16490,17 +16490,6 @@
         "value": "PARENT->IMPURITY",
         "display": "PARENT-> IMPURITY",
         "hidden": false,
-        "selected": false,
-        "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1457983679327,
-        "modified": 1462481431912,
-        "deprecated": false,
-        "value": "Alternative Definition",
-        "display": "Alternative Definition",
-        "hidden": true,
         "selected": false,
         "filters": []
       }

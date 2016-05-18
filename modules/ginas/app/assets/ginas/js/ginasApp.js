@@ -653,8 +653,6 @@
                 //console.log("Invalid");
                 return false;
             }
-
-
         };
 
         $scope.checkErrors = function () {
@@ -1656,8 +1654,8 @@
                     if (attrs.definition) {
                         var r = {relatedSubstance: temp};
                         CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
-                            //var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
-                            var type = _.find(response.data.content[0].terms, ['value', 'Alternative Definition']);
+                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            //var type = _.find(response.data.content[0].terms, ['value', 'Alternative Definition']);
                             r.type = type;
                         });
                         if (!_.has(scope.referenceobj, 'relationships')) {
