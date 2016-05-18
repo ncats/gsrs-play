@@ -95,22 +95,22 @@ import play.mvc.Results;
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
-	static final SecureRandom rand = new SecureRandom ();
-
-    static final ExecutorService _threadPool = 
-        Executors.newCachedThreadPool();
 
     static Model.Finder<Long, Principal> _principalFinder;
 
-    static TextIndexer _textIndexer;
+    static TextIndexerPlugin textIndexerPlugin;
     
     static{
     	init();
     }
     
     public static void init(){
-    	_textIndexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
     	_principalFinder=new Model.Finder(Long.class, Principal.class);
+    }
+
+    static TextIndexer getTextIndexer(){
+        return textIndexerPlugin.getIndexer();
     }
 
     public static class FetchOptions {
@@ -625,7 +625,7 @@ public class EntityFactory extends Controller {
         try {
             T inst = finder.byId(id);
             if (inst != null) {
-                return Java8Util.ok (_textIndexer.getDocJson(inst));
+                return Java8Util.ok (getTextIndexer().getDocJson(inst));
             }
             return notFound ("Bad request: "+request().uri());
         }

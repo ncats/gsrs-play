@@ -640,7 +640,7 @@ public class GinasTestServer extends ExternalResource{
             }
             sessions.clear();
             //explicitly shutdown indexer to clear file locks
-            App._textIndexer.shutdown();
+            App.getTextIndexer().shutdown();
             ts.stop();
 
         }

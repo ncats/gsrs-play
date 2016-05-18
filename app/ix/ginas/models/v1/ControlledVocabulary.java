@@ -18,10 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import ix.core.models.BaseModel;
-import ix.core.models.Indexable;
-import ix.core.models.IxModel;
-import ix.core.models.Keyword;
+import ix.core.models.*;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 
@@ -30,6 +27,7 @@ import ix.ginas.models.serialization.KeywordListSerializer;
 @Table(name = "ix_ginas_controlled_vocab")
 @Inheritance
 @DiscriminatorValue("CTLV")
+@Backup
 public class ControlledVocabulary extends IxModel {
 
     private static final long serialVersionUID = 5455592961232451608L;

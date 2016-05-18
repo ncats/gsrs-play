@@ -385,7 +385,7 @@ public class SequenceIndexer {
             indexDir.close();
 
             if (localThreadPool)
-                threadPool.shutdown();
+                threadPool.shutdownNow();
         }
         catch (IOException ex) {
             ex.printStackTrace();

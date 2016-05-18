@@ -34,8 +34,6 @@ import java.util.zip.ZipFile;
 
 
 public class NTDLoad extends App {
-    static final TextIndexer TEXT_INDEXER =
-            Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     public static Result error(int code, String mesg) {
         return ok(ix.ntd.views.html.error.render(code, mesg));
