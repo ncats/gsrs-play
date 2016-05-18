@@ -14,7 +14,7 @@
         <thead>
             <tr>
                 <th>Substance</th>
-                <th>Name</th>
+                @*<th>Name</th>*@
                 <th>Type</th>
                 <th>Comments</th>
                 <th>Interaction Type</th>
@@ -27,62 +27,19 @@
         @for(r <- relationships) {
 
             <tr>
-            	@defining(SubstanceFactory.getFullSubstance(r.relatedSubstance)) { ref =>
-                    @if(ref != null) {
-                
-    
-                        
-                            <td>
-                                @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")) {
-                                    <img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
-                                    src='@ix.ginas.controllers.routes.GinasApp.structure(ref.asInstanceOf[ChemicalSubstance].structure.getId, "svg", 150)'>
-                                } else {
-                                    @if(ref.getClass.toString.equals("class ix.ginas.models.v1.StructurallyDiverseSubstance")) {
-    
-                                    } else {
-                                        @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ProteinSubstance")) {
-                                            <img src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="img-responsive" id="" />
-                                        } else {
-                                            @if(ref.getClass.toString.equals("class ix.ginas.models.v1.MixtureSubstance")) {
-                                                <div class = "col-md-3">
-                                                    <div class = "row">
-                                                        <div class = "col-md-1 pour">
-                                                            <i class="fa fa-flask fa-4x fa-rotate-90"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class ="row">
-                                                        <div class = "col-md-1 col-md-offset-1">
-                                                            <i class="fa fa-flask fa-4x"></i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            } else {
-                                                @if(ref.getClass.toString.equals("class ix.ginas.models.v1.PolymerSubstance")) {
-    
-                                                } else {
-                                                    @if(ref.substanceClass.equals("concept")) {
-                                                        <i class="fa fa-cloud fa-4x "></i>
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            </td>
-                    } else {
-                        <td><i>Substance not yet imported</i></td>
-                    }
-                    
-                }
                 <td>
-                @defining(r.relatedSubstance) { sub =>
-                    @if(sub != null && sub.getLinkingID() != null) {
-                        <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">
-                        @sub.getName()
-                        </a>
-                    }
-                }
+                @subref(r.relatedSubstance)
                 </td>
+
+                @*<td>*@
+                @*@defining(r.relatedSubstance) { sub =>*@
+                    @*@if(sub != null && sub.getLinkingID() != null) {*@
+                        @*<a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">*@
+                        @*@sub.getName()*@
+                        @*</a>*@
+                    @*}*@
+                @*}*@
+                @*</td>*@
     
                 <td>@r.getDisplayType()</td>
                 <td>@r.comments</td>
