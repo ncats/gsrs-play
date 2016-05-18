@@ -2101,17 +2101,6 @@
         "hidden": false,
         "selected": false,
         "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1462542367719,
-        "modified": 1462542367776,
-        "deprecated": false,
-        "value": "eerere",
-        "display": "erererer",
-        "hidden": false,
-        "selected": false,
-        "filters": []
       }
     ],
     "fields": [
@@ -3459,6 +3448,17 @@
         "deprecated": false,
         "value": "DERIVED",
         "display": "DERIVED",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679299,
+        "modified": 1462481431523,
+        "deprecated": false,
+        "value": "PUBLIC_DOMAIN_RELEASE",
+        "display": "PUBLIC_DOMAIN_RELEASE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -6124,6 +6124,17 @@
         "deprecated": false,
         "value": "GB",
         "display": "UNITED KINGDOM",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679304,
+        "modified": 1462481431669,
+        "deprecated": false,
+        "value": "EU",
+        "display": "EUROPEAN UNION",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -9537,6 +9548,39 @@
         "deprecated": false,
         "value": "food",
         "display": "Food",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679310,
+        "modified": 1462481431619,
+        "deprecated": false,
+        "value": "tobacco",
+        "display": "tobacco",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679310,
+        "modified": 1462481431619,
+        "deprecated": false,
+        "value": "biologic",
+        "display": "biologic",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679310,
+        "modified": 1462481431619,
+        "deprecated": false,
+        "value": "device",
+        "display": "device",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15099,6 +15143,7 @@
         "modified": 1462481431887,
         "deprecated": false,
         "value": "COLONY STIMULATING FACTOR",
+        "display": "COLONY STIMULATING FACTOR",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15806,7 +15851,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "BIOSIMILAR->PARENT",
-        "display": "BIOSIMILAR->PARENT",
+        "display": "BIOSIMILAR-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15817,7 +15862,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "CONSTITUENT ALWAYS PRESENT->PARENT",
-        "display": "CONSTITUENT ALWAYS PRESENT->PARENT",
+        "display": "CONSTITUENT ALWAYS PRESENT-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15828,7 +15873,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "CONSTITUENT MAY BE PRESENT->PARENT",
-        "display": "CONSTITUENT MAY BE PRESENT->PARENT",
+        "display": "CONSTITUENT MAY BE PRESENT-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15839,7 +15884,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "DEGRADENT->PARENT",
-        "display": "DEGRADENT->PARENT",
+        "display": "DEGRADENT-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15850,7 +15895,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "DERIVATIVE->PARENT",
-        "display": "DERIVATIVE->PARENT",
+        "display": "DERIVATIVE-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15861,7 +15906,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "DIASTEREOISOMER->DIASTEREOISOMER",
-        "display": "DIASTEREOISOMER->DIASTEREOISOMER",
+        "display": "DIASTEREOISOMER-> DIASTEREOISOMER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15872,7 +15917,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "ENANTIOMER->ENANTIOMER",
-        "display": "ENANTIOMER->ENANTIOMER",
+        "display": "ENANTIOMER-> ENANTIOMER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15883,7 +15928,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "ENANTIOMER->RACEMATE",
-        "display": "ENANTIOMER->RACEMATE",
+        "display": "ENANTIOMER-> RACEMATE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15894,7 +15939,7 @@
         "modified": 1462481431909,
         "deprecated": false,
         "value": "IMPURITY->PARENT",
-        "display": "IMPURITY->PARENT",
+        "display": "IMPURITY-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15905,7 +15950,7 @@
         "modified": 1462481431910,
         "deprecated": false,
         "value": "INACTIVE ISOMER->PARENT",
-        "display": "INACTIVE ISOMER->PARENT",
+        "display": "INACTIVE ISOMER-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15916,7 +15961,7 @@
         "modified": 1462481431910,
         "deprecated": false,
         "value": "INHIBITOR->TARGET",
-        "display": "INHIBITOR->TARGET",
+        "display": "INHIBITOR-> TARGET",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15927,7 +15972,7 @@
         "modified": 1462481431910,
         "deprecated": false,
         "value": "LABELED->NON-LABELED",
-        "display": "LABELED->NON-LABELED",
+        "display": "LABELED-> NON-LABELED",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15938,7 +15983,7 @@
         "modified": 1462481431910,
         "deprecated": false,
         "value": "LESS ACTIVE ISOMER->PARENT",
-        "display": "LESS ACTIVE ISOMER->PARENT",
+        "display": "LESS ACTIVE ISOMER-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15949,7 +15994,7 @@
         "modified": 1462481431910,
         "deprecated": false,
         "value": "METABOLIC ENZYME->INDUCER",
-        "display": "METABOLIC ENZYME->INDUCER",
+        "display": "METABOLIC ENZYME-> INDUCER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15960,7 +16005,7 @@
         "modified": 1462481431910,
         "deprecated": false,
         "value": "METABOLIC ENZYME->INHIBITOR",
-        "display": "METABOLIC ENZYME->INHIBITOR",
+        "display": "METABOLIC ENZYME-> INHIBITOR",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15971,7 +16016,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "METABOLIC ENZYME->SUBSTRATE",
-        "display": "METABOLIC ENZYME->SUBSTRATE",
+        "display": "METABOLIC ENZYME-> SUBSTRATE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15982,7 +16027,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "METABOLITE ACTIVE->PARENT",
-        "display": "METABOLITE ACTIVE->PARENT",
+        "display": "METABOLITE ACTIVE-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -15993,7 +16038,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "METABOLITE ACTIVE->PRODRUG",
-        "display": "METABOLITE ACTIVE->PRODRUG",
+        "display": "METABOLITE ACTIVE-> PRODRUG",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16004,7 +16049,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->METABOLITE",
-        "display": "PARENT->METABOLITE",
+        "display": "PARENT-> METABOLITE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16015,7 +16060,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->METABOLITE ACTIVE",
-        "display": "PARENT->METABOLITE ACTIVE",
+        "display": "PARENT-> METABOLITE ACTIVE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16026,7 +16071,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->METABOLITE INACTIVE",
-        "display": "PARENT->METABOLITE INACTIVE",
+        "display": "PARENT-> METABOLITE INACTIVE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16037,7 +16082,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->METABOLITE LESS ACTIVE",
-        "display": "PARENT->METABOLITE LESS ACTIVE",
+        "display": "PARENT-> METABOLITE LESS ACTIVE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16048,7 +16093,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->METABOLITE TOXIC",
-        "display": "PARENT->METABOLITE TOXIC",
+        "display": "PARENT-> METABOLITE TOXIC",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16059,7 +16104,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->SALT/SOLVATE",
-        "display": "PARENT->SALT/SOLVATE",
+        "display": "PARENT-> SALT/SOLVATE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16070,7 +16115,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PART/FRACTION->PARENT ORGANISM",
-        "display": "PART/FRACTION->PARENT ORGANISM",
+        "display": "PART/FRACTION-> PARENT ORGANISM",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16081,7 +16126,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PRODRUG->METABOLITE ACTIVE",
-        "display": "PRODRUG->METABOLITE ACTIVE",
+        "display": "PRODRUG-> METABOLITE ACTIVE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16092,7 +16137,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PRODUCT COMPONENT->PRODUCT",
-        "display": "PRODUCT COMPONENT->PRODUCT",
+        "display": "PRODUCT COMPONENT-> PRODUCT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16103,7 +16148,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "RACEMATE->ACTIVE ENANTIOMER",
-        "display": "RACEMATE->ACTIVE ENANTIOMER",
+        "display": "RACEMATE-> ACTIVE ENANTIOMER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16114,7 +16159,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "RACEMATE->ENANTIOMER",
-        "display": "RACEMATE->ENANTIOMER",
+        "display": "RACEMATE-> ENANTIOMER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16125,7 +16170,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "RACEMATE->INACTIVE ENANTIOMER",
-        "display": "RACEMATE->INACTIVE ENANTIOMER",
+        "display": "RACEMATE-> INACTIVE ENANTIOMER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16136,7 +16181,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "RADIOISOTOPE->RADIOISOTOPE",
-        "display": "RADIOISOTOPE->RADIOISOTOPE",
+        "display": "RADIOISOTOPE-> RADIOISOTOPE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16147,7 +16192,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "REGIOISOMER->REGIOISOMER",
-        "display": "REGIOISOMER->REGIOISOMER",
+        "display": "REGIOISOMER-> REGIOISOMER",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16158,7 +16203,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "SALT/SOLVATE->PARENT",
-        "display": "SALT/SOLVATE->PARENT",
+        "display": "SALT/SOLVATE-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16169,7 +16214,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "METABOLITE INACTIVE->PARENT",
-        "display": "METABOLITE INACTIVE->PARENT",
+        "display": "METABOLITE INACTIVE-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16180,7 +16225,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "METABOLITE LESS ACTIVE->PARENT",
-        "display": "METABOLITE LESS ACTIVE->PARENT",
+        "display": "METABOLITE LESS ACTIVE-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16191,7 +16236,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "METABOLITE TOXIC->PARENT",
-        "display": "METABOLITE TOXIC->PARENT",
+        "display": "METABOLITE TOXIC-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16202,7 +16247,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "METABOLITE->PARENT",
-        "display": "METABOLITE->PARENT",
+        "display": "METABOLITE-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16213,7 +16258,7 @@
         "modified": 1462481431913,
         "deprecated": false,
         "value": "SALT/SOLVATE->SALT/SOLVATE",
-        "display": "SALT/SOLVATE->SALT/SOLVATE",
+        "display": "SALT/SOLVATE-> SALT/SOLVATE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16224,7 +16269,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "SUB_ALTERNATE->SUBSTANCE",
-        "display": "SUB_ALTERNATE->SUBSTANCE",
+        "display": "SUB_ALTERNATE-> SUBSTANCE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16235,7 +16280,17 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "SUBSTANCE->SUB_ALTERNATE",
-        "display": "SUBSTANCE->SUB_ALTERNATE",
+        "display": "SUBSTANCE-> SUB_ALTERNATE",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },{
+        "version": 1,
+        "created": 1457983679328,
+        "modified": 1462481431911,
+        "deprecated": false,
+        "value": "SUBSTANCE->SUB_CONCEPT",
+        "display": "SUBSTANCE-> SUB_CONCEPT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16246,7 +16301,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "TARGET->AGONIST",
-        "display": "TARGET->AGONIST",
+        "display": "TARGET-> AGONIST",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16257,7 +16312,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "TARGET->INHIBITOR",
-        "display": "TARGET->INHIBITOR",
+        "display": "TARGET-> INHIBITOR",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16268,7 +16323,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "TRANSPORTER->INHIBITOR",
-        "display": "TRANSPORTER->INHIBITOR",
+        "display": "TRANSPORTER-> INHIBITOR",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16279,7 +16334,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "TRANSPORTER->SUBSTRATE",
-        "display": "TRANSPORTER->SUBSTRATE",
+        "display": "TRANSPORTER-> SUBSTRATE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16323,7 +16378,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "ACTIVE ISOMER->PARENT",
-        "display": "ACTIVE ISOMER->PARENT",
+        "display": "ACTIVE ISOMER-> PARENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16334,7 +16389,7 @@
         "modified": 1462481431911,
         "deprecated": false,
         "value": "AGONIST->TARGET",
-        "display": "AGONIST->TARGET",
+        "display": "AGONIST-> TARGET",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16345,7 +16400,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "BASIS OF STRENGTH->",
-        "display": "BASIS OF STRENGTH->",
+        "display": "BASIS OF STRENGTH",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16356,7 +16411,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->BIOSIMILAR",
-        "display": "PARENT->BIOSIMILAR",
+        "display": "PARENT-> BIOSIMILAR",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16367,7 +16422,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->CONSTITUENT ALWAYS PRESENT",
-        "display": "PARENT->CONSTITUENT ALWAYS PRESENT",
+        "display": "PARENT-> CONSTITUENT ALWAYS PRESENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16378,7 +16433,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->CONSTITUENT MAY BE PRESENT",
-        "display": "PARENT->CONSTITUENT MAY BE PRESENT",
+        "display": "PARENT-> CONSTITUENT MAY BE PRESENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16389,7 +16444,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "NON-LABELED->LABELED",
-        "display": "NON-LABELED->LABELED",
+        "display": "NON-LABELED-> LABELED",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16400,7 +16455,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT ORGANISM->PART/FRACTION",
-        "display": "PARENT ORGANISM->PART/FRACTION",
+        "display": "PARENT ORGANISM-> PART/FRACTION",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16411,7 +16466,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->DEGRADENT",
-        "display": "PARENT->DEGRADENT",
+        "display": "PARENT-> DEGRADENT",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16422,7 +16477,7 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->DERIVATIVE",
-        "display": "PARENT->DERIVATIVE",
+        "display": "PARENT-> DERIVATIVE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -16433,8 +16488,19 @@
         "modified": 1462481431912,
         "deprecated": false,
         "value": "PARENT->IMPURITY",
-        "display": "PARENT->IMPURITY",
+        "display": "PARENT-> IMPURITY",
         "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679327,
+        "modified": 1462481431912,
+        "deprecated": false,
+        "value": "Alternative Definition",
+        "display": "Alternative Definition",
+        "hidden": true,
         "selected": false,
         "filters": []
       }

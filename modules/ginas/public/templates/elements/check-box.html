@@ -1,5 +1,5 @@
 <div>
-    <label for="{{::field}}" class="text-capitalize">{{label || field}}</label>
+    <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
     <div class="text-center">
         <input type="checkbox" ng-model="obj" placeholder="{{::field}}" title="{{::field}}"
                id="{{::field}}"/>

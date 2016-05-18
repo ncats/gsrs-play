@@ -859,30 +859,6 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
     color: white;
 }
 
-/*
-.blue {
-    color: #337ab7;
-}
-
-.disulfide {
-    background: purple;
-    color: white;
-}
-
-.nglycosylation, .oglycosylation, .cglycosylation {
-    background: green;
-}
-
-.structuralModification {
-    background: black;
-    color: white;
-}
-*/
-
-
-
-
-
 .invalidAA {
     color: red;
     font-family: "Lucida Console", Monaco, monospace;
@@ -1126,4 +1102,19 @@ a#resolverButton {
 
 pre.fixedsize{
 	max-height: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
+
+.row.ng-scope.reftable {
+    margin-right: 0px;
+}
+
+.subunitButtons {
+    padding-left: 2%;
+    padding-right: 2%;
+}
+
+.subrefThumb{
+    min-width: 150px;
+ }

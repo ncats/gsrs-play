@@ -15,11 +15,7 @@
 
     @kind match {
         case "chemical" => {
-            @*
-            <div>@forms.structureform()</div>
-            *@
             <structure-form parent = substance type="structure" path ="parent.structure"></structure-form>
-
             <moiety-form ng-if="substance.moieties.length>1" parent = substance ng-cloak></moiety-form>
         }
         case "mixture" => {
@@ -64,9 +60,6 @@
             <polymer-classification-form parent=substance></polymer-classification-form>
             <polymer-monomer-form parent=substance></polymer-monomer-form>
             <structure-form type="idealizedStructure" path ="parent.polymer.idealizedStructure" parent = substance></structure-form>
-            @*
-            <div>@forms.polymerstructureform()</div>
-            *@
             <polymer-sru-form parent=substance></polymer-sru-form>
         }
         case "nucleicAcid" => {
@@ -184,11 +177,6 @@
 	        	
                 var loadjson = @Html(json);
                 @if(!"{}".equals(json) && json != null) {
-	        		/*$(window).load(function(){
-			        	$(window).bind('beforeunload', function(){
-				                    return 'Navigating away from this page will lose all unsaved changed. Are you sure?';
-			            });*/
-			       // });
 	        		window.setInterval(function(){
 	        			$.ajax({
 	        				url: baseurl + "lock?uuid=" + loadjson.uuid, 

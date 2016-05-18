@@ -1,5 +1,5 @@
 <div>
-    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}</label><br>
+    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label><br>
     <a ng-show="!obj._editing{{::field}}" ng-click="editing(obj, field);" id="{{::field}}"><i
                 class="fa fa-check fa-2x success" ng-show="obj[field]===true"  uib-tooltip="{{::field}}"></i>
             <i class="fa fa-times fa-2x" ng-show="!obj[field]===true" uib-tooltip="Field not Set"></i></a>

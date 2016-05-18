@@ -7,19 +7,23 @@
             <div class="row form-row">
                 <div class="col-md-3">
                     <dropdown-view-edit obj="parent" field="definitionType" label="Definition Type"
-                                        cv="DEFINITION_TYPE" ng-blur = "$parent.clear();"></dropdown-view-edit>
+                                        cv="DEFINITION_TYPE" ng-blur="$parent.clear();"></dropdown-view-edit>
                 </div>
                 <div class="col-md-4" ng-if="parent.definitionType.display=='Alternative'">
                     <substance-chooser-selector referenceobj="parent" field="$$relatedSubstance" name="relatedSubstance"
                                                 formname="headerForm" label="Primary Substance" type="search"
                                                 definition="true"></substance-chooser-selector>
                 </div>
-            <div class="col-md-1 pull-right">
-                <form-selector referenceobj="parent" parent="parent" divid="headerForm"
-                               type="access"></form-selector>
+                <div class="col-md-1 pull-right text-center">
+                    <form-selector referenceobj="parent" parent="parent" divid="headerForm"
+                                   type="access"></form-selector>
+                </div>
+                <div class="col-md-2 pull-right text-center" ng-if="parent.substanceClass!='concept'">
+                    <reference-modal-button subclass={{subClass}} parent="parent"
+                                            label="Definition Reference"></reference-modal-button>
+                </div>
             </div>
+            <div class="headerForm"></div>
+        </form>
     </div>
-    <div class="headerForm"></div>
-    </form>
-</div>
 </div>

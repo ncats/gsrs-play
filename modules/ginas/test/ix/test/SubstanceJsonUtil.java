@@ -1,12 +1,16 @@
 package ix.test;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
-import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Reference;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
-
-import static org.junit.Assert.assertTrue;
+import util.json.JsonUtil.JsonNodeBuilder;
 
 public final class SubstanceJsonUtil {
 
@@ -14,17 +18,42 @@ public final class SubstanceJsonUtil {
 		//can not instantiate
 	}
 	
+	/**
+	 * Normalizes a substance JSON to be as expected for a typical submission.
+	 * Specifically, removing approval information, changing status to pending,
+	 * and ensuring that the public domain tag is added to the first
+	 * reference.
+	 * @param substance
+	 * @return
+	 */
 	public static JsonNode toUnapproved(JsonNode substance){
 		
-		return new JsonUtil.JsonNodeBuilder(substance)
+		JsonNodeBuilder jnb=new JsonUtil.JsonNodeBuilder(substance)
 				.remove("/approvalID")
 				.remove("/approved")
 				.remove("/approvedBy")
 				
 				.set("/status", "pending")
-				
-				.ignoreMissing()
-				.build();
+				.ignoreMissing();
+		boolean hasReferences=false;
+		if(substance.at("/references")!=null){
+			for(JsonNode jsn:substance.at("/references")){
+				hasReferences=true;break;
+			}
+		}
+		
+		if(hasReferences){
+			jnb=jnb.add("/references/0/tags/-", Reference.PUBLIC_DOMAIN_REF);
+			jnb=jnb.set("/references/0/publicDomain", true);
+		}else{
+			List<String> acc=new ArrayList<String>();
+			acc.add("protected");
+			jnb = jnb.set("/access", acc);
+			
+		}
+		
+		return jnb.build();
+		
 	}
 
 	public static void ensureFailure(WSResponse response){

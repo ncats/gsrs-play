@@ -30,7 +30,7 @@
             </div>
             <div class = "row">
                 <div class = "col-md-6 col-md-offset-6">
-                    <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
+                    <ul class= "list-inline pull-right list-unstyled">
                         <li class = "padded"> <export-button structureid ="'@sub.structure.id'" format="'sdf'" ></export-button></li>
                         <li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" uib-tooltip="search for structure" target="_self" ng-click="passStructure('@sub.structure.id')" class="btn btn-primary" aria-label="Structure Search">
                             <span class="sr-only">Structure Search</span>
@@ -84,7 +84,7 @@
                     </tr>
                     @if(sub.structure.stereoComments != null) {
                         <tr>
-                            <td>StereoComments</td>
+                            <td><strong>StereoComments</strong></td>
                             <td>@sub.structure.stereoComments</td>
                         </tr>
                     }
@@ -95,16 +95,17 @@
                                 <referencesmanager indices substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.structure.getReferences())"></referencesmanager>
                             </td>
                         </tr>
-                        <tr><td class = "'@sub.getUuid()'" colspan = "2"></td></tr>
                     }
-                    @*
-                    <td><strong>References</strong></td>
-                    @properties.referencetable(GinasApp.getStructureReferences(sub.structure), "hi", 2)
-                    </tr>*@
                 </table>
             </div>
         </div>
+        <div class = "row">
+            <div class = "col-md-12">
+                <div class = "'@sub.getUuid()'"></div>
+            </div>
+        </div>
     </div>
+
     @if(sub.moieties.size > 0) {
         <div class="row info" id="moieties">
             <button class="btn btn-primary label-offset det">
@@ -116,7 +117,26 @@
                     <div class="col-md-4">
                         <rendered id= '@m.structure.id' size ="300"></rendered>
                     </div>
-                    <div class="col-md-4">
+                    <div class ="col-md-8">
+                        <div class = "row">
+                            <div class = "col-md-12">
+                                <div class="table-responsive">
+                            <table class="table table-striped moiety-Table">
+                                <tr>
+                                    <td><strong>Molecular Formula</strong></td>
+                                    <td>@m.structure.formula</td>
+                                </tr>
+                                @if(m.getCountAmount != null) {
+                                    <tr>
+                                        <td><strong>Count</strong></td>
+                                        <td class="url"><amount value="@GinasApp.getAsJson(m.getCountAmount)"></amount></td>
+                                    </tr>
+                                </table>
+                    </div>
+                                </div>
+                            </div>
+                        <div class ="row">
+                    <div class="col-md-6">
                         <div class="table-responsive">
                             <table class="table table-striped moiety-Table">
                                 <tr>
@@ -137,14 +157,12 @@
                                 <td><strong>Additional Stereochemistry</strong></td>
                                 <td><span class="badge">@m.structure.atropisomerism</span></td>
                             </tr>
-                                <tr>
-                                    <td><strong>Molecular Formula</strong></td>
-                                    <td>@m.structure.formula</td>
-                                </tr>
+
+                                }
                             </table>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="table-responsive">
                             <table class="table table-striped moiety-Table">
                                 <tr>
@@ -163,9 +181,9 @@
                                     <td><strong>Charge</strong></td>
                                     <td><span class="badge">@m.structure.charge</span></td>
                                 </tr>
-                                @if(sub.structure.stereoComments != null) {
+                                @if(m.structure.stereoComments != null && m.structure.stereoComments != "") {
                                     <tr>
-                                        <td>StereoComments</td>
+                                        <td><strong>StereoComments</strong></td>
                                         <td>@m.structure.stereoComments</td>
                                     </tr>
                                 }
@@ -173,7 +191,9 @@
                             </table>
                         </div>
                     </div>
+                            </div>
                 </div>
+                    </div>
             }
             </div>
         </div>

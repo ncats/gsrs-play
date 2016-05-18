@@ -172,12 +172,15 @@ public class JsonUtil {
     	
     	public JsonNodeBuilder set(String path, Object value){
     		try{
-	    		if(oldJson.at(path).isNull()){
+    			//consider this an add if it's for a missing node,
+    			//as per JSONPatch spec
+	    		if(oldJson.at(path).isMissingNode()){
 	    			changes.add(JsonChange.add(path, value));
 	    			return this;
 	    		}
     		}catch(Exception e){
-    			
+    			//If the path is not found at some other level,
+    			//then fallback to using the standard replace
     		}
     		changes.add(JsonChange.set(path, value));
     		return this;
@@ -203,13 +206,16 @@ public class JsonUtil {
     			for(int i=changes.size()-1;i>=0;i--){
     				String path=changes.get(i).path;
 	    			JsonNode has=oldJson.at(path);
+	    			//don't ignore additions
+	    			if(changes.get(i).op.equals("add")){
+	    				continue;
+	    			}	    			
 	    			if(has==null || has.isNull() || has.isMissingNode()){
 	    				changes.remove(i);
 	    			}
     			}
     		}
     		try {
-    			//System.out.println("There are these changes, which will be turned into a patch:" + changes.size());
     			JsonPatch jp=JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes));
     			
     			//System.out.println("THE PATCH:" + jp);

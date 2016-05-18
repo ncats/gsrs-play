@@ -8,11 +8,24 @@
                 <div class="col-md-2">
                     <substance-chooser-selector referenceobj ="relationship" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm" label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
-                <div class="col-md-3">
-                    <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="relationship.interactionType" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction"></dropdown-select>
+                <div class ="col-md-6">
+                    <div class = "row">
+                        <div class="col-md-6">
+                            <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>
+                        </div>
+                        <div class="col-md-6">
+                            <dropdown-select ng-model="relationship.interactionType" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction"></dropdown-select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class = "row">
+                        <div class="col-md-6">
+                            <dropdown-select ng-model="relationship.qualification" field="qualification" cv = "QUALIFICATION" ></dropdown-select>
+                        </div>
+                        <div class="col-md-6">
+                            <form-selector referenceobj= "relationship" parent = "parent" divid="relationshipForm" type = "amount" filter= "relationship.type"></form-selector>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-selector referenceobj ="relationship" field ="mediatorSubstance" name ="mediatorSubstance" formname ="relationshipForm" label ="Mediator Substance" type = "search"></substance-chooser-selector>
@@ -24,18 +37,22 @@
                     <reference-modal-button referenceobj= "relationship" parent = "parent"></reference-modal-button>
                 </div>
             </div>
-            <div class="row form-row">
-                <div class="col-md-2 col-md-offset-2">
-                    <dropdown-select ng-model="relationship.qualification" field="qualification" cv = "QUALIFICATION" ></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj= "relationship" divid="relationshipForm" field="comments" label="comments" type = "textbox"></form-selector>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj= "relationship" parent = "parent" divid="relationshipForm" type = "amount" filter= "relationship.type"></form-selector>
-                </div>
-            </div>
             <div class="relationshipForm"></div>
+            <div class ="row">
+                <div class ="col-md-1"></div>
+                <div class = "col-md-12">
+                    <text-box ng-model="relationship.comments" field="comments" rows=2></text-box>
+
+                    <!--<div class="row form-row">-->
+                <!--<div class="col-md-2 col-md-offset-2">-->
+                <!--</div>-->
+                <!--<div class="col-md-2">-->
+                    <!--<form-selector referenceobj= "relationship" divid="relationshipForm" field="comments" label="comments" type = "textbox"></form-selector>-->
+                <!--</div>-->
+                <!--<div class="col-md-2">-->
+                <!--</div>-->
+            </div>
+                </div>
             <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
         </form>
 
@@ -48,14 +65,27 @@
                 <div class="col-md-2">
                     <substance-chooser-selector referenceobj ="obj" field ="relatedSubstance" name ="relatedSubstance" formname = relationship-{{index}} label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
-                <div class="col-md-2">
+                <div class ="col-md-5">
+                    <div class ="row">
+                <div class="col-md-6">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-6">
                     <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction Type"></dropdown-view-edit>
                 </div>
+                        </div>
+                    <div class = "row"><br/></div>
+                    <div class = "row">
+                        <div class="col-md-6">
+                            <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
+                        </div>
+                        <div class="col-md-6">
+                            <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid=relationship-{{index}}></form-selector>
+                        </div>
+                    </div>
+                    </div>
                 <div class="col-md-2">
-                    <substance-chooser-view-edit obj = "obj" field ="mediatorSubstance" label = "Mediator Substance"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj = "obj" field ="mediatorSubstance" name ="mediatorSubstance" formname = relationship-{{index}} label = "Mediator Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid=relationship-{{index}}></form-selector>
@@ -64,19 +94,17 @@
                     <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
                 </div>
             </div>
+            <div class = relationship-{{index}}></div>
             <div class ="row">
                 <div class ="col-md-1"></div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid=relationship-{{index}} mode="edit"></form-selector>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid=relationship-{{index}}></form-selector>
-                </div>
+<div class = "col-md-11">
+    <text-box-view-edit obj="obj" field="comments"></text-box-view-edit>
+
+</div>
+                <!--<div class="col-md-2 pull-right text-center">-->
+                    <!--<form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid=relationship-{{index}} mode="edit"></form-selector>-->
+                <!--</div>-->
             </div>
-            <div class = relationship-{{index}}></div>
         </div>
     </div>
 </div>

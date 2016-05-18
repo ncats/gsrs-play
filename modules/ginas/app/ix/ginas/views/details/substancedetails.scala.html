@@ -74,7 +74,8 @@
                             <code class ="text-uppercase"> version:
                                 <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-model-options="{ getterSetter: true }" ng-change = "redirectVersion()">
                                     <option ng-repeat="v in getRange(1, '@sub.version');">{{v}}</option></select>
-                            </code>
+                            </code><br/>
+                            <span>View audit details:  <input type="checkbox" ng-model="audit"></span>
                         </div>
                         <div class = "col-md-3 pull-right">
                             <h5>Substance ID:</h5>
@@ -83,7 +84,6 @@
                             } else {
                                 <h3 class= "appid">@sub.getApprovalIDDisplay()</h3>
                             }
-
                         </div>
                     </div>
                     <div class = "row">

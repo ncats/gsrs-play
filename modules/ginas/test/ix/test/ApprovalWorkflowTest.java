@@ -43,7 +43,7 @@ public class ApprovalWorkflowTest {
             InputStream is = new FileInputStream(resource)){
 
 
-                JsonNode js = new ObjectMapper().readTree(is);
+                JsonNode js = SubstanceJsonUtil.toUnapproved(new ObjectMapper().readTree(is));
 
                 uuid = js.get("uuid").asText();
 
@@ -92,7 +92,7 @@ public class ApprovalWorkflowTest {
             InputStream is = new FileInputStream(resource)) {
 
             SubstanceAPI api = new SubstanceAPI(session);
-            JsonNode js = new ObjectMapper().readTree(is);
+            JsonNode js = SubstanceJsonUtil.toUnapproved(new ObjectMapper().readTree(is));
 
             String uuid = js.get("uuid").asText();
 
@@ -115,7 +115,7 @@ public class ApprovalWorkflowTest {
             RestSession session2 = ts.newRestSession(ts.getFakeUser2());
             InputStream is = new FileInputStream(resource)) {
 
-            JsonNode js = new ObjectMapper().readTree(is);
+            JsonNode js = SubstanceJsonUtil.toUnapproved(new ObjectMapper().readTree(is));
             SubstanceAPI api = new SubstanceAPI(session);
             SubstanceAPI api2 = new SubstanceAPI(session2);
 
