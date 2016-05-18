@@ -122,10 +122,10 @@ public class Substance extends GinasCommonData {
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	@JsonSerialize(using = PrincipalSerializer.class)
 	@JsonDeserialize(using = PrincipalDeserializer.class)
-	@Indexable(facet = true, name = "Approved By")
+	@Indexable(facet = true, name = "Approved By", sortable=true)
 	public Principal approvedBy;
 
-	@Indexable(facet = true, name = "Approved Date")
+	@Indexable(facet = true, name = "Approved Date", sortable=true)
 	@JsonDeserialize(using = DateDeserializer.class)
 	public Date approved;
 	
@@ -171,7 +171,7 @@ public class Substance extends GinasCommonData {
 
 	@JSONEntity(title = "Approval ID", isReadOnly = true)
 	@Column(length = 10)
-	@Indexable(facet = true, suggest = true, name = "Approval ID")
+	@Indexable(facet = true, suggest = true, name = "Approval ID", sortable=true)
 	public String approvalID;
 
 	// TODO in original schema, this field is missing its items: String
@@ -311,13 +311,14 @@ public class Substance extends GinasCommonData {
 		return node;
 	}
 
-	@Column(length = 1024)
-	@Indexable(suggest = true, facet = true, name = "Name")
+	@Indexable(suggest = true, facet = true, name = "Display Name", sortable=true)
 	@JsonProperty("_name")
 	public String getName() {
-		for (Name n : names) {
-			if (n.preferred) {
-				return n.name;
+		if(names!=null){
+			for (Name n : names) {
+				if (n.preferred) {
+					return n.name;
+				}
 			}
 		}
 		if(names!=null && names.size()>0){
@@ -500,6 +501,15 @@ public class Substance extends GinasCommonData {
 		if (subRef != null) {
 			return subRef.approvalID;
 		}
+		if(this.isAlternativeDefinition()){
+			SubstanceReference subRef2 = this.getPrimaryDefinitionReference();
+			if(subRef2!=null){
+				if(subRef2.approvalID!=null){
+					return subRef2.approvalID;
+				}
+			}
+		}
+		
 		if(!isValidated()){
 			return this.status + " record";
 		}
@@ -833,5 +843,15 @@ public class Substance extends GinasCommonData {
 			}
 		}
 		return rlist;
+	}
+	
+	@Indexable(facet = true, name = "Name Count", sortable=true)
+	public int getNameCount(){
+		return names.size();
+	}
+	
+	@Indexable(facet = true, name = "Reference Count", sortable=true)
+	public int getRederenceCount(){
+		return names.size();
 	}
 }

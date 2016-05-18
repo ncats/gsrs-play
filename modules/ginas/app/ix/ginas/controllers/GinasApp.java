@@ -167,6 +167,7 @@ public class GinasApp extends App {
                       (page, rows, total, pages,
                        decorate(filter(facets, this.facets)),
                        substances, context.getId(), context.getFieldFacets()));
+            
         }
     }
 
@@ -587,7 +588,14 @@ public class GinasApp extends App {
         final Map<String, String[]> params = App.getRequestQuery(); 
         
         
+        
         final String sha1 = signature (qcache, params);
+        String[] order = params.get("order");
+        if(order==null || order.length<=0){
+        	order=new String[]{"$lastEdited"};
+        	params.put("order", order);
+        }
+        
         try {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse
