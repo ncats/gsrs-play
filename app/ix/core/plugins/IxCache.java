@@ -325,7 +325,7 @@ public class IxCache extends Plugin {
 			boolean worked=true;
 	    	Set<String> oldKeys=_instance.keymaster.getAllAdaptedKeys(key);
 	    	if(oldKeys!=null){
-		    	for(String okey:oldKeys){
+	    		for(String okey:new ArrayList<String>(oldKeys)){
 		    		worked &=_instance.cache.remove(okey);
 		    	}
 	    	}
