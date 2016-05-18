@@ -1,22 +1,27 @@
 package ix.core.plugins;
 
-import java.util.List;
-import java.util.Collections;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
+import ix.core.CacheStrategy;
 import ix.core.UserFetcher;
-import ix.core.models.Session;
 import ix.utils.Util;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.Statistics;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.event.CacheEventListener;
+import play.Application;
 import play.Logger;
 import play.Plugin;
-import play.Application;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.Statistics;
 
 public class IxCache extends Plugin {
     public static final String CACHE_NAME = "IxCache";
@@ -35,9 +40,53 @@ public class IxCache extends Plugin {
 
     static private IxCache _instance;
     
+    private KeyMaster keymaster = new ExplicitMapKeyMaster();
+    private CacheEventListener cacheListener = new CacheEventListener(){
+    	@Override
+    	public void notifyElementEvicted(Ehcache arg0, Element arg1) {
+    		
+    		
+    		gateKeep(arg1);
+    		
+    	}
+    	@Override
+    	public void notifyElementRemoved(Ehcache arg0, Element arg1) throws CacheException {
+    		gateKeep(arg1);
+    	}
+    	public void gateKeep(Element arg1){
+    		String adaptKey = arg1.getObjectKey().toString();
+    		String key=unAdaptKey(adaptKey);
+    		keymaster.removeKey(key, adaptKey);
+    		CacheStrategy cacheStrat=arg1.getObjectValue().getClass().getAnnotation(CacheStrategy.class);
+    		if(cacheStrat!=null && !cacheStrat.evictable()){
+    			if(!arg1.isExpired()){
+    				_instance.cache.put(new Element(arg1.getObjectKey(), arg1.getObjectValue(),arg1.isEternal(),arg1.getTimeToIdle(),arg1.getTimeToLive()));
+    			}
+    		}
+    	}
+    	@Override
+    	public void dispose() {}
+    	@Override
+    	public void notifyElementExpired(Ehcache arg0, Element arg1) {}
+    	@Override
+    	public void notifyElementPut(Ehcache arg0, Element arg1) throws CacheException {}
+    	@Override
+    	public void notifyElementUpdated(Ehcache arg0, Element arg1) throws CacheException {}
+    	@Override
+    	public void notifyRemoveAll(Ehcache arg0) {}
+    	
+    	public Object clone(){
+    		return null;
+    	}
+    };
+    
+    
     public IxCache (Application app) {
         this.app = app;
     }
+    
+    
+    
 
     @Override
     public void onStart () {
@@ -55,6 +104,7 @@ public class IxCache extends Plugin {
         cache = new Cache (config);
         CacheManager.getInstance().addCache(cache);     
         cache.setSampledStatisticsEnabled(true);
+        cache.getCacheEventNotificationService().registerListener(cacheListener);
         _instance = this;
     }
 
@@ -137,20 +187,11 @@ public class IxCache extends Plugin {
     
     public static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        
-        Object value = get (key);
-        if (value == null) {
-            if (_instance.ctx.debug(2))
-                Logger.debug("IxCache missed: "+adaptKey(key));
-            T v = generator.call();
-            _instance.cache.put(new Element (adaptKey(key), v));
-            return v;
-        }
-        return (T)value;
+    	return getOrElse(key,generator,0);
     }
 
+    
+    
     // mimic play.Cache 
     public static <T> T getOrElse (String key, Callable<T> generator,
                                    int seconds) throws Exception {
@@ -158,16 +199,27 @@ public class IxCache extends Plugin {
             throw new IllegalStateException ("Cache hasn't been initialized!");
         
         Object value = get (key);
+        
+        
+        	
         if (value == null) {
             if (_instance.ctx.debug(2))
                 Logger.debug("IxCache missed: "+adaptKey(key));
             T v = generator.call();
+            String adaptKey=adaptKey(key);
             _instance.cache.put
-                (new Element (adaptKey(key), v, seconds <= 0, seconds, seconds));
+                (new Element (adaptKey, v, seconds <= 0, seconds, seconds));
+            _instance.keymaster.addKey(key, adaptKey);
+            
             return v;
         }
         return (T)value;
     }
+    
+    
+    
+    
+    
     public static <T> T getOrElseRaw (String key, Callable<T> generator,
             int seconds) throws Exception {
 		if (_instance == null)
@@ -222,6 +274,15 @@ public class IxCache extends Plugin {
         return _instance.cache.remove(adaptKey(key));
     }
     
+    public static boolean removeAllChildKeys (String key){
+    	if (_instance == null){
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+    	}
+    	return _instance.keymaster.removeAllChildKeys(key);
+    }
+    
+   
+    
     public static Statistics getStatistics () {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
@@ -236,8 +297,18 @@ public class IxCache extends Plugin {
     
     public static String adaptKey(String okey){
     	final String user = UserFetcher.getActingUser(true).username;
-    	String nkey = okey + "#" + Util.sha1(user);
+    	String nkey = "!" + okey + "#" + Util.sha1(user);
     	return nkey;
+    }
+    public static String unAdaptKey(String adaptKey){
+    	if(!adaptKey.startsWith("!")){
+    		return adaptKey;
+    	}else{
+    		int lastindex=adaptKey.lastIndexOf('#');
+    			
+    		String p= adaptKey.substring(1, lastindex);
+    		return p;
+    	}
     }
 
 	public static void setRaw(String key, Object value) {
@@ -245,4 +316,50 @@ public class IxCache extends Plugin {
 	            throw new IllegalStateException ("Cache hasn't been initialized!");
 	      _instance.cache.put(new Element (key, value));
 	}
+
+	public static interface KeyMaster{
+		public Set<String> getAllAdaptedKeys(String baseKey);
+		public void addKey(String baseKey, String adaptKey);
+		public void removeKey(String baseKey, String adaptKey);
+		default boolean removeAllChildKeys(String key){
+			boolean worked=true;
+	    	Set<String> oldKeys=_instance.keymaster.getAllAdaptedKeys(key);
+	    	if(oldKeys!=null){
+		    	for(String okey:oldKeys){
+		    		worked &=_instance.cache.remove(okey);
+		    	}
+	    	}
+	    	return worked;
+		}
+	}
+	
+	public static class ExplicitMapKeyMaster implements KeyMaster{
+		private ConcurrentHashMap<String,Set<String>> thekeys= new ConcurrentHashMap<String,Set<String>>();
+	    private int size=0;
+		public Set<String> getAllAdaptedKeys(String baseKey){
+			return thekeys.get(baseKey);
+		}
+
+		@Override
+		public void addKey(String baseKey, String adaptKey) {
+			if(thekeys.computeIfAbsent(baseKey, k-> new HashSet<>()).add(adaptKey)){
+				size++;
+			}
+		}
+
+		@Override
+		public void removeKey(String baseKey, String adaptKey) {
+			Set<String> keylist=thekeys.get(baseKey);
+			if(keylist!=null){
+				if(keylist.remove(adaptKey)){
+					size--;
+				}
+			}
+		}
+	}
+	
+
+
+
+	
 }

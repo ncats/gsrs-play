@@ -35,6 +35,7 @@ import ix.core.models.BaseModel;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.plugins.IxCache;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
@@ -499,7 +500,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
-        
+        String beanID=null;
         Class cls = bean.getClass();
         if (Edit.class.isAssignableFrom(cls)) {
             // don't touch this class
@@ -510,6 +511,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     Object id = EntityUtils.getId(bean);
                     
                     if (id != null) {
+                    	beanID=id+"";
                     	Edit edit=EntityPersistAdapter.popEditForUpdate(cls, id);
                     	//TP: Are these done 2 places now?
                     	//won't edits be stored twice?
@@ -558,10 +560,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             }
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
+            
         }
         catch (Exception ex) {
             Logger.warn("Can't update bean index "+bean, ex);
         }
+        //This invalidates the cache for this bean
+        String kindIDKey=bean.getClass().getName() + "._id" + ":" + beanID;
+        IxCache.removeAllChildKeys(kindIDKey);
     } 
 
     @Override
@@ -673,14 +679,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
 //        long ocount=reindexCount;
         try {
-//        	long start=System.currentTimeMillis();
-        	//times.push();
-            if(_id!=null)
+            if(_id!=null){
                 alreadyLoaded.put(bean.getClass()+_id,_id);
+            }
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
             
-//            times.pop();
         } catch (Exception e) {
             e.printStackTrace();
         }

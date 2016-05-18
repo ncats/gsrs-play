@@ -55,6 +55,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.CacheStrategy;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
@@ -1269,6 +1270,7 @@ public class App extends Authentication {
         protected abstract R instrument (T r) throws Exception;
     }
 
+    @CacheStrategy(evictable=false)
     public static class SearchResultContext {
         public enum Status {
             Pending,
@@ -1386,7 +1388,6 @@ public class App extends Authentication {
     public static Call checkStatus () {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
-
         Logger.debug("checkStatus: q=" + query + " type=" + type);
         if (type != null && query != null) {
             try {
@@ -1432,6 +1433,8 @@ public class App extends Authentication {
         }
         else {
             String key = signature (query, getRequestQuery ());
+            
+            System.out.println("Fetching for:" + key);
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             if (value != null) {
@@ -1443,6 +1446,8 @@ public class App extends Authentication {
                 if (!ctx.finished()){
                     return routes.App.status(key);
                 }
+            }else{
+            	//perform magic
             }
         }
         return null;
@@ -1644,7 +1649,6 @@ public class App extends Authentication {
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
-    	 String wait=request().getQueryString("wait");
     	 List<T> resultList = new ArrayList<T>();
     	 int[] pages = new int[0];
     	 if (result.count() > 0) {
