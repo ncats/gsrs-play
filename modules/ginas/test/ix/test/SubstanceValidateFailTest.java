@@ -75,7 +75,7 @@ public class SubstanceValidateFailTest extends WithApplication {
 
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
-            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
 
             WSResponse wsResponse1 = api.validateSubstance(js);
             JsonNode jsonNode1 = wsResponse1.asJson();
