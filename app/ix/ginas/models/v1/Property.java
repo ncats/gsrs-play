@@ -32,6 +32,14 @@ public class Property extends CommonDataElementOfCollection {
     @JSONEntity(title = "Property Value")
     @OneToOne(cascade = CascadeType.ALL)
     private Amount value;
+    
+    //Needed for some properties
+    @OneToOne(cascade=CascadeType.ALL)
+    private SubstanceReference referencedSubstance;
+    
+    
+    
+    
 
     @JSONEntity(title = "Defining")
     private Boolean defining;

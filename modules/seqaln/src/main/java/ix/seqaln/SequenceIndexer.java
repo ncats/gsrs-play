@@ -781,8 +781,8 @@ public class SequenceIndexer {
                               qa+String.format("%1$5d - %2$d", seg.qi, seg.qj)
                               +"\n"+qq+"\n"
                               +qs+String.format("%1$5d - %2$d", seg.ti,seg.tj),
-                              score, (double)score/Math.max(q.length(),
-                                                            s.length()));
+                              score, (double)score/Math.max(query.length(),
+                            		  target.length()));
     }
 
     @SuppressWarnings("unchecked")
