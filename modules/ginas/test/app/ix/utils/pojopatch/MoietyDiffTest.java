@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by katzelda on 5/13/16.
  */
-@Ignore
 public class MoietyDiffTest {
 
     ObjectMapper mapper = new ObjectMapper();

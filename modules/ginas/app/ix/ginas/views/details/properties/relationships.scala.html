@@ -41,7 +41,7 @@
                 @*}*@
                 @*</td>*@
     
-                <td>@r.getDisplayType()</td>
+                <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
                 <td>@r.comments</td>
                 <td>
                 @if(r.interactionType != null) {

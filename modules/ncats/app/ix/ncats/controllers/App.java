@@ -55,6 +55,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.CacheStrategy;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
@@ -326,7 +327,8 @@ public class App extends Authentication {
     public static String encode (Facet facet, int i) {
         String value = facet.getValues().get(i).getLabel();
         try {
-            return URLEncoder.encode(value, "utf8");
+        	String newvalue=URLEncoder.encode(value.replace("/", "$$"), "utf8");
+            return newvalue;
         }
         catch (Exception ex) {
             Logger.trace("Can't encode string "+value, ex);
@@ -547,7 +549,7 @@ public class App extends Authentication {
                 if (toks.length == 2) {
                     try {
                         String name = toks[0];
-                        String value = toks[1];
+                        String value = toks[1].replace("$$", "/");
                         /*
                         Logger.debug("Searching facet "+name+"/"+value+"..."
                                      +facet.getName()+"/"
@@ -1271,6 +1273,7 @@ public class App extends Authentication {
         protected abstract R instrument (T r) throws Exception;
     }
 
+    @CacheStrategy(evictable=false)
     public static class SearchResultContext {
         public enum Status {
             Pending,
@@ -1388,7 +1391,6 @@ public class App extends Authentication {
     public static Call checkStatus () {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
-
         Logger.debug("checkStatus: q=" + query + " type=" + type);
         if (type != null && query != null) {
             try {
@@ -1434,6 +1436,7 @@ public class App extends Authentication {
         }
         else {
             String key = signature (query, getRequestQuery ());
+            
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             if (value != null) {
@@ -1445,6 +1448,8 @@ public class App extends Authentication {
                 if (!ctx.finished()){
                     return routes.App.status(key);
                 }
+            }else{
+            	//perform magic
             }
         }
         return null;
@@ -1646,7 +1651,6 @@ public class App extends Authentication {
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
-    	 String wait=request().getQueryString("wait");
     	 List<T> resultList = new ArrayList<T>();
     	 int[] pages = new int[0];
     	 if (result.count() > 0) {

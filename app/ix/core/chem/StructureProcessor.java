@@ -351,7 +351,7 @@ public class StructureProcessor {
         struc.formula = mol.getFormula();
         struc.mwt = mol.getMass();
         struc.smiles = ChemUtil.canonicalSMILES(mol);
-
+        
         calcStereo (struc);
     }
 

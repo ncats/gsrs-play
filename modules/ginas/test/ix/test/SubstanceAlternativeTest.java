@@ -61,7 +61,7 @@ public class SubstanceAlternativeTest {
     public void testAPIAlternativeSubstanceSubmitValidate()   throws Exception {
         //submit primary
         resource = new File("test/testJSON/alternative/Prim1.json");
-        JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuid = js.get("uuid").asText();
         JsonNode validationResult = api.validateSubstanceJson(js);
         SubstanceJsonUtil.ensureIsValid(validationResult);
@@ -69,7 +69,7 @@ public class SubstanceAlternativeTest {
 
         //submit alternative
         resource = new File("test/testJSON/alternative/PostAlt.json");
-        JsonNode jsA = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -90,7 +90,7 @@ public class SubstanceAlternativeTest {
     public void testAPIAlternativeSubstanceUpdate()   throws Exception {
         //submit primary
         resource = new File("test/testJSON/alternative/Prim1.json");
-        JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuid = js.get("uuid").asText();
         JsonNode validationResult = api.validateSubstanceJson(js);
         SubstanceJsonUtil.ensureIsValid(validationResult);
@@ -98,7 +98,7 @@ public class SubstanceAlternativeTest {
 
         //submit alternative
         resource = new File("test/testJSON/alternative/PostAlt.json");
-        JsonNode jsA = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
        
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
@@ -117,7 +117,7 @@ public class SubstanceAlternativeTest {
 
         //submit new primary
         resource = new File("test/testJSON/alternative/Prim2.json");
-        JsonNode jsNew = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        JsonNode jsNew = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuidNew = jsNew.get("uuid").asText();
         JsonNode validationResultNew = api.validateSubstanceJson(jsNew);
         SubstanceJsonUtil.ensureIsValid(validationResultNew);
@@ -125,7 +125,7 @@ public class SubstanceAlternativeTest {
 
         //update alternative
         resource = new File("test/testJSON/alternative/PutAlt.json");
-        JsonNode jsAUpdate = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+        JsonNode jsAUpdate = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         JsonPatch jsp = JsonDiff.asJsonPatch(jsA,jsAUpdate);
         JsonNode newAVersion =jsp.apply(fetchedA);
         String uuidAUpdate = newAVersion.get("uuid").asText();

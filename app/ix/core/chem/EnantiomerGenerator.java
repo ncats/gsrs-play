@@ -62,7 +62,10 @@ public class EnantiomerGenerator {
 
     public void setMol (Molecule mol) { this.mol = mol; }
     public Molecule getMol () { return mol; }
-    public void setStereo (Stereo stereo) { this.stereo = stereo; }
+    public void setStereo (Stereo stereo) {
+    	this.stereo = stereo; 
+    	
+    }
     public Stereo getStereo () { return stereo; }
     public Optical getOptical () { return optical; }
     public void setOptical (Optical optical) { this.optical = optical; }

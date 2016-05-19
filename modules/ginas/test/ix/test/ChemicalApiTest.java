@@ -189,6 +189,28 @@ public class ChemicalApiTest {
         }
    	}
     
+    @Test
+    public void ensureWarningOnPentavalentCarbon(){
+    	try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode pentaCarbon = makeChemicalSubstanceJSON("C(C)(C)(C)(C)C");
+            
+            String valmessage="NO VALANCE ERROR";
+            JsonNode validation=api.validateSubstanceJson(pentaCarbon);
+            for(JsonNode validationMessage:validation.at("/validationMessages")){
+            	if(validationMessage.at("/messageType").asText().equals("WARNING")){
+            		String msg=validationMessage.at("/message").asText();
+            		if(msg.contains("Valance Error")){
+            			valmessage=msg;
+            		}
+            	}
+            }
+            assertTrue("Pentavalent carbon should issue a warning message",valmessage.contains("Valance Error"));
+            
+            
+        }
+    }
+    
     public JsonNode makeChemicalSubstanceJSON(String smiles){
     	ChemicalSubstance cs = makeChemicalSubstance(smiles);
         EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -216,6 +238,6 @@ public class ChemicalApiTest {
 		return parseJsonFile(new File(path));
 	}
     public JsonNode parseJsonFile(File resource){
-    	return SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+    	return SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
     }
 }

@@ -167,18 +167,18 @@ public class GinasUtils {
 			c.setProperty("STEREOCHEMISTRY_COMMENTS", s.stereoComments);
 		if (s.stereoChemistry != null) {
 			switch (s.stereoChemistry) {
-			case ABSOLUTE:
-			case ACHIRAL:
-				break;
-			case EPIMERIC:
-			case MIXED:
-			case RACEMIC:
-			case UNKNOWN:
-				messages.add(GinasProcessingMessage
-						.WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
-				break;
-			default:
-				break;
+				case ABSOLUTE:
+				case ACHIRAL:
+					break;
+				case EPIMERIC:
+				case MIXED:
+				case RACEMIC:
+				case UNKNOWN:
+					messages.add(GinasProcessingMessage
+							.WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
+					break;
+				default:
+					break;
 			}
 		}
 		if (s.smiles != null)

@@ -76,6 +76,7 @@ public class CV {
                 }
             }
         }
+        System.out.println("Couldn't find:" + value);
         return value;
     }
 

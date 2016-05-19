@@ -92,6 +92,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.CacheStrategy;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
@@ -107,7 +108,8 @@ import play.db.ebean.Model;
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer implements Closeable{
-    protected static final String STOP_WORD = " THE_STOP";
+    private static final String SORT_PREFIX = "SORT_";
+	protected static final String STOP_WORD = " THE_STOP";
     protected static final String START_WORD = "THE_START ";
     protected static final String GIVEN_STOP_WORD = "$";
     protected static final String GIVEN_START_WORD = "^";
@@ -159,6 +161,7 @@ public class TextIndexer implements Closeable{
             this.label = label;
             this.count = count;
         }
+        
         public String getLabel () { return label; }
         public Integer getCount () { return count; }
     }
@@ -182,6 +185,7 @@ public class TextIndexer implements Closeable{
         public String getLabel (int index) {
             return values.get(index).getLabel();
         }
+        
         public Integer getCount (int index) {
             return values.get(index).getCount();
         }
@@ -310,6 +314,7 @@ public class TextIndexer implements Closeable{
         }
     }
     
+    @CacheStrategy(evictable=false)
     public static class SearchResult {
     	
         SearchContextAnalyzer searchAnalyzer;
@@ -429,8 +434,6 @@ public class TextIndexer implements Closeable{
          */
         public int copyTo (List list, int start, int count, boolean wait) {
 
-        	
-        	
         	
         	// It may be that the page that is being fetched is not yet
         	// complete. There are 2 options here then. The first is to
@@ -848,8 +851,10 @@ public class TextIndexer implements Closeable{
                         }
                         
                         try {
+                        	//Cache needs to be invalidate
+                        	String thekey=field+":"+id.stringValue();
                             Object value = IxCache.getOrElse
-                                (field+":"+id.stringValue(), new Callable () {
+                                (thekey, new Callable<Object> () {
                                         public Object call () throws Exception {
                                             return findObject (kind, id);
                                         }
@@ -1431,9 +1436,11 @@ public class TextIndexer implements Closeable{
         }
         
         long start = TimeUtil.getCurrentTimeMillis();
-            
+        
         FacetsCollector fc = new FacetsCollector ();
+        
         TopDocs hits = null;
+        
         try (TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter)){
             Sort sorter = null;
             if (!options.order.isEmpty()) {
@@ -1441,15 +1448,24 @@ public class TextIndexer implements Closeable{
                 for (String f : options.order) {
                     boolean rev = false;
                     if (f.charAt(0) == '^') {
-                        // sort in reverse
                         f = f.substring(1);
-                    }
-                    else if (f.charAt(0) == '$') {
+                    }else if (f.charAt(0) == '$') {
                         f = f.substring(1);
                         rev = true;
                     }
+                    // Find the correct sorter field. The sorter fields
+                    // always have the SORT_PREFIX prefix, and should also have
+                    // a ROOT prefix for the full path. If the root prefix is not
+                    // present, this will add it.
                     
-                    SortField.Type type = sorters.get(f);
+                    
+                    SortField.Type type = sorters.get(TextIndexer.SORT_PREFIX + f);
+                    if(type == null){
+                    	type = sorters.get(TextIndexer.SORT_PREFIX + ROOT + "_" + f);
+                    	f=TextIndexer.SORT_PREFIX + ROOT + "_" + f;
+                    }else{
+                    	f=TextIndexer.SORT_PREFIX + f;
+                    }
                     if (type != null) {
                         SortField sf = new SortField (f, type, rev);
                         Logger.debug("Sort field (rev="+rev+"): "+sf);
@@ -1460,8 +1476,9 @@ public class TextIndexer implements Closeable{
                     }
                 }
                 
-                if (!fields.isEmpty())
-                    sorter = new Sort (fields.toArray(new SortField[0]));
+                if (!fields.isEmpty()){
+                	sorter = new Sort (fields.toArray(new SortField[0]));
+                }
             }
             
             List<String> drills = options.facets;
@@ -1549,11 +1566,15 @@ public class TextIndexer implements Closeable{
                 DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
                 // the first term is the drilldown dimension
                 for (String dd : options.facets) {
-                    int pos = dd.indexOf('/');
+                	int pos = dd.indexOf('/');
                     if (pos > 0) {
                         String facet = dd.substring(0, pos);
                         String value = dd.substring(pos+1);
-                        ddq.add(facet, value.split("/"));
+                        String[] drill=value.split("/");
+                        for(int i=0;i<drill.length;i++){
+                        	drill[i]=drill[i].replace("$$", "/");
+                        }
+                        ddq.add(facet, drill);
                     }
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);
@@ -1996,6 +2017,7 @@ public class TextIndexer implements Closeable{
                 try {
                     Class type = f.getType();
                     Object value = f.get(entity);
+                    
 
                     if (DEBUG (2)) {
                         Logger.debug
@@ -2072,6 +2094,7 @@ public class TextIndexer implements Closeable{
                         }
                     }
                     else { // treat as string
+                    	
                         indexField (ixFields, indexable, path, value);
                     }
                 }
@@ -2196,7 +2219,7 @@ public class TextIndexer implements Closeable{
         String name = path.getFirst();
         String full = toPath (path);
         String fname =indexable.name().isEmpty() ? name : indexable.name();
-        
+        boolean sorterAdded=false;
         boolean asText = true;
         if (value instanceof Long) {
             //fields.add(new NumericDocValuesField (full, (Long)value));
@@ -2205,9 +2228,11 @@ public class TextIndexer implements Closeable{
             asText = indexable.facet();
             if (!asText && !name.equals(full)) 
                 fields.add(new LongField (name, lval, store));
-            if (indexable.sortable())
-                sorters.put(full, SortField.Type.LONG);
-
+            if (indexable.sortable()){
+            	sorters.put(SORT_PREFIX +full, SortField.Type.LONG);
+            	fields.add(new LongField (SORT_PREFIX +full, lval, store));
+            	sorterAdded=true;
+            }
             FacetField ff = getRangeFacet (fname, indexable.ranges(), lval);
             if (ff != null) {
                 facetsConfig.setMultiValued(fname, true);
@@ -2223,9 +2248,13 @@ public class TextIndexer implements Closeable{
             asText = indexable.facet();
             if (!asText && !name.equals(full))
                 fields.add(new IntField (name, ival, store));
-            if (indexable.sortable())
-                sorters.put(full, SortField.Type.INT);
-
+            
+            if (indexable.sortable()){
+            	sorters.put(SORT_PREFIX +full, SortField.Type.INT);
+            	fields.add(new IntField (SORT_PREFIX +full, ival, store));
+            	sorterAdded=true;
+            }
+            
             FacetField ff = getRangeFacet 
                 (fname, indexable.ranges(), ival);
             if (ff != null) {
@@ -2241,8 +2270,12 @@ public class TextIndexer implements Closeable{
             fields.add(new FloatField (name, fval, store));
             if (!full.equals(name))
                 fields.add(new FloatField (full, fval, NO));
-            if (indexable.sortable())
-                sorters.put(full, SortField.Type.FLOAT);
+            
+            if (indexable.sortable()){
+            	sorters.put(SORT_PREFIX +full, SortField.Type.FLOAT);
+            	fields.add(new FloatField (SORT_PREFIX +full, fval, NO));
+            	sorterAdded=true;
+            }
             
             FacetField ff = getRangeFacet 
                 (fname, indexable.dranges(), fval, indexable.format());
@@ -2257,10 +2290,14 @@ public class TextIndexer implements Closeable{
             //fields.add(new DoubleDocValuesField (full, (Double)value));
             Double dval = (Double)value;
             fields.add(new DoubleField (name, dval, store));
-            if (!full.equals(name))
+            if (!full.equals(name)){
                 fields.add(new DoubleField (full, dval, NO));
-            if (indexable.sortable())
-                sorters.put(full, SortField.Type.DOUBLE);
+            }
+            if (indexable.sortable()){
+                sorters.put(SORT_PREFIX +full, SortField.Type.DOUBLE);
+                fields.add(new DoubleField (SORT_PREFIX +full, dval, NO));
+                sorterAdded=true;
+            }
 
             FacetField ff = getRangeFacet 
                 (fname, indexable.dranges(), dval, indexable.format());
@@ -2276,8 +2313,11 @@ public class TextIndexer implements Closeable{
             fields.add(new LongField (name, date, YES));
             if (!full.equals(name))
                 fields.add(new LongField (full, date, NO));
-            if (indexable.sortable())
-                sorters.put(full, SortField.Type.LONG);
+            if (indexable.sortable()){
+                sorters.put(SORT_PREFIX +full, SortField.Type.LONG);
+                fields.add(new LongField (SORT_PREFIX +full, date, NO));
+                sorterAdded=true;
+            }
             asText = indexable.facet();
             if (asText) {
                 value = YEAR_DATE_FORMAT.get().format(date);
@@ -2319,11 +2359,17 @@ public class TextIndexer implements Closeable{
                                 + text + TextIndexer.STOP_WORD, NO));
             }
 
-            if (indexable.sortable() && !sorters.containsKey(name))
-                sorters.put(name, SortField.Type.STRING);
+            //Add specific sort column only if it's not added by some other mechanism
+            if (indexable.sortable() && !sorterAdded){
+                sorters.put(SORT_PREFIX + full, SortField.Type.STRING);
+                fields.add(
+                		new StringField(SORT_PREFIX + full, text, store)
+                        );
+            }
             fields.add(new TextField
                        (name, TextIndexer.START_WORD
                         + text + TextIndexer.STOP_WORD, store));
+            
         }
     }
 
