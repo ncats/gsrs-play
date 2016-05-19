@@ -79,6 +79,7 @@ import play.Logger;
  */
 
 public class PojoDiff {
+	public static ObjectMapper _mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 	
 	public static class JsonObjectPatch<T> implements PojoPatch<T>{
 		private JsonPatch jp;
@@ -133,7 +134,7 @@ public class PojoDiff {
 		
 		public Stack apply(Object old, ChangeEventListener ... changeListener) throws Exception{
 			if(jp==null){
-				jp=getEnhancedJsonDiff(oldV,newV);
+				jp=getEnhancedJsonDiff(oldV,newV,null);
 			}
 			if(old==oldV){
 				return applyChanges(oldV,newV, jp,changeListener);
@@ -145,9 +146,20 @@ public class PojoDiff {
 		public List<Change> getChanges() {
 			List<Change> changes= new
 					ArrayList<Change>();
-			JsonNode jsnp = getEnhancedJsonDiff(oldV,newV);
+			JsonNode[] oldAndNew = new JsonNode[2];
+			JsonNode jsnp = getEnhancedJsonDiff(oldV,newV,oldAndNew);
+			
 			for(JsonNode jsn:jsnp){
-				changes.add(new Change(jsn));
+				Change c=new Change(jsn);
+				try{
+					String path=jsn.at("/path").asText();
+					String old=oldAndNew[0].at(path).toString();
+					c.oldValue=old;
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				
+				changes.add(c);
 			}
 			return changes;
 		}
@@ -324,8 +336,10 @@ public class PojoDiff {
 		return arr;
 	}
 	
-	public static JsonNode getEnhancedJsonDiff(Object oldValue, Object newValue){
-		ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+	
+	
+	public static JsonNode getEnhancedJsonDiff(Object oldValue, Object newValue, JsonNode[] oldAndNewValue){
+		ObjectMapper mapper = _mapper;
 		JsonNode js1;
 		JsonNode js2;
 		if(oldValue instanceof JsonNode){
@@ -338,12 +352,15 @@ public class PojoDiff {
 		}else{
 			js2=mapper.valueToTree(newValue);
 		}
-		
-		
+		if(oldAndNewValue==null || oldAndNewValue.length<2){
+			oldAndNewValue=new JsonNode[2];
+		}
+		oldAndNewValue[0]=mappifyJson(js1);
+		oldAndNewValue[1]=mappifyJson(js2);
 		
 		JsonNode diff= JsonDiff.asJson(
-				mappifyJson(js1),
-				mappifyJson(js2)
+				oldAndNewValue[0],
+				oldAndNewValue[1]
     			);
 		List<JsonNode> reorderedDiffs= new ArrayList<JsonNode>();
 		
@@ -400,7 +417,7 @@ public class PojoDiff {
 	}
 	
 	private static <T> Stack applyPatch(T oldValue, JsonPatch jp, ChangeEventListener ... changeListener) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
-		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		ObjectMapper mapper = _mapper;
 		JsonNode oldNode=mapper.valueToTree(oldValue);
 		JsonNode newNode=jp.apply(oldNode);
 		//cat to T should be safe...
@@ -409,7 +426,7 @@ public class PojoDiff {
 	}
 	
 	public static JsonNode getJsonDiff(Object oldValue, Object newValue){
-			ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+			ObjectMapper mapper = _mapper;
 			return JsonDiff.asJson(
 	    			mapper.valueToTree(oldValue),
 	    			mapper.valueToTree(newValue)
@@ -419,7 +436,7 @@ public class PojoDiff {
 	private static <T> Stack applyChanges(T oldValue, T newValue, JsonNode jsonpatch,ChangeEventListener ... changeListener){
 			LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
 			if(jsonpatch==null){
-				ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+				ObjectMapper mapper = _mapper;
 				jsonpatch = JsonDiff.asJson(
 		    			mapper.valueToTree(oldValue),
 		    			mapper.valueToTree(newValue)
