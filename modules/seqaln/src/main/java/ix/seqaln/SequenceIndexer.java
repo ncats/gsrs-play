@@ -162,16 +162,18 @@ public class SequenceIndexer {
         public final String alignment; // full alignment string
         public final int score;
         public final double iden;
+        public final double global;
 
         Alignment (SEG segment,
                    String query, String target,
-                   String alignment, int score, double iden) {
+                   String alignment, int score, double iden, double global) {
             this.segment = segment;
             this.query = query;
             this.target = target;
             this.alignment = alignment;
             this.score = score;
             this.iden = iden;
+            this.global = global;
         }
         
         public int compareTo (Alignment aln) {
@@ -652,19 +654,23 @@ public class SequenceIndexer {
 
             //System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
             int max = 0;
+            Alignment maxaln = null;
             for (SEG seg : segments) {
                 //System.err.println(seg);
                 Alignment aln = align (seg, qs, seq);
                 if (aln.score > max) {
                     //System.err.println(aln);
                     max = aln.score;
+                    maxaln=aln;
                 }
                 result.alignments.add(aln);
             }
 
-            double score = (double)max/Math.min(query.length(), seq.length());
-            if (score >= identity) {
-                results.put(result);
+            if(maxaln!=null){
+	            double score = maxaln.global;
+	            if (score >= identity) {
+	                results.put(result);
+	            }
             }
         }
     }
@@ -781,8 +787,9 @@ public class SequenceIndexer {
                               qa+String.format("%1$5d - %2$d", seg.qi, seg.qj)
                               +"\n"+qq+"\n"
                               +qs+String.format("%1$5d - %2$d", seg.ti,seg.tj),
-                              score, (double)score/Math.max(query.length(),
-                            		  target.length()));
+                              score, (double)score/Math.max(q.length(),
+                            		  s.length()),(double)score/Math.max(query.length(),
+                                    		  target.length()));
     }
 
     @SuppressWarnings("unchecked")

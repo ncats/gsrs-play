@@ -380,6 +380,12 @@ public class GinasApp extends App {
         Map<String, String[]> params = request().body().asFormUrlEncoded();
 
         String[] values = params.get("sequence");
+        String ident="0.5";
+        
+        String[] idcutoff=params.get("identity");
+        if(idcutoff!=null && idcutoff.length>0){
+        	ident=idcutoff[0];
+        }
         if (values != null && values.length > 0) {
             String seq = values[0];
             try {
@@ -387,7 +393,7 @@ public class GinasApp extends App {
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
-                return redirect (call.url()+"&type=sequence");
+                return redirect (call.url()+"&type=sequence" + "&identity=" + ident);
             }
             catch (Exception ex) {
                 ex.printStackTrace();
