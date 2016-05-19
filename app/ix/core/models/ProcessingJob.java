@@ -21,6 +21,7 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_procjob")
+@Backup
 public class ProcessingJob extends LongBaseModel {
 	private static final String EXTRACTOR_KEYWORD = "EXTRACTOR";
 	private static final String TRANSFORM_KEYWORD = "TRANSFORM";
