@@ -22,12 +22,9 @@ import com.jolbox.bonecp.BoneCPDataSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ChemblRegistry implements Commons {
-    static final TextIndexer INDEXER = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
     static final StructureProcessorPlugin PROCESSOR =
         Play.application().plugin(StructureProcessorPlugin.class);
-    static final PersistenceQueue PQ =
-        Play.application().plugin(PersistenceQueue.class);
     
 
     DataSource chembl;

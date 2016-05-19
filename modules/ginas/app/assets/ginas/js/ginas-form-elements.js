@@ -567,7 +567,13 @@
                 field: '@',
                 name: '=',
                 label: '@',
-                required: '=?'
+                required: '=?',
+                rows: '=?'
+            },
+            link: function(scope, element){
+                if(_.isUndefined(scope.rows)){
+                    scope.rows = 7;
+                }
             }
         };
     });

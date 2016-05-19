@@ -42,7 +42,7 @@ import ix.utils.Global;
 @Inheritance
 @DiscriminatorValue("DEF")
 @Table(name = "ix_core_structure")
-public class Structure extends BaseModel{
+public class Structure extends BaseModel implements ForceUpdatableModel{
 
     @Id
     public UUID id;
@@ -282,4 +282,18 @@ public class Structure extends BaseModel{
         }
     	return hash;
     }
+
+	@Override
+	public void forceUpdate() {
+		System.out.println("Forcing an update on structure");
+		lastEdited=new Date();
+		super.update();
+	}
+
+	@Override
+	public boolean tryUpdate() {
+		long ov=version;
+		super.update();
+		return ov!=version;
+	}
 }

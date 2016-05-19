@@ -37,7 +37,6 @@ import play.mvc.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class NTDApp extends App {
-    private static TextIndexer TEXT_INDEXER;
 
 
     // substance finder
@@ -86,8 +85,6 @@ public class NTDApp extends App {
 
     public static void init(){
 
-        TEXT_INDEXER =
-                Play.application().plugin(TextIndexerPlugin.class).getIndexer();
         cvlist = new HashMap<String,Map<String,String>>();
 
         Map<String, String> strains = new HashMap<String,String>();

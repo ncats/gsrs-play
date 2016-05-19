@@ -957,7 +957,7 @@ public class Validation {
         	 oldstr.digest=newstr.digest;
          }
          if(oldstr.smiles==null){
-        	 oldstr.smiles=newstr.digest;
+        	 oldstr.smiles=newstr.smiles;
          }
          if(oldstr.ezCenters==null){
         	 oldstr.ezCenters=newstr.ezCenters;

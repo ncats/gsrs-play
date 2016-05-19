@@ -23,7 +23,6 @@ import javax.persistence.PreUpdate;
 import org.apache.lucene.store.AlreadyClosedException;
 
 import com.avaje.ebean.event.BeanPersistAdapter;
-import com.avaje.ebean.event.BeanPersistListener;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
@@ -35,12 +34,12 @@ import ix.core.models.BaseModel;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.plugins.IxCache;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
-import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
 import ix.utils.TimeProfiler;
@@ -75,7 +74,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     
     
-    private TextIndexerPlugin plugin = 
+    private TextIndexerPlugin textIndexerPlugin =
             Play.application().plugin(TextIndexerPlugin.class);
     private static StructureIndexerPlugin strucProcessPlugin;
     private static SequenceIndexerPlugin seqProcessPlugin;
@@ -402,8 +401,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {
-		if (plugin != null){
-			plugin.getIndexer().add(bean);
+		if (textIndexerPlugin != null){
+			textIndexerPlugin.getIndexer().add(bean);
 		}
 
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
@@ -438,8 +437,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 	}
 	
 	private void deleteIndexOnBean(Object bean) throws Exception {
-		if (plugin != null)
-            plugin.getIndexer().remove(bean);
+		if (textIndexerPlugin != null)
+            textIndexerPlugin.getIndexer().remove(bean);
 		String _id = EntityUtils.getIdForBeanAsString(bean);
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {
@@ -499,7 +498,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
-        
+        String beanID=null;
         Class cls = bean.getClass();
         if (Edit.class.isAssignableFrom(cls)) {
             // don't touch this class
@@ -510,6 +509,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     Object id = EntityUtils.getId(bean);
                     
                     if (id != null) {
+                    	beanID=id+"";
                     	Edit edit=EntityPersistAdapter.popEditForUpdate(cls, id);
                     	//TP: Are these done 2 places now?
                     	//won't edits be stored twice?
@@ -558,10 +558,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             }
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
+            
         }
         catch (Exception ex) {
             Logger.warn("Can't update bean index "+bean, ex);
         }
+        //This invalidates the cache for this bean
+        String kindIDKey=bean.getClass().getName() + "._id" + ":" + beanID;
+        IxCache.removeAllChildKeys(kindIDKey);
     } 
 
     @Override
@@ -642,8 +646,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             }
         }
     }
-    
     public void deepreindex(Object bean){
+        deepreindex(bean, true);
+    }
+    public void deepreindex(Object bean, boolean deleteFirst){
     	//reindex(bean);
     	
     	if(bean instanceof Model){
@@ -651,7 +657,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 				@Override
 				public void call(Object m, String path) {
 						
-					reindex(m);
+					reindex(m, deleteFirst);
 				}
 	    	});
     	}
@@ -660,7 +666,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
 //    public static long reindexCount=0;
 //    public Stack<Long> times= new Stack<Long>();
-    public void reindex(Object bean){
+public void reindex(Object bean){
+    reindex(bean, true);
+}
+    public void reindex(Object bean, boolean deleteFirst){
     	
     	String _id=null;
     	if(bean instanceof BaseModel){
@@ -675,12 +684,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         try {
 //        	long start=System.currentTimeMillis();
         	//times.push();
-            if(_id!=null)
-                alreadyLoaded.put(bean.getClass()+_id,_id);
-            deleteIndexOnBean(bean);
+            if(_id!=null) {
+                alreadyLoaded.put(bean.getClass() + _id, _id);
+            }
+            if(deleteFirst) {
+                deleteIndexOnBean(bean);
+            }
             makeIndexOnBean(bean);
             
-//            times.pop();
         } catch (Exception e) {
             e.printStackTrace();
         }

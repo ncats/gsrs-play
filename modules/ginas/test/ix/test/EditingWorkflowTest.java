@@ -288,7 +288,7 @@ public class EditingWorkflowTest {
 
             ensureFailure(api.submitSubstance(entered));
 
-            entered = SubstanceJsonUtil.toUnapproved(entered);
+            entered = SubstanceJsonUtil.prepareUnapprovedPublic(entered);
             entered = api.submitSubstanceJson(entered);
         }
 
@@ -462,6 +462,17 @@ public class EditingWorkflowTest {
                ensurePass(api.submitSubstance(entered));
                System.out.println("about to add reference");
                testAddLanguageNameServer(api, uuid);
+           }
+   	}
+    
+    @Test
+   	public void testFailOnPublicMissingPublicReleaseTag() throws Exception {
+        try(RestSession session = ts.newRestSession(fakeUser1)) {
+               SubstanceAPI api = new SubstanceAPI(session);
+			   JsonNode entered = SubstanceJsonUtil
+						.prepareUnapproved(JsonUtil.parseJsonFile(new File("test/testJSON/toedit.json")));
+			   
+			   ensureFailure(api.submitSubstance(entered));
            }
    	}
     
@@ -978,7 +989,7 @@ public class EditingWorkflowTest {
 		return parseJsonFile(new File(path));
 	}
     public JsonNode parseJsonFile(File resource){
-    	return SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+    	return SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
     }
 
 

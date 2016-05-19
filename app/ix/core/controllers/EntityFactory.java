@@ -95,22 +95,22 @@ import play.mvc.Results;
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
-	static final SecureRandom rand = new SecureRandom ();
-
-    static final ExecutorService _threadPool = 
-        Executors.newCachedThreadPool();
 
     static Model.Finder<Long, Principal> _principalFinder;
 
-    static TextIndexer _textIndexer;
+    static TextIndexerPlugin textIndexerPlugin;
     
     static{
     	init();
     }
     
     public static void init(){
-    	_textIndexer=Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
     	_principalFinder=new Model.Finder(Long.class, Principal.class);
+    }
+
+    static TextIndexer getTextIndexer(){
+        return textIndexerPlugin.getIndexer();
     }
 
     public static class FetchOptions {
@@ -625,7 +625,7 @@ public class EntityFactory extends Controller {
         try {
             T inst = finder.byId(id);
             if (inst != null) {
-                return Java8Util.ok (_textIndexer.getDocJson(inst));
+                return Java8Util.ok (getTextIndexer().getDocJson(inst));
             }
             return notFound ("Bad request: "+request().uri());
         }
@@ -1546,7 +1546,7 @@ public class EntityFactory extends Controller {
 	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
 					@Override
 					public void handleChange(ix.utils.pojopatch.Change c) {
-						//System.out.println("Change IS:" + c);
+						System.out.println("Change IS:" + c);
 						if("remove".equals(c.op)){
 							removed.add(c.oldValue);
 						}
@@ -1557,11 +1557,13 @@ public class EntityFactory extends Controller {
 	        		Object v=changeStack.pop();
 	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
 		        		if(v instanceof ForceUpdatableModel){
+		        			System.out.println("Force update for:" + v);
 		            		((ForceUpdatableModel)v).forceUpdate();
 		            	}else if(v instanceof Model){
+		            		System.out.println("Regular update for:" + v);
 		            		((Model)v).update();
 		            	}else{
-		            		//System.out.println("Nothing to do for:" + v);
+		            		System.out.println("Nothing to do for:" + v);
 		            	}
 	        		}
 	        	}
@@ -1582,6 +1584,7 @@ public class EntityFactory extends Controller {
 		            	}
 	        		}
 	        	}
+	        	
 	        	
 	        	//The old value is now the new value
 	        	newValue = oldValueContainer.value;

@@ -55,6 +55,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.CacheStrategy;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
@@ -122,7 +123,6 @@ public class App extends Authentication {
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static TextIndexer _textIndexer;
     public static PayloadPlugin _payloader;
     public static IxContext _ix;
     public static PersistenceQueue _pq;
@@ -132,13 +132,16 @@ public class App extends Authentication {
     }
 
     public static void init() {
-        _textIndexer =
-            Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
         _payloader = Play.application().plugin(PayloadPlugin.class);
        _ix = Play.application().plugin(IxContext.class);
        _pq = Play.application().plugin(PersistenceQueue.class);
     }
 
+
+    public static TextIndexer getTextIndexer(){
+        return Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    }
     /**
      * interface for rendering a result page
      */
@@ -324,7 +327,8 @@ public class App extends Authentication {
     public static String encode (Facet facet, int i) {
         String value = facet.getValues().get(i).getLabel();
         try {
-            return URLEncoder.encode(value, "utf8");
+        	String newvalue=URLEncoder.encode(value.replace("/", "$$"), "utf8");
+            return newvalue;
         }
         catch (Exception ex) {
             Logger.trace("Can't encode string "+value, ex);
@@ -545,7 +549,7 @@ public class App extends Authentication {
                 if (toks.length == 2) {
                     try {
                         String name = toks[0];
-                        String value = toks[1];
+                        String value = toks[1].replace("$$", "/");
                         /*
                         Logger.debug("Searching facet "+name+"/"+value+"..."
                                      +facet.getName()+"/"
@@ -582,7 +586,7 @@ public class App extends Authentication {
 
     public static List<Facet> getFacets (SearchOptions options) {
         try {
-            SearchResult result = _textIndexer.search(options, null, null);
+            SearchResult result = getTextIndexer().search(options, null, null);
             return result.getFacets();
         }
         catch (IOException ex) {
@@ -693,13 +697,13 @@ public class App extends Authentication {
     
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
-        return getSearchResult (_textIndexer, kind, q, total);
+        return getSearchResult (getTextIndexer(), kind, q, total);
     }
 
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total,
          Map<String, String[]> query) {
-        return getSearchResult (_textIndexer, kind, q, total, query);
+        return getSearchResult (getTextIndexer(), kind, q, total, query);
     }
     
     public static SearchResult getSearchResult
@@ -786,7 +790,7 @@ public class App extends Authentication {
         try {       
             long start = System.currentTimeMillis();
             SearchResult result;
-            if (indexer != _textIndexer) {
+            if (indexer != getTextIndexer()) {
                 // if it's an ad-hoc indexer, then we don't bother caching
                 //  the results
                 result = SearchFactory.search
@@ -813,10 +817,10 @@ public class App extends Authentication {
                                     SearchOptions options =
                                         new SearchOptions (query);
                                     options.top = total;
-                                    SearchResult result = _textIndexer.range
-                                        (options, field, min.equals("")
+                                    SearchResult result = getTextIndexer().range
+                                        (options, field, min.isEmpty()
                                          ? null : Integer.parseInt(min),
-                                         max.equals("")
+                                         max.isEmpty()
                                          ? null : Integer.parseInt(max));
                                     return cacheKey (result, sha1);
                                 }
@@ -872,7 +876,7 @@ public class App extends Authentication {
     
     public static <T> T getOrElse(String key, Callable<T> callable)
         throws Exception {
-        return getOrElse (_textIndexer.lastModified(), key, callable);
+        return getOrElse (getTextIndexer().lastModified(), key, callable);
     }
 
     public static <T> T getOrElse (long modified,
@@ -1269,6 +1273,7 @@ public class App extends Authentication {
         protected abstract R instrument (T r) throws Exception;
     }
 
+    @CacheStrategy(evictable=false)
     public static class SearchResultContext {
         public enum Status {
             Pending,
@@ -1386,7 +1391,6 @@ public class App extends Authentication {
     public static Call checkStatus () {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
-
         Logger.debug("checkStatus: q=" + query + " type=" + type);
         if (type != null && query != null) {
             try {
@@ -1432,6 +1436,7 @@ public class App extends Authentication {
         }
         else {
             String key = signature (query, getRequestQuery ());
+            
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             if (value != null) {
@@ -1443,6 +1448,8 @@ public class App extends Authentication {
                 if (!ctx.finished()){
                     return routes.App.status(key);
                 }
+            }else{
+            	//perform magic
             }
         }
         return null;
@@ -1644,7 +1651,6 @@ public class App extends Authentication {
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
-    	 String wait=request().getQueryString("wait");
     	 List<T> resultList = new ArrayList<T>();
     	 int[] pages = new int[0];
     	 if (result.count() > 0) {

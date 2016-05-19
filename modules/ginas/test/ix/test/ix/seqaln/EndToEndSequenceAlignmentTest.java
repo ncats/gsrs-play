@@ -82,7 +82,7 @@ public class EndToEndSequenceAlignmentTest {
         try(RestSession restSession = ts.newRestSession(ts.getFakeUser2())){
             SubstanceAPI api = new SubstanceAPI(restSession);
 
-            WSResponse response = api.submitSubstance(SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(jsonFile)));
+            WSResponse response = api.submitSubstance(SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(jsonFile)));
             SubstanceJsonUtil.ensurePass(response);
         }
     }

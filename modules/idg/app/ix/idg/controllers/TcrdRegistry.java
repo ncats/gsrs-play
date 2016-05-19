@@ -8,7 +8,6 @@ import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.PublicationFactory;
 import ix.core.models.*;
 import ix.core.plugins.*;
-import ix.core.search.TextIndexer;
 import ix.idg.models.*;
 import ix.seqaln.SequenceIndexer;
 import tripod.chem.indexer.StructureIndexer;
@@ -41,8 +40,8 @@ public class TcrdRegistry extends Controller implements Commons {
     static final Model.Finder<Long, Disease> diseaseDb = 
         new Model.Finder(Long.class, Disease.class);
     
-    static final TextIndexer INDEXER = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    static final TextIndexerPlugin TEXT_INDEXER_PLUGIN =
+        Play.application().plugin(TextIndexerPlugin.class);
     static final StructureProcessorPlugin PROCESSOR =
         Play.application().plugin(StructureProcessorPlugin.class);
     static final PersistenceQueue PQ =
@@ -86,7 +85,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         xref.save();
                         ligand.links.add(xref);
                         ligand.update();
-                        INDEXER.update(ligand);
+                        TEXT_INDEXER_PLUGIN.getIndexer().update(ligand);
                     }
                     Logger.debug
                         (status+": Ligand "+ligand.id+" "+ligand.getName());
@@ -241,7 +240,7 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Target t : TARGETS) {
                 try {
                     //t.update();
-                    INDEXER.update(t);
+                    TEXT_INDEXER_PLUGIN.getIndexer().update(t);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -251,7 +250,7 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Ligand l : LIGS) {
                 try {
                     //l.update();
-                    INDEXER.update(l);              
+                    TEXT_INDEXER_PLUGIN.getIndexer().update(l);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -261,7 +260,7 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Disease d : DISEASES.values()) {
                 try {
                     //d.update();             
-                    INDEXER.update(d);              
+                    TEXT_INDEXER_PLUGIN.getIndexer().update(d);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -1712,7 +1711,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 for (Disease d : updates) {
                     try {
                         d.update();
-                        INDEXER.update(d);
+                        TEXT_INDEXER_PLUGIN.getIndexer().update(d);
                     }
                     catch (Exception ex) {
                         Logger.error("Can't update disease "

@@ -59,8 +59,7 @@ public class ChemicalSubstance extends Substance  {
                 n.put("href", Global.getRef(getClass (), getUuid())
                       +"/moieties");
                 node = n;
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 // this means that the class doesn't have the NamedResource
                 // annotation, so we can't resolve the context
                 node = mapper.valueToTree(moieties);

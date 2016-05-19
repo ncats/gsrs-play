@@ -78,7 +78,16 @@ public class Moiety extends CommonDataElementOfCollection {
 	}
 	
 	public UUID getUUID(){
-		return UUID.fromString(this.innerUuid);
+		if(this.innerUuid!=null){
+			return UUID.fromString(this.innerUuid);
+		}else{
+			return null;
+		}
+	}
+	@Override
+	public void forceUpdate() {
+		structure.forceUpdate();
+		super.forceUpdate();
 	}
 	
 }

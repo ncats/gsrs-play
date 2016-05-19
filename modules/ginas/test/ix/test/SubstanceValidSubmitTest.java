@@ -83,14 +83,14 @@ public class SubstanceValidSubmitTest {
         @Test
         public void testAPIValidateSubstance() throws Exception {
 
-            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
             JsonNode jsonNode1 = api.validateSubstanceJson(js);
             assertTrue(jsonNode1.get("valid").asBoolean());
         }
         @Test
         public void testAPIValidateSubmitSubstance()  throws Exception {
 
-            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
             JsonNode jsonNode1 = api.validateSubstanceJson(js);
 
             SubstanceJsonUtil.ensureIsValid(jsonNode1);
@@ -100,7 +100,7 @@ public class SubstanceValidSubmitTest {
         @Test
         public void testAPIValidateSubmitFetchSubstance()   throws Exception {
 
-            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
             String uuid = js.get("uuid").asText();
             JsonNode validationResult = api.validateSubstanceJson(js);
 
@@ -119,7 +119,7 @@ public class SubstanceValidSubmitTest {
         public void validateFetchedSubmittedSubstance()  throws Exception {
 
 
-            JsonNode js = SubstanceJsonUtil.toUnapproved(JsonUtil.parseJsonFile(resource));
+            JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
 
             String uuid = js.get("uuid").asText();
 

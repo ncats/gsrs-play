@@ -26,7 +26,7 @@ public final class SubstanceJsonUtil {
 	 * @param substance
 	 * @return
 	 */
-	public static JsonNode toUnapproved(JsonNode substance){
+	public static JsonNode prepareUnapprovedPublic(JsonNode substance){
 		
 		JsonNodeBuilder jnb=new JsonUtil.JsonNodeBuilder(substance)
 				.remove("/approvalID")
@@ -53,6 +53,19 @@ public final class SubstanceJsonUtil {
 		}
 		
 		return jnb.build();
+		
+	}
+	
+	public static JsonNode prepareUnapproved(JsonNode substance){
+		
+		return new JsonUtil.JsonNodeBuilder(substance)
+				.remove("/approvalID")
+				.remove("/approved")
+				.remove("/approvedBy")
+				
+				.set("/status", "pending")
+				.ignoreMissing().build();
+		
 		
 	}
 
