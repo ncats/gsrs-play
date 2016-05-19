@@ -32,8 +32,8 @@
                 <referencesmanager indices substance ="'@id'" divid ="'@c.getUuid'" references = "@GinasApp.getAsJson(c.getReferences())"></referencesmanager>
             </td>
             </tr>
-            <tr><div ng-if="audit==true"><td colspan = "5"> Created by <code>@c.createdBy</code> on <code>@c.created</code> , Edited by <code>@c.lastEditedBy</code> on <code>@c.lastEdited</code> </td></div></tr>
-            <tr><td class = "'@c.getUuid'" colspan = "5"></td></tr>
+            <tr><td colspan = "5"> </td></tr>
+            <tr><td class = "'@c.getUuid'" colspan = "5"><div ng-if="audit==true">Created by <code>@c.createdBy</code> on <code>@c.created</code> , Edited by <code>@c.lastEditedBy</code> on <code>@c.lastEdited</code> </div></td></tr>
         }else{
                 <td>no refs</td>
             }

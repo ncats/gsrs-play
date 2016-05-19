@@ -65,7 +65,7 @@
                     }
                 }
                 </td>
-                <td><span class="badge badge-primary">@{m.amount.`type`}</span>&nbsp;&nbsp;@Html(m.amount.toString())</td>
+                <td><amount value="@GinasApp.getAsJson(m.amount)"></amount></td>
                 <td><span class="badge">@{m.`type`}</span></td>
             </tr>
         }    
@@ -92,15 +92,21 @@
                 <td><span><rendered id= '@m.uuid' size ="300"></rendered></span></td>
                 <td><span class="badge badge-primary">@m.label</td>
                 <td>
-                @if(m.amount!=null){
-                <span class="badge badge-primary">
-                
-                @{m.amount.`type`}</span>&nbsp;&nbsp;@Html(m.amount.toString())
+                @if(m.amount!=null) {
+                    @* <span class="badge badge-primary">
+
+                    @{m.amount.`type`}</span>&nbsp;&nbsp;@Html(m.amount.toString())
+                    *@
+                    <amount value="@GinasApp.getAsJson(m.amount)"></amount>
                 }
                 
                 </td>
                 <td><span class="badge">@{m.`type`}</span></td>
-                <td>@{m.getAttachmentMap().toString()}</td>
+                <td>
+                    @if(m.getAttachmentMap().size() > 0) {
+                        @m.getAttachmentMap().toString()
+                    }
+                </td>
             </tr>
         }    
     </table>
