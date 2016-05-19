@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -573,7 +574,15 @@ public class PojoDiff {
 							new FieldGetter(m)
 							);
 				}
+				if(isUnwrappedField(m)){
+					Map<String,Getter> subGetters=getGetters(m.getType());
+					for(Entry<String,Getter> ent:subGetters.entrySet()){
+						System.out.println("Registered:" + ent.getKey());
+						getterMap.putIfAbsent(ent.getKey(), new UnwrappedDelegateFieldGetter(m,ent.getValue()));
+					}
+				}
 			}
+			
 			
 			List<String> toRemove=new ArrayList<String>();
 			
@@ -624,6 +633,13 @@ public class PojoDiff {
 							getFieldProperty(m),
 							new FieldSetter(m)
 							);
+				}
+				if(isUnwrappedField(m)){
+					Map<String,Setter> subSetters=getSetters(m.getType());
+					for(Entry<String,Setter> ent:subSetters.entrySet()){
+						System.out.println("Registering setter:" + ent.getKey());
+						setterMap.putIfAbsent(ent.getKey(), new UnwrappedDelegateFieldSetter(m,ent.getValue()));
+					}
 				}
 			}
 			
@@ -676,7 +692,6 @@ public class PojoDiff {
 			if(jp!=null){
 				return jp.value();
 			}
-			
 			String name=m.getName().substring("get".length());
 			return Character.toLowerCase(name.charAt(0))+name.substring(1);
 		}
@@ -706,6 +721,14 @@ public class PojoDiff {
 			int mods=m.getModifiers();
 			if(Modifier.isStatic(mods))return false;
 			return true;
+		}
+		
+		public static boolean isUnwrappedField(Field m){
+			JsonUnwrapped junwrapped= m.getAnnotation(JsonUnwrapped.class);
+			if(junwrapped!=null){
+				return true;
+			}
+			return false;
 		}
 		
 		public static boolean isImplicitSetterMethod(Method m){
@@ -831,6 +854,30 @@ public class PojoDiff {
 			@Override
 			public boolean isIgnored() {return this.ignore;}
 		}
+		public static class UnwrappedDelegateFieldGetter implements Getter{
+			private Field m;
+			private Getter g;
+			private boolean ignore=false;
+			public UnwrappedDelegateFieldGetter(Field m, Getter g){
+				this.m=m;
+				this.g=g;
+				JsonIgnore jsn=m.getAnnotation(JsonIgnore.class);
+				if(jsn!=null)ignore=true;
+			}
+			
+			@Override
+			public Object get(Object instance) {
+				try{
+					Object delegateInstance=m.get(instance);
+					return g.get(delegateInstance); 
+				}catch(Exception e){
+					throw new IllegalStateException(e);
+				}
+			}
+
+			@Override
+			public boolean isIgnored() {return this.ignore;}
+		}
 		
 		public static class FieldSetter implements Setter{
 			private Field m;
@@ -847,6 +894,37 @@ public class PojoDiff {
 					Object old=m.get(instance);
 					m.set(instance, value);
 					return old;
+				}catch(Exception e){
+					throw new IllegalStateException(e);
+				}
+			}
+
+			@Override
+			public boolean isIgnored() {return this.ignore;}
+		}
+		public static class UnwrappedDelegateFieldSetter implements Setter{
+			private Field m;
+			private Setter g;
+			private boolean ignore=false;
+			public UnwrappedDelegateFieldSetter(Field m, Setter g){
+				this.m=m;
+				this.g=g;
+				
+				JsonIgnore jsn=m.getAnnotation(JsonIgnore.class);
+				if(jsn!=null)ignore=true;
+			}
+			
+			@Override
+			public Object set(Object instance, Object value) {
+				try{
+					Object delegateInstance=m.get(instance);
+					System.out.println("Setting:" + m + " to " + value.getClass() + value + " on " +delegateInstance);
+					Object ret=g.set(delegateInstance,value);;
+					if(g instanceof FieldSetter){
+						Object onow=((FieldSetter)g).m.get(delegateInstance);
+						System.out.println("And now it's:" + onow);
+					}
+					return  ret;
 				}catch(Exception e){
 					throw new IllegalStateException(e);
 				}
@@ -1141,6 +1219,7 @@ public class PojoDiff {
 			Object old=null;
 			
 			Object fetched=getObjectAt(src,subPath,changeChain);
+			changeChain.add(fetched);
 			TypeRegistry.Setter s=getSetterDirect(fetched,lastPath);
 			if(s!=null){
 				old=s.set(fetched, newValue);
@@ -1159,7 +1238,7 @@ public class PojoDiff {
 			Object oldValue=null;
 			//this is the container for that object
 			Object fetched=getObjectAt(src,subPath,visited);
-			
+			visited.add(fetched);
 			
 			//This gets the removal setter for the object 
 			TypeRegistry.Setter s=getRemoverDirect(fetched,lastPath);

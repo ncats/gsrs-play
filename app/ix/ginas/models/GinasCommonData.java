@@ -303,13 +303,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	@Override
 	public void forceUpdate() {
 		currentVersion++;
-		
-//		if(this.recordAccess!=null){
-//			this.recordAccess.save();
-//		}
-		
 		super.update();
-		
 	}
 	
 	public boolean tryUpdate(){

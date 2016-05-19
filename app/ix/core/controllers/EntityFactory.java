@@ -1546,7 +1546,7 @@ public class EntityFactory extends Controller {
 	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
 					@Override
 					public void handleChange(ix.utils.pojopatch.Change c) {
-						//System.out.println("Change IS:" + c);
+						System.out.println("Change IS:" + c);
 						if("remove".equals(c.op)){
 							removed.add(c.oldValue);
 						}
@@ -1557,11 +1557,13 @@ public class EntityFactory extends Controller {
 	        		Object v=changeStack.pop();
 	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
 		        		if(v instanceof ForceUpdatableModel){
+		        			System.out.println("Force update for:" + v);
 		            		((ForceUpdatableModel)v).forceUpdate();
 		            	}else if(v instanceof Model){
+		            		System.out.println("Regular update for:" + v);
 		            		((Model)v).update();
 		            	}else{
-		            		//System.out.println("Nothing to do for:" + v);
+		            		System.out.println("Nothing to do for:" + v);
 		            	}
 	        		}
 	        	}
@@ -1582,6 +1584,7 @@ public class EntityFactory extends Controller {
 		            	}
 	        		}
 	        	}
+	        	
 	        	
 	        	//The old value is now the new value
 	        	newValue = oldValueContainer.value;

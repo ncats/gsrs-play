@@ -330,7 +330,7 @@ public class IntegrationTest {
     	p1.apply(s1a);
     	p2.apply(s1b);
     	
-    	JsonNode jsdiff = PojoDiff.getEnhancedJsonDiff(s1a, s1b);
+    	JsonNode jsdiff = PojoDiff.getEnhancedJsonDiff(s1a, s1b,null);
     	
     	for(JsonNode jsd:jsdiff){
     		System.err.println("Diff is:" + jsd.toString());
