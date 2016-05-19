@@ -848,13 +848,15 @@ public class Substance extends GinasCommonData {
 		return rlist;
 	}
 	
+	@JsonIgnore
 	@Indexable(facet = true, name = "Name Count", sortable=true)
 	public int getNameCount(){
 		return names.size();
 	}
 	
+	@JsonIgnore
 	@Indexable(facet = true, name = "Reference Count", sortable=true)
-	public int getRederenceCount(){
+	public int getReferenceCount(){
 		return names.size();
 	}
 }
