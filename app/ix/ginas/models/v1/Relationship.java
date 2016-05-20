@@ -62,4 +62,10 @@ public class Relationship extends CommonDataElementOfCollection {
         }
         return type;
     }
+    
+    @PrePersist
+    @PreUpdate
+    public void fixNewLine(){
+    	comments=comments.replaceAll("[\\][\\]*n", "\n");
+    }
 }
