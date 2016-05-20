@@ -631,21 +631,26 @@ public class GinasTestServer extends ExternalResource{
      * @param preserveDatabase {@code true} if the h2 database and indexes
      *                         should be preserved; {@code false} if they should be deleted.
      */
-    public void stop(boolean preserveDatabase){
-        if(running) {
+    public void stop(boolean preserveDatabase) {
+        try {
+            if (running) {
+                try {
+                    running = false;
+                    for (AbstractSession session : sessions) {
+                        session.logout();
+                    }
+                    sessions.clear();
+                    //explicitly shutdown indexer to clear file locks
+                    App.getTextIndexer().shutdown();
+                } finally {
+                    ts.stop();
+                }
 
-            running = false;
-            for (AbstractSession session : sessions) {
-                session.logout();
             }
-            sessions.clear();
-            //explicitly shutdown indexer to clear file locks
-            App.getTextIndexer().shutdown();
-            ts.stop();
-
-        }
-        if(preserveDatabase){
-            TextIndexerPlugin.prepareTestRestart();
+        }finally{
+            if (preserveDatabase) {
+                TextIndexerPlugin.prepareTestRestart();
+            }
         }
     }
 
