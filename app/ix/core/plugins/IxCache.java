@@ -64,11 +64,13 @@ public class IxCache extends Plugin {
     		String adaptKey = arg1.getObjectKey().toString();
     		String key=unAdaptKey(adaptKey);
     		keymaster.removeKey(key, adaptKey);
-    		CacheStrategy cacheStrat=arg1.getObjectValue().getClass().getAnnotation(CacheStrategy.class);
-    		if(cacheStrat!=null && !cacheStrat.evictable()){
-    			if(!arg1.isExpired()){
-    				_instance.evictableCache.put(new Element(arg1.getObjectKey(), arg1.getObjectValue(),arg1.isEternal(),arg1.getTimeToIdle(),arg1.getTimeToLive()));
-    			}
+    		if(arg1!=null && arg1.getObjectValue() !=null){
+	    		CacheStrategy cacheStrat=arg1.getObjectValue().getClass().getAnnotation(CacheStrategy.class);
+	    		if(cacheStrat!=null && !cacheStrat.evictable()){
+	    			if(!arg1.isExpired()){
+	    				_instance.evictableCache.put(new Element(arg1.getObjectKey(), arg1.getObjectValue(),arg1.isEternal(),arg1.getTimeToIdle(),arg1.getTimeToLive()));
+	    			}
+	    		}
     		}
     	}
     	@Override
