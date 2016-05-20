@@ -1512,7 +1512,8 @@ public class GinasApp extends App {
                     return o1.subunitIndex-o2.subunitIndex;
                 }});
         for(Subunit s: subs){
-        	sb.append(">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n");
+        	
+        	sb.append(">" + p.getBestId().replace(" ", "_") + "|SUBUNIT_" +  s.subunitIndex + "\n");
             for(String seq : splitBuffer(s.sequence,80)){
                 sb.append(seq+"\n");
             }
@@ -1529,7 +1530,7 @@ public class GinasApp extends App {
                         }});
         
         for(Subunit s: subs){
-                resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+                resp+=">" + p.getBestId().replace(" ", "_") + "|SUBUNIT_" +  s.subunitIndex + "\n";
                 for(String seq : splitBuffer(s.sequence,80)){
                         resp+=seq+"\n";
                 }
