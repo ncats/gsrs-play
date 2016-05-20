@@ -245,14 +245,14 @@ public class ChemicalApiTest {
 		}
 	}
     
-    public JsonNode makeChemicalSubstanceJSON(String smiles){
+    public static JsonNode makeChemicalSubstanceJSON(String smiles){
     	ChemicalSubstance cs = makeChemicalSubstance(smiles);
         EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         JsonNode entered = em.valueToTree(cs);
         return entered;
     }
     
-    public ChemicalSubstance makeChemicalSubstance(String smiles){
+    public static ChemicalSubstance makeChemicalSubstance(String smiles){
     	ChemicalSubstance cs = new ChemicalSubstance();
     	cs.structure= new GinasChemicalStructure();
     	cs.structure.molfile=smiles;
