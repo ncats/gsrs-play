@@ -45,6 +45,7 @@ import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
 import play.Logger;
 import play.db.ebean.Model;
@@ -433,7 +434,7 @@ public class SubstanceFactory extends EntityFactory {
 	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top, int skip, Subunit subunit) {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();
 		try {
-			ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+			ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL);
 			int i = 0;
 			while (re.hasMoreElements()) {
 				SequenceIndexer.Result r = re.nextElement();

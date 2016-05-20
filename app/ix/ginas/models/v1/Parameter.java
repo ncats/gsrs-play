@@ -19,6 +19,11 @@ public class Parameter extends GinasCommonSubData {
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Property owner;
 	
+	//TP: added 05-19-2016
+    //Needed for some properties
+	@OneToOne(cascade=CascadeType.ALL)
+    private SubstanceReference referencedSubstance;
+	
     @JSONEntity(title = "Parameter Name", isRequired = true)
     @Column(nullable=false)
     private String name;

@@ -1,6 +1,7 @@
 package ix.test.ix.seqaln;
 
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CutoffType;
 import net.sf.ehcache.CacheManager;
 import org.h2.schema.Sequence;
 import org.junit.After;
@@ -70,12 +71,101 @@ public class SequenceIndexerTest {
     }
 
     @Test
-    public void lowIdentityShouldNotHaveHit() throws IOException {
+    public void lowIdentityShouldNotGlobalHaveHit() throws IOException {
         String seq = "ACGTTTGCCG";
         String rev  = "TGCAAACGGA"; // rev comp
         indexer.add("foo", seq);
 
-        SequenceIndexer.ResultEnumeration results = indexer.search(rev, .9);
+        SequenceIndexer.ResultEnumeration results = indexer.search(rev, .9, CutoffType.GLOBAL);
+        assertFalse(results.hasMoreElements());
+    }
+    @Test
+    public void commonSubsequenceShouldHaveLocalHit() throws IOException {
+        String seq =  "KKKKKKKKACDEFGHIKLLLLLLLL";
+        String rev  = "ACDEFGHIKLKDKDKDKDKDKDKDKZYXWZYXWZYXWZYXW";
+        indexer.add("foo", seq);
+
+        SequenceIndexer.ResultEnumeration results = indexer.search(rev, .9, CutoffType.LOCAL);
+        assertTrue(results.hasMoreElements());
+    }
+    @Test
+    public void commonSubsequenceShouldHaveNoSubHit() throws IOException {
+        String seq =  "KKKKKKKK"
+        			 	+"ACDEFGHIKL"
+        			 +"LLLLLLL";
+        String rev  = "LOOKATMELOOKATME"
+        			    +"ACDEFGHIKL"
+        			  +"KDKDKDKDKDKDKDKZYXWZYXWZYXWZYXW";
+        indexer.add("foo", seq);
+
+        SequenceIndexer.ResultEnumeration results = indexer.search(rev, .9, CutoffType.SUB);
+        assertFalse(results.hasMoreElements());
+    }
+    
+    @Test
+    public void perfectSubQueryShouldHavePerfectSubHit() throws IOException {
+        String q =  "NEEDLE"; //contained below
+        String t  = "HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"NEEDLE" + //There it is!
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY"+
+        			"HEY";
+        indexer.add("foo", t);
+
+        SequenceIndexer.ResultEnumeration results = indexer.search(q, 1, CutoffType.SUB);
+        assertTrue(results.hasMoreElements());
+    }
+    
+    @Test
+    public void perfectSuperQueryShouldHavePerfectLocalHit() throws IOException {
+		String q = "MRLAVGALLVCAVLGLCLAVPDKTVRWCAVSEHEATKCQSFRDHMKSVIPSDGP"
+				+"SVACVKKASYLDCIRAIAANEADAVTLDAGLVYDAYLAPNNLKPVVAEFYGSKEDPQT"
+				+"FYYAVAVVKKDSGFQMNQLRGKKSCHTGLGRSAGWNIPIGLLYCDLPEPRKPLEKAVA"
+				+"NFFSGSCAPCADGTDFPQLCQLCPGCGCSTLNQYFGYSGAFKCLKDGAGDVAFVKHST"
+				+"IFENLANKADRDQYELLCLDNTRKPVDEYKDCHLAQVPSHTVVARSMGGKEDLIWELL"
+				+"NQAQEHFGKDKSKEFQLFSSPHGKDLLFKDSAHGFLKVPPRMDAKMYLGYEYVTAIRN"
+				+"LREGTCPEAPTDECKPVKWCALSHHERLKCDEWSVNSVGKIECVSAETTEDCIAKIMN"
+				+"GEADAMSLDGGFVYIAGKCGLVPVLAENYNKSDNCEDTPEAGYFAVAVVKKSASDLTW"
+				+"DNLKGKKSCHTAVGRTAGWNIPMGLLYNKINHCRFDEFFSEGCAPGSKKDSSLCKLCM"
+				+"GSGLNLCEPNNKEGYYGYTGAFRCLVEKGDVAFVKHQTVPQNTGGKNPDPWAKNLNEK"
+				+"DYELLCLDGTRKPVEEYANCHLARAPNHAVVTRKDKEACVHKILRQQQHLFGSNVTDC"
+				+"SGNFCLFRSETKDLLFRDDTVCLAKLHDRNTYEKYLGEEYVKAVGNLRKCSTSSLLEA"
+				+"CTFRRP";
+		String t  = "RDQYELLCLDNTRKPVDEYKDCH"; //contained above
+        indexer.add("foo", t);
+
+        SequenceIndexer.ResultEnumeration results = indexer.search(q, 1, CutoffType.LOCAL);
+        assertTrue(results.hasMoreElements());
+    }
+    @Test
+    public void perfectSuperQueryShouldHaveNoSubHit() throws IOException {
+		String q = "MRLAVGALLVCAVLGLCLAVPDKTVRWCAVSEHEATKCQSFRDHMKSVIPSDGP"
+				+"SVACVKKASYLDCIRAIAANEADAVTLDAGLVYDAYLAPNNLKPVVAEFYGSKEDPQT"
+				+"FYYAVAVVKKDSGFQMNQLRGKKSCHTGLGRSAGWNIPIGLLYCDLPEPRKPLEKAVA"
+				+"NFFSGSCAPCADGTDFPQLCQLCPGCGCSTLNQYFGYSGAFKCLKDGAGDVAFVKHST"
+				+"IFENLANKADRDQYELLCLDNTRKPVDEYKDCHLAQVPSHTVVARSMGGKEDLIWELL"
+				+"NQAQEHFGKDKSKEFQLFSSPHGKDLLFKDSAHGFLKVPPRMDAKMYLGYEYVTAIRN"
+				+"LREGTCPEAPTDECKPVKWCALSHHERLKCDEWSVNSVGKIECVSAETTEDCIAKIMN"
+				+"GEADAMSLDGGFVYIAGKCGLVPVLAENYNKSDNCEDTPEAGYFAVAVVKKSASDLTW"
+				+"DNLKGKKSCHTAVGRTAGWNIPMGLLYNKINHCRFDEFFSEGCAPGSKKDSSLCKLCM"
+				+"GSGLNLCEPNNKEGYYGYTGAFRCLVEKGDVAFVKHQTVPQNTGGKNPDPWAKNLNEK"
+				+"DYELLCLDGTRKPVEEYANCHLARAPNHAVVTRKDKEACVHKILRQQQHLFGSNVTDC"
+				+"SGNFCLFRSETKDLLFRDDTVCLAKLHDRNTYEKYLGEEYVKAVGNLRKCSTSSLLEA"
+				+"CTFRRP";
+		String t  = "RDQYELLCLDNTRKPVDEYKDCH"; //contained above
+        indexer.add("foo", t);
+
+        SequenceIndexer.ResultEnumeration results = indexer.search(q, 1, CutoffType.SUB);
         assertFalse(results.hasMoreElements());
     }
 
@@ -143,7 +233,7 @@ public class SequenceIndexerTest {
         String seq =  "ACGTACGT";
         indexer.add("foo",seq);
 
-        SequenceIndexer.ResultEnumeration results = indexer.search(seq, .5);
+        SequenceIndexer.ResultEnumeration results = indexer.search(seq, .5, CutoffType.GLOBAL);
 
 
         assertTrue(results.hasMoreElements());

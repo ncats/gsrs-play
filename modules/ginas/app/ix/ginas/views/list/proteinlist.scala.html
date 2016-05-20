@@ -114,6 +114,7 @@
 			     <pre ng-click="toggle()" class = "struc-thumb img-responsive">
 @{"identity = %.3f".format(r.alignments(0).global)}
 @{"local    = %.3f".format(r.alignments(0).iden)}
+@{"sub      = %.3f".format(r.alignments(0).sub)}
 @{"matched  = " + r.alignments(0).score}
 
 @r.alignments(0).alignment
