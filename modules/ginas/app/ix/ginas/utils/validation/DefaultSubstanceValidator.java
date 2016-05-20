@@ -13,6 +13,7 @@ import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingStrategy;
+import ix.ginas.utils.GinasUtils;
 
 public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	GinasProcessingStrategy _strategy;
@@ -144,11 +145,20 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 
 		if (objold.approvalID != null) {
 			if (!objold.approvalID.equals(objnew.approvalID)) {
+				
+				
+				
 				// Can't change approvalID!!! (unless admin)
 				if (up.hasRole(Role.Admin)) {
-					vlad.add(GinasProcessingMessage
+					if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
+						vlad.add(GinasProcessingMessage
+								.ERROR_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
+										+ "') but now is ('" + objnew.approvalID + "'). This approvalID is either a duplicate or invalid."));
+					}else{
+						vlad.add(GinasProcessingMessage
 							.WARNING_MESSAGE("The approvalID for the record has changed. Was ('" + objold.approvalID
 									+ "') but now is ('" + objnew.approvalID + "'). This is strongly discouraged."));
+					}
 				} else {
 					vlad.add(GinasProcessingMessage.ERROR_MESSAGE(
 							"The approvalID for the record has changed. Was ('" + objold.approvalID + "') but now is ('"

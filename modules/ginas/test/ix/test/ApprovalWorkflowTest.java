@@ -10,6 +10,8 @@ import java.io.InputStream;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
+import util.json.JsonUtil.JsonNodeBuilder;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -23,7 +25,8 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 public class ApprovalWorkflowTest {
-	
+	public final static String VALID_APPROVAL_ID="0000000000";
+	public final static String INVALID_APPROVAL_ID="0000000001";
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
@@ -69,7 +72,7 @@ public class ApprovalWorkflowTest {
 
 
 
-              after = api2.fetchSubstanceJsonByUuid(uuid);
+                after = api2.fetchSubstanceJsonByUuid(uuid);
                 assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
                 assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
 
@@ -83,6 +86,129 @@ public class ApprovalWorkflowTest {
 
         }
 
+	}
+	@Test
+	public void testNonAdminCantChangeApprovalID() throws Exception {
+        String uuid;
+        final File resource=new File("test/testJSON/toapprove.json");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+        		InputStream is = new FileInputStream(resource)){
+
+
+                JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));
+                uuid = js.get("uuid").asText();
+                SubstanceAPI api = new SubstanceAPI(session);
+                JsonNode jsonNode2 = api.submitSubstanceJson(js);
+                assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+            }
+
+
+        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+            String approvalID;
+            JsonNode before = null;
+            JsonNode after = null;
+
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+            //approval, CAN approve if different user
+
+                before = api2.approveSubstanceJson(uuid);
+                approvalID = SubstanceJsonUtil.getApprovalId(before);
+
+
+
+                after = api2.fetchSubstanceJsonByUuid(uuid);
+                assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+                assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
+
+                JsonNode withChangedApprovalID= new JsonNodeBuilder(after).set("/approvalID", VALID_APPROVAL_ID).build();
+                SubstanceJsonUtil.ensureFailure(api2.updateSubstance(withChangedApprovalID));
+        }
+
+	}
+	@Test
+	public void testAdminCanChangeApprovalID() throws Exception {
+        String uuid;
+        final File resource=new File("test/testJSON/toapprove.json");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+        		InputStream is = new FileInputStream(resource)){
+
+
+                JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));
+                uuid = js.get("uuid").asText();
+                SubstanceAPI api = new SubstanceAPI(session);
+                JsonNode jsonNode2 = api.submitSubstanceJson(js);
+                assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+            }
+
+
+        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+            String approvalID;
+            JsonNode before = null;
+            JsonNode after = null;
+
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+            //approval, CAN approve if different user
+
+                before = api2.approveSubstanceJson(uuid);
+                approvalID = SubstanceJsonUtil.getApprovalId(before);
+
+
+
+                after = api2.fetchSubstanceJsonByUuid(uuid);
+                assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+                assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
+
+                JsonNode withChangedApprovalID= new JsonNodeBuilder(after).set("/approvalID", VALID_APPROVAL_ID).build();
+                SubstanceJsonUtil.ensureFailure(api2.updateSubstance(withChangedApprovalID));
+        }
+        try(RestSession session3 = ts.newRestSession(ts.createAdmin("adminguy", "nonsense"))){
+            
+            	SubstanceAPI api3 = new SubstanceAPI(session3);
+            	//approval, CAN approve if different user
+                JsonNode after = api3.fetchSubstanceJsonByUuid(uuid);
+                JsonNode withChangedApprovalID= new JsonNodeBuilder(after).set("/approvalID", VALID_APPROVAL_ID).build();
+                SubstanceJsonUtil.ensurePass(api3.updateSubstance(withChangedApprovalID));
+                JsonNode changed = api3.fetchSubstanceJsonByUuid(uuid);
+                assertEquals(changed.at("/approvalID").asText(),VALID_APPROVAL_ID);
+        }
+	}
+	@Test
+	public void testAdminCannotChangeApprovalIDToInvalid() throws Exception {
+        String uuid;
+        final File resource=new File("test/testJSON/toapprove.json");
+        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+        		InputStream is = new FileInputStream(resource)){
+
+
+                JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));
+                uuid = js.get("uuid").asText();
+                SubstanceAPI api = new SubstanceAPI(session);
+                JsonNode jsonNode2 = api.submitSubstanceJson(js);
+                assertEquals(Substance.STATUS_PENDING, SubstanceJsonUtil.getApprovalStatus(jsonNode2));
+            }
+
+
+        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+            String approvalID;
+            JsonNode before = null;
+            JsonNode after = null;
+
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+
+                before = api2.approveSubstanceJson(uuid);
+                approvalID = SubstanceJsonUtil.getApprovalId(before);
+                after = api2.fetchSubstanceJsonByUuid(uuid);
+                assertEquals(Substance.STATUS_APPROVED, SubstanceJsonUtil.getApprovalStatus(after));
+                assertEquals(approvalID, SubstanceJsonUtil.getApprovalId(after));
+        }
+        try(RestSession session3 = ts.newRestSession(ts.createAdmin("adminguy", "nonsense"))){
+            
+            	SubstanceAPI api3 = new SubstanceAPI(session3);
+            	//approval, CAN approve if different user
+                JsonNode after = api3.fetchSubstanceJsonByUuid(uuid);
+                JsonNode withChangedApprovalID= new JsonNodeBuilder(after).set("/approvalID", INVALID_APPROVAL_ID).build();
+                SubstanceJsonUtil.ensureFailure(api3.updateSubstance(withChangedApprovalID));
+        }
 	}
 	
 	@Test

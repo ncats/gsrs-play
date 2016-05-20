@@ -41,7 +41,10 @@ public class StructureIndexerPlugin extends Plugin {
         if (indexer != null){
         	try{
         		indexer.shutdown();
-        	}catch(Exception e){
+        	}catch(Throwable e){
+        		System.out.println("########################");
+        		System.out.println("########################");
+        		System.out.println("PROBLEM SHUTTING DOWN STRUCTURE INDEXER");
         		e.printStackTrace();
         	}
         }

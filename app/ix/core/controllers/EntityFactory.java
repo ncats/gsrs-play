@@ -1557,13 +1557,13 @@ public class EntityFactory extends Controller {
 	        		Object v=changeStack.pop();
 	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
 		        		if(v instanceof ForceUpdatableModel){
-		        			System.out.println("Force update for:" + v);
+		        			//System.out.println("Force update for:" + v);
 		            		((ForceUpdatableModel)v).forceUpdate();
 		            	}else if(v instanceof Model){
-		            		System.out.println("Regular update for:" + v);
+		            		//System.out.println("Regular update for:" + v);
 		            		((Model)v).update();
 		            	}else{
-		            		System.out.println("Nothing to do for:" + v);
+		            		//System.out.println("Nothing to do for:" + v);
 		            	}
 	        		}
 	        	}
