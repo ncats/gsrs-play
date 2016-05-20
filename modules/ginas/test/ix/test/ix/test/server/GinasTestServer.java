@@ -634,7 +634,6 @@ public class GinasTestServer extends ExternalResource{
     public void stop(boolean preserveDatabase) {
         try {
             if (running) {
-                ts.
                 try {
                     running = false;
                     for (AbstractSession session : sessions) {
