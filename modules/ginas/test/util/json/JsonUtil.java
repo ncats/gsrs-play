@@ -1,5 +1,6 @@
 package util.json;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
@@ -349,4 +350,11 @@ public class JsonUtil {
             }
         }
     }
+	public static JsonNode parseJsonString(String string) {
+        	try {
+				return new ObjectMapper().readTree(string);
+        	}catch(Throwable t){
+	    		throw new RuntimeException(t);
+	    	}
+	}
 }
