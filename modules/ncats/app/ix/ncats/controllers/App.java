@@ -1864,25 +1864,38 @@ public class App extends Authentication {
     }
 
     public static Result cacheList (int top, int skip) {
-        List keys = IxCache.getKeys(top, skip);
-        if (keys != null) {
-            ObjectMapper mapper = new ObjectMapper ();
-            ArrayNode nodes = mapper.createArrayNode();
-            for (Iterator it = keys.iterator(); it.hasNext(); ) {
-                Object key = it.next();
-                try {
-                    Element elm = IxCache.getElm(key.toString());
-                    if (elm != null)
-                        nodes.add(toJson (mapper, elm));
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
 
-            return ok (nodes);
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode result =  IxCache.toJsonStream(top,skip)
+                                    .collect( ()-> mapper.createArrayNode(),
+                                             (nodes, elm) -> nodes.add(toJson (mapper, elm)),
+                                             (nodes1, nodes2) -> nodes1.addAll(nodes2)
+                                            );
+
+        if(result.size() == 0){
+            return ok ("No cache available!");
         }
-        return ok ("No cache available!");
+        return ok(result);
+
+//        List keys = IxCache.getKeys(top, skip);
+//        if (keys != null) {
+//            ObjectMapper mapper = new ObjectMapper ();
+//            ArrayNode nodes = mapper.createArrayNode();
+//            for (Iterator it = keys.iterator(); it.hasNext(); ) {
+//                Object key = it.next();
+//                try {
+//                    Element elm = IxCache.getElm(key.toString());
+//                    if (elm != null)
+//                        nodes.add(toJson (mapper, elm));
+//                }
+//                catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//            }
+//
+//            return ok (nodes);
+//        }
+//        return ok ("No cache available!");
     }
 
     public static Result cacheDelete (String key) {
