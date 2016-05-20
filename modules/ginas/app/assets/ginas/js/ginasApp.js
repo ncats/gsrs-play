@@ -1932,6 +1932,20 @@
                 };
 
                 scope.getExport = function () {
+                	switch (scope.format) {
+                		case "fas":
+                			scope.formatName="FASTA";
+                			break;
+                		case "mol":
+                			scope.formatName="Molfile";
+                			break;	
+                		case "sdf":
+                			scope.formatName="SD File";
+                			break;	
+                		default:
+                			scope.formatName="Export";
+                			break;			
+                	}
                     if(_.isUndefined(scope.structureid)){
                         var url = baseurl + 'structure';
                         var mol = molChanger.getMol();

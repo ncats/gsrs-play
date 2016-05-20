@@ -37,8 +37,17 @@ public class StructureIndexerPlugin extends Plugin {
 
     @Override
     public void onStop () {
-        if (indexer != null)
-            indexer.shutdown();
+    	
+        if (indexer != null){
+        	try{
+        		indexer.shutdown();
+        	}catch(Throwable e){
+        		System.out.println("########################");
+        		System.out.println("########################");
+        		System.out.println("PROBLEM SHUTTING DOWN STRUCTURE INDEXER");
+        		e.printStackTrace();
+        	}
+        }
         Logger.info("Plugin "+getClass().getName()+" stopped!");
         closed=true;
     }

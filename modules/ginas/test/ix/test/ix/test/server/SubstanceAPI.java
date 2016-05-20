@@ -31,7 +31,7 @@ public class SubstanceAPI {
     private static final String UI_URL_SUBSTANCE_SEARCH_SUB="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
-
+    private static final String EXPORT_URL="ginas/app/export/$ID$.$FORMAT$";
     private final RestSession session;
 
     private final long timeout = 10_000L;
@@ -193,6 +193,14 @@ public class SubstanceAPI {
 	}
 	public JsonNode submitCVDomainJson(JsonNode newCV) {
 		return this.session.extractJSON(submitCVDomain(newCV));
+	}
+
+	public WSResponse export(String id, String format) {
+		return session.createRequestHolder(EXPORT_URL.replace("$ID$", id).replace("$FORMAT$", format)).get().get(timeout);
+	}
+	
+	public String exportHTML(String id, String format) {
+		return export(id,format).getBody();
 	}
 
 

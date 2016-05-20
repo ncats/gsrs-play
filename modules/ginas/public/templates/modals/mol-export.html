@@ -13,16 +13,16 @@
                     </div>
                 </div>
                     <uib-tabset>
-                        <uib-tab heading="Molfile">
+                        <uib-tab  ng-show="exportData" heading="{{formatName}}">
                             <textarea class="col-md-12 exportArea" id="exportMol">{{exportData}}</textarea>
                         </uib-tab>
-                        <uib-tab heading="Smiles">
+                        <uib-tab  ng-show="exportSmiles" heading="Smiles">
                             <textarea class="col-md-12 exportArea">{{exportSmiles}}</textarea>
                         </uib-tab>
                     </uib-tabset>
                 </div>
                 <div class="modal-footer">
-                    <download-button data=exportData format ="mol">Download Molfile</download-button>
+                    <download-button data=exportData format ="mol">Download</download-button>
                     <button type="button" class="btn btn-primary"  ng-click="close()">Close</button>
                 </div>
             </div>

@@ -86,6 +86,7 @@ import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
@@ -367,7 +368,10 @@ public class GinasApp extends App {
         }
         return StringUtils.arrayToDelimitedString(arr, "; ");
     }
-
+	public static String getFirstOrElse(String[] s, String def){
+		if(s==null || s.length==0)return def;
+		return s[0];
+	}
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
                    maxLength = 10_000)
     public static Result sequenceSearch () {
@@ -380,6 +384,9 @@ public class GinasApp extends App {
         Map<String, String[]> params = request().body().asFormUrlEncoded();
 
         String[] values = params.get("sequence");
+        String ident=getFirstOrElse(params.get("identity"),"0.5");
+        String identType=getFirstOrElse(params.get("identityType"),"SUB");
+        
         if (values != null && values.length > 0) {
             String seq = values[0];
             try {
@@ -387,7 +394,7 @@ public class GinasApp extends App {
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
-                return redirect (call.url()+"&type=sequence");
+                return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType);
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -496,10 +503,16 @@ public class GinasApp extends App {
 
     public static Result _sequences (final String seq, final double identity,
                                      final int rows, final int page) {
+    	CutoffType ct= CutoffType.GLOBAL;
+    	try{
+    		ct=CutoffType.valueOf(request().getQueryString("identityType"));
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
         try {
             SearchResultContext context = sequence
                 (seq, identity, rows,
-                 page, new GinasSequenceResultProcessor ());
+                 page, ct, new GinasSequenceResultProcessor ());
             
             return App.fetchResult
                 (context, rows, page, new SubstanceResultRenderer ());
@@ -1426,9 +1439,6 @@ public class GinasApp extends App {
         
         Substance s = SubstanceFactory.getSubstance(id);
         
-        
-        
-        
         if(s==null){
                 Structure struc = StructureFactory.getStructure(id);
                 c = GinasUtils.structureToChemical(struc, messages);
@@ -1460,10 +1470,12 @@ public class GinasApp extends App {
                     }else if (format.equalsIgnoreCase("cdx")){
                         return ok(c.export(Chemical.FORMAT_CDX));
                     }else if (format.equalsIgnoreCase("fas")){
-                        if(s instanceof ProteinSubstance){      
+                        if(s instanceof ProteinSubstance){   
                             return ok(makeFastaFromProtein(((ProteinSubstance)s)));
-                        }else{
+                        }else if(s instanceof NucleicAcidSubstance){
                             return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
+                        }else{
+                        	throw new IllegalStateException("object can not be exported to FASTA");
                         }
                     }else{
                         return _badRequest("unknown format:" + format);
@@ -1491,21 +1503,21 @@ public class GinasApp extends App {
         return sb.toString();
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
-        String resp = "";
-        List<Subunit> subs=p.protein.subunits;
+        StringBuilder sb= new StringBuilder();
+        
+        List<Subunit> subs=p.protein.getSubunits();
         Collections.sort(subs, new Comparator<Subunit>(){
                 @Override
                 public int compare(Subunit o1, Subunit o2) {
                     return o1.subunitIndex-o2.subunitIndex;
                 }});
-        
         for(Subunit s: subs){
-            resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+        	sb.append(">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n");
             for(String seq : splitBuffer(s.sequence,80)){
-                resp+=seq+"\n";
+                sb.append(seq+"\n");
             }
         }
-        return resp;
+        return sb.toString();
     }
     public static String makeFastaFromNA(NucleicAcidSubstance p){
         String resp = "";

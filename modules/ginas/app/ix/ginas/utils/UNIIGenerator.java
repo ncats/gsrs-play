@@ -19,4 +19,12 @@ public class UNIIGenerator extends RandomAlphaNumericIDGenerator{
 		if(dupe==null)return true;
 		return false;
 	}
+
+
+	@Override
+	public boolean isValidId(String id) {
+		return this.valid(id) && this.allowID(id);
+	}
+
+
 }

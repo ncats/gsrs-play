@@ -44,6 +44,8 @@ import ix.core.search.TextIndexer;
 import java.sql.Connection;
 
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CutoffType;
+
 import static ix.core.search.TextIndexer.*;
 import tripod.chem.indexer.StructureIndexer;
 import static tripod.chem.indexer.StructureIndexer.*;
@@ -1407,7 +1409,11 @@ public class App extends Authentication {
                     if (iden == null) {
                         iden = "0.5";
                     }
-                    key = "sequence/"+getKey (query, Double.parseDouble(iden));
+                    String idenType = request().getQueryString("identityType");
+                    if(idenType==null){
+                    	idenType="GLOBAL";
+                    }
+                    key = "sequence/"+getKey (query +idenType, Double.parseDouble(iden));
                 }
                 else {
                 }
@@ -1471,11 +1477,15 @@ public class App extends Authentication {
                     key = "similarity/"+getKey (query, Double.parseDouble(c));
                 }
                 else if (type.equalsIgnoreCase("sequence")) {
-                    String iden = request().getQueryString("identity");
+                	String iden = request().getQueryString("identity");
                     if (iden == null) {
                         iden = "0.5";
                     }
-                    key = "sequence/"+getKey (query, Double.parseDouble(iden));
+                    String idenType = request().getQueryString("identityType");
+                    if(idenType==null){
+                    	idenType="GLOBAL";
+                    }
+                    key = "sequence/"+getKey (query +idenType, Double.parseDouble(iden));
                 }
                 else {
                 }
@@ -1556,15 +1566,15 @@ public class App extends Authentication {
     
     public static SearchResultContext sequence
         (final String seq, final double identity, final int rows,
-         final int page, final SearchResultProcessor processor) {
+         final int page, CutoffType ct, final SearchResultProcessor processor) {
         try {
-            final String key = "sequence/"+getKey (seq, identity);
+            final String key = "sequence/"+getKey (seq + ct.toString(), identity);
             return getOrElse
                 (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
                  new Callable<SearchResultContext> () {
                      public SearchResultContext call () throws Exception {
                          processor.setResults
-                             (rows, EntityPersistAdapter.getSequenceIndexer().search(seq, identity));
+                             (rows, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct));
                          return processor.getContext();
                      }
                  });
