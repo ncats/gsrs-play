@@ -44,7 +44,7 @@ public final class IOUtil {
                     try{
                         //System.out.println("Deleting:" + file);
                         Files.delete(file);
-                    }catch(IOException e){
+                    }catch(Exception e){
                         System.out.println(e.getMessage());
                     }
                 }
@@ -62,7 +62,7 @@ public final class IOUtil {
                 try{
                     //System.out.println("Deleting:" + dirfile);
                     Files.delete(dir);
-                }catch(IOException e){
+                }catch(Exception e){
                     System.out.println("unable to delete:" + e.getMessage());
                 }
                 return fvr;
