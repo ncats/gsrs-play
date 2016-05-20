@@ -66,6 +66,12 @@ public class Relationship extends CommonDataElementOfCollection {
     @PrePersist
     @PreUpdate
     public void fixNewLine(){
-    	comments=comments.replaceAll("[\\][\\]*n", "\n");
+		//System.out.println("Persisting relationship");
+
+		if (comments != null) {
+			comments = comments.replaceAll("[\\\\][\\\\]*n", "\n");
+		}
+
+		//System.out.println("Persisted");
     }
 }

@@ -24,13 +24,16 @@ import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import play.libs.ws.WSResponse;
-import play.test.WithApplication;
 import util.json.JsonUtil;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
-public class SubstanceValidateFailTest extends WithApplication {
+public class SubstanceValidateFailTest{
 
+    File resource;
+
+    @Rule
+    public GinasTestServer ts = new GinasTestServer();
 
 
     @Rule
@@ -60,10 +63,6 @@ public class SubstanceValidateFailTest extends WithApplication {
     	return mylist;
     }
 
-    File resource;
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
 
    public SubstanceValidateFailTest(File f, String dummy){
     	this.resource=f;

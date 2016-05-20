@@ -395,10 +395,10 @@ public class GinasTestServer extends ExternalResource{
         testSpecificAdditionalConfiguration.clear();
 
        if(isOracleDB()){
-           System.out.println("in the Oracle db loop");
+           //System.out.println("in the Oracle db loop");
            dropOracleDb();
        }else { //h2 for now
-           System.out.println("in the h2 db loop");
+           //System.out.println("in the h2 db loop");
            deleteH2Db();
        }
 

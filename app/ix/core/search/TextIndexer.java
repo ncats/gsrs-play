@@ -2576,11 +2576,12 @@ public class TextIndexer implements Closeable{
         }
         conf.put("sorters", node);
 
+        
         try(OutputStream fos = new BufferedOutputStream(new FileOutputStream (file))) {
 
             mapper.writerWithDefaultPrettyPrinter().writeValue(fos, conf);
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             Logger.trace("Can't persist sorter config!", ex);
             ex.printStackTrace();
         }
