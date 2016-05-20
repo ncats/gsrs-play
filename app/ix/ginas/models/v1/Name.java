@@ -258,4 +258,8 @@ public class Name extends CommonDataElementOfCollection {
 		this.nameJurisdiction= new EmbeddedKeywordList(this.nameJurisdiction);
 	}
 	
+	public String toString(){
+		return "Name:\"" +this.getName()  +"\"";
+	}
+	
 }
