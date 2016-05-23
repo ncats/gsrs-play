@@ -42,15 +42,6 @@
                 <div class ="col-md-1"></div>
                 <div class = "col-md-12">
                     <text-box ng-model="relationship.comments" field="comments" rows=2></text-box>
-
-                    <!--<div class="row form-row">-->
-                <!--<div class="col-md-2 col-md-offset-2">-->
-                <!--</div>-->
-                <!--<div class="col-md-2">-->
-                    <!--<form-selector referenceobj= "relationship" divid="relationshipForm" field="comments" label="comments" type = "textbox"></form-selector>-->
-                <!--</div>-->
-                <!--<div class="col-md-2">-->
-                <!--</div>-->
             </div>
                 </div>
             <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
@@ -60,22 +51,25 @@
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="relationships" ng-if = "parent.definitionType.value !='ALTERNATIVE'"></delete-button>
+                    <delete-button delete="obj" path="relationships" ng-if = "obj.type.value !='SUBSTANCE->SUB_ALTERNATE'"></delete-button>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-selector referenceobj ="obj" field ="relatedSubstance" name ="relatedSubstance" formname = relationship-{{index}} label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class ="col-md-5">
                     <div class ="row">
-                <div class="col-md-6">
+                <div class="col-md-6" ng-if = "obj.type.value !='SUBSTANCE->SUB_ALTERNATE'">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" ng-if = "obj.type.value==='SUBSTANCE->SUB_ALTERNATE'">
+                    <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" class="disabled"></dropdown-view-edit>
+                </div>
+                <div class="col-md-6" ng-if = "obj.type.value !='SUBSTANCE->SUB_ALTERNATE'">
                     <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction Type"></dropdown-view-edit>
                 </div>
                         </div>
                     <div class = "row"><br/></div>
-                    <div class = "row">
+                    <div class = "row" ng-if = "obj.type.value !='SUBSTANCE->SUB_ALTERNATE'">
                         <div class="col-md-6">
                             <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
                         </div>
@@ -84,7 +78,7 @@
                         </div>
                     </div>
                     </div>
-                <div class="col-md-2">
+                <div class="col-md-2" ng-if = "obj.type.value !='SUBSTANCE->SUB_ALTERNATE'">
                     <substance-chooser-selector referenceobj = "obj" field ="mediatorSubstance" name ="mediatorSubstance" formname = relationship-{{index}} label = "Mediator Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1 pull-right">
