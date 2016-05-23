@@ -33,8 +33,5 @@ public abstract class AbstractLoadDataSetTest {
     public void createAdmin(){
         admin = ts.createAdmin("admin2", "adminPass");
     }
-
-
-
-
+    
 }

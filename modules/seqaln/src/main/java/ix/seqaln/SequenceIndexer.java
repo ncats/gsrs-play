@@ -607,7 +607,7 @@ public class SequenceIndexer {
                 TermQuery tq = new TermQuery (new Term (FIELD_ID, me.getKey()));
                 TopDocs docs = searcher.search(tq, ndocs);
                 for(ScoreDoc scoreDoc :docs.scoreDocs){
-                    System.err.println(searcher.doc(scoreDoc.doc));
+                    //System.err.println(searcher.doc(scoreDoc.doc));
                 }
                 continue;
             }
