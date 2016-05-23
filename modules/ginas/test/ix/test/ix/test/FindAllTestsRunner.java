@@ -21,6 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -56,48 +57,11 @@ public class FindAllTestsRunner extends Suite{
 
 
     public FindAllTestsRunner(Class<?> klass, RunnerBuilder builder) throws InitializationError {
-        super(null, getRunnersFor(getTestClasses(klass), klass));
+        super(builder, null, getTestClasses(klass));
     }
 
-    private static List<Runner> getRunnersFor(List<Class<?>> testClasses, Class<?> parent) throws InitializationError{
-        List<Runner> runners = new LinkedList<>();
 
-        Object parentInstance = null;
-        try {
-            parentInstance = parent.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        List<TestRule> rules = new ArrayList<>();
-        for(Field f : parent.getFields()){
-            if(f.getDeclaredAnnotation(Rule.class) !=null){
-                try {
-
-                    if( TestRule.class.isAssignableFrom(f.getType())){
-                        rules.add((TestRule) f.get(parentInstance));
-                        System.out.println("adding " + f.get(parentInstance));
-                    }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        for (Class<?> klazz : testClasses) {
-            System.out.println("adding test class " + klazz);
-            try {
-                runners.add(new MyRunner(klazz, rules));
-            }catch(Exception ex){
-                //ignore ?
-            }
-        }
-
-        return runners;
-    }
-    private static List<Class<?>> getTestClasses(Class<?> suiteClass) {
+    private static Class<?>[] getTestClasses(Class<?> suiteClass) {
         String classpath = System.getProperty("java.class.path");
         String[] paths = classpath.split(System.getProperty("path.separator"));
 
@@ -108,7 +72,7 @@ public class FindAllTestsRunner extends Suite{
     if(config ==null ){
         throw new IllegalStateException("how!");
     }
-        List<Class<?>> classes = new LinkedList<>();
+        List<Class<?>> classes = new ArrayList<>();
         Pattern includePattern = Pattern.compile(config.includePattern());
         for(String path : paths){
             File f = new File(path);
@@ -121,7 +85,7 @@ public class FindAllTestsRunner extends Suite{
 
 
         }
-        return classes;
+        return classes.toArray(new Class<?>[classes.size()]);
     }
 
     private static void getClassesFrom(Class<?> suiteClass, File root, File currentFile, FindAllTestConfig config, Pattern includePattern,  List<Class<?>> classes){
@@ -145,9 +109,9 @@ public class FindAllTestsRunner extends Suite{
 
                     try {
                         Class<?> c = Class.forName(fullClassName);
-                       // if(! suiteClass.equals(c)) {
+                        if(!Modifier.isAbstract(c.getModifiers())){
                             classes.add(c);
-                       // }
+                        }
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -173,26 +137,5 @@ public class FindAllTestsRunner extends Suite{
         return builder.toString();
     }
 
-    private static class MyRunner extends BlockJUnit4ClassRunner {
-        private final List<TestRule> rules;
 
-        public MyRunner(Class<?> klass, List<TestRule> rules) throws InitializationError {
-            super(klass);
-            this.rules = rules;
-        }
-
-        @Override
-        protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
-            Description description= describeChild(method);
-            if (method.getAnnotation(Ignore.class) != null) {
-                notifier.fireTestIgnored(description);
-            } else {
-                if (description.getAnnotation(Deprecated.class) != null) {
-                    System.out.println("name=" + description.getMethodName() + " annotations=" + description.getAnnotations());
-                }
-                RunRules runRules = new RunRules(methodBlock(method), rules, description);
-                runLeaf(runRules, description, notifier);
-            }
-        }
-    }
 }
