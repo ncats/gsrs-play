@@ -126,7 +126,7 @@ public class ChemicalApiTest {
    	}
     
     @Test
-   	public void testFlexMatchWithIons() throws Exception {
+   	public void testFlexMatchWithIonsReturnsParents() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -141,7 +141,7 @@ public class ChemicalApiTest {
         }
    	}
     @Test
-   	public void testFlexMatchReturnsNothing() throws Exception {
+   	public void testBadFlexMatchReturnsNothing() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -211,14 +211,48 @@ public class ChemicalApiTest {
         }
     }
     
-    public JsonNode makeChemicalSubstanceJSON(String smiles){
+    @Test
+	public void testChemicalExportAsSDF() throws Exception {
+		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+			SubstanceAPI api = new SubstanceAPI(session);
+			JsonNode chemical = makeChemicalSubstanceJSON("COC1=CC=CC=C1");
+            
+            JsonNode entered= api.submitSubstanceJson(chemical);
+            String displayName = entered.at("/_name").asText();
+            String uuid=entered.at("/uuid").asText();
+			String export=api.exportHTML(uuid,"sdf");
+			assertTrue("Exported sdf should have $$$$ in it", export.contains("$$$$"));
+			assertTrue("Exported sdf should have NON_OFFICIAL_NAMES in it", export.contains("NON_OFFICIAL_NAMES"));
+			assertTrue("First line of sdf should have display name in it", export.startsWith(displayName));
+			
+		}
+	}
+    @Test
+	public void testChemicalExportAsSmiles() throws Exception {
+		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+			SubstanceAPI api = new SubstanceAPI(session);
+			JsonNode chemical = makeChemicalSubstanceJSON("COC1=CC=CC=C1");
+            
+            JsonNode entered= api.submitSubstanceJson(chemical);
+            String displayName = entered.at("/_name").asText();
+            String uuid=entered.at("/uuid").asText();
+			String export=api.exportHTML(uuid,"smiles");
+			assertTrue("Exported smiles should be kekulized", export.contains("="));
+			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have 'O'", export.contains("O"));
+			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have 'C'", export.contains("C"));
+			assertTrue("Exported smiles for 'COC1=CC=CC=C1' should have '1'", export.contains("1"));
+			
+		}
+	}
+    
+    public static JsonNode makeChemicalSubstanceJSON(String smiles){
     	ChemicalSubstance cs = makeChemicalSubstance(smiles);
         EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         JsonNode entered = em.valueToTree(cs);
         return entered;
     }
     
-    public ChemicalSubstance makeChemicalSubstance(String smiles){
+    public static ChemicalSubstance makeChemicalSubstance(String smiles){
     	ChemicalSubstance cs = new ChemicalSubstance();
     	cs.structure= new GinasChemicalStructure();
     	cs.structure.molfile=smiles;
@@ -240,4 +274,6 @@ public class ChemicalApiTest {
     public JsonNode parseJsonFile(File resource){
     	return SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
     }
+    
+    
 }

@@ -10,6 +10,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.CloseableIterator;
 import ix.core.util.IOUtil;
+import ix.utils.Util;
 import play.Play;
 import play.db.ebean.Model;
 
@@ -62,9 +63,13 @@ public class ReIndexService {
     }
 
     public void reindexAll(ReIndexListener listener){
+    	System.out.println("$$$$$$$$$$$$$$");
+    	System.out.println("SHUTTING DOWN");
         listener.newReindex();
+        //Util.debugSpin(3000);
         File ginasIx = new File(Play.application().configuration().getString("ix.home"));
 
+        System.out.println("#################### Deleting everything");
         Play.application().plugin(SequenceIndexerPlugin.class).onStop();
         Play.application().plugin(StructureIndexerPlugin.class).onStop();
 
@@ -74,18 +79,26 @@ public class ReIndexService {
         IOUtil.deleteRecursivelyQuitely(new File(ginasIx, "sequence"));
         File structureDir = new File(ginasIx, "structure");
         IOUtil.deleteRecursivelyQuitely(structureDir);
-        IOUtil.deleteRecursivelyQuitely(new File(ginasIx, "text"));
+        IOUtil.deleteRecursivelyQuitely(TextIndexerPlugin.getStorageRootDir());
 
+        try {
+			IOUtil.printDirectoryStructure(ginasIx);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        
         structureDir.mkdirs();
 
+        
         Play.application().plugin(SequenceIndexerPlugin.class).onStart();
         Play.application().plugin(StructureIndexerPlugin.class).onStart();
         Play.application().plugin(TextIndexerPlugin.class).onStart();
 
 
         listener.totalRecordsToIndex(finder.findRowCount());
-
-
+        System.out.println("#################### Deleted everything");
+        
         //QueryIterator must be in try-wtih-resource
         //so it is properly closed if it errors out early.
         try (QueryIterator<BackupEntity> iter = finder.findIterate()){

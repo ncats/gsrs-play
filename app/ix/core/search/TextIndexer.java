@@ -924,6 +924,8 @@ public class TextIndexer implements Closeable{
         }
 
         public void run () {
+        	//Don't execute if already shutdown
+        	if(isShutDown)return;
             File file = getFacetsConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 Logger.debug(Thread.currentThread()
@@ -1165,6 +1167,7 @@ public class TextIndexer implements Closeable{
         // run daemon every 5s
         scheduler.scheduleAtFixedRate
             (new FlushDaemon (), 10, 20, TimeUnit.SECONDS);
+        
     }
 
     public void setFetchWorkers (int n) {
@@ -2605,8 +2608,11 @@ public class TextIndexer implements Closeable{
         //System.out.println("shutting down " + System.identityHashCode(this));
         try {
             fetchQueue.put(POISON_PAYLOAD);
-            scheduler.shutdownNow();
+            System.out.println("Shutting down scheduler");
+            scheduler.shutdown();
             scheduler.awaitTermination(1, TimeUnit.MINUTES);
+            scheduler.shutdownNow();
+            System.out.println("scheduler shut down");
             //System.out.println("done waiting for termination");
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
             saveSorters (getSorterConfigFile (), sorters);
@@ -2628,11 +2634,12 @@ public class TextIndexer implements Closeable{
             closeAndIgnore(indexDir);
             closeAndIgnore(taxonDir);
 
-            isShutDown=true;
+            
         }
         catch (Exception ex) {
                 System.out.println(ex.getMessage());
-            //ex.printStackTrace();
+                System.out.println("#########$##$#$ ERROR");
+            ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
         finally {
@@ -2644,6 +2651,7 @@ public class TextIndexer implements Closeable{
             }catch(Exception e){
                 e.printStackTrace();
             }
+            isShutDown=true;
         }
     }
 
