@@ -67,7 +67,7 @@
                                         if (_.isUndefined(newcv)) {
                                             newcv = {};
                                             _.set(newcv, 'display', value + ' (not in CV)');
-                                            _.set(newcv, 'value', value + ' (not in CV)');
+                                          //  _.set(newcv, 'value', value + ' (not in CV)');
                                         }
                                         sub[field][key] = newcv;
 
@@ -90,7 +90,7 @@
                                 if (_.isUndefined(newcv)) {
                                     newcv = {};
                                     _.set(newcv, 'display', sub[field] + ' (not in CV)');
-                                    _.set(newcv, 'value', sub[field] + ' (not in CV)');
+                                  //  _.set(newcv, 'value', sub[field] + ' (not in CV)');
 
                                 }
                                 sub[field] = newcv;
