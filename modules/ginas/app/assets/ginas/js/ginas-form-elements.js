@@ -161,7 +161,14 @@
     ginasFormElements.service('download', function ($location, $http) {
         createURL = function () {
             var current = ($location.$$url).split('app')[1];
-            var ret = baseurl + "api/v1" + current + '?view=full';
+            var ret;
+            var c = current.split('?');
+            if(c.length>1){
+                var q= c[0] + '/search?'+ c[1];
+                ret = baseurl + "api/v1" + q + '&view=full';
+            }else {
+                ret = baseurl + "api/v1" + current + '?view=full';
+            }
             return ret;
         };
 
@@ -174,6 +181,7 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function (data) {
+                console.log(data.content);
                 return data.content;
             });
 
@@ -791,15 +799,16 @@
             },
             link: function (scope, element, attrs) {
                 var template;
+                console.log(scope.ref);
                 if (scope.format == "subref") {
                     template = angular.element('<div>' +
-                        '<rendered id= {{ref.uuid}} size="200"></rendered><br><code>{{ref.source}}</code><br>' +
+                        '<rendered id= {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
                         '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Select</button>' +
                         '</div>');
                 } else if (scope.ref.uuid) {
                     var url = baseurl + 'substance/' + scope.ref.uuid.split('-')[0];
                     template = angular.element('<div>' +
-                        '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>Ginas Duplicate</code><br/>' +
+                        '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>Ginas Duplicate</code><br/>' +
                         '<div class ="row"><div class="col-md-3 col-md-offset-3"><a class = "btn btn-primary" href = "' + url + '" target="_blank">View</a></div>' +
                         '<div class = "col-md-3"><a class = "btn btn-primary" href = "' + url + '/edit" target="_self">Edit</a></div>' +
                         '</div></div>');
@@ -807,7 +816,7 @@
                     template = angular.element('<div><code>No substances found</code></div>');
                 } else {
                     template = angular.element('<div>' +
-                        '<rendered id= {{ref.value.id}} size="200"></rendered><br><code>{{ref.source}}</code><br>' +
+                        '<rendered id= {{ref.value.id}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
                         '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Use</button>' +
                         '</div>');
                 }
@@ -830,6 +839,7 @@
             link: function (scope, element, attrs) {
 
                 scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
@@ -889,7 +899,8 @@
         return {
             restrict: 'E',
             scope: {
-                data: '='
+                data: '=',
+                format: '='
             },
             link: function (scope, element, attrs) {
                 var json;
@@ -911,9 +922,9 @@
                     } else {
                         var b;
                         var fileType = "json";
-                        if (attrs.format === 'mol') {
+                        if (scope.format) {
                             b = new Blob([scope.data]);
-                            fileType = "mol";
+                            fileType = scope.format;
                         } else {
                             json = JSON.stringify(scope.data);
                             b = new Blob([json], {type: "application/json"});

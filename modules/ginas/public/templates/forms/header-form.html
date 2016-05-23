@@ -14,6 +14,10 @@
                                                 formname="headerForm" label="Primary Substance" type="search"
                                                 definition="true"></substance-chooser-selector>
                 </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="parent" field="definitionLevel" label="Definition Level"
+                                        cv="DEFINITION_LEVEL" ng-blur="$parent.clear();"></dropdown-view-edit>
+                </div>
                 <div class="col-md-1 pull-right text-center">
                     <form-selector referenceobj="parent" parent="parent" divid="headerForm"
                                    type="access"></form-selector>

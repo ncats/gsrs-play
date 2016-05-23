@@ -872,6 +872,17 @@
         "hidden": false,
         "selected": false,
         "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679340,
+        "modified": 1462481431323,
+        "deprecated": false,
+        "value": "definitionLevel",
+        "display": "DEFINITION_LEVEL",
+        "hidden": false,
+        "selected": false,
+        "filters": []
       }
     ],
     "fields": []
@@ -3148,7 +3159,7 @@
         "filters": []
       }
     ],
-    "fields": []
+    "fields": ["definitionType"]
   },
   {
     "id": 14,
@@ -14252,6 +14263,17 @@
         "created": 1457983679322,
         "modified": 1462481431876,
         "deprecated": false,
+        "value": "MOL_WEIGHT:NUMBER(CALCULATED)",
+        "display": "MOL_WEIGHT:NUMBER(CALCULATED)",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1462481431876,
+        "deprecated": false,
         "value": "MOL_WEIGHT:WEIGHT AVERAGE",
         "display": "MOL_WEIGHT:WEIGHT AVERAGE",
         "hidden": false,
@@ -16281,7 +16303,7 @@
         "deprecated": false,
         "value": "SUBSTANCE->SUB_ALTERNATE",
         "display": "Alternative Definition",
-        "hidden": false,
+        "hidden": true,
         "selected": false,
         "filters": []
       },{
@@ -18787,5 +18809,63 @@
       }
     ],
     "fields": []
+  },
+  {
+    "id": 80,
+    "version": 1,
+    "created": 1457983680014,
+    "modified": 1462481431509,
+    "deprecated": false,
+    "domain": "DEFINITION_LEVEL",
+    "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
+    "editable": true,
+    "filterable": false,
+    "terms": [
+      {
+        "version": 1,
+        "created": 1457983679340,
+        "modified": 1462481431509,
+        "deprecated": false,
+        "value": "COMPLETE",
+        "display": "Complete",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679340,
+        "modified": 1462481431510,
+        "deprecated": false,
+        "value": "INCOMPLETE",
+        "display": "Incomplete",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679340,
+        "modified": 1462481431510,
+        "deprecated": false,
+        "value": "INVALID",
+        "display": "Invalid",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679340,
+        "modified": 1462481431510,
+        "deprecated": false,
+        "value": "REPRESENTATIVE",
+        "display": "Representative",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      }
+    ],
+    "fields": ["definitionLevel"]
   }
 ]
