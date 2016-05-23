@@ -23,6 +23,37 @@ public final class IOUtil {
             e.printStackTrace();
         }
     }
+    
+    public static void printDirectoryStructure(File dir) throws IOException{
+    	 if(!dir.exists()){
+             return;
+         }
+         Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<Path>() {
+
+
+             @Override
+             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+             }
+             
+             @Override
+             public FileVisitResult postVisitDirectory(Path dir,
+                                                       IOException exc)
+                     throws IOException{
+
+                 FileVisitResult fvr= super.postVisitDirectory(dir, exc);
+                 File dirfile=dir.toFile();
+                 try{
+                     System.out.println("Visiting  :" + dirfile.getAbsolutePath());
+                     //Files.delete(dir);
+                 }catch(Exception e){
+                     System.out.println("unable to visit:" + e.getMessage());
+                 }
+                 return fvr;
+             }
+
+         });
+    }
     public static void deleteRecursively(File dir) throws IOException {
         if(!dir.exists()){
             return;
@@ -44,7 +75,7 @@ public final class IOUtil {
                     try{
                         //System.out.println("Deleting:" + file);
                         Files.delete(file);
-                    }catch(IOException e){
+                    }catch(Exception e){
                         System.out.println(e.getMessage());
                     }
                 }
@@ -62,7 +93,7 @@ public final class IOUtil {
                 try{
                     //System.out.println("Deleting:" + dirfile);
                     Files.delete(dir);
-                }catch(IOException e){
+                }catch(Exception e){
                     System.out.println("unable to delete:" + e.getMessage());
                 }
                 return fvr;

@@ -42,8 +42,15 @@ public class SequenceIndexerPlugin extends Plugin {
 
     @Override
     public void onStop () {
-        if (indexer != null)
-            indexer.shutdown();
+        if (indexer != null){
+        	try{
+        		
+        		indexer.shutdown();
+        	}catch(Exception e){
+        		System.out.println("Failed to shutdown sequence indexer");
+        		e.printStackTrace();
+        	}
+        }
         Logger.info("Plugin "+getClass().getName()+" stopped!");
         closed=true;
     }

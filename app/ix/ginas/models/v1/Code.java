@@ -26,7 +26,14 @@ public class Code extends CommonDataElementOfCollection{
     @Column(nullable=false)
     public String code;
     
-    @JSONEntity(title = "Code Comments")
+    public String getCode() {
+		return code;
+	}
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	@JSONEntity(title = "Code Comments")
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String comments;
@@ -49,6 +56,10 @@ public class Code extends CommonDataElementOfCollection{
     public Code (String code) {
         this.code = code;
     }
+    
+    public String toString(){
+		return "Code[" + this.codeSystem + "]:\"" +this.getCode()  +"\"";
+	}
     
     
     

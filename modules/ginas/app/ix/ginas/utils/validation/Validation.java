@@ -240,11 +240,11 @@ public class Validation {
 			
 			GinasProcessingMessage gpmerr=null;
 			if(onemptyref == ReferenceAction.FAIL){
-				gpmerr=GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+				gpmerr=GinasProcessingMessage.ERROR_MESSAGE(data.toString() + " needs at least 1 reference").appliableChange(true);
 			}else if(onemptyref == ReferenceAction.WARN){
-				gpmerr=GinasProcessingMessage.WARNING_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+				gpmerr=GinasProcessingMessage.WARNING_MESSAGE(data.toString() + " needs at least 1 reference").appliableChange(true);
 			}else{
-				gpmerr=GinasProcessingMessage.WARNING_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+				gpmerr=GinasProcessingMessage.WARNING_MESSAGE(data.toString() + " needs at least 1 reference").appliableChange(true);
 			}
 					
 			strat.processMessage(gpmerr);
@@ -910,6 +910,7 @@ public class Validation {
             	}
             }
             strat.addAndProcess(validateChemicalStructure(cs.structure,struc,strat),gpm);
+            validateReferenced((Substance)cs,(GinasAccessReferenceControlled)cs.structure,gpm, strat, ReferenceAction.FAIL);
             strat.addAndProcess(validateStructureDuplicates(cs), gpm);
         }else{
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a valid chemical structure"));

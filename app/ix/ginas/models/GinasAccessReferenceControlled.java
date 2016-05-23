@@ -12,4 +12,5 @@ public interface GinasAccessReferenceControlled extends GinasAccessControlled{
 	Set<Keyword> getReferences();
 	void setReferences(Set<Keyword> references);
 	
+	
 }

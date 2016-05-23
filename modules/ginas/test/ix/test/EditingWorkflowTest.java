@@ -1,6 +1,4 @@
 package ix.test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import ix.core.models.Role;
 import ix.ginas.models.v1.NameOrg;
 
@@ -20,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static ix.test.SubstanceJsonUtil.*;
+import static org.junit.Assert.*;
 
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -85,6 +84,7 @@ public class EditingWorkflowTest {
         ensurePass(api.fetchSubstanceByUuid(uuid));
         ensureFailure(api.updateSubstance(entered));
     }
+    
    
     
     @Test
@@ -94,6 +94,35 @@ public class EditingWorkflowTest {
 
             SubstanceAPI api = new SubstanceAPI(session);
             ensurePass(api.submitSubstance(entered));
+        }
+   	}
+    
+    @Test
+   	public void testCleanNewlinesInComments() throws Exception {
+        JsonNode entered = parseJsonFile(resource);
+        entered=(new JsonUtil.JsonNodeBuilder(entered))
+        		.add("/relationships/-", JsonUtil.parseJsonString("{\n" + 
+                		"		\"relatedSubstance\": {\n" + 
+                		"			\"substanceClass\": \"reference\",\n" + 
+                		"			\"approvalID\": \"R16CO5Y76E\",\n" + 
+                		"			\"refPname\": \"ASPIRIN\",\n" + 
+                		"			\"refuuid\": \"1868e373-1b6f-4dcc-8308-0d73ac865f3b\"\n" + 
+                		"		},\n" + 
+                		"		\"type\": \"PARENT-\\u003eSALT/SOLVATE\",\n" + 
+                		"		\"comments\": \"Should remove the extra \\\\n pieces\",\n" + 
+                		"		\"references\": [],\n" + 
+                		"		\"access\": []\n" + 
+                		"	}"))
+        		
+        		.build();
+        try( RestSession session = ts.newRestSession(fakeUser1)) {
+
+            SubstanceAPI api = new SubstanceAPI(session);
+            ensurePass(api.submitSubstance(entered));
+            String uuid=entered.at("/uuid").asText();
+            JsonNode asstored=api.fetchSubstanceJsonByUuid(uuid);
+            assertTrue("Entered comment should have a newline", asstored.at("/relationships/0/comments").asText().contains("\n"));
+            assertFalse("Entered comment should not have '\\\\n'", asstored.at("/relationships/0/comments").asText().contains("\\n"));
         }
    	}
     

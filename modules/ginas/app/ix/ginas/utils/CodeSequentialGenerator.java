@@ -23,6 +23,7 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
 		this.codeSystem=codeSystem;
 	}
 
+	
 	@Override
 	public long getNextNumber() {
 		if(!fetched){
@@ -51,6 +52,14 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
 		r.citation="System Generated Code";
 		c.addReference(r, s);
 		return c;
+	}
+
+	@Override
+	public boolean isValidId(String id) {
+		if(id.endsWith(id)){
+			return true;
+		}
+		return false;
 	}
 	
 	

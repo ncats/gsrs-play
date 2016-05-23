@@ -212,4 +212,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		gcs.id=null;
 		return gcs;
 	}
+	public String toString(){
+		return "Structure Definition";
+	}
 }

@@ -350,4 +350,9 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	}
 	
 	
+	public String toString(){
+		return this.getClass().getSimpleName();
+	}
+	
+	
 }

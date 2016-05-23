@@ -81,8 +81,12 @@ public class TextIndexerPlugin extends Plugin {
        // if (indexer != null && !Play.isTest()) {
         if (indexer != null) {
             indexer.shutdown();
+            System.out.println("###### Shut it all down");
             Logger.info("Plugin " + getClass().getName() + " stopped!");
         }
+        
+        System.out.println("###### Now it's shutdown");
+        
         
 
         closed=true;

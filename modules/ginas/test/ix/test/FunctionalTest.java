@@ -12,7 +12,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import play.test.WithApplication;
 
-public class FunctionalTest extends WithApplication {
+public class FunctionalTest {
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);

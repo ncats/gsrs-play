@@ -22,7 +22,7 @@ import ix.utils.Util;
 @Table(name="ix_core_backup")
 public class BackupEntity extends IxModel{
 	
-	EntityMapper em = EntityMapper.INTERNAL_ENTITY_MAPPER();
+	public static final EntityMapper em = EntityMapper.INTERNAL_ENTITY_MAPPER();
 	
 	@Id
 	private Long id;
@@ -95,7 +95,8 @@ public class BackupEntity extends IxModel{
 	public void setInstantiated(BaseModel o) throws Exception{
 		kind=o.getClass().getName();
 		refid=o.fetchGlobalId();
-		setBytes(em.toJson(o).getBytes(StandardCharsets.UTF_8));
+		String json=em.toJson(o);
+		setBytes(json.getBytes(StandardCharsets.UTF_8));
 		sha1=Util.sha1(data);
 	}
 	

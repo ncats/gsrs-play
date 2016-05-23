@@ -93,7 +93,12 @@ public class GinasUtils {
 			messages.add(GinasProcessingMessage
 					.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
 		}
-		c.setProperty("APPROVAL_ID", s.approvalID);
+		if(c.getDim()<2){
+			c.clean2D();
+		}
+		if(s.approvalID!=null){
+			c.setProperty("APPROVAL_ID", s.approvalID);
+		}
 		c.setProperty("NAME", s.getName());
 		c.setName(s.getName());
 		StringBuilder sb = new StringBuilder();
@@ -121,7 +126,7 @@ public class GinasUtils {
 			}
 		}
 		if (sb.length() > 0) {
-			c.setProperty("OTHER_NAMES", sb.toString());
+			c.setProperty("NON_OFFICIAL_NAMES", sb.toString());
 		}
 		// clear builder
 		sb.setLength(0);

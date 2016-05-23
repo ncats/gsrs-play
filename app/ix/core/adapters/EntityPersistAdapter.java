@@ -402,7 +402,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {
 		if (textIndexerPlugin != null){
-			textIndexerPlugin.getIndexer().add(bean);
+			try{
+				textIndexerPlugin.getIndexer().add(bean);
+			}catch(Exception e){
+				System.err.println(e.getMessage());
+			}
 		}
 
 		List<Field> sequenceFields = getSequenceIndexableField(bean);

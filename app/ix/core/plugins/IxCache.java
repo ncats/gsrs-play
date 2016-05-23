@@ -1,13 +1,15 @@
 package ix.core.plugins;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.CacheStrategy;
 import ix.core.UserFetcher;
 import ix.utils.Util;
@@ -24,18 +26,23 @@ import play.Logger;
 import play.Plugin;
 
 public class IxCache extends Plugin {
-    public static final String CACHE_NAME = "IxCache";
+    private static final String IX_CACHE_EVICTABLE = "IxCache-Evictable";
+    private static final String IX_CACHE_NOT_EVICTABLE = "IxCache-Not-Evictable";
     
     static final int MAX_ELEMENTS = 10000;
     static final int TIME_TO_LIVE = 60*60; // 1hr
     static final int TIME_TO_IDLE = 60*60; // 1hr
 
-    public static final String CACHE_MAX_ELEMENTS = "ix.cache.maxElements";
-    public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
-    public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
+    public static final String CACHE_MAX_ELEMENTS = "ix.evictableCache.maxElements";
+    public static final String CACHE_TIME_TO_LIVE = "ix.evictableCache.timeToLive";
+    public static final String CACHE_TIME_TO_IDLE = "ix.evictableCache.timeToIdle";
 
     private final Application app;
-    private Cache cache;
+    private Cache evictableCache;
+    private Cache nonEvictableCache;
+
+    private GateKeeper gateKeeper;
+
     private IxContext ctx;
 
     static private IxCache _instance;
@@ -57,11 +64,13 @@ public class IxCache extends Plugin {
     		String adaptKey = arg1.getObjectKey().toString();
     		String key=unAdaptKey(adaptKey);
     		keymaster.removeKey(key, adaptKey);
-    		CacheStrategy cacheStrat=arg1.getObjectValue().getClass().getAnnotation(CacheStrategy.class);
-    		if(cacheStrat!=null && !cacheStrat.evictable()){
-    			if(!arg1.isExpired()){
-    				_instance.cache.put(new Element(arg1.getObjectKey(), arg1.getObjectValue(),arg1.isEternal(),arg1.getTimeToIdle(),arg1.getTimeToLive()));
-    			}
+    		if(arg1!=null && arg1.getObjectValue() !=null){
+	    		CacheStrategy cacheStrat=arg1.getObjectValue().getClass().getAnnotation(CacheStrategy.class);
+	    		if(cacheStrat!=null && !cacheStrat.evictable()){
+	    			if(!arg1.isExpired()){
+	    				_instance.evictableCache.put(new Element(arg1.getObjectKey(), arg1.getObjectValue(),arg1.isEternal(),arg1.getTimeToIdle(),arg1.getTimeToLive()));
+	    			}
+	    		}
     		}
     	}
     	@Override
@@ -84,9 +93,7 @@ public class IxCache extends Plugin {
     public IxCache (Application app) {
         this.app = app;
     }
-    
-    
-    
+
 
     @Override
     public void onStart () {
@@ -95,94 +102,111 @@ public class IxCache extends Plugin {
         
         int maxElements = app.configuration()
             .getInt(CACHE_MAX_ELEMENTS, MAX_ELEMENTS);
-        CacheConfiguration config =
-            new CacheConfiguration (CACHE_NAME, maxElements)
-            .timeToLiveSeconds(app.configuration()
-                               .getInt(CACHE_TIME_TO_LIVE, TIME_TO_LIVE))
-            .timeToIdleSeconds(app.configuration()
-                               .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE));
-        cache = new Cache (config);
-        CacheManager.getInstance().addCache(cache);     
-        cache.setSampledStatisticsEnabled(true);
-        cache.getCacheEventNotificationService().registerListener(cacheListener);
+
+        int timeToLive = app.configuration()
+                .getInt(CACHE_TIME_TO_LIVE, TIME_TO_LIVE);
+
+        int timeToIdle = app.configuration()
+                .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE);
+
+
+        evictableCache = new Cache ( new CacheConfiguration (IX_CACHE_EVICTABLE, maxElements)
+                                            .timeToLiveSeconds(timeToLive)
+                                            .timeToIdleSeconds(timeToIdle));
+
+        nonEvictableCache = new Cache ( new CacheConfiguration (IX_CACHE_NOT_EVICTABLE, maxElements)
+                                                .timeToLiveSeconds(timeToLive)
+                                                .timeToIdleSeconds(timeToIdle));
+
+        CacheManager.getInstance().addCache(evictableCache);
+
+        CacheManager.getInstance().addCache(nonEvictableCache);
+
+        evictableCache.setSampledStatisticsEnabled(true);
+        evictableCache.getCacheEventNotificationService().registerListener(cacheListener);
+
+        gateKeeper = new GateKeeper( ctx, new ExplicitMapKeyMaster(), evictableCache, nonEvictableCache);
         _instance = this;
     }
 
     @Override
     public void onStop () {
-        Logger.info("Stopping plugin "+getClass().getName());   
-        try {
-            cache.dispose();
-            CacheManager.getInstance().removeCache(cache.getName());
-        }
-        catch (Exception ex) {
-            Logger.trace("Disposing cache", ex);
-        }
+        Logger.info("Stopping plugin "+getClass().getName());
+
+        gateKeeper.close();
     }
+
+
 
     public static Element getElm (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.get(adaptKey(key));
+        checkInitialized();
+        return _instance.gateKeeper.getRawElement(key);
     }
-    
+
+    private static void checkInitialized(){
+        if (_instance == null) {
+            throw new IllegalStateException("Cache hasn't been initialized!");
+        }
+    }
+
     public static Object get (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(adaptKey(key));
-        return elm != null ? elm.getObjectValue() : null;
+        checkInitialized();
+        return _instance.gateKeeper.get(key);
+
     }
     private static Object getRaw (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(key);
-        return elm != null ? elm.getObjectValue() : null;
+        checkInitialized();
+        return _instance.gateKeeper.getRaw(key);
     }
 
-    public static long getLastAccessTime (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(adaptKey(key));
-        return elm != null ? elm.getLastAccessTime() : 0l;
-    }
-
-    public static long getExpirationTime (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(adaptKey(key));
-        return elm != null ? elm.getExpirationTime() : 0l;
-    }
-
-    public static boolean isExpired (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(adaptKey(key));
-        return elm != null ? elm.isExpired() : false;
-    }
+//    public static long getLastAccessTime (String key) {
+//        if (_instance == null)
+//            throw new IllegalStateException ("Cache hasn't been initialized!");
+//        Element elm = _instance.evictableCache.get(adaptKey(key));
+//        return elm != null ? elm.getLastAccessTime() : 0l;
+//    }
+//
+//    public static long getExpirationTime (String key) {
+//        if (_instance == null)
+//            throw new IllegalStateException ("Cache hasn't been initialized!");
+//        Element elm = _instance.evictableCache.get(adaptKey(key));
+//        return elm != null ? elm.getExpirationTime() : 0l;
+//    }
+//
+//    public static boolean isExpired (String key) {
+//        if (_instance == null)
+//            throw new IllegalStateException ("Cache hasn't been initialized!");
+//        Element elm = _instance.evictableCache.get(adaptKey(key));
+//        return elm != null ? elm.isExpired() : false;
+//    }
 
     /**
-     * apply generator if the cache was created before epoch
+     * apply generator if the evictableCache was created before epoch
      */
     public static <T> T getOrElse (long epoch,
                                    String key, Callable<T> generator)
         throws Exception {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        Element elm = _instance.cache.get(adaptKey(key));
-        if (elm == null || elm.getCreationTime() < epoch) {
-            T v = generator.call();
-            elm = new Element (adaptKey(key), v);
-            _instance.cache.put(elm);
-        }
-        try {
-            return (T) elm.getObjectValue();
-        }
-        catch(Exception e){
-            T v = generator.call();
-            elm = new Element (adaptKey(key), v);
-            _instance.cache.put(elm);
-            return (T) elm.getObjectValue();
-        }
+
+        checkInitialized();
+        return _instance.gateKeeper.getSinceOrElse(key,epoch, generator);
+
+//        if (_instance == null)
+//            throw new IllegalStateException ("Cache hasn't been initialized!");
+//        Element elm = _instance.evictableCache.get(adaptKey(key));
+//        if (elm == null || elm.getCreationTime() < epoch) {
+//            T v = generator.call();
+//            elm = new Element (adaptKey(key), v);
+//            _instance.evictableCache.put(elm);
+//        }
+//        try {
+//            return (T) elm.getObjectValue();
+//        }
+//        catch(Exception e){
+//            T v = generator.call();
+//            elm = new Element (adaptKey(key), v);
+//            _instance.evictableCache.put(elm);
+//            return (T) elm.getObjectValue();
+//        }
     }
     
     public static <T> T getOrElse (String key, Callable<T> generator)
@@ -195,25 +219,29 @@ public class IxCache extends Plugin {
     // mimic play.Cache 
     public static <T> T getOrElse (String key, Callable<T> generator,
                                    int seconds) throws Exception {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        
-        Object value = get (key);
-        
-        
-        	
-        if (value == null) {
-            if (_instance.ctx.debug(2))
-                Logger.debug("IxCache missed: "+adaptKey(key));
-            T v = generator.call();
-            String adaptKey=adaptKey(key);
-            _instance.cache.put
-                (new Element (adaptKey, v, seconds <= 0, seconds, seconds));
-            _instance.keymaster.addKey(key, adaptKey);
-            
-            return v;
-        }
-        return (T)value;
+
+        checkInitialized();
+        return _instance.gateKeeper.getOrElse(key,  generator,seconds);
+//
+//        if (_instance == null)
+//            throw new IllegalStateException ("Cache hasn't been initialized!");
+//
+//        Object value = get (key);
+//
+//
+//
+//        if (value == null) {
+//            if (_instance.ctx.debug(2))
+//                Logger.debug("IxCache missed: "+adaptKey(key));
+//            T v = generator.call();
+//            String adaptKey=adaptKey(key);
+//            _instance.evictableCache.put
+//                (new Element (adaptKey, v, seconds <= 0, seconds, seconds));
+//            _instance.keymaster.addKey(key, adaptKey);
+//
+//            return v;
+//        }
+//        return (T)value;
     }
     
     
@@ -222,77 +250,84 @@ public class IxCache extends Plugin {
     
     public static <T> T getOrElseRaw (String key, Callable<T> generator,
             int seconds) throws Exception {
-		if (_instance == null)
-		throw new IllegalStateException ("Cache hasn't been initialized!");
-		
-		Object value = getRaw (key);
-		if (value == null) {
-		if (_instance.ctx.debug(2))
-		Logger.debug("IxCache missed: "+key);
-		T v = generator.call();
-		_instance.cache.put
-		(new Element (key, v, seconds <= 0, seconds, seconds));
-		return v;
-		}
-		return (T)value;
+
+        checkInitialized();
+        return _instance.gateKeeper.getOrElseRaw(key,  generator,seconds);
+//
+//		if (_instance == null)
+//		throw new IllegalStateException ("Cache hasn't been initialized!");
+//
+//		Object value = getRaw (key);
+//		if (value == null) {
+//		if (_instance.ctx.debug(2))
+//		Logger.debug("IxCache missed: "+key);
+//		T v = generator.call();
+//		_instance.evictableCache.put
+//		(new Element (key, v, seconds <= 0, seconds, seconds));
+//		return v;
+//		}
+//		return (T)value;
 	}
 
-    public static List getKeys () {
-        try {
-            return new ArrayList (_instance.cache.getKeys());
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't get cache keys", ex);
-        }
-        return null;
+
+    public static JsonNode toJson(String key){
+        Element e = _instance.gateKeeper.getRawElement(key);
+        return new ObjectMapper().valueToTree(e);
     }
-    
-    public static List getKeys (int top, int skip) {
-        List keys = getKeys ();
-        if (keys != null) {
-            keys = keys.subList(skip, Math.min(skip+top, keys.size()));
-        }
-        return keys;
+
+    public static Stream<Element> toJsonStream(int top, int skip){
+        checkInitialized();
+        final ObjectMapper mapper = new ObjectMapper();
+
+        Stream<String> stream = Stream.concat(
+                                 _instance.evictableCache.getKeys().stream(),
+                                 _instance.nonEvictableCache.getKeys().stream());
+
+        return stream.skip(skip)
+                .limit(top)
+                .map(k -> _instance.gateKeeper.getRawElement(k));
+
     }
+
+
     
     public static void set (String key, Object value) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        _instance.cache.put(new Element (adaptKey(key), value));
+
+        checkInitialized();
+        _instance.gateKeeper.put(key, value);
+
     }
 
     public static void set (String key, Object value, int expiration) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        _instance.cache.put
-            (new Element (adaptKey(key), value, expiration <= 0, expiration, expiration));
+        checkInitialized();
+        _instance.gateKeeper.put(key, value, expiration);
     }
 
     public static boolean remove (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.remove(adaptKey(key));
+        checkInitialized();
+        return _instance.gateKeeper.remove(key);
+
     }
     
     public static boolean removeAllChildKeys (String key){
-    	if (_instance == null){
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-    	}
-    	return _instance.keymaster.removeAllChildKeys(key);
+        checkInitialized();
+        return _instance.gateKeeper.removeAllChildKeys(key);
+
     }
     
    
     
     public static Statistics getStatistics () {
+        //TODO how to handle multiple caches
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.getStatistics();
+        return _instance.evictableCache.getStatistics();
     }
 
     public static boolean contains (String key) {
-        if (_instance == null)
-            throw new IllegalStateException ("Cache hasn't been initialized!");
-        return _instance.cache.isKeyInCache(adaptKey(key));
+        checkInitialized();
+        return _instance.gateKeeper.contains(key);
+
     }
     
     public static String adaptKey(String okey){
@@ -312,25 +347,48 @@ public class IxCache extends Plugin {
     }
 
 	public static void setRaw(String key, Object value) {
-		 if (_instance == null)
-	            throw new IllegalStateException ("Cache hasn't been initialized!");
-	      _instance.cache.put(new Element (key, value));
+        checkInitialized();
+        _instance.gateKeeper.putRaw(key, value);
+
 	}
 
-	public static interface KeyMaster{
-		public Set<String> getAllAdaptedKeys(String baseKey);
-		public void addKey(String baseKey, String adaptKey);
-		public void removeKey(String baseKey, String adaptKey);
+
+    public interface KeyMaster{
+		Set<String> getAllAdaptedKeys(String baseKey);
+		void addKey(String baseKey, String adaptKey);
+		void removeKey(String baseKey, String adaptKey);
+
 		default boolean removeAllChildKeys(String key){
 			boolean worked=true;
 	    	Set<String> oldKeys=_instance.keymaster.getAllAdaptedKeys(key);
 	    	if(oldKeys!=null){
 	    		for(String okey:new ArrayList<String>(oldKeys)){
-		    		worked &=_instance.cache.remove(okey);
+		    		worked &=_instance.evictableCache.remove(okey);
 		    	}
 	    	}
 	    	return worked;
 		}
+
+        default void add(String baseKey){
+            addKey(baseKey, adaptKey(baseKey));
+        }
+
+
+        default String adaptKey(String baseKey){
+            final String user = UserFetcher.getActingUser(true).username;
+            String nkey = "!" + baseKey + "#" + Util.sha1(user);
+            return nkey;
+        }
+
+        default String unAdaptKey(String adaptedKey) {
+            if (!adaptedKey.startsWith("!")) {
+                return adaptedKey;
+            }
+            int lastindex = adaptedKey.lastIndexOf('#');
+
+            return adaptedKey.substring(1, lastindex);
+        }
+
 	}
 	
 	public static class ExplicitMapKeyMaster implements KeyMaster{

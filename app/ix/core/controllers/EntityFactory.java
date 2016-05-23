@@ -1531,7 +1531,6 @@ public class EntityFactory extends Controller {
             	usePojoPatch=false;
             }
             
-            
             if(usePojoPatch){
 	            //Get the difference as a patch
 	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
@@ -1557,13 +1556,13 @@ public class EntityFactory extends Controller {
 	        		Object v=changeStack.pop();
 	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
 		        		if(v instanceof ForceUpdatableModel){
-		        			System.out.println("Force update for:" + v);
+		        			//System.out.println("Force update for:" + v);
 		            		((ForceUpdatableModel)v).forceUpdate();
 		            	}else if(v instanceof Model){
-		            		System.out.println("Regular update for:" + v);
+		            		//System.out.println("Regular update for:" + v);
 		            		((Model)v).update();
 		            	}else{
-		            		System.out.println("Nothing to do for:" + v);
+		            		//System.out.println("Nothing to do for:" + v);
 		            	}
 	        		}
 	        	}
@@ -1632,6 +1631,7 @@ public class EntityFactory extends Controller {
             // updated at all, at least from the ebean perspective
             
             EntityPersistAdapter.getInstance().deepreindex(newValue);
+            
             return Java8Util.ok (mapper.valueToTree(newValue));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
@@ -1974,7 +1974,7 @@ public class EntityFactory extends Controller {
     }
     
     private static FetchedValue getCurrentValue(Object value) throws Exception{
-    	Class cls = value.getClass();
+    	Class<?> cls = value.getClass();
         if (cls.getAnnotation(Entity.class) == null)
             throw new IllegalArgumentException
                 ("Class "+cls.getName()+" is not an entity");
@@ -1987,16 +1987,19 @@ public class EntityFactory extends Controller {
         Object xval = null;
         Object id=null;
         
-        LinkedHashSet<Class> possibleClasses = new LinkedHashSet<Class>();
+        LinkedHashSet<Class<?>> possibleClasses = new LinkedHashSet<Class<?>>();
         possibleClasses.add(cls);
         if(value instanceof BaseModel){
-    		Class[] classes=((BaseModel)value).fetchEquivalentClasses();
-    		for(Class c:classes){
+    		Class<?>[] classes=((BaseModel)value).fetchEquivalentClasses();
+    		for(Class<?> c:classes){
     			possibleClasses.add(c);
     		}
     	}
-        
-        for(Class c:possibleClasses){
+        Class<?> lastClass=null;
+        //This may not be necessary after all?
+        for(Class<?> c:possibleClasses){
+        	
+        	lastClass=c;
         	
 	        Model.Finder finder = new Model.Finder
 	            (idf.getType(), c);
@@ -2021,8 +2024,10 @@ public class EntityFactory extends Controller {
 	                            f.get(value))
 	                        .findUnique();
 	                    
-	                    if (xval != null)
+	                    if (xval != null){
 	                        id = EntityUtils.getId (xval);
+	                        
+	                    }
 	                    
 	                    break;
 	                }
@@ -2032,7 +2037,7 @@ public class EntityFactory extends Controller {
 	            xval = finder.byId(id);
 	        }
 	        if(xval!=null){
-	        	cls=c;
+	        	cls=xval.getClass();
 	        	break;
 	    	}
         }

@@ -50,7 +50,11 @@ public class SequenceIndexer {
     static {
         init ();
     }
-
+    public static enum CutoffType{
+    	LOCAL,
+    	GLOBAL,
+    	SUB
+    }
     public static void init(){
         CACHE_MANAGER = CacheManager.getInstance();
         CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
@@ -162,16 +166,24 @@ public class SequenceIndexer {
         public final String alignment; // full alignment string
         public final int score;
         public final double iden;
+        public final double global;
+        public final double sub;
 
         Alignment (SEG segment,
                    String query, String target,
-                   String alignment, int score, double iden) {
+                   String alignment, 
+                   int score, 
+                   double iden, 
+                   double global,
+                   double sub) {
             this.segment = segment;
             this.query = query;
             this.target = target;
             this.alignment = alignment;
             this.score = score;
             this.iden = iden;
+            this.global = global;
+            this.sub=sub;
         }
         
         public int compareTo (Alignment aln) {
@@ -490,15 +502,19 @@ public class SequenceIndexer {
     public long lastModified () { return lastModified.get(); }
     
     public ResultEnumeration search (String query) {
-        return search (query, 0.4);
+        return search (query, 0.4,CutoffType.GLOBAL);
+    }
+    
+    public ResultEnumeration search (String query,CutoffType rt) {
+        return search (query, 0.4,rt);
     }
 
-    public ResultEnumeration search (String query, double identity) {
-        return search (query, identity, 3);
+    public ResultEnumeration search (String query, double identity,CutoffType rt) {
+        return search (query, identity, 3,rt);
     }
     
     public ResultEnumeration search (final String query,
-                                     final double identity, final int gap) {
+                                     final double identity, final int gap,CutoffType rt) {
         if (getSize()<=0 || query == null || query.length() == 0) {
             return new ResultEnumeration(null);
         }
@@ -506,10 +522,10 @@ public class SequenceIndexer {
         threadPool.submit(new Runnable () {
                 public void run () {
 
-                    System.out.println("elapsed = " + ix.core.util.StopWatch.timeElaspsed(()->{
+                    ix.core.util.StopWatch.timeElaspsed(()->{
                     try {
 
-                        search (out, query, identity, gap);
+                        search (out, query, identity, gap, rt);
                     }
                     catch (Exception ex) {
                         ex.printStackTrace();
@@ -522,7 +538,7 @@ public class SequenceIndexer {
                         } 
                     }
                     
-                }));
+                    });
                 }
             });
         
@@ -530,7 +546,7 @@ public class SequenceIndexer {
     }
 
     protected void search (BlockingQueue<Result> results,
-                           String query, double identity, int gap)
+                           String query, double identity, int gap,CutoffType rt)
         throws Exception {
 
         /*
@@ -541,17 +557,17 @@ public class SequenceIndexer {
         kmerSearchManager.maybeRefresh();
         IndexSearcher searcher = kmerSearchManager.acquire();
         try {
-            search (searcher, results, query, identity, gap);
+            search (searcher, results, query, identity, gap, rt);
         }
         finally {
             kmerSearchManager.release(searcher);
         }
         searcher = null;
     }
-    
+   
     protected void search (IndexSearcher searcher,
                            BlockingQueue<Result> results,
-                           String query, double identity, int gap)
+                           String query, double identity, int gap, CutoffType rt)
         throws Exception {
 
         Kmers kmers = Kmers.create(query);
@@ -591,7 +607,7 @@ public class SequenceIndexer {
                 TermQuery tq = new TermQuery (new Term (FIELD_ID, me.getKey()));
                 TopDocs docs = searcher.search(tq, ndocs);
                 for(ScoreDoc scoreDoc :docs.scoreDocs){
-                    System.err.println(searcher.doc(scoreDoc.doc));
+                    //System.err.println(searcher.doc(scoreDoc.doc));
                 }
                 continue;
             }
@@ -652,19 +668,38 @@ public class SequenceIndexer {
 
             //System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
             int max = 0;
+            Alignment maxaln = null;
             for (SEG seg : segments) {
                 //System.err.println(seg);
                 Alignment aln = align (seg, qs, seq);
                 if (aln.score > max) {
                     //System.err.println(aln);
                     max = aln.score;
+                    maxaln=aln;
                 }
                 result.alignments.add(aln);
             }
 
-            double score = (double)max/Math.min(query.length(), seq.length());
-            if (score >= identity) {
-                results.put(result);
+            if(maxaln!=null){
+            	double score =0;
+            	switch(rt){
+					case GLOBAL:
+						score=maxaln.global;
+						break;
+					case LOCAL:
+						score=maxaln.iden;
+						break;
+					case SUB:
+						score=maxaln.sub;
+						break;
+					default:
+						break;
+	            	
+            	}
+	            
+	            if (score >= identity) {
+	                results.put(result);
+	            }
             }
         }
     }
@@ -777,12 +812,44 @@ public class SequenceIndexer {
         */
 
         int score = M[q.length()][s.length()];
+        
+        //Local alignment score 
+        // (fraction of aligned residues in the longest local sequence)
+		double iden=(double)score/Math.max(q.length(),s.length());
+		
+		//Global alignment score
+		// (fraction of aligned residues in the longest global sequence)
+		double glob=(double)score/Math.max(query.length(),target.length());
+		
+		//Sub alignment score
+		// (local alignment score, multiplied by the fraction of the
+		//  residues found in the query)
+		//
+		//	The purpose of this is to penalize the local identity score
+		//  such that a strong local alignment that doesn't have much 
+		//  of the query present is not weighted as strongly
+		
+		//  As an example where we want to have high match
+		//   Query: ABC
+		//  Target: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+		//  
+		//	As an example where we want to have a low match
+		//   Query: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+		//  Target: ABC
+		//
+		double sub=iden*score/(double)query.length();
+		
+		
         return new Alignment (seg, qa.toString(), qs.toString(),
                               qa+String.format("%1$5d - %2$d", seg.qi, seg.qj)
                               +"\n"+qq+"\n"
                               +qs+String.format("%1$5d - %2$d", seg.ti,seg.tj),
-                              score, (double)score/Math.max(q.length(),
-                                                            s.length()));
+                              score, 
+                              iden,
+                              glob,
+                              sub
+        		
+        		);
     }
 
     @SuppressWarnings("unchecked")

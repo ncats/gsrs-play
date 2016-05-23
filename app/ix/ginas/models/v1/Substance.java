@@ -496,6 +496,7 @@ public class Substance extends GinasCommonData {
 		return this.status.equalsIgnoreCase(STATUS_APPROVED);
 	}
 
+	//probably should be turned off
 	@JsonProperty("_approvalIDDisplay")
 	public String getApprovalIDDisplay() {
 		if (approvalID != null)
@@ -518,6 +519,26 @@ public class Substance extends GinasCommonData {
 		}
 		return "NO APPROVAL ID";
 	}
+	
+	@JsonIgnore
+	public String getBestId() {
+		if (approvalID != null)
+			return approvalID;
+		SubstanceReference subRef = getParentSubstanceReference();
+		if (subRef != null) {
+			return subRef.approvalID + "_sub" + this.uuid;
+		}
+		if(this.isAlternativeDefinition()){
+			SubstanceReference subRef2 = this.getPrimaryDefinitionReference();
+			if(subRef2!=null){
+				if(subRef2.approvalID!=null){
+					return subRef2.approvalID + "_alt" + this.uuid;
+				}
+			}
+		}
+		return this.uuid.toString();
+	}
+	
 
 	@JsonIgnore
 	public List<SubstanceReference> getChildConceptReferences() {
@@ -859,4 +880,17 @@ public class Substance extends GinasCommonData {
 	public int getReferenceCount(){
 		return names.size();
 	}
+//	
+//	public boolean hasEquivalentRelationship(Relationship rel){
+//		String relType=rel.type;
+//		String refid=rel.relatedSubstance.refuuid;
+//		for(Relationship relationship:this.relationships){
+//			if(relationship.relatedSubstance.refuuid.equals(refid)){
+//				if(relationship.type.equals(relType)){
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
+//	}
 }
