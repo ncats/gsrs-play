@@ -28,19 +28,14 @@
 
             <tr>
                 <td>
+                @if(r.relatedSubstance != null && r.relatedSubstance.getLinkingID() != null) {
+                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(r.relatedSubstance.getLinkingID())" target="_self">
                 @subref(r.relatedSubstance)
+                    </a>
+                    }else{
+                    @subref(r.relatedSubstance)
+                }
                 </td>
-
-                @*<td>*@
-                @*@defining(r.relatedSubstance) { sub =>*@
-                    @*@if(sub != null && sub.getLinkingID() != null) {*@
-                        @*<a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">*@
-                        @*@sub.getName()*@
-                        @*</a>*@
-                    @*}*@
-                @*}*@
-                @*</td>*@
-    
                 <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
                 <td>@r.comments</td>
                 <td>

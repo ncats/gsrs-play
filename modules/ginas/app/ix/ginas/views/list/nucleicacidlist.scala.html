@@ -44,7 +44,7 @@
 
                 <div class = "row">
                     <div class = "col-md-2">
-                        <h5>Other Names:</h5>
+                        <h5><strong>Other Names:</strong></h5>
                     </div>
                     <div class = "col-md-10">
                         <h5>@ix.ginas.controllers.GinasApp.namesList(nuc.names)</h5>
@@ -52,34 +52,53 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-2">
-                        <h5>Codes:</h5>
+                        <h5><strong>Codes:</strong></h5>
                     </div>
                     <div class = "col-md-10">
                         <h5>@ix.ginas.controllers.GinasApp.codesList(nuc.codes)</h5>
                     </div>
                 </div>
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5><strong>Subunits:</strong></h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <span class = "badge">@nuc.nucleicAcid.getSubunits().size()</span>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5><strong>Relationships:</strong></h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <span class = "badge">@nuc.relationships.size()</span>
+                    </div>
+                </div>
+                @if(nuc.getAlternativeDefinitionRelationships().size() > 0) {
+                    <div class = "row">
+                        <div class = "col-md-2">
+                            <h5><strong>Alternative Definitions:</strong></h5>
+                        </div>
+                        <div class = "col-md-10">
+                            <h5>nuc.getAlternativeDefinitionRelationships().size()</h5>
+                        </div>
+                    </div>
+                }
             </div>
 
             <div class = "col-md-2">
                 <div class = "row">
                     <div class = "col-md-12">
-@*
-                        Subunits: <span class = "badge">@nuc.nucleicAcid.subunits.length</span>
-*@
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-12">
                         @if(nuc.approved==null){
                             <h6>Not Approved</h6>
                         }else{
-                            Date approved: <h6>{{@GinasApp.getDateTime(nuc.approved) | date: 'mediumDate'}}</h6>
+                            <strong>Date approved: </strong><h6>{{@GinasApp.getDateTime(nuc.approved) | date: 'mediumDate'}}</h6>
                         }
                     </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@nuc.getLastEdited.getTime())}}</h6>
+                        <strong>Last modified: </strong><h6>{{moment(@nuc.getLastEdited.getTime())}}</h6>
                     </div>
                 </div>
                 <div class = "row">

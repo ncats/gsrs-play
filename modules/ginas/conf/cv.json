@@ -16303,7 +16303,7 @@
         "deprecated": false,
         "value": "SUBSTANCE->SUB_ALTERNATE",
         "display": "Alternative Definition",
-        "hidden": false,
+        "hidden": true,
         "selected": false,
         "filters": []
       },{
