@@ -40,7 +40,7 @@
             @if(sub.names.size()>0) {
                 <div class = "row">
                     <div class = "col-md-3">
-                        <h5>Other Names:</h5>
+                        <h5><strong>Other Names:</strong></h5>
                     </div>
                     <div class = "col-md-9">
                         <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
@@ -50,7 +50,7 @@
                 @if(sub.codes.size()>0){
 	                <div class = "row">
 	                    <div class = "col-md-3">
-	                        <h5>Codes:</h5>
+	                        <h5><strong>Codes:</strong></h5>
 	                    </div>
 	                    <div class = "col-md-9">
 	                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
@@ -63,7 +63,7 @@
                
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@sub.getLastEdited.getTime())}}</h6>
+                        <strong>Last modified: </strong><h6>{{moment(@sub.getLastEdited.getTime())}}</h6>
                     </div>
                 </div>
                 

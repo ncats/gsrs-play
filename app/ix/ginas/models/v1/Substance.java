@@ -376,6 +376,7 @@ public class Substance extends GinasCommonData {
 		ret.removeAll(getImpurities());
 		ret.removeAll(getMetabolites());
 		ret.removeAll(getActiveMoieties());
+		ret.removeAll(getAlternativeDefinitionRelationships());
 		return ret;
 	}
 
