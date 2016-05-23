@@ -48,44 +48,7 @@ public class IxCache extends Plugin {
     static private IxCache _instance;
     
     private KeyMaster keymaster = new ExplicitMapKeyMaster();
-    private CacheEventListener cacheListener = new CacheEventListener(){
-    	@Override
-    	public void notifyElementEvicted(Ehcache arg0, Element arg1) {
-    		
-    		
-    		gateKeep(arg1);
-    		
-    	}
-    	@Override
-    	public void notifyElementRemoved(Ehcache arg0, Element arg1) throws CacheException {
-    		gateKeep(arg1);
-    	}
-    	public void gateKeep(Element arg1){
-    		String adaptKey = arg1.getObjectKey().toString();
-    		String key=unAdaptKey(adaptKey);
-    		keymaster.removeKey(key, adaptKey);
-    		CacheStrategy cacheStrat=arg1.getObjectValue().getClass().getAnnotation(CacheStrategy.class);
-    		if(cacheStrat!=null && !cacheStrat.evictable()){
-    			if(!arg1.isExpired()){
-    				_instance.evictableCache.put(new Element(arg1.getObjectKey(), arg1.getObjectValue(),arg1.isEternal(),arg1.getTimeToIdle(),arg1.getTimeToLive()));
-    			}
-    		}
-    	}
-    	@Override
-    	public void dispose() {}
-    	@Override
-    	public void notifyElementExpired(Ehcache arg0, Element arg1) {}
-    	@Override
-    	public void notifyElementPut(Ehcache arg0, Element arg1) throws CacheException {}
-    	@Override
-    	public void notifyElementUpdated(Ehcache arg0, Element arg1) throws CacheException {}
-    	@Override
-    	public void notifyRemoveAll(Ehcache arg0) {}
-    	
-    	public Object clone(){
-    		return null;
-    	}
-    };
+
     
     
     public IxCache (Application app) {
@@ -121,7 +84,6 @@ public class IxCache extends Plugin {
         CacheManager.getInstance().addCache(nonEvictableCache);
 
         evictableCache.setSampledStatisticsEnabled(true);
-        evictableCache.getCacheEventNotificationService().registerListener(cacheListener);
 
         gateKeeper = new GateKeeper( ctx, new ExplicitMapKeyMaster(), evictableCache, nonEvictableCache);
         _instance = this;
