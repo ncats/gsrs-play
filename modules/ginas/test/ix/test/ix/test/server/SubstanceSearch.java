@@ -51,21 +51,30 @@ public class SubstanceSearch {
         Set<String> temp;
         HtmlPage firstPage=null;
         do {
+            try {
+                HtmlPage htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+                temp = getSubstancesFrom(htmlPage);
+                if (firstPage == null) {
+                    firstPage = htmlPage;
+                }
 
-            HtmlPage htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
-            temp = getSubstancesFrom(htmlPage);
-            if(firstPage ==null){
-                firstPage = htmlPage;
+
+                page++;
+                //we check the return value of the add() call
+                //because when we get to the page beyond the end of the results
+                //it returns the first page again
+                //so we can check to see if we've already added these
+                //records (so add() will return false)
+                //which will break us out of the loop.
+            }catch(IllegalArgumentException e){
+                //Code looks like it's been improved
+                //to throw an exception if you page too far
+                //so swallow that exception.
+                if(e.getMessage().contains("Bogus page")){
+                    break;
+                }
+                throw e;
             }
-            
-            
-            page++;
-            //we check the return value of the add() call
-            //because when we get to the page beyond the end of the results
-            //it returns the first page again
-            //so we can check to see if we've already added these
-            //records (so add() will return false)
-            //which will break us out of the loop.
         }while(substances.addAll(temp));
 
         SearchResult results = new SearchResult(substances);
