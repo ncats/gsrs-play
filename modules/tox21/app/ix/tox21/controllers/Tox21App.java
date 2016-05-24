@@ -317,7 +317,8 @@ public class Tox21App extends App {
         Statement stm = con.createStatement();
         try {
             ResultSet rset = stm.executeQuery
-                ("select * from ncgc_sample where tox21_t0 is not null");
+                ("select * from ncgc_sample where "
+                 +"tox21_id like 'Tox21%' order by sample_id");
             int count = load ("ncgc_sample", rset);
             Logger.debug(count+" samples processed!");
         }
@@ -329,20 +330,36 @@ public class Tox21App extends App {
     static int load (String source, ResultSet rset) throws SQLException {
         return load (source, null, rset);
     }
+
+    static String grade (String g) {
+        if (g == null || g.equals("")) return "ND";
+        else if (g.equals("AC")) return "Ac";
+        else if (g.equals("FNS")) return "Fns";
+        else if (g.equals("BC")) return "Bc";
+        else if (g.equals("CC")) return "Cc";
+        else if (g.equals("FC")) return "Fc";
+        return g;
+    }
+        
     
     static int load (String source, Molecule struc, ResultSet rset)
         throws SQLException {
-        int count = 0;
+
+        Set<String> ids = new HashSet<String>();
         while (rset.next()) {
             String name = rset.getString("sample_name");
             String ncgc = rset.getString("sample_id");
             String cas = rset.getString("cas");
             String sid = rset.getString("tox21_sid");
-            String gradeT0 = rset.getString("tox21_t0");
-            String gradeT4 = rset.getString("tox21_t4");
+            String gradeT0 = grade (rset.getString("tox21_t0"));
+            String gradeT4 = grade (rset.getString("tox21_t4"));
             String toxid = rset.getString("tox21_id");
             String inchi = rset.getString("inchi_hash");
-            
+
+            if (ids.contains(toxid)) {
+                continue;
+            }
+
             QCSample qc = new QCSample (name);
             qc.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
             qc.synonyms.add(new Keyword (Sample.S_SID, sid));
@@ -355,14 +372,14 @@ public class Tox21App extends App {
                 qc.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
             */
 
-            if (struc != null) {
+            /*if (struc != null) {
                 qc.properties.add
                     (new Text (Sample.P_MOLFILE, struc.toFormat("mol")));
                 qc.properties.add
                     (new Text (Sample.P_SMILES_ISO,
                                struc.toFormat("smiles:-a")));
             }
-            else {
+            else*/ {
                 String mol = rset.getString("structure");
                 if (mol != null) {
                     qc.properties.add(new Text (Sample.P_MOLFILE, mol));
@@ -413,14 +430,14 @@ public class Tox21App extends App {
                 else {
                     qc.save();
                 }
-                
-                ++count;
+                ids.add(toxid);                
             }
             catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-        return count;
+        
+        return ids.size();
     }
 
     public static Result index () {
@@ -705,7 +722,8 @@ public class Tox21App extends App {
         "LCMS.pdf",
         "LCMS1.pdf",
         "LCMS3.pdf",
-        "GCMS1.pdf"
+        "GCMS1.pdf",
+        "NMR.pdf"
     };
     static String PDF_ROOT =
         Play.application().configuration().getString("tox21.pdf");

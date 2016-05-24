@@ -261,18 +261,18 @@ public class TextIndexer implements Closeable{
     }
 
     public static SearchContextAnalyzer getDefaultSearchAnalyzerFor(Class<?> cls){
-    	SearchContextAnalyzerGenerator gen=defaultSearchAnalyzers.get(cls);
-    	if(gen!=null){
-    		return gen.create();
-    	}
-    	return null;
-    	
+        SearchContextAnalyzerGenerator gen=defaultSearchAnalyzers.get(cls);
+        if(gen!=null){
+                return gen.create();
+        }
+        return null;
+        
     }
     
     public static class SearchResultFuture extends FutureTask<List>{
-    	public SearchResultFuture(final SearchResult result){
-    		super(new WaitForSearchCallable(result));
-    	}
+        public SearchResultFuture(final SearchResult result){
+                super(new WaitForSearchCallable(result));
+        }
         public SearchResultFuture(final SearchResult result, int numberOfRecords){
             super(new WaitForSearchCallable(result, numberOfRecords));
         }
@@ -280,18 +280,18 @@ public class TextIndexer implements Closeable{
     
     private static class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
 
-    	private final SearchResult result;
-    	
-    	private final CountDownLatch latch;
-    	private boolean waitForAll;
+        private final SearchResult result;
+        
+        private final CountDownLatch latch;
+        private boolean waitForAll;
 
-    	public WaitForSearchCallable(final SearchResult result){
-    		Objects.requireNonNull(result);
-    		this.result = result;
-    		this.result.addListener(this);
+        public WaitForSearchCallable(final SearchResult result){
+                Objects.requireNonNull(result);
+                this.result = result;
+                this.result.addListener(this);
             waitForAll = true;
             latch = new CountDownLatch(1);
-    	}
+        }
         public WaitForSearchCallable(final SearchResult result, int numberOfRecords){
             Objects.requireNonNull(result);
             this.result = result;
@@ -301,20 +301,20 @@ public class TextIndexer implements Closeable{
             latch = new CountDownLatch(count);
             waitForAll = false;
         }
-		@Override
-		public List call() throws Exception {
-			if(latch.getCount()>0 && !result.finished()){
-				latch.await();
-			}
+                @Override
+                public List call() throws Exception {
+                        if(latch.getCount()>0 && !result.finished()){
+                                latch.await();
+                        }
             result.removeListener(this);
-			return result.getMatches();
-		}
-		@Override
-		public void searchIsDone() {
-			while(latch.getCount()>0){
+                        return result.getMatches();
+                }
+                @Override
+                public void searchIsDone() {
+                        while(latch.getCount()>0){
                 latch.countDown();
             }
-		}
+                }
 
         @Override
         public void added(Object o) {
@@ -325,7 +325,7 @@ public class TextIndexer implements Closeable{
     }
     
     public static class SearchResult {
-    	
+        
         SearchContextAnalyzer searchAnalyzer;
 
         /**
@@ -335,10 +335,10 @@ public class TextIndexer implements Closeable{
          * @return
          */
         public List<FieldFacet> getFieldFacets(){
-        	if(searchAnalyzer!=null)
-        		return searchAnalyzer.getFieldFacets();
-        	return new ArrayList<FieldFacet>();
-        	
+                if(searchAnalyzer!=null)
+                        return searchAnalyzer.getFieldFacets();
+                return new ArrayList<FieldFacet>();
+                
         }
         
         String key;
@@ -355,11 +355,11 @@ public class TextIndexer implements Closeable{
         private List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
         
         SearchResult () {
-        	
+                
         }
         
         SearchResult (SearchOptions options, String query) {
-        	this();
+                this();
             this.options = options;
             this.query = query;
             searchAnalyzer=getDefaultSearchAnalyzerFor(this.options.kind);
@@ -385,21 +385,21 @@ public class TextIndexer implements Closeable{
         }
 
         public void addListener(SearchResultDoneListener listener){
-        	listeners.add(new SoftReference<>(listener));
+                listeners.add(new SoftReference<>(listener));
         }
         
         public void removeListener(SearchResultDoneListener listener){
-        	Iterator<SoftReference<SearchResultDoneListener>> iter =listeners.iterator();
-        	while(iter.hasNext()){
-        		SoftReference<SearchResultDoneListener> l = iter.next();
-        		SearchResultDoneListener actualListener = l.get();
-        		//if get() returns null then the object was garbage collected
-        		if(actualListener ==null || listener.equals(actualListener)){
-        			iter.remove();
-        			//keep checking in the unlikely event that
-        			//a listener was added twice?
-        		}
-        	}
+            Iterator<SoftReference<SearchResultDoneListener>> iter =listeners.iterator();
+            while(iter.hasNext()){
+                SoftReference<SearchResultDoneListener> l = iter.next();
+                SearchResultDoneListener actualListener = l.get();
+                //if get() returns null then the object was garbage collected
+                if(actualListener ==null || listener.equals(actualListener)){
+                    iter.remove();
+                    //keep checking in the unlikely event that
+                    //a listener was added twice?
+                }
+            }
         }
         
         public String getKey() { return key; }
@@ -431,31 +431,28 @@ public class TextIndexer implements Closeable{
          * is available.
          * 
           * @param list 
-         * 	Destination list to copy into
+         *      Destination list to copy into
          * @param start
-         * 	Offset starting location from master list
+         *      Offset starting location from master list
          * @param count
-         * 	Total number of records to be copied
+         *      Total number of records to be copied
          * @param wait
-         * 	set to true for blocking for correct answer,
+         *      set to true for blocking for correct answer,
          *  false will return available records immediately
          * @return
          */
         public int copyTo (List list, int start, int count, boolean wait) {
-
-        	
-        	
-        	
-        	// It may be that the page that is being fetched is not yet
-        	// complete. There are 2 options here then. The first is to
-        	// return whatever is ready now immediately, and report the
-        	// number of results (that is what had been done before).
-        	
-        	// The second way is to wait for the fetching to be completed
-        	// which is what is demonstrated below. 
-        	List matches;
-        	if(wait){
-        		try {
+                
+            // It may be that the page that is being fetched is not yet
+            // complete. There are 2 options here then. The first is to
+            // return whatever is ready now immediately, and report the
+            // number of results (that is what had been done before).
+                
+            // The second way is to wait for the fetching to be completed
+            // which is what is demonstrated below. 
+            List matches;
+            if(wait){
+                try {
                     matches =this.getMatchesFuture(start+count).get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -463,18 +460,18 @@ public class TextIndexer implements Closeable{
                     matches = Collections.emptyList();
                 }
             }else{
-        		matches = getMatches();
-        	}
-        	
-        	//Question:
-        	// Does this ever cause a problem if we're searching for
-        	// something that starts beyond where we've gotten to?
-        	// Like if we try to page before getting all results?
-        	
-        	//Answer: 
-        	// not anymore. Use "wait" if that's a problem.
-        	
-        	if (start >= matches.size()) {
+                matches = getMatches();
+            }
+                
+            //Question:
+            // Does this ever cause a problem if we're searching for
+            // something that starts beyond where we've gotten to?
+            // Like if we try to page before getting all results?
+                
+            //Answer: 
+            // not anymore. Use "wait" if that's a problem.
+                
+            if (start >= matches.size()) {
                 return 0;
             }
 
@@ -489,7 +486,7 @@ public class TextIndexer implements Closeable{
             }
             
             return i;
-        	
+                
         }
         /**
          * Copies from the search results to the specified list
@@ -506,11 +503,11 @@ public class TextIndexer implements Closeable{
          *
          * 
          * @param list 
-         * 	Destination list to copy into
+         *      Destination list to copy into
          * @param start
-         * 	Offset starting location from master list
+         *      Offset starting location from master list
          * @param count
-         * 	Total number of records to be copied
+         *      Total number of records to be copied
          * @return
          */
         // fill the given list with value starting at start up to start+count
@@ -566,7 +563,7 @@ public class TextIndexer implements Closeable{
         }
         
         public List getMatches () {
-        	if (result != null) return result;
+                if (result != null) return result;
             
             List list = new ArrayList (matches);
             if (matches instanceof PriorityBlockingQueue) {
@@ -596,14 +593,14 @@ public class TextIndexer implements Closeable{
             notifyAdd(obj);
 
             if(searchAnalyzer!=null && query!=null && query.length()>0){
-            	searchAnalyzer.updateFieldQueryFacets(obj, query);
+                searchAnalyzer.updateFieldQueryFacets(obj, query);
             }
             //If you see this in the code base, erase it
             //it's only here for debugging
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
 //            if(Math.random()>.9){
-            	//Util.debugSpin(100);
+                //Util.debugSpin(100);
 //            }
         }
 
@@ -627,19 +624,19 @@ public class TextIndexer implements Closeable{
             
             Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
             while(iter.hasNext()){
-            	SearchResultDoneListener l = iter.next().get();
-            	if(l ==null){
-            		iter.remove();
-            	}else{
-            		l.searchIsDone();
-            	}
-            	
+                SearchResultDoneListener l = iter.next().get();
+                if(l ==null){
+                        iter.remove();
+                }else{
+                        l.searchIsDone();
+                }
+                
             }
         }
     }
 
     interface SearchResultDoneListener{
-    	void searchIsDone();
+        void searchIsDone();
         void added(Object o);
     }
     
@@ -1006,69 +1003,69 @@ public class TextIndexer implements Closeable{
     }
     
     public static interface SearchContextAnalyzerGenerator{
-    	public SearchContextAnalyzer create();
+        public SearchContextAnalyzer create();
     }
     public static class DefaultSearchContextAnalyzerGenerator implements SearchContextAnalyzerGenerator{
 
-    	Class<?> entityCls;
-		Class<?> analyzerCls;
-		Map params;
-		
-    	public DefaultSearchContextAnalyzerGenerator(Class<?> entityCls, Class<?> analyzerCls, Map with){
-    		this.entityCls=entityCls;
-    		this.analyzerCls=analyzerCls;
-    		this.params=with;
-    		
-    	}
-		@Override
-		public SearchContextAnalyzer create() {
-			SearchContextAnalyzer analyzer=null;
-			if(params!=null){
-				try{
-					Constructor c=analyzerCls.getConstructor(Map.class);
-					analyzer= (SearchContextAnalyzer) c.newInstance(params);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-			if(analyzer==null){
-				try {
-					analyzer = (SearchContextAnalyzer) analyzerCls.newInstance();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			return analyzer;
-		}
-    	
+        Class<?> entityCls;
+                Class<?> analyzerCls;
+                Map params;
+                
+        public DefaultSearchContextAnalyzerGenerator(Class<?> entityCls, Class<?> analyzerCls, Map with){
+                this.entityCls=entityCls;
+                this.analyzerCls=analyzerCls;
+                this.params=with;
+                
+        }
+        @Override
+        public SearchContextAnalyzer create() {
+            SearchContextAnalyzer analyzer=null;
+            if(params!=null){
+                try{
+                    Constructor c=analyzerCls.getConstructor(Map.class);
+                    analyzer= (SearchContextAnalyzer) c.newInstance(params);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+            if(analyzer==null){
+                try {
+                    analyzer = (SearchContextAnalyzer) analyzerCls.newInstance();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return analyzer;
+        }
+        
     }
     
     public static void registerDefaultAnalyzers(){
-    	List<Object> ls= Play.application().configuration().getList("ix.core.searchanalyzers",null);
-    	if(ls!=null){
-    		for(Object o:ls){
-    			if(o instanceof Map){
-	    			Map m = (Map)o;
-	    			String entityClass=(String) m.get("class");
-	    			String analyzerClass=(String) m.get("analyzer");
-	    			Map params=(Map) m.get("with");
-	    			String debug="Setting up analyzer for [" + entityClass + "] ... ";
-	    			try {
-	    				
-						Class<?> entityCls = Class.forName(entityClass);
-						Class<?> analyzerCls = Class.forName(analyzerClass);
-						
-						SearchContextAnalyzerGenerator generator = 
-								new DefaultSearchContextAnalyzerGenerator(entityCls,analyzerCls,params);
-						defaultSearchAnalyzers.put(entityCls, generator);
-						Logger.info(debug + "done");
-					} catch (Exception e) {
-						Logger.info(debug + "failed");
-						e.printStackTrace();
-					}
-    			}
-    		}
-    	}
+        List<Object> ls= Play.application().configuration().getList("ix.core.searchanalyzers",null);
+        if(ls!=null){
+            for(Object o:ls){
+                if(o instanceof Map){
+                    Map m = (Map)o;
+                    String entityClass=(String) m.get("class");
+                    String analyzerClass=(String) m.get("analyzer");
+                    Map params=(Map) m.get("with");
+                    String debug="Setting up analyzer for [" + entityClass + "] ... ";
+                    try {
+                                        
+                        Class<?> entityCls = Class.forName(entityClass);
+                        Class<?> analyzerCls = Class.forName(analyzerClass);
+                                                
+                        SearchContextAnalyzerGenerator generator = 
+                            new DefaultSearchContextAnalyzerGenerator(entityCls,analyzerCls,params);
+                        defaultSearchAnalyzers.put(entityCls, generator);
+                        Logger.info(debug + "done");
+                    } catch (Exception e) {
+                        Logger.info(debug + "failed");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 
     public synchronized static TextIndexer getInstance (File baseDir) throws IOException {
@@ -1276,30 +1273,28 @@ public class TextIndexer implements Closeable{
     
     public static class IxQueryParser extends QueryParser{
 
-		
+        protected IxQueryParser(CharStream charStream) {
+            super(charStream);
+        }
+                
+        public IxQueryParser(String string, Analyzer indexAnalyzer) {
+            super(string,indexAnalyzer);
+        }
 
-		protected IxQueryParser(CharStream charStream) {
-			super(charStream);
-		}
-		
-		public IxQueryParser(String string, Analyzer indexAnalyzer) {
-			super(string,indexAnalyzer);
-		}
-
-		@Override
-		public Query parse(String qtext) throws ParseException{
-			if (qtext!=null){
-	            qtext= qtext.replace(TextIndexer.GIVEN_START_WORD,
-	                                TextIndexer.START_WORD);
-	            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
-	                                  TextIndexer.STOP_WORD);
-	        }
-			//add ROOT prefix to all term queries (containing '_') where not
-			//otherwise specified
-			qtext=qtext.replaceAll("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])", ROOT + "_$1");
-			Query q = super.parse(qtext);
-			return q;
-		}
+        @Override
+        public Query parse(String qtext) throws ParseException{
+            if (qtext!=null){
+                qtext= qtext.replace(TextIndexer.GIVEN_START_WORD,
+                                     TextIndexer.START_WORD);
+                qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
+                                      TextIndexer.STOP_WORD);
+            }
+            //add ROOT prefix to all term queries (containing '_') where not
+            //otherwise specified
+            qtext=qtext.replaceAll("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])", ROOT + "_$1");
+            Query q = super.parse(qtext);
+            return q;
+        }
     }
     
     public SearchResult search 
@@ -1669,7 +1664,7 @@ public class TextIndexer implements Closeable{
                 payload.fetch();
             }
             else {
-            	
+                
                 // we first block until we have enough result to show; simulate
                 //  with a random number of fetch
                 int fetch = 20 + new Random().nextInt(options.fetch);
@@ -1943,21 +1938,21 @@ public class TextIndexer implements Closeable{
                                Object entity, 
                                List<IndexableField> ixFields,
                                LinkedList<Object> entities
-    							) {
-    	//This is a problem because of infinite recursion. It
-    	//can actually happen really easily on ManyToOne
-    	//JPA annotations.
-    	if(entities==null){
-    		entities= new LinkedList<Object>();
-    	}
-    	// This is to avoid infinite recurse. If this object has already been 
-    	// seen here, then things would explode.
-    	if(entities.contains(entity)){
-    		return;
-    	}
+                               ) {
+        //This is a problem because of infinite recursion. It
+        //can actually happen really easily on ManyToOne
+        //JPA annotations.
+        if(entities==null){
+            entities= new LinkedList<Object>();
+        }
+        // This is to avoid infinite recurse. If this object has already been 
+        // seen here, then things would explode.
+        if(entities.contains(entity)){
+            return;
+        }
         try {
-        	
-        	entities.push(entity);
+                
+            entities.push(entity);
             Class cls = entity.getClass();
             ixFields.add(new FacetField (DIM_CLASS, cls.getName()));
 
@@ -1979,7 +1974,7 @@ public class TextIndexer implements Closeable{
                     || Modifier.isStatic(mods)
                     || Modifier.isTransient(mods)
                     
-                		) {
+                    ) {
                     //Logger.debug("** skipping field "+f.getName()+"["+cls.getName()+"]");
                     continue;
                 }
@@ -2103,14 +2098,14 @@ public class TextIndexer implements Closeable{
                                 name = name.substring(3);
                             }
                             if(!indexable.name().equals("")){
-                            	name=indexable.name();
+                                name=indexable.name();
                             }
                             LinkedList<String> l = new LinkedList<>();
                             l.add(name);
                             
                             Class type = value.getClass();
                             if (Collection.class.isAssignableFrom(type)) {
-                            	
+                                
                                 Iterator it = ((Collection)value).iterator();
                                 for (int i = 0; it.hasNext(); ++i) {
                                     l.push(String.valueOf(i));
@@ -2147,7 +2142,7 @@ public class TextIndexer implements Closeable{
             Logger.trace("Fetching entity fields", ex);
         }
         finally{
-        	entities.pop();
+            entities.pop();
         }
     }
 

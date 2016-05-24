@@ -612,7 +612,7 @@ public class App extends Authentication {
         
         List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
-        	boolean found=false;
+                boolean found=false;
             for (Facet f : facets){
                 if (n.equals(f.getName())){
                     filtered.add(f);
@@ -620,7 +620,7 @@ public class App extends Authentication {
                 }
             }
             if(!found){
-            	//System.out.println("Didn't find:" + n);
+                //System.out.println("Didn't find:" + n);
             }
         }
         return filtered.toArray(new Facet[filtered.size()]);
@@ -974,10 +974,10 @@ public class App extends Authentication {
         Chemical chem = new Jchemical (mol);
         Request r=request();
         if(r!=null){
-        	if("true".equals(r.getQueryString("standardize"))){
-        		chem.dearomatize();
-        		chem.removeNonDescriptHydrogens();
-        	}
+                if("true".equals(r.getQueryString("standardize"))){
+                        chem.dearomatize();
+                        chem.removeNonDescriptHydrogens();
+                }
         }
         
         DisplayParams dp = DisplayParams.DEFAULT();
@@ -1202,6 +1202,8 @@ public class App extends Authentication {
             // to show pagination) and return immediately. as the user pages,
             // the background job will fill in the rest of the results.
             int count = process (rows+1);
+            Logger.debug("$$ search context "+context.getId()+" has "+count
+                         +"/"+(rows+1)+" results!");
             
             // while we continue to fetch the rest of the results in the
             // background
@@ -1261,8 +1263,8 @@ public class App extends Authentication {
         }
         
         public SearchResultContext (SearchResult result) {
-        	fieldFacets=result.getFieldFacets();
-        	
+                fieldFacets=result.getFieldFacets();
+                
             start = result.getTimestamp();          
             if (result.finished()) {
                 status = Status.Done;
@@ -1281,7 +1283,7 @@ public class App extends Authentication {
         }
         
         public List<FieldFacet> getFieldFacets(){
-        	return fieldFacets;
+                return fieldFacets;
         }
 
         public String getId () { return id; }
@@ -1538,24 +1540,24 @@ public class App extends Authentication {
     public static <T> Result fetchResultImmediate
     (final TextIndexer.SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
-    	 SearchResultContext src= new SearchResultContext(result);
-    	 String wait=request().getQueryString("wait");
-    	 List<T> resultList = new ArrayList<T>();
-    	 int[] pages = new int[0];
-    	 if (result.count() > 0) {
-    	             rows = Math.min(result.count(), Math.max(1, rows));
-    	             pages = paging(rows, page, result.count());
-    	             
-    	             //block for results only if the request specifies this
-    	             if(wait!=null && wait.equalsIgnoreCase("true")){
-    	            	 result.copyTo(resultList, (page-1)*rows, rows, true);
-    	             }else{
-    	            	 result.copyTo(resultList, (page-1)*rows, rows, false);
-    	             }
-    	             
-    	 }
-    	 return renderer.render(src, page, rows, result.count(),
-    			 pages, result.getFacets(), resultList);
+         SearchResultContext src= new SearchResultContext(result);
+         String wait=request().getQueryString("wait");
+         List<T> resultList = new ArrayList<T>();
+         int[] pages = new int[0];
+         if (result.count() > 0) {
+                     rows = Math.min(result.count(), Math.max(1, rows));
+                     pages = paging(rows, page, result.count());
+                     
+                     //block for results only if the request specifies this
+                     if(wait!=null && wait.equalsIgnoreCase("true")){
+                         result.copyTo(resultList, (page-1)*rows, rows, true);
+                     }else{
+                         result.copyTo(resultList, (page-1)*rows, rows, false);
+                     }
+                     
+         }
+         return renderer.render(src, page, rows, result.count(),
+                         pages, result.getFacets(), resultList);
     }
     public static <T> Result fetchResult
         (final SearchResultContext context, int rows,
@@ -1612,12 +1614,14 @@ public class App extends Authentication {
                 page = 1;
                 i = 0;
             }
+            Logger.debug("checkpoint #1.. "+new java.util.Date());
             pages = paging (rows, page, count);
             result.copyTo(results, i, rows);
             facets.addAll(result.getFacets());
+            Logger.debug("checkpoint #2.. "+new java.util.Date());
 
             if (result.finished()) {
-                final String k = getKey (context) + "result";
+                final String k = getKey (context);
                 final int _page = page;
                 final int _rows = rows;
                 final int _count = count;
