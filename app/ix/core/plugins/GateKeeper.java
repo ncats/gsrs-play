@@ -60,6 +60,10 @@ public class GateKeeper implements Closeable{
 
     public boolean remove(String key) {
         String adaptedKey = keyMaster.adaptKey(key);
+        return removeRaw(adaptedKey);
+    }
+
+    private boolean removeRaw(String adaptedKey) {
         if(evictableCache.remove(adaptedKey)){
             return true;
         }
@@ -72,7 +76,7 @@ public class GateKeeper implements Closeable{
             return false;
         }
         set.stream()
-                .forEach(k-> remove(k));
+                .forEach(k-> removeRaw(k));
 
         return true;
     }
@@ -112,7 +116,8 @@ public class GateKeeper implements Closeable{
       String adaptedKey = keyMaster.adaptKey(key);
         return getOrElseRaw(adaptedKey,
                 createKeyWrapper(generator, key, adaptedKey, seconds),
-                e-> e.getCreationTime() < creationTime);
+                e->e.getCreationTime() < creationTime
+                );
     }
 
 
@@ -170,7 +175,10 @@ public class GateKeeper implements Closeable{
 
     public <T> T getOrElse(String key, Callable<T> generator, int seconds) throws Exception{
         String adaptedKey = keyMaster.adaptKey(key);
-        return getOrElseRaw(adaptedKey, generator, seconds);
+
+        return getOrElseRaw(adaptedKey,
+                createKeyWrapper(generator, key, adaptedKey, seconds),
+                e-> false);
     }
 
     public void put(String key, Object value, int expiration){
@@ -188,6 +196,9 @@ public class GateKeeper implements Closeable{
     }
 
     private void addToCache(String adaptedKey, Object value, int expiration) {
+        if(value ==null ){
+            return;
+        }
         if(isEvictable(value)){
             evictableCache.put(new Element(adaptedKey, value, expiration <= 0, expiration, expiration));
         }else{
@@ -201,6 +212,7 @@ public class GateKeeper implements Closeable{
             return true;
         }
         CacheStrategy cacheStrat=o.getClass().getAnnotation(CacheStrategy.class);
+
         if(cacheStrat ==null){
             return true;
         }

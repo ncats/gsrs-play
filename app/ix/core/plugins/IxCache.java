@@ -290,21 +290,7 @@ public class IxCache extends Plugin {
 
     }
     
-    public static String adaptKey(String okey){
-    	final String user = UserFetcher.getActingUser(true).username;
-    	String nkey = "!" + okey + "#" + Util.sha1(user);
-    	return nkey;
-    }
-    public static String unAdaptKey(String adaptKey){
-    	if(!adaptKey.startsWith("!")){
-    		return adaptKey;
-    	}else{
-    		int lastindex=adaptKey.lastIndexOf('#');
-    			
-    		String p= adaptKey.substring(1, lastindex);
-    		return p;
-    	}
-    }
+
 
 	public static void setRaw(String key, Object value) {
         checkInitialized();
@@ -318,16 +304,7 @@ public class IxCache extends Plugin {
 		void addKey(String baseKey, String adaptKey);
 		void removeKey(String baseKey, String adaptKey);
 
-		default boolean removeAllChildKeys(String key){
-			boolean worked=true;
-	    	Set<String> oldKeys=_instance.keymaster.getAllAdaptedKeys(key);
-	    	if(oldKeys!=null){
-	    		for(String okey:new ArrayList<String>(oldKeys)){
-		    		worked &=_instance.evictableCache.remove(okey);
-		    	}
-	    	}
-	    	return worked;
-		}
+
 
         default void add(String baseKey){
             addKey(baseKey, adaptKey(baseKey));
