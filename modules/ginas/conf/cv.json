@@ -3511,6 +3511,17 @@
         "modified": 1462481431530,
         "deprecated": false,
         "value": "INN",
+        "display": "INTERNATIONAL NONPROPRIETARY NAME",
+        "hidden": false,
+        "selected": false,
+        "systemCategory": "GENERAL INFORMATION",
+        "filters": []
+      },{
+        "version": 1,
+        "created": 1457983679299,
+        "modified": 1462481431530,
+        "deprecated": false,
+        "value": "INDEX NAME NOMINUM",
         "display": "INDEX NAME NOMINUM",
         "hidden": false,
         "selected": false,

@@ -1858,16 +1858,19 @@
             },
             templateUrl: baseurl + "assets/templates/forms/relationship-form.html",
             link: function (scope) {
-                scope.validate = function (obj, form, path) {
-                    console.log(scope);
+              /*  scope.validate = function (obj, form, path) {
+                    scope.$emit('validate', scope.obj, scope.form, scope.path);*/
+                  /*  console.log(scope);
                     console.log(obj);
+                    console.log(form);
+                    console.log(path);
                     if (!scope.parent.relationships) {
                         scope.parent.relationships = [];
                     }
                     scope.parent.relationships.push(obj);
-                    obj = {};
-                    scope.relationshipForm.$setPristine();
-                };
+                    obj = null;
+                   form.$setPristine();*/
+          //      };
             }
         };
     });
@@ -1984,7 +1987,7 @@
         };
     });
 
-    ginasForms.directive('submitButtons', function () {
+    ginasForms.directive('submitButtons', function ($rootScope) {
 
         return {
             restrict: 'E',
@@ -1999,10 +2002,8 @@
             link: function (scope, element, attrs) {
                 scope.validate = function () {
                     if (!scope.$parent.validate) {
-                        console.log(scope);
-                        if (scope.$parent.$parent.validate(scope.obj, scope.form, scope.path)) {
-                            scope.reset();
-                        }
+                        scope.$emit('validate', scope.obj, scope.form, scope.path);
+                           scope.reset();
                     } else {
                         if (scope.$parent.validate(scope.obj, scope.form, scope.path)) {
                             scope.reset();

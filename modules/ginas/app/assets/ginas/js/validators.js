@@ -12,14 +12,19 @@ angular.module('validatorListener', [])
 
 		var codeSystemValidators = {
 			defaultValidator: function (codeSystem) {
-				console.log("No validator for:" + codeSystem + ", using default");
+				//console.log("No validator for:" + codeSystem + ", using default");
 				return function (code) {
 					//TODO: make more robust?
 					return true;
 				}
 			},
 			makeKey: function (codeSystem) {
-				return "VAL" + codeSystem.replace(/[ .-]/g, "");
+				if(codeSystem!="" &&codeSystem!=null) {
+					return "VAL" + codeSystem.replace(/[ .-]/g, "");
+				}
+				else{
+					return null;
+				}
 			},
 			getValidatorFor: function (codeSystem) {
 				var f = codeSystemValidators[codeSystemValidators.makeKey(codeSystem)];
