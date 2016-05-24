@@ -375,7 +375,7 @@
                     filter: " = ",
                     selected: false
                 }];
-                
+                var temp= scope.obj[scope.field];
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -406,15 +406,34 @@
                     }
                 };
 
+                scope.undo = function(){
+                    if(scope.obj[scope.field].changed==true) {
+                        scope.obj[scope.field] = temp;
+                    scope.obj[scope.field].changed = false;
+                        scope.obj[scope.field].$editing=false;
+                    }
+                };
 
+                scope.change = function(){
+                        if (scope.obj[scope.field]) {
+                            scope.obj[scope.field].$editing = false;
+                            scope.obj[scope.field].changed = true;
+                        }else {
+                            _.unset(scope.obj, scope.field);
+                        }
+                };
 
-
+                scope.toggleEdit= function(){
+                if(scope.obj[scope.field]){
+                    scope.obj[scope.field].$editing=false;
+                }
+                };
 
                 scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
+                    if (_.has(obj, '$editing')) {
+                        obj.$editing = !obj.$editing;
                     } else {
-                        _.set(obj, '_editing', true);
+                        _.set(obj, '$editing', true);
                     }
                 };
             }
