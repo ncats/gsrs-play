@@ -1,35 +1,35 @@
 package ix.test;
-import ix.core.models.Role;
-import ix.ginas.models.v1.NameOrg;
+import static ix.test.SubstanceJsonUtil.ensureFailure;
+import static ix.test.SubstanceJsonUtil.ensurePass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.JsonHistoryResult;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static ix.test.SubstanceJsonUtil.*;
-import static org.junit.Assert.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
-
+import ix.core.models.Role;
+import ix.ginas.models.v1.NameOrg;
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.JsonHistoryResult;
+import ix.test.ix.test.server.RestSession;
+import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.util.TestNamePrinter;
 import util.json.ChangeFilters;
 import util.json.Changes;
 import util.json.ChangesBuilder;
 import util.json.JsonUtil;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * 
@@ -191,33 +191,7 @@ public class EditingWorkflowTest {
            	addNameOrgServer(api,uuid,  "INN");
         }
    	}
-    @Test
-   	public void testPromoteConceptToProtein() throws Exception {
-        try( RestSession session = ts.newRestSession(fakeUser1)) {
-            SubstanceAPI api = new SubstanceAPI(session);
-    		
-           	JsonNode entered= parseJsonFile(resource);
-           	JsonNode concept=new JsonUtil
-            .JsonNodeBuilder(entered)
-            .remove("/protein")
-            .set("/substanceClass", "concept")
-            .build();
-           	String uuid=entered.get("uuid").asText();
-            ensurePass(api.submitSubstance(concept));
-            JsonNode fetched=api.fetchSubstanceJsonByUuid(uuid);
-            assertEquals(fetched.at("/substanceClass").asText(), "concept");
-            JsonNode updated = new JsonUtil
-                    .JsonNodeBuilder(fetched)
-                    .add("/protein",entered.at("/protein"))
-                    .set("/substanceClass", "protein")
-                    .build();
-            ensurePass(api.updateSubstance(updated));
-            JsonNode fetchedagain=api.fetchSubstanceJsonByUuid(uuid);
-            assertEquals(fetchedagain.at("/substanceClass").asText(), "protein");
-            
-            
-        }
-   	}
+   
     @Test
    	public void testFailDoubleEditProtein() throws Exception {
         try( RestSession session1 = ts.newRestSession(fakeUser1);
@@ -247,6 +221,67 @@ public class EditingWorkflowTest {
             JsonNode fetchedagain=api1.fetchSubstanceJsonByUuid(uuid);
             assertEquals(fetchedagain.at("/names/0/name").asText(), "MADE UP NAME 1");
             
+            
+        }
+   	}
+    
+
+    @Test
+   	public void testAllowReferenceReverseAndGranularChange() throws Exception {
+
+        String someNew="SOME_NEW_TAG";
+        try( RestSession session1 = ts.newRestSession(fakeUser1);
+        	 RestSession session2 = ts.newRestSession(fakeUser2);
+        		) {
+            SubstanceAPI api1 = new SubstanceAPI(session1);
+            SubstanceAPI api2 = new SubstanceAPI(session2);
+    		
+           	JsonNode entered= parseJsonFile(resource);
+           	String uuid=entered.get("uuid").asText();
+            ensurePass(api1.submitSubstance(entered));
+            JsonNode fetched=api1.fetchSubstanceJsonByUuid(uuid);
+            JsonNode references = fetched.at("/references");
+            JsonNode granularReference = fetched.at("/references/0");
+            ArrayNode newReferences = (new ObjectMapper()).createArrayNode();
+            for(int i=references.size()-1;i>=0;i--){
+            	JsonNode ref=references.get(i);
+            	if(granularReference == ref){
+            		ref=new JsonUtil
+                            .JsonNodeBuilder(ref)
+                            .add("/tags/-", someNew)
+                            .build();
+            	}
+            	newReferences.add(ref);
+            }
+            JsonNode updated1 = new JsonUtil
+                    .JsonNodeBuilder(fetched)
+                    .set("/references", newReferences)
+                    .add("/references/0/tags/-", someNew)
+                    .build();
+            
+            
+            ensurePass(api1.updateSubstance(updated1));
+            JsonNode fetchedagain=api1.fetchSubstanceJsonByUuid(uuid);
+            
+            
+            Set<String> refuuidsnew = new LinkedHashSet<String>();
+            Set<String> refuuidsold = new LinkedHashSet<String>();
+            for(JsonNode ref: fetchedagain.at("/references")){
+            	refuuidsnew.add(ref.at("/uuid").asText());
+            	System.out.println(ref.at("/uuid"));
+            	if(ref.at("/uuid").asText().equals(granularReference.at("/uuid").asText())){
+            		assertTrue("New added tag should show up in the changed reference", ref.at("/tags").toString().contains(someNew));
+            	}
+            }
+            System.out.println("----");
+            for(JsonNode ref: updated1.at("/references")){
+            	refuuidsold.add(ref.at("/uuid").asText());
+            	System.out.println(ref.at("/uuid"));
+            	
+            }
+            assertEquals(refuuidsold,refuuidsnew);
+            System.out.println("These are the tags now");
+            System.out.println(fetchedagain.at("/references/0"));
             
         }
    	}

@@ -621,6 +621,10 @@
             localStorageService.remove('structureid');
         };
 
+        $scope.$on('validate', function(event, obj, form, path){
+            $scope.validate(obj, form, path);
+        });
+
         //Method for pushing temporary objects into the final message
         //Note: This was changed to use a full path for type.
         //That means that passing something like "nucleicAcid.type"
@@ -628,6 +632,7 @@
         //the substance, unless otherwise caught in the switch.
         //This simplifies some things.
         $scope.validate = function (obj, form, path) {
+
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -641,8 +646,8 @@
                 }
 
                 /// form.$setSubmitted(true);
-                obj = {};
-
+                obj = null;
+                console.log(form);
                 form.$setPristine();
                 form.$setUntouched();
                 $scope.$broadcast('show-errors-reset');
@@ -1703,7 +1708,6 @@
                 size: '='
             },
             link: function (scope, element) {
-                console.log(scope.subref);
                 var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);
@@ -2080,7 +2084,6 @@
             template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 if(attrs.showlabel){
-                    console.log(attrs);
                     scope.showlabel= attrs.showlabel;
                 }
                 scope.deleteObj = function () {

@@ -11,11 +11,16 @@
                 <div class="col-md-2">
                     <dropdown-select ng-model="property.type" field="type" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount" filter= "property.type"></form-selector>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "parameter"></form-selector>
+                </div>
+                <div class="col-md-2">
+                    <substance-chooser-selector referenceobj="property" field="referencedSubstance"
+                                                name="referencedSubstance" formname="propertyForm"
+                                                label="Referenced Substance" type="search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1">
                     <check-box ng-model="property.defining" field="defining" ></check-box>
@@ -43,11 +48,14 @@
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid=property-{{index}}></form-selector>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <form-selector referenceobj= "obj" formname="propertyForm" type = "parameter" divid=property-{{index}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-2">
+                    <substance-chooser-selector referenceobj="obj" field="referencedSubstance" name ="referencedSubstance" formname =property-{{index}} label="Referenced Substance" type ="search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>

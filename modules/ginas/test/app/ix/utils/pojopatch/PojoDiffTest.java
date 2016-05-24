@@ -10,6 +10,7 @@ import java.util.Stack;
 import java.util.UUID;
 
 import ix.ginas.models.v1.*;
+
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,6 +19,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.models.Author;
 import ix.core.models.Keyword;
+import ix.utils.pojopatch.Change;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
@@ -505,6 +507,56 @@ public class PojoDiffTest {
         patch.apply(old);
 
         JsonMatches(newProp, old);
+
+    }
+    @Test
+    public void changeOrderAndPropertyOfIdentifiedObjects() throws Exception{
+        Property oldp = new Property();
+        List<Parameter> params = new ArrayList<Parameter>();
+        UUID uuid1=UUID.randomUUID();
+        UUID uuid2=UUID.randomUUID();
+        UUID uuid3=UUID.randomUUID();
+        
+        Parameter p1 = new Parameter();
+        p1.setUuid(uuid1);
+        Parameter p2 = new Parameter();
+        p2.setUuid(uuid2);
+        Parameter p3 = new Parameter();
+        p3.setUuid(uuid3);
+        
+        params.add(p1);
+        params.add(p2);
+        params.add(p3);
+        
+        oldp.setParameters(params);
+        
+        Property newp = new Property();
+        List<Parameter> paramsnew = new ArrayList<Parameter>();
+       
+        
+        Parameter p1b = new Parameter();
+        p1b.setUuid(uuid1);
+        Parameter p2b = new Parameter();
+        p2b.setUuid(uuid2);
+        Parameter p3b = new Parameter();
+        p3b.setUuid(uuid3);
+        
+        p3b.addReference("NONSENSE");
+        paramsnew.add(p3b);
+        paramsnew.add(p2b);
+        paramsnew.add(p1b);
+        newp.setParameters(paramsnew);
+        
+
+
+        PojoPatch<Property> patch = PojoDiff.getDiff(oldp, newp);
+        for(Change c:patch.getChanges()){
+        	System.out.println("Changed:" + c.toString());
+        }
+
+        patch.apply(oldp);
+
+        JsonMatches(newp, oldp);
 
     }
 

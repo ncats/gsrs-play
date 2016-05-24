@@ -4,24 +4,24 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -30,12 +30,12 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import ix.core.IgnoredModel;
 import ix.core.controllers.EntityFactory;
-import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.ginas.models.EmbeddedKeywordList;
+import ix.core.models.BaseModel;
+import ix.core.models.ForceUpdatableModel;
 import ix.utils.EntityUtils;
-import ix.utils.Util;
-import play.Logger;
+import play.db.ebean.Model;
 
 
 /**
@@ -121,6 +121,37 @@ public class PojoDiff {
 				changes.add(new Change(jsn));
 			}
 			return changes;
+		}
+	}
+	
+	private static class JsonSimpleNodeChange{
+		public String op;
+		public String path;
+		public String from;
+		public boolean report=true;
+		
+		public JsonSimpleNodeChange(String op, String path, String from){
+			this.op=op;
+			this.path=path;
+			this.from=from;
+		}
+		
+		public static JsonSimpleNodeChange MOVE_OP(String from, String to){
+			return new JsonSimpleNodeChange("move",to, from);
+		}
+		public static JsonSimpleNodeChange COPY_OP(String from, String to){
+			return new JsonSimpleNodeChange("copy",to, from);
+		}
+		public JsonNode asJsonNode(){
+			return _mapper.valueToTree(this);
+		}
+
+		public static JsonSimpleNodeChange REMOVE_OP(String path) {
+			return new JsonSimpleNodeChange("remove",path,null);
+		}
+		public JsonSimpleNodeChange noReport(){
+			this.report=false;
+			return this;
 		}
 	}
 	
@@ -433,7 +464,29 @@ public class PojoDiff {
 	    			mapper.valueToTree(newValue)
 	    			);
 	}
-	
+	/**
+	 * Returns the unique path, with the embedded ID, and ignoring order
+	 * of the supplied JSON pointer-esque path.
+	 * 
+	 * If the path does not have an embedded ID, returns null
+	 * 
+	 */
+	private static String toUniqueIDPath(String path){
+		
+		String pathu=path.replaceAll("([$][^_]*[_])[0-9]*", "$1");
+		if(!pathu.equals(path)){
+			return pathu;
+		}
+		return null;
+	}
+	/**
+	 * Returns the simplified (non ID-embedded) path
+	 * 
+	 */
+	private static String toStandardPath(String path){
+		
+		return path.replaceAll("([$][^_]*)([_][0-9]*)", "$2");
+	}
 	private static <T> Stack applyChanges(T oldValue, T newValue, JsonNode jsonpatch,ChangeEventListener ... changeListener){
 			LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
 			if(jsonpatch==null){
@@ -447,17 +500,109 @@ public class PojoDiff {
         	if(jsonpatch==null){
         		System.out.println("There are no changes?");
         	}
+        	List<JsonNode> patchChanges = new ArrayList<JsonNode>();
+        	
+        	Map<String, JsonNode> adding = new HashMap<String,JsonNode>();
+        	Map<String, JsonNode> removing = new HashMap<String,JsonNode>();
         	for(JsonNode change:jsonpatch){
+        		String op=change.get("op").asText();
+        		String path=change.get("path").asText();
+        		String pathu=toUniqueIDPath(path);
+        		if(pathu!=null){
+	        		if(op.equals("add")){
+	        			adding.put(pathu,change);
+	        		}else if(op.equals("remove")){
+	        			removing.put(pathu, change);
+	        		}
+        		}
+        		patchChanges.add(change);
+        	}
+        	
+        	// Those IDed objects which are being both removed and
+        	// re-added are really being moved.
+        	
+        	// It wouldn't make a difference how it's done, except that
+        	// we use the IDs as enhanced pointers, so adding 2 objects
+        	// with the same ID will cause problems. Similarly, removing
+        	// an object by ID that matches more than one record will
+        	// cause unexpected results.
+        	
+        	// Typically, "move" operations are captured by JSONDiff
+        	// However, if there is both a move AND an internal change, 
+        	// JSONDiff isn't always good at spotting what happened.
+        	// It may decide to capture it as a full add followed by
+        	// a full remove
+        	
+        	// So, we can find the actual changes between the two versions
+        	// and apply them directly to the object in question.
+        	// Then replace the "add" with a "copy", and remove the ID
+        	// element of the remove operation, and it should be as
+        	// expected
+        	
+        	Map<String, Object> explicitNewValues = new HashMap<String,Object>();
+        	for(String path1: adding.keySet()){
+        		if(removing.containsKey(path1)){
+        			JsonNode toAdd = adding.get(path1);
+        			JsonNode toRemove = removing.get(path1);
+        			Object oldv=Manipulator.getObjectAt(oldValue, toAdd.get("path").asText(), null);
+        			Object newv=Manipulator.getObjectAt(newValue, toAdd.get("path").asText(), null);
+        			int idofAdd=patchChanges.indexOf(toAdd);
+        			int idofRemove=patchChanges.indexOf(toRemove);
+        			String opath=toRemove.get("path").asText();
+        			String npath=toAdd.get("path").asText();
+        			
+        			
+        			PojoPatch patch =PojoDiff.getDiff(oldv, newv);
+        			Stack changeStack;
+					try {
+						//System.out.println("Applying subpatch");
+						changeStack = patch.apply(oldv,changeListener);
+	    	            changedContainers.addAll(changeStack);
+	    	            if(idofAdd<idofRemove){
+		    	            patchChanges.set(idofAdd, JsonSimpleNodeChange
+			    	            	.COPY_OP(opath, toStandardPath(npath))
+			    	            	.noReport()
+			    	            	.asJsonNode());
+		    	            patchChanges.set(
+		    	            			idofRemove,
+		    	            			JsonSimpleNodeChange
+			    	            		.REMOVE_OP(toStandardPath(opath))
+			    	            		.noReport()
+			    	            		.asJsonNode()
+			    	            		);
+	    	            }else{
+	    	            	explicitNewValues.put(npath, oldv);
+	    	            }
+					} catch (Exception e) {
+						e.printStackTrace();
+						throw new IllegalArgumentException(e);
+					}
+					
+					
+    	            
+        		}
+        	}
+        	
+        	
+        	for(JsonNode change:patchChanges){
+        		//System.out.println(new Change(change));
         		String path=change.get("path").asText();
         		String from=path;
         		Object newv=null;
         		Object oldv=null;
-        		
+        		JsonNode report = change.get("report");
+        		boolean reportChange = true;
+        		if(report!=null && !report.isMissingNode() && !report.asBoolean()){
+        			reportChange=false;
+        		}
         		String op=change.get("op").asText();
         		if("replace".equals(op) ||
         			   "add".equals(op)	
         				){
-        			newv=Manipulator.getObjectAt(newValue, path, null);
+        			newv=explicitNewValues.get(path);
+        			if(newv==null){
+        				newv=Manipulator.getObjectAt(newValue, path, null);
+        			}
         		}
         		if("copy".equals(op) ||
         		   "move".equals(op) 
@@ -466,10 +611,10 @@ public class PojoDiff {
          			newv=Manipulator.getObjectAt(oldValue, from, null);
          		}
         		
-        		
         	    if("replace".equals(op)){
         	    	oldv=Manipulator.setObjectAt(oldValue, path, newv, changedContainers);
         		}
+        	    
         	    if("remove".equals(op) ||
         	         "move".equals(op)
         	    		){
@@ -482,11 +627,12 @@ public class PojoDiff {
         			Manipulator.addObjectAt(oldValue, path, newv, changedContainers);
         		}
         	    
-        	    Change c = new Change(path, op, oldv, newv, null);
-        	    
-        	    for(ChangeEventListener ch: changeListener){
-    				ch.handleChange(c);
-    			}
+        	    Change c = new Change(path, op, oldv, newv, null, from);
+        	    if(reportChange){
+	        	    for(ChangeEventListener ch: changeListener){
+	    				ch.handleChange(c);
+	    			}
+        	    }
             	
         	}
         	
