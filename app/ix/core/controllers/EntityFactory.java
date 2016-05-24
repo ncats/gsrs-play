@@ -10,11 +10,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -25,8 +25,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,11 +33,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OptimisticLockException;
 
-import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.FutureRowCount;
 import com.avaje.ebean.Query;
-import com.avaje.ebean.Transaction;
 import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.bean.EntityBean;
 import com.avaje.ebean.bean.EntityBeanIntercept;
@@ -76,8 +72,6 @@ import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
 import ix.core.util.Java8Util;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
 import ix.utils.Util;
@@ -1551,6 +1545,7 @@ public class EntityFactory extends Controller {
 						}
 					}
 	            });
+	            
 	            
 	        	while(!changeStack.isEmpty()){
 	        		Object v=changeStack.pop();
