@@ -89,4 +89,33 @@ public class ChangeSubstanceClassTest {
         	throw t;
         }
     }
+    
+    @Test
+   	public void testPromoteConceptToProtein() throws Exception {
+        try( RestSession session = ts.newRestSession(fakeUser1)) {
+            SubstanceAPI api = new SubstanceAPI(session);
+    		
+           	JsonNode entered= SubstanceJsonUtil
+    				.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+           	JsonNode concept=new JsonUtil
+            .JsonNodeBuilder(entered)
+            .remove("/protein")
+            .set("/substanceClass", "concept")
+            .build();
+           	String uuid=entered.get("uuid").asText();
+            ensurePass(api.submitSubstance(concept));
+            JsonNode fetched=api.fetchSubstanceJsonByUuid(uuid);
+            assertEquals(fetched.at("/substanceClass").asText(), "concept");
+            JsonNode updated = new JsonUtil
+                    .JsonNodeBuilder(fetched)
+                    .add("/protein",entered.at("/protein"))
+                    .set("/substanceClass", "protein")
+                    .build();
+            ensurePass(api.updateSubstance(updated));
+            JsonNode fetchedagain=api.fetchSubstanceJsonByUuid(uuid);
+            assertEquals(fetchedagain.at("/substanceClass").asText(), "protein");
+            
+            
+        }
+   	}
 }

@@ -128,6 +128,7 @@ public class PojoDiff {
 		public String op;
 		public String path;
 		public String from;
+		public boolean report=true;
 		
 		public JsonSimpleNodeChange(String op, String path, String from){
 			this.op=op;
@@ -147,6 +148,10 @@ public class PojoDiff {
 
 		public static JsonSimpleNodeChange REMOVE_OP(String path) {
 			return new JsonSimpleNodeChange("remove",path,null);
+		}
+		public JsonSimpleNodeChange noReport(){
+			this.report=false;
+			return this;
 		}
 	}
 	
@@ -556,10 +561,15 @@ public class PojoDiff {
 	    	            if(idofAdd<idofRemove){
 		    	            patchChanges.set(idofAdd, JsonSimpleNodeChange
 			    	            	.COPY_OP(opath, toStandardPath(npath))
-			    	            	. asJsonNode());
-		    	            patchChanges.set(idofRemove, JsonSimpleNodeChange
-			    	            	.REMOVE_OP(toStandardPath(opath))
-			    	            	. asJsonNode());
+			    	            	.noReport()
+			    	            	.asJsonNode());
+		    	            patchChanges.set(
+		    	            			idofRemove,
+		    	            			JsonSimpleNodeChange
+			    	            		.REMOVE_OP(toStandardPath(opath))
+			    	            		.noReport()
+			    	            		.asJsonNode()
+			    	            		);
 	    	            }else{
 	    	            	explicitNewValues.put(npath, oldv);
 	    	            }
@@ -580,6 +590,11 @@ public class PojoDiff {
         		String from=path;
         		Object newv=null;
         		Object oldv=null;
+        		JsonNode report = change.get("report");
+        		boolean reportChange = true;
+        		if(report!=null && !report.isMissingNode() && !report.asBoolean()){
+        			reportChange=false;
+        		}
         		String op=change.get("op").asText();
         		if("replace".equals(op) ||
         			   "add".equals(op)	
@@ -603,9 +618,7 @@ public class PojoDiff {
         	    if("remove".equals(op) ||
         	         "move".equals(op)
         	    		){
-        	    	
         			oldv=Manipulator.removeObjectAt(oldValue, from, changedContainers);
-        			
         		}
         	    if( "add".equals(op) ||
         		   "copy".equals(op) ||
@@ -614,11 +627,12 @@ public class PojoDiff {
         			Manipulator.addObjectAt(oldValue, path, newv, changedContainers);
         		}
         	    
-        	    Change c = new Change(path, op, oldv, newv, null);
-        	    
-        	    for(ChangeEventListener ch: changeListener){
-    				ch.handleChange(c);
-    			}
+        	    Change c = new Change(path, op, oldv, newv, null, from);
+        	    if(reportChange){
+	        	    for(ChangeEventListener ch: changeListener){
+	    				ch.handleChange(c);
+	    			}
+        	    }
             	
         	}
         	
