@@ -10033,7 +10033,8 @@
       }
     ],
     "fields": [
-      "moieties.opticalActivity"
+      "moieties.opticalActivity",
+      "structure.opticalActivity"
     ]
   },
   {
@@ -14003,7 +14004,7 @@
     "domain": "PROPERTY_NAME",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filterable": false,
+    "filterable": true,
     "terms": [
       {
         "version": 1,
@@ -18536,7 +18537,8 @@
       }
     ],
     "fields": [
-      "moieties.stereochemistry"
+      "moieties.stereochemistry",
+      "structure.stereochemistry"
     ]
   },
   {
@@ -18928,7 +18930,7 @@
         "display": "CHEMICAL",
         "hidden": false,
         "selected": false,
-        "filters": []
+        "filters": ["PROPERTY_NAME=ISOTOPE"]
       }
     ],
     "fields": [
