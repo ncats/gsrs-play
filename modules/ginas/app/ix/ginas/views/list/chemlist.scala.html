@@ -14,7 +14,7 @@
                 <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" uib-tooltip="view record details" target="_self">@chem.getName()</a></h3>
             </div>
             <div class = "col-md-2 prot-approvID">
-                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" uib-tooltip="view record details" target="_self"><code>@chem.approvalID</code></a></h4>
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" uib-tooltip="view record details" target="_self"><code>@chem.getApprovalIDDisplay()</code></a></h4>
             </div>
         </div>
     </div>
@@ -81,7 +81,7 @@
             <div class = "col-md-6">
                 <div class = "row">
                     <div class = "col-md-2">
-                        <h5>Other Names:</h5>
+                        <h5><strong>Other Names:</strong></h5>
                     </div>
                     <div class = "col-md-10 break-text">
                         <h5>@ix.ginas.controllers.GinasApp.namesList(chem.names)</h5>
@@ -89,35 +89,62 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-2">
-                        <h5>Codes:</h5>
+                        <h5><strong>Codes:</strong></h5>
                     </div>
                     <div class = "col-md-10">
                         <h5>@ix.ginas.controllers.GinasApp.codesList(chem.codes)</h5>
                     </div>
                 </div>
-                <h5>@chem.structure.formula</h5>
-                <h5>Relationships: @chem.relationships.size()</h5>
-
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5><strong>Formula:</strong></h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@chem.structure.formula</h5>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <strong>Moieties: </strong>
+                    </div>
+                    <div class = "col-md-9">
+                    <span class = "badge">@chem.moieties.length</span>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5><strong>Relationships:</strong></h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <span class = "badge">@chem.relationships.size()</span>
+                    </div>
+                </div>
+                @if(chem.getAlternativeDefinitionRelationships().size() > 0) {
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5><strong>Alternative Definitions:</strong></h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>chem.getAlternativeDefinitionRelationships().size()</h5>
+                    </div>
+                </div>
+            }
             </div>
 
             <div class = "col-md-2">
-                <div class = "row">
-                    <div class = "col-md-12">
-                        Moieties: <span class = "badge">@chem.moieties.length</span>
-                    </div>
-                </div>
+
                 <div class = "row">
                     <div class = "col-md-12">
                     @if(chem.approved == null) {
                         <h6>Not Approved</h6>
                     } else {
-                        Date approved: <h6>{{@GinasApp.getDateTime(chem.approved) | date: 'mediumDate'}}</h6>
+                        <strong>Date approved: </strong><h6>{{@GinasApp.getDateTime(chem.approved) | date: 'mediumDate'}}</h6>
                     }
                     </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@chem.getLastEdited.getTime())}}</h6>
+                        <strong>Last modified: </strong><h6>{{moment(@chem.getLastEdited.getTime())}}</h6>
                     </div>
                 </div>
                 <div class = "row">

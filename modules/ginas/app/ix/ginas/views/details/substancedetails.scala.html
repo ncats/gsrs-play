@@ -16,6 +16,12 @@
                 <ul class="nav nav-pills nav-stacked" id="breadcrumb-list">
                     <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
                         {{_.startCase('@sub.substanceClass')}} Details</a></li>
+
+                    @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
+                        <li role="presentation" ><a href="#altrelationships" prevent-default="" ng-click="scrollTo('altrelationships')">
+                            Alternative Definitions <span class="badge pull-right">@sub.getAlternativeDefinitionRelationships().size()</span></a></li>
+                    }
+
                     @breadcrumb
                     @defining(sub.getModificationCount()) { gcount =>
                         @if(gcount > 0) {
@@ -92,6 +98,13 @@
                     </div>
                 </div>
             </div>
+
+            @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
+                <div class="row info" id="altrelationships">
+                @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definitions", sub.uuid.toString)
+                </div>
+            }
+
             @content
 
             @if(sub.hasModifications()) {
@@ -150,12 +163,6 @@
             @if(sub.getFilteredRelationships().size() > 0) {
                 <div class="row info" id="relationships">
                 @properties.relationships(sub.getFilteredRelationships(), "Relationships", sub.uuid.toString)
-                </div>
-            }
-
-            @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
-                <div class="row info" id="altrelationships">
-                @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definition Relationships", sub.uuid.toString)
                 </div>
             }
 

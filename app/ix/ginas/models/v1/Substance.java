@@ -376,6 +376,7 @@ public class Substance extends GinasCommonData {
 		ret.removeAll(getImpurities());
 		ret.removeAll(getMetabolites());
 		ret.removeAll(getActiveMoieties());
+		ret.removeAll(getAlternativeDefinitionRelationships());
 		return ret;
 	}
 
@@ -499,6 +500,7 @@ public class Substance extends GinasCommonData {
 	//probably should be turned off
 	@JsonProperty("_approvalIDDisplay")
 	public String getApprovalIDDisplay() {
+		
 		if (approvalID != null)
 			return approvalID;
 		SubstanceReference subRef = getParentSubstanceReference();
@@ -508,6 +510,7 @@ public class Substance extends GinasCommonData {
 		if(this.isAlternativeDefinition()){
 			SubstanceReference subRef2 = this.getPrimaryDefinitionReference();
 			if(subRef2!=null){
+				
 				if(subRef2.approvalID!=null){
 					return subRef2.approvalID;
 				}

@@ -1,54 +1,77 @@
 package ix.test.ix.test;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.rules.RunRules;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runner.Runner;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.Suite;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
-import org.mockito.internal.matchers.Find;
-import org.openqa.selenium.support.FindAll;
 
 import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
+ * JUnit Runner that can find all Test classes on the classpath
+ * and execute them.  Use the {@link #FindAllTestsRunner.Config}
+ * annotation to specify filtering options.
+ *
+ * Example:
+ *
+ * <pre>
+ *     @RunWith(FindAllTestsRunner.class)
+ @FindAllTestsRunner.Config(fullExcludePattern = {"ix\\.ntd\\..+"})
+ public class PrototypeSuite {
+
+
+ }
+ *
+ * </pre>
+ *
+ *
  * Created by katzelda on 5/20/16.
  */
 public class FindAllTestsRunner extends Suite{
-    /*
     /**
-	 * Called by this class and subclasses once the classes making up the suite have been determined
-	 *
-	 * @param builder builds runners for classes in the suite
-	 * @param klass the root of the suite
-	 * @param suiteClasses the classes in the suite
-	 * @throws InitializationError
-	 *
-    protected Suite(RunnerBuilder builder, Class<?> klass, Class<?>[] suiteClasses) throws InitializationError {
+     * Annotation to add to provide configuration details.
      */
     @Retention(value= RetentionPolicy.RUNTIME)
     @Target(value = ElementType.TYPE)
-    public @interface FindAllTestConfig{
+    public @interface Config {
+        /**
+         * Should jar files in the class path be included.
+         * @return {@code true} if jars should be included; {@code false} otherwise.
+         */
         boolean includeJars() default false;
-        String includePattern() default ".*Test$";
+
+        /**
+         * String Patterns of class names that should be included
+         * in this suite.
+         * @return an array of Strings that can be converted into Pattern objects.
+         */
+        String[] includePattern() default {".*Test$"};
+        /**
+         * String Patterns of class names that should NOT be included
+         * in this suite.
+         * @return an array of Strings that can be converted into Pattern objects.
+         */
+        String[] excludePattern() default {};
+        /**
+         * String Patterns of fully qualified class names, including all packages separated by "\\." that should be included
+         * in this suite.
+         * @return an array of Strings that can be conveted into Pattern objects.
+         */
+        String[] fullExcludePattern() default {};
+        /**
+         * String Patterns of fully qualified class names, including all packages separated by "\\." that should NOT be included
+         * in this suite.
+         * @return an array of Strings that can be conveted into Pattern objects.
+         */
+        String[] fullIncludePattern() default {".*"};
     }
-    @FindAllTestConfig
+    @Config
     private static class DefaultConfig {}
 
 
@@ -56,102 +79,116 @@ public class FindAllTestsRunner extends Suite{
 
 
     public FindAllTestsRunner(Class<?> klass, RunnerBuilder builder) throws InitializationError {
-        super(null, getRunnersFor(getTestClasses(klass), klass));
+        super(builder, null, getTestClasses(klass));
     }
 
-    private static List<Runner> getRunnersFor(List<Class<?>> testClasses, Class<?> parent) throws InitializationError{
-        List<Runner> runners = new LinkedList<>();
 
-        Object parentInstance = null;
-        try {
-            parentInstance = parent.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        List<TestRule> rules = new ArrayList<>();
-        for(Field f : parent.getFields()){
-            if(f.getDeclaredAnnotation(Rule.class) !=null){
-                try {
-
-                    if( TestRule.class.isAssignableFrom(f.getType())){
-                        rules.add((TestRule) f.get(parentInstance));
-                        System.out.println("adding " + f.get(parentInstance));
-                    }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        for (Class<?> klazz : testClasses) {
-            System.out.println("adding test class " + klazz);
-            try {
-                runners.add(new MyRunner(klazz, rules));
-            }catch(Exception ex){
-                //ignore ?
-            }
-        }
-
-        return runners;
-    }
-    private static List<Class<?>> getTestClasses(Class<?> suiteClass) {
+    private static Class<?>[] getTestClasses(Class<?> suiteClass) {
         String classpath = System.getProperty("java.class.path");
         String[] paths = classpath.split(System.getProperty("path.separator"));
 
-        FindAllTestConfig config = suiteClass.getAnnotation(FindAllTestConfig.class);
+        Config config = suiteClass.getAnnotation(Config.class);
         if(config ==null){
-            config = defaultConfigInstance.getClass().getAnnotation(FindAllTestConfig.class);
+            config = defaultConfigInstance.getClass().getAnnotation(Config.class);
         }
-    if(config ==null ){
-        throw new IllegalStateException("how!");
-    }
-        List<Class<?>> classes = new LinkedList<>();
-        Pattern includePattern = Pattern.compile(config.includePattern());
+
+        List<Class<?>> classes = new ArrayList<>();
+
+        ClassFilter filter = new ClassFilter(config);
+
         for(String path : paths){
             File f = new File(path);
             if(!f.exists()){
                 continue;
             }
             if(f.isDirectory()){
-                getClassesFrom(suiteClass, f,f,config, includePattern, classes);
+                getClassesFrom(suiteClass, f,f,config, filter, classes);
             }
 
 
         }
-        return classes;
+        return classes.toArray(new Class<?>[classes.size()]);
     }
 
-    private static void getClassesFrom(Class<?> suiteClass, File root, File currentFile, FindAllTestConfig config, Pattern includePattern,  List<Class<?>> classes){
+    private static class ClassFilter{
+        private final  List<Pattern> includePatterns, excludePatterns, fullIncludePatterns,fullExcludePatterns;
+
+        ClassFilter(Config config) {
+            includePatterns = compilePatterns(config.includePattern());
+            excludePatterns = compilePatterns(config.excludePattern());
+
+            fullIncludePatterns = compilePatterns(config.fullIncludePattern());
+            fullExcludePatterns = compilePatterns(config.fullExcludePattern());
+        }
+
+
+        public Optional<Class<?>>  test(String className, File root, File classFile){
+            //for now don't let subclasses through...
+            if(className.contains("$")){
+                return Optional.empty();
+            }
+            if(matches(className, includePatterns) && !matches(className, excludePatterns)) {
+                String fullClassName = computeFullClassName(root, classFile);
+                //System.out.println("matched class checking full patterns for " + fullClassName);
+                if(matches(fullClassName, fullIncludePatterns) && !matches(fullClassName, fullExcludePatterns)){
+                    try {
+                        Class<?> c = Class.forName(fullClassName);
+                        int modifiers = c.getModifiers();
+                        if( !c.isEnum() && !Modifier.isAbstract(modifiers)){
+                           return Optional.of(c);
+                        }
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        private boolean matches(String input, List<Pattern> patterns){
+            for(Pattern p : patterns){
+                if(p.matcher(input).matches()){
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    private static List<Pattern> compilePatterns( String[] array) {
+        if(array !=null){
+            List<Pattern> includePatterns = new ArrayList<>(array.length);
+
+            for(String pattern : array){
+                includePatterns.add(Pattern.compile(pattern));
+            }
+            return includePatterns;
+        }
+        return Collections.emptyList();
+    }
+
+
+
+    private static void getClassesFrom(Class<?> suiteClass, File root, File currentFile, Config config, ClassFilter filter, List<Class<?>> classes){
         if(currentFile.isDirectory()){
             File[] children = currentFile.listFiles();
             if(children ==null){
                 return;
             }
             for(File child : children){
-                getClassesFrom(suiteClass, root, child, config, includePattern, classes);
+                getClassesFrom(suiteClass, root, child, config, filter, classes);
             }
         }else {
             if (currentFile.getName().endsWith(".jar") && config.includeJars()) {
                 //TODO handle jars
             }else if(currentFile.getName().endsWith(".class")){
                 String className = currentFile.getName().substring(0, currentFile.getName().lastIndexOf(".class"));
-                if(includePattern.matcher(className).matches()) {
-                    String fullClassName = computeFullClassName(root, currentFile);
-                    System.out.println("full qualified class name for " + currentFile.getAbsolutePath() + " is ");
-                    System.out.println(fullClassName);
+                filter.test(className, root, currentFile)
+                        .ifPresent( c ->{
+                            if(c != suiteClass) {
+                                classes.add(c);
+                            }
+                        });
 
-                    try {
-                        Class<?> c = Class.forName(fullClassName);
-                       // if(! suiteClass.equals(c)) {
-                            classes.add(c);
-                       // }
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
         }
     }
@@ -173,26 +210,5 @@ public class FindAllTestsRunner extends Suite{
         return builder.toString();
     }
 
-    private static class MyRunner extends BlockJUnit4ClassRunner {
-        private final List<TestRule> rules;
 
-        public MyRunner(Class<?> klass, List<TestRule> rules) throws InitializationError {
-            super(klass);
-            this.rules = rules;
-        }
-
-        @Override
-        protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
-            Description description= describeChild(method);
-            if (method.getAnnotation(Ignore.class) != null) {
-                notifier.fireTestIgnored(description);
-            } else {
-                if (description.getAnnotation(Deprecated.class) != null) {
-                    System.out.println("name=" + description.getMethodName() + " annotations=" + description.getAnnotations());
-                }
-                RunRules runRules = new RunRules(methodBlock(method), rules, description);
-                runLeaf(runRules, description, notifier);
-            }
-        }
-    }
 }

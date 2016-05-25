@@ -10,6 +10,7 @@
             		  }
                     @if(ref != null) {
 						@if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
+
 	                            	<img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
 	                                src='@ix.ginas.controllers.routes.GinasApp.structure(ref.asInstanceOf[ChemicalSubstance].structure.getId, "svg", 150)'>
 	                            		
