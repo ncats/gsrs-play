@@ -9,7 +9,7 @@
                     <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="property.type" field="type" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
+                    <dropdown-select ng-model="property.propertyType" field="propertyType" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount" filter= "property.type"></form-selector>
@@ -17,7 +17,7 @@
                 <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "parameter"></form-selector>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" ng-if="property.name && property.name.value=='ISOTOPE'">
                     <substance-chooser-selector referenceobj="property" field="referencedSubstance"
                                                 name="referencedSubstance" formname="propertyForm"
                                                 label="Referenced Substance" type="search"></substance-chooser-selector>
@@ -46,7 +46,7 @@
                     <text-view-edit obj = "obj.name" field="display" cv = "PROPERTY_NAME" max="1"></text-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="type" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
+                    <dropdown-view-edit obj = "obj" field="propertyType" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid=property-{{index}}></form-selector>
