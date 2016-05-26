@@ -29,6 +29,7 @@ public class SubstanceAPI {
 
     private static final String UI_URL_SUBSTANCE_SEARCH_FLEX="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE_SEARCH_SUB="ginas/app/substances";
+    private static final String UI_URL_SUBSTANCE_BROWSE="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
     private static final String EXPORT_URL="ginas/app/export/$ID$.$FORMAT$";
@@ -163,6 +164,13 @@ public class SubstanceAPI {
     public WSResponse fetchSubstancesSearch() {
         return session.createRequestHolder(API_URL_SUBSTANCES_SEARCH).get().get(timeout);
     }
+    public WSResponse fetchSubstancesUIBrowse() {
+        return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE).get().get(timeout);
+    }
+    public String fetchSubstancesUIBrowseHTML() {
+        return fetchSubstancesUIBrowse().getBody();
+    }
+    
 
     /**
      * Get the summary JSON which contains the oldValue and newValue URLs
