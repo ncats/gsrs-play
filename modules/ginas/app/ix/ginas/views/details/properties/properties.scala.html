@@ -9,7 +9,6 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Type</th>
                 <th>Property Type</th>
                 <th>Amount</th>
                 <th>Referenced Substance</th>
@@ -21,8 +20,7 @@
         @for(n <- properties) {
             <tr>
                 <td class="url">@n.getName</td>
-                <td>@GinasApp.getCV.getDisplay("NAME_TYPE", n.getType())</td>
-                <td>@GinasApp.getCV.getDisplay("Property_TYPE", n.getPropertyType)</td>
+                <td>@GinasApp.getCV.getDisplay("PROPERTY_TYPE", n.getPropertyType)</td>
                 <td><amount value="@GinasApp.getAsJson(n.getValue())"></amount></td>
                 <td>@if(n.getReferencedSubstance()!=null){
                     @subref(n.getReferencedSubstance)
