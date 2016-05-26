@@ -2,6 +2,7 @@ package ix.test.database;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -20,8 +21,10 @@ import ix.test.ix.test.server.GinasTestServer;
 */
 public class DataCascadeTest  {
 
-    
-	@Rule
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
+
+    @Rule
 	public GinasTestServer ts = new GinasTestServer(9001);
 
     @Test

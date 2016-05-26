@@ -4,6 +4,7 @@ import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceLoader;
 import ix.test.ix.test.server.SubstanceSearch;
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -18,6 +19,9 @@ import static org.junit.Assert.*;
  * Created by katzelda on 4/29/16.
  */
 public class FacetCountsTest {
+
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer();

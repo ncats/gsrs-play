@@ -3,6 +3,7 @@ package ix.seqaln;
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -378,30 +379,41 @@ public class SequenceIndexer {
             return 0;
         }
     }
+
+    private static void closeAndIgnore(Closeable c){
+        if(c ==null){
+            return;
+        }
+        try{
+            c.close();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
     
     public void shutdown () {
-        try {
-            kmerSearchManager.close();
-            searchManager.close();
+        closeAndIgnore(kmerSearchManager);
+        closeAndIgnore(searchManager);
 
-            if (_kmerReader != null)
-                _kmerReader.close();
-            if (_indexReader != null)
-                _indexReader.close();
-            if (indexWriter != null)
-                indexWriter.close();
-            if (kmerWriter != null)
-                kmerWriter.close();
-            
-            kmerDir.close();
-            indexDir.close();
+        closeAndIgnore(_kmerReader);
+        closeAndIgnore(_indexReader);
+        closeAndIgnore(indexWriter);
 
-            if (localThreadPool)
-                threadPool.shutdownNow();
+        closeAndIgnore(kmerWriter);
+
+        closeAndIgnore(kmerDir);
+        closeAndIgnore(indexDir);
+
+        if (localThreadPool) {
+            threadPool.shutdown();
+            try {
+                threadPool.awaitTermination(1, TimeUnit.HOURS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        catch (IOException ex) {
-            ex.printStackTrace();
-        }
+
+
     }
 
     public void remove(String id) throws IOException{

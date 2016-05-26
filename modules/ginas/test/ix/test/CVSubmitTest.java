@@ -1,6 +1,7 @@
 package ix.test;
 import static org.junit.Assert.assertTrue;
 
+import ix.test.util.TestNamePrinter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -19,11 +20,8 @@ import ix.test.ix.test.server.SubstanceAPI;
 public class CVSubmitTest {
 
     @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getName() + " . " + description.getMethodName());
-        }
-    };
+    public TestNamePrinter printer = new TestNamePrinter();
+    ;
         
         
 

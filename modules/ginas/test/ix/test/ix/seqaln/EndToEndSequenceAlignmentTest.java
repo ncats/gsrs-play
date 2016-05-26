@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.util.List;
 
+import ix.test.util.TestNamePrinter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,6 +25,8 @@ import util.json.JsonUtil;
 public class EndToEndSequenceAlignmentTest {
 
     File folder=new File("test/testJSON/pass");
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
 
 
     @Rule

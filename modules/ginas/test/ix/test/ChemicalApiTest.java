@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -26,7 +27,12 @@ import ix.test.ix.test.server.SubstanceAPI;
 import util.json.JsonUtil;
 
 public class ChemicalApiTest {
-	@Rule
+
+
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
+
+    @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 	
 	final File resource=new File("test/testJSON/racemic-unicode.json");

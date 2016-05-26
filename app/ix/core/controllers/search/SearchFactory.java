@@ -40,7 +40,7 @@ public class SearchFactory extends EntityFactory {
     }
 
     public static void init(){
-        TextIndexer.init();
+     //   TextIndexer.init();
         etagDb = new Model.Finder(Long.class, ETag.class);
         textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
 

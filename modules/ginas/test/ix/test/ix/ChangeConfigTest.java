@@ -1,6 +1,7 @@
 package ix.test.ix;
 
 import ix.test.ix.test.server.GinasTestServer;
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 import play.api.Configuration;
@@ -12,6 +13,9 @@ import static org.junit.Assert.*;
  * Created by katzelda on 5/2/16.
  */
 public class ChangeConfigTest {
+
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer();

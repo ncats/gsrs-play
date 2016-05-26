@@ -18,6 +18,8 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.TextIndexer;
+import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -137,6 +139,7 @@ public class GinasTestServer extends ExternalResource{
     private Map<String, Object> additionalConfiguration = new HashMap<>();
     private Map<String, Object> testSpecificAdditionalConfiguration = new HashMap<>();
     private File storage;
+    private CacheManager cacheManager;
 
     public static class User{
     	private final String username;
@@ -404,14 +407,16 @@ public class GinasTestServer extends ExternalResource{
 
         //This cleans out the old eh-cache
         //and forces us to use a new one with each test
-        CacheManager.getInstance().shutdown();
+        cacheManager = CacheManager.getInstance();
+        cacheManager.removalAll();
+        cacheManager.shutdown();
         start();
    }
 
     private void initializeControllers() {
 
         App.init();
-
+      //  TextIndexer.init();
         Validation.init();
         AdminFactory.init();
         RouteFactory.init();
@@ -433,6 +438,8 @@ public class GinasTestServer extends ExternalResource{
 
         GinasLoad.init();
         GinasFactory.init();
+
+        GinasApp.init();
         //our APIs
        // SubstanceLoader.init();
     }

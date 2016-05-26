@@ -7,6 +7,7 @@ import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 import play.libs.ws.WSResponse;
@@ -21,6 +22,10 @@ import static ix.test.login.LoginUtil.*;
 public class ExpiredSessionTest {
 
     public static final String URL = "ginas/app/wizard?kind=chemical";
+
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
+
     @Rule
     public GinasTestServer ts = new GinasTestServer();
 

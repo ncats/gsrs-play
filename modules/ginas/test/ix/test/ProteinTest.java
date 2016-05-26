@@ -23,11 +23,12 @@ public class ProteinTest {
 	//
 
 	final File resource = new File("test/testJSON/toedit.json");
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(9001);
 
 	@Rule
-	public TestNamePrinter testNamePrinter = new TestNamePrinter();
+	public TestNamePrinter printer = new TestNamePrinter();
+
+	@Rule
+	public GinasTestServer ts = new GinasTestServer();
 
 	private GinasTestServer.User fakeUser1, fakeUser2;
 

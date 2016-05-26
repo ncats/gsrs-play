@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -37,16 +38,8 @@ public class SubstanceValidateFailTest{
 
 
     @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-        
-        @Override
-        protected void finished(Description description) {
-            System.out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-    };
+    public TestNamePrinter printer = new TestNamePrinter().setPrintEnd(true);
+
 
     @Parameters(name="{1}")
     static public Collection<Object[]> findstuff(){

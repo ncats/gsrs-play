@@ -100,12 +100,11 @@ import gov.nih.ncgc.chemical.ChemicalFactory;
 import tripod.chem.indexer.StructureIndexer;
 
 public class GinasApp extends App {
-    static final Model.Finder<UUID, Substance> SUBFINDER =
-        new Model.Finder<UUID, Substance>(UUID.class, Substance.class);
+    static Model.Finder<UUID, Substance> SUBFINDER ;
 
     // relationship finder
-    static final Model.Finder<UUID, Relationship> RELFINDER =
-        new Model.Finder<UUID, Relationship>(UUID.class, Relationship.class);
+//    static final Model.Finder<UUID, Relationship> RELFINDER =
+//        new Model.Finder<UUID, Relationship>(UUID.class, Relationship.class);
     
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
@@ -145,8 +144,7 @@ public class GinasApp extends App {
         "approved"         //"Approved Date"
     };
 
-    static final PayloadPlugin _payload =
-        Play.application().plugin(PayloadPlugin.class);
+    static PayloadPlugin _payload ;
 
     static class SubstanceResultRenderer
         extends DefaultResultRenderer<Substance> {
@@ -172,6 +170,17 @@ public class GinasApp extends App {
         }
     }
 
+    static{
+        init();
+    }
+
+
+    public static void init(){
+        SUBFINDER =
+                new Model.Finder<UUID, Substance>(UUID.class, Substance.class);
+        _payload =
+                Play.application().plugin(PayloadPlugin.class);
+    }
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
 
