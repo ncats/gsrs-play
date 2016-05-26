@@ -673,6 +673,28 @@ public class EditingWorkflowTest {
 
         }
     }
+    @Test
+    public void updateShouldUpdateListView() throws Exception {
+        try(RestSession session = ts.newRestSession(fakeUser1)) {
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+
+            ensurePass(api.submitSubstance(entered));
+            
+            String htmlbrowse1=api.fetchSubstancesUIBrowseHTML();
+            
+            assertTrue("Browse substance should have version set to 1", htmlbrowse1.contains("version: 1"));
+            
+            String oldName = "TRANSFERRIN ALDIFITOX S EPIMER";
+            String newName = "foo";
+            
+            JsonNode oldNode = renameServer(api, uuid, newName);
+            String htmlbrowse2=api.fetchSubstancesUIBrowseHTML();
+            assertTrue("Browse editted substance should have version set to 2", htmlbrowse2.contains("version: 2"));
+        }
+    }
 
     @Test
     public void historyNewValueShouldBeOldValueOfNextVersion() throws Exception {
@@ -821,6 +843,14 @@ public class EditingWorkflowTest {
     public JsonNode renameServer(SubstanceAPI api, String uuid){
         return renameServer(api, uuid, "TRANSFERRIN ALDIFITOX S EPIMER CHANGED");
     }
+    /**
+     * Rename the substance with the given uuid to have its first name's name
+     * be newName
+     * @param session
+     * @param uuid
+     * @param newName
+     * @return
+     */
     public JsonNode renameServer(SubstanceAPI session, String uuid, String newName){
     	
     	JsonNode fetched = session.fetchSubstanceJsonByUuid(uuid);
