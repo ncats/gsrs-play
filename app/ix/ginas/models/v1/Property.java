@@ -84,6 +84,14 @@ public class Property extends CommonDataElementOfCollection {
         this.value = value;
     }
 
+    public SubstanceReference getReferencedSubstance() {
+        return referencedSubstance;
+    }
+
+    public void setReferencedSubstance(SubstanceReference referencedSubstance) {
+        this.referencedSubstance = referencedSubstance;
+    }
+
     public Boolean isDefining() {
         return defining;
     }

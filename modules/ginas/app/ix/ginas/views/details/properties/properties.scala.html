@@ -11,6 +11,7 @@
                 <th>Name</th>
                 <th>Property Type</th>
                 <th>Amount</th>
+                <th>Referenced Substance</th>
                 <th>Defining</th>
                 <th>Parameters</th>
                 <th>References</th>
@@ -21,6 +22,10 @@
                 <td class="url">@n.getName</td>
                 <td>@GinasApp.getCV.getDisplay("PROPERTY_TYPE", n.getPropertyType)</td>
                 <td><amount value="@GinasApp.getAsJson(n.getValue())"></amount></td>
+                <td>@if(n.getReferencedSubstance()!=null){
+                    @subref(n.getReferencedSubstance)
+                }
+                </td>
                 @if(n.isDefining == true) {
                     <td>
                         <i class="fa fa-check fa-2x success"></i>
