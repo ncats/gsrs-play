@@ -883,6 +883,21 @@ public class Substance extends GinasCommonData {
 	public int getReferenceCount(){
 		return names.size();
 	}
+	
+	@JsonIgnore
+	public boolean hasCodes(){
+		return !this.codes.isEmpty();
+	}
+	@JsonIgnore
+	public boolean hasNames(){
+		return !this.names.isEmpty();
+	}
+	
+	@JsonIgnore
+	public boolean hasRelationships(){
+		return !this.relationships.isEmpty();
+	}
+	
 //	
 //	public boolean hasEquivalentRelationship(Relationship rel){
 //		String relType=rel.type;

@@ -1,0 +1,60 @@
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.{Substance}
+@(sub: Substance)
+				@if(sub.isAlternativeDefinition()) {
+                @defining(sub.getPrimaryDefinitionReference) { ref =>
+                <div class = "row">
+                    <div class = "col-md-6">
+                        <strong>Primary Definition: </strong>
+                    </div>
+                    <div class = "col-md-6">
+                    	<a href="@ix.ginas.controllers.routes.GinasApp.substance(ref.getLinkingID())" target="_self">@ref.refPname</a>
+                    </div>
+                </div>
+                
+                }
+            	}
+            	 @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
+                <div class = "row">
+                    <div class = "col-md-6">
+                        <strong>Alternative Definitions: </strong>
+                    </div>
+                    <div class = "col-md-6">
+                    <span class = "badge">@sub.getAlternativeDefinitionRelationships().size()</span>
+                    </div>
+                </div>
+                <hr>
+            	}
+    			@if(sub.hasNames()){
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5><strong>Names:</strong></h5>
+                    </div>
+                    <div class = "col-md-10 break-text">
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
+                    </div>
+                </div>
+                }
+                @if(sub.hasCodes()){
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5><strong>Codes:</strong></h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
+                    </div>
+                </div>
+                }
+               
+            	
+            	@if(!sub.isAlternativeDefinition() && sub.hasRelationships()){
+            	<div class = "row">
+                    <div class = "col-md-3">
+                        <h5><strong>Relationships:</strong></h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <span class = "badge">@sub.relationships.size()</span>
+                    </div>
+                </div>
+                }
+            	<hr>

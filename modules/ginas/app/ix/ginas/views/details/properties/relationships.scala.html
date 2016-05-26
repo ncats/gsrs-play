@@ -5,7 +5,7 @@
 
 
 
-@(relationships: List[Relationship], title: String, id:String)
+@(relationships: List[Relationship], title: String, id:String, full:Boolean = true)
 
 <button class="btn btn-primary label-offset det">
     @title&nbsp;<span class="badge"> @relationships.length</span></button>
@@ -13,14 +13,16 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Substance</th>
+                <th>Related Record</th>
                 @*<th>Name</th>*@
                 <th>Type</th>
+                @if(full){
                 <th>Comments</th>
                 <th>Interaction Type</th>
                 <th>Qualification</th>
                 <th>Amount</th>
                 <th>References</th>
+                }
             </tr>
         </thead>
 
@@ -37,6 +39,7 @@
                 }
                 </td>
                 <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
+                @if(full){
                 <td>@r.comments</td>
                 <td>
                 @if(r.interactionType != null) {
@@ -61,6 +64,7 @@
                         <tr><td class = "'@r.getUuid'" colspan = "8"></td></tr>
                 }else{
                         <td>none</td>
+                }
                 }
             <tr ng-if="audit==true"><td colspan = "8">Created by <code>@r.createdBy</code> on <code>@r.created</code> , Edited by <code>@r.lastEditedBy</code> on <code>@r.lastEdited</code></td></tr>
         }
