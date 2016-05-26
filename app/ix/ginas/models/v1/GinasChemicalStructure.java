@@ -132,6 +132,8 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     	}
     	return new LinkedHashSet<Group>();
     }
+
+	@JsonIgnore
     public Set<String> getAccessString(){
     	Set<String> keyset=new LinkedHashSet<String>();
     	for(Group k:getAccess()){
