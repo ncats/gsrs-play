@@ -255,6 +255,10 @@ nav#main-pagination {
     font-family: monospace;
 }
 
+.subref{
+    min-width: 150px;
+}
+
 #local-menu {
     position: absolute;
     top: 23%;
