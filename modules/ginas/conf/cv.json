@@ -10033,7 +10033,8 @@
       }
     ],
     "fields": [
-      "moieties.opticalActivity"
+      "moieties.opticalActivity",
+      "structure.opticalActivity"
     ]
   },
   {
@@ -14003,7 +14004,7 @@
     "domain": "PROPERTY_NAME",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filterable": false,
+    "filterable": true,
     "terms": [
       {
         "version": 1,
@@ -14012,6 +14013,17 @@
         "deprecated": false,
         "value": "CONTENT",
         "display": "CONTENT",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679321,
+        "modified": 1462481431875,
+        "deprecated": false,
+        "value": "ISOTOPE",
+        "display": "ISOTOPE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -14308,52 +14320,49 @@
     ]
   },
   {
-    "id": 57,
     "version": 1,
-    "created": 1457983681442,
-    "modified": 1462481431881,
+    "created": 1457983681407,
+    "modified": 1462481431874,
     "deprecated": false,
-    "domain": "PROPERTY_TYPE",
+    "domain": "ISOTOPE_SUBSTITUTION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
     "editable": true,
-    "filterable": true,
+    "filterable": false,
     "terms": [
       {
         "version": 1,
-        "created": 1457983679322,
-        "modified": 1462481431881,
+        "created": 1457983679321,
+        "modified": 1462481431875,
         "deprecated": false,
-        "value": "PHYSICAL",
-        "display": "PHYSICAL",
+        "value": "SPECIFIC",
+        "display": "SPECIFIC",
         "hidden": false,
         "selected": false,
         "filters": []
       },
       {
         "version": 1,
-        "created": 1457983679322,
-        "modified": 1462481431881,
+        "created": 1457983679321,
+        "modified": 1462481431875,
         "deprecated": false,
-        "value": "ENZYMATIC",
-        "display": "ENZYMATIC",
-        "hidden": false,
-        "selected": false,
-        "filters": []
-      },
-      {
-        "version": 1,
-        "created": 1457983679322,
-        "modified": 1462481431881,
-        "deprecated": false,
-        "value": "CHEMICAL",
-        "display": "CHEMICAL",
+        "value": "NON-SPECIFIC",
+        "display": "NON-SPECIFIC",
         "hidden": false,
         "selected": false,
         "filters": []
       }
-    ],
-    "fields": [
-      "properties.type"
+      ,
+      {
+        "version": 1,
+        "created": 1457983679321,
+        "modified": 1462481431875,
+        "deprecated": false,
+        "value": "UNKNOWN",
+        "display": "UNKNOWN",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      }
     ]
   },
   {
@@ -18528,7 +18537,8 @@
       }
     ],
     "fields": [
-      "moieties.stereochemistry"
+      "moieties.stereochemistry",
+      "structure.stereochemistry"
     ]
   },
   {
@@ -18878,5 +18888,53 @@
       }
     ],
     "fields": ["definitionLevel"]
+  },
+  {
+    "version": 1,
+    "created": 1457983681442,
+    "modified": 1462481431881,
+    "deprecated": false,
+    "domain": "PROPERTY_TYPE",
+    "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
+    "editable": true,
+    "filterable": true,
+    "terms": [
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1462481431881,
+        "deprecated": false,
+        "value": "PHYSICAL",
+        "display": "PHYSICAL",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1462481431881,
+        "deprecated": false,
+        "value": "ENZYMATIC",
+        "display": "ENZYMATIC",
+        "hidden": false,
+        "selected": false,
+        "filters": []
+      },
+      {
+        "version": 1,
+        "created": 1457983679322,
+        "modified": 1462481431881,
+        "deprecated": false,
+        "value": "CHEMICAL",
+        "display": "CHEMICAL",
+        "hidden": false,
+        "selected": false,
+        "filters": ["PROPERTY_NAME=ISOTOPE"]
+      }
+    ],
+    "fields": [
+      "properties.type"
+    ]
   }
 ]

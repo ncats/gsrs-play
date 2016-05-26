@@ -47,7 +47,14 @@ angular.module('filterListener', [])
                                 //obj = [];
                                 scope.values = response.data.content[0].terms;
                                 if (scope.values.length == 1) {
+                                    console.log(scope.values);
                                     obj = scope.values[0];
+                                }
+                                if(edit){
+                                    scope.obj[scope.field]= obj;
+                                }else{
+                                    console.log(obj);
+                                    scope.obj = obj;
                                 }
                             });
                         } else {
@@ -76,16 +83,21 @@ angular.module('filterListener', [])
                                     }
                                     scope.values = cv;
                                 }
+                                console.log(scope.values.length);
                                 if (scope.values.length == 1) {
+                                    console.log(scope.values);
                                     obj = scope.values[0];
+                                }
+                                if(edit){
+                                    scope.obj[scope.field]= obj;
+                                }else{
+                                    console.log(obj);
+                                    scope.obj = obj;
+                                    console.log(scope);
                                 }
                             });
                         }
-                        if(edit){
-                            scope.obj[scope.field]= obj;
-                        }else{
-                            scope.obj = obj;
-                        }
+
                     }
                 });
             },
