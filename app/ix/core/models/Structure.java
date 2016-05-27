@@ -71,7 +71,36 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
 
     // stereochemistry
     public enum Stereo {
-        ABSOLUTE, ACHIRAL, RACEMIC, MIXED, EPIMERIC, UNKNOWN;
+        ABSOLUTE("ABSOLUTE"), ACHIRAL("ACHIRAL"), RACEMIC("RACEMIC"), MIXED("MIXED"),
+        EPIMERIC("EPIMERIC"), UNKNOWN("UNKNOWN");
+
+        final String value;
+
+        Stereo(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String toValue() {
+            return value;
+        }
+
+        @JsonCreator
+        public static Stereo forValue(String value) {
+            if (value.equals("ABSOLUTE"))
+                return ABSOLUTE;
+            if (value.equals("ACHIRAL") )
+                return ACHIRAL;
+            if (value.equals("RACEMIC") )
+                return RACEMIC;
+            if (value.equals("MIXED") )
+                return MIXED;
+            if (value.equals("EPIMERIC") )
+                return EPIMERIC;
+            if (value.equalsIgnoreCase("UNKNOWN"))
+                return UNKNOWN;
+            return null;
+        }
     }
 
     // optical activity
@@ -130,11 +159,21 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @Indexable(name = "Molecular Formula", facet = true)
     public String formula;
 
+
+    public Stereo getStereoChemistry() {
+        return stereoChemistry;
+    }
+
+    @JsonProperty("stereochemistry")
+    public void setStereoChemistry(Stereo stereoChemistry) {
+        this.stereoChemistry = stereoChemistry;
+    }
+
     @JsonProperty("stereochemistry")
     @Column(name = "stereo")
     @Indexable(name = "StereoChemistry", facet = true)
     public Stereo stereoChemistry;
-    
+
     @Column(name = "optical")
     public Optical opticalActivity;
     
@@ -155,7 +194,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Integer charge; // formal charge
     @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f")
     public Double mwt; // molecular weight
-    
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonView(BeanViews.Internal.class)
     @JoinTable(name = "ix_core_structure_property")
@@ -213,6 +252,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         return node;
     }
 
+
     public String getSelf() {
         return id != null ? Global.getRef(this) + "?view=full" : null;
     }
@@ -222,13 +262,13 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public void modified() {
         this.lastEdited = TimeUtil.getCurrentDate();
     }
-    
 
-    
+
+
     public String getId() {
         return id != null ? id.toString() : null;
     }
-    
+
     @JsonProperty(value="id")
     public UUID getRealId(){
     	return this.id;
