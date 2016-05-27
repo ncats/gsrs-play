@@ -9,7 +9,7 @@
                     <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="property.propertyType" field="propertyType" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
+                    <dropdown-select ng-model="property.propertyType" field="propertyType" label ="Property Type" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount" filter= "property.type"></form-selector>
@@ -46,7 +46,7 @@
                     <text-view-edit obj = "obj.name" field="display" cv = "PROPERTY_NAME" max="1"></text-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="propertyType" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
+                    <dropdown-view-edit obj = "obj" field="propertyType" cv = "PROPERTY_TYPE"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid=property-{{index}}></form-selector>
@@ -58,7 +58,7 @@
                     <substance-chooser-selector referenceobj="obj" field="referencedSubstance" name ="referencedSubstance" formname =property-{{index}} label="Referenced Substance" type ="search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>
+                    <check-box-view-edit obj = "obj" field="defining"></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid=property-{{index}}></form-selector>

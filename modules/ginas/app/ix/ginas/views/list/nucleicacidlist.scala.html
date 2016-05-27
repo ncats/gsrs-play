@@ -41,23 +41,7 @@
                 </div>
             </div>
             <div class = "col-md-6">
-
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Other Names:</strong></h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(nuc.names)</h5>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Codes:</strong></h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(nuc.codes)</h5>
-                    </div>
-                </div>
+				@commonlistdetails(nuc)
                 <div class = "row">
                     <div class = "col-md-3">
                         <h5><strong>Subunits:</strong></h5>
@@ -66,24 +50,6 @@
                         <span class = "badge">@nuc.nucleicAcid.getSubunits().size()</span>
                     </div>
                 </div>
-                <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Relationships:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <span class = "badge">@nuc.relationships.size()</span>
-                    </div>
-                </div>
-                @if(nuc.getAlternativeDefinitionRelationships().size() > 0) {
-                    <div class = "row">
-                        <div class = "col-md-2">
-                            <h5><strong>Alternative Definitions:</strong></h5>
-                        </div>
-                        <div class = "col-md-10">
-                            <h5>nuc.getAlternativeDefinitionRelationships().size()</h5>
-                        </div>
-                    </div>
-                }
             </div>
 
             <div class = "col-md-2">

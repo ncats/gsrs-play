@@ -11,7 +11,7 @@
                     @if(ref != null) {
 						@if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
 
-	                            	<img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
+	                            	<img class="struc-thumb img-responsive subref" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
 	                                src='@ix.ginas.controllers.routes.GinasApp.structure(ref.asInstanceOf[ChemicalSubstance].structure.getId, "svg", 150)'>
 	                            		
 	                            }else{
@@ -47,7 +47,6 @@
 	                	@*
 	                	This is making the route via the substance reference, rather than the expanded substance.
 	                	This has not been very well standardized so far. 
-	                	
 	                	*@
 	                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@sub.refPname</a>
 	                    

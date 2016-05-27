@@ -31,26 +31,7 @@
                 </div>
             </div>
             <div class = "col-md-7">
-            @if(sub.names.size()>0) {
-                <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Other Names:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
-                    </div>
-                </div>
-            }
-                @if(sub.codes.size()>0){
-                <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Codes:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
-                    </div>
-                </div>
-                }
+           		@commonlistdetails(sub)
                 <div class = "row">
                     <div class = "col-md-3">
                         <h5><strong>Components:</strong></h5>
@@ -59,24 +40,7 @@
                     <span class = "label label-primary label-rounded">@sub.mixture.size()</span>
                     </div>
                 </div>
-                <div class = "row">
-                        <div class = "col-md-3">
-                            <h5><strong>Relationships:</strong></h5>
-                        </div>
-                        <div class = "col-md-9">
-                            <span class = "badge">@sub.relationships.size()</span>
-                        </div>
-                </div>
-                @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
-                    <div class = "row">
-                        <div class = "col-md-2">
-                            <h5><strong>Alternative Definitions:</strong></h5>
-                        </div>
-                        <div class = "col-md-10">
-                            <h5>sub.getAlternativeDefinitionRelationships().size()</h5>
-                        </div>
-                    </div>
-                }
+               
             </div>
             <div class = "col-md-2">
 

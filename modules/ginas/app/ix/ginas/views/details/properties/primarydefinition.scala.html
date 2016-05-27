@@ -1,0 +1,29 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.{Substance, Relationship, SubstanceReference}
+
+
+
+
+@(sref: SubstanceReference)
+
+
+<button class="btn btn-primary label-offset det">
+    Primary Definition&nbsp;</button>
+<div class="col-md-12">
+       
+						@if(SubstanceFactory.getFullSubstance(sref) != null) {
+                            @subref(sref)
+                        }else{
+                            <div class="col-md-3 text-center thumb-col">
+                                <div class="panel panel-default">
+                                    <div class = "panel-body">
+                            			<i>Record not yet imported</i> <br />
+                        			</div>
+		                    		<div class = "panel-footer">
+		                    			@sref.refPname
+		                    		</div>
+                         		</div>
+                            </div>
+                    	}
+</div>
