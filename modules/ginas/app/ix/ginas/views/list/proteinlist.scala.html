@@ -57,22 +57,7 @@
                 </div>
             </div>
             <div class = "col-md-6">
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Other Names:</strong></h5>
-                    </div>
-                    <div class = "col-md-10 break-text">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(prot.names)</h5>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Codes:</strong></h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(prot.codes)</h5>
-                    </div>
-                </div>
+                @commonlistdetails(prot)
                 <div class = "row">
                     <div class = "col-md-3">
                         <h5><strong>Subunits:</strong></h5>
@@ -81,24 +66,7 @@
                         <span class = "badge">@prot.protein.getSubunits().size()</span>
                     </div>
                 </div>
-                <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Relationships:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <span class = "badge">@prot.relationships.size()</span>
-                    </div>
-                </div>
-                @if(prot.getAlternativeDefinitionRelationships().size() > 0) {
-                    <div class = "row">
-                        <div class = "col-md-3">
-                            <h5><strong>Alternative Definitions:</strong></h5>
-                        </div>
-                        <div class = "col-md-9">
-                            <span class = "badge">@prot.getAlternativeDefinitionRelationships().size()</span>
-                        </div>
-                    </div>
-                }
+                
             </div>
 
 

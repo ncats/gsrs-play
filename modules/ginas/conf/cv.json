@@ -18935,7 +18935,7 @@
       }
     ],
     "fields": [
-      "properties.type"
+      "properties.propertyType"
     ]
   }
 ]

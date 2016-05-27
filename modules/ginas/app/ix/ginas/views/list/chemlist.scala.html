@@ -79,22 +79,7 @@
                 </div>
             </div>
             <div class = "col-md-6">
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Other Names:</strong></h5>
-                    </div>
-                    <div class = "col-md-10 break-text">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(chem.names)</h5>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Codes:</strong></h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(chem.codes)</h5>
-                    </div>
-                </div>
+            	@commonlistdetails(chem)
                 <div class = "row">
                     <div class = "col-md-2">
                         <h5><strong>Formula:</strong></h5>
@@ -111,24 +96,8 @@
                     <span class = "badge">@chem.moieties.length</span>
                     </div>
                 </div>
-                <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Relationships:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <span class = "badge">@chem.relationships.size()</span>
-                    </div>
-                </div>
-                @if(chem.getAlternativeDefinitionRelationships().size() > 0) {
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Alternative Definitions:</strong></h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>chem.getAlternativeDefinitionRelationships().size()</h5>
-                    </div>
-                </div>
-            }
+                
+                
             </div>
 
             <div class = "col-md-2">

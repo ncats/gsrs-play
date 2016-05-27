@@ -19,7 +19,11 @@
 
                     @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                         <li role="presentation" ><a href="#altrelationships" prevent-default="" ng-click="scrollTo('altrelationships')">
-                            Alternative Definitions <span class="badge pull-right">@sub.getAlternativeDefinitionRelationships().size()</span></a></li>
+                            Alt Definitions <span class="badge pull-right">@sub.getAlternativeDefinitionRelationships().size()</span></a></li>
+                    }
+                     @if(sub.getPrimaryDefinitionReference() != null) {
+                        <li role="presentation" ><a href="#pridefinition" prevent-default="" ng-click="scrollTo('pridefinition')">
+                            Primary Definition </a></li>
                     }
 
                     @breadcrumb
@@ -101,7 +105,12 @@
 
             @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                 <div class="row info" id="altrelationships">
-                @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definitions", sub.uuid.toString)
+                @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definitions", sub.uuid.toString, false)
+                </div>
+            }
+            @if(sub.getPrimaryDefinitionReference() != null) {
+                <div class="row info" id="pridefinition">
+                	@properties.primarydefinition(sub.getPrimaryDefinitionReference())
                 </div>
             }
 

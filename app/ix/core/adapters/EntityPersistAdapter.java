@@ -569,6 +569,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
         //This invalidates the cache for this bean
         String kindIDKey=bean.getClass().getName() + "._id" + ":" + beanID;
+        
         IxCache.removeAllChildKeys(kindIDKey);
     } 
 
