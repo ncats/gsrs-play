@@ -63,10 +63,7 @@ public class TextIndexerPlugin extends Plugin {
 
         if(Play.isTest()){
             String newStorage=storage.getAbsolutePath() + initCount;
-            if(initCount == 11){
-                System.out.println("TEXT 11  is test ...");
-                new RuntimeException("foo").printStackTrace();
-            }
+
             Logger.info("Making new text index folder for test:" + newStorage);
             storage = new File(newStorage);
             storage.mkdirs();
