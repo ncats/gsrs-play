@@ -81,6 +81,7 @@ public class StructureFactory extends EntityFactory {
 
     
     public static void saveTempStructure(Structure s){
+    	//s.save();
     	if(s.id==null)s.id=UUID.randomUUID();
     	play.cache.Cache.set(s.id.toString(), s);
     }
