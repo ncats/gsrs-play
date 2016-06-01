@@ -101,8 +101,11 @@ public class IxCache extends Plugin {
     @Override
     public void onStop () {
         Logger.info("Stopping plugin "+getClass().getName());
-
-        gateKeeper.close();
+        if(this!=_instance){
+            _instance.gateKeeper.close();
+        }else{
+            gateKeeper.close();
+        }
     }
 
 
