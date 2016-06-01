@@ -97,8 +97,8 @@ my $stdErr = toString($abs_path . "/daemon.err");
 
 
 
-my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
-
+#my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
+my $ginasFileDump = "modules/ginas/test/testdumps/jsonDumpINN.txt.gz"
 if(-e $ginasFileDump){
 	print "file exists\n";
 }else{
