@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 //@RunWith(FindAllTestsRunner.class)
 @RunWith(GinasTestSuite.class)
 @GinasTestSuite.Config(fullExcludePattern = {"ix\\.ntd\\..+"})
-public class PrototypeSuite {
+public class RunAllGinasTests {
 
 
 }
