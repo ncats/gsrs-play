@@ -1157,11 +1157,11 @@ public class GinasApp extends App {
                     if(payload.contains("\n") && payload.contains("M  END")){
                     	struc.molfile=payload;
                     }
-                    struc.save();
+                    //struc.save();
                     
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                        m.save();
+                        //m.save();
                         ObjectNode on = mapper.valueToTree(m);
                         Amount c1=Moiety.intToAmount(m.count);
                         JsonNode amt=mapper.valueToTree(c1);
@@ -1182,7 +1182,7 @@ public class GinasApp extends App {
                     for (StructuralUnit su : o) {
                         Structure struc = StructureProcessor.instrument
                             (su.structure, null, false);
-                        struc.save();
+                        //struc.save();
                         su._structure = struc;
                     }
                     node.put("structuralUnits", mapper.valueToTree(o));
