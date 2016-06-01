@@ -2,6 +2,7 @@ package ix.core.controllers;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import play.*;
 import play.db.ebean.*;
@@ -20,12 +21,16 @@ public class StructureFactory extends EntityFactory {
     
     public static final Model.Finder<UUID, Structure> finder = 
         new Model.Finder(UUID.class, Structure.class);
-
+    
     public static Structure getStructure (UUID id) {
+    	Structure s=getTempStructure(id.toString());
+    	if(s!=null)return s;
         return getEntity (id, finder);
     }
 
     public static Structure getStructure (String id) {
+    	Structure s=getTempStructure(id);
+    	if(s!=null)return s;
         return getEntity (toUUID (id), finder);
     }
     
@@ -71,5 +76,16 @@ public class StructureFactory extends EntityFactory {
 
     public static Result updateEntity () {
         return EntityFactory.updateEntity(Structure.class);
+    }
+    
+
+    
+    public static void saveTempStructure(Structure s){
+    	if(s.id==null)s.id=UUID.randomUUID();
+    	play.cache.Cache.set(s.id.toString(), s);
+    }
+    
+    public static Structure getTempStructure(String uuid){
+    	return (Structure)play.cache.Cache.get(uuid);
     }
 }
