@@ -818,7 +818,7 @@
             },
             link: function (scope, element, attrs) {
                 var template;
-                console.log(scope.ref);
+                console.log(scope);
                 if (scope.format == "subref") {
                     template = angular.element('<div>' +
                         '<rendered id= {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
