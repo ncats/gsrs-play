@@ -803,7 +803,7 @@ public class TextIndexer implements Closeable{
             offset = Math.min(options.skip, total);
         }
 
-        void fetch () throws IOException {
+        void fetch () throws IOException, InterruptedException {
             try {
                 fetch (total);
             }
@@ -848,9 +848,12 @@ public class TextIndexer implements Closeable{
         }
         
             
-        void fetch (int size)  throws IOException {
+        void fetch (int size)  throws IOException, InterruptedException {
             size = Math.min(options.top, Math.min(total - offset, size));
             for (int i = result.size(); i < size; ++i) {
+                if(Thread.interrupted()){
+                    throw new InterruptedException();
+                }
                 Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
                 final IndexableField kind = doc.getField(FIELD_KIND);
                 if (kind != null) {
@@ -889,42 +892,44 @@ public class TextIndexer implements Closeable{
         }
     }
         
-    class FetchWorker implements Runnable {
-        FetchWorker () {
-        }
-
-        public void run () {
-            Logger.debug(Thread.currentThread()
-                         +": FetchWorker started at "+new Date ());
-
-
-            try{
-                SearchResultPayload payload;
-                while( (payload = fetchQueue.take()) !=POISON_PAYLOAD){
-                    try {
-                        long start = System.currentTimeMillis();
-                        Logger.debug(Thread.currentThread()
-                                + ": fetching payload "
-                                + payload.hits.totalHits
-                                + " for " + payload.result);
-
-                        payload.fetch();
-                        Logger.debug(Thread.currentThread() + ": ## fetched "
-                                + payload.result.size()
-                                + " for result " + payload.result
-                                + " in " + String.format
-                                ("%1$dms",
-                                        System.currentTimeMillis() - start));
-                    }catch(IOException ex){
-                        ex.printStackTrace();
-                        Logger.error("Error in processing payload", ex);
-                    }
-                }
-            }catch (InterruptedException ex){
-                System.out.println("FETCH_WORKER EXCEPTION");
-                ex.printStackTrace();
-                Logger.trace(Thread.currentThread()+" stopped", ex);
-            }
+//    class FetchWorker implements Runnable {
+//        FetchWorker () {
+//        }
+//
+//        public void run () {
+//            Logger.debug(Thread.currentThread()
+//                         +": FetchWorker started at "+new Date ());
+//
+//
+//            try{
+//                SearchResultPayload payload;
+//                while( (payload = fetchQueue.take()) !=POISON_PAYLOAD){
+//                    try {
+//                        long start = System.currentTimeMillis();
+//                        Logger.debug(Thread.currentThread()
+//                                + ": fetching payload "
+//                                + payload.hits.totalHits
+//                                + " for " + payload.result);
+//
+//                        payload.fetch();
+//                        Logger.debug(Thread.currentThread() + ": ## fetched "
+//                                + payload.result.size()
+//                                + " for result " + payload.result
+//                                + " in " + String.format
+//                                ("%1$dms",
+//                                        System.currentTimeMillis() - start));
+//                    }catch(InterruptedException ex){
+//                        throw ex;
+//                    }catch(Exception ex){
+//                        ex.printStackTrace();
+//                        Logger.error("Error in processing payload", ex);
+//                    }
+//                }
+//            }catch (InterruptedException ex){
+//                System.out.println("FETCH_WORKER EXCEPTION");
+//                ex.printStackTrace();
+//                Logger.trace(Thread.currentThread()+" stopped", ex);
+//            }
 
 //            try {
 //                for (SearchResultPayload payload;
@@ -959,8 +964,8 @@ public class TextIndexer implements Closeable{
 //                Logger.trace(Thread.currentThread()+" stopped", ex);
 //            }
 
-        }
-    }
+      //  }
+   // }
 
     class FlushDaemon implements Runnable {
         FlushDaemon () {
@@ -1024,9 +1029,9 @@ public class TextIndexer implements Closeable{
     private ExecutorService threadPool;
     private ScheduledExecutorService scheduler;
     
-    private Future[] fetchWorkers;
-    private BlockingQueue<SearchResultPayload> fetchQueue =
-        new LinkedBlockingQueue<SearchResultPayload>();
+   // private Future[] fetchWorkers;
+//    private BlockingQueue<SearchResultPayload> fetchQueue =
+//        new LinkedBlockingQueue<SearchResultPayload>();
         
     static ConcurrentMap<File, TextIndexer> indexers;
 
@@ -1142,10 +1147,10 @@ public class TextIndexer implements Closeable{
     }
 
     private TextIndexer () {
-        threadPool = Executors.newCachedThreadPool();
+        threadPool = Executors.newWorkStealingPool(FETCH_WORKERS);
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
-        setFetchWorkers (FETCH_WORKERS);
+      //  setFetchWorkers (FETCH_WORKERS);
     }
     
     public TextIndexer (File dir) throws IOException {
@@ -1219,7 +1224,7 @@ public class TextIndexer implements Closeable{
         Logger.info("## "+sorters.size()+" sort fields defined!");
 
 
-        setFetchWorkers (FETCH_WORKERS);
+       // setFetchWorkers (FETCH_WORKERS);
 
         // run daemon every 5s
         scheduler.scheduleAtFixedRate
@@ -1227,17 +1232,17 @@ public class TextIndexer implements Closeable{
         
     }
 
-    public void setFetchWorkers (int n) {
-        if (fetchWorkers != null) {
-            for (Future f : fetchWorkers)
-                if (f != null)
-                    f.cancel(true);
-        }
-
-        fetchWorkers = new Future[n];
-        for (int i = 0; i < fetchWorkers.length; ++i)
-            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
-    }
+//    public void setFetchWorkers (int n) {
+//        if (fetchWorkers != null) {
+//            for (Future f : fetchWorkers)
+//                if (f != null)
+//                    f.cancel(true);
+//        }
+//
+//        fetchWorkers = new Future[n];
+//        for (int i = 0; i < fetchWorkers.length; ++i)
+//            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
+//    }
     @FunctionalInterface
     interface SearcherFunction<R> {
 
@@ -1763,10 +1768,31 @@ public class TextIndexer implements Closeable{
                 if (hits.totalHits > fetch) {
                     // now queue the payload so the remainder is fetched in
                     // the background
-                    fetchQueue.put(payload);
+                   // fetchQueue.put(payload);
+                    threadPool.submit(()->{
+                        try {
+                            long tstart = System.currentTimeMillis();
+                            Logger.debug(Thread.currentThread()
+                                    + ": fetching payload "
+                                    + payload.hits.totalHits
+                                    + " for " + payload.result);
+
+                            payload.fetch();
+                            Logger.debug(Thread.currentThread() + ": ## fetched "
+                                    + payload.result.size()
+                                    + " for result " + payload.result
+                                    + " in " + String.format
+                                    ("%1$dms",
+                                            System.currentTimeMillis() - tstart));
+                        }catch(Exception ex){
+                            ex.printStackTrace();
+                            Logger.error("Error in processing payload", ex);
+                        }
+                    });
                 }
                 else {
-                    payload.fetch();
+                   // payload.fetch();
+                    searchResult.done();
                 }
             }
         }
@@ -2664,12 +2690,13 @@ public class TextIndexer implements Closeable{
         }
         //System.out.println("shutting down " + System.identityHashCode(this));
         try {
-            for(int i=0; i< fetchWorkers.length; i++) {
-                fetchQueue.put(POISON_PAYLOAD);
-            }
+//            for(int i=0; i< fetchWorkers.length; i++) {
+//                fetchQueue.put(POISON_PAYLOAD);
+//            }
+
             System.out.println("Shutting down scheduler");
-            scheduler.shutdown();
-            scheduler.awaitTermination(1, TimeUnit.MINUTES);
+          //  scheduler.shutdown();
+           // scheduler.awaitTermination(1, TimeUnit.MINUTES);
             scheduler.shutdownNow();
             System.out.println("scheduler shut down");
             //System.out.println("done waiting for termination");
