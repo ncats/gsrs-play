@@ -25,6 +25,7 @@ public class SubstanceAPI {
     private static final String API_URL_UPDATE = "ginas/app/api/v1/substances";
 
     private static final String API_URL_SUBSTANCES_SEARCH = "ginas/app/api/v1/substances/search";
+    private static final String API_URL_STRUCTURE_BROWSE = "ginas/app/api/v1/structures";
 
 
     private static final String UI_URL_SUBSTANCE_SEARCH_FLEX="ginas/app/substances";
@@ -209,6 +210,19 @@ public class SubstanceAPI {
 	
 	public String exportHTML(String id, String format) {
 		return export(id,format).getBody();
+	}
+
+	public JsonNode fetchStructureBrowseJSON() {
+		return this.session.extractJSON(fetchStructureBrowse());
+	}
+	
+	public int fetchStructureBrowseCount() {
+		JsonNode jsn= this.fetchStructureBrowseJSON();
+		return jsn.at("/total").asInt();
+	}
+	
+	public WSResponse fetchStructureBrowse() {
+		return session.createRequestHolder(API_URL_STRUCTURE_BROWSE).get().get(timeout);
 	}
 
 

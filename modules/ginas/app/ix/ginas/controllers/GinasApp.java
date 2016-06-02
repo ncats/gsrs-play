@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -1136,6 +1137,8 @@ public class GinasApp extends App {
 
     }
     
+    
+    
     @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
     public static Result interpretMolfile() {
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -1157,11 +1160,13 @@ public class GinasApp extends App {
                     if(payload.contains("\n") && payload.contains("M  END")){
                     	struc.molfile=payload;
                     }
-                    struc.save();
+                    
+                    StructureFactory.saveTempStructure(struc);
                     
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                        m.save();
+                        //m.save();
+                    	StructureFactory.saveTempStructure(m);
                         ObjectNode on = mapper.valueToTree(m);
                         Amount c1=Moiety.intToAmount(m.count);
                         JsonNode amt=mapper.valueToTree(c1);
@@ -1182,7 +1187,8 @@ public class GinasApp extends App {
                     for (StructuralUnit su : o) {
                         Structure struc = StructureProcessor.instrument
                             (su.structure, null, false);
-                        struc.save();
+                        //struc.save();
+                        StructureFactory.saveTempStructure(struc);
                         su._structure = struc;
                     }
                     node.put("structuralUnits", mapper.valueToTree(o));
@@ -1226,12 +1232,14 @@ public class GinasApp extends App {
                     if (amap[i] > 0)
                         ++nmaps;
                     ++i;
+                    //System.out.println("Maps: " + ma);
                 }
 
                 chem = chemicals.iterator().next();             
                 if (nmaps > 0) {
                     IxCache.set("AtomMaps/"+getContext().getId()+"/" +r.getId(), amap);
-                    
+                    //System.out.println("Storing at:" + "AtomMaps/"+getContext().getId()+"/" +r.getId());
+                    //System.out.println("Got:" + IxCache.get("AtomMaps/"+getContext().getId()+"/" +r.getId()));
                 }
                 IxCache.set("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
@@ -1348,15 +1356,17 @@ public class GinasApp extends App {
         String atomMap = "";
         if (context != null) {
             int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+            //System.out.println("Fetching from:" + "AtomMaps/"+context+"/" +id);
+            //System.out.println("Found amaps:" + amap);
             //Logger.debug("AtomMaps/"+context+" => "+amap);
             if (amap != null && amap.length > 0) {
                 StringBuilder sb = new StringBuilder ();
                 sb.append(amap[0]);
-                for (int i = 1; i < amap.length; ++i)
+                for (int i = 1; i < amap.length; ++i){
                     sb.append(","+amap[i]);
+                }
                 atomMap = sb.toString();
-            }
-            else {
+            }else{
                 atomMap = context;
             }
         }
