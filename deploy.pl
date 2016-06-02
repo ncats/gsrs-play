@@ -62,7 +62,7 @@ my $abs_path = abs_path($outputPath. "/$subDir");
 #chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
 
-my $command = "$abs_path/bin/ginas -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.admin=true -Dix.authentication.allownonauthenticated=false";
+my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.admin=true -Dix.authentication.allownonauthenticated=false";
 
 my $daemon = Proc::Daemon->new(
         work_dir => $abs_path,
