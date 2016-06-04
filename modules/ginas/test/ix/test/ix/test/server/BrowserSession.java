@@ -9,6 +9,8 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.Cookie;
 
+import ix.utils.Util;
+
 import org.apache.http.impl.client.HttpClientBuilder;
 import play.libs.ws.WS;
 import play.libs.ws.WSCookie;
@@ -81,6 +83,11 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     public WebRequest newGetRequest(String path) throws MalformedURLException {
         return new WebRequest(new URL(constructUrlFor(path)), HttpMethod.GET);
     }
+    
+    public String sha1ofResponse(WebRequest ws) throws IOException{
+    	HtmlPage html=submit(ws);
+    	return Util.sha1(html.asXml());
+    }
 
     public WebRequest newPostRequest(String path) throws MalformedURLException {
         return new WebRequest(new URL(constructUrlFor(path)), HttpMethod.POST);
@@ -89,6 +96,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     public HtmlPage submit(WebRequest request) throws IOException{
         Objects.requireNonNull(request);
         Objects.requireNonNull(webClient, "webclient is null!!!!!!!");
+        
         return webClient.getPage(request);
     }
 

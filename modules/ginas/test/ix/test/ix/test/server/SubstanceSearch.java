@@ -21,7 +21,8 @@ public class SubstanceSearch {
 
     private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9]+)\"");
     private static final Pattern TOTAL_PATTERN = Pattern.compile("[^0-9]([0-9][0-9]*)[^0-9]*h3[^0-9]*pagination");
-
+///ginas/app/img/c37bea80-14ec-4144-8379-60c92d422713.svg?size=200&amp;context=ghtjouloym
+    private static final Pattern STRUCTURE_IMG_URL = Pattern.compile("src=.(/ginas/app/img/[^\'\"]+)");
     
     private static final Pattern ROW_PATTERN = Pattern.compile("(un)?checked\\s+(\\S+(\\s+\\S+)?)\\s+(\\d+)");
 
@@ -231,6 +232,19 @@ public class SubstanceSearch {
         Set<String> substances = new LinkedHashSet<>();
 
         Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(page.asXml());
+        while(matcher.find()){
+            substances.add(matcher.group(1));
+        }
+
+        return substances;
+    }
+    
+    public static Set<String> getStructureImagesFrom(HtmlPage page){
+        Set<String> substances = new LinkedHashSet<>();
+
+        String txt=page.asXml();
+        System.out.println(txt);
+        Matcher matcher = STRUCTURE_IMG_URL.matcher(txt);
         while(matcher.find()){
             substances.add(matcher.group(1));
         }
