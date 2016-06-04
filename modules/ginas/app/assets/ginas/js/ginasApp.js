@@ -541,6 +541,7 @@
         $scope.gridView = localStorageService.get('gridView') || false;
         $scope.diff = false;
         $scope.scrollTo = function (prmElementToScrollTo) {
+            console.log('scrolling');
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
@@ -554,9 +555,12 @@
                     $scope.structureSearchResolve = response.data;
                 }
                 $scope.name = null;
-                var template = angular.element('<substance-viewer data=structureSearchResolve></substance-viewer>');
+                var template = angular.element('<substance-viewer data=structureSearchResolve parent = substance></substance-viewer>');
                 toggler.refresh($scope, div, template);
                 spinnerService.hideAll();
+                $timeout(function() {
+                    $anchorScroll(div);
+                }, 0, false);
             });
         };
 
@@ -1734,7 +1738,7 @@
         };
     });
 
-    ginasApp.directive('sketcher', function ($compile, $http, UUID, polymerUtils, CVFields, localStorageService, molChanger) {
+    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger) {
         return {
             restrict: 'E',
             replace: true,
@@ -1779,54 +1783,67 @@
 				};
 
                 scope.updateMol = function () {
-                    var url = baseurl + 'structure';
-                    $http.post(url, scope.mol, {
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        }
-                    }).success(function (data) {
-                        if (scope.parent.substanceClass === "polymer") {
-                            scope.parent.polymer.idealizedStructure = data.structure;
-                            scope.structure = data.structure;
-                            CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
-                                for (var i in data.structuralUnits) {
-                                    var cv = response.data.content[0].terms;
-                                    data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
-                                }
-                                polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
-                                scope.parent.polymer.structuralUnits = data.structuralUnits;
-                            });
-                        }
-                        if(scope.parent.structure){
-	                        data.structure.id=scope.parent.structure.id;
-                        }else{
-                        	scope.parent.structure={};
-                        }
-                        var defChange=scope.merge(scope.parent.structure, data.structure);
-                        
-                        if(defChange){
-                        	scope.parent.moieties = [];
-                        	_.forEach(data.moieties, function (m) {
-                        		m["$$new"]=true;
-                        		var moi={};
-                        		scope.merge(moi, m);
-                        		scope.parent.moieties.push(moi);
-                        	});
-                        }
-                        
-                        
-                        if (data.structure) {
-                            _.set(scope.parent, 'q', data.structure.smiles);
-                        }
-                    });
+                    console.log("update");
+                        var url = baseurl + 'structure';
+                        $http.post(url, scope.mol, {
+                            headers: {
+                                'Content-Type': 'text/plain'
+                            }
+                        }).success(function (data) {
+                            if (scope.parent.substanceClass === "polymer") {
+                                scope.parent.polymer.idealizedStructure = data.structure;
+                                scope.structure = data.structure;
+                                CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
+                                    for (var i in data.structuralUnits) {
+                                        var cv = response.data.content[0].terms;
+                                        data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
+                                    }
+                                    polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                                    scope.parent.polymer.structuralUnits = data.structuralUnits;
+                                });
+                            }
+                            if (scope.parent.structure) {
+                                data.structure.id = scope.parent.structure.id;
+                            } else {
+                                scope.parent.structure = {};
+                            }
+                            var defChange = scope.merge(scope.parent.structure, data.structure);
+
+                            if (defChange) {
+                                scope.parent.moieties = [];
+                                _.forEach(data.moieties, function (m) {
+                                    m["$$new"] = true;
+                                    var moi = {};
+                                    scope.merge(moi, m);
+                                    scope.parent.moieties.push(moi);
+                                });
+                            }
+
+
+                            if (data.structure) {
+                                _.set(scope.parent, 'q', data.structure.smiles);
+                            }
+                        });
                 };
 
                 scope.sketcher = new JSDraw("sketcherForm");
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
                 scope.sketcher.options.ondatachange = function () {
+                    console.log("data change");
                     scope.mol = scope.sketcher.getMolfile();
-                    scope.updateMol();
+                  //  console.log(scope.sketcher.getSmiles());
+
+                    console.log(scope);
+                    if(attrs.ajax =='false') {
+                        $timeout(function() {
+                            _.set(scope.parent, 'q', scope.sketcher.getSmiles());
+                        }, 0);
+                        //scope.$apply(function () {
+                        //});
+                    }else{
+                        scope.updateMol();
+                    }
                 };
                 molChanger.setSketcher(scope.sketcher);
                 var structureid = (localStorageService.get('structureid') || false);
@@ -1848,6 +1865,7 @@
                 }
 
                 if (structureid) {
+                    console.log("dtructure id ");
                     var url = baseurl + 'api/v1/structures/' + structureid;
                     $http.get( url, {cache: true}).then(function (response) {
                         scope.sketcher.setMolfile(response.data.molfile);

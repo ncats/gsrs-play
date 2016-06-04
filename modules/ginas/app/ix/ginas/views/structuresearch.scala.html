@@ -10,10 +10,12 @@
             method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()" novalidate>
                 <div class="row form-row">
                     <div class="col-md-12">
-                        <sketcher parent = substance ng-model=parent.structure.molfile></sketcher>
+                        <sketcher parent = substance ng-model=parent.structure.molfile ajax="false"></sketcher>
+
                     </div>
                 </div>
                 <div class="row form-row">
+
                     <div class ="col-md-1">
                         <button
                         class="btn btn-primary" id="search-btn"><i class = "fa fa-search"></i> Search</button>
@@ -56,8 +58,11 @@
                         title="Query structure"
                         name="q"
                         ng-hide="true"
-                        ng-model="substance.q"
+                        ng-model= substance.q
                         id="structure">
+                    <div class="col-md-5">
+                        <pre>{{substance.q}}</pre>
+                    </div>
                     <div class="col-md-2 pull-right">
                         <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
@@ -83,7 +88,7 @@
         </div>
         <div class="col-md-12">
             <spinner name="structureSearchSpinner"><loading></loading><br/></spinner>
-            <div class = "structureSearch"></div>
+            <div class = "structureSearch" id ="structureSearch"></div>
         </div>
     </div>
 
