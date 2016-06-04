@@ -124,8 +124,9 @@ public class IxCache extends Plugin {
     public static Object get (String key) {
         checkInitialized();
         return _instance.gateKeeper.get(key);
-
     }
+    
+    
     private static Object getRaw (String key) {
         checkInitialized();
         return _instance.gateKeeper.getRaw(key);
@@ -237,5 +238,33 @@ public class IxCache extends Plugin {
 
 
 
+	/**
+	 * Used for temporary cache storage which may be needed across
+	 * users or within both attached and detached sessions 
+	 * (background threads)
+	 * 
+	 * Gets a value set from setTemp
+	 *  
+	 * @param key
+	 * @return
+	 */
+	public static Object getTemp(String key) {
+		return getRaw("tmp123" + key);
+	}
+	
+	/**
+	 * Used for temporary cache storage which may be needed across
+	 * users or within both attached and detached sessions 
+	 * (background threads)
+	 * 
+	 * Sets the value in such a way that the same key could fetch 
+	 * that value, regardless of who is logged in.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public static void setTemp(String key, Object value) {
+		setRaw("tmp123" +key, value);
+	}
 	
 }

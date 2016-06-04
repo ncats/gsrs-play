@@ -2,9 +2,11 @@ package ix.test.ix.test.server;
 
 
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -31,19 +33,30 @@ public class SubstanceSearch {
 
     /**
      * Get the UUIDs of all the loaded substances that have this substructure.
+     * Assumes the page size for searches is 16.
      * @param smiles a kekulized SMILES string of the substructure to search for.
      * @return a Set of UUIDs that match. will never be null but may be empty.
      *
      * @throws IOException if there is a problem parsing the results.
      */
     public SearchResult substructure(String smiles) throws IOException {
+    	return substructure(smiles, 16, true);
+    }
+    
+    /**
+     * Get the UUIDs of all the loaded substances that have this substructure.
+     * @param smiles a kekulized SMILES string of the substructure to search for.
+     * @param rows the number of rows per page to return
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     *
+     * @throws IOException if there is a problem parsing the results.
+     */
+    public SearchResult substructure(String smiles, int rows, boolean wait) throws IOException {
 
         //TODO have to kekulize
 
 
-    	//Added "wait" so that it doesn't return before it's
-    	//completely ready
-        String rootUrl = "ginas/app/substances?type=Substructure&q="+URLEncoder.encode(smiles, "UTF-8") + "&wait=true";
+    	
         int page=1;
 
         Set<String> substances = new LinkedHashSet<>();
@@ -52,12 +65,13 @@ public class SubstanceSearch {
         HtmlPage firstPage=null;
         do {
             try {
-                HtmlPage htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+                HtmlPage htmlPage = getSubstructurePage(smiles,rows,page, wait);
                 temp = getSubstancesFrom(htmlPage);
                 if (firstPage == null) {
                     firstPage = htmlPage;
                 }
 
+                
 
                 page++;
                 //we check the return value of the add() call
@@ -66,11 +80,12 @@ public class SubstanceSearch {
                 //so we can check to see if we've already added these
                 //records (so add() will return false)
                 //which will break us out of the loop.
-            }catch(IllegalArgumentException e){
+            }catch(FailingHttpStatusCodeException e){
+            	
                 //Code looks like it's been improved
                 //to throw an exception if you page too far
                 //so swallow that exception.
-                if(e.getMessage().contains("Bogus page")){
+                if(e.getResponse().getContentAsString().contains("Bogus page")){
                     break;
                 }
                 throw e;
@@ -83,6 +98,26 @@ public class SubstanceSearch {
         }
         return results;
     }
+    
+    public HtmlPage getPage(String rootUrl, int page) throws MalformedURLException, IOException{
+    	return session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+    }
+    
+    public HtmlPage getSubstructurePage(String smiles, int rows, int page, boolean wait) throws MalformedURLException, IOException{
+    	// Added "wait" so that it doesn't return before it's
+    	// completely ready
+    	// This may be a problem, as URLEncoder may over encode some smiles strings
+    	String rootUrl = "ginas/app/substances?type=Substructure&q="+URLEncoder.encode(smiles, "UTF-8") + "&wait=" + wait + "&rows=" + rows;
+    	return getPage(rootUrl, page);
+    }
+    
+    
+    public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws MalformedURLException, IOException{
+    	return new SearchResult(getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait)));
+    }
+    
+    
+    
     /**
      * Get the UUIDs of all the loaded substances
      * @return a Set of UUIDs that match. will never be null but may be empty.

@@ -909,8 +909,12 @@ public class GinasApp extends App {
             return App.fetchResult
                 (context, rows, page, 
                  new SubstanceResultRenderer (CHEMICAL_FACETS));
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (BogusPageException ex) {
+            return internalServerError
+                    (ix.ginas.views.html.error.render
+                     (500, ex.getMessage()));
+        } catch (Exception ex){
+        	ex.printStackTrace();
             Logger.error("Can't perform substructure search", ex);
         }
         return internalServerError
@@ -1229,21 +1233,26 @@ public class GinasApp extends App {
                 int i = 0, nmaps = 0;
                 for (MolAtom ma : r.getMol().getAtomArray()) {
                     amap[i] = ma.getAtomMap();
-                    if (amap[i] > 0)
+                    if (amap[i] > 0){
                         ++nmaps;
+                    }
                     ++i;
-                    //System.out.println("Maps: " + ma);
                 }
 
                 chem = chemicals.iterator().next();             
                 if (nmaps > 0) {
-                    IxCache.set("AtomMaps/"+getContext().getId()+"/" +r.getId(), amap);
-                    //System.out.println("Storing at:" + "AtomMaps/"+getContext().getId()+"/" +r.getId());
-                    //System.out.println("Got:" + IxCache.get("AtomMaps/"+getContext().getId()+"/" +r.getId()));
+                	String cachekey="AtomMaps/"+getContext().getId()+"/" +r.getId();
+                    IxCache.setTemp(cachekey, amap);
                 }
-                IxCache.set("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
+                IxCache.setTemp("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
            
+            // This will simulate a slow structure processing (e.g. slow database fetch)
+            // This should be used in conjunction with another debugSpin in TextIndexer
+            // to simulate both slow fetches and slow lucene processing            
+             Util.debugSpin(1000);
+            
+            
             return chem;
         }
     }
@@ -1260,7 +1269,7 @@ public class GinasApp extends App {
             ProteinSubstance protein =
                 proteins.isEmpty() ? null : proteins.get(0);
             if (protein != null) {
-                IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
+                IxCache.setTemp("Alignment/"+getContext().getId()+"/"+r.id, r);
             }
             else {
                 Logger.warn("Can't retrieve protein for subunit "+r.id);
@@ -1271,11 +1280,11 @@ public class GinasApp extends App {
 
     public static SequenceIndexer.Result
         getSeqAlignment (String context, String id) {
-        return (SequenceIndexer.Result)IxCache.get("Alignment/"+context+"/"+id);
+        return (SequenceIndexer.Result)IxCache.getTemp("Alignment/"+context+"/"+id);
     }
     public static Double
         getChemSimilarity (String context, String id) {
-        return (Double)IxCache.get("Similarity/"+context+"/"+id);
+        return (Double)IxCache.getTemp("Similarity/"+context+"/"+id);
     }
 
     static public Substance resolve(Relationship rel) {
@@ -1355,9 +1364,7 @@ public class GinasApp extends App {
         //Logger.debug("Fetching structure");
         String atomMap = "";
         if (context != null) {
-            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
-            //System.out.println("Fetching from:" + "AtomMaps/"+context+"/" +id);
-            //System.out.println("Found amaps:" + amap);
+            int[] amap = (int[])IxCache.getTemp("AtomMaps/"+context+"/"+id);
             //Logger.debug("AtomMaps/"+context+" => "+amap);
             if (amap != null && amap.length > 0) {
                 StringBuilder sb = new StringBuilder ();

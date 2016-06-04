@@ -328,6 +328,7 @@ public class TextIndexer implements Closeable{
     
     @CacheStrategy(evictable=false)
     public static class SearchResult {
+    
     	
         SearchContextAnalyzer searchAnalyzer;
 
@@ -566,8 +567,10 @@ public class TextIndexer implements Closeable{
             return future;
         }
         
+        
         public List getMatches () {
         	if (result != null) return result;
+            boolean finished=finished();
             
             List list = new ArrayList (matches);
             if (matches instanceof PriorityBlockingQueue) {
@@ -575,7 +578,7 @@ public class TextIndexer implements Closeable{
                 Collections.sort(list, q.comparator());
             }
             
-            if (finished ()) {
+            if (finished) {
                 result = list;
             }
             
@@ -604,8 +607,10 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
-            //	Util.debugSpin(100);
+            	//Util.debugSpin(100);
+            
             //}
+            //System.out.println("added:" + matches.size());
         }
 
         private void notifyAdd(Object o){
@@ -639,7 +644,7 @@ public class TextIndexer implements Closeable{
         }
     }
 
-    interface SearchResultDoneListener{
+    public static interface SearchResultDoneListener{
     	void searchIsDone();
         void added(Object o);
     }
@@ -1760,9 +1765,9 @@ public class TextIndexer implements Closeable{
             }
             else {
             	
-                // we first block until we have enough result to show; simulate
-                //  with a random number of fetch
-                int fetch = 20 + new Random().nextInt(options.fetch);
+                // we first block until we have enough result to show
+            	// should be fetch plus a little extra padding (2 here)
+                int fetch = 2 +options.fetch;
                 payload.fetch(fetch);
 
                 if (hits.totalHits > fetch) {
@@ -1776,6 +1781,7 @@ public class TextIndexer implements Closeable{
                                     + ": fetching payload "
                                     + payload.hits.totalHits
                                     + " for " + payload.result);
+                            
 
                             payload.fetch();
                             Logger.debug(Thread.currentThread() + ": ## fetched "

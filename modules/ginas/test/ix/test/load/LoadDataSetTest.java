@@ -41,6 +41,24 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         SubstanceSearch.SearchResult all = searcher.all();
         assertEquals(90, all.numberOfResults());
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
+        
+        
+        
+    }
+    
+    
+    private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
+    	SubstanceSearch searcher = new SubstanceSearch(session);
+    	SubstanceSearch.SearchResult results =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
+        assertTrue("15th page of substructure search should have the same substance every time",results.getUuids().contains("0a707d18"));
+        assertTrue("15th page of substructure search should have no other substances",results.getUuids().size()==1);        
+    }
+    
+    private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
+    	SubstanceSearch searcher = new SubstanceSearch(session);
+    	SubstanceSearch.SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
+    	SubstanceSearch.SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
+    	assertTrue("6th page on substructure search should have 2 entries", resultsLater.getUuids().size()==2);
     }
     
     @Test
@@ -72,6 +90,40 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
             runRepTests(session);
+        }
+    }
+    
+    @Test
+    public void substructureSearchOnRep90ShouldReturnDeterministicResults() throws IOException {
+        try(BrowserSession session = ts.newBrowserSession(admin)){
+
+            SubstanceLoader loader = new SubstanceLoader(session);
+
+            File f = new File("test/testdumps/rep90.ginas");
+
+            loader.loadJson(f);
+
+
+            runRepTests(session);
+            substructureSearchShouldWait(session);
+            
+        }
+    }
+    
+    @Test
+    public void substructureSearchOnRep90ShouldAllowPaging() throws IOException {
+        try(BrowserSession session = ts.newBrowserSession(admin)){
+
+            SubstanceLoader loader = new SubstanceLoader(session);
+
+            File f = new File("test/testdumps/rep90.ginas");
+
+            loader.loadJson(f);
+
+
+            runRepTests(session);
+            substructureSearchShouldWaitAndLaterPagesShouldReturn(session);
+            
         }
     }
 

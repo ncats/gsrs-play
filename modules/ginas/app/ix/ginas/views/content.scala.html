@@ -87,6 +87,17 @@
                         }
                     </div>
                 }
+                
+                  @defining(flash().remove("warning")) { mesg =>
+		             	@if(mesg != null) {
+		             	 <div  class="alert alert-warning alert-dismissible" role="alert">
+		             	 	<button type="button" class="close" data-dismiss="alert" aria-label="Close"> 
+		             	 		<span aria-hidden="true">&times;</span>
+                        	</button>
+	                    	<p class="warning-message">@mesg</p>
+	                    	</div>
+	                 	}
+		          }
                   @if(searchFacets!=null && searchFacets.size()>0){
                            <div
                         @if(total > 0) {
@@ -167,7 +178,7 @@ function dismissQuery () {
 
 $(document).ready(function () {
     $(function () {
-        $('[data-toggle="popover"]').popover()
+        $('[data-toggle="popover"]').popover();
     })
 
    @defining(App.checkStatus()) { status =>
@@ -184,7 +195,8 @@ $(document).ready(function () {
     	 }
     	 }
     	 
-    	 if(firststatus.count<@{current*rows}){
+    	 if(firststatus.count<@{current*rows} || !firststatus.total){
+    	 	//alert("OK?");
     		 window["needsreload"]=true;
     	 }
     	 
@@ -215,18 +227,21 @@ $(document).ready(function () {
              $.ajax(url, {
 	         dataType: 'json',
 	     }).done(function(data) {
+	     
 		    	 
                  console.log(data.status + ' '+data.count+' '+data.total);
-                 if (data.status == 'Done' || data.status == 'Failed') {
+                 if (data.status == 'Done' || data.status == 'Failed' 
+                 			|| data.status == 'Determined'
+                 		) {
                        	   window.clearInterval(timer);
                        	   $('#searching').html('');
                            $('#loading').modal('hide');
                            if(window["needsreload"]){
+                            	$('#searching').html('Reloading search ...');
                            		location.reload(true);	
                            }
-                       
                   } else {
-		       // loading vs searhing..
+		       		// loading vs searhing..
                        if (data.total) {
  	                   		if (data.count < @{current*rows}) {
   	                      		$('#loading').modal('show');
@@ -251,7 +266,7 @@ $(document).ready(function () {
               });
          };
 	   
-	 timer = window.setInterval(checkStatus, delay);
+	     timer = window.setInterval(checkStatus, delay);
       }
    }
 });
