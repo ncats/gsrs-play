@@ -5,6 +5,7 @@ import ix.test.ix.test.server.AbstractSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.util.MultiThreadInteracter;
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +22,9 @@ import java.util.Random;
  */
 @RunWith(Parameterized.class)
 public class ConcurrentLoginsTest {
+
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);

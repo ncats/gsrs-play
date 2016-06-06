@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -100,12 +101,11 @@ import gov.nih.ncgc.chemical.ChemicalFactory;
 import tripod.chem.indexer.StructureIndexer;
 
 public class GinasApp extends App {
-    static final Model.Finder<UUID, Substance> SUBFINDER =
-        new Model.Finder<UUID, Substance>(UUID.class, Substance.class);
+    static Model.Finder<UUID, Substance> SUBFINDER ;
 
     // relationship finder
-    static final Model.Finder<UUID, Relationship> RELFINDER =
-        new Model.Finder<UUID, Relationship>(UUID.class, Relationship.class);
+//    static final Model.Finder<UUID, Relationship> RELFINDER =
+//        new Model.Finder<UUID, Relationship>(UUID.class, Relationship.class);
     
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
@@ -145,8 +145,7 @@ public class GinasApp extends App {
         "approved"         //"Approved Date"
     };
 
-    static final PayloadPlugin _payload =
-        Play.application().plugin(PayloadPlugin.class);
+    static PayloadPlugin _payload ;
 
     static class SubstanceResultRenderer
         extends DefaultResultRenderer<Substance> {
@@ -172,6 +171,17 @@ public class GinasApp extends App {
         }
     }
 
+    static{
+        init();
+    }
+
+
+    public static void init(){
+        SUBFINDER =
+                new Model.Finder<UUID, Substance>(UUID.class, Substance.class);
+        _payload =
+                Play.application().plugin(PayloadPlugin.class);
+    }
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
 
@@ -899,8 +909,12 @@ public class GinasApp extends App {
             return App.fetchResult
                 (context, rows, page, 
                  new SubstanceResultRenderer (CHEMICAL_FACETS));
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (BogusPageException ex) {
+            return internalServerError
+                    (ix.ginas.views.html.error.render
+                     (500, ex.getMessage()));
+        } catch (Exception ex){
+        	ex.printStackTrace();
             Logger.error("Can't perform substructure search", ex);
         }
         return internalServerError
@@ -1127,6 +1141,8 @@ public class GinasApp extends App {
 
     }
     
+    
+    
     @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
     public static Result interpretMolfile() {
         ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
@@ -1148,11 +1164,13 @@ public class GinasApp extends App {
                     if(payload.contains("\n") && payload.contains("M  END")){
                     	struc.molfile=payload;
                     }
-                    struc.save();
+                    
+                    StructureFactory.saveTempStructure(struc);
                     
                     ArrayNode an = mapper.createArrayNode();
                     for (Structure m : moieties){
-                        m.save();
+                        //m.save();
+                    	StructureFactory.saveTempStructure(m);
                         ObjectNode on = mapper.valueToTree(m);
                         Amount c1=Moiety.intToAmount(m.count);
                         JsonNode amt=mapper.valueToTree(c1);
@@ -1173,7 +1191,8 @@ public class GinasApp extends App {
                     for (StructuralUnit su : o) {
                         Structure struc = StructureProcessor.instrument
                             (su.structure, null, false);
-                        struc.save();
+                        //struc.save();
+                        StructureFactory.saveTempStructure(struc);
                         su._structure = struc;
                     }
                     node.put("structuralUnits", mapper.valueToTree(o));
@@ -1214,19 +1233,26 @@ public class GinasApp extends App {
                 int i = 0, nmaps = 0;
                 for (MolAtom ma : r.getMol().getAtomArray()) {
                     amap[i] = ma.getAtomMap();
-                    if (amap[i] > 0)
+                    if (amap[i] > 0){
                         ++nmaps;
+                    }
                     ++i;
                 }
 
                 chem = chemicals.iterator().next();             
                 if (nmaps > 0) {
-                    IxCache.set("AtomMaps/"+getContext().getId()+"/" +r.getId(), amap);
-                    
+                	String cachekey="AtomMaps/"+getContext().getId()+"/" +r.getId();
+                    IxCache.setTemp(cachekey, amap);
                 }
-                IxCache.set("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
+                IxCache.setTemp("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
            
+            // This will simulate a slow structure processing (e.g. slow database fetch)
+            // This should be used in conjunction with another debugSpin in TextIndexer
+            // to simulate both slow fetches and slow lucene processing            
+             Util.debugSpin(1000);
+            
+            
             return chem;
         }
     }
@@ -1243,7 +1269,7 @@ public class GinasApp extends App {
             ProteinSubstance protein =
                 proteins.isEmpty() ? null : proteins.get(0);
             if (protein != null) {
-                IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
+                IxCache.setTemp("Alignment/"+getContext().getId()+"/"+r.id, r);
             }
             else {
                 Logger.warn("Can't retrieve protein for subunit "+r.id);
@@ -1254,11 +1280,11 @@ public class GinasApp extends App {
 
     public static SequenceIndexer.Result
         getSeqAlignment (String context, String id) {
-        return (SequenceIndexer.Result)IxCache.get("Alignment/"+context+"/"+id);
+        return (SequenceIndexer.Result)IxCache.getTemp("Alignment/"+context+"/"+id);
     }
     public static Double
         getChemSimilarity (String context, String id) {
-        return (Double)IxCache.get("Similarity/"+context+"/"+id);
+        return (Double)IxCache.getTemp("Similarity/"+context+"/"+id);
     }
 
     static public Substance resolve(Relationship rel) {
@@ -1338,16 +1364,16 @@ public class GinasApp extends App {
         //Logger.debug("Fetching structure");
         String atomMap = "";
         if (context != null) {
-            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+            int[] amap = (int[])IxCache.getTemp("AtomMaps/"+context+"/"+id);
             //Logger.debug("AtomMaps/"+context+" => "+amap);
             if (amap != null && amap.length > 0) {
                 StringBuilder sb = new StringBuilder ();
                 sb.append(amap[0]);
-                for (int i = 1; i < amap.length; ++i)
+                for (int i = 1; i < amap.length; ++i){
                     sb.append(","+amap[i]);
+                }
                 atomMap = sb.toString();
-            }
-            else {
+            }else{
                 atomMap = context;
             }
         }

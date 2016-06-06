@@ -167,6 +167,11 @@ public class IxContext extends Plugin {
         
         dbName=meta.getDatabaseProductName().toLowerCase();
     }
+
+    public int getDebugLevel() {
+        return debug;
+    }
+
     public static interface ExceptionHandler{
     	public void handleException(Exception e);
     }

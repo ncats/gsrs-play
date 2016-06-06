@@ -1,6 +1,7 @@
 package ix.ncats.controllers;
 
 import java.io.*;
+import java.lang.ref.SoftReference;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.sql.DatabaseMetaData;
@@ -9,6 +10,9 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import ix.core.util.Java8Util;
 import play.Play;
@@ -68,6 +72,9 @@ import ix.core.models.Structure;
 import ix.core.models.VInt;
 import ix.core.search.FieldFacet;
 import ix.core.search.SearchOptions;
+import ix.core.search.TextIndexer.SearchResult;
+import ix.core.search.TextIndexer.SearchResultDoneListener;
+import ix.core.search.TextIndexer.SearchResultFuture;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
@@ -140,6 +147,15 @@ public class App extends Authentication {
        _pq = Play.application().plugin(PersistenceQueue.class);
     }
 
+    
+    public static class BogusPageException extends IllegalArgumentException{
+
+		public BogusPageException(String string) {
+			super(string);
+			
+		}
+    	
+    }
 
     public static TextIndexer getTextIndexer(){
         return Play.application().plugin(TextIndexerPlugin.class).getIndexer();
@@ -234,7 +250,7 @@ public class App extends Authentication {
         int max = Math.max(1,(total+ rowsPerPage-1)/rowsPerPage);
         //System.out.println("Max is:" + max);
         if (page < 0 || page > max) {
-            throw new IllegalArgumentException ("Bogus page " + page);
+            throw new BogusPageException ("Bogus page " + page);
         }
         
         int[] pages;
@@ -855,11 +871,15 @@ public class App extends Authentication {
         }
         return null;
     }
-
-    static protected SearchResult cacheKey (SearchResult result, String key) {
-        if (key.length() > 10) {
+    static protected String formatKey(String key){
+    	if (key.length() > 10) {
             key = key.substring(0, 10);
         }
+    	return key;
+    }
+
+    static protected SearchResult cacheKey (SearchResult result, String key) {
+    	key=formatKey(key);
         IxCache.set(key, result); // create alias       
         result.setKey(key);
         return result;
@@ -1226,14 +1246,13 @@ public class App extends Authentication {
             if(wait){
             	context.start = System.currentTimeMillis();
             	process();
-            	
-            	context.setStatus(SearchResultContext.Status.Done);
+            	context.setStatus(SearchResultContext.Status.Determined);
             	context.stop = System.currentTimeMillis();
                 
             }else{
 
-                // the idea is to generate enough results for 1.5 pages (enough
-                // to show pagination) and return immediately. as the user pages,
+                // the idea is to generate enough results for 1 page, and 1 extra record
+            	// (enough to show pagination) and return immediately. as the user pages,
                 // the background job will fill in the rest of the results.
             	int count = process (rows+1);
                 
@@ -1280,11 +1299,17 @@ public class App extends Authentication {
         public enum Status {
             Pending,
             Running,
+            Determined,
             Done,
             Failed
         }
 
-        Status status = Status.Pending;
+        public static interface StatusChangeListener{
+        	void onStatusChange(Status newStatus, Status oldStatus);
+        }
+        private List<SoftReference<StatusChangeListener>> listeners = new ArrayList<>();
+        
+        private Status _status = Status.Pending;
         String mesg;
         Long start;
         Long stop;
@@ -1292,7 +1317,45 @@ public class App extends Authentication {
         List results = new CopyOnWriteArrayList ();
         String id = randvar (10);
         Integer total;
+        
+        public static class SearchResultContextDeterminedFuture extends FutureTask<Void>{
+        	public SearchResultContextDeterminedFuture(final SearchResultContext context){
+        		super(new WaitForDeterminedCallable(context));
+        	}
+        }
+        
+        private static class WaitForDeterminedCallable implements Callable<Void>, StatusChangeListener{
+        	private SearchResultContext context;
+        	private final CountDownLatch latch;
 
+        	public WaitForDeterminedCallable(final SearchResultContext context){
+        		Objects.requireNonNull(context);
+        		this.context = context;
+        		this.context.addListener(this);
+                latch = new CountDownLatch(1);
+        	}
+        	
+        	public void onStatusChange(Status newStatus, Status oldStatus){
+        		if(newStatus == Status.Determined || 
+        			newStatus==Status.Done || 
+        			newStatus == Status.Failed){
+        			
+        			while(latch.getCount()>0){
+                        latch.countDown();
+                    }
+        		}
+        		
+        	}
+    		@Override
+    		public Void call() throws Exception {
+    			if(latch.getCount()>0 && !context.isDetermined()){
+    				latch.await();
+    			}
+    			context.removeListener(this);
+    			return null;
+    		}
+        }
+        
         SearchResultContext () {
         }
         
@@ -1301,16 +1364,17 @@ public class App extends Authentication {
         	
             start = result.getTimestamp();          
             if (result.finished()) {
-                status = Status.Done;
+                setStatus(Status.Done);
                 stop = result.getStopTime();
             }
-            else if (result.size() > 0)
-                status = Status.Running;
+            else if (result.size() > 0){
+            	setStatus(Status.Running);
+            }
             
-            if (status != Status.Done) {
+            if (_status != Status.Done) {
                 mesg = String.format
                     ("Loading...%1$d%%",
-                     (int)(100.*result.size()/result.count()+0.5));
+                     (int)(Math.ceil(100.*result.size()/((double)result.count()))));
             }
             
             results = result.getMatches();
@@ -1322,8 +1386,13 @@ public class App extends Authentication {
         }
 
         public String getId () { return id; }
-        public Status getStatus () { return status; }
-        public void setStatus (Status status) { this.status = status; }
+        public Status getStatus () { return _status; }
+        public void setStatus (Status status) { 
+        	Status ostat=this._status;
+        	this._status = status;
+        	notifyChange(_status,ostat);
+        	
+        }
         public String getMessage () { return mesg; }
         public void setMessage (String mesg) { this.mesg = mesg; }
         public Integer getCount () { return results.size(); }
@@ -1331,13 +1400,64 @@ public class App extends Authentication {
         public Long getStart () { return start; }
         public Long getStop () { return stop; }
         public boolean finished () {
-            return status == Status.Done || status == Status.Failed;
+            return _status == Status.Done || _status == Status.Failed;
+        }
+        public boolean isDetermined () {
+            return finished () || _status == Status.Determined;
         }
         
         @com.fasterxml.jackson.annotation.JsonIgnore
         public List getResults () { return results; }
         protected void add (Object obj) { results.add(obj); }
         
+        
+        public void addListener(StatusChangeListener listener){
+        	listeners.add(new SoftReference<>(listener));
+        }
+        
+        public void removeListener(StatusChangeListener listener){
+        	Iterator<SoftReference<StatusChangeListener>> iter =listeners.iterator();
+        	while(iter.hasNext()){
+        		SoftReference<StatusChangeListener> l = iter.next();
+        		StatusChangeListener actualListener = l.get();
+        		//if get() returns null then the object was garbage collected
+        		if(actualListener ==null || listener.equals(actualListener)){
+        			iter.remove();
+        			//keep checking in the unlikely event that
+        			//a listener was added twice?
+        		}
+        	}
+        }
+        
+        private void notifyChange(Status newStatus, Status oldStatus){
+            Iterator<SoftReference<StatusChangeListener>> iter = listeners.iterator();
+            List<StatusChangeListener> tocall = new ArrayList<StatusChangeListener>();
+            while(iter.hasNext()){
+            	StatusChangeListener l = iter.next().get();
+                if(l ==null){
+                    iter.remove();
+                }else{
+                	tocall.add(l);
+                    
+                }
+            }
+            for(StatusChangeListener l : tocall){
+            	l.onStatusChange(newStatus, oldStatus);
+            }
+        }
+        
+        
+        /**
+         * Get a future which will return only when
+         * {@link #isDetermined()}} is true.
+         *
+         * @return a Future will never be null, but get() will return null when completed
+         */
+        public Future<Void> getDeterminedFuture(){
+        	SearchResultContextDeterminedFuture future= new SearchResultContextDeterminedFuture(this);
+            new Thread(future).start();
+            return future;
+        }
         
         public String toJson(){
         	ObjectMapper om = new ObjectMapper();
@@ -1355,14 +1475,19 @@ public class App extends Authentication {
                     ctx.setStatus(SearchResultContext.Status.Running);
                     ctx.start = System.currentTimeMillis();            
                     int count = processor.process();
-                    ctx.setStatus(SearchResultContext.Status.Done);
+                    if(count==0){
+                    	ctx.setStatus(SearchResultContext.Status.Done);
+                    }else{
+                    	ctx.setStatus(SearchResultContext.Status.Determined);
+                    }
+                    
                     ctx.stop = System.currentTimeMillis();
                     Logger.debug("Actor "+self()+" finished; "+count
                                  +" search result(s) instrumented!");
                     context().stop(self ());
                 }
                 catch (Exception ex) {
-                    ctx.status = SearchResultContext.Status.Failed;
+                    ctx.setStatus(SearchResultContext.Status.Failed);
                     ctx.setMessage(ex.getMessage());
                     ex.printStackTrace();
                     Logger.error("Unable to process search results", ex);
@@ -1426,12 +1551,12 @@ public class App extends Authentication {
                                  +" count="+context.getCount()
                                  +" total="+context.getTotal());
                     switch (context.getStatus()) {
-                    case Done:
-                    case Failed:
-                        break;
-                        
-                    default:
-                    	return routes.App.status(key);
+	                    case Done:
+	                    case Failed:
+	                        break;
+	                        
+	                    default:
+	                    	return routes.App.status(key);
                     }
                     //return routes.App.status(type.toLowerCase(), query);
                 }
@@ -1441,6 +1566,7 @@ public class App extends Authentication {
             }
         }
         else {
+        	
             String key = signature (query, getRequestQuery ());
             
             Object value = IxCache.get(key);
@@ -1532,10 +1658,20 @@ public class App extends Authentication {
                 ctx.id = key;
                 value = ctx;
             }
+            
 
             SearchResultContext ctx = (SearchResultContext)value;
             Logger.debug
                 (" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
+            if(ctx.finished()){
+            	Object result2=IxCache.get(formatKey(ctx.id));
+            	if(result2!=null){
+            		SearchResultContext fakeContext = new SearchResultContext ((SearchResult)result2);
+                
+            		fakeContext.id = key;
+	                value = fakeContext;
+            	}
+            }
             
             ObjectMapper mapper = new ObjectMapper ();
             return Java8Util.ok (mapper.valueToTree(value));
@@ -1673,7 +1809,6 @@ public class App extends Authentication {
     	             }else{
     	            	 result.copyTo(resultList, (page-1)*rows, rows, false);
     	             }
-    	             
     	 }
     	 return renderer.render(src, page, rows, result.count(),
     			 pages, result.getFacets(), resultList);
@@ -1685,10 +1820,22 @@ public class App extends Authentication {
         final String key = getKey (context, "facet");
         
         /**
+         * If wait is set to be forced, we need to hold off going forward until
+         * everything has been processed
+         */
+        if(isWaitSet()){
+        	context.getDeterminedFuture().get();
+        }
+        
+        SearchResultContext.Status stat=context.getStatus();
+        boolean isDetermined=context.isDetermined();
+        /**
          * we need to connect context.id with this key to have
          * the results of structure/sequence search context merged
          * together with facets, sorting, etc.
          */
+      
+        
         final SearchResult result = getOrElse
             (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
@@ -1696,7 +1843,6 @@ public class App extends Authentication {
                         if (results.isEmpty()) {
                             return null;
                         }
-                        
                         SearchResult searchResult =
                         SearchFactory.search (results, null, results.size(), 0,
                                               renderer.getFacetDim(),
@@ -1709,42 +1855,73 @@ public class App extends Authentication {
                         return cacheKey (searchResult, context.getId());
                     }
                 });
-
+        
+        
+        
+       
         final List<T> results = new ArrayList<T>();
         final List<Facet> facets = new ArrayList<Facet>();
         int[] pages = new int[0];
         int count = 0;
         if (result != null) {
-            Long stop = context.getStop();
-            if (!context.finished() ||
-                (stop != null && stop >= result.getTimestamp())) {
-                Logger.debug("** removing cache "+key);
-                IxCache.remove(key);
-            }
+        	Long stop = context.getStop();
+        	if(!isDetermined || (stop != null && stop >= result.getTimestamp())){
+        		Logger.debug("** removing cache "+key);
+        		IxCache.remove(key);
+        	}
             
-            count = result.size();
+            
+            count = result.count();
+            
             Logger.debug(key+": "+count+"/"+result.count()
                          +" finished? "+context.finished()
                          +" stop="+stop);
             
             rows = Math.min(count, Math.max(1, rows));
+            
             int i = (page - 1) * rows;
+            
             if (i < 0 || i >= count) {
-                page = 1;
-                i = 0;
+            	if(isDetermined){
+            		 throw new BogusPageException ("Bogus page " + page);
+            	}else{
+            		flash("warning","Showing page 1. Page " + page + " is not available at this time. It will be loaded when the search is complete.");            		
+            		page = 1;
+                	i = 0;
+            	}
             }
             pages = paging (rows, page, count);
-            result.copyTo(results, i, rows);
+            
+            // If the requested page isn't ready yet, block until the page is ready.
+            
+            // This is different than the way that the text indexer allows ajaxing to 
+            // check the status of unfinished jobs. The idea here is that it would be 
+            // to confusing to have 2 levels of ajax waiting in the background
+            // and since this method is only called for those complex external
+            // searches, which typically get some smaller number of records back,
+            // this may be an acceptable lack of responsiveness
+            result.copyTo(results, i, rows, true);
             facets.addAll(result.getFacets());
-
-            if (result.finished()) {
+            
+            
+            
+            
+            // If the context was determined, now we can mark it as done.
+            if(stat == SearchResultContext.Status.Determined){
+            	context.setStatus(SearchResultContext.Status.Done);
+            }
+            
+            
+            if (isDetermined && result.finished()) {
                 final String k = getKey (context) + "result";
                 final int _page = page;
                 final int _rows = rows;
                 final int _count = count;
                 final int[] _pages = pages;
+                
 
                 // result is cached
+                
                 return getOrElse(result.getStopTime(),
                                  k, new Callable<Result> () {
                             public Result call () throws Exception {
@@ -1753,6 +1930,7 @@ public class App extends Authentication {
                             return renderer.render
                                 (context, _page, _rows, _count, _pages,
                                  facets, results);
+                            
                         }
                     });
             }
@@ -1786,6 +1964,7 @@ public class App extends Authentication {
         return node;
     }
 
+    
     public static Result cache (String key) {
         try {
             Element elm = IxCache.getElm(key);

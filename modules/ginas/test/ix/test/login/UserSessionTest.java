@@ -5,6 +5,7 @@ import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.util.MultiThreadInteracter;
+import ix.test.util.TestNamePrinter;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -25,11 +26,8 @@ import static org.junit.Assert.*;
  */
 public class UserSessionTest {
     @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getName() + " . " + description.getMethodName());
-        }
-    };
+    public TestNamePrinter printer = new TestNamePrinter();
+
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 

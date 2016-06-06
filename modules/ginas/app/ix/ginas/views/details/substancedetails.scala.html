@@ -10,6 +10,7 @@
 } {
 
     <div class = "row">
+
         <div class = "col-md-3 hidden-xs hidden-sm sidebar">
             <h3 class="display-name"><em>@sub.getName()</em></h3>
            <nav id="breadcrumb">
@@ -74,7 +75,7 @@
                 </ul>
             </nav>
         </div>
-        <div class = "col-md-9 col-sm-12 pull-right">
+        <div class = "col-md-9 col-md-offset-3  col-xs-12">
             <div class="row info" id="details">
                 <button class="btn btn-primary label-offset det text-capitalize">
                     @sub.substanceClass Details</button>
@@ -97,19 +98,19 @@
                             }
                         </div>
                     </div>
-                    <div class = "row">
+                    <div class = "row table-responsive">
                     @details
                     </div>
                 </div>
             </div>
 
-            @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
-                <div class="row info" id="altrelationships">
+         @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
+                <div class="row info table-responsive" id="altrelationships">
                 @properties.relationships(sub.getAlternativeDefinitionRelationships(), "Alternative Definitions", sub.uuid.toString, false)
                 </div>
             }
             @if(sub.getPrimaryDefinitionReference() != null) {
-                <div class="row info" id="pridefinition">
+                <div class="row info table-responsive" id="pridefinition">
                 	@properties.primarydefinition(sub.getPrimaryDefinitionReference())
                 </div>
             }
@@ -121,7 +122,7 @@
                 <div class="row info" id="modification">
                     <button class="btn btn-primary label-offset det ">
                         Modifications&nbsp;<span class="badge head"> @sub.getModificationCount()</span></button>
-                    <div class="col-md-12">
+                    <div class="col-md-12" table-responsive>
                         @if(sub.getModifications().agentModifications.size > 0) {
                             @properties.agentmodifications(sub.getModifications().agentModifications)
                         }
@@ -135,64 +136,65 @@
                 </div>
             }
             @if(sub.getAllNames().size() > 0) {
-                <div class="row info" id="names">
+                <div class="row info table-responsive" id="names">
                 @properties.names(sub.getAllNames(), sub)
                 </div>
             }
-
-            @if(sub.codes.size() > 0) {
-                <div class="row info" id="codes">
+             @if(sub.codes.size() > 0) {
+                <div class="row info table-responsive" id="codes">
                 @properties.codes(sub.codes, sub.uuid.toString)
                 </div>
             }
             @if(sub.hasChildConceptReferences()) {
-                <div class="row info" id="variants">
+                <div class="row info table-responsive" id="variants">
                 @properties.variantconcepts(sub)
                 </div>
             }
 
             @if(sub.getActiveMoieties().size() > 0) {
-                <div class="row info" id="activemoieties">
+                <div class="row info table-responsive" id="activemoieties">
                 @properties.relationships(sub.getActiveMoieties(), "Active Moieties", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.getMetabolites().size() > 0) {
-                <div class="row info" id="metabolites">
+                <div class="row info table-responsive" id="metabolites">
                 @properties.relationships(sub.getMetabolites(), "Metabolites", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.getImpurities().size() > 0) {
-                <div class="row info" id="impurities">
+                <div class="row info table-responsive" id="impurities">
                 @properties.relationships(sub.getImpurities(), "Impurities", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.getFilteredRelationships().size() > 0) {
-                <div class="row info" id="relationships">
+                <div class="row info table-responsive" id="relationships">
                 @properties.relationships(sub.getFilteredRelationships(), "Relationships", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.properties != null && sub.properties.size() > 0) {
-                <div class="row info" id="properties">
+                <div class="row info table-responsive" id="properties">
                 @properties.properties(sub.properties, sub.uuid.toString)
                 </div>
             }
             @if(sub.notes != null && sub.notes.size() > 0) {
-                <div class="row info" id="notes">
+                <div class="row info table-responsive" id="notes">
                 @properties.notes(sub.getDisplayNotes(), sub.uuid.toString)
                 </div>
             }
 
-            <div class="row info" id="refs">
+            <div class="row info table-responsive" id="refs">
                 <button class="btn btn-primary label-offset det">
                     References&nbsp;<span class="badge"> @sub.references.size()</span></button>
+                <div class="table-responsive">
                 <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
+                    </div>
             </div>
 
-            <div class="row info" id="audit">
+            <div class="row info table-responsive" id="audit">
                 <button class="btn btn-primary label-offset det">
                 Audit Information</button>
                     <table class="table table-striped keyvalue">

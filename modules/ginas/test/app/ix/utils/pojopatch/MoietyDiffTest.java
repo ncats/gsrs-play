@@ -6,6 +6,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Moiety;
 import ix.test.ix.test.server.GinasTestServer;
+import ix.test.util.TestNamePrinter;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import org.junit.Ignore;
@@ -22,6 +23,9 @@ import static org.junit.Assert.assertEquals;
 public class MoietyDiffTest {
 
     ObjectMapper mapper = new ObjectMapper();
+
+    @Rule
+    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer();

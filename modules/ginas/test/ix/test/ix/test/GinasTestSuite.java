@@ -1,39 +1,25 @@
 package ix.test.ix.test;
 
+import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Modifier;
+import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * JUnit Runner that can find all Test classes on the classpath
- * and execute them.  Use the {@link #FindAllTestsRunner.Config}
- * annotation to specify filtering options.
- *
- * Example:
- *
- * <pre>
- *     @RunWith(FindAllTestsRunner.class)
- @FindAllTestsRunner.Config(fullExcludePattern = {"ix\\.ntd\\..+"})
- public class PrototypeSuite {
 
+public class GinasTestSuite extends Suite{
 
- }
- *
- * </pre>
- *
- *
- * Created by katzelda on 5/20/16.
- */
-public class FindAllTestsRunner extends Suite{
     /**
      * Annotation to add to provide configuration details.
      */
@@ -78,42 +64,72 @@ public class FindAllTestsRunner extends Suite{
     private static DefaultConfig defaultConfigInstance = new DefaultConfig();
 
 
-    public FindAllTestsRunner(Class<?> klass, RunnerBuilder builder) throws InitializationError {
-        super(builder, null, getTestClasses(klass));
+
+    public GinasTestSuite(Class<?> klass, RunnerBuilder builder) throws InitializationError {
+        this(builder, null, getTestClasses(klass));
     }
 
+    public static Class<?>[] getTestClasses(Class<?> parentSuite) {
 
-    private static Class<?>[] getTestClasses(Class<?> suiteClass) {
-        String classpath = System.getProperty("java.class.path");
-        String[] paths = classpath.split(System.getProperty("path.separator"));
-
-        Config config = suiteClass.getAnnotation(Config.class);
+        Config config = parentSuite.getAnnotation(Config.class);
         if(config ==null){
             config = defaultConfigInstance.getClass().getAnnotation(Config.class);
         }
+        ClassFilter filter = new ConfigClassFilter(config);
 
-        List<Class<?>> classes = new ArrayList<>();
-
-        ClassFilter filter = new ClassFilter(config);
-
-        for(String path : paths){
-            File f = new File(path);
-            if(!f.exists()){
-                continue;
-            }
-            if(f.isDirectory()){
-                getClassesFrom(suiteClass, f,f,config, filter, classes);
-            }
-
-
-        }
-        return classes.toArray(new Class<?>[classes.size()]);
+        return ClassFinder.getTestClasses(parentSuite, config.includeJars(), filter);
     }
 
-    private static class ClassFilter{
+    /**
+     * Called by this class and subclasses once the classes making up the suite have been determined
+     *
+     * @param builder builds runners for classes in the suite
+     * @param klass the root of the suite
+     * @param suiteClasses the classes in the suite
+     * @throws InitializationError
+     */
+    public GinasTestSuite(RunnerBuilder builder, Class<?> klass, Class<?>[] suiteClasses) throws InitializationError {
+        super(builder, klass, handleClasses(suiteClasses));
+
+
+    }
+
+    private static Class<?>[] handleClasses(Class<?>[] suiteClasses) {
+        MessageFormat format = new MessageFormat(System.getenv("command"));
+        System.out.println("property value of command is '" + format.toPattern());
+
+        System.out.println(System.getProperties().keySet());
+        System.out.println("test suite now has the following classes");
+
+        File root = new File(new File(".").getAbsolutePath()).getParentFile().getParentFile().getParentFile();
+        System.out.println("root dir = " + root.getAbsolutePath());
+        for(Class c : suiteClasses){
+            String command = format.format(new Object[]{c.getCanonicalName()});
+
+            List<String> args = ArgParser.parseArgs(command);
+            System.out.println("executing " + args);
+            System.out.println("cwd = " + new File(".").getAbsolutePath());
+            try{
+                Process process = new ProcessBuilder(args)
+                                                .directory(root)
+                                                .inheritIO()
+                                                .start();
+                process.waitFor();
+                
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        return new Class[0];
+    }
+
+
+
+    private static class ConfigClassFilter implements ClassFilter {
         private final  List<Pattern> includePatterns, excludePatterns, fullIncludePatterns,fullExcludePatterns;
 
-        ClassFilter(Config config) {
+        ConfigClassFilter(Config config) {
             includePatterns = compilePatterns(config.includePattern());
             excludePatterns = compilePatterns(config.excludePattern());
 
@@ -122,7 +138,8 @@ public class FindAllTestsRunner extends Suite{
         }
 
 
-        public Optional<Class<?>>  test(String className, File root, File classFile){
+        @Override
+        public Optional<Class<?>> test(String className, File root, File classFile){
             //for now don't let subclasses through...
             if(className.contains("$")){
                 return Optional.empty();
@@ -135,7 +152,7 @@ public class FindAllTestsRunner extends Suite{
                         Class<?> c = Class.forName(fullClassName);
                         int modifiers = c.getModifiers();
                         if( !c.isEnum() && !Modifier.isAbstract(modifiers)){
-                           return Optional.of(c);
+                            return Optional.of(c);
                         }
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
@@ -168,30 +185,7 @@ public class FindAllTestsRunner extends Suite{
 
 
 
-    private static void getClassesFrom(Class<?> suiteClass, File root, File currentFile, Config config, ClassFilter filter, List<Class<?>> classes){
-        if(currentFile.isDirectory()){
-            File[] children = currentFile.listFiles();
-            if(children ==null){
-                return;
-            }
-            for(File child : children){
-                getClassesFrom(suiteClass, root, child, config, filter, classes);
-            }
-        }else {
-            if (currentFile.getName().endsWith(".jar") && config.includeJars()) {
-                //TODO handle jars
-            }else if(currentFile.getName().endsWith(".class")){
-                String className = currentFile.getName().substring(0, currentFile.getName().lastIndexOf(".class"));
-                filter.test(className, root, currentFile)
-                        .ifPresent( c ->{
-                            if(c != suiteClass) {
-                                classes.add(c);
-                            }
-                        });
 
-            }
-        }
-    }
 
     private static String computeFullClassName(File root, File currentFile) {
         String name = currentFile.getName();
@@ -199,7 +193,6 @@ public class FindAllTestsRunner extends Suite{
 
         File p = currentFile.getParentFile();
 
-        System.out.println("getting class name for " + currentFile.getAbsolutePath());
         StringBuilder builder = new StringBuilder();
         builder.append(className);
         while( p!=null && !root.equals(p)){
@@ -209,6 +202,9 @@ public class FindAllTestsRunner extends Suite{
 
         return builder.toString();
     }
+
+
+
 
 
 }

@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
@@ -115,6 +116,16 @@ public class TextIndexer implements Closeable{
     protected static final String GIVEN_START_WORD = "^";
     private static final String ROOT = "root";
 
+    public void deleteAll() {
+        try {
+            indexWriter.deleteAll();
+            indexWriter.commit();
+        }catch(Exception e){
+           // e.printStackTrace();
+        }
+
+    }
+
     @Indexable
     static final class DefaultIndexable {}
     static final Indexable defaultIndexable = 
@@ -152,6 +163,7 @@ public class TextIndexer implements Closeable{
     private static final Pattern SUGGESTION_WHITESPACE_PATTERN = Pattern.compile("[\\s/]");
 
 
+    private static AtomicBoolean ALREADY_INITIALIZED = new AtomicBoolean(false);
 
     public static class FV {
         String label;
@@ -316,6 +328,7 @@ public class TextIndexer implements Closeable{
     
     @CacheStrategy(evictable=false)
     public static class SearchResult {
+    
     	
         SearchContextAnalyzer searchAnalyzer;
 
@@ -554,8 +567,10 @@ public class TextIndexer implements Closeable{
             return future;
         }
         
+        
         public List getMatches () {
         	if (result != null) return result;
+            boolean finished=finished();
             
             List list = new ArrayList (matches);
             if (matches instanceof PriorityBlockingQueue) {
@@ -563,7 +578,7 @@ public class TextIndexer implements Closeable{
                 Collections.sort(list, q.comparator());
             }
             
-            if (finished ()) {
+            if (finished) {
                 result = list;
             }
             
@@ -592,8 +607,10 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
-            //	Util.debugSpin(100);
+            	//Util.debugSpin(100);
+            
             //}
+            //System.out.println("added:" + matches.size());
         }
 
         private void notifyAdd(Object o){
@@ -627,7 +644,7 @@ public class TextIndexer implements Closeable{
         }
     }
 
-    interface SearchResultDoneListener{
+    public static interface SearchResultDoneListener{
     	void searchIsDone();
         void added(Object o);
     }
@@ -791,7 +808,7 @@ public class TextIndexer implements Closeable{
             offset = Math.min(options.skip, total);
         }
 
-        void fetch () throws IOException {
+        void fetch () throws IOException, InterruptedException {
             try {
                 fetch (total);
             }
@@ -836,9 +853,12 @@ public class TextIndexer implements Closeable{
         }
         
             
-        void fetch (int size)  throws IOException {
+        void fetch (int size)  throws IOException, InterruptedException {
             size = Math.min(options.top, Math.min(total - offset, size));
             for (int i = result.size(); i < size; ++i) {
+                if(Thread.interrupted()){
+                    throw new InterruptedException();
+                }
                 Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
                 final IndexableField kind = doc.getField(FIELD_KIND);
                 if (kind != null) {
@@ -877,47 +897,80 @@ public class TextIndexer implements Closeable{
         }
     }
         
-    class FetchWorker implements Runnable {
-        FetchWorker () {
-        }
+//    class FetchWorker implements Runnable {
+//        FetchWorker () {
+//        }
+//
+//        public void run () {
+//            Logger.debug(Thread.currentThread()
+//                         +": FetchWorker started at "+new Date ());
+//
+//
+//            try{
+//                SearchResultPayload payload;
+//                while( (payload = fetchQueue.take()) !=POISON_PAYLOAD){
+//                    try {
+//                        long start = System.currentTimeMillis();
+//                        Logger.debug(Thread.currentThread()
+//                                + ": fetching payload "
+//                                + payload.hits.totalHits
+//                                + " for " + payload.result);
+//
+//                        payload.fetch();
+//                        Logger.debug(Thread.currentThread() + ": ## fetched "
+//                                + payload.result.size()
+//                                + " for result " + payload.result
+//                                + " in " + String.format
+//                                ("%1$dms",
+//                                        System.currentTimeMillis() - start));
+//                    }catch(InterruptedException ex){
+//                        throw ex;
+//                    }catch(Exception ex){
+//                        ex.printStackTrace();
+//                        Logger.error("Error in processing payload", ex);
+//                    }
+//                }
+//            }catch (InterruptedException ex){
+//                System.out.println("FETCH_WORKER EXCEPTION");
+//                ex.printStackTrace();
+//                Logger.trace(Thread.currentThread()+" stopped", ex);
+//            }
 
-        public void run () {
-            Logger.debug(Thread.currentThread()
-                         +": FetchWorker started at "+new Date ());
-            try {
-                for (SearchResultPayload payload;
-                     !Thread.currentThread().isInterrupted() &&
-                             (payload = fetchQueue.take()) != POISON_PAYLOAD; ) {
-                    try {
-                        long start = System.currentTimeMillis();
-                        Logger.debug(Thread.currentThread()
-                                     +": fetching payload "
-                                     +payload.hits.totalHits
-                                     +" for "+payload.result);
+//            try {
+//                for (SearchResultPayload payload;
+//                     !Thread.currentThread().isInterrupted() &&
+//                             (payload = fetchQueue.take()) != POISON_PAYLOAD; ) {
+//                    try {
+//                        long start = System.currentTimeMillis();
+//                        Logger.debug(Thread.currentThread()
+//                                     +": fetching payload "
+//                                     +payload.hits.totalHits
+//                                     +" for "+payload.result);
+//
+//                        payload.fetch();
+//                        Logger.debug(Thread.currentThread()+": ## fetched "
+//                                     +payload.result.size()
+//                                     +" for result "+payload.result
+//                                     +" in "+String.format
+//                                     ("%1$dms",
+//                                      System.currentTimeMillis()-start));
+//                    }
+//                    catch (IOException ex) {
+//                        ex.printStackTrace();
+//                        Logger.error("Error in processing payload", ex);
+//                    }
+//                }
+//                Logger.debug(Thread.currentThread()
+//                             +": FetchWorker stopped at "+new Date());
+//            }
+//            catch (Exception ex) {
+//                System.out.println("FETCH_WORKER EXCEPTION");
+//                ex.printStackTrace();
+//                Logger.trace(Thread.currentThread()+" stopped", ex);
+//            }
 
-                        payload.fetch();
-                        Logger.debug(Thread.currentThread()+": ## fetched "
-                                     +payload.result.size()
-                                     +" for result "+payload.result
-                                     +" in "+String.format
-                                     ("%1$dms", 
-                                      System.currentTimeMillis()-start));
-                    }
-                    catch (IOException ex) {
-                        ex.printStackTrace();
-                        Logger.error("Error in processing payload", ex);
-                    }
-                }
-                Logger.debug(Thread.currentThread()
-                             +": FetchWorker stopped at "+new Date());
-            }
-            catch (Exception ex) {
-                //ex.printStackTrace();
-                Logger.trace(Thread.currentThread()+" stopped", ex);
-            }
-
-        }
-    }
+      //  }
+   // }
 
     class FlushDaemon implements Runnable {
         FlushDaemon () {
@@ -981,9 +1034,9 @@ public class TextIndexer implements Closeable{
     private ExecutorService threadPool;
     private ScheduledExecutorService scheduler;
     
-    private Future[] fetchWorkers;
-    private BlockingQueue<SearchResultPayload> fetchQueue =
-        new LinkedBlockingQueue<SearchResultPayload>();
+   // private Future[] fetchWorkers;
+//    private BlockingQueue<SearchResultPayload> fetchQueue =
+//        new LinkedBlockingQueue<SearchResultPayload>();
         
     static ConcurrentMap<File, TextIndexer> indexers;
 
@@ -997,11 +1050,24 @@ public class TextIndexer implements Closeable{
     SearcherManager searchManager;
 
     static{
+        System.out.println("static initializer");
         init();
     }
     public static void init(){
-        indexers = new ConcurrentHashMap<File, TextIndexer>();
-        registerDefaultAnalyzers();
+        if(!ALREADY_INITIALIZED.get()) {
+            System.out.println("in init()");
+            if (indexers != null) {
+                indexers.forEach((k, v) -> {
+                    System.out.println("init shutdown " + k.getAbsolutePath());
+                    v.shutdown();
+                });
+            }
+
+            indexers = new ConcurrentHashMap<File, TextIndexer>();
+            registerDefaultAnalyzers();
+
+            ALREADY_INITIALIZED.set(true);
+        }
     }
     
     public interface SearchContextAnalyzerGenerator{
@@ -1072,8 +1138,9 @@ public class TextIndexer implements Closeable{
 
     public static TextIndexer getInstance (File baseDir) throws IOException {
 
-
+    System.out.println("getInstance");
         return indexers.computeIfAbsent(baseDir, dir ->{
+            System.out.println("gettingInstance() new for " + dir.getName());
             try{
                return new TextIndexer (dir);
             }catch(IOException ex){
@@ -1085,10 +1152,10 @@ public class TextIndexer implements Closeable{
     }
 
     private TextIndexer () {
-        threadPool = Executors.newCachedThreadPool();
+        threadPool = Executors.newWorkStealingPool(FETCH_WORKERS);
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
-        setFetchWorkers (FETCH_WORKERS);
+      //  setFetchWorkers (FETCH_WORKERS);
     }
     
     public TextIndexer (File dir) throws IOException {
@@ -1162,7 +1229,7 @@ public class TextIndexer implements Closeable{
         Logger.info("## "+sorters.size()+" sort fields defined!");
 
 
-        setFetchWorkers (FETCH_WORKERS);
+       // setFetchWorkers (FETCH_WORKERS);
 
         // run daemon every 5s
         scheduler.scheduleAtFixedRate
@@ -1170,17 +1237,17 @@ public class TextIndexer implements Closeable{
         
     }
 
-    public void setFetchWorkers (int n) {
-        if (fetchWorkers != null) {
-            for (Future f : fetchWorkers)
-                if (f != null)
-                    f.cancel(true);
-        }
-
-        fetchWorkers = new Future[n];
-        for (int i = 0; i < fetchWorkers.length; ++i)
-            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
-    }
+//    public void setFetchWorkers (int n) {
+//        if (fetchWorkers != null) {
+//            for (Future f : fetchWorkers)
+//                if (f != null)
+//                    f.cancel(true);
+//        }
+//
+//        fetchWorkers = new Future[n];
+//        for (int i = 0; i < fetchWorkers.length; ++i)
+//            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
+//    }
     @FunctionalInterface
     interface SearcherFunction<R> {
 
@@ -1698,18 +1765,40 @@ public class TextIndexer implements Closeable{
             }
             else {
             	
-                // we first block until we have enough result to show; simulate
-                //  with a random number of fetch
-                int fetch = 20 + new Random().nextInt(options.fetch);
+                // we first block until we have enough result to show
+            	// should be fetch plus a little extra padding (2 here)
+                int fetch = 2 +options.fetch;
                 payload.fetch(fetch);
 
                 if (hits.totalHits > fetch) {
                     // now queue the payload so the remainder is fetched in
                     // the background
-                    fetchQueue.put(payload);
+                   // fetchQueue.put(payload);
+                    threadPool.submit(()->{
+                        try {
+                            long tstart = System.currentTimeMillis();
+                            Logger.debug(Thread.currentThread()
+                                    + ": fetching payload "
+                                    + payload.hits.totalHits
+                                    + " for " + payload.result);
+                            
+
+                            payload.fetch();
+                            Logger.debug(Thread.currentThread() + ": ## fetched "
+                                    + payload.result.size()
+                                    + " for result " + payload.result
+                                    + " in " + String.format
+                                    ("%1$dms",
+                                            System.currentTimeMillis() - tstart));
+                        }catch(Exception ex){
+                            ex.printStackTrace();
+                            Logger.error("Error in processing payload", ex);
+                        }
+                    });
                 }
                 else {
-                    payload.fetch();
+                   // payload.fetch();
+                    searchResult.done();
                 }
             }
         }
@@ -1882,7 +1971,7 @@ public class TextIndexer implements Closeable{
         doc = facetsConfig.build(taxonWriter, doc);
         if (DEBUG (2))
             Logger.debug("++ adding document "+doc);
-        
+      //  indexWriter.
         indexWriter.addDocument(doc);
         lastModified.set(TimeUtil.getCurrentTimeMillis());
     }
@@ -2607,10 +2696,13 @@ public class TextIndexer implements Closeable{
         }
         //System.out.println("shutting down " + System.identityHashCode(this));
         try {
-            fetchQueue.put(POISON_PAYLOAD);
+//            for(int i=0; i< fetchWorkers.length; i++) {
+//                fetchQueue.put(POISON_PAYLOAD);
+//            }
+
             System.out.println("Shutting down scheduler");
-            scheduler.shutdown();
-            scheduler.awaitTermination(1, TimeUnit.MINUTES);
+          //  scheduler.shutdown();
+           // scheduler.awaitTermination(1, TimeUnit.MINUTES);
             scheduler.shutdownNow();
             System.out.println("scheduler shut down");
             //System.out.println("done waiting for termination");
@@ -2643,9 +2735,11 @@ public class TextIndexer implements Closeable{
             Logger.trace("Closing index", ex);
         }
         finally {
-            indexers.remove(baseDir);
+            System.out.println("indexers... before shutdown " + indexers.keySet());
+            TextIndexer indexer = indexers.remove(baseDir);
+            System.out.println("removed baseDir " + baseDir);
             //System.out.println("indexers left after shutdown =" + indexers.keySet());
-            threadPool.shutdownNow();
+            threadPool.shutdown();
             try{
                 threadPool.awaitTermination(1, TimeUnit.MINUTES);
             }catch(Exception e){

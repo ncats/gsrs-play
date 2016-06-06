@@ -3,6 +3,7 @@ package ix.test;
 
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
+import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -15,14 +16,12 @@ import play.test.WithApplication;
 public class FunctionalTest {
 
     @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-    };
+    public GinasTestServer ts = new GinasTestServer();
+
+
 
     @Test
     public void loggedInUserHasLogout()   throws Exception {

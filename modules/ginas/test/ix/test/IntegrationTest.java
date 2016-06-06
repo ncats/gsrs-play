@@ -11,6 +11,7 @@ import ix.ginas.models.v1.Substance;
 import ix.test.ix.test.server.ControlledVocab;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
+import ix.test.util.TestNamePrinter;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import org.junit.Rule;
@@ -32,14 +33,12 @@ public class IntegrationTest {
 	public ExpectedException expectedException = ExpectedException.none();
 
 	@Rule
-	public GinasTestServer ts = new GinasTestServer(9001);
+	public TestNamePrinter printer = new TestNamePrinter();
 
 	@Rule
-	public TestRule watcher = new TestWatcher() {
-		protected void starting(Description description) {
-			System.out.println("Starting test: " + description.getMethodName());
-		}
-	};
+	public GinasTestServer ts = new GinasTestServer();
+
+
 
 
 	@Test

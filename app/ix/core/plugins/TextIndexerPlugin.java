@@ -3,6 +3,7 @@ package ix.core.plugins;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.lucene.store.AlreadyClosedException;
 import play.Logger;
 import play.Play;
 import play.Plugin;
@@ -62,6 +63,7 @@ public class TextIndexerPlugin extends Plugin {
 
         if(Play.isTest()){
             String newStorage=storage.getAbsolutePath() + initCount;
+
             Logger.info("Making new text index folder for test:" + newStorage);
             storage = new File(newStorage);
             storage.mkdirs();
@@ -80,6 +82,14 @@ public class TextIndexerPlugin extends Plugin {
         //TODO find root cause of this issue
        // if (indexer != null && !Play.isTest()) {
         if (indexer != null) {
+
+            if(Play.isTest()){
+                try{
+                    indexer.deleteAll();
+                }catch(AlreadyClosedException e){
+                    //ignore?
+                }
+            }
             indexer.shutdown();
             System.out.println("###### Shut it all down");
             Logger.info("Plugin " + getClass().getName() + " stopped!");
@@ -99,4 +109,6 @@ public class TextIndexerPlugin extends Plugin {
     public synchronized TextIndexer getIndexer () { 
     	return indexer; 
     }
+
+
 }
