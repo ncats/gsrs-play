@@ -30,6 +30,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import javax.persistence.Entity;
@@ -267,7 +268,7 @@ public class TextIndexer implements Closeable{
     	if(gen!=null){
     		return gen.create();
     	}
-    	return null;
+    	return NullSearchAnalyzer.INSTANCE;
     	
     }
     
@@ -339,16 +340,12 @@ public class TextIndexer implements Closeable{
          * @return
          */
         public List<FieldFacet> getFieldFacets(){
-        	if(searchAnalyzer!=null)
-        		return searchAnalyzer.getFieldFacets();
-        	return new ArrayList<FieldFacet>();
-        	
+            return searchAnalyzer.getFieldFacets();
         }
         
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        Map<Object, Integer> rank;
         BlockingQueue matches = new LinkedBlockingQueue ();
         List result; // final result when there are no more updates
         int count;
@@ -358,22 +355,19 @@ public class TextIndexer implements Closeable{
 
         private List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
         
-        SearchResult () {
-        	
-        }
+
         
         SearchResult (SearchOptions options, String query) {
-        	this();
             this.options = options;
             this.query = query;
             searchAnalyzer=getDefaultSearchAnalyzerFor(this.options.kind);
         }
 
         void setRank (final Map<Object, Integer> rank) {
-            this.rank = rank;
+            Objects.requireNonNull(rank);
+
             matches = new PriorityBlockingQueue
-                (rank.size(), new Comparator () {
-                        public int compare (Object o1, Object o2) {
+                (rank.size(), (o1, o2)-> {
                             Object id1 = EntityUtils.getIdForBean(o1);
                             Object id2 = EntityUtils.getIdForBean(o2);
                             Integer r1 = rank.get(id1), r2 = rank.get(id2);
@@ -385,7 +379,7 @@ public class TextIndexer implements Closeable{
                                 Logger.error("Unknown rank for "+o2);
                             return 0;
                         }
-                });
+                );
         }
 
         public void addListener(SearchResultDoneListener listener){
@@ -614,37 +608,45 @@ public class TextIndexer implements Closeable{
         }
 
         private void notifyAdd(Object o){
-            Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
-            while(iter.hasNext()){
-                SearchResultDoneListener l = iter.next().get();
-                if(l ==null){
-                    iter.remove();
-                }else{
-                    l.added(o);
-                }
 
-            }
+            notifyListeners(l-> l.added(o));
+
         }
         
         
         protected void done () {
             stop.set(TimeUtil.getCurrentTimeMillis());
-            //notify listeners
-            
+            notifyListeners(l -> l.searchIsDone());
+
+        }
+
+        /**
+         * Notify all listeners that haven't yet been
+         * GC'ed by performing the given consumer
+         * on each one.
+         *
+         * @param consumer the Consumer function to perform
+         *                 on each listener; can not be null.
+         *
+         * @throws NullPointerException if consumer is null.
+         */
+        private void notifyListeners(Consumer<SearchResultDoneListener> consumer){
             Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
             while(iter.hasNext()){
-            	SearchResultDoneListener l = iter.next().get();
-            	if(l ==null){
-            		iter.remove();
-            	}else{
-            		l.searchIsDone();
-            	}
-            	
+                SearchResultDoneListener l = iter.next().get();
+                //if object pointed to by soft reference
+                //has been GC'ed then it is null
+                if(l ==null){
+                    iter.remove();
+                }else{
+                   consumer.accept(l);
+                }
+
             }
         }
     }
 
-    public static interface SearchResultDoneListener{
+    public interface SearchResultDoneListener{
     	void searchIsDone();
         void added(Object o);
     }
@@ -1385,17 +1387,15 @@ public class TextIndexer implements Closeable{
     }
     
     public SearchResult search 
-        (SearchOptions options, String text, Collection subset)
+        (SearchOptions options, String qtext, Collection subset)
         throws IOException {
-        //this is a quick and dirty way to have a cleaner-looking
-        //query for display
-        String qtext =text;
+
         
-        SearchResult searchResult = new SearchResult (options, text);
+        SearchResult searchResult = new SearchResult (options, qtext);
 
         
         Query query = null;
-        if (text == null) {
+        if (qtext == null) {
             query = new MatchAllDocsQuery ();
         }else {
             try {
@@ -2760,6 +2760,26 @@ public class TextIndexer implements Closeable{
             closeable.close();
         }catch(Exception e){
                 System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * SearchContextAnalyzer implementation that does nothing (the Null Object Pattern).
+     */
+    private enum NullSearchAnalyzer implements SearchContextAnalyzer{
+        /**
+         * Get the singleton instance.
+         */
+        INSTANCE;
+
+        @Override
+        public void updateFieldQueryFacets(Object o, String q) {
+
+        }
+
+        @Override
+        public List<FieldFacet> getFieldFacets() {
+            return Collections.emptyList();
         }
     }
 }

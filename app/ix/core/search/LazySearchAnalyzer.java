@@ -79,14 +79,12 @@ public class LazySearchAnalyzer implements SearchContextAnalyzer{
 			throws Exception {
 		Map<String, FieldFacet> ffacet = new HashMap<String, FieldFacet>();
 
-		Object o = null;
-
 		while (it.hasNext()) {
-			o = it.next();
+			Object o = it.next();
 			updateFieldQueryFacets(o, q, ffacet);
 		}
 
-		return new ArrayList<FieldFacet>(ffacet.values());
+		return new ArrayList<>(ffacet.values());
 	}
 
 	public static List<FieldFacet> getFieldMathingList(Collection c, String q)

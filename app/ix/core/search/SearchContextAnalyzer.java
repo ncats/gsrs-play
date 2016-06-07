@@ -4,8 +4,8 @@ import java.util.List;
 
 public interface SearchContextAnalyzer<K> {
 	
-	public void updateFieldQueryFacets(K o, String q);
+	void updateFieldQueryFacets(K o, String q);
 
-	public List<FieldFacet> getFieldFacets();
+	List<FieldFacet> getFieldFacets();
 	
 }
