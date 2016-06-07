@@ -92,13 +92,14 @@ do{
 
 if($startResponse->is_error()){
 my $stdErr = toString($abs_path . "/daemon.err");
-	die "could not connect to ginas ", $startReq->status_line(), "\nSTDERR=\n", $stdErr;
+#$response->status_line
+	die "could not connect to ginas ", $startResponse->status_line, "\nSTDERR=\n", $stdErr;
 }
 
 
 
 #my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
-my $ginasFileDump = "modules/ginas/test/testdumps/jsonDumpINN.txt.gz";
+my $ginasFileDump = "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
 if(-e $ginasFileDump){
 	print "file exists\n";
 }else{
