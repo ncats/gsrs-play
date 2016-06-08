@@ -15,6 +15,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import play.libs.ws.WSResponse;
 
+import java.util.Collections;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,7 +30,7 @@ public class UserSessionTest {
     public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+    public GinasTestServer ts = new GinasTestServer(Collections.singletonMap("ix.admin", false));
 
     private GinasTestServer.User luke;
 
@@ -52,7 +53,7 @@ public class UserSessionTest {
         try(BrowserSession session = ts.newBrowserSession(luke)){
 
             String content = session.logout().getBody();
-            assertTrue(content.contains("<title>NCATS Login</title>"));
+            assertTrue(content, content.contains("Login</title>"));
         }
     }
 
@@ -205,6 +206,7 @@ public class UserSessionTest {
     }
     @Test
     public void normalUserCantSeeAdminPage(){
+
 
         try(BrowserSession session = ts.newBrowserSession(ts.getFakeUser1())){
             WSResponse response = session.get("ginas/app/admin");
