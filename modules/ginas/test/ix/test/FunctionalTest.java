@@ -57,10 +57,12 @@ public class FunctionalTest {
     public void testRouteChemicalWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/wizard?kind=chemical").getBody();
-
-            assertTrue(content.contains("Structure"));
+            assertTrue(content.contains("structure-form"));
             assertTrue(content.contains("moiety-form"));
             testCommonWizardElements(content);
+        }catch(Throwable t){
+        	t.printStackTrace();
+        	throw t;
         }
     }
     @Test

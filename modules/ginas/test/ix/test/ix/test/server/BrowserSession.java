@@ -38,6 +38,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     private  String sessionCookie;
     public BrowserSession(int port) {
         super(port);
+        
         webClient = new WebClient();
     }
 
@@ -97,7 +98,9 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         Objects.requireNonNull(request);
         Objects.requireNonNull(webClient, "webclient is null!!!!!!!");
         
-        return webClient.getPage(request);
+        HtmlPage page= webClient.getPage(request);
+        webClient.closeAllWindows();
+        return page;
     }
 
     public WSRequestHolder newRequestHolder(String relativePath){
