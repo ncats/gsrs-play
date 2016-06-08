@@ -141,7 +141,7 @@ public class TextIndexer implements Closeable{
      * these default parameters should be configurable!
      */
     public static final int CACHE_TIMEOUT = 60*60*24; // 24 hours
-    public static final int FETCH_WORKERS = 4; // number of fetch workers
+    private static int FETCH_WORKERS;
 
     /**
      * Make sure to properly update the code when upgrading version
@@ -1063,6 +1063,9 @@ public class TextIndexer implements Closeable{
                 });
             }
 
+            FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
+
+
             indexers = new ConcurrentHashMap<File, TextIndexer>();
             registerDefaultAnalyzers();
 
@@ -1152,7 +1155,7 @@ public class TextIndexer implements Closeable{
     }
 
     private TextIndexer () {
-        threadPool = Executors.newWorkStealingPool(FETCH_WORKERS);
+        threadPool = Executors.newFixedThreadPool(FETCH_WORKERS);
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
       //  setFetchWorkers (FETCH_WORKERS);
@@ -1160,7 +1163,7 @@ public class TextIndexer implements Closeable{
     
     public TextIndexer (File dir) throws IOException {
         this.baseDir = dir;
-        threadPool = Executors.newCachedThreadPool();
+        threadPool = Executors.newFixedThreadPool(FETCH_WORKERS);
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
         if (!dir.isDirectory())
