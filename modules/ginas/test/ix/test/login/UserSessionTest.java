@@ -52,7 +52,10 @@ public class UserSessionTest {
         try(BrowserSession session = ts.newBrowserSession(luke)){
 
             String content = session.logout().getBody();
-            assertTrue(content.contains("<title>NCATS Login</title>"));
+            assertTrue(content.contains("Login</title>"));
+        }catch(Throwable t){
+        	t.printStackTrace();
+        	throw t;
         }
     }
 
