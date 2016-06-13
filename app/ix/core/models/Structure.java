@@ -5,23 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -70,6 +54,46 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public static final String H_InChI_Key = "InChI_Key";
 
     // stereochemistry
+   /* public enum Stereo {
+        ABSOLUTE("ABSOLUTE"),
+        ACHIRAL("ACHIRAL"),
+        RACEMIC("RACEMIC"),
+        MIXED("MIXED"),
+        EPIMERIC("EPIMERIC"),
+        UNKNOWN("UNKNOWN");
+
+        public final String value;
+
+        private Stereo(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() { return value.toString(); }
+
+        @JsonValue
+        public String toValue() {
+            return value.toString();
+        }
+
+        @JsonCreator
+        public static Stereo forValue(String value) {
+            if (value.equalsIgnoreCase("ABSOLUTE"))
+                return Stereo.ABSOLUTE;
+            if (value.equalsIgnoreCase("ACHIRAL") )
+                return Stereo.ACHIRAL;
+            if (value.equalsIgnoreCase("RACEMIC") )
+                return Stereo.RACEMIC;
+            if (value.equalsIgnoreCase("MIXED") )
+                return Stereo.MIXED;
+            if (value.equalsIgnoreCase("EPIMERIC") )
+                return Stereo.EPIMERIC;
+            if (value.equalsIgnoreCase("UNKNOWN"))
+                return Stereo.UNKNOWN;
+            return null;
+        }
+    }*/
+
     public enum Stereo {
         ABSOLUTE, ACHIRAL, RACEMIC, MIXED, EPIMERIC, UNKNOWN;
     }
@@ -90,7 +114,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
 
         @JsonValue
         public String toValue() {
-            return value;
+            return value.toString();
         }
 
         @JsonCreator
@@ -131,10 +155,15 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public String formula;
 
     @JsonProperty("stereochemistry")
-    @Column(name = "stereo")
+    public void setStereoChemistry(Stereo stereoChemistry) {
+        this.stereoChemistry = stereoChemistry;
+    }
+
+    @JsonProperty("stereochemistry")
     @Indexable(name = "StereoChemistry", facet = true)
+    @Column(name = "stereo")
     public Stereo stereoChemistry;
-    
+
     @Column(name = "optical")
     public Optical opticalActivity;
     
@@ -155,7 +184,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public Integer charge; // formal charge
     @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f")
     public Double mwt; // molecular weight
-    
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonView(BeanViews.Internal.class)
     @JoinTable(name = "ix_core_structure_property")
@@ -213,6 +242,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         return node;
     }
 
+
     public String getSelf() {
         return id != null ? Global.getRef(this) + "?view=full" : null;
     }
@@ -222,13 +252,13 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public void modified() {
         this.lastEdited = TimeUtil.getCurrentDate();
     }
-    
 
-    
+
+
     public String getId() {
         return id != null ? id.toString() : null;
     }
-    
+
     @JsonProperty(value="id")
     public UUID getRealId(){
     	return this.id;

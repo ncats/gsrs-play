@@ -53,9 +53,14 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearch searcher = new SubstanceSearch(session);
-    	SubstanceSearch.SearchResult results =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
-        assertTrue("15th page of substructure search should have the same substance every time",results.getUuids().contains("0a707d18"));
-        assertTrue("15th page of substructure search should have no other substances",results.getUuids().size()==1);        
+    	SubstanceSearch.SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
+    	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
+    	
+    	SubstanceSearch.SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
+    	//System.out.println("Found results size:" + results2.getUuids().toString());
+    	assertEquals(1, results2.getUuids().size());
+        assertTrue("15th page of substructure search should have the same substance every time",results2.getUuids().contains("0a707d18"));
+        assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);        
     }
     
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{

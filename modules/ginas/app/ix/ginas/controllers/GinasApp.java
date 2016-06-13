@@ -1249,8 +1249,9 @@ public class GinasApp extends App {
            
             // This will simulate a slow structure processing (e.g. slow database fetch)
             // This should be used in conjunction with another debugSpin in TextIndexer
-            // to simulate both slow fetches and slow lucene processing            
-            //Util.debugSpin(1000);
+            // to simulate both slow fetches and slow lucene processing
+            
+            //Util.debugSpin(10);
             
             
             return chem;

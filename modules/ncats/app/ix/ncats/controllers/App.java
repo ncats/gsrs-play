@@ -1643,6 +1643,8 @@ public class App extends Authentication {
     }
 
     public static Result status (String key) {
+    	//if(true) return notFound ("No key found: "+key+"!");
+    	//System.out.println("Checking status for:" + key);
         Object value = IxCache.get(key);
         Logger.debug("status["+key+"] => "+value);
         if (value != null) {
@@ -1819,8 +1821,13 @@ public class App extends Authentication {
          * If wait is set to be forced, we need to hold off going forward until
          * everything has been processed
          */
-        if(isWaitSet()){
+        if(!context.finished() && isWaitSet()){
+
+        	System.out.println("Waiting for finished product for search:" + context.id);
         	context.getDeterminedFuture().get();
+
+        }else{
+        	System.out.println("Not waiting for finished product for search:" + context.id);
         }
         
         SearchResultContext.Status stat=context.getStatus();
