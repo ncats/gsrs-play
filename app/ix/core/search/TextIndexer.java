@@ -10,6 +10,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -1168,12 +1170,17 @@ public class TextIndexer implements Closeable{
         threadPool = Executors.newFixedThreadPool(FETCH_WORKERS);
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
-        if (!dir.isDirectory())
+
+        Path dirPath  = baseDir.toPath();
+        if (dir.exists() && !dir.isDirectory())
             throw new IllegalArgumentException ("Not a directory: "+dir);
 
+
         indexFileDir = new File (dir, "index");
-        if (!indexFileDir.exists())
-            indexFileDir.mkdirs();
+        Files.createDirectories(indexFileDir.toPath());
+//
+//        if (!indexFileDir.exists())
+//            indexFileDir.mkdirs();
         indexDir = new NIOFSDirectory 
             (indexFileDir, NoLockFactory.getNoLockFactory());
 
@@ -1181,8 +1188,9 @@ public class TextIndexer implements Closeable{
 
 
         facetFileDir = new File (dir, "facet");
-        if (!facetFileDir.exists())
-            facetFileDir.mkdirs();
+        Files.createDirectories(facetFileDir.toPath());
+//        if (!facetFileDir.exists())
+//            facetFileDir.mkdirs();
         taxonDir = new NIOFSDirectory
             (facetFileDir, NoLockFactory.getNoLockFactory());
 
@@ -1211,8 +1219,9 @@ public class TextIndexer implements Closeable{
         }
 
         suggestDir = new File (dir, "suggest");
-        if (!suggestDir.exists())
-            suggestDir.mkdirs();
+        Files.createDirectories(suggestDir.toPath());
+//        if (!suggestDir.exists())
+//            suggestDir.mkdirs();
 
         // load saved lookups
         lookups = new ConcurrentHashMap<String, SuggestLookup>();
