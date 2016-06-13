@@ -94,7 +94,7 @@ do{
 
 if($startResponse->is_error()){
 my $stdErr = toString($abs_path . "/daemon.err");
-	die "could not connect to ginas ", $startReq->status_line(), "\nSTDERR=\n", $stdErr;
+	die "could not connect to ginas ", $startReq->status_line, "\nSTDERR=\n", $stdErr;
 }
 
 
