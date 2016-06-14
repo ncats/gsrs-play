@@ -6,14 +6,9 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.sql.DatabaseMetaData;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 import ix.core.util.Java8Util;
 import play.Play;
@@ -1315,7 +1310,7 @@ public class App extends Authentication {
         Long start;
         Long stop;
         List<FieldFacet> fieldFacets=null;
-        List results = new CopyOnWriteArrayList ();
+        Collection results = new LinkedBlockingDeque();
         String id = randvar (10);
         Integer total;
         
@@ -1408,7 +1403,7 @@ public class App extends Authentication {
         }
         
         @com.fasterxml.jackson.annotation.JsonIgnore
-        public List getResults () { return results; }
+        public Collection getResults () { return results; }
         protected void add (Object obj) { results.add(obj); }
         
         
@@ -1827,10 +1822,10 @@ public class App extends Authentication {
          * everything has been processed
          */
         if(!context.finished() && isWaitSet()){
-        	
+
         	System.out.println("Waiting for finished product for search:" + context.id);
         	context.getDeterminedFuture().get();
-        	
+
         }else{
         	System.out.println("Not waiting for finished product for search:" + context.id);
         }
@@ -1847,7 +1842,7 @@ public class App extends Authentication {
         final SearchResult result = getOrElse
             (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
-                        List results = context.getResults();
+                        Collection results = context.getResults();
                         if (results.isEmpty()) {
                             return null;
                         }
