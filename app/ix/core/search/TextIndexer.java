@@ -476,11 +476,8 @@ public class TextIndexer implements Closeable{
                 return 0;
             }
 
-            Iterator it = matches.iterator();
-            
-            for (int i = 0; i < start && it.hasNext(); ++i)
-                it.next(); // skip
-            
+            Iterator it = matches.listIterator(start);
+
             int i = 0;
             for (; i < count && it.hasNext(); ++i) {
                 list.add(it.next());
