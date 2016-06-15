@@ -166,6 +166,31 @@ public class ChemicalApiTest {
    	}
     
     @Test
+   	public void testExactMatchReturnsOnlyExactMatches() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode form1 = makeChemicalSubstanceJSON("[O-]C1=CC=CC=C1.[Cl-]");
+            JsonNode form2 = makeChemicalSubstanceJSON("OC1=CC=CC=C1.O");
+            JsonNode form3 = makeChemicalSubstanceJSON("OC1=CC=CC=C1");
+            
+            ensurePass( api.submitSubstance(form1));
+            ensurePass( api.submitSubstance(form2));
+            ensurePass( api.submitSubstance(form3));
+            
+            String html=api.getExactMatchHTML("OC1=CC=CC=C1");
+            try{
+            	assertTrue("Should have 1 match, but found something different",html.contains("<span class=\"label label-default\">1</span>"));
+            }catch(Throwable t){
+            	//System.out.println(html);
+            	t.printStackTrace();
+            	throw t;
+            }
+            
+        }
+   	}
+    
+    @Test
    	public void testSubstructureSearchSimple() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {

@@ -882,11 +882,9 @@ public class GinasApp extends App {
         		//System.out.println("Page is:" + page);
                 try{
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
-                        String hash=null;
+                        String hash=struc2.getLychiv3Hash();
                         if(exact){
-                                hash=struc2.getLychiv3Hash();
-                        }else{
-                                hash=struc2.getLychiv4Hash();
+                        	hash="root_structure_properties_term:" + struc2.getLychiv3Hash();
                         }
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){

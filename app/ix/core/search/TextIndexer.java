@@ -476,11 +476,8 @@ public class TextIndexer implements Closeable{
                 return 0;
             }
 
-            Iterator it = matches.iterator();
-            
-            for (int i = 0; i < start && it.hasNext(); ++i)
-                it.next(); // skip
-            
+            Iterator it = matches.listIterator(start);
+
             int i = 0;
             for (; i < count && it.hasNext(); ++i) {
                 list.add(it.next());
@@ -2101,6 +2098,7 @@ public class TextIndexer implements Closeable{
 
             Field[] fields = cls.getFields();
             for (Field f : fields) {
+            	boolean defindex=false;
                 Indexable indexable = 
                     (Indexable)f.getAnnotation(Indexable.class);
                 if (indexable == null) {
@@ -2162,10 +2160,12 @@ public class TextIndexer implements Closeable{
                     else if (dyna != null 
                              && f.getName().equals(dyna.label())) {
                         facetLabel = value.toString();
+                        defindex=true;
                     }
                     else if (dyna != null
                              && f.getName().equals(dyna.value())) {
                         facetValue = value.toString();
+                        defindex=true;
                     }
                     else if (type.isPrimitive()) {
                         indexField (ixFields, indexable, path, value);
@@ -2196,8 +2196,10 @@ public class TextIndexer implements Closeable{
                         if (ind != null) {
                             indexField (ixFields, indexable, path, value);
                         }
+                    }else{
+                    	defindex=true;
                     }
-                    else { // treat as string
+                    if(defindex) { // treat as string
                     	
                         indexField (ixFields, indexable, path, value);
                     }
