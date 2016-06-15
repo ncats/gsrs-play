@@ -926,7 +926,9 @@ public class Validation {
     	 String newhash=null;
     	 oldhash=oldstr.getLychiv4Hash();
 	     newhash=newstr.getLychiv4Hash();
-         if(!newhash.equals(oldhash)){
+	     //Should always use the calculated pieces
+	     //TODO: Come back to this and allow for SOME things to be overloaded
+         if(true || !newhash.equals(oldhash)){
              GinasProcessingMessage mes
                   = GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
              
