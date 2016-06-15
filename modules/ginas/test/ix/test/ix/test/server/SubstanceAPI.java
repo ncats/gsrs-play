@@ -120,10 +120,21 @@ public class SubstanceAPI {
         		.setQueryParameter("type", "flex")
                 .setQueryParameter("q", smiles).get().get(timeout);
     }
+    
+    public WSResponse getExactMatch(String smiles){
+        return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_FLEX)
+        		.setQueryParameter("type", "exact")
+                .setQueryParameter("q", smiles).get().get(timeout);
+    }
 
 
     public String getFlexMatchHTML(String smiles){
     	WSResponse wsr= getFlexMatch(smiles);
+    	return wsr.getBody();
+    }
+    
+    public String getExactMatchHTML(String smiles){
+    	WSResponse wsr= getExactMatch(smiles);
     	return wsr.getBody();
     }
 

@@ -1299,6 +1299,8 @@ public class App extends Authentication {
             Done,
             Failed
         }
+        
+        
 
         public static interface StatusChangeListener{
         	void onStatusChange(Status newStatus, Status oldStatus);
@@ -1395,15 +1397,21 @@ public class App extends Authentication {
         public Integer getTotal () { return total; }
         public Long getStart () { return start; }
         public Long getStop () { return stop; }
+        
         public boolean finished () {
             return _status == Status.Done || _status == Status.Failed;
         }
+        
         public boolean isDetermined () {
             return finished () || _status == Status.Determined;
         }
         
         @com.fasterxml.jackson.annotation.JsonIgnore
         public Collection getResults () { return results; }
+        
+        @com.fasterxml.jackson.annotation.JsonIgnore
+        public Collection getResultsAsList () {return (results!=null)?new ArrayList<>(results):null; }
+        
         protected void add (Object obj) { results.add(obj); }
         
         
@@ -2055,6 +2063,8 @@ public class App extends Authentication {
     	return dblist;
     }
 
+    
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheList (int top, int skip) {
 
         ObjectMapper mapper = new ObjectMapper ();
@@ -2068,26 +2078,6 @@ public class App extends Authentication {
             return ok ("No cache available!");
         }
         return ok(result);
-
-//        List keys = IxCache.getKeys(top, skip);
-//        if (keys != null) {
-//            ObjectMapper mapper = new ObjectMapper ();
-//            ArrayNode nodes = mapper.createArrayNode();
-//            for (Iterator it = keys.iterator(); it.hasNext(); ) {
-//                Object key = it.next();
-//                try {
-//                    Element elm = IxCache.getElm(key.toString());
-//                    if (elm != null)
-//                        nodes.add(toJson (mapper, elm));
-//                }
-//                catch (Exception ex) {
-//                    ex.printStackTrace();
-//                }
-//            }
-//
-//            return ok (nodes);
-//        }
-//        return ok ("No cache available!");
     }
 
     public static Result cacheDelete (String key) {
