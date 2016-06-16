@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+ <testsuite name="Protein Details form test" timestamp="2016-05-04T15:11:53" hostname="localhost" time="19.232" errors="0" tests="4" skipped="0" disabled="0" failures="4">
+  <testcase classname="Protein Details form test" name="should see if form is visible" time="8.513" />
+  <testcase classname="Protein Details form test" name="should test form toggling" time="1.034">
+   <failure type="exception" message="Failed: No element found using locator: By.id(&quot;login-button&quot;)"><![CDATA[NoSuchElementError: No element found using locator: By.id("login-button")
+    at new bot.Error (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/atoms/error.js:108:18)
+    at /usr/local/lib/node_modules/protractor/lib/element.js:674:15
+    at [object Object].promise.Promise.goog.defineClass.invokeCallback_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1337:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2758:21)
+    at goog.async.run.processWorkQueue (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/async/run.js:124:15)
+    at process._tickCallback (internal/process/next_tick.js:103:7)
+Error
+    at [object Object].ElementArrayFinder.applyAction_ (/usr/local/lib/node_modules/protractor/lib/element.js:380:21)
+    at [object Object].ElementArrayFinder.(anonymous function) [as click] (/usr/local/lib/node_modules/protractor/lib/element.js:78:17)
+    at [object Object].ElementFinder.(anonymous function) [as click] (/usr/local/lib/node_modules/protractor/lib/element.js:709:7)
+    at [object Object].login (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:26:11)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:90:28)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:96:23
+    at [object Object].promise.Promise.goog.defineClass.constructor (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1056:7)
+    at new wrappedCtr (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/base.js:2468:26)
+    at controlFlowExecute (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:82:18)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+From: Task: Run beforeEach in control flow
+    at Object.<anonymous> (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:81:14)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at QueueRunner.execute (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1859:10)
+    at Spec.Env.queueRunnerFactory (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:697:35)
+    at Spec.execute (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:359:10)
+    at Object.fn (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:2479:37)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1898:16
+From asynchronous test: 
+Error
+    at Suite.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:89:5)
+    at addSpecsToSuite (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:833:25)
+    at Env.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:802:7)
+    at jasmineInterface.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:3375:18)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:86:1)
+    at Module._compile (module.js:413:34)
+    at Object.Module._extensions..js (module.js:422:10)
+    at Module.load (module.js:357:32)
+    at Function.Module._load (module.js:314:12)]]>
+   </failure>
+   <failure type="exception" message="Failed: No element found using locator: By.id(&quot;addDetailsForm&quot;)"><![CDATA[NoSuchElementError: No element found using locator: By.id("addDetailsForm")
+    at new bot.Error (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/atoms/error.js:108:18)
+    at /usr/local/lib/node_modules/protractor/lib/element.js:674:15
+    at [object Object].promise.Promise.goog.defineClass.invokeCallback_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1337:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2758:21)
+    at goog.async.run.processWorkQueue (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/async/run.js:124:15)
+    at process._tickCallback (internal/process/next_tick.js:103:7)
+From: Task: WebElement.isDisplayed()
+    at [object Object].webdriver.WebDriver.schedule (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/webdriver/webdriver.js:362:15)
+    at [object Object].webdriver.WebElement.schedule_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/webdriver/webdriver.js:1817:23)
+    at [object Object].webdriver.WebElement.isDisplayed (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/webdriver/webdriver.js:2184:15)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:101:64)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:96:23
+    at [object Object].promise.Promise.goog.defineClass.constructor (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1056:7)
+    at new wrappedCtr (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/base.js:2468:26)
+    at controlFlowExecute (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:82:18)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2758:21)
+From: Task: Run it("should test form toggling") in control flow
+    at Object.<anonymous> (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:81:14)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1898:16
+    at /usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1842:9
+    at Function.next.fail (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1904:9)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:101:16
+    at [object Object].promise.Promise.goog.defineClass.invokeCallback_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1337:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2758:21)
+From asynchronous test: 
+Error
+    at Suite.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:99:5)
+    at addSpecsToSuite (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:833:25)
+    at Env.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:802:7)
+    at jasmineInterface.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:3375:18)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:86:1)
+    at Module._compile (module.js:413:34)
+    at Object.Module._extensions..js (module.js:422:10)
+    at Module.load (module.js:357:32)
+    at Function.Module._load (module.js:314:12)]]>
+   </failure>
+  </testcase>
+  <testcase classname="Protein Details form test" name="should test all basic form elements" time="6.344">
+   <failure type="exception" message="Failed: No element found using locator: By.id(&quot;login-button&quot;)"><![CDATA[NoSuchElementError: No element found using locator: By.id("login-button")
+    at new bot.Error (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/atoms/error.js:108:18)
+    at /usr/local/lib/node_modules/protractor/lib/element.js:674:15
+    at [object Object].promise.Promise.goog.defineClass.invokeCallback_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1337:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2758:21)
+    at goog.async.run.processWorkQueue (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/async/run.js:124:15)
+    at process._tickCallback (internal/process/next_tick.js:103:7)
+Error
+    at [object Object].ElementArrayFinder.applyAction_ (/usr/local/lib/node_modules/protractor/lib/element.js:380:21)
+    at [object Object].ElementArrayFinder.(anonymous function) [as click] (/usr/local/lib/node_modules/protractor/lib/element.js:78:17)
+    at [object Object].ElementFinder.(anonymous function) [as click] (/usr/local/lib/node_modules/protractor/lib/element.js:709:7)
+    at [object Object].login (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:26:11)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:90:28)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:96:23
+    at [object Object].promise.Promise.goog.defineClass.constructor (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1056:7)
+    at new wrappedCtr (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/base.js:2468:26)
+    at controlFlowExecute (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:82:18)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+From: Task: Run beforeEach in control flow
+    at Object.<anonymous> (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:81:14)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at QueueRunner.execute (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1859:10)
+    at Spec.Env.queueRunnerFactory (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:697:35)
+    at Spec.execute (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:359:10)
+    at Object.fn (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:2479:37)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1898:16
+From asynchronous test: 
+Error
+    at Suite.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:89:5)
+    at addSpecsToSuite (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:833:25)
+    at Env.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:802:7)
+    at jasmineInterface.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:3375:18)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:86:1)
+    at Module._compile (module.js:413:34)
+    at Object.Module._extensions..js (module.js:422:10)
+    at Module.load (module.js:357:32)
+    at Function.Module._load (module.js:314:12)]]>
+   </failure>
+  </testcase>
+  <testcase classname="Protein Details form test" name="should test all subforms" time="3.338">
+   <failure type="exception" message="Failed: No element found using locator: By.id(&quot;login-button&quot;)"><![CDATA[NoSuchElementError: No element found using locator: By.id("login-button")
+    at new bot.Error (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/atoms/error.js:108:18)
+    at /usr/local/lib/node_modules/protractor/lib/element.js:674:15
+    at [object Object].promise.Promise.goog.defineClass.invokeCallback_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1337:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2758:21)
+    at goog.async.run.processWorkQueue (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/async/run.js:124:15)
+    at process._tickCallback (internal/process/next_tick.js:103:7)
+Error
+    at [object Object].ElementArrayFinder.applyAction_ (/usr/local/lib/node_modules/protractor/lib/element.js:380:21)
+    at [object Object].ElementArrayFinder.(anonymous function) [as click] (/usr/local/lib/node_modules/protractor/lib/element.js:78:17)
+    at [object Object].ElementFinder.(anonymous function) [as click] (/usr/local/lib/node_modules/protractor/lib/element.js:709:7)
+    at [object Object].login (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:26:11)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:90:28)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:96:23
+    at [object Object].promise.Promise.goog.defineClass.constructor (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:1056:7)
+    at new wrappedCtr (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/base.js:2468:26)
+    at controlFlowExecute (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:82:18)
+    at [object Object].promise.ControlFlow.goog.defineClass.goog.defineClass.abort_.error.executeNext_.execute_ (/usr/local/lib/node_modules/protractor/node_modules/selenium-webdriver/lib/goog/../webdriver/promise.js:2776:14)
+From: Task: Run beforeEach in control flow
+    at Object.<anonymous> (/usr/local/lib/node_modules/protractor/node_modules/jasminewd2/index.js:81:14)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at QueueRunner.execute (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1859:10)
+    at Spec.Env.queueRunnerFactory (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:697:35)
+    at Spec.execute (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:359:10)
+    at Object.fn (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:2479:37)
+    at attemptAsync (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1916:24)
+    at QueueRunner.run (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1871:9)
+    at /usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:1898:16
+From asynchronous test: 
+Error
+    at Suite.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:89:5)
+    at addSpecsToSuite (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:833:25)
+    at Env.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:802:7)
+    at jasmineInterface.describe (/usr/local/lib/node_modules/protractor/node_modules/jasmine/node_modules/jasmine-core/lib/jasmine-core/jasmine.js:3375:18)
+    at Object.<anonymous> (/home/sheilstk/Desktop/workspace/inxight/modules/ginas/test/protractor/ProteinDetailsFormTest.js:86:1)
+    at Module._compile (module.js:413:34)
+    at Object.Module._extensions..js (module.js:422:10)
+    at Module.load (module.js:357:32)
+    at Function.Module._load (module.js:314:12)]]>
+   </failure>
+  </testcase>
+ </testsuite>
+</testsuites>

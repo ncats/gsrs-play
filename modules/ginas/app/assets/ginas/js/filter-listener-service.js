@@ -4,24 +4,22 @@ angular.module('filterListener', [])
             //this covers setting a variable based off of the codeSystemVocabularyTerm class
             _registerSystemCategoryFilter: function(scope, edit) {
                 scope.$watch('filter', function (newValue) {
-                    if (!_.isUndefined(newValue)) {
+                    if (!_.isUndefined(newValue) && !_.isNull(newValue)) {
                         var obj = {};
                         if (!_.isUndefined(newValue.systemCategory)) {
                             CVFields.searchTags(scope.cv, newValue.systemCategory).then(function (response) {
                                 obj = response[0];
-                                if (edit) {
-                                    scope.obj[scope.field] = obj;
-                                } else {
                                     scope.obj = obj;
-                                }
+
                             });
                         }
+                    }else{
+                        scope.obj ={};
                     }
                 });
             },
 
             _registerText: function(scope){
-                console.log("registering a filter on a text field");
                 var filter = scope.filter;
                 scope.$watch('filter', function (newValue) {
                     if (!_.isUndefined(newValue)) {

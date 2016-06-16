@@ -6,96 +6,99 @@
 	
 
     @wizardfields(kind: String) = {
-		@if(lock!=null){
-			<span class="warning" id="lockmessage">This record is currently being edited by another user, you may have difficulty saving changes.</span>
-		}
-        <header-form kind = "substance.substanceClass" parent = substance></header-form>
-        <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
 
-
-    @kind match {
-        case "chemical" => {
-            <structure-form parent = substance type="structure" path ="parent.structure"></structure-form>
-            <moiety-form ng-if="substance.moieties.length>1" parent = substance ng-cloak></moiety-form>
-        }
-        case "mixture" => {
-            <mixture-details-form parent = substance></mixture-details-form>
-            <mixture-component-select-form parent = substance></mixture-component-select-form>
-        }
-        case "protein" => {
-            <protein-details-form parent = substance></protein-details-form>
-            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
-            <div ng-if = "substance.protein.subunits.length>0">
-                <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
-                <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
-                <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
-            </div>
-        }
-        case "structurallyDiverse" => {
-            <diverse-type-form parent = substance></diverse-type-form>
-            <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
-                <diverse-source-form  parent = substance></diverse-source-form>
-                <diverse-organism-form ng-if="substance.$$diverseType=='whole'" ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
-                <diverse-details-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value !== 'PLANT'" parent = substance></diverse-details-form>
-@*
-                <diverse-plant-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value == 'PLANT'" parent = substance></diverse-plant-form>
-*@
-
-@*
-                <diverse-plant-form parent = substance></diverse-plant-form>
-*@
-
-                <parent-form parent = substance></parent-form>
-                <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
-            </div>
-
-        }
-        case "concept" => {
-            <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
-            <div ng-if="substance.uuid">
-                <concept-upgrade-form parent = substance></concept-upgrade-form>
-            </div>
-        }
-        case "polymer" => {
-            <polymer-classification-form parent=substance></polymer-classification-form>
-            <polymer-monomer-form parent=substance></polymer-monomer-form>
-            <structure-form type="idealizedStructure" path ="parent.polymer.idealizedStructure" parent = substance></structure-form>
-            <polymer-sru-form parent=substance></polymer-sru-form>
-        }
-        case "nucleicAcid" => {
-            <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
-            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
-            <div ng-if = "substance.nucleicAcid.subunits.length>0">
-                <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
-                <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
-            </div>
-        }
-        case "specifiedSubstanceG1" => {
-            <ss-constituent-form parent = substance></ss-constituent-form>
-        }
-        case x => {
-            <h2>Unknown substance class: @kind</h2>
-        }
-    }
-        <div ng-if="substance.substanceClass !== 'chemical'">
-            <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
-            <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
-            <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-        </div>
-        <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
-        <relationship-form parent = substance ng-cloak></relationship-form>
-        <note-form parent = substance ng-cloak></note-form>
-        <property-form parent = substance ng-cloak></property-form>
-        <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
     }
 
     @ginas("Register", kind) {
         @menu()
     } {
-        <div ng-cloak="">
+        <div ng-cloak="" ng-init="form={}">
             <form class="form-horizontal" name ="substanceForm" role ="form" novalidate>
+@*
                 @wizardfields(kind)
+*@
 
+                @if(lock!=null){
+                    <span class="warning" id="lockmessage">This record is currently being edited by another user, you may have difficulty saving changes.</span>
+                }
+                <header-form kind = "substance.substanceClass" parent = substance></header-form>
+                <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
+
+
+                @kind match {
+                    case "chemical" => {
+                        <structure-form parent = substance type="structure" path ="parent.structure"></structure-form>
+                        <moiety-form ng-if="substance.moieties.length>1" parent = substance ng-cloak></moiety-form>
+                    }
+                    case "mixture" => {
+                        <mixture-details-form parent = substance></mixture-details-form>
+                        <mixture-component-select-form parent = substance></mixture-component-select-form>
+                    }
+                    case "protein" => {
+                        <protein-details-form parent = substance></protein-details-form>
+                        <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+                        <div ng-if = "substance.protein.subunits.length>0">
+                            <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
+                            <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
+                            <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
+                        </div>
+                    }
+                    case "structurallyDiverse" => {
+                        <diverse-type-form parent = substance></diverse-type-form>
+                        <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
+                            <diverse-source-form  parent = substance></diverse-source-form>
+                            <diverse-organism-form ng-if="substance.$$diverseType=='whole'" ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
+                            <diverse-details-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value !== 'PLANT'" parent = substance></diverse-details-form>
+                            @*
+                            <diverse-plant-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value == 'PLANT'" parent = substance></diverse-plant-form>
+                            *@
+
+                            @*
+                            <diverse-plant-form parent = substance></diverse-plant-form>
+                            *@
+
+                            <parent-form parent = substance></parent-form>
+                            <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
+                        </div>
+
+                    }
+                    case "concept" => {
+                        <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
+                        <div ng-if="substance.uuid">
+                            <concept-upgrade-form parent = substance></concept-upgrade-form>
+                        </div>
+                    }
+                    case "polymer" => {
+                        <polymer-classification-form parent=substance></polymer-classification-form>
+                        <polymer-monomer-form parent=substance></polymer-monomer-form>
+                        <structure-form type="idealizedStructure" path ="parent.polymer.idealizedStructure" parent = substance></structure-form>
+                        <polymer-sru-form parent=substance></polymer-sru-form>
+                    }
+                    case "nucleicAcid" => {
+                        <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
+                        <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+                        <div ng-if = "substance.nucleicAcid.subunits.length>0">
+                            <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
+                            <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
+                        </div>
+                    }
+                    case "specifiedSubstanceG1" => {
+                        <ss-constituent-form parent = substance></ss-constituent-form>
+                    }
+                    case x => {
+                        <h2>Unknown substance class: @kind</h2>
+                    }
+                }
+                <div ng-if="substance.substanceClass !== 'chemical'">
+                    <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
+                    <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
+                    <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
+                </div>
+                <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
+                <relationship-form parent = substance ng-cloak></relationship-form>
+                <note-form parent = substance ng-cloak></note-form>
+                <property-form parent = substance ng-cloak></property-form>
+                <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
                 <div class = "row info">
                     <div class="col-md-4">
                         <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSONBtn">

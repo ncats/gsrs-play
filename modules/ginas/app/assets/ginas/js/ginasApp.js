@@ -733,9 +733,27 @@
         };
 
         $scope.validateSubstance = function (callback) {
-            console.log("validate");
+            console.log($scope);
+          //  console.log("validate");
+            //this should cascade to all forms to check and see if validation is ok
+            $scope.$broadcast('show-errors-check-validity');
+            //this is the api error checking
+            $scope.checkErrors();
+            console.log($scope);
+            console.log($scope.substanceForm.codeForm);
+
+             /*console.log($scope.nameForm);
+             if($scope.nameForm.$dirty){
+             alert('Name Form not saved');
+             }*/
+            /*            console.log($scope);
+             if(!$scope.substanceForm.$valid) {
+             alert("not valid");
+             }*/
+
+
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-           console.log(sub);
+       //    console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(function (response) {
                 $scope.validating = false;
@@ -756,8 +774,11 @@
             var url;
             var sub = {};
             $scope.close();
-            //  $scope.$broadcast('show-errors-check-validity');
-            //      $scope.checkErrors();
+            //this should cascade to all forms to check and see if validation is ok
+            $scope.$broadcast('show-errors-check-validity');
+            //this is the api error checking
+            $scope.checkErrors();
+            console.log($scope);
             /*console.log($scope.nameForm);
              if($scope.nameForm.$dirty){
              alert('Name Form not saved');
@@ -765,10 +786,6 @@
             /*            console.log($scope);
              if(!$scope.substanceForm.$valid) {
              alert("not valid");
-             }*/
-            /*            var r = confirm("Are you sure you'd like to submit this substance?");
-             if (r != true) {
-             return;
              }*/
             if (_.has($scope.substance, '$$update')) {
             	
