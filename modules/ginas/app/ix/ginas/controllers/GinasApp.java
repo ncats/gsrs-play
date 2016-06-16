@@ -998,7 +998,7 @@ public class GinasApp extends App {
                         }
                     });
             } catch (Exception ex) {
-                return _internalServerError(ex);
+                throw new IllegalStateException(ex);
             }
         }
 

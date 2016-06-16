@@ -173,17 +173,27 @@ public class SubstanceFactory extends EntityFactory {
 	
 
 
+	/**
+	 * Returns the substance corresponding to the supplied uuid or approvalID.
+	 * 
+	 * If either is null, it will not be used in resolving. This method returns
+	 * first based on the UUID, and falls back to the approvalID if nothing is found.
+	 * 
+	 * @param approvalID
+	 * @param uuid
+	 * @return
+	 */
 	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
 		try{
-			Substance s = getSubstance(uuid);
+			if(approvalID==null && uuid == null)return null;
 			
-			if (s == null){
+			Substance s = (uuid!=null)?getSubstance(uuid):null;
+			if (s == null && approvalID !=null){
 				s=getSubstanceByApprovalID(approvalID);
 			}
 			return s;
 		}catch(Exception e){
 			e.printStackTrace();
-			
 		}
 		return null;
 		// return finder.where().eq("approvalID", approvalID).findUnique();
