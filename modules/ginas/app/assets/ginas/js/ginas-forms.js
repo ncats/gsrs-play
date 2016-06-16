@@ -317,6 +317,63 @@
                         }
                     }
                     return scope.errors;
+                };
+
+                scope.addAnother = function(form){
+                    console.log(scope);
+                    var temp ={};
+                    if(scope.parent.codes) {
+                        console.log(form);
+                        var subforms = [];
+                        //this makes an array of the subforms (i.e. list elements), excluding the current object;
+                        for(var i=0; i<scope.parent.codes.length; i++){
+                            var name = 'form-'+i;
+                            console.log(form[name]);
+                            subforms.push(form[name]);
+                        }
+                        console.log(subforms);
+                        _.forEach(subforms, function(sub) {
+                            console.log(sub);
+                            _.forEach(sub, function (value, key) {
+                                if (typeof value === 'object' && value.hasOwnProperty('$modelValue')) {
+                                    console.log(value.$name);
+                                    if (value.$isEmpty) {
+                                        console.log("emply");
+                                        value.$setValidity('required', true);
+                                    }
+                                    sub.$setDirty(true);
+                                }
+                                console.log(sub);
+                            });
+                        });
+                        //first this needs to re-validate each of the previous codes, probably through the form
+                        console.log(scope);
+
+                     //   scope.validate();
+                        scope.parent.codes.push(temp);
+                    }else{
+                        _.set(scope.parent, 'codes', [] );
+                        scope.parent.codes.push(temp);
+                    }
+                };
+
+                scope.validateFunction = function(obj, hi){
+                    console.log("code form validation function");
+                    console.log(obj);
+                    if(_.isEmpty(obj)||_.isNull(obj.codeSystem)){
+                        console.log(scope.codeForm.codeObjForm.codeSystem);
+                        console.log("empty");
+                        scope.codeForm.codeObjForm.codeSystem.$setValidity('required', false);
+                        console.log(scope.codeForm.codeObjForm.codeSystem);
+                        return scope.codeForm.codeObjForm.codeSystem.$invalid;
+
+                    }else{
+                        console.log("not empty");
+                        scope.codeForm.codeObjForm.codeSystem.$setValidity('required', true);
+                        console.log(scope.codeForm.codeObjForm.codeSystem);
+                        return scope.codeForm.codeObjForm.codeSystem.$invalid;
+                    }
+                 //   return scope.codeForm.codeObjForm.codeSystem.$invalid;
                 }
             }
         };

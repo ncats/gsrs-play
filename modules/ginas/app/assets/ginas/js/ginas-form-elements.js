@@ -11,7 +11,10 @@
                     patharr = _.takeRight(patharr, 2);
                 }
                 var pathString = _.join(patharr, '.');
-                return $http.get(vocabulariesUrl,{params: {"filter": "fields.term ='"+pathString+"'"}, cache: true}, {
+                return $http.get(vocabulariesUrl, {
+                    params: {"filter": "fields.term ='" + pathString + "'"},
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -25,7 +28,10 @@
             },
             //used to load cv in form elements
             getCV: function (domain) {
-                return $http.get(vocabulariesUrl, {params: {"filter": "domain='" + domain.toUpperCase() + "'"}, cache: true}, {
+                return $http.get(vocabulariesUrl, {
+                    params: {"filter": "domain='" + domain.toUpperCase() + "'"},
+                    cache: true
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -163,10 +169,10 @@
             var current = ($location.$$url).split('app')[1];
             var ret;
             var c = current.split('?');
-            if(c.length>1){
-                var q= c[0] + '/search?'+ c[1];
+            if (c.length > 1) {
+                var q = c[0] + '/search?' + c[1];
                 ret = baseurl + "api/v1" + q + '&view=full';
-            }else {
+            } else {
                 ret = baseurl + "api/v1" + current + '?view=full';
             }
             return ret;
@@ -278,7 +284,6 @@
     });
 
 
-
     //filterFunction allows for choosing which cv to be loaded for each dropdown. Foe example, displaying amino acid vs nucleic acid bases based on input.
     //filter is an object that a $watch is set on. when that object changes, the currently loaded cv is filtered based on the value. these filtering options are set in the cv
     ginasFormElements.directive('dropdownSelect', function (CVFields, filterService) {
@@ -288,24 +293,24 @@
             replace: true,
             scope: {
                 obj: '=ngModel',
-                cv:'@',
+                cv: '@',
                 field: '@',
                 label: '@',
                 values: '=?',
                 filter: '=',
-                filterField:'@filter',
+                filterField: '@filter',
                 filterFunction: '&?',
                 required: '=?'
             },
             link: function (scope, element, attrs) {
                 var other = [{
-                display: "Other",
+                    display: "Other",
                     value: "Other",
                     filter: " = ",
                     selected: false
-            }];
-                if(_.isUndefined(scope.obj)){
-                  //  scope.obj={};
+                }];
+                if (_.isUndefined(scope.obj)) {
+                    //  scope.obj={};
                 }
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
@@ -316,7 +321,7 @@
                         }
 
                         if (response.data.content[0].editable == true) {
-                           scope.values =  _.union(scope.values, other);
+                            scope.values = _.union(scope.values, other);
                         }
 
                         _.forEach(scope.values, function (term) {
@@ -328,8 +333,8 @@
                 }
 
                 scope.makeNewCV = function () {
-                    if(_.isUndefined(scope.obj)){
-                        scope.obj={};
+                    if (_.isUndefined(scope.obj)) {
+                        scope.obj = {};
                     }
                     var exists = _.find(scope.values, function (cv) {
                         return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
@@ -347,27 +352,28 @@
                     }
                 };
             }
-    };
-});
+        };
+    });
 
     ginasFormElements.directive('dropdownViewEdit', function (CVFields, filterService) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/dropdown-view-edit.html",
             replace: true,
+            require: '?ngModel',
             scope: {
-                formname: '=',
-                cv:'@',
-                obj: '=',
+                formname: '@',
+                cv: '@',
+                obj: '=ngModel',
                 field: '@',
                 label: '@',
                 values: '=?',
                 filter: '=',
-                filterField:'@filter',
+                filterField: '@filter',
                 filterFunction: '&?',
                 required: '=?'
             },
-            link: function (scope, element, attrs) {
+            link: function (scope, element, attrs, ngModelCtrl) {
 
                 var other = [{
                     display: "Other",
@@ -375,7 +381,8 @@
                     filter: " = ",
                     selected: false
                 }];
-                var temp= scope.obj[scope.field];
+                // var temp= scope.obj[scope.field];
+                var temp = scope.obj;
                 if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (response) {
                         scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
@@ -384,9 +391,18 @@
                         }
 
                         if (response.data.content[0].editable == true) {
-                            scope.values =  _.union(scope.values, other);
+                            scope.values = _.union(scope.values, other);
                         }
                     });
+                }
+
+                if (scope.required) {
+                    console.log(ngModelCtrl);
+                    if (_.isUndefined(scope.obj)) {
+                        console.log(scope);
+                        scope.formname[scope.field].$setValidity("requiredssss", false);
+                    }
+                    console.log(scope.obj);
                 }
 
                 scope.makeNewCV = function () {
@@ -406,27 +422,27 @@
                     }
                 };
 
-                scope.undo = function(){
-                    if(scope.obj[scope.field].changed==true) {
+                scope.undo = function () {
+                    if (scope.obj[scope.field].changed == true) {
                         scope.obj[scope.field] = temp;
-                    scope.obj[scope.field].changed = false;
-                        scope.obj[scope.field].$editing=false;
+                        scope.obj[scope.field].changed = false;
+                        scope.obj[scope.field].$editing = false;
                     }
                 };
 
-                scope.change = function(){
-                        if (scope.obj[scope.field]) {
-                            scope.obj[scope.field].$editing = false;
-                            scope.obj[scope.field].changed = true;
-                        }else {
-                            _.unset(scope.obj, scope.field);
-                        }
+                scope.change = function () {
+                    if (scope.obj[scope.field]) {
+                        scope.obj[scope.field].$editing = false;
+                        scope.obj[scope.field].changed = true;
+                    } else {
+                        _.unset(scope.obj, scope.field);
+                    }
                 };
 
-                scope.toggleEdit= function(){
-                if(scope.obj[scope.field]){
-                    scope.obj[scope.field].$editing=false;
-                }
+                scope.toggleEdit = function () {
+                    if (scope.obj[scope.field]) {
+                        scope.obj[scope.field].$editing = false;
+                    }
                 };
 
                 scope.editing = function (obj) {
@@ -434,6 +450,119 @@
                         obj.$editing = !obj.$editing;
                     } else {
                         _.set(obj, '$editing', true);
+                    }
+                };
+            }
+        };
+    });
+
+
+    ginasFormElements.directive('dropdownSelecto', function (CVFields, filterService) {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/elements/dropdown-select2.html",
+            replace: true,
+            require: '?ngModel',
+            scope: {
+                formname: '@',
+                cv: '@',
+                obj: '=ngModel',
+                field: '@',
+                label: '@',
+                values: '=?',
+                filter: '=',
+                filterField: '@filter',
+                filterFunction: '&?',
+                validation: '&?',
+                required: '=?'
+            },
+            link: function (scope, element, attrs, ngModelCtrl) {
+                console.log(scope);
+                var other = [{
+                    display: "Other",
+                    value: "Other",
+                    filter: " = ",
+                    selected: false
+                }];
+                if (_.isUndefined(scope.obj)) {
+                    scope.obj = {};
+                }
+                // var temp= scope.obj;
+                var temp = scope.obj;
+                if(scope.required===true && _.isEmpty(scope.obj)) {
+                    ngModelCtrl.$setValidity('required', true);
+                     _.set(scope, 'invali', ngModelCtrl.$isEmpty());
+                }
+
+                if (scope.cv) {
+                    CVFields.getCV(scope.cv).then(function (response) {
+                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
+                        if (response.data.content[0].filterable == true) {
+                            filterService._register(scope, true);
+                        }
+
+                        if (response.data.content[0].editable == true) {
+                            scope.values = _.union(scope.values, other);
+                        }
+                    });
+                }
+
+                scope.makeNewCV = function () {
+                    var exists = _.find(scope.values, function (cv) {
+                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
+                    });
+                    if (!exists && scope.obj.new !== '') {
+                        var cv = {};
+                        cv.display = scope.obj.new;
+                        cv.value = scope.obj.new;
+                        scope.values.push(cv);
+                        CVFields.updateCV(attrs.cv, cv);
+                        scope.obj = cv;
+                    } else {
+                        alert(scope.obj.new + ' exists in the cv');
+                        scope.obj = {};
+                    }
+                };
+
+                scope.undo = function () {
+                    if (scope.obj.changed == true) {
+                        scope.obj = temp;
+                        scope.obj.changed = false;
+                        scope.obj.$editing = false;
+                        if(!_.isEmpty(scope.obj) && scope.required) {
+                            _.set(scope, 'invali', ngModelCtrl.$invalid);
+                        }
+
+                    }
+                };
+
+                scope.change = function () {
+                    if (scope.obj) {
+                        scope.obj.$editing = false;
+                        if(!_.isEmpty(temp)) {
+                            scope.obj.changed = true;
+                        }
+                    }
+                    if(scope.required) {
+                        _.set(scope, 'invali', ngModelCtrl.$invalid);
+                    }
+                };
+
+
+                scope.toggleEdit = function () {
+                    if (scope.obj) {
+                        scope.obj.$editing = false;
+                    }
+                    if(scope.required) {
+                        _.set(scope, 'invali', ngModelCtrl.$invalid);
+                    }
+                };
+
+                scope.editing = function () {
+                    if (_.has(scope.obj, '$editing')) {
+                        scope.obj.$editing = !scope.obj.$editing;
+                    } else {
+                        _.set(scope.obj, '$editing', true);
                     }
                 };
             }
@@ -461,11 +590,11 @@
                 } else {
                     scope.max = 'MAX_SAFE_INTEGER';
                 }
-                
+
                 //this allows the switching of cv depending on an external value
                 if (scope.filter) {
                     scope.$watch('filter', function (newValue) {
-                        if(!_.isUndefined(newValue)) {
+                        if (!_.isUndefined(newValue)) {
                             var cv = scope.filterFunction({type: newValue});
                             CVFields.getCV(cv).then(function (response) {
                                 scope.obj = [];
@@ -481,23 +610,23 @@
                         scope.tags = response.data.content[0].terms;
                         _.forEach(scope.tags, function (term) {
                             if (term.selected == true) {
-                                if(_.isUndefined(scope.obj)){
-                                    scope.obj=[];
+                                if (_.isUndefined(scope.obj)) {
+                                    scope.obj = [];
                                 }
                                 scope.obj.push(term);
                             }
                         });
                         /*if (scope.cv == 'LANGUAGE') {
-                            var values = _.orderBy(response.data.content[0].terms, function (cv) {
-                                return cv.display == 'English';
-                            }, ['desc']);
-                            scope.tags = values;
-                        } else {*/
-                            scope.tags = response.data.content[0].terms;
+                         var values = _.orderBy(response.data.content[0].terms, function (cv) {
+                         return cv.display == 'English';
+                         }, ['desc']);
+                         scope.tags = values;
+                         } else {*/
+                        scope.tags = response.data.content[0].terms;
                         //}
                     });
                 }
-                
+
                 scope.loadItems = function ($query) {
                     var filtered = _.filter(scope.tags, function (cv) {
                         return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
@@ -538,7 +667,7 @@
 
                 if (scope.filter) {
                     scope.$watch('filter', function (newValue, oldValue) {
-                        if(!_.isUndefined(newValue)) {
+                        if (!_.isUndefined(newValue)) {
                             var cv = scope.filterFunction({type: newValue});
                             if (!_.isNull(cv)) {
                                 CVFields.getCV(cv).then(function (response) {
@@ -553,7 +682,7 @@
                     });
                 }
 
-                if(scope.cv) {
+                if (scope.cv) {
                     CVFields.getCV(scope.cv).then(function (data) {
                         var values = _.orderBy(data.data.content[0].terms, function (cv) {
                             return cv.display == 'English';
@@ -597,8 +726,8 @@
                 required: '=?',
                 rows: '=?'
             },
-            link: function(scope, element){
-                if(_.isUndefined(scope.rows)){
+            link: function (scope, element) {
+                if (_.isUndefined(scope.rows)) {
                     scope.rows = 7;
                 }
             }
@@ -669,16 +798,16 @@
             link: function (scope, elem, attrs, ngModel) {
 
                 scope.validatorFunction = function () {
-                    if(scope.validator) {
+                    if (scope.validator) {
                         scope.errorMessages = scope.validator({model: scope.obj});
                     }
                 };
 
-                if (scope.filter &&!_.isEmpty(scope.filter)){
+                if (scope.filter && !_.isEmpty(scope.filter)) {
                     var filter = scope.filter;
                     scope.$watch('filter', function (newValue) {
-                        if(!_.isUndefined(newValue)) {
-                         scope.errorMessages = scope.validator({model:scope.obj});
+                        if (!_.isUndefined(newValue)) {
+                            scope.errorMessages = scope.validator({model: scope.obj});
                         }
                     });
                 }
@@ -707,14 +836,14 @@
                     scope.edit = !scope.edit;
                 };
                 scope.validatorFunction = function () {
-                    scope.errorMessages = scope.validator({model:scope.obj});
+                    scope.errorMessages = scope.validator({model: scope.obj});
                 };
 
-                if (scope.filter){
+                if (scope.filter) {
                     var filter = scope.filter;
                     scope.$watch('filter', function (newValue) {
-                        if(!_.isUndefined(newValue)) {
-                            scope.errorMessages = scope.validator({model:scope.obj});
+                        if (!_.isUndefined(newValue)) {
+                            scope.errorMessages = scope.validator({model: scope.obj});
                         }
                     });
                 }
@@ -733,9 +862,9 @@
         var resolver = {};
 
         resolver.resolve = function (name, loading) {
-                        if(loading){
-             spinnerService.show(loading);
-             }
+            if (loading) {
+                spinnerService.show(loading);
+            }
             var url = baseurl + "resolve/" + name;
             return $http.get(url, {cache: true}, {
                 headers: {
@@ -773,7 +902,7 @@
                     scope.subs = scope.data;
                 }
                 scope.select = function (selected) {
-                    if(scope.parent) {
+                    if (scope.parent) {
                         var reference = {
                             uuid: UUID.newID(),
                             apply: true,
