@@ -3,7 +3,7 @@
 @import ix.ncats.controllers.App.FacetDecorator
 @import ix.utils.Util
 
-@(facets: Array[FacetDecorator])
+@(facets: Array[FacetDecorator], searchflag:Boolean)
 
 <script>
   var filters = {};
@@ -50,9 +50,9 @@
          }
 	 <td>
            @if(f.raw) {
-             <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))</span>
+             <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
            } else {
-             <span class="badge" style="float:right;">@f.value(i)</span>
+             <span class="badge" style="float:right;">@f.value(i)@if(searchflag){+}</span>
            }
 	 </td>
         </tr>
@@ -82,9 +82,9 @@
           }
 	 <td>
            @if(f.raw) {
-              <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))</span>
+              <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
            } else {
-              <span class="badge" style="float:right;">@f.value(i)</span>
+              <span class="badge" style="float:right;">@f.value(i)@if(searchflag){+}</span>
            }
 	 </td>
         </tr>
