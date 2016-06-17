@@ -287,6 +287,11 @@
             },
             link: function (scope, element, attrs) {
                 scope.errors = [];
+
+                if(scope.codeForm.form && scope.codeForm.form.$pristine) {
+                    scope.codeForm.form.$pending = true;
+                }
+
                 scope.parse = function (code) {
                     if (!_.isUndefined(code) || !_.isNull(code)) {
                         if (_.isEmpty(code)) {
@@ -319,11 +324,27 @@
                     return scope.errors;
                 };
 
+
+                ///deleting a code from the form removes the "pending" class, and the form is not able to be reached/redrawn? again.
+//pending is not persisted, need a different flag, probably a custom one
+
+
+
                 scope.addAnother = function(form){
                     console.log(scope);
                     var temp ={};
-                    if(scope.parent.codes) {
-                        console.log(form);
+                    if(scope.parent.codes && scope.parent.codes.length>0) {
+                        console.log(scope.codeForm);
+                        if(scope.codeForm.form && scope.codeForm.form.$pristine) {
+                            console.log("adding flagged");
+                            scope.codeForm.form.$flagged = true;
+                        }else{
+                            console.log("adding a new code after deleting");
+                            //scope.codeForm.form.$flagged = false;
+
+                            //  scope.codeForm.$setDirty(false);
+                        }
+                      /*  console.log(form);
                         var subforms = [];
                         //this makes an array of the subforms (i.e. list elements), excluding the current object;
                         for(var i=0; i<scope.parent.codes.length; i++){
@@ -337,24 +358,29 @@
                             _.forEach(sub, function (value, key) {
                                 if (typeof value === 'object' && value.hasOwnProperty('$modelValue')) {
                                     console.log(value.$name);
+                                    console.log(value);
                                     if (value.$isEmpty) {
                                         console.log("emply");
                                         value.$setValidity('required', true);
                                     }
                                     sub.$setDirty(true);
                                 }
-                                console.log(sub);
+                                if(sub.$dirty && sub.$invalid){
+                                   // sub.$setDirty(true);
+                                    scope.codeForm[sub.$name].$dirty=sub.$dirty;
+                                }
                             });
                         });
                         //first this needs to re-validate each of the previous codes, probably through the form
                         console.log(scope);
-
+*/
                      //   scope.validate();
                         scope.parent.codes.push(temp);
                     }else{
                         _.set(scope.parent, 'codes', [] );
                         scope.parent.codes.push(temp);
                     }
+                    console.log(scope);
                 };
 
                 scope.validateFunction = function(obj, hi){

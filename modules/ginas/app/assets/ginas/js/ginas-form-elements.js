@@ -464,7 +464,7 @@
             replace: true,
             require: '?ngModel',
             scope: {
-                formname: '@',
+                formname: '=',
                 cv: '@',
                 obj: '=ngModel',
                 field: '@',
@@ -477,7 +477,6 @@
                 required: '=?'
             },
             link: function (scope, element, attrs, ngModelCtrl) {
-                console.log(scope);
                 var other = [{
                     display: "Other",
                     value: "Other",
@@ -485,13 +484,12 @@
                     selected: false
                 }];
                 if (_.isUndefined(scope.obj)) {
-                    scope.obj = {};
+                 //   scope.obj = {};
                 }
                 // var temp= scope.obj;
                 var temp = scope.obj;
                 if(scope.required===true && _.isEmpty(scope.obj)) {
                     ngModelCtrl.$setValidity('required', true);
-                     _.set(scope, 'invali', ngModelCtrl.$isEmpty());
                 }
 
                 if (scope.cv) {
@@ -544,6 +542,7 @@
                         }
                     }
                     if(scope.required) {
+                        console.log(ngModelCtrl);
                         _.set(scope, 'invali', ngModelCtrl.$invalid);
                     }
                 };

@@ -5,15 +5,15 @@
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="codeForm" role="form" id="addCodeForm" novalidate>
         <div ng-repeat="(index,obj) in parent.codes track by $index">
-            <ng-form name="form-{{index}}" ng-class="">
+            <ng-form name="form" ng-class="{'warning' : form.$flagged && form.$pristine}">
             <div class="row">
-
-
                 <div class="col-md-1">
                     <delete-button delete="obj" path="codes"></delete-button>
                 </div>
+                <div class="col-md-9">
+                    <div class ="row">
                 <div class="col-md-2">
-                    <dropdown-selecto field="codeSystem" cv="CODE_SYSTEM" ng-model="obj.codeSystem" label="Code System" required="true" formname=codeForm></dropdown-selecto>
+                    <dropdown-selecto field="codeSystem" cv="CODE_SYSTEM" ng-model="obj.codeSystem" label="Code System" required="true" formname=form></dropdown-selecto>
 <!--                {{obj.codeSystem.$invalid}}<br>
                     /////<br>
                 {{codeObjForm.codeSystem.$error}}<br>
@@ -24,7 +24,7 @@
                     <dropdown-selecto ng-model="obj.$$systemCategory" field="$$systemCategory" cv="CODE_SYSTEM_TYPE" filter="obj.codeSystem" label="Code System Type" class="disabled"></dropdown-selecto>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-selecto  ng-model="obj.type" field="type" cv="CODE_TYPE"></dropdown-selecto>
+                    <dropdown-selecto  ng-model="obj.type" field="type" cv="CODE_TYPE" formname=form></dropdown-selecto>
                 </div>
                 <div class="col-md-2">
                     <text-view-edit obj="obj" field="code" form = "codeForm" filter = "obj.codeSystem" validator="parse(model)" ></text-view-edit>
@@ -32,27 +32,45 @@
                                             <span class={{err.class}}>{{err.message}}</span>
                                         </div>-->
                 </div>
-                <div class="col-md-2 url">
-                    <text-view-edit obj="obj" field="url"></text-view-edit>
-                </div>
+                <!--<div class="col-md-2 url">-->
+                    <!--<text-view-edit obj="obj" field="url"></text-view-edit>-->
+                <!--</div>-->
+                        </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <text-box ng-model="obj.url" field="url" rows=1></text-box>
+                        </div>
+                        </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <text-box ng-model="obj.comments" field="comments" rows=2></text-box>
+                        </div>
+                        </div>
+                    </div>
+
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" type="access" divid=code-{{index}}></form-selector>
                 </div>
+
                 <div class="col-md-1 pull-right">
                     <reference-modal-button referenceobj= "obj" parent = "parent" edit = "true"></reference-modal-button>
 
                 </div>
             </div>
-            <div class = "row">
-                <div class="col-md-6 col-md-offset-1">
-                    <form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"
-                                   type="textbox" divid=code-{{index}} mode="edit"></form-selector>
-                </div>
-            </div>
+            <!--<div class = "row">-->
+                <!--<div class="col-md-6 col-md-offset-1">-->
+                    <!--<form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"-->
+                                   <!--type="textbox" divid=code-{{index}} mode="edit"></form-selector>-->
+                <!--</div>-->
+            <!--</div>-->
             <div class=code-{{index}}></div>
+                {{form.$invalid}}//
+                {{form.$flagged}}
+                {{index}}
                 </ng-form>
             <hr>
         </div>
+
 </form>
 <br>
         <br>

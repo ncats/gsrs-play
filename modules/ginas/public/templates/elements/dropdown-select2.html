@@ -1,8 +1,11 @@
-<div ng-class="{'has-error' : !obj.display && invali}">
+<div ng-class="{'has-error' : formname[field].$invalid}">
     <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span>
-    </label><br>
+    </label>
+    <br>
     <a ng-hide="obj.$editing || obj.display =='Other'" class="ng-hide" aria-hidden="true" ng-click="editing(obj);">{{obj.display}}</a>
-    <span class= "float-right" ng-if="obj.changed==true"><a ng-click="undo()"><i class="fa fa-undo danger" aria-hidden="true" uib-tooltip="Undo"></i></a></span>
+    <span class= "float-right" ng-if="obj.changed==true">
+        <a ng-click="undo()"><i class="fa fa-undo danger" aria-hidden="true" uib-tooltip="Undo"></i></a>
+    </span>
     <select ng-show="obj.$editing || !obj.display  || !obj.display =='Other'"
             class="form-control"
             ng-model= obj
@@ -13,7 +16,8 @@
             title="{{::field}}"
             name="{{::field}}"
             id ="{{::field}}"
-            aria-labelledby="{{::field}}-label">
+            aria-labelledby="{{::field}}-label"
+            ng-required="required">
         <option class= "text-capitalize" value="" selected>{{label || field}}...</option>
     </select>
     <input type="text" class="form-control" name ="{{::field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();"
