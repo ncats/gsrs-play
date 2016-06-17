@@ -1,5 +1,5 @@
-<div>
-    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label><br>
+<div ng-class="{'has-error' : formname[field].$invalid}">
+<label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label><br>
     <a ng-click="edit= !edit" ng-show="!edit">{{obj[field]}}</a>
         <input ng-show="!obj[field] || edit" type="text" class="form-control" ng-model=obj[field] ng-init ="validatorFunction()" ng-change="validatorFunction()" ng-blur="edit = !edit" ng-model-options="{ debounce: 500 }"
                placeholder ="{{label || field}}" title="{{::field}}" id="{{::name}}-{{::field}}" name="{{::field}}" aria-labelledby="{{::field}}-label"/>

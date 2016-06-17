@@ -831,6 +831,52 @@
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.edit = false;
+
+                if(scope.required===true && _.isEmpty(scope.obj)) {
+                    ngModelCtrl.$setValidity('required', true);
+                }
+
+                scope.editing = function () {
+                    scope.edit = !scope.edit;
+                };
+                scope.validatorFunction = function () {
+                    scope.errorMessages = scope.validator({model: scope.obj});
+                };
+
+                if (scope.filter) {
+                    var filter = scope.filter;
+                    scope.$watch('filter', function (newValue) {
+                        if (!_.isUndefined(newValue)) {
+                            scope.errorMessages = scope.validator({model: scope.obj});
+                        }
+                    });
+                }
+            }
+        };
+    });
+
+    ginasFormElements.directive('textViewEdito', function () {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/elements/text-view-edit.html",
+            replace: true,
+            scope: {
+                obj: '=ngModel',
+                field: '@',
+                label: '@',
+                form: '=?',
+                filter: '=',
+                filterFunction: '&',
+                validator: '&',
+                required: '=?'
+            },
+            link: function (scope, element, attrs, ngModelCtrl) {
+                scope.edit = false;
+
+                if(scope.required===true && _.isEmpty(scope.obj)) {
+                    ngModelCtrl.$setValidity('required', true);
+                }
+
                 scope.editing = function () {
                     scope.edit = !scope.edit;
                 };
