@@ -6,7 +6,7 @@
         <form class="form-horizontal" name="codeForm" role="form" id="addCodeForm" novalidate>
             <div ng-repeat="(index,obj) in parent.codes">
                 <ng-form name="form">
-                    <div ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                    <div class = "form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
                                 <delete-button delete="obj" path="codes"></delete-button>
@@ -43,15 +43,17 @@
                                     <!--<text-view-edit obj="obj" field="url"></text-view-edit>-->
                                     <!--</div>-->
                                 </div>
+                                <br>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <text-view-edito ng-model="obj.url" field="url" required="true"></text-view-edito>
+                                        <text-view-edito ng-model="obj.url" field="url" required="true" formname=form></text-view-edito>
                                     </div>
                                 </div>
+                                <br>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <text-box-view-edit ng-model="obj.comments" field="comments"
-                                                            rows=2></text-box-view-edit>
+                                        <text-box-view-edito ng-model="obj.comments" field="comments"
+                                                            rows=2 formname=form></text-box-view-edito>
                                     </div>
                                 </div>
                             </div>
@@ -74,9 +76,6 @@
                         <!--</div>-->
                         <!--</div>-->
                         <div class=code-{{index}}></div>
-                        {{form.$invalid}}//
-                        {{form.$flagged}}//
-                        {{form.$invalid && form.$flagged}}
                     </div>
                 </ng-form>
                 <hr>

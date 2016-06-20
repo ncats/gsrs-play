@@ -777,6 +777,80 @@
             }
         };
     });
+    ginasFormElements.directive('textBoxViewEdito', function () {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/elements/text-box-view-edit2.html",
+            replace: true,
+            require: '?ngModel',
+            scope: {
+                formname: '=',
+                obj: '=ngModel',
+                field: '@',
+                label: '@',
+                name: '=',
+                validator: '&',
+                changeValidator: '&',
+                required: '=?'
+            },
+            link: function (scope, element, attrs, ngModelCtrl) {
+                scope.edit = true;
+
+                    if(scope.required===true && _.isEmpty(scope.obj)) {
+                        ngModelCtrl.$setValidity('required', true);
+                    }
+
+                    scope.editing = function () {
+                        scope.edit = !scope.edit;
+                    };
+                    
+                    
+               /* if(_.isUndefined(scope.obj)) {
+                 scope.obj = {};
+                    _.set(scope.obj, '$editing', true);
+                    console.log(scope.obj);
+                }
+
+
+                if(scope.required===true && _.isEmpty(scope.obj)) {
+                    ngModelCtrl.$setValidity('required', true);
+                }
+*/
+                if (_.isUndefined(scope.rows)) {
+                    scope.rows = 7;
+                }
+                
+               /* scope.editing = function (obj) {
+                    console.log(scope);
+                    console.log("editing");
+                    console.log(obj);
+                    scope.errors = [];
+                    try {
+                        scope.validator(obj);
+                        if (_.has(obj, '$editing')) {
+                            obj.$editing = !obj.$editing;
+                        } else {
+                            _.set(obj, '$editing', true);
+                        }
+                    } catch (e) {
+                        scope.errors.push(e);
+                    }
+                };*/
+                scope.errors = [];
+
+                if (!scope.validator) {
+                    scope.validator = function () {
+                    };
+                }
+
+                if (!scope.changeValidator) {
+                    scope.changeValidator = function () {
+                    };
+                }
+
+            }
+        };
+    });
 
     ginasFormElements.directive('textInput', function (filterService) {
         return {
@@ -830,15 +904,12 @@
                 required: '=?'
             },
             link: function (scope, element, attrs, ngModel) {
-                scope.edit = false;
+                scope.edit = true;
 
                 if(scope.required===true && _.isEmpty(scope.obj)) {
                     ngModelCtrl.$setValidity('required', true);
                 }
 
-                scope.editing = function () {
-                    scope.edit = !scope.edit;
-                };
                 scope.validatorFunction = function () {
                     scope.errorMessages = scope.validator({model: scope.obj});
                 };
@@ -858,9 +929,11 @@
     ginasFormElements.directive('textViewEdito', function () {
         return {
             restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-view-edit.html",
+            templateUrl: baseurl + "assets/templates/elements/text-view-edit2.html",
             replace: true,
+            require: '?ngModel',
             scope: {
+                formname: '=',
                 obj: '=ngModel',
                 field: '@',
                 label: '@',
@@ -871,15 +944,12 @@
                 required: '=?'
             },
             link: function (scope, element, attrs, ngModelCtrl) {
-                scope.edit = false;
+                scope.edit = true;
 
                 if(scope.required===true && _.isEmpty(scope.obj)) {
                     ngModelCtrl.$setValidity('required', true);
                 }
 
-                scope.editing = function () {
-                    scope.edit = !scope.edit;
-                };
                 scope.validatorFunction = function () {
                     scope.errorMessages = scope.validator({model: scope.obj});
                 };

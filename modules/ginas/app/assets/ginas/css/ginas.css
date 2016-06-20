@@ -1122,3 +1122,8 @@ pre.fixedsize{
 .subrefThumb{
     min-width: 150px;
  }
+
+.form-div{
+    padding-top: 1%;
+    padding-bottom: 1%;
+}

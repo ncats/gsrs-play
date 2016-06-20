@@ -285,8 +285,6 @@
             scope: {
                 parent: '='
             },
-            link: function (scope, element, attrs) {
-                scope.errors = [];
 
                 if(scope.codeForm.form && scope.codeForm.form.$pristine) {
                     scope.codeForm.form.$pending = true;
@@ -295,7 +293,7 @@
                 scope.parse = function (code) {
                     if (!_.isUndefined(code) || !_.isNull(code)) {
                         if (_.isEmpty(code)) {
-                            scope.errors.push({text: 'no code system yet', class: 'warning'});
+                            scope.codeForm.form.code.errors.push({text: 'no code system yet', class: 'warning'});
                         }
 
                         var codeSystem;
@@ -309,19 +307,18 @@
                             codeSystem = code.codeSystem.value || code.codeSystem;
                             codeValue = code.code;
                         }
-                        scope.errors = [];
                         var valid = validatorFactory.validate(codeSystem, codeValue);
                         if (valid == false) {
-                            scope.errors.push({text: 'invalid', class: 'danger'});
+                            scope.codeForm.form.code.errors.push({text: 'invalid', class: 'danger'});
                         } else {
-                            scope.errors.push({text: 'valid', class: 'success'});
+                            scope.codeForm.form.code.errors.push({text: 'valid', class: 'success'});
                         }
                     } else {
-                        if (scope.errors.length < 1) {
-                            scope.errors.push({text: 'no code system yet', class: 'warning'});
+                        if (scope.codeForm.form.code.errors.length < 1) {
+                            scope.codeForm.form.code.errors.push({text: 'no code system yet', class: 'warning'});
                         }
                     }
-                    return scope.errors;
+                    return scope.codeForm.form.code.errors;
                 };
 
 

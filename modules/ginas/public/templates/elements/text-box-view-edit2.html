@@ -1,0 +1,21 @@
+<div>
+        <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
+        <a ng-hide="edit" ng-click="edit = !edit">
+        <pre ng-if = "!edit">{{obj}}</pre>
+        </a>
+        <textarea 
+        		ng-change="changeValidator(obj)" 
+        		ng-show="edit"
+        		type="text" 
+        		class="form-control" 
+        		ng-model= obj
+				ng-blur="edit = !edit"
+               placeholder ="{{label || field}}" title="{{::field}}" name="{{::field}}"></textarea>
+		
+		<span class="danger" ng-repeat="err in errors" >
+			{{err}}
+		</span>
+</div>
+
+
+
