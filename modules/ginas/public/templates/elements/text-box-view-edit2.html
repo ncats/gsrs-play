@@ -1,17 +1,29 @@
-<div>
-        <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
+<div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
+<label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
         <a ng-hide="edit" ng-click="edit = !edit">
         <pre ng-if = "!edit">{{obj}}</pre>
         </a>
         <textarea 
-        		ng-change="changeValidator(obj)" 
+				ng-init ="validatorFunction()"
+				ng-change="validatorFunction()"
         		ng-show="edit"
         		type="text" 
         		class="form-control" 
         		ng-model= obj
 				ng-blur="edit = !edit"
-               placeholder ="{{label || field}}" title="{{::field}}" name="{{::field}}"></textarea>
-		
+				ng-required="required"
+               placeholder ="{{label || field}}"
+				title="{{::field}}"
+				name="{{::field}}"></textarea>
+
+	<div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+		<div ng-message="required" class ="danger">required field</div>
+		<div ng-repeat="errorMessage in errorMessages">
+			<!-- use ng-message-exp for a message whose key is given by an expression -->
+			<div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
+		</div>
+	</div>
+
 		<span class="danger" ng-repeat="err in errors" >
 			{{err}}
 		</span>

@@ -1,4 +1,4 @@
-<div ng-class="{'has-error' : formname[field].$invalid}">
+<div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
     <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span>
     </label>
     <br>
@@ -22,4 +22,12 @@
     </select>
     <input type="text" class="form-control" name ="{{::field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();"
            aria-labelledby="{{::field}}-label" ng-if="obj.display=='Other'"/>
+
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+        <div ng-message="required" class ="danger">required field</div>
+        <div ng-repeat="errorMessage in errorMessages">
+            <!-- use ng-message-exp for a message whose key is given by an expression -->
+            <div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
+        </div>
+    </div>
 </div>

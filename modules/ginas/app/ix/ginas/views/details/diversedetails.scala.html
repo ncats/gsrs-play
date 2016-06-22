@@ -11,8 +11,11 @@
     <div class="row info" id="definition">
     	<div class="col-md-5">
     	<br>
-    	<table class="table table-striped keyvalue">
-    	@if(sub.structurallyDiverse.sourceMaterialClass != null && !sub.structurallyDiverse.sourceMaterialClass.equals("../../../../../../ncats/public")) {<tr><td>Source Materials Class</td><td>@sub.structurallyDiverse.sourceMaterialClass</td></tr>}
+            <table class="table table-striped keyvalue">
+            @if(sub.structurallyDiverse.sourceMaterialClass != null) {
+                <tr><td>Source Materials Class</td><td col-span="6"> @GinasApp.getCV.getDisplay("SOURCE_MATERIAL_CLASS", sub.structurallyDiverse.sourceMaterialClass)</td></tr>
+            }
+    	@if(sub.structurallyDiverse.sourceMaterialClass != null && !sub.structurallyDiverse.sourceMaterialClass.equals("../../../../../../ncats/public")) {}
         @if(sub.structurallyDiverse.sourceMaterialType != null && !sub.structurallyDiverse.sourceMaterialType.equals("../../../../../../ncats/public")) {<tr><td>Source Materials Type</td><td>@sub.structurallyDiverse.sourceMaterialType</td></tr>}
         @if(sub.structurallyDiverse.sourceMaterialState != null && !sub.structurallyDiverse.sourceMaterialState.equals("../../../../../../ncats/public")) {<tr><td>Source Materials State</td><td>@sub.structurallyDiverse.sourceMaterialState</td></tr>}
         </table>

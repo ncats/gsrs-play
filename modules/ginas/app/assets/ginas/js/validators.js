@@ -67,33 +67,4 @@ angular.module('validatorListener', [])
 			}
 		});
 return codeSystemValidators;
-	})
-.service('validatorService', function(){
-		//this should be use for the form to force an object to validate itself.
-
-//follow this pattern?  would the input field need to be registered with the service?
-
-/*
-
-	//this is solely to set the molfile in the sketcher externally
-	ginasApp.service('molChanger', function ($http, CVFields, UUID) {
-		var sketcher;
-		this.setSketcher = function (sketcherInstance) {
-			sketcher = sketcherInstance;
-		};
-		this.setMol = function (mol) {
-			sketcher.setMolfile(mol);
-		};
-
-		this.getMol = function () {
-			return sketcher.getMolfile();
-		};
-
-		this.getSmiles = function () {
-			return sketcher.getSmiles();
-		};
-	});*/
-	
-	
-	
 	});

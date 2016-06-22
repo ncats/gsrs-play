@@ -13,15 +13,10 @@
                             </div>
                             <div class="col-md-9">
                                 <div class="row">
-                                    <div class="col-md-3">
+<!--                                    <div class="col-md-3">
                                         <dropdown-selecto field="codeSystem" cv="CODE_SYSTEM" ng-model="obj.codeSystem"
                                                           label="Code System" required="true"
                                                           formname=form></dropdown-selecto>
-                                        <!--                {{obj.codeSystem.$invalid}}<br>
-                                                            /////<br>
-                                                        {{codeObjForm.codeSystem.$error}}<br>
-                                                               /////<br>
-                                                        {{codeObjForm.$error}}-->
                                     </div>
                                     <div class="col-md-3">
                                         <dropdown-selecto ng-model="obj.$$systemCategory" field="$$systemCategory"
@@ -31,51 +26,41 @@
                                     <div class="col-md-3">
                                         <dropdown-selecto ng-model="obj.type" field="type" cv="CODE_TYPE"
                                                           formname=form></dropdown-selecto>
-                                    </div>
+                                    </div>-->
                                     <div class="col-md-3">
-                                        <text-view-edit obj="obj" field="code" form="codeForm" filter="obj.codeSystem"
-                                                        validator="parse(model)"></text-view-edit>
-                                        <!--                    <div ng-repeat="err in errors">
-                                                                <span class={{err.class}}>{{err.message}}</span>
-                                                            </div>-->
-                                    </div>
-                                    <!--<div class="col-md-2 url">-->
-                                    <!--<text-view-edit obj="obj" field="url"></text-view-edit>-->
-                                    <!--</div>-->
-                                </div>
-                                <br>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <text-view-edito ng-model="obj.url" field="url" required="true" formname=form></text-view-edito>
+                                        <gsrs-input type = "text" ng-model="obj.code" field="code" formname=form filter="obj.codeSystem"
+                                                        validator="parse(model)"></gsrs-input>
                                     </div>
                                 </div>
                                 <br>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <text-box-view-edito ng-model="obj.comments" field="comments"
-                                                            rows=2 formname=form></text-box-view-edito>
+                                        <gsrs-input type = "text" ng-model="obj.url" field="url" required="true" formname=form></gsrs-input>
                                     </div>
                                 </div>
-                            </div>
+                                <br>
+                                <!--   <div class="row">
+                                       <div class="col-md-12">
+                                           <gsrs-input type ="text-box" ng-model="obj.comments" field="comments"
+                                                               rows=2 formname=form required="true"></gsrs-input>
+                                       </div>
+                                   </div>
+                               </div>
 
-                            <div class="col-md-1 pull-right">
-                                <form-selector referenceobj="obj" parent="parent" type="access"
-                                               divid=code-{{index}}></form-selector>
-                            </div>
+                               <div class="col-md-1 pull-right">
+                                   <form-selector referenceobj="obj" parent="parent" type="access"
+                                                  divid=code-{{index}}></form-selector>
+                               </div>
 
-                            <div class="col-md-1 pull-right">
-                                <reference-modal-button referenceobj="obj" parent="parent"
-                                                        edit="true"></reference-modal-button>
+                               <div class="col-md-1 pull-right">
+                                   <reference-modal-button referenceobj="obj" parent="parent"
+                                                           edit="true"></reference-modal-button>
 
-                            </div>
+                               </div>-->
                         </div>
-                        <!--<div class = "row">-->
-                        <!--<div class="col-md-6 col-md-offset-1">-->
-                        <!--<form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"-->
-                        <!--type="textbox" divid=code-{{index}} mode="edit"></form-selector>-->
-                        <!--</div>-->
-                        <!--</div>-->
+                            </div>
                         <div class=code-{{index}}></div>
+{{form}}
                     </div>
                 </ng-form>
                 <hr>

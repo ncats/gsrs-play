@@ -4,9 +4,7 @@
         <input ng-show="edit || !obj"
                type="text"
                class="form-control"
-               ng-model=obj
-               ng-init ="validatorFunction()"
-               ng-change="validatorFunction()"
+               ng-model= obj
                ng-blur="edit = !edit"
                ng-required="required"
                placeholder ="{{label || field}}"
@@ -14,17 +12,16 @@
                id="{{::name}}-{{::field}}"
                name="{{::field}}"
                aria-labelledby="{{::field}}-label"/>
-    {{formname[field]}}<br>
-    {{formname}}
-
+<br>
+    field error<br>
+    {{formname[field].$error}}
     <div ng-messages="formname[field].$error" role="alert">
         <div ng-message="required" class ="danger">required field</div>
         <div ng-repeat="errorMessage in errorMessages">
             <!-- use ng-message-exp for a message whose key is given by an expression -->
-            <div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
+            <div ng-class="errorMessage.type">{{ errorMessage.text }}</div>
         </div>
     </div>
-    </form>
 </div>
 
 

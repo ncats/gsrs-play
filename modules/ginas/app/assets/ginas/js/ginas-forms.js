@@ -285,40 +285,43 @@
             scope: {
                 parent: '='
             },
-
-                if(scope.codeForm.form && scope.codeForm.form.$pristine) {
-                    scope.codeForm.form.$pending = true;
-                }
-
+            link: function (scope, element, attrs) {
+                console.log(scope.codeForm.form);
+                scope.f= angular.toJson(scope.codeForm.form);
                 scope.parse = function (code) {
-                    if (!_.isUndefined(code) || !_.isNull(code)) {
-                        if (_.isEmpty(code)) {
-                            scope.codeForm.form.code.errors.push({text: 'no code system yet', class: 'warning'});
-                        }
+                    var errors =[];
+                    console.log(code);
+                    /* if (!_.isUndefined(code) || !_.isNull(code)) {
+                     if (_.isEmpty(code)) {
+                     scope.errors.push({text: 'no code system yet', class: 'warning'});
+                     }
 
-                        var codeSystem;
-                        var codeValue;
-                        //this is for adding a new code
-                        if (scope.code && !_.isEmpty(scope.code.codeSystem)) {
-                            codeSystem = scope.code.codeSystem.value;
-                            codeValue = code;
-                        } else {
-                            //this is for editing one
-                            codeSystem = code.codeSystem.value || code.codeSystem;
-                            codeValue = code.code;
-                        }
-                        var valid = validatorFactory.validate(codeSystem, codeValue);
-                        if (valid == false) {
-                            scope.codeForm.form.code.errors.push({text: 'invalid', class: 'danger'});
-                        } else {
-                            scope.codeForm.form.code.errors.push({text: 'valid', class: 'success'});
-                        }
-                    } else {
-                        if (scope.codeForm.form.code.errors.length < 1) {
-                            scope.codeForm.form.code.errors.push({text: 'no code system yet', class: 'warning'});
-                        }
-                    }
-                    return scope.codeForm.form.code.errors;
+                     var codeSystem;
+                     var codeValue;
+                     //this is for adding a new code
+                     console.log(scope);
+                     if (code && !_.isEmpty(code.codeSystem)) {
+                     codeSystem = scope.code.codeSystem.value;
+                     codeValue = code;
+                     } else {
+                     //this is for editing one
+                     codeSystem = code.codeSystem.value || code.codeSystem;
+                     codeValue = code.code;
+                     }
+                     var valid = validatorFactory.validate(codeSystem, codeValue);
+                     console.log(valid);
+                     if (valid == false) {
+                     scope.errors.push({text: 'invalid', type: 'danger'});
+                     } else {
+                     scope.errors.push({text: 'valid', type: 'success'});
+                     }
+                     } else {
+                     if (scope.errors.length < 1) {
+                     scope.errors.push({text: 'no code system yet', type: 'warning'});
+                     }*/
+                    errors.push({text: 'no code system yet', type: 'error'});
+                    console.log("returning");
+                    return errors;
                 };
 
 
@@ -332,46 +335,11 @@
                     var temp ={};
                     if(scope.parent.codes && scope.parent.codes.length>0) {
                         console.log(scope.codeForm);
-                        if(scope.codeForm.form && scope.codeForm.form.$pristine) {
+                        if(scope.codeForm.form && scope.codeForm.form.$invalid) {
                             console.log("adding flagged");
                             scope.codeForm.form.$flagged = true;
-                        }else{
-                            console.log("adding a new code after deleting");
-                            //scope.codeForm.form.$flagged = false;
+                        }
 
-                            //  scope.codeForm.$setDirty(false);
-                        }
-                      /*  console.log(form);
-                        var subforms = [];
-                        //this makes an array of the subforms (i.e. list elements), excluding the current object;
-                        for(var i=0; i<scope.parent.codes.length; i++){
-                            var name = 'form-'+i;
-                            console.log(form[name]);
-                            subforms.push(form[name]);
-                        }
-                        console.log(subforms);
-                        _.forEach(subforms, function(sub) {
-                            console.log(sub);
-                            _.forEach(sub, function (value, key) {
-                                if (typeof value === 'object' && value.hasOwnProperty('$modelValue')) {
-                                    console.log(value.$name);
-                                    console.log(value);
-                                    if (value.$isEmpty) {
-                                        console.log("emply");
-                                        value.$setValidity('required', true);
-                                    }
-                                    sub.$setDirty(true);
-                                }
-                                if(sub.$dirty && sub.$invalid){
-                                   // sub.$setDirty(true);
-                                    scope.codeForm[sub.$name].$dirty=sub.$dirty;
-                                }
-                            });
-                        });
-                        //first this needs to re-validate each of the previous codes, probably through the form
-                        console.log(scope);
-*/
-                     //   scope.validate();
                         scope.parent.codes.push(temp);
                     }else{
                         _.set(scope.parent, 'codes', [] );
@@ -380,7 +348,7 @@
                     console.log(scope);
                 };
 
-                scope.validateFunction = function(obj, hi){
+               /* scope.validateFunction = function(obj, hi){
                     console.log("code form validation function");
                     console.log(obj);
                     if(_.isEmpty(obj)||_.isNull(obj.codeSystem)){
@@ -397,7 +365,7 @@
                         return scope.codeForm.codeObjForm.codeSystem.$invalid;
                     }
                  //   return scope.codeForm.codeObjForm.codeSystem.$invalid;
-                }
+                }*/
             }
         };
     });
@@ -1661,7 +1629,9 @@
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
                 scope.validateConnectivity = function (obj) {
+                    console.log("validatying");
                     var map = polymerUtils.sruDisplayToConnectivity(obj._displayConnectivity);
+                    console.log(map);
                 }
             }
         };

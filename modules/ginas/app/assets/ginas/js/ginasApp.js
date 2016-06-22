@@ -1800,7 +1800,6 @@
 				};
 
                 scope.updateMol = function () {
-                    console.log("update");
                         var url = baseurl + 'structure';
                         $http.post(url, scope.mol, {
                             headers: {
@@ -1847,17 +1846,11 @@
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
                 scope.sketcher.options.ondatachange = function () {
-                    console.log("data change");
                     scope.mol = scope.sketcher.getMolfile();
-                  //  console.log(scope.sketcher.getSmiles());
-
-                    console.log(scope);
                     if(attrs.ajax =='false') {
                         $timeout(function() {
                             _.set(scope.parent, 'q', scope.sketcher.getSmiles());
                         }, 0);
-                        //scope.$apply(function () {
-                        //});
                     }else{
                         scope.updateMol();
                     }
@@ -1882,7 +1875,6 @@
                 }
 
                 if (structureid) {
-                    console.log("dtructure id ");
                     var url = baseurl + 'api/v1/structures/' + structureid;
                     $http.get( url, {cache: true}).then(function (response) {
                         scope.sketcher.setMolfile(response.data.molfile);

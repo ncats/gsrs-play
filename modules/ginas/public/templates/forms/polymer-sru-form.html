@@ -24,7 +24,7 @@
                     <form-selector referenceobj= "obj" formname="sruForm" field ="amount" type = "amount" divid=sru-{{index}}></form-selector>
                 </div>
                 <div class="col-md-3">
-                    <text-box-view-edit validator="validateConnectivity(obj)" obj="obj" label="Connectivity" field="_displayConnectivity"></text-box-view-edit>
+                    <gsrs-text-box ng-model="obj._displayConnectivity" validator="validateConnectivity(obj)" label="Connectivity" field="_displayConnectivity"></gsrs-text-box>
                 </div>
 
             </div>

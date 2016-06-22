@@ -484,7 +484,7 @@
                     selected: false
                 }];
                 if (_.isUndefined(scope.obj)) {
-                 //   scope.obj = {};
+                    //   scope.obj = {};
                 }
                 // var temp= scope.obj;
                 var temp = scope.obj;
@@ -777,77 +777,63 @@
             }
         };
     });
-    ginasFormElements.directive('textBoxViewEdito', function () {
+    ginasFormElements.directive('gsrsTextBox', function () {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/text-box-view-edit2.html",
             replace: true,
             require: '?ngModel',
             scope: {
+                //the actual object of the form -- used for validation
                 formname: '=',
+                //angular ng-model of obj.field type
                 obj: '=ngModel',
+                // text name of the field -- used for labels and firm field retrieval
                 field: '@',
+                //used if the label needs to display something other than the field
                 label: '@',
+                //name of the element
                 name: '=',
-                validator: '&',
-                changeValidator: '&',
+                //optional function passed in from the form directive and used to validate on init and change
+                validator: '&?',
+                //optional validation function that is passed in from the form. this only fires on blur, so it should be used if the regular validation fires too much
+                blurValidator: '&?',
+                //optional variable that enables required form validation
                 required: '=?'
             },
             link: function (scope, element, attrs, ngModelCtrl) {
-                scope.edit = true;
-
-                    if(scope.required===true && _.isEmpty(scope.obj)) {
-                        ngModelCtrl.$setValidity('required', true);
-                    }
-
-                    scope.editing = function () {
-                        scope.edit = !scope.edit;
-                    };
-                    
-                    
-               /* if(_.isUndefined(scope.obj)) {
-                 scope.obj = {};
-                    _.set(scope.obj, '$editing', true);
-                    console.log(scope.obj);
+                if(!_.isUndefined(scope.obj)){
+                    scope.edit = false;
+                }else {
+                    scope.edit = true;
                 }
-
 
                 if(scope.required===true && _.isEmpty(scope.obj)) {
                     ngModelCtrl.$setValidity('required', true);
                 }
-*/
+
+                scope.editing = function () {
+                    scope.edit = !scope.edit;
+                };
+
                 if (_.isUndefined(scope.rows)) {
                     scope.rows = 7;
                 }
-                
-               /* scope.editing = function (obj) {
-                    console.log(scope);
-                    console.log("editing");
-                    console.log(obj);
-                    scope.errors = [];
-                    try {
-                        scope.validator(obj);
-                        if (_.has(obj, '$editing')) {
-                            obj.$editing = !obj.$editing;
-                        } else {
-                            _.set(obj, '$editing', true);
-                        }
-                    } catch (e) {
-                        scope.errors.push(e);
-                    }
-                };*/
+
                 scope.errors = [];
 
-                if (!scope.validator) {
-                    scope.validator = function () {
-                    };
-                }
+                scope.validatorFunction = function () {
+                    if (scope.validator) {
+                        scope.errorMessages = scope.validator({model: scope.obj});
+                    }
+                };
 
-                if (!scope.changeValidator) {
-                    scope.changeValidator = function () {
-                    };
-                }
-
+                scope.changeValidatorFunction = function () {
+                    if (scope.changeValidator) {
+                        console.log("change");
+                        scope.errorMessages = scope.changeValidator({model: scope.obj});
+                    }
+                };
             }
         };
     });
@@ -926,45 +912,103 @@
         };
     });
 
-    ginasFormElements.directive('textViewEdito', function () {
+    ginasFormElements.directive('gsrsInput', function ($templateRequest, $compile, $q) {
         return {
             restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-view-edit2.html",
+            //templateUrl: baseurl + "assets/templates/elements/text-view-edit2.html",
             replace: true,
             require: '?ngModel',
             scope: {
-                formname: '=',
-                obj: '=ngModel',
-                field: '@',
-                label: '@',
-                form: '=?',
-                filter: '=',
-                filterFunction: '&',
-                validator: '&',
-                required: '=?'
+                formname: '=', //the actual object of the form -- used for validation
+                obj: '=ngModel',  //angular ng-model of obj.field type
+                field: '@',  // text name of the field -- used for labels and form field retrieval
+                label: '@',  //used if the label needs to display something other than the field
+                filter: '=?', //form object to watch to filter values with. example: filtering code validation based on codeSystem type
+                filterFunction: '&', // function called to filter input variables
+                validator: '&?', //optional function passed in from the form directive and used to validate on init and change
+                blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur, so it should be used if the regular validation fires too much
+                required: '=?'  //optional variable that enables required form validation
             },
             link: function (scope, element, attrs, ngModelCtrl) {
-                scope.edit = true;
 
-                if(scope.required===true && _.isEmpty(scope.obj)) {
-                    ngModelCtrl.$setValidity('required', true);
+                //this function returns different templates, based on input. all above scope variables are callable
+                //doing this first makes sure everything is attached to the scope before compiling the directive
+                var templateurl;
+                switch (attrs.type) {
+                    case "text":
+                        templateurl = baseurl + "assets/templates/elements/text-view-edit2.html";
+                        break;
+                    case "text-box":
+                        templateurl = baseurl + "assets/templates/elements/text-box-view-edit2.html";
+                        break;
+                }
+                $templateRequest(templateurl).then(function (html) {
+                console.log(scope);
+                //this toggles the view of the element, an input if it is true, a link to toggle with the value if it is false
+                scope.edit = _.isUndefined(scope.obj);
+
+                //this watches the filter object -- if it is changed, the validation method needs to be re-run
+                if (attrs.filter) {
+                    console.log("adding filter");
+                    var filter = scope.filter;
+                    scope.$watch('filter', function (newValue) {
+                        console.log("validating from filter");
+                        if (!_.isUndefined(newValue)) {
+                            console.log("passing");
+                            scope.errorMessages = scope.validator({model: scope.obj});
+                        }
+                    });
                 }
 
-                scope.validatorFunction = function () {
-                    scope.errorMessages = scope.validator({model: scope.obj});
-                };
-
-                if (scope.filter) {
-                    var filter = scope.filter;
+               /* if (scope.filter) {
+                    console.log("adding filter");
+                    filter = scope.filter;
+                    console.log(filter);
                     scope.$watch('filter', function (newValue) {
                         if (!_.isUndefined(newValue)) {
                             scope.errorMessages = scope.validator({model: scope.obj});
                         }
                     });
                 }
+*/
+          /*      if(scope.validator) {
+                    ngModelCtrl.$asyncValidators.prime = function(modelValue) {
+                        var defer = $q.defer();
+                        scope.errorMessages = scope.validator({model:{model:modelValue,filter:scope.filter}});
+                        console.log(scope.errorMessages.length);
+                            if(!scope.errorMessages.length > 0) {
+                                defer.resolve();
+                            } else {
+                                defer.reject();
+                            }
+                        return defer.promise;
+                    };*/
+
+
+
+                    ngModelCtrl.$validators.validCharacters =  function(modelValue){
+                       console.log(modelValue);
+                        console.log(scope.filter);
+                      /*  scope.errorMessages = scope.validator({model:{model:modelValue,filter:scope.filter}});
+                        console.log(!scope.errorMessages.length > 0);*/
+                        return false;
+                    };
+                    console.log(ngModelCtrl);
+
+               // }
+
+
+
+                    var template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                });
             }
         };
     });
+
+
+
 
     ginasFormElements.directive('closeButton', function () {
         return {

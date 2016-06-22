@@ -42,6 +42,7 @@
                     @GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
                 }</td>
                 <td>@for(l <- n.languages) {
+                    @l.term
                     @GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
                 }
                 </td>
