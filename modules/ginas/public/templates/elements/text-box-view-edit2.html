@@ -1,8 +1,8 @@
 <div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
 <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
-        <a ng-hide="edit" ng-click="edit = !edit">
+        <span ng-hide="edit" ng-click="edit = !edit">
         <pre ng-if = "!edit">{{obj}}</pre>
-        </a>
+        </span>
         <textarea 
 				ng-init ="validatorFunction()"
 				ng-change="validatorFunction()"
@@ -23,10 +23,6 @@
 			<div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
 		</div>
 	</div>
-
-		<span class="danger" ng-repeat="err in errors" >
-			{{err}}
-		</span>
 </div>
 
 

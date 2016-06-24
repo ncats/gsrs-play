@@ -286,8 +286,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope.codeForm.form);
-                scope.f= angular.toJson(scope.codeForm.form);
                 scope.parse = function (code) {
                     var errors =[];
                     console.log(code);
@@ -319,15 +317,19 @@
                      if (scope.errors.length < 1) {
                      scope.errors.push({text: 'no code system yet', type: 'warning'});
                      }*/
-                    errors.push({text: 'no code system yet', type: 'error'});
-                    console.log("returning");
+                    if(_.isUndefined(code.formatter)){
+                        errors.push({text: 'no code system yet', type: 'warning'});
+                    }else {
+                        var valid = validatorFactory.validate(code.formatter.value, code.model);
+                        console.log(valid);
+                        if (valid == false) {
+                            errors.push({text: 'invalid', type: 'danger'});
+                        } else {
+                          //  errors.push({text: 'valid', type: 'success'});
+                        }
+                    }
                     return errors;
                 };
-
-
-                ///deleting a code from the form removes the "pending" class, and the form is not able to be reached/redrawn? again.
-//pending is not persisted, need a different flag, probably a custom one
-
 
 
                 scope.addAnother = function(form){
@@ -576,19 +578,20 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
                 scope.parent.$$diverseType = "whole";
-
-                if (scope.parent.structurallyDiverse.displayParts === 'WHOLE') {
-                    _.set(scope.parent, '$$diverseType', 'whole');
-                } else {
+                if (scope.parent.structurallyDiverse.part.length>0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
                     _.set(scope.parent, '$$diverseType', 'part');
+                    _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
                 }
-
                 scope.checkType = function () {
                     if (scope.parent.$$diverseType === 'whole') {
                         scope.parent.$$diverseType = 'whole';
                         _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                     } else {
-                        _.set(scope.parent.structurallyDiverse, 'part', []);
+                        if (scope.$$temp) {
+                            _.set(scope.parent.structurallyDiverse, 'part', scope.$$temp);
+                        } else {
+                            _.set(scope.parent.structurallyDiverse, 'part', []);
+                        }
                     }
                 };
             }

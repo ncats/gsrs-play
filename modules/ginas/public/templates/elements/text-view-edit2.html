@@ -1,6 +1,6 @@
 <div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
 <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label><br>
-    <a ng-click="edit= !edit" ng-show="!edit">{{obj}}</a>
+    <a ng-click="edit= !edit" ng-show="!edit" uib-tooltip ="click to edit">{{obj}}</a>
         <input ng-show="edit || !obj"
                type="text"
                class="form-control"
@@ -12,15 +12,13 @@
                id="{{::name}}-{{::field}}"
                name="{{::field}}"
                aria-labelledby="{{::field}}-label"/>
-<br>
-    field error<br>
-    {{formname[field].$error}}
-    <div ng-messages="formname[field].$error" role="alert">
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
         <div ng-message="required" class ="danger">required field</div>
-        <div ng-repeat="errorMessage in errorMessages">
-            <!-- use ng-message-exp for a message whose key is given by an expression -->
-            <div ng-class="errorMessage.type">{{ errorMessage.text }}</div>
-        </div>
+
+    </div>
+    <!--moving this outside of the above div seems to be more responsive-->
+    <div ng-repeat="errorMessage in errorMessages">
+        <div ng-class="errorMessage.type">{{ errorMessage.text }}</div>
     </div>
 </div>
 

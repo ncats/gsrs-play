@@ -89,16 +89,17 @@
                         <h2>Unknown substance class: @kind</h2>
                     }
                 }
-                <div ng-if="substance.substanceClass !== 'chemical'">
+               @* <div ng-if="substance.substanceClass !== 'chemical'">
                     <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
                     <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
                     <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-                </div>
+                </div>*@
+
                 <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
-                <relationship-form parent = substance ng-cloak></relationship-form>
+                @*<relationship-form parent = substance ng-cloak></relationship-form>
                 <note-form parent = substance ng-cloak></note-form>
                 <property-form parent = substance ng-cloak></property-form>
-                <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
+                <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>*@
                 <div class = "row info">
                     <div class="col-md-4">
                         <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSONBtn">

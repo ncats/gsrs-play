@@ -10,10 +10,11 @@ angular.module('filterListener', [])
                             CVFields.searchTags(scope.cv, newValue.systemCategory).then(function (response) {
                                 obj = response[0];
                                     scope.obj = obj;
-
+                                scope.edit = false;
                             });
                         }
                     }else{
+                        console.log("clearing object");
                         scope.obj ={};
                     }
                 });
@@ -33,65 +34,71 @@ angular.module('filterListener', [])
             _register: function (scope, edit) {
                 if (scope.field == "$$systemCategory") {
                     this._registerSystemCategoryFilter(scope, edit);
-                }
-                var filter = scope.filter;
-                scope.$watch('filter', function (newValue) {
-                    if (!_.isUndefined(newValue)) {
-                        var obj = {};
-                        //this returns the object to be filtered by the form
-                        if (scope.filterFunction) {
-                            var cv = scope.filterFunction({type: newValue});
-                            CVFields.getCV(cv).then(function (response) {
-                                //obj = [];
-                                scope.values = response.data.content[0].terms;
-                                if (scope.values.length == 1) {
-                                    obj = scope.values[0];
-                                }
-                                if(edit){
-                                    scope.obj[scope.field]= obj;
-                                }else{
-                                    scope.obj = obj;
-                                }
-                            });
-                        } else {
-                            //this filters within the VocabularyTerm object
-                            CVFields.getCV(scope.cv).then(function (response) {
-                                var filtered = [];
-                                var cv = response.data.content[0].terms;
-                                _.forEach(cv, function (term) {
-                                    if (!_.isNull(term.filters)) {
-                                        _.forEach(term.filters, function (f) {
-                                            //this will capture one filter hit
-                                            //need to figure out how to run compound filtering
+                }else {
+                    var filter = scope.filter;
+                    scope.$watch('filter', function (newValue) {
+                        console.log(newValue);
+                        if (!_.isUndefined(newValue)) {
+                            var obj = {};
+                            //this returns the object to be filtered by the form
+                            if (scope.filterFunction) {
+                                var cv = scope.filterFunction({type: newValue});
+                                CVFields.getCV(cv).then(function (response) {
+                                    //obj = [];
+                                    scope.values = response.data.content[0].terms;
+                                    if (scope.values.length == 1) {
+                                        obj = scope.values[0];
+                                    }
+                                    if (edit) {
+                                        console.log("setting field object");
 
-                                            if (_.isEqual(newValue.value, f.split('=')[1])) {
-                                                filtered.push(term);
-                                            }
-                                        });
+                                        scope.obj[scope.field] = obj;
+                                    } else {
+                                        console.log("setting object");
+
+                                        scope.obj = obj;
                                     }
                                 });
-                                if (filtered.length > 0) {
-                                    scope.values = filtered;
-                                } else {
-                                    // obj = {};
-                                    if (response.data.content[0].editable == true) {
-                                        cv = _.union(cv, other);
-                                    }
-                                    scope.values = cv;
-                                }
-                                if (scope.values.length == 1) {
-                                    obj = scope.values[0];
-                                }
-                                if(edit){
-                                    scope.obj[scope.field]= obj;
-                                }else{
-                                    scope.obj = obj;
-                                }
-                            });
-                        }
+                            } else {
+                                //this filters within the VocabularyTerm object
+                                CVFields.getCV(scope.cv).then(function (response) {
+                                    var filtered = [];
+                                    var cv = response.data.content[0].terms;
+                                    _.forEach(cv, function (term) {
+                                        if (!_.isNull(term.filters)) {
+                                            _.forEach(term.filters, function (f) {
+                                                //this will capture one filter hit
+                                                //need to figure out how to run compound filtering
 
-                    }
-                });
+                                                if (_.isEqual(newValue.value, f.split('=')[1])) {
+                                                    filtered.push(term);
+                                                }
+                                            });
+                                        }
+                                    });
+                                    if (filtered.length > 0) {
+                                        scope.values = filtered;
+                                    } else {
+                                        // obj = {};
+                                        if (response.data.content[0].editable == true) {
+                                            cv = _.union(cv, other);
+                                        }
+                                        scope.values = cv;
+                                    }
+                                    if (scope.values.length == 1) {
+                                        obj = scope.values[0];
+                                    }
+                                    if (edit) {
+                                        scope.obj[scope.field] = obj;
+                                    } else {
+                                        scope.obj = obj;
+                                    }
+                                });
+                            }
+
+                        }
+                    });
+                }
             },
 
             _unregister: function (field) {
