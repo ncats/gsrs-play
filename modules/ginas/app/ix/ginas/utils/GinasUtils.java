@@ -171,19 +171,12 @@ public class GinasUtils {
 		if (s.stereoComments != null)
 			c.setProperty("STEREOCHEMISTRY_COMMENTS", s.stereoComments);
 		if (s.stereoChemistry != null) {
-			switch (s.stereoChemistry) {
-				case ABSOLUTE:
-				case ACHIRAL:
-					break;
-				case EPIMERIC:
-				case MIXED:
-				case RACEMIC:
-				case UNKNOWN:
-					messages.add(GinasProcessingMessage
+			if(Structure.Stereo.EPIMERIC.equals(s.stereoChemistry) || 
+					Structure.Stereo.MIXED.equals(s.stereoChemistry) || 
+					Structure.Stereo.RACEMIC.equals(s.stereoChemistry) || 
+					Structure.Stereo.UNKNOWN.equals(s.stereoChemistry)) {
+				messages.add(GinasProcessingMessage
 							.WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
-					break;
-				default:
-					break;
 			}
 		}
 		if (s.smiles != null)
@@ -271,6 +264,7 @@ public class GinasUtils {
 							"JSON parse error: Unimplemented substance class:\"" + subclass.asText() + "\"");
 				}
 			} catch (JsonProcessingException e) {
+				e.printStackTrace();
 				throw new IllegalStateException("JSON parse error:" + e.getMessage());
 			}
 		} else {

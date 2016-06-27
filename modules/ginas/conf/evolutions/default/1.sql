@@ -867,7 +867,7 @@ create table ix_core_structure (
   molfile                   clob,
   smiles                    clob,
   formula                   varchar(255),
-  stereo                    integer,
+  stereo                    varchar(255),
   optical                   integer,
   atropi                    integer,
   stereo_comments           clob,
@@ -882,7 +882,6 @@ create table ix_core_structure (
   created_by_id             bigint,
   last_edited_by_id         bigint,
   record_access             varbinary(255),
-  constraint ck_ix_core_structure_stereo check (stereo in (0,1,2,3,4,5)),
   constraint ck_ix_core_structure_optical check (optical in (0,1,2,3,4)),
   constraint ck_ix_core_structure_atropi check (atropi in (0,1,2)),
   constraint pk_ix_core_structure primary key (id))

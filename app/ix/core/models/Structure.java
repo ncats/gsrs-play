@@ -1,5 +1,6 @@
 package ix.core.models;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -12,9 +13,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.AbstractValueDeserializer;
@@ -94,8 +103,58 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         }
     }*/
 
-    public enum Stereo {
-        ABSOLUTE, ACHIRAL, RACEMIC, MIXED, EPIMERIC, UNKNOWN;
+    public static class StereoSerializer extends JsonSerializer<Stereo> {
+    	public StereoSerializer(){
+    		super();
+    	}
+        @Override
+        public void serialize(Stereo value, JsonGenerator jgen, SerializerProvider provider) 
+          throws IOException, JsonProcessingException {
+            jgen.writeString(value.stereoType);
+        }
+    }
+    public static class StereoDeserializer extends JsonDeserializer<Stereo> {
+    	 public StereoDeserializer(){
+    		 super();
+    	 }
+        @Override
+        public Stereo deserialize(JsonParser jp, DeserializationContext ctxt) 
+          throws IOException, JsonProcessingException {
+            JsonNode node = jp.getCodec().readTree(jp);
+            return new Stereo(node.asText());
+        }
+    }
+    
+    @JsonSerialize(using = StereoSerializer.class)
+    @JsonDeserialize(using = StereoDeserializer.class)
+    public static class Stereo {
+        public static final Stereo ACHIRAL = new Stereo("ACHIRAL");
+        public static final Stereo ABSOLUTE = new Stereo("ABSOLUTE");
+        public static final Stereo RACEMIC = new Stereo("RACEMIC");
+        public static final Stereo EPIMERIC = new Stereo("EPIMERIC");
+        public static final Stereo MIXED = new Stereo("MIXED");
+        public static final Stereo UNKNOWN = new Stereo("UNKNOWN");
+        
+		private String stereoType;
+        
+        public Stereo(String stereo){
+        	this.stereoType=stereo;
+        }
+
+		public static Stereo valueOf(String asText) {
+			return new Stereo(asText);
+		}
+        
+		public boolean equals(Object o){
+			if(o instanceof Stereo){
+				return ((Stereo)o).stereoType.equals(this.stereoType);
+			}
+			return false;
+		}
+		
+		public String toString(){
+			return this.stereoType;
+		}
     }
 
     // optical activity
