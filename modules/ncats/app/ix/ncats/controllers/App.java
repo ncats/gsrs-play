@@ -1034,7 +1034,7 @@ public class App extends Authentication {
                 }
             }
         }
-        
+        dp = preProcessChemical(chem,dp);
         if(size>250 && !highlight){
             if(chem.hasStereoIsomers())
                 dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
@@ -2352,4 +2352,123 @@ public class App extends Authentication {
 
         return ok (results);
     }
+
+    private static DisplayParams preProcessChemical(Chemical c, DisplayParams dp){
+    	if(c!=null){
+			boolean compColor=false;
+			boolean fuse=false;
+			boolean hasRgroups=hasRGroups(c);
+			int rgroupColor=1;
+			
+			if(hasRgroups){
+				if(fuse){
+					compColor=colorChemicalComponents(c);
+					if(compColor){
+						dp=dp.withSpecialColor2();
+					}
+					if(fuseChemical(c)){
+						c.clean2D();
+					}
+				}
+				if(rgroupColor==1){
+					if(!compColor && mapChemicalRgroup(c)){
+						dp=dp.withSpecialColor();
+					}
+				}else if(rgroupColor==2){
+					if(!compColor && mapChemicalRgroup(c)){
+						dp=dp.withSpecialColorMON();
+					}
+				}
+			}
+			
+		}
+    	return dp;
+    }
+    public static boolean hasRGroups(Chemical c){
+		boolean r=false;
+		for(ChemicalAtom ca:c.getAtomArray()){
+			int rindex=	ca.getRgroupIndex();
+			if(rindex>0){
+				return true;
+			}else{
+				//r=true;
+				if(ca.getAlias().startsWith("_")){
+					ca.setRgroupIndex(Integer.parseInt(ca.getAlias().replace("_R", "")));
+					ca.setAlias(ca.getAlias().replace("_",""));
+					r= true;
+				}else{
+					//System.out.println(ca.getSymbol());
+				}
+			}
+		}
+		return r;
+	}
+    public static boolean colorChemicalComponents(Chemical c){
+		int[] mapAssign= new int[c.getAtomCount()];
+		int i = 2;
+		int con=80;
+		Chemical c2 = c.cloneChemical();
+		c2.generateAtomMap();
+		Iterable<Chemical> components = c2.getComponents();
+		for (Chemical c1 : components) {
+			for (ChemicalAtom ca : c1.getAtomArray()) {
+				//System.out.println(ca.getAtomMap());
+				mapAssign[ca.getAtomMap()-1] = i+con;
+			}
+			i--;
+		}
+		if(i>=1){
+			return false;
+		}
+		int aindex=0;
+		for(ChemicalAtom ca:c.getAtomArray()){
+			//System.out.println(aindex + "=" + mapAssign[aindex]);
+			ca.setAtomMap(mapAssign[aindex++]);
+		}
+		return true;
+	}
+    public static boolean mapChemicalRgroup(Chemical c){
+		boolean change=false;
+		for(ChemicalAtom ca:c.getAtomArray()){
+			int rindex=	ca.getRgroupIndex();
+			if(rindex>0){
+				ca.setAtomMap(rindex);
+				change=true;
+			}
+		}
+		return change;
+	}
+	public static boolean fuseChemical(Chemical c){
+		
+		
+		Map<Integer,ChemicalAtom> needLink = new HashMap<Integer,ChemicalAtom>();
+		Set<ChemicalAtom> toRemove=new HashSet<ChemicalAtom>();
+		
+		
+		for(ChemicalAtom ca:c.getAtomArray()){
+		
+			int rindex=	ca.getRgroupIndex();
+			
+			if(rindex>0){
+				ChemicalAtom newNeighbor=needLink.get(rindex);
+				if(newNeighbor==null){
+					needLink.put(rindex,ca);
+				}else{
+					needLink.remove(rindex);
+					for(ChemicalAtom ca2:ca.getNeighbors()){
+						for(ChemicalAtom ca3:newNeighbor.getNeighbors()){
+							c.addBond(ca2,ca3,1,0);
+						}
+					}
+					toRemove.add(ca);
+					toRemove.add(newNeighbor);
+					
+				}
+			}
+		}
+		for(ChemicalAtom ca:toRemove){
+			c.removeAtom(ca);
+		}
+		return toRemove.size()>0;
+	}
 }
