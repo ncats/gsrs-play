@@ -10,8 +10,9 @@
         @header
     }{
 
-        @defining(App.checkStatusDirect().getStatus().toString().equals("Running") &&
-                request().getQueryString("q") != null){searchFlag =>
+        @defining(	App.checkStatusDirect()!= null && 
+        		  	"Running".equals(App.checkStatusDirect().getStatus().toString()) &&
+                	request().getQueryString("q") != null){searchFlag =>
     	<div class="row">
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">
@@ -23,8 +24,6 @@
                     </div>
             		<div uib-collapse="isCollapsed" class="panel-group">
                         @ix.ncats.views.html.filters(facets, searchFlag)
-
-
                     </div>
                 </div>
 
