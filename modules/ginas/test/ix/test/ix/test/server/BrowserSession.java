@@ -41,7 +41,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         super(port);
         
         webClient = new WebClient();
-        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+      //  webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
     }
 
     public BrowserSession(GinasTestServer.User user, int port) {
@@ -49,7 +49,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
         try {
             webClient = new WebClient();
-            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+       //     webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
             HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
             //there is only 1 form but it isn't named..
             HtmlForm form = page.getForms().get(0);
