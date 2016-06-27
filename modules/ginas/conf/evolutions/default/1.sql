@@ -747,6 +747,7 @@ create table ix_ginas_relationship (
   qualification             varchar(255),
   related_substance_uuid    varchar(40),
   mediator_substance_uuid   varchar(40),
+  originator_uuid           varchar(255),
   type                      varchar(255),
   internal_version          bigint not null,
   constraint pk_ix_ginas_relationship primary key (uuid))

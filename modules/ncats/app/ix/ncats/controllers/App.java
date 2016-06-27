@@ -1542,7 +1542,7 @@ public class App extends Authentication {
                     if(idenType==null){
                     	idenType="GLOBAL";
                     }
-                    key = "sequence/"+getKey (query +idenType, Double.parseDouble(iden));
+                    key = "sequence/"+getKey (getSequence(query) +idenType, Double.parseDouble(iden));
                 }
                 else {
                 }
@@ -1615,7 +1615,8 @@ public class App extends Authentication {
                     if(idenType==null){
                     	idenType="GLOBAL";
                     }
-                    key = "sequence/"+getKey (query +idenType, Double.parseDouble(iden));
+                    key = "sequence/"+getKey (getSequence(query) +idenType, Double.parseDouble(iden));
+                   
                 }
                 else {
                 }
@@ -1711,6 +1712,7 @@ public class App extends Authentication {
          final int page, CutoffType ct, final SearchResultProcessor processor) {
         try {
             final String key = "sequence/"+getKey (seq + ct.toString(), identity);
+            //System.out.println("Key is:" + seq + ct.toString());
             return getOrElse
                 (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
                  new Callable<SearchResultContext> () {
@@ -1831,11 +1833,11 @@ public class App extends Authentication {
          */
         if(!context.finished() && isWaitSet()){
 
-        	System.out.println("Waiting for finished product for search:" + context.id);
+        	//System.out.println("Waiting for finished product for search:" + context.id);
         	context.getDeterminedFuture().get();
 
         }else{
-        	System.out.println("Not waiting for finished product for search:" + context.id);
+        	//System.out.println("Not waiting for finished product for search:" + context.id);
         }
         
         SearchResultContext.Status stat=context.getStatus();

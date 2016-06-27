@@ -49,6 +49,9 @@ public class Relationship extends CommonDataElementOfCollection {
     public SubstanceReference mediatorSubstance;
     
     
+    public String originatorUuid=null;
+    
+    
     @Indexable(facet=true,name="Relationships")
     @JSONEntity(title = "Relationship Type", format = JSONConstants.CV_RELATIONSHIP_TYPE, isRequired = true)
     public String type;
@@ -63,6 +66,7 @@ public class Relationship extends CommonDataElementOfCollection {
         return type;
     }
     
+    
     @PrePersist
     @PreUpdate
     public void fixNewLine(){
@@ -71,7 +75,9 @@ public class Relationship extends CommonDataElementOfCollection {
 		if (comments != null) {
 			comments = comments.replaceAll("[\\\\][\\\\]*n", "\n");
 		}
-
+		if(originatorUuid==null){
+			originatorUuid=this.getOrGenerateUUID().toString();
+		}
 		//System.out.println("Persisted");
     }
 }
