@@ -80,4 +80,42 @@ public class Relationship extends CommonDataElementOfCollection {
 		}
 		//System.out.println("Persisted");
     }
+   
+    /**
+     * Returns true if this relationship is made directly, and not from another relationship
+     * @return
+     */
+    @JsonIgnore
+    public boolean isGenerator(){
+    	if(this.originatorUuid==null||this.originatorUuid.equals(this.uuid.toString())){
+    		return true;
+    	}
+    	return false;
+    }
+    
+    /**
+     * Returns true if this relationship is invertable
+     * @return
+     */
+    @JsonIgnore
+    public boolean isInvertable(){
+    	if(this.fetchOwner().getOrGenerateUUID().toString().equals(this.relatedSubstance.refuuid)){
+    		return false;
+    	}
+    	String[] types=this.type.split("->");
+    	if(types.length>=2)return true;
+    	return false;
+    }
+    
+    public Relationship fetchInverseRelationship(){
+    	if(!isInvertable()){
+    		throw new IllegalStateException("Relationship :" + this.type + " is not invertable");
+    	}
+    	Relationship r=new Relationship();
+    	String[] types=this.type.split("->");
+    	r.type=types[1] + "->" + types[0];
+    	r.setAccess(this.getAccess());
+    	return r;
+    }
+    
 }
