@@ -36,8 +36,10 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			r.relatedSubstance=oldSub;
 			Reference ref1 = Reference.SYSTEM_GENERATED();
 			ref1.citation="Generated from relationship on:'" + oldSub.refPname + "'"; 
-			r.addReference(ref1);
+			r.addReference(ref1.getOrGenerateUUID().toString());
+			
 			newSub.relationships.add(r);
+			newSub.references.add(ref1);
 			//r.save();
 			newSub.save();
 		}
