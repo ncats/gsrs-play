@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.PrePersist;
 
@@ -29,12 +30,14 @@ import ix.ginas.utils.validation.Validation;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
+import play.db.ebean.Model;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
 	public static StructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
 	KewControlledPlantDataSet kewData;
 	
+	public Model.Finder<UUID, Relationship> finder;
 	
 	public SubstanceProcessor(){
 		try{
@@ -42,14 +45,31 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		finder = new Model.Finder(UUID.class, Relationship.class);
 		//System.out.println("Made processor");
 	}
 	
 	
-	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
 	public void postPersist(Substance obj) {
 			   //System.out.print(System.currentTimeMillis() + "\t");
+		
+//		if(changed){
+//			obj.save();
+//		}
+	}
+	
+	public void addWaitingRelationships(Substance obj){
+		List<Relationship> refrel = finder.where().eq("relatedSubstance.refuuid",
+				obj.getOrGenerateUUID().toString()).findList();
+		boolean changed=false;
+		for(Relationship r:refrel){
+			
+			Relationship inv=RelationshipProcessor.getInstance().createAndAddInvertedRelationship(r,r.fetchOwner().asSubstanceReference(),obj);
+			if(inv!=null){
+				changed=true;
+			}
+		}
 	}
 	
 	@Override
@@ -77,13 +97,12 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 		if (s.isAlternativeDefinition()) {
 			
 			Logger.debug("It's alternative");
+			//If it's alternative, find the primary substance (there should only be 1, but this returns a list anyway)
 			List<Substance> realPrimarysubs=SubstanceFactory.getSubstanceWithAlternativeDefinition(s);
 			Logger.debug("Got some relationships:" + realPrimarysubs.size());
 			Set<String> oldprimary = new HashSet<String>();
 			for(Substance pri:realPrimarysubs){
-				
 				oldprimary.add(pri.getUuid().toString());
-				
 			}
 			
 			
@@ -98,7 +117,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 						for(Relationship r:related){
 							r.delete();
 						}
-						oldPri.save();
+						oldPri.forceUpdate();
 					}
 					Logger.debug("Expanding reference");
 					Substance subPrimary=null;	
@@ -114,7 +133,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 							if(!subPrimary.addAlternativeSubstanceDefinitionRelationship(s)){
 								Logger.info("Saving alt definition, now has:" + subPrimary.getAlternativeDefinitionReferences().size());
 							}
-							subPrimary.save();
+							subPrimary.forceUpdate();
 						}
 					}
 				
@@ -123,7 +142,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 			}
 		}
 		addKewIfPossible(s);
-		
+		addWaitingRelationships(s);
 	}
 	
 	/**

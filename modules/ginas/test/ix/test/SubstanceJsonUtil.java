@@ -92,7 +92,12 @@ public final class SubstanceJsonUtil {
 	}
 
 	public static void ensureIsValid(JsonNode js){
-		assertTrue( isValid(js));
+		try{
+			assertTrue( isValid(js));
+		}catch(Throwable e){
+			System.err.println(js.toString());
+			throw e;
+		}
 	}
 	public static boolean isValid(JsonNode js){
 		return js.get("valid").asBoolean();
@@ -107,9 +112,12 @@ public final class SubstanceJsonUtil {
         return js.get("approvalID").asText();
     }
 
-	public static String getRefUuid(JsonNode js){
+	public static String getRefUuidOnFirstRelationship(JsonNode js){
 		JsonNode relations = js.get("relationships").get(0);
 		JsonNode relatedSubs = relations.get("relatedSubstance");
 		return relatedSubs.get("refuuid").asText();
+	}
+	public static String getTypeOnFirstRelationship(JsonNode js){
+		return js.at("/relationships/0/type").asText();
 	}
 }

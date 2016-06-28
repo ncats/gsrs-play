@@ -98,8 +98,12 @@ public class Relationship extends CommonDataElementOfCollection {
      * @return
      */
     @JsonIgnore
-    public boolean isInvertable(){
+    public boolean isAutomaticInvertable(){
     	if(this.fetchOwner().getOrGenerateUUID().toString().equals(this.relatedSubstance.refuuid)){
+    		return false;
+    	}
+    	//Explicitly ignore alternative relationships
+    	if(this.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || this.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
     		return false;
     	}
     	String[] types=this.type.split("->");
@@ -108,7 +112,7 @@ public class Relationship extends CommonDataElementOfCollection {
     }
     
     public Relationship fetchInverseRelationship(){
-    	if(!isInvertable()){
+    	if(!isAutomaticInvertable()){
     		throw new IllegalStateException("Relationship :" + this.type + " is not invertable");
     	}
     	Relationship r=new Relationship();
@@ -116,6 +120,17 @@ public class Relationship extends CommonDataElementOfCollection {
     	r.type=types[1] + "->" + types[0];
     	r.setAccess(this.getAccess());
     	return r;
+    }
+    
+    //This flag is used to explicitly allow deleting of this relationship
+    private transient boolean okToRemoveFlag=false;
+    
+    public void setOkToRemove(){
+    	okToRemoveFlag=true;
+    }
+    
+    public boolean isOkToRemove(){
+    	return okToRemoveFlag;
     }
     
 }

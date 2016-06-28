@@ -335,9 +335,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     m.invoke(bean);
                 }
                 catch (Exception ex) {
-                    Logger.trace("Can't invoke method "
-                                 +name+"["+m.getName()+"]", ex);
-                    return false;
+                	Logger.trace("Can't invoke method "
+                            +m.getName()+"["+name+"]", ex);
+                	throw new IllegalStateException(ex);
                 }
             }
         }
@@ -462,6 +462,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     @Override
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
+       
         return preUpdateBeanDirect(bean);
     }
     
@@ -473,9 +474,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 try {
                     m.invoke(bean);
                 }catch (Exception ex) {
+                	ex.printStackTrace();
                     Logger.trace("Can't invoke method "
                                  +m.getName()+"["+name+"]", ex);
-                    return false;
+                    throw new IllegalStateException(ex);
+                    //return false;
                 }
             }
         }
@@ -587,9 +590,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     }
                 }
                 catch (Exception ex) {
+                	
                     Logger.trace("Can't invoke method "
                                  +m.getName()+"["+name+"]", ex);
-                    return false;
+                    throw new IllegalStateException(ex);
                 }
             }
         }
