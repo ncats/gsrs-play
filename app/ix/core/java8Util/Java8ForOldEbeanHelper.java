@@ -32,7 +32,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPrePersistEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPrePersistEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "prePersist", ep::prePersist);
     }
     /**
@@ -41,7 +41,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPostPersistEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPostPersistEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "postPersist", ep::postPersist);
     }
     /**
@@ -50,7 +50,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPreUpdateEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPreUpdateEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "preUpdate", ep::preUpdate);
     }
     /**
@@ -59,7 +59,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPostUpdateEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPostUpdateEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "postUpdate", ep::postUpdate);
     }
     /**
@@ -68,7 +68,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPreRemoveEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPreRemoveEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "preRemove", ep::preRemove);
     }
     /**
@@ -77,7 +77,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPostRemoveEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPostRemoveEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "postRemove", ep::postRemove);
     }
     /**
@@ -86,15 +86,15 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      * @param ep the EntityProcessor's instance.
      */
-    public static void addPostLoadEntityProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
+    public static void addPostLoadEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, EntityProcessor ep) {
         registerProcessor(cls, registry, "postLoad", ep::postLoad);
     }
 
 
-    private static void registerProcessor(Class cls, Map<String, List<EntityPersistAdapter.Hook>> registry, String name, EntityHookMethod
+    private static void registerProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry, String name, EntityHookMethod
             method){
 
-        registry.computeIfAbsent(cls.getName(), k-> new ArrayList<>())
+        registry.computeIfAbsent(cls, k-> new ArrayList<>())
                 .add(new EntityProcessorHook(method, name));
 
     }
@@ -110,7 +110,7 @@ public class Java8ForOldEbeanHelper {
      * @param registry the registry mapping of hooks.
      */
     public static void register (Class annotation,
-                   Class cls, Method m, Map<String, List<EntityPersistAdapter.Hook>> registry) {
+                   Class cls, Method m, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry) {
         if (m.isAnnotationPresent(annotation)) {
 //            Logger.info("Method \""+m.getName()+"\"["+cls.getName()
 //                    +"] is registered for "+annotation.getName());
@@ -119,11 +119,11 @@ public class Java8ForOldEbeanHelper {
         }
     }
 
-    private static void convertToMethodHandle(Class cls, Method m, Map<String, List<EntityPersistAdapter.Hook>> registry) {
+    private static void convertToMethodHandle(Class cls, Method m, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry) {
         try{
             MethodHandle mh = LOOKUP.unreflect(m);
 
-            registry.computeIfAbsent(cls.getName(), k-> new ArrayList<>())
+            registry.computeIfAbsent(cls, k-> new ArrayList<>())
                     .add(new MethodHandleHook(m.getName(), mh));
         }catch(Exception e){
             throw new RuntimeException(e.getMessage(), e);
