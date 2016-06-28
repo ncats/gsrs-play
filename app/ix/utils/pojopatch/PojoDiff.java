@@ -749,56 +749,54 @@ public class PojoDiff {
 			
 			for(Method m: cls.getMethods()){
 				if(isExplicitSetterMethod(m)){
-					setterMap.putIfAbsent(
+					setterMap.computeIfAbsent(
 							getMethodProperty(m),
-							new MethodSetter(m)
+							k -> new MethodSetter(m)
 							);
 				}
 			}
 			
 			for(Method m: cls.getMethods()){
 				if(isImplicitSetterMethod(m)){
-					setterMap.putIfAbsent(
+					setterMap.computeIfAbsent(
 							getMethodProperty(m),
-							new MethodSetter(m)
+							k -> new MethodSetter(m)
 							);
 				}
 			}
 			
 			for(Field m: cls.getFields()){
 				if(isExplicitSetterField(m)){
-					setterMap.putIfAbsent(
+					setterMap.computeIfAbsent(
 							getFieldProperty(m),
-							new FieldSetter(m)
+							k-> new FieldSetter(m)
 							);
 				}
 			}
 			for(Field m: cls.getFields()){
 				if(isImplicitSetterField(m)){
-					setterMap.putIfAbsent(
+					setterMap.computeIfAbsent(
 							getFieldProperty(m),
-							new FieldSetter(m)
+							k -> new FieldSetter(m)
 							);
 				}
 				if(isUnwrappedField(m)){
 					Map<String,Setter> subSetters=getSetters(m.getType());
 					for(Entry<String,Setter> ent:subSetters.entrySet()){
 						System.out.println("Registering setter:" + ent.getKey());
-						setterMap.putIfAbsent(ent.getKey(), new UnwrappedDelegateFieldSetter(m,ent.getValue()));
+						setterMap.computeIfAbsent(ent.getKey(), k-> new UnwrappedDelegateFieldSetter(m,ent.getValue()));
 					}
 				}
 			}
 			
 			List<String> toRemove=new ArrayList<String>();
-			
-			for(Entry<String,Setter> ent:setterMap.entrySet()){
-				if(ent.getValue().isIgnored()){
-					toRemove.add(ent.getKey());
+			Iterator<Setter> iter = setterMap.values().iterator();
+			while(iter.hasNext()){
+				if(iter.next().isIgnored()){
+					iter.remove();
 				}
 			}
-			for(String s:toRemove){
-				setterMap.remove(s);
-			}
+
 			return setterMap;
 		}
 		public static boolean isExplicitGetterMethod(Method m){
