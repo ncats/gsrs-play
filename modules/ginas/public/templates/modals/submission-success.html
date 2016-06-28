@@ -4,15 +4,16 @@
                 <h4 class="modal-title" id="myModalLabelExport">Success</h4>
             </div>
             <div class="modal-body">
+                <loading ng-show = "submitting"></loading>
                 <div class = "row">   
                 <div class="col-md-12 warn">
                     <p>Submitted!</p>
                 </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-success"  a href = "/register" target ="_self">Add a different substance type</button>
-                    <button type="button" class="btn btn-success"  ng-click="close()">Add Another {{substanceClass}}</button>
-                    <button type="button" class="btn btn-success"  ng-click="viewSubstance()">View Substance</button>
+                    <button type="button" class="btn btn-success" ng-click="addDifferentSubstance()" target ="_self">Add a different substance type</button>
+                    <button type="button" class="btn btn-success" ng-click="addSameSubstanceType()" target="_self" class="btn btn-default">Add Another {{substanceClass}}</button>
+                    <button type="button" class="btn btn-success" ng-click="viewSubstance()">View Substance</button>
                 </div>
             </div>
         </div>

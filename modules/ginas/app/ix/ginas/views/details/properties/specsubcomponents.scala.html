@@ -7,14 +7,26 @@
 <button class="btn btn-primary label-offset det">
     Components&nbsp;<span class="badge head"> @components.length</span></button>
 <div class="col-md-12">
+    @if(components.length > 0) {
+    <table class="table table-striped" id="namesTable">
+        <thead>
+            <tr>
+                <th>Substance</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
         @for(c <- components) {
-
+            <tr>
              @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
-                @subref(c.substance)
+              <td> @subref(c.substance) </td>
+                 @if(c.amount != null) {
+                 <td><amount value="@GinasApp.getAsJson(c.amount)"></amount></td>
+                 }
             } else {
                 <i>Substance not yet imported</i> <br />
                 @c.substance.refPname
-
             }
         }
+        </tr></table>
+}
 </div>

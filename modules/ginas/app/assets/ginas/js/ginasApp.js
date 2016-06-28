@@ -503,6 +503,7 @@
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
+        $scope.submitting = false;
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
@@ -756,6 +757,7 @@
             var url;
             var sub = {};
             $scope.close();
+            $scope.submitting = true;
             //  $scope.$broadcast('show-errors-check-validity');
             //      $scope.checkErrors();
             /*console.log($scope.nameForm);
@@ -785,6 +787,7 @@
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
                     $scope.open(url);
                 });
             } else {
@@ -797,10 +800,12 @@
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
+                    $scope.submitting = false;
                     $scope.open(url);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
                     $scope.open(url);
                 });
             }
@@ -891,6 +896,18 @@
             $window.location.search = null;
             $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0];
             //  $window.location.search =null;
+        };
+
+        $scope.addSameSubstanceType = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'wizard?kind=' + $scope.substanceClass;
+        };
+
+        $scope.addDifferentSubstance = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'register';
         };
 
         $scope.redirect = function () {
