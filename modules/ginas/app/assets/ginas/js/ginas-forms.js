@@ -528,19 +528,20 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
                 scope.parent.$$diverseType = "whole";
-
-                if (scope.parent.structurallyDiverse.displayParts === 'WHOLE') {
-                    _.set(scope.parent, '$$diverseType', 'whole');
-                } else {
+                if (scope.parent.structurallyDiverse.part.length>0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
                     _.set(scope.parent, '$$diverseType', 'part');
+                    _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
                 }
-
                 scope.checkType = function () {
                     if (scope.parent.$$diverseType === 'whole') {
                         scope.parent.$$diverseType = 'whole';
                         _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                     } else {
-                        _.set(scope.parent.structurallyDiverse, 'part', []);
+                        if (scope.$$temp) {
+                            _.set(scope.parent.structurallyDiverse, 'part', scope.$$temp);
+                        } else {
+                            _.set(scope.parent.structurallyDiverse, 'part', []);
+                        }
                     }
                 };
             }

@@ -159,10 +159,18 @@
     }]);
 
     ginasFormElements.service('download', function ($location, $http) {
-        createURL = function () {
+        createURL = function (id) {
             var current = ($location.$$url).split('app')[1];
+            console.log("current");
+            console.log(current);
             var ret;
             var c = current.split('?');
+            if(id){
+                ret = baseurl + "api/v1/substances(" + id + ")?view=full";
+                console.log(ret);
+                return ret;
+            } else {
+
             if(c.length>1){
                 var q= c[0] + '/search?'+ c[1];
                 ret = baseurl + "api/v1" + q + '&view=full';
@@ -170,12 +178,12 @@
                 ret = baseurl + "api/v1" + current + '?view=full';
             }
             return ret;
-        };
+        }};
 
         var download = {};
 
-        download.fetch = function () {
-            var url = createURL();
+        download.fetch = function (id) {
+            var url = createURL(id);
             return $http.get(url, {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
@@ -919,13 +927,14 @@
             restrict: 'E',
             scope: {
                 data: '=',
-                format: '='
+                format: '=',
+                uuid: '@'
             },
             link: function (scope, element, attrs) {
                 var json;
                 scope.url = '';
                 scope.make = function () {
-                    if (_.isUndefined(scope.data)) {
+                    if (_.isUndefined(scope.data) && _.isUndefined(scope.uuid) ) {
                         download.fetch().then(function (data) {
                             json = JSON.stringify(data.data);
                             var b = new Blob([json], {type: "application/json"});
@@ -938,7 +947,22 @@
                             )(scope));
                             document.getElementById('download').click();
                         });
-                    } else {
+                    } else if (_.isUndefined(scope.data) && (!_.isUndefined(scope.uuid)) ) {
+                        download.fetch(scope.uuid).then(function (data) {
+                            json = JSON.stringify(data.data);
+                            var b = new Blob([json], {type: "application/json"});
+                            scope.url = URL.createObjectURL(b);
+                            element.replaceWith($compile(
+                                '<a class="btn btn-primary" download="results.json"' +
+                                'href="' + scope.url + '" target = "_self" id ="download">' +
+                                '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
+                                '</a>'
+                            )(scope));
+                            document.getElementById('download').click();
+                        });
+
+                    }
+                    else {
                         var b;
                         var fileType = "json";
                         if (scope.format) {

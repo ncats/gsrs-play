@@ -6,6 +6,7 @@
 
 @(sub: ix.ginas.models.v1.ProteinSubstance)
 
+<div class="row info" id="definition">
 @structureImage(s: Structure, size: Integer) = {
     <img class="struc-thumb" alt="Structure of @sub.getName()"
     src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId, "svg", size)'>
@@ -37,32 +38,28 @@
         }
     }
 } {
-            <div class ="col-md-4">
-        <dl>
+
+    <div class="col-md-7" >
+        <br>
+        <table class="table table-striped keyvalue">
             @if(sub.protein.proteinType != null) {
-                <dt>Protein Type<dt>
-            <dd>
-                    @GinasApp.getCV.getDisplay("PROTEIN_TYPE", sub.protein.proteinType)
-            </dd>
+                <tr><td>Protein Type</td><td >@GinasApp.getCV.getDisplay("PROTEIN_TYPE", sub.protein.proteinType)</td></tr>
             }
             @if(sub.protein.proteinSubType != null) {
-                <dt>Protein Type<dt>
-            <dd>
-                    @GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", sub.protein.proteinSubType)
-            </dd>
+                <tr><td>Protein Sub Type</td><td >@GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", sub.protein.proteinSubType)</td></tr>
             }
             @if(sub.protein.sequenceOrigin != null) {
-                <dt>Sequence Origin</dt>
-                <dd>@GinasApp.getCV.getDisplay("SEQUENCE_ORIGIN", sub.protein.sequenceOrigin)
-                </dd>
+                <tr><td>Sequence Origin</td><td >@GinasApp.getCV.getDisplay("SEQUENCE_ORIGIN", sub.protein.sequenceOrigin)</td></tr>
             }
-                @if(sub.protein.sequenceType != null) {
-                    <dt>Sequence Type</dt>
-                    <dd>@GinasApp.getCV.getDisplay("SEQUENCE_TYPE", sub.protein.sequenceType)
-                    </dd>
-                }
-        </dl>
-            </div>
+            @if(sub.protein.sequenceType != null) {
+                <tr><td>Sequence Type</td><td >@GinasApp.getCV.getDisplay("SEQUENCE_TYPE", sub.protein.sequenceType)</td></tr>
+            }
+            @if(sub.protein.getReferences() != null && sub.protein.getReferences().size() > 0) {
+                <tr><td>Definition References</td><td >
+                    <referencesmanager indices substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.protein.getReferences())"></referencesmanager></td></tr>
+            }
+        </table>
+    </div>
 }{
     <div class="row info" id="subunits">
         <div class = "row">
@@ -183,7 +180,5 @@
             </div>
         }
     }
-   
-
-
 }
+</div>
