@@ -788,8 +788,7 @@ public class PojoDiff {
 					}
 				}
 			}
-			
-			List<String> toRemove=new ArrayList<String>();
+
 			Iterator<Setter> iter = setterMap.values().iterator();
 			while(iter.hasNext()){
 				if(iter.next().isIgnored()){
@@ -863,16 +862,12 @@ public class PojoDiff {
 		}
 		public static boolean isImplicitGetterField(Field m){
 			int mods=m.getModifiers();
-			if(Modifier.isStatic(mods))return false;
-			return true;
+			return  !Modifier.isStatic(mods);
 		}
 		
 		public static boolean isUnwrappedField(Field m){
 			JsonUnwrapped junwrapped= m.getAnnotation(JsonUnwrapped.class);
-			if(junwrapped!=null){
-				return true;
-			}
-			return false;
+			return junwrapped!=null;
 		}
 		
 		public static boolean isImplicitSetterMethod(Method m){
@@ -881,13 +876,12 @@ public class PojoDiff {
 			
 			if(!m.getName().startsWith("set"))return false;
 			if(m.getParameterTypes().length!=1)return false;
-			if(m.getDeclaringClass().equals(java.lang.Object.class))return false;
-			return true;
+			 return !(m.getDeclaringClass().equals(java.lang.Object.class));
+
 		}
 		public static boolean isImplicitSetterField(Field m){
 			int mods=m.getModifiers();
-			if(Modifier.isStatic(mods))return false;
-			return true;
+			return !Modifier.isStatic(mods);
 		}
 		
 		
