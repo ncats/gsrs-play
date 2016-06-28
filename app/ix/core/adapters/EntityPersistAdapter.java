@@ -56,15 +56,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 	
 	
 
-    private Map<String, List<Hook>> preInsertCallback = new ConcurrentHashMap<>();
-    private Map<String, List<Hook>> postInsertCallback = new ConcurrentHashMap<>();
-    private Map<String, List<Hook>> preUpdateCallback = new ConcurrentHashMap<>();
-    private Map<String, List<Hook>> postUpdateCallback = new ConcurrentHashMap<>();
-    private Map<String, List<Hook>> preDeleteCallback = new ConcurrentHashMap<>();
-    private Map<String, List<Hook>> postDeleteCallback = new ConcurrentHashMap<>();
-    private Map<String, List<Hook>> postLoadCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> preInsertCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> postInsertCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> preUpdateCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> postUpdateCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> preDeleteCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> postDeleteCallback = new ConcurrentHashMap<>();
+    private Map<Class<?>, List<Hook>> postLoadCallback = new ConcurrentHashMap<>();
     
-    private Map<Class, List<EntityProcessor>> extraProcessors=new HashMap<Class,List<EntityProcessor>>();
+    private Map<Class<?>, List<EntityProcessor>> extraProcessors=new HashMap<>();
     
     
     
@@ -90,9 +90,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
         seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
 
-        alreadyLoaded = new ConcurrentHashMap<String,String>(10000);
+        alreadyLoaded = new ConcurrentHashMap<>(10000);
 
-        editMap = new ConcurrentHashMap<String,Edit>();
+        editMap = new ConcurrentHashMap<>();
 
 
     }
@@ -203,45 +203,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			return m.getName();
 		}
     }
-    public static class EntityProcessorHook implements Hook{
-    	private EntityProcessor<?> ep;
-    	private Method useMethod;
-    	public EntityProcessorHook(EntityProcessor<?> ep, Class<?> hookAnnotation){
-    		this.ep=ep;
-    		try{
-	    		if(hookAnnotation.equals(PrePersist.class)){
-					useMethod=ep.getClass().getMethod("prePersist",Object.class);
-	    		}else if(hookAnnotation.equals(PostPersist.class)){
-					useMethod=ep.getClass().getMethod("postPersist",Object.class);
-	    		}else if(hookAnnotation.equals(PreUpdate.class)){
-					useMethod=ep.getClass().getMethod("preUpdate",Object.class);
-	    		}else if(hookAnnotation.equals(PostUpdate.class)){
-					useMethod=ep.getClass().getMethod("postUpdate",Object.class);
-	    		}else if(hookAnnotation.equals(PreRemove.class)){
-					useMethod=ep.getClass().getMethod("preRemove",Object.class);
-	    		}else if(hookAnnotation.equals(PostRemove.class)){
-					useMethod=ep.getClass().getMethod("postRemove",Object.class);
-	    		}else if(hookAnnotation.equals(PostLoad.class)){
-					useMethod=ep.getClass().getMethod("postLoad",Object.class);
-	    		}
-    		}catch(Exception e){
-    			e.printStackTrace();
-    		}
-    	}
 
-		@Override
-		public void invoke(Object o) throws Exception {
-			if(useMethod!=null){
-				useMethod.invoke(ep, o);
-			}
-		}
 
-		@Override
-		public String getName() {
-			return useMethod.getName();
-		}
-
-    }
 
     boolean debug (int level) {
         IxContext ctx = Play.application().plugin(IxContext.class);
@@ -269,10 +232,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 Java8ForOldEbeanHelper.register (PostLoad.class, cls, m, postLoadCallback);
             }
         }
-        
-        for(Class c:extraProcessors.keySet()){
+        for(Map.Entry<Class<?>,List<EntityProcessor>> entry : extraProcessors.entrySet()){
+            Class<?> c = entry.getKey();
         	if(c.isAssignableFrom(cls)){
-        		for(EntityProcessor ep :extraProcessors.get(c)){
+        		for(EntityProcessor ep :entry.getValue()){
         			Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
         			addEntityProcessor(cls,ep);
         		}
@@ -317,14 +280,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     	
         Object bean = request.getBean();
         
-        String name = bean.getClass().getName();
+        Class clazz = bean.getClass();
         
-        TimeProfiler.addGlobalTime(name);
+        TimeProfiler.addGlobalTime(clazz);
         if(bean instanceof Keyword){
         	TimeProfiler.addGlobalTime(((Keyword)bean).toString());
         }
         
-        List<Hook> methods = preInsertCallback.get(name);
+        List<Hook> methods = preInsertCallback.get(clazz);
         if (methods != null) {
             for (Hook m : methods) {
                 try {
@@ -332,7 +295,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 }
                 catch (Exception ex) {
                     Logger.trace("Can't invoke method "
-                                 +name+"["+m.getName()+"]", ex);
+                                 +clazz+"["+m.getName()+"]", ex);
                     return false;
                 }
             }
@@ -343,9 +306,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
 
     public void postInsertBeanDirect(Object bean){
-    	String name = bean.getClass().getName();
+    	Class clazz = bean.getClass();
         try {
-            List<Hook> methods = postInsertCallback.get(name);
+            List<Hook> methods = postInsertCallback.get(clazz);
             if (methods != null) {
                 for (Hook m : methods) {
                     try {
@@ -354,7 +317,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     catch (Exception ex) {
                         Logger.trace
                             ("Can't invoke method "
-                             +m.getName()+"["+name+"]", ex);
+                             +m.getName()+"["+clazz+"]", ex);
                     }
                 }
             }
@@ -363,7 +326,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
         }
-        TimeProfiler.stopGlobalTime(name);
+        TimeProfiler.stopGlobalTime(clazz);
         if(bean instanceof Keyword){
         	TimeProfiler.stopGlobalTime(((Keyword)bean).toString());
         }
@@ -462,15 +425,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
     public boolean preUpdateBeanDirect(Object bean){
-    	String name = bean.getClass().getName();
-        List<Hook> methods = preUpdateCallback.get(name);
+    	Class clazz = bean.getClass();
+        List<Hook> methods = preUpdateCallback.get(clazz);
         if (methods != null) {
             for (Hook m : methods) {
                 try {
                     m.invoke(bean);
                 }catch (Exception ex) {
                     Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+name+"]", ex);
+                                 +m.getName()+"["+clazz+"]", ex);
                     return false;
                 }
             }
@@ -542,8 +505,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
 
         try {
-            String name = cls.getName();
-            List<Hook> methods = postUpdateCallback.get(name);
+
+            List<Hook> methods = postUpdateCallback.get(cls);
             if (methods != null) {
                 for (Hook m : methods) {
                     try {
@@ -552,7 +515,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     catch (Exception ex) {
                         Logger.trace
                             ("Can't invoke method "
-                             +m.getName()+"["+name+"]", ex);
+                             +m.getName()+"["+cls+"]", ex);
                     }
                 }
             }
@@ -572,9 +535,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     @Override
     public boolean preDelete (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-        String name = bean.getClass().getName();
+        Class clazz = bean.getClass();
         
-        List<Hook> methods = preDeleteCallback.get(name);
+        List<Hook> methods = preDeleteCallback.get(clazz);
         if (methods != null) {
             for (Hook m : methods) {
                 try {
@@ -584,7 +547,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 }
                 catch (Exception ex) {
                     Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+name+"]", ex);
+                                 +m.getName()+"["+clazz+"]", ex);
                     return false;
                 }
             }
@@ -593,9 +556,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
     public void postDeleteBeanDirect (Object bean) {
-    	String name = bean.getClass().getName();
+    	Class clazz = bean.getClass();
 
-        List<Hook> methods = postDeleteCallback.get(name);
+        List<Hook> methods = postDeleteCallback.get(clazz);
         if (methods != null) {
             for (Hook m : methods) {
                 try {
@@ -603,7 +566,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 }
                 catch (Exception ex) {
                     Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+name+"]", ex);
+                                 +m.getName()+"["+clazz+"]", ex);
                 }
             }
         }
@@ -633,8 +596,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 
     @Override
     public void postLoad (Object bean, Set<String> includedProperties) {
-        String name = bean.getClass().getName();
-        List<Hook> methods = postLoadCallback.get(name);
+        Class clazz = bean.getClass();
+        List<Hook> methods = postLoadCallback.get(clazz);
         if (methods != null) {
             for (Hook m : methods) {
                 try {
@@ -642,7 +605,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 }
                 catch (Exception ex) {
                     Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+name+"]", ex);
+                                 +m.getName()+"["+clazz+"]", ex);
                 }
             }
         }
@@ -703,12 +666,13 @@ public void reindex(Object bean){
         
     }
     public static List<Field> getSequenceIndexableField(Object entity){
-    	List<Field> flist = new ArrayList<Field>();
+
         if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
+        List<Field> flist = new ArrayList<Field>();
         try {
-                
+
             for (Field f : entity.getClass().getFields()) {
                 Indexable ind= f.getAnnotation(Indexable.class);
                 if (ind != null) {
@@ -718,16 +682,18 @@ public void reindex(Object bean){
                 }
                
             }
+
         }catch (Exception ex) {
             Logger.trace("Unable to search for sequence indexes for "+entity, ex);
         }
         return flist;
     }
     public static List<Field> getStructureIndexableField(Object entity){
-    	List<Field> flist = new ArrayList<Field>();
+
         if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
+        List<Field> flist = new ArrayList<Field>();
         try {
                 
             for (Field f : entity.getClass().getFields()) {
