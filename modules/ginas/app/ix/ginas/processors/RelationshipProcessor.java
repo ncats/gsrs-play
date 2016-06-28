@@ -2,8 +2,10 @@ package ix.ginas.processors;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import ix.core.EntityProcessor;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.Group;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import play.db.ebean.Model;
@@ -32,13 +34,20 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		addInverse(obj);
 	}
 	
-	public void addInverse(Relationship obj){
+	public void addInverse(final Relationship obj){
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
-			SubstanceReference oldSub=obj.fetchOwner().asSubstanceReference();
-			Substance newSub=SubstanceFactory.getFullSubstance(obj.relatedSubstance);
-			if(createAndAddInvertedRelationship(obj,oldSub,newSub)!=null){
-				newSub.forceUpdate();	
-			}
+			final SubstanceReference oldSub=obj.fetchOwner().asSubstanceReference();
+			final Substance newSub=SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+			EntityPersistAdapter.performChange(newSub,new Callable(){
+				@Override
+				public Object call() throws Exception {
+					if(createAndAddInvertedRelationship(obj,oldSub,newSub)!=null){
+						newSub.forceUpdate();	
+					}
+					return null;
+				}
+			});
+			
 			
 		}
 	}
@@ -66,8 +75,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 				
 				newSub.relationships.add(r);
 				newSub.references.add(ref1);
-				//r.save();
-				//newSub.save();
 				return r;
 			}
 		}
@@ -100,11 +107,21 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
 			List<Relationship> rel = finder.where().eq("originatorUuid",
 					obj.getOrGenerateUUID().toString()).findList();
-			for(Relationship r1 : rel){
+			for(final Relationship r1 : rel){
 				if(!r1.isGenerator()){
 					r1.setOkToRemove();
 					System.out.println("Removing:" + r1.uuid);
-					r1.delete();
+					final Substance osub=r1.fetchOwner();
+					EntityPersistAdapter.performChange(osub,new Callable(){
+						@Override
+						public Object call() throws Exception {
+							EntityPersistAdapter.storeEditForPossibleUpdate(osub);
+							r1.delete();
+							osub.forceUpdate();
+							return null;
+						}
+					});
+					
 				}
 			}
 		}

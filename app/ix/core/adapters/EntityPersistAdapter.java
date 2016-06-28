@@ -103,8 +103,34 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 
     }
 
+    public static Edit storeEditForPossibleUpdate(Object bean){
+    	if(bean==null)return null;
+    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
+    	String oldJSON = mapper.toJson(bean);
+    	Class cls = bean.getClass();
+        Object id = EntityUtils.getIdForBean(bean);
+    	Edit e = new Edit(cls,id);
+    	e.oldValue=oldJSON;
+    	e.version=EntityUtils.getVersionForBeanAsString(bean);
+    	storeEditForUpdate(cls,id,e);
+    	return e;
+    }
     
-    public static void storeEditForUpdate(Class c, Object id, Edit e){
+    public static void performChange(Object bean, final Callable change){
+    	Edit e=storeEditForPossibleUpdate(bean);
+    	if(e==null)return;
+    	try{
+    		change.call();
+    	}catch(Exception t){
+    		t.printStackTrace();
+    		throw new IllegalStateException(t);
+    	}finally{
+    		popEditForUpdate(e.getClass(),e.refid);
+    	}
+    }
+    
+    
+    private static void storeEditForUpdate(Class c, Object id, Edit e){
     	String s1=c.getName() + ":" + id;
     	editMap.put(s1,e);
     }
@@ -527,11 +553,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     	//that info is lost.
                     	if(edit==null){
                     		 edit = new Edit (cls, id);
+                    		 edit.oldValue = mapper.toJson(oldvalues);
+                    		 edit.version = EntityUtils.getVersionForBeanAsString(oldvalues);
+                    	}else{
+                    		
                     	}
-                    	edit.oldValue = mapper.toJson(oldvalues);
-               	     	edit.newValue = mapper.toJson(bean);
-                        edit.save();
-                        
+                    	edit.kind = cls.getName();
+                    	edit.newValue = mapper.toJson(bean);
+               	     	edit.save();                        
                     }
                     else {
                         Logger.warn("Entity bean ["+cls.getName()+"]="+id

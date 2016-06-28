@@ -22,6 +22,9 @@ import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
+import util.json.Change;
+import util.json.ChangeFilter;
+import util.json.Changes;
 import util.json.JsonUtil;
 import util.json.JsonUtil.JsonNodeBuilder;
 
@@ -51,7 +54,7 @@ public class RelationshipInvertTest {
     }
 
     
-    @Test
+    @Test 
     public void testAPIAddSubstanceWithRelationshipThenAddRelatedSubstanceShouldResultInBirectionalRelationship()   throws Exception {
         //submit primary, with dangling relationship
         resource = new File("test/testJSON/invrelate1.json");
@@ -80,7 +83,7 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test
+    @Test 
     public void testRemoveSourceRelationshipShouldRemoveInvertedRelationship()   throws Exception {
     	
     	 //submit primary, with dangling relationship
@@ -124,8 +127,8 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test
-    public void testAddRelationshipAfterAddingEachSubstanceShouldRemoveInvertedRelationship()   throws Exception {
+    @Test 
+    public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationship()   throws Exception {
     	
         //submit primary
         resource = new File("test/testJSON/invrelate1.json");
@@ -170,8 +173,106 @@ public class RelationshipInvertTest {
     	
     }
     
-    
+    @Test 
+    public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndIncrementVersion()   throws Exception {
+    	
+        //submit primary
+        resource = new File("test/testJSON/invrelate1.json");
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode newRelate = js.at("/relationships/0");
+        js=new JsonUtil.JsonNodeBuilder(js)
+			.remove("/relationships/1")
+			.remove("/relationships/0")
+			.ignoreMissing()
+			.build();
+        
+        String uuid = js.get("uuid").asText();
+        JsonNode validationResult = api.validateSubstanceJson(js);
+        SubstanceJsonUtil.ensureIsValid(validationResult);
+        ensurePass(api.submitSubstance(js));
+        js =api.fetchSubstanceJsonByUuid(uuid);
+        
+        
+        //submit alternative
+        resource = new File("test/testJSON/invrelate2.json");
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        String uuidA = jsA.get("uuid").asText();
+        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        ensurePass(api.submitSubstance(jsA));
+
+        
+        //add relationship
+        JsonNode updated=new JsonUtil.JsonNodeBuilder(js)
+		.add("/relationships/-", newRelate)
+		.ignoreMissing().build();
+        ensurePass(api.updateSubstance(updated));
+        String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(updated);
+        String[] parts=type1.split("->");
+        
+        //check inverse relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+        assertTrue(refUuidA.equals(uuid));
+        assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
+    	assertEquals("2",fetchedA.at("/version").asText());
+    	
+    }
     @Test
+    public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {
+    	
+        //submit primary
+        resource = new File("test/testJSON/invrelate1.json");
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode newRelate = js.at("/relationships/0");
+        js=new JsonUtil.JsonNodeBuilder(js)
+			.remove("/relationships/1")
+			.remove("/relationships/0")
+			.ignoreMissing()
+			.build();
+        
+        String uuid = js.get("uuid").asText();
+        JsonNode validationResult = api.validateSubstanceJson(js);
+        SubstanceJsonUtil.ensureIsValid(validationResult);
+        ensurePass(api.submitSubstance(js));
+        js =api.fetchSubstanceJsonByUuid(uuid);
+        
+        
+        //submit alternative
+        resource = new File("test/testJSON/invrelate2.json");
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        String uuidA = jsA.get("uuid").asText();
+        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        ensurePass(api.submitSubstance(jsA));
+        JsonNode beforeA = api.fetchSubstanceJsonByUuid(uuidA);
+        
+        //add relationship
+        JsonNode updated=new JsonUtil.JsonNodeBuilder(js)
+		.add("/relationships/-", newRelate)
+		.ignoreMissing().build();
+        ensurePass(api.updateSubstance(updated));
+        String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(updated);
+        String[] parts=type1.split("->");
+        
+        //check inverse relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+        assertTrue(refUuidA.equals(uuid));
+        assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
+    	assertEquals("2",fetchedA.at("/version").asText());
+    	JsonNode historyFetched=api.fetchSubstanceJsonByUuid(uuidA, 1).getOldValue();
+    	Changes changes= JsonUtil.computeChanges(beforeA, historyFetched, new ChangeFilter[0]);
+    	for(Change c:changes.getAllChanges()){
+    		System.out.println("Change is:" + c);
+    		
+    	}
+    	assertEquals(beforeA,historyFetched);
+    	
+    }
+    
+    
+    @Test 
     public void testAddRelationshipAfterAddingEachSubstanceThenRemovingInvertedRelationshipShouldFail()   throws Exception {
     	
         //submit primary
@@ -221,7 +322,7 @@ public class RelationshipInvertTest {
     	
     }
     
-    @Test
+    @Test 
     public void testDontAddRelationshipIfOneLikeItAlreadyExists()   throws Exception {
     	
         //submit primary

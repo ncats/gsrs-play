@@ -5,10 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import javax.persistence.PrePersist;
 
 import ix.core.EntityProcessor;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.Chem;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
@@ -90,7 +92,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 	
 	@Override
-	public void prePersist(Substance s) {
+	public void prePersist(final Substance s) {
 		
 		
 		Logger.debug("Persisting substance:" + s);
@@ -111,13 +113,23 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 				
 					Logger.debug("Enforcing bidirectional relationship");
 					//remove old references
-					for(Substance oldPri: realPrimarysubs){
+					for(final Substance oldPri: realPrimarysubs){
 						Logger.debug("Removing stale bidirectional relationships");
-						List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
-						for(Relationship r:related){
-							r.delete();
-						}
-						oldPri.forceUpdate();
+						EntityPersistAdapter.performChange(oldPri, new Callable(){
+
+							@Override
+							public Object call() throws Exception {
+								List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+								for(Relationship r:related){
+									r.delete();
+								}
+								oldPri.forceUpdate();
+								return null;
+							}
+							
+						});
+						
+						
 					}
 					Logger.debug("Expanding reference");
 					Substance subPrimary=null;	
@@ -129,11 +141,22 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 					Logger.debug("Got parent sub, which is:" + subPrimary.getName());
 					if (subPrimary != null) {
 						if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
+							final Substance subPrimaryFinal=subPrimary;
 							Logger.debug("Going to save");
-							if(!subPrimary.addAlternativeSubstanceDefinitionRelationship(s)){
-								Logger.info("Saving alt definition, now has:" + subPrimary.getAlternativeDefinitionReferences().size());
-							}
-							subPrimary.forceUpdate();
+							
+							EntityPersistAdapter.performChange(subPrimary, new Callable(){
+
+								@Override
+								public Object call() throws Exception {
+									if(!subPrimaryFinal.addAlternativeSubstanceDefinitionRelationship(s)){
+										Logger.info("Saving alt definition, now has:" + subPrimaryFinal.getAlternativeDefinitionReferences().size());
+									}
+									subPrimaryFinal.forceUpdate();
+									return null;
+								}
+								
+							});
+							
 						}
 					}
 				
