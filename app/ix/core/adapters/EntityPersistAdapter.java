@@ -20,6 +20,8 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
+import ix.core.java8Util.Java8ForOldEbeanHelper;
+import ix.core.util.Java8Util;
 import org.apache.lucene.store.AlreadyClosedException;
 
 import com.avaje.ebean.event.BeanPersistAdapter;
@@ -47,7 +49,6 @@ import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 import tripod.chem.indexer.StructureIndexer;
-//import javax.annotation.PreDestroy;
 
 public class EntityPersistAdapter extends BeanPersistAdapter{
    
@@ -55,20 +56,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 	
 	
 
-    private Map<String, List<Hook>> preInsertCallback = 
-        new HashMap<String, List<Hook>>();
-    private Map<String, List<Hook>> postInsertCallback = 
-        new HashMap<String, List<Hook>>();
-    private Map<String, List<Hook>> preUpdateCallback = 
-        new HashMap<String, List<Hook>>();
-    private Map<String, List<Hook>> postUpdateCallback = 
-        new HashMap<String, List<Hook>>();
-    private Map<String, List<Hook>> preDeleteCallback = 
-        new HashMap<String, List<Hook>>();
-    private Map<String, List<Hook>> postDeleteCallback = 
-        new HashMap<String, List<Hook>>();
-    private Map<String, List<Hook>> postLoadCallback = 
-        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> preInsertCallback = new ConcurrentHashMap<>();
+    private Map<String, List<Hook>> postInsertCallback = new ConcurrentHashMap<>();
+    private Map<String, List<Hook>> preUpdateCallback = new ConcurrentHashMap<>();
+    private Map<String, List<Hook>> postUpdateCallback = new ConcurrentHashMap<>();
+    private Map<String, List<Hook>> preDeleteCallback = new ConcurrentHashMap<>();
+    private Map<String, List<Hook>> postDeleteCallback = new ConcurrentHashMap<>();
+    private Map<String, List<Hook>> postLoadCallback = new ConcurrentHashMap<>();
     
     private Map<Class, List<EntityProcessor>> extraProcessors=new HashMap<Class,List<EntityProcessor>>();
     
@@ -177,11 +171,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     public static class InstanceMethodHook implements Hook{
     	public Method m;
-    	
+
     	public InstanceMethodHook(Method m){
     		this.m=m;
     	}
-    	
+
 		@Override
 		public void invoke(Object o) throws Exception {
 			m.invoke(o);
@@ -194,11 +188,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     public static class StaticMethodHook implements Hook{
     	public Method m;
-    	
+
     	public StaticMethodHook(Method m){
     		this.m=m;
     	}
-    	
+
 		@Override
 		public void invoke(Object o) throws Exception {
 			m.invoke(null,o);
@@ -233,8 +227,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     		}catch(Exception e){
     			e.printStackTrace();
     		}
-    	} 
-    	
+    	}
+
 		@Override
 		public void invoke(Object o) throws Exception {
 			if(useMethod!=null){
@@ -246,7 +240,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 		public String getName() {
 			return useMethod.getName();
 		}
-    	
+
     }
 
     boolean debug (int level) {
@@ -258,13 +252,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         boolean registered = cls.isAnnotationPresent(Entity.class);
         if (registered) {
             for (Method m : cls.getMethods()) {
-                register (PrePersist.class, cls, m, preInsertCallback);
-                register (PostPersist.class, cls, m, postInsertCallback);
-                register (PreUpdate.class, cls, m, preUpdateCallback);
-                register (PostUpdate.class, cls, m, postUpdateCallback);
-                register (PreRemove.class, cls, m, preDeleteCallback);
-                register (PostRemove.class, cls, m, postDeleteCallback);
-                register (PostLoad.class, cls, m, postLoadCallback);
+//                register (PrePersist.class, cls, m, preInsertCallback);
+//                register (PostPersist.class, cls, m, postInsertCallback);
+//                register (PreUpdate.class, cls, m, preUpdateCallback);
+//                register (PostUpdate.class, cls, m, postUpdateCallback);
+//                register (PreRemove.class, cls, m, preDeleteCallback);
+//                register (PostRemove.class, cls, m, postDeleteCallback);
+//                register (PostLoad.class, cls, m, postLoadCallback);
+//
+                Java8ForOldEbeanHelper.register (PrePersist.class, cls, m, preInsertCallback);
+                Java8ForOldEbeanHelper.register (PostPersist.class, cls, m, postInsertCallback);
+                Java8ForOldEbeanHelper.register (PreUpdate.class, cls, m, preUpdateCallback);
+                Java8ForOldEbeanHelper.register (PostUpdate.class, cls, m, postUpdateCallback);
+                Java8ForOldEbeanHelper.register (PreRemove.class, cls, m, preDeleteCallback);
+                Java8ForOldEbeanHelper.register (PostRemove.class, cls, m, postDeleteCallback);
+                Java8ForOldEbeanHelper.register (PostLoad.class, cls, m, postLoadCallback);
             }
         }
         
@@ -284,33 +286,27 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
     private void addEntityProcessor(Class cls, EntityProcessor ep){
-    	registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
-		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
-		registerProcessor(cls,ep,preUpdateCallback,PreUpdate.class);
-		registerProcessor(cls,ep,postUpdateCallback,PostUpdate.class);
-		registerProcessor(cls,ep,preDeleteCallback,PreRemove.class);
-		registerProcessor(cls,ep,postDeleteCallback,PostRemove.class);
-		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
+
+
+        Java8ForOldEbeanHelper.addPrePersistEntityProcessor(cls, preInsertCallback, ep);
+        Java8ForOldEbeanHelper.addPostPersistEntityProcessor(cls, postInsertCallback, ep);
+        Java8ForOldEbeanHelper.addPreUpdateEntityProcessor(cls, preUpdateCallback, ep);
+        Java8ForOldEbeanHelper.addPostUpdateEntityProcessor(cls, postUpdateCallback, ep);
+        Java8ForOldEbeanHelper.addPreRemoveEntityProcessor(cls, preDeleteCallback, ep);
+        Java8ForOldEbeanHelper.addPostRemoveEntityProcessor(cls, postDeleteCallback, ep);
+        Java8ForOldEbeanHelper.addPostLoadEntityProcessor(cls, postLoadCallback, ep);
+
     }
     
-    void registerProcessor(Class cls, EntityProcessor<?> ep, Map<String, List<Hook>> registry, Class<?> hookAnnotation){
-    	List<Hook> methods = registry.get(cls.getName());
-    	if (methods == null) {
-            registry.put(cls.getName(), methods = new ArrayList<Hook>());
-        }
-        methods.add(new EntityProcessorHook(ep,hookAnnotation));
-    }
+
 
     void register (Class annotation,
                    Class cls, Method m, Map<String, List<Hook>> registry) {
         if (m.isAnnotationPresent(annotation)) {
             Logger.info("Method \""+m.getName()+"\"["+cls.getName()
                         +"] is registered for "+annotation.getName());
-            List<Hook> methods = registry.get(cls.getName());
-            if (methods == null) {
-                registry.put(cls.getName(), methods = new ArrayList<Hook>());
-            }
-            methods.add(new InstanceMethodHook(m));
+            Java8Util.createNewListIfAbsent(registry, cls.getName())
+                    .add(new InstanceMethodHook(m));
         }
     }
     

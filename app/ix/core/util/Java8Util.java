@@ -3,6 +3,10 @@ package ix.core.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import play.mvc.Results;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * Utility class  to help transition the inxight
@@ -28,6 +32,11 @@ public final class Java8Util {
      */
     public static Results.Status ok(JsonNode content) {
         return Results.ok(content);
+    }
+
+
+    public static <K, V> List<V> createNewListIfAbsent(Map<K, List<V>> map, K key){
+        return map.computeIfAbsent( key, k-> new ArrayList<V>());
     }
 
 }
