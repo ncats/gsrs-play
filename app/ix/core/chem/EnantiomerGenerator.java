@@ -169,8 +169,8 @@ public class EnantiomerGenerator {
                      +" stereocenters "+stereodefined+"/"
                      +stereocenters.size()+" "+stereocenters);
 
-        switch (stereo) {
-        case RACEMIC:
+        //switch (stereo.toString()) {
+        if(stereo.equals(Stereo.RACEMIC)){
             if (optical == Optical.PLUS_MINUS) {
                 if (stereodefined == 0 && stereocenters.size() == 1) {
                     // generate one version each
@@ -209,10 +209,8 @@ public class EnantiomerGenerator {
                     ("RACEMIC stereochemistry with optical activity "+optical
                      +" not supported!");
             }
-            break;
-
-        case EPIMERIC:
-            if (stereocenters.size() > 1 
+        }else if(stereo.equals(Stereo.EPIMERIC)){
+        	if (stereocenters.size() > 1 
                 && stereodefined+1 == stereocenters.size()) {
                 Integer atom = null;
                 for (Map.Entry<Integer, Integer> me 
@@ -265,10 +263,8 @@ public class EnantiomerGenerator {
                     ("EPIMERIC stereochemistry with more than 1 "
                      +"stereocenters undefined not supported!");
             }
-            break;
-
-        case MIXED: {
-            if (optical == Optical.NONE) {
+        }else if(stereo.equals(Stereo.MIXED)){
+        	if (optical == Optical.NONE) {
                 return;
             }
 
@@ -319,14 +315,7 @@ public class EnantiomerGenerator {
                     });
                 gc.generate();
             }
-        } break;
-
-            /*
-        case ABSOLUTE:
-        case ACHIRAL:
-        case UNKNOWN:
-            */
-        default:
+        }else{
             callback.generated(StructureProcessor.instrument(mol));
         }
     }

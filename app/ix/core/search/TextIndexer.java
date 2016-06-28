@@ -652,16 +652,24 @@ public class TextIndexer implements Closeable{
     
     public static class SuggestResult {
         CharSequence key, highlight;
+        long weight=0;
         
         
         SuggestResult (CharSequence key, CharSequence highlight) {
             this.key = key;
             this.highlight = highlight;
         }
+        
+        SuggestResult (CharSequence key, CharSequence highlight, long weight) {
+            this.key = key;
+            this.highlight = highlight;
+            this.weight=weight;
+        }
 
         
         public CharSequence getKey () { return key; }
         public CharSequence getHighlight () { return highlight; }
+        public Long getWeight () { return weight; }
     }
 
     class SuggestLookup implements Closeable{
@@ -671,6 +679,24 @@ public class TextIndexer implements Closeable{
         AnalyzingInfixSuggester lookup;
         long lastRefresh;
 
+        
+        ConcurrentHashMap<String,Addition> additions=new ConcurrentHashMap<String,Addition>();
+        class Addition{
+        	String text;
+        	long weight;
+        	public Addition(String text, long weight){
+        		this.text=text;
+        		this.weight=weight;
+        	}
+        	public synchronized void incrementWeight(){
+        		weight++;
+        	}
+			public void addToWeight(long value) {
+				weight+=value;
+			}
+        }
+
+        
         SuggestLookup (File dir) throws IOException {
             boolean isNew = false;
             if (!dir.exists()) {
@@ -714,18 +740,21 @@ public class TextIndexer implements Closeable{
             this (new File (suggestDir, name));
         }
 
-        void add (BytesRef text, Set<BytesRef> contexts, 
-                  long weight, BytesRef payload) throws IOException { 
-            lookup.update(text, contexts, weight, payload);
-            incr ();
-        }
+//        void add (BytesRef text, Set<BytesRef> contexts, 
+//                  long weight, BytesRef payload) throws IOException { 
+//            lookup.update(text, contexts, weight, payload);
+//            incr ();
+//        }
 
         void add (String text) throws IOException {
-            BytesRef ref = new BytesRef (text);
-            lookup.update(ref, null, 0, ref);
+        	
+        	Addition add = additions.computeIfAbsent(text, t -> new Addition(t, 0));
+        	add.incrementWeight();
+        	
+            //BytesRef ref = new BytesRef (text);
+            //lookup.update(ref, null, 0, ref);
             incr ();
         }
-
         void incr ()  {
             dirty.incrementAndGet();
         }
@@ -742,15 +771,31 @@ public class TextIndexer implements Closeable{
             }
         }
 
-        synchronized void refresh () throws IOException {
-            long start = System.currentTimeMillis();
-            lookup.refresh();
-            lastRefresh = System.currentTimeMillis();
-            Logger.debug(lookup.getClass().getName()
-                         +" refreshs "+lookup.getCount()+" entries in "
-                         +String.format("%1$.2fs", 
-                                        1e-3*(lastRefresh - start)));
-            dirty.set(0);
+        private void refresh () throws IOException {
+        	synchronized(dirty){
+        		synchronized(additions){
+	        		for(Addition add : additions.values()){
+	        			List<Lookup.LookupResult> looklist=lookup.lookup(add.text, 4, true, true);
+	        			for(Lookup.LookupResult lr:looklist){
+	        				if(add.text.equalsIgnoreCase(lr.key.toString())){
+	        					add.addToWeight(lr.value);
+	        				}
+	        			}
+	        			BytesRef ref = new BytesRef (add.text);
+	        			lookup.update(ref, null, add.weight, ref);
+	        			
+	        		}
+	        		additions.clear();
+        		}
+	            long start = System.currentTimeMillis();
+	            lookup.refresh();
+	            lastRefresh = System.currentTimeMillis();
+	            Logger.debug(lookup.getClass().getName()
+	                         +" refreshs "+lookup.getCount()+" entries in "
+	                         +String.format("%1$.2fs", 
+	                                        1e-3*(lastRefresh - start)));
+	            dirty.set(0);
+        	}
         }
         @Override
         public void close () throws IOException {
@@ -773,15 +818,14 @@ public class TextIndexer implements Closeable{
 
         List<SuggestResult> suggest (CharSequence key, int max)
             throws IOException {
-            if (dirty.get() > 0)
-                refresh ();
+        	refreshIfDirty ();
 
             List<Lookup.LookupResult> results = lookup.lookup
                 (key, null, false, max);
 
             List<SuggestResult> m = new ArrayList<SuggestResult>();
             for (Lookup.LookupResult r : results) {
-                m.add(new SuggestResult (r.payload.utf8ToString(), r.key));
+                m.add(new SuggestResult (r.payload.utf8ToString(), r.key,r.value));
             }
 
             return m;
