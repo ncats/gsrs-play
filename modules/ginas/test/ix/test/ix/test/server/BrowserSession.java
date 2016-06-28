@@ -2,6 +2,7 @@ package ix.test.ix.test.server;
 
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebClientOptions;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 
@@ -40,6 +41,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         super(port);
         
         webClient = new WebClient();
+      //  webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
     }
 
     public BrowserSession(GinasTestServer.User user, int port) {
@@ -47,6 +49,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
         try {
             webClient = new WebClient();
+       //     webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
             HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
             //there is only 1 form but it isn't named..
             HtmlForm form = page.getForms().get(0);

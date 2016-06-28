@@ -1616,7 +1616,7 @@ public class App extends Authentication {
                     	idenType="GLOBAL";
                     }
                     key = "sequence/"+getKey (getSequence(query) +idenType, Double.parseDouble(iden));
-                   
+
                 }
                 else {
                 }
@@ -1712,7 +1712,6 @@ public class App extends Authentication {
          final int page, CutoffType ct, final SearchResultProcessor processor) {
         try {
             final String key = "sequence/"+getKey (seq + ct.toString(), identity);
-            //System.out.println("Key is:" + seq + ct.toString());
             return getOrElse
                 (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
                  new Callable<SearchResultContext> () {
@@ -1831,13 +1830,15 @@ public class App extends Authentication {
          * If wait is set to be forced, we need to hold off going forward until
          * everything has been processed
          */
-        if(!context.finished() && isWaitSet()){
+        if(!context.finished() ) {
 
-        	//System.out.println("Waiting for finished product for search:" + context.id);
-        	context.getDeterminedFuture().get();
+            if (isWaitSet()) {
+                System.out.println("Waiting for finished product for search:" + context.id);
+                context.getDeterminedFuture().get();
 
-        }else{
-        	//System.out.println("Not waiting for finished product for search:" + context.id);
+            } else {
+                System.out.println("Not waiting for finished product for search:" + context.id);
+            }
         }
         
         SearchResultContext.Status stat=context.getStatus();
@@ -2361,7 +2362,7 @@ public class App extends Authentication {
 			boolean fuse=false;
 			boolean hasRgroups=hasRGroups(c);
 			int rgroupColor=1;
-			
+
 			if(hasRgroups){
 				if(fuse){
 					compColor=colorChemicalComponents(c);
@@ -2382,7 +2383,7 @@ public class App extends Authentication {
 					}
 				}
 			}
-			
+
 		}
     	return dp;
     }
@@ -2441,16 +2442,16 @@ public class App extends Authentication {
 		return change;
 	}
 	public static boolean fuseChemical(Chemical c){
-		
-		
+
+
 		Map<Integer,ChemicalAtom> needLink = new HashMap<Integer,ChemicalAtom>();
 		Set<ChemicalAtom> toRemove=new HashSet<ChemicalAtom>();
-		
-		
+
+
 		for(ChemicalAtom ca:c.getAtomArray()){
-		
+
 			int rindex=	ca.getRgroupIndex();
-			
+
 			if(rindex>0){
 				ChemicalAtom newNeighbor=needLink.get(rindex);
 				if(newNeighbor==null){
@@ -2464,7 +2465,7 @@ public class App extends Authentication {
 					}
 					toRemove.add(ca);
 					toRemove.add(newNeighbor);
-					
+
 				}
 			}
 		}
