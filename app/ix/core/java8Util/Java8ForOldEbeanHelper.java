@@ -24,7 +24,7 @@ import java.util.Map;
 public class Java8ForOldEbeanHelper {
 
 
-    private static MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+    private  static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
     /**
      * Register an EntityProcessor's  {@link EntityProcessor#prePersist(Object)} method.
@@ -135,7 +135,7 @@ public class Java8ForOldEbeanHelper {
     interface EntityHookMethod{
         void apply(Object o) throws EntityProcessor.FailProcessingException;
     }
-    public static class EntityProcessorHook implements EntityPersistAdapter.Hook {
+    private static class EntityProcessorHook implements EntityPersistAdapter.Hook {
         private final EntityHookMethod delegate;
         private final String name;
 
