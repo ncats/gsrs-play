@@ -1,10 +1,10 @@
 <div>
    <label for={{name}}-{{type}} class="text-capitalize">Access</label>
-    <a ng-show="referenceobj.access.length>0" ng-click="toggle()" role="button"  uib-tooltip="Edit user access">
+    <a ng-show="referenceobj.access.length>0" ng-click="open()" role="button"  uib-tooltip="Edit user access">
         <access value = "referenceobj.access"></access>
     </a>
     <div class="text-center" uib-tooltip="Set user access">
-    <a ng-hide="referenceobj.access.length>0" ng-click="toggle()" role="button" aria-label="Set user access"  id="{{name}}-{{type}}">
-        <i class="fa fa-unlock fa-2x warning"></i></a>
+    <a ng-hide="referenceobj.access.length>0" ng-click="open()" role="button" aria-label="Set user access"  id="{{name}}-{{type}}">
+        <i class="fa fa-unlock fa-2x warning" ng-class="{'disabled': opened == true}"></i></a>
     </div>
 </div>

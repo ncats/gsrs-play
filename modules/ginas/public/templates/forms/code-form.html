@@ -44,7 +44,6 @@
                                         </gsrs-input>
                                     </div>
                                     <div class="col-md-3">
-                                        {{obj.code}}
                                         <gsrs-input type="text"
                                                     ng-model="obj.code"
                                                     field="code"
@@ -78,21 +77,23 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="col-md-1 pull-right">
-                                <form-selector referenceobj="obj" parent="parent" type="access"
-                                               divid=code-{{index}}></form-selector>
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
                             </div>
 
                             <div class="col-md-1 pull-right">
-                                <reference-modal-button referenceobj="obj" parent="parent"
-                                                        edit="true"></reference-modal-button>
-
+                                <modal-form-button type="reference"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
                             </div>
                         </div>
                         <div class=code-{{index}}></div>
-                        {{obj}}
                     </div>
+                    <hr>
                 </ng-form>
                 <hr>
             </div>
@@ -100,7 +101,7 @@
         </form>
         <br>
         <br>
-        <button class="btn btn-primary" ng-click="addAnother(codeForm)"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary" ng-click="addNew(codeForm, 'codes')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.codes.length>0">nother</span> code
         </button>
     </div>

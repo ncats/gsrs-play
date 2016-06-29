@@ -295,13 +295,17 @@
                 field: '@',  // text name of the field -- used for labels and form field retrieval
                 label: '@',  //used if the label needs to display something other than the field
                 formatter: '=?', //form object to watch to format values with. example: filtering code validation based on codeSystem type, mainly if the vocabulary term has a regex associated with it
+                formattercheck: '@formatter', //string literal ofthe object name. this is a placeholder to check and see if there is supposed to be a formatter to watch.
                 filter: '=?', //form object to watch to filter values with. example: filtering codeSystemType validation based on codeSystem
                 filterFunction: '&?', // function called to filter input variables
+                //validator function should accept a model object, and return an array of errors
                 validator: '&?', //optional function passed in from the form directive and used to validate on init and change, used in conjunction with a formatter if available.
                 blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur, so it should be used if the regular validation fires too much
                 required: '=?'  //optional variable that enables required form validation
             },
             link: function (scope, element, attrs, ngModelCtrl) {
+
+               // console.log(scope);
 
                 //this function returns different templates, based on input. all above scope variables are callable
                 //doing this first makes sure everything is attached to the scope before compiling the directive
@@ -317,6 +321,10 @@
                         templateurl = baseurl + "assets/templates/elements/text-view-edit2.html";
                         break;
                     case "text-box":
+                        //this passes along the desired row count for a text box, without making it a scope variable
+                        if (attrs.rows) {
+                            scope.rows = attrs.rows;
+                        }
                         templateurl = baseurl + "assets/templates/elements/text-box-view-edit2.html";
                         break;
                 }
@@ -337,12 +345,12 @@
                     };
 
                     scope.undo = function () {
-                /*        console.log(temp);
+                        console.log(temp);
                         if (scope.changed == true) {
                             scope.obj = temp;
-                            scope.changed = false;
                             scope.edit = false;
-                        }*/
+                            scope.changed = false;
+                        }
                     };
 
                     //this will manage the cv retrieval for dropdown/multi select
@@ -368,6 +376,7 @@
                                 }];
                                 scope.values = _.union(scope.values, other);
                             }
+
                         });
 
                         //used for the multiselect to filter and return the cv
@@ -389,7 +398,6 @@
                         //adds a new cv element to the cv. the update cv function is not working however, and should be fixed
                         /////////////////////////////fix updateCV method
                         scope.makeNewCV = function () {
-                            console.log(scope.obj.new);
                             if(!_.isUndefined(scope.obj.new)) {
                                 var exists = _.find(scope.values, function (cv) {
                                     return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
@@ -426,10 +434,11 @@
                     }
 
                     //this sets a validator if there is a formatter/regex available. could also be set as ngModelCtrl.$formatters
-                    if (scope.validator && scope.formatter) {
+                    //using the string literal for initialization
+                    if (scope.validator && scope.formattercheck) {
                         //this allows invalid options to be shown, so if a formatter changes and the validation fails, it will not be shown
                         ngModelCtrl.$options ={
-                            allowInvalid: true
+                           allowInvalid: true
                         };
                        //set the custom validator to the model controller
                         ngModelCtrl.$validators.customFormat = function (modelValue, viewValue) {
@@ -451,27 +460,19 @@
                         });
                     }
 
-
-
-                    //this is happening if scope.formatter hasn't been set first, ie new form
-
-
                     //validator with no formatting control
-                    if (scope.validator && !scope.formatter) {
+                    if (scope.validator && !scope.formattercheck) {
                         console.log("no formatting!");
                         //just pass the object, probably for async validation, so this might have to be moved
                         ngModelCtrl.$validators.custom = function (modelValue) {
                             scope.errorMessages = scope.validator({model: modelValue});
+                            console.log(scope.errorMessages);
                             console.log("setting anyways no format");
                             scope.obj = modelValue;
-                            return scope.errorMessages.length > 0;
+                            return !scope.errorMessages.length > 0;
                         };
                 }
 
-                    //this passes along the desired row count for a text box, without making it a scope variable
-                    if (attrs.rows) {
-                        scope.rows = attrs.rows;
-                    }
                     //multi select max allowed tags
                     if (attrs.max) {
                         scope.max = attrs.max;
@@ -489,12 +490,7 @@
     });
 
 
-    ginasFormElements.directive('closeButton', function () {
-        return {
-            restrict: 'E',
-            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
-        };
-    });
+
 
     ginasFormElements.service('resolver', function ($http, spinnerService) {
         var resolver = {};
@@ -585,7 +581,6 @@
             },
             link: function (scope, element, attrs) {
                 var template;
-                console.log(scope);
                 if (scope.format == "subref") {
                     template = angular.element('<div>' +
                         '<rendered id= {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
@@ -681,6 +676,117 @@
         };
     });
 
+    ginasFormElements.directive('substanceChooserSelector', function ($templateRequest, $compile, toggler, substanceFactory, spinnerService, CVFields) {
+        return {
+            replace: true,
+            restrict: 'E',
+            scope: {
+                subref: '=ngModel',
+                referenceobj: '=',
+                formname: '@',
+                field: '@',
+                label: '@',
+                type: '@'
+            },
+            link: function (scope, element, attrs, ngModel) {
+                var template;
+                scope.toggle = function () {
+                    if (scope.stage == false) {
+                        scope.q = null;
+                    }
+                    toggler.toggle(scope, scope.formname, template, scope.referenceobj);
+                };
+
+                scope.stage = true;
+
+                scope.fetch = function (term, skip) {
+                    if (_.isUndefined(scope.referenceobj) || scope.referenceobj == null) {
+                        scope.referenceobj = {};
+                    }
+                    spinnerService.show('subrefSpinner');
+                    substanceFactory.getSubstances(scope.q).then(function (response) {
+                        scope.data = response.data.content;
+                        spinnerService.hide('subrefSpinner');
+                        template = angular.element('<substance-viewer data = data obj =referenceobj format= "subref"></substance-viewer>');
+                        toggler.refresh(scope, scope.formname, template);
+                    });
+                };
+
+                scope.createSubref = function (selectedItem) {
+                    var temp = {};
+                    temp.refuuid = selectedItem.uuid;
+                    temp.refPname = selectedItem._name;
+                    temp.approvalID = selectedItem.approvalID;
+                    temp.substanceClass = "reference";
+                    if (attrs.definition) {
+                        var r = {relatedSubstance: temp};
+                        CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
+                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            //var type = _.find(response.data.content[0].terms, ['value', 'Alternative Definition']);
+                            r.type = type;
+                        });
+                        if (!_.has(scope.referenceobj, 'relationships')) {
+                            _.set(scope.referenceobj, 'relationships', []);
+                        }
+                        scope.referenceobj.relationships.push(r);
+                    }
+
+                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
+                    scope.q = null;
+                    scope.stage = false;
+                    toggler.toggle(scope, scope.formname);
+                };
+
+
+                switch (scope.type) {
+                    case "lite":
+                        $templateRequest(baseurl + "assets/templates/substance-select.html").then(function (html) {
+                            template = angular.element(html);
+                            element.append(template);
+                            $compile(template)(scope);
+                        });
+                        break;
+                    case "search":
+                        $templateRequest(baseurl + "assets/templates/substance-search.html").then(function (html) {
+                            template = angular.element(html);
+                            element.append(template);
+                            $compile(template)(scope);
+                        });
+                        if (attrs.definition) {
+                            scope.definition = attrs.definition;
+                        }
+                        break;
+                }
+            }
+        };
+    });
+
+    ginasFormElements.directive('substanceView', function ($compile) {
+        return {
+            replace: true,
+            restrict: 'E',
+            scope: {
+                subref: '=',
+                size: '='
+            },
+            link: function (scope, element) {
+                var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
+                element.append(template);
+                $compile(template)(scope);
+            }
+        };
+    });
+    
+    //////////////BUTTONS///////////////////////////
+
+/////////////////////////////////is this one used???
+    ginasFormElements.directive('closeButton', function () {
+        return {
+            restrict: 'E',
+            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
+        };
+    });
+
     ginasFormElements.directive('downloadButton', function ($compile, $timeout, download) {
         return {
             restrict: 'E',
@@ -732,8 +838,222 @@
         };
     });
 
+    ginasFormElements.directive('deleteButton', function () {
+        return {
+            restrict: 'E',
+            template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
+            link: function (scope, element, attrs) {
+                    scope.showlabel= attrs.showlabel;
+
+                scope.deleteObj = function () {
+                    scope.$emit('delete');
+                    if (scope.parent) {
+                        var arr = _.get(scope.parent, attrs.path);
+                        arr.splice(arr.indexOf(scope.obj), 1);
+                    } else {
+                        scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
+                    }
+                };
+
+            }
+        };
+    });
+
+    ginasFormElements.directive('infoButton', function ($compile, toggler) {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                type: '@',
+                path: '@'
+            },
+            link: function (scope, element, attrs) {
+                scope.stage = true;
+                var template;
+                var url = baseurl + "assets/templates/info/";
+                if (attrs.mark == "exclaim") {
+                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" uib-tooltip="click for description"></i></span>');
+                } else {
+                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-question-circle fa-lg"  uib-tooltip="click for description"></i></span>');
+                }
+                element.append(template);
+                $compile(template)(scope);
+                if (attrs.info) {
+                    url = url + attrs.info + '-info.html';
+                } else {
+                    url = url + 'code-info.html';
+                }
 
 
+                scope.showInfo = function () {
+                    toggler.show(scope, scope.type, url);
+                };
+            }
+        }
+    });
+
+    ginasFormElements.directive('modalFormButton', function ($uibModal) {
+        return {
+            scope: {
+                referenceobj: '=?',
+                parent: '=',
+                label: '@?',
+                edit: '=?',
+                subclass: '@?',
+                field: "@?"
+            },
+            templateUrl: function(tElem, tAttrs){
+                var templateurl;
+                switch (tAttrs.type) {
+                    case "access":
+                        templateurl =  baseurl + "assets/templates/selectors/access-selector.html";
+                        break;
+                    case "amount":
+                        templateurl =  baseurl + "assets/templates/selectors/amount-selector.html";
+                        break;
+                    case "nameorg":
+                        templateurl =  baseurl + "assets/templates/selectors/name-org-selector.html";
+                        break; 
+                    case "parameter":
+                        templateurl =  baseurl + "assets/templates/selectors/parameter-selector.html";
+                        break;
+                    case "reference":
+                        templateurl =  baseurl + "assets/templates/selectors/reference-selector.html";
+                        break;
+                }
+                return templateurl;
+            },
+
+
+
+////////////See if this is can be moved to reference form or header form///////////////////////////////
+            //this is used in the reference form to apply the references to structure/protein etc.
+            link: function(scope, element){
+                if(_.isUndefined(scope.referenceobj)){
+                    scope.subClass = scope.parent.substanceClass;
+                    if(scope.subClass ==="chemical"){
+                        scope.subClass = "structure";
+                    }
+                    if(scope.subClass ==="specifiedSubstanceG1"){
+                        scope.subClass = "specifiedSubstance";
+                    }
+                    scope.referenceobj = scope.parent[scope.subClass];
+                }
+            },
+
+         //   templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
+
+            controller: function ($scope, $element, $attrs) {
+                $scope.opened=false;
+                var modalInstance;
+                $scope.close = function () {
+                    $scope.opened=false;
+                    //this has a listener in the reference form that applies the reference to the array of the object
+                    //might need to check the type before calling it.
+                    $scope.$broadcast('save');
+                    modalInstance.close();
+                };
+
+                $scope.open = function () {
+                    modalInstance = $uibModal.open({
+                        templateUrl: function(tElem, tAttrs){
+                            var templateurl;
+                            switch ($attrs.type) {
+                                case "access":
+                                    templateurl =  baseurl + "assets/templates/modals/access-modal.html";
+                                    break;
+                                case "amount":
+                                    if(!$scope.field){
+                                        $scope.field = "amount";
+                                    }
+                                    templateurl =  baseurl + "assets/templates/modals/amount-modal.html";
+                                    break;
+                                case "nameorg":
+                                    templateurl =  baseurl + "assets/templates/modals/name-org-modal.html";
+                                    break;
+                                case "parameter":
+                                    templateurl =  baseurl + "assets/templates/modals/parameter-modal.html";
+                                    break;
+                                case "reference":
+                                    templateurl =  baseurl + "assets/templates/modals/reference-modal.html";
+                                    break;
+                            }
+                            return templateurl;
+
+                        },
+                       // templateUrl:
+                        size: 'xl',
+                        scope: $scope,
+                        resolve: {
+                            parent: function () {
+                                return $scope.substance;
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    });
+
+    ginasFormElements.directive('referenceApply', function ($compile) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                apply: '=?ngModel',
+                obj: '=?',
+                referenceobj: '=',
+                parent: '='
+            },
+            link: function (scope, element, attrs) {
+                var uuid;
+                var index;
+                var template;
+             //   scope.apply = false;
+                if (_.isUndefined(scope.referenceobj)) {
+                    scope.referenceobj = {};
+                }
+
+                if (_.isUndefined(scope.referenceobj.references)) {
+                    var x = [];
+                    _.set(scope.referenceobj, 'references', x);
+                }
+
+                scope.isReferenced = function () {
+                    return index >= 0;
+                };
+
+                switch (attrs.type) {
+                    case "view":
+                        template = angular.element('<div class = "text-center"><label for="apply" class="text-capitalize">Apply</label><br/><input type="checkbox" ng-model= apply placeholder="Apply" title="Apply" id="apply" checked/></div>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        break;
+                    case "edit":
+                        template = angular.element('<div class = "text-center"><input type="checkbox" ng-model="obj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        uuid = scope.obj.uuid;
+                        index = _.indexOf(scope.referenceobj.references, uuid);
+                        scope.obj.apply = scope.isReferenced();
+                        scope.parent.references = _.orderBy(scope.parent.references, ['apply'], ['desc']);
+                        break;
+                }
+
+                scope.updateReference = function () {
+                    index = _.indexOf(scope.referenceobj.references, uuid);
+                    if (index >= 0) {
+                        scope.referenceobj.references.splice(index, 1);
+                        scope.obj.apply = false;
+                    } else {
+                        scope.referenceobj.references.push(uuid);
+                        scope.obj.apply = true;
+                    }
+                };
+
+            }
+        };
+    });
 
 
 

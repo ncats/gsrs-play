@@ -1,108 +1,114 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
-        <form-header type="names" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="names" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <ng-form name="nameForm" id = "addNameForm" novalidate isolate-form>
-            <div class="row form-row">
-                <div class="col-md-4" >
-<!--
-                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" validator="duplicateCheck(name)"></text-input>
--->
-                     <text-input ng-model="name.name" field="name" name ="name" form="nameForm" required="true"></text-input>
-                    <button class="btn btn-default" ng-click="duplicateCheck(name.name)" ng-if="parent.substanceClass=='chemical'">Resolve Name</button>
-                </div>
-
-                <div class="col-md-2">
-                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type" required="true"></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
-                </div>
-                <div class="col-md-1">
-                    <check-box ng-model="name.displayName" field="displayName" label="Display"></check-box>
-                </div>
-                <div class="col-md-1">
-                    <check-box ng-model="name.preferred" field="preferred" ></check-box>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "access"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "name" parent = "parent"></reference-modal-button>
-                </div>
-            </div>
-            <div class="row form-row">
-                <div class = "col-md-2">
-                </div>
-                <div ng-if="name.type.value=='of'">
-                <div class="col-md-2">
-                </div>
-                <div class="col-md-2 err-check">
-                    <multi-select ng-model="name.domains" field="domains" cv = "NAME_DOMAIN" required="true"></multi-select>
-                </div>
-                    <div class="col-md-1">
-                        <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "nameOrgs"></form-selector>
-                    </div>
-                <div class="col-md-2 err-check">
-                    <multi-select ng-model="name.nameJurisdiction" field="nameJurisdiction" label = "Name Jurisdiction" cv = "JURISDICTION" ></multi-select>
-                </div>
-                </div>
-            </div>
-            <div class = "row">
-                <spinner name="nameSpinner"><loading></loading><br/></spinner>
-                <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>
-            </div>
-            <div class="nameForm"></div>
-            <submit-buttons submit="name" form="nameForm" path="names" customSubmit ="clear()" ></submit-buttons>
-        </ng-form>
-
-
-        <div ng-repeat="(index, obj) in parent.names track by $index">
-            <div class ="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path="names"></delete-button>
-                </div>
-                <div class="col-md-3">
-                    <text-view-edit obj = "obj" field = "name" required="true"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE" required="true"></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="displayName" label="Display"></check-box-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid=name-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
-                </div>
-                </div>
-                <div class="row form-row">
-                    <div ng-show="obj.type.value=='of'">
+        <form class="form-horizontal" name="nameForm" role="form" id="addNameForm" novalidate>
+            <div ng-repeat="(index,obj) in parent.names">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="names"></delete-button>
+                            </div>
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-7">
+<!--                        <gsrs-input type="text"
+                                    ng-model="obj.name"
+                                    field="name"
+                                    required="true"
+                                    validator="duplicateCheck(model)"
+                                    formname=form>
+                        </gsrs-input>  -->
+                            <gsrs-input type="text"
+                                    ng-model="obj.name"
+                                    field="name"
+                                    required="true"
+                                    formname=form>
+                        </gsrs-input>
+                            <button class="btn btn-default" ng-click="duplicateCheck(obj.name)" ng-if="parent.substanceClass=='chemical'">Resolve Name</button>
+                        </div>
+                        <div class="col-md-3">
+                            <gsrs-input type = "multi"
+                                        ng-model= obj.languages
+                                        field="languages"
+                                        cv="LANGUAGE">
+                            </gsrs-input>
+                        </div>
+                        <div class="col-md-1">
+                            <check-box ng-model="obj.displayName" field="displayName" label="Display"></check-box>
+                        </div>
+                        <div class="col-md-1">
+                            <check-box ng-model="obj.preferred" field="preferred" ></check-box>
+                        </div>
+                        </div>
+                    <br>
+                    <div class="row">
                         <div class="col-md-4">
+                            <gsrs-input type="dropdown"
+                                        ng-model="obj.type"
+                                        field="type"
+                                        cv="NAME_TYPE"
+                                        required="true"
+                                        formname=form>
+                            </gsrs-input>
                         </div>
-                        <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "domains" cv = "NAME_DOMAIN"></multi-view-edit>
+                        <div ng-if="obj.type.value=='of'">
+                            <div class="col-md-3">
+                                <gsrs-input type = "multi"
+                                            ng-model= obj.domains
+                                            field="domains"
+                                            required="true"
+                                            cv="NAME_DOMAIN">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2">
+                                <modal-form-button type="nameorg"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-3">
+                                <gsrs-input type = "multi"
+                                            ng-model= obj.nameJurisdiction
+                                            field="nameJurisdiction"
+                                            label = "Name Jurisdiction"
+                                            cv="JURISDICTION">
+                                </gsrs-input>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <form-selector referenceobj ="obj" parent = "parent" type = "nameOrgs" divid=name-{{index}}></form-selector>
-                        </div>
-                        <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION" label ="Jurisdiction"></multi-view-edit>
-                        </div>
+
                     </div>
                 </div>
-            <div class = name-{{index}}></div>
-        </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="reference"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            </div>
+                        <spinner name="nameSpinner"><loading></loading><br/></spinner>
+                        <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>
+                        <div class = "row">
+
+                        </div>
+                    </div>
+                    <hr>
+                </ng-form>
+            </div>
+        </form>
+        <div class="nameForm"></div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(nameForm, 'names')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="parent.names.length>0">nother</span> name
+        </button>
     </div>
 </div>
-

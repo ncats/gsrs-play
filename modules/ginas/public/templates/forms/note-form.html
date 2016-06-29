@@ -1,42 +1,48 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
-        <form-header type="notes" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="notes" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="noteForm" id = "addNoteForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-10">
-                    <text-box ng-model="note.note" field="note"></text-box>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="note" parent = "parent" divid="noteForm" type = "access"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "note" parent = "parent"></reference-modal-button>
+        <form class="form-horizontal" name="noteForm" role="form" id="addNoteForm" novalidate>
+            <div ng-repeat="(index,obj) in parent.notes">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="notes"></delete-button>
+                            </div>
+                            <div class="col-md-9">
+                                <gsrs-input type="text-box"
+                                            ng-model="obj.note"
+                                            field="note"
+                                            formname=form
+                                            required="true"
+                                            rows = 7 >
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
 
-                </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="reference"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </ng-form>
             </div>
-            <div class="noteForm"></div>
-            <submit-buttons submit="note" form="noteForm" path="notes"></submit-buttons>
         </form>
-
-        <div ng-repeat="(index, obj) in parent.notes track by $index">
-            <div class ="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path="notes"></delete-button>
-                </div>
-                <div class="col-md-9 err-check" id="name-div">
-                    <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid=note-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "note" parent = "parent" edit ="true"></reference-modal-button>
-                </div>
-            </div>
-            <div class = note-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(noteForm, 'notes')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="parent.notes.length>0">nother</span> note
+        </button>
     </div>
 </div>

@@ -1,28 +1,34 @@
 <div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
-<label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
+    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class="danger"> *</span></label><br>
         <span ng-hide="edit" ng-click="edit = !edit">
-        <pre ng-if = "!edit">{{obj}}</pre>
+        <pre ng-if="!edit && !obj==''">{{obj}}</pre>
         </span>
-        <textarea 
-				ng-init ="validatorFunction()"
-				ng-change="validatorFunction()"
-        		ng-show="edit"
-        		type="text" 
-        		class="form-control" 
-        		ng-model= obj
-				ng-blur="edit = !edit"
-				ng-required="required"
-               placeholder ="{{label || field}}"
-				title="{{::field}}"
-				name="{{::field}}"></textarea>
+    <span ng-hide="edit" ng-click="edit = !edit">
+        <span ng-if="!edit && obj==''" uib-tooltip="Add {{label || field}}"><i
+                class="fa fa-plus fa-2x success"></i></a></span>
+        </span>
+        <textarea
+                ng-init="validatorFunction()"
+                ng-change="validatorFunction()"
+                ng-show="edit"
+                type="text"
+                class="form-control"
+                ng-model=obj
+                ng-blur="edit = !edit"
+                ng-required="required"
+                placeholder="{{label || field}}"
+                title="{{::field}}"
+                name="{{::field}}"
+                rows={{rows}}
+        ></textarea>
 
-	<div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
-		<div ng-message="required" class ="danger">required field</div>
-		<div ng-repeat="errorMessage in errorMessages">
-			<!-- use ng-message-exp for a message whose key is given by an expression -->
-			<div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
-		</div>
-	</div>
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+        <div ng-message="required" class="danger">required field</div>
+        <div ng-repeat="errorMessage in errorMessages">
+            <!-- use ng-message-exp for a message whose key is given by an expression -->
+            <div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
+        </div>
+    </div>
 </div>
 
 

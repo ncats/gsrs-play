@@ -1,46 +1,58 @@
-<div class="row info">
-    <div class="row">
-        <form-header type="amount" parent="substance"></form-header>
-        <close-button></close-button>
-    </div>
+<div class="row">
     <div class="col-md-12">
         <form class="form-horizontal" name="amountForm" id="addAmountForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-<!--
-                    <dropdown-select ng-model="referenceobj[field].type" field="type" cv="AMOUNT_TYPE" filter = filter></dropdown-select>
--->
-                    <dropdown-select ng-model="referenceobj[field].type" field="type" cv="AMOUNT_TYPE"></dropdown-select>
+                <gsrs-input type="dropdown"
+                            ng-model="referenceobj.type"
+                            field="type"
+                            cv="AMOUNT_TYPE"
+                            required="true">
+                </gsrs-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="referenceobj[field].average" field="average"></text-input>
+                    <gsrs-input type="text"
+                                ng-model="referenceobj.average"
+                                field="average">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="referenceobj[field].low" field="low"></text-input>
+                    <gsrs-input type="text"
+                                ng-model="referenceobj.low"
+                                field="low">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="referenceobj[field].high" field="high"></text-input>
+                    <gsrs-input type="text"
+                                ng-model="referenceobj.high"
+                                field="high">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="referenceobj[field].lowLimit" field="lowLimit"></text-input>
+                    <gsrs-input type="text"
+                                ng-model="referenceobj.lowLimit"
+                                field="lowLimit">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-1">
-                    <text-input ng-model="referenceobj[field].highLimit" field="highLimit"></text-input>
+                    <gsrs-input type="text"
+                                ng-model="referenceobj.highLimit"
+                                field="highLimit">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-2">
-<!--
-                    <dropdown-select ng-model="referenceobj[field].units" field="units" cv="AMOUNT_UNIT" filter = "referenceobj[field].type"></dropdown-select>
--->
-                    <dropdown-select ng-model="referenceobj[field].units" field="units" cv="AMOUNT_UNIT"></dropdown-select>
-                </div>
+                    <gsrs-input type="dropdown"
+                            ng-model="referenceobj.units"
+                            field="units"
+                            cv="AMOUNT_UNIT"
+                            filter = "referenceobj.type">
+                     </gsrs-input>
+                    </div>
                 <div class="col-md-2">
-                    <text-input ng-model="referenceobj[field].nonNumericValue" field="nonNumericValue"></text-input>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-2 pull-right">
-                    <a ng-click="referenceobj[field]=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="$parent.toggle()"><i class="fa fa-check fa-2x success"></i></a>
+                    <gsrs-input type="text"
+                                ng-model="referenceobj.nonNumericValue"
+                                field="nonNumericValue">
+                    </gsrs-input>
                 </div>
             </div>
         </form>

@@ -1,74 +1,91 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
-        <form-header type="properties" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="properties" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="propertyForm" id="addPropertyForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-3">
-                    <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME"></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="property.propertyType" field="propertyType" label ="Property Type" cv = "PROPERTY_TYPE" filter= "property.name"></dropdown-select>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "property" divid="propertyForm" field="value" type = "amount" filter= "property.type"></form-selector>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "property" divid="propertyForm" type = "parameter"></form-selector>
-                </div>
-                <div class="col-md-2" ng-if="property.name && property.name.value=='ISOTOPE'">
-                    <substance-chooser-selector referenceobj="property" field="referencedSubstance"
-                                                name="referencedSubstance" formname="propertyForm"
-                                                label="Referenced Substance" type="search"></substance-chooser-selector>
-                </div>
-                <div class="col-md-1">
-                    <check-box ng-model="property.defining" field="defining" ></check-box>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="property" parent = "parent" divid="propertyForm" type = "access"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "property" parent = "parent"></reference-modal-button>
-                </div>
+        <form class="form-horizontal" name="propertyForm" role="form" id="addPropertyForm" novalidate>
+            <div ng-repeat="(index,obj) in  parent.properties">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="properties"></delete-button>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="obj.name"
+                                                    field="name"
+                                                    cv="PROPERTY_NAME"
+                                                    max="1"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="obj.propertyType"
+                                                    field="propertyType"
+                                                    cv="PROPERTY_TYPE"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <modal-form-button type="amount"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <substance-chooser-selector referenceobj="obj"
+                                                                    field="referencedSubstance"
+                                                                    name="referencedSubstance"
+                                                                    formname=property-{{index}}
+                                                                    label="Referenced Substance"
+                                                                    type="search">
+                                        </substance-chooser-selector>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <check-box-view-edit
+                                                obj="obj"
+                                                field="defining">
+                                        </check-box-view-edit>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 pull-left">
+                                        <modal-form-button type="parameter"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="reference"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                        </div>
+                        <div class=property-{{index}}></div>
+                    </div>
+                    <hr>
+                </ng-form>
             </div>
-            <div class="propertyForm"></div>
-            <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
-
-        <div ng-repeat="(index, obj) in parent.properties track by $index">
-            <div class ="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path = "properties"></delete-button>
-                </div>
-                <div class="col-md-2 url">
-                    <text-view-edit obj = "obj.name" field="display" cv = "PROPERTY_NAME" max="1"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="propertyType" cv = "PROPERTY_TYPE"></dropdown-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="propertyForm" field="value" type = "amount" divid=property-{{index}}></form-selector>
-
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="propertyForm" type = "parameter" divid=property-{{index}} mode="edit"></form-selector>
-                </div>
-                <div class="col-md-2">
-                    <substance-chooser-selector referenceobj="obj" field="referencedSubstance" name ="referencedSubstance" formname =property-{{index}} label="Referenced Substance" type ="search"></substance-chooser-selector>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="defining"></check-box-view-edit>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid=property-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "name" parent = "parent" edit ="true"></reference-modal-button>
-                </div>
-            </div>
-            <div class = property-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(propertyForm, 'properties')"><i class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.properties.length>0">nother</span> property
+        </button>
     </div>
 </div>

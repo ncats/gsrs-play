@@ -60,6 +60,456 @@
         };
     });
 
+
+    //generic controller that all forms will have. has acces to specific form scopes, and the more specific forms can call these methods
+    ginasForms.controller('formController', function ($scope, $http) {
+
+        $scope.addNew = function (mainForm, list, obj) {
+            console.log("clicked add new in form controller");
+            console.log($scope);
+            var temp = {};
+            if (obj) {
+                temp= obj;
+            }
+            if ($scope.parent[list] && $scope.parent[list].length > 0) {
+                if (mainForm.form && mainForm.form.$invalid) {
+                    mainForm.form.$flagged = true;
+                }
+
+                $scope.parent[list].push(temp);
+            } else {
+                _.set($scope.parent, list, []);
+                $scope.parent[list].push(temp);
+            }
+        };
+
+
+        $scope.submitFile = function (obj) {
+            //create form data object
+            var fd = new FormData();
+            if (obj) {
+                $scope.$$uploadFile = obj.$$uploadFile;
+            }
+            console.log($scope);
+            fd.append('file-name', $scope.$$uploadFile);
+            fd.append('file-type', $scope.$$uploadFile.type);
+            //send the file / data to your server
+            $http.post(baseurl + 'upload', fd, {
+                transformRequest: angular.identity,
+                headers: {'Content-Type': undefined}
+            }).success(function (data) {
+                if (obj) {
+                    _.set(obj, 'uploadedFile', data.url);
+                    delete obj.$$uploadFile;
+                } else {
+                    _.set($scope.obj, 'uploadedFile', data.url);
+                }
+            }).error(function (err) {
+                _.set(obj, 'uploadedFile', false);
+                _.set(obj, '$$uploadFile', false);
+            });
+            delete $scope.$$uploadFile;
+        };
+
+
+    });
+
+    ginasForms.directive('accessForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/access-form.html"
+        };
+    });
+
+    ginasForms.directive('amountForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                amount: '=',
+                referenceobj: '=',
+                parent: '=',
+                field: '=',
+                filter: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/amount-form.html"
+        };
+    });
+
+    ginasForms.directive('codeForm', function (validatorFactory) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            templateUrl: baseurl + "assets/templates/forms/code-form.html",
+            scope: {
+                parent: '='
+            },
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.parse = function (code) {
+                    var errors = [];
+                    if (_.isUndefined(code.formatter)) {
+                        errors.push({text: 'no code system yet', type: 'warning'});
+                    } else {
+                        var valid = validatorFactory.validate(code.formatter.value, code.model);
+                        if (valid == false) {
+                            errors.push({text: 'invalid', type: 'danger'});
+                        } else {
+                            //  errors.push({text: 'valid', type: 'success'});
+                        }
+                    }
+                    return errors;
+                };
+            }
+        };
+    });
+
+    ginasForms.directive('diverseTypeForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
+            link: function (scope, element, attrs) {
+                scope.parent.$$diverseType = "whole";
+                if (scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
+                    _.set(scope.parent, '$$diverseType', 'part');
+                    _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
+                }
+                scope.checkType = function () {
+                    if (scope.parent.$$diverseType === 'whole') {
+                        scope.parent.$$diverseType = 'whole';
+                        _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
+                    } else {
+                        if (scope.$$temp) {
+                            _.set(scope.parent.structurallyDiverse, 'part', scope.$$temp);
+                        } else {
+                            _.set(scope.parent.structurallyDiverse, 'part', []);
+                        }
+                    }
+                };
+            }
+        };
+    });
+
+    ginasForms.directive('headerForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            link: function (scope, element, attrs) {
+                if (scope.parent._name) {
+                    scope.formType = 'Editing';
+                    scope.name = scope.parent._name;
+                } else {
+                    scope.formType = 'Registering new';
+                    scope.name = _.startCase(scope.parent.substanceClass);
+                }
+            },
+            templateUrl: baseurl + "assets/templates/forms/header-form.html"
+        };
+    });
+
+    ginasForms.directive('moietyForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/moiety-form.html"
+        }
+    });
+
+    ginasForms.directive('nameForm', function ($q, substanceFactory, resolver, toggler, spinnerService) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/name-form.html",
+            link: function (scope) {
+
+                scope.duplicateCheck = function (name) {
+                    var errors = [];
+                    console.log("Duplicate");
+                    var result = angular.element(document.getElementsByClassName('nameForm'));
+                    result.empty();
+                    var resolve = resolver.resolve(name).then(function (response) {
+                        if (response.data.length > 0) {
+                            return response.data;
+                        }
+                        return [];
+                    });
+                    var duplicate = substanceFactory.getSubstances(name).then(function (response) {
+                        var duplicate = [];
+                        if (response.data.count > 0) {
+                            errors.push({text: 'duplicate name', type: 'warning'});
+                            _.forEach(response.data.content, function (sub) {
+                                _.set(sub, 'refType', 'duplicate');
+                                duplicate.push(sub);
+                            });
+                        }
+                        return duplicate;
+                    });
+                    if (!_.isUndefined(name) && name !== "") {
+                        spinnerService.show('nameSpinner');
+                        var template;
+                        $q.all([resolve, duplicate]).then(function (results) {
+                            scope.data = [];
+                            var temp = [];
+                            _.forEach(results, function (result) {
+                                if (!_.isUndefined(result)) {
+                                    temp.push(result);
+                                }
+                                scope.data = _.flattenDeep(temp);
+                            });
+                        }).finally(function () {
+                            if (_.isEmpty(scope.data)) {
+                                scope.data.push("empty");
+                            }
+                            template = angular.element('<substance-viewer data = data parent = parent obj = name></substance-viewer>');
+                            toggler.refresh(scope, 'nameForm', template);
+                        });
+                    } else {
+                        spinnerService.hideAll();
+                    }
+                    return errors;
+                };
+
+            }
+        };
+    });
+
+    ginasForms.directive('nameOrgForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=?'
+            },
+            templateUrl: baseurl + "assets/templates/forms/name-org-form.html"
+        };
+    });
+
+    ginasForms.directive('noteForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/note-form.html"
+        };
+    });
+
+    ginasForms.directive('parameterForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=?'// this is the object from the form that is getting the parameter added to it
+            },
+            templateUrl: baseurl + "assets/templates/forms/parameter-form.html"
+        };
+    });
+
+    ginasForms.directive('propertyForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=?'// this is the object from the form that is getting the property added to it
+            },
+            templateUrl: baseurl + "assets/templates/forms/property-form.html"
+        };
+    });
+
+    ginasForms.directive('referenceForm', function (UUID) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=?'// this is the object from the form that is getting the references added to it
+            },
+            templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
+            link: function (scope, element, attrs) {
+                
+                scope.addNewRef = function (mainform, list) {
+                    //passes a new uuid for reference tracking
+                    var obj = {
+                        uuid: UUID.newID(),
+                        apply: true
+                    };
+                    scope.addNew(mainform, list, obj);
+                };
+
+                scope.applyRefs = attrs.apply;
+
+                //called on close of the modal reference form. saves all applied references to the array
+                scope.$on('save', function (e) {
+                    console.log("saviunig");
+                    scope.validate();
+                });
+
+                scope.validate = function () {
+                    console.log(scope);
+                    //grabs an array of all the uuids of the references where apply checkbox is true
+                    var objreferences = _
+                        .chain(scope.parent.references)
+                        .filter(function (ref) {
+                            if (ref.apply) {
+                                return ref;
+                            }
+                        })
+                        .map('uuid')
+                        .value();
+                    console.log(objreferences);
+
+                    //pushes this array to the reference object
+                    console.log(scope.referenceobj);
+                    if (_.has(scope.referenceobj, 'references') && scope.referenceobj.references.length > 0) {
+                        _.union(scope.referenceobj.references, objreferences);
+                    } else {
+                        _.set(scope.referenceobj, 'references', objreferences);
+                    }
+                };
+
+                //the delete button emits the delete object, which is used here to remove the reference form all arrays that use it
+                scope.$on('delete', function (e) {
+                    console.log(e.targetScope.obj);
+                    console.log("form delete");
+                    console.log(scope.obj);
+                    var obj = scope.parent;
+                    var del = e.targetScope.obj.uuid;
+                    scope.deleteObj(obj, del);
+                });
+
+                //recursive object iteration method
+                scope.deleteObj = function (obj, ref) {
+                    _.forEach(_.keysIn(obj), function (field) {
+                        if (_.isObject(obj[field])) {
+                            if (_.isArray(obj[field])) {
+                                _.forEach((obj[field]), function (value, key) {
+                                    if (_.isObject(value)) {
+                                        console.log(value);
+                                        if (_.indexOf(_.keysIn(value), 'references') > -1) {
+                                            scope.deleteObjectReferences(value, ref);
+                                        } else {
+                                            scope.deleteObj(value, ref);
+                                        }
+                                    }
+                                });
+                            } else {
+                                scope.deleteObj(obj[field], ref);
+                            }
+                        }
+                    });
+                };
+
+                //actual method to delete the reference uuid from an object references array
+                scope.deleteObjectReferences = function (obj, id) {
+                    var index;
+                    var refs = _.get((obj), 'references');
+                    index = _.findIndex(refs, function (o) {
+                        return o == id;
+                    });
+                    if (index > -1) {
+                        refs.splice(index, 1);
+                        obj.references = refs;
+                    }
+                };
+            }
+        };
+    });
+
+    ginasForms.directive('relationshipForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/relationship-form.html"
+        };
+    });
+
+    ginasForms.directive('structureForm', function ($http, $templateRequest, $compile, molChanger) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '=',
+                type: '@'
+            },
+            link: function (scope, element) {
+                if (scope.parent.substanceClass === 'polymer') {
+                    if (_.has(scope.parent.polymer.idealizedStructure)) {
+                        _.set(scope.parent, 'structure', scope.parent.polymer.idealizedStructure);
+                    } else {
+                        _.set(scope.parent, 'structure', scope.parent.polymer.displayStructure);
+                    }
+                } else {
+                    scope.structure = scope.parent.structure;
+                }
+
+                scope.checkDuplicateChemicalSubstance = function () {
+                    var sub = scope.parent.$$flattenSubstance(angular.copy(scope.parent));
+                    scope.structureErrorsArray = [];
+                    $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
+                        var arr = [];
+
+                        for (var i in response) {
+                            if (response[i].messageType != "INFO")
+                                arr.push(response[i]);
+                            if (response[i].messageType == "WARNING")
+                                response[i].class = "alert-warning";
+                            if (response[i].messageType == "ERROR")
+                                response[i].class = "alert-danger";
+                            if (response[i].messageType == "INFO")
+                                response[i].class = "alert-info";
+                            if (response[i].messageType == "SUCCESS")
+                                response[i].class = "alert-success";
+
+
+                        }
+                        scope.structureErrorsArray = arr;
+                    });
+                };
+                $templateRequest(baseurl + "assets/templates/forms/structure-form.html").then(function (html) {
+                   var template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                });
+
+            }
+        };
+    });
+
+
+
     ginasForms.directive('formHeader', function ($compile, $templateRequest) {
         return {
             restrict: 'E',
@@ -181,74 +631,14 @@
         };
     });
 
-    ginasForms.directive('infoButton', function ($compile, toggler) {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                type: '@',
-                path: '@'
-            },
-            link: function (scope, element, attrs) {
-                scope.stage = true;
-                var template;
-                var url = baseurl + "assets/templates/info/";
-                if (attrs.mark == "exclaim") {
-                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" uib-tooltip="click for description"></i></span>');
-                } else {
-                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-question-circle fa-lg"  uib-tooltip="click for description"></i></span>');
-                }
-                element.append(template);
-                $compile(template)(scope);
-                if (attrs.info) {
-                    url = url + attrs.info + '-info.html';
-                } else {
-                    url = url + 'code-info.html';
-                }
+    
 
-
-                scope.showInfo = function () {
-                    toggler.show(scope, scope.type, url);
-                };
-            }
-        }
-    });
-
-    ginasForms.directive('accessForm', function () {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/access-form.html",
-            link: function (scope, element, attrs) {
-                scope.validate = function () {
-                    if (_.has(scope.referenceobj, 'access')) {
-                        var temp = _.get(scope.referenceobj, 'access');
-                        temp.push(scope.access);
-                        _.set(scope.referenceobj, 'access', temp);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(scope.access));
-                        _.set(scope.referenceobj, 'access', x);
-                    }
-                    scope.access = {};
-                    scope.accessForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj, parent) {
-                    parent.splice(_.indexOf(parent, obj), 1);
-                };
-            }
-        };
-    });
 
     ginasForms.directive('agentModificationForm', function () {
         return {
             restrict: 'E',
             replace: true,
+            controller: 'formController',
             scope: {
                 parent: '='
             },
@@ -256,121 +646,6 @@
         };
     });
 
-    ginasForms.directive('amountForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                amount: '=',
-                referenceobj: '=',
-                parent: '=',
-                field: '=',
-                filter: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/amount-form.html",
-            link: function (scope) {
-                console.log(scope);
-                if (scope.filter) {
-                }
-
-            }
-        };
-    });
-
-    ginasForms.directive('codeForm', function ($compile, $templateRequest, toggler, validatorFactory) {
-        return {
-            restrict: 'E',
-            replace: true,
-            templateUrl: baseurl + "assets/templates/forms/code-form.html",
-            scope: {
-                parent: '='
-            },
-            link: function (scope, element, attrs) {
-                scope.parse = function (code) {
-                    var errors =[];
-                    console.log(code);
-                    /* if (!_.isUndefined(code) || !_.isNull(code)) {
-                     if (_.isEmpty(code)) {
-                     scope.errors.push({text: 'no code system yet', class: 'warning'});
-                     }
-
-                     var codeSystem;
-                     var codeValue;
-                     //this is for adding a new code
-                     console.log(scope);
-                     if (code && !_.isEmpty(code.codeSystem)) {
-                     codeSystem = scope.code.codeSystem.value;
-                     codeValue = code;
-                     } else {
-                     //this is for editing one
-                     codeSystem = code.codeSystem.value || code.codeSystem;
-                     codeValue = code.code;
-                     }
-                     var valid = validatorFactory.validate(codeSystem, codeValue);
-                     console.log(valid);
-                     if (valid == false) {
-                     scope.errors.push({text: 'invalid', type: 'danger'});
-                     } else {
-                     scope.errors.push({text: 'valid', type: 'success'});
-                     }
-                     } else {
-                     if (scope.errors.length < 1) {
-                     scope.errors.push({text: 'no code system yet', type: 'warning'});
-                     }*/
-                    if(_.isUndefined(code.formatter)){
-                        errors.push({text: 'no code system yet', type: 'warning'});
-                    }else {
-                        var valid = validatorFactory.validate(code.formatter.value, code.model);
-                        console.log(valid);
-                        if (valid == false) {
-                            errors.push({text: 'invalid', type: 'danger'});
-                        } else {
-                          //  errors.push({text: 'valid', type: 'success'});
-                        }
-                    }
-                    return errors;
-                };
-
-
-                scope.addAnother = function(form){
-                    console.log(scope);
-                    var temp ={};
-                    if(scope.parent.codes && scope.parent.codes.length>0) {
-                        console.log(scope.codeForm);
-                        if(scope.codeForm.form && scope.codeForm.form.$invalid) {
-                            console.log("adding flagged");
-                            scope.codeForm.form.$flagged = true;
-                        }
-
-                        scope.parent.codes.push(temp);
-                    }else{
-                        _.set(scope.parent, 'codes', [] );
-                        scope.parent.codes.push(temp);
-                    }
-                    console.log(scope);
-                };
-
-               /* scope.validateFunction = function(obj, hi){
-                    console.log("code form validation function");
-                    console.log(obj);
-                    if(_.isEmpty(obj)||_.isNull(obj.codeSystem)){
-                        console.log(scope.codeForm.codeObjForm.codeSystem);
-                        console.log("empty");
-                        scope.codeForm.codeObjForm.codeSystem.$setValidity('required', false);
-                        console.log(scope.codeForm.codeObjForm.codeSystem);
-                        return scope.codeForm.codeObjForm.codeSystem.$invalid;
-
-                    }else{
-                        console.log("not empty");
-                        scope.codeForm.codeObjForm.codeSystem.$setValidity('required', true);
-                        console.log(scope.codeForm.codeObjForm.codeSystem);
-                        return scope.codeForm.codeObjForm.codeSystem.$invalid;
-                    }
-                 //   return scope.codeForm.codeObjForm.codeSystem.$invalid;
-                }*/
-            }
-        };
-    });
 
     ginasForms.directive('conceptUpgradeForm', function ($window, localStorageService) {
         return {
@@ -568,35 +843,8 @@
         };
     });
 
-    ginasForms.directive('diverseTypeForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
-            link: function (scope, element, attrs) {
-                scope.parent.$$diverseType = "whole";
-                if (scope.parent.structurallyDiverse.part.length>0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
-                    _.set(scope.parent, '$$diverseType', 'part');
-                    _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
-                }
-                scope.checkType = function () {
-                    if (scope.parent.$$diverseType === 'whole') {
-                        scope.parent.$$diverseType = 'whole';
-                        _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
-                    } else {
-                        if (scope.$$temp) {
-                            _.set(scope.parent.structurallyDiverse, 'part', scope.$$temp);
-                        } else {
-                            _.set(scope.parent.structurallyDiverse, 'part', []);
-                        }
-                    }
-                };
-            }
-        };
-    });
+
+
 
     ginasForms.directive('cvTermsForm', function (CVFields) {
         return {
@@ -987,158 +1235,8 @@
         };
     });
 
-    ginasForms.directive('moietyForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/moiety-form.html"
-        }
-    });
-
-    ginasForms.directive('structureForm', function ($http, $templateRequest, $compile, molChanger) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '=',
-                type: '@'
-            },
-            link: function (scope, element) {
-                if (scope.parent.substanceClass === 'polymer') {
-                    if (_.has(scope.parent.polymer.idealizedStructure)) {
-                        _.set(scope.parent, 'structure', scope.parent.polymer.idealizedStructure);
-                    } else {
-                        _.set(scope.parent, 'structure', scope.parent.polymer.displayStructure);
-                    }
-                } else {
-                    scope.structure = scope.parent.structure;
-                }
-
-                scope.checkDuplicateChemicalSubstance = function () {
-                    var sub = scope.parent.$$flattenSubstance(angular.copy(scope.parent));
-                    scope.structureErrorsArray = [];
-                    $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
-                        var arr = [];
-
-                        for (var i in response) {
-                            if (response[i].messageType != "INFO")
-                                arr.push(response[i]);
-                            if (response[i].messageType == "WARNING")
-                                response[i].class = "alert-warning";
-                            if (response[i].messageType == "ERROR")
-                                response[i].class = "alert-danger";
-                            if (response[i].messageType == "INFO")
-                                response[i].class = "alert-info";
-                            if (response[i].messageType == "SUCCESS")
-                                response[i].class = "alert-success";
 
 
-                        }
-                        scope.structureErrorsArray = arr;
-                    });
-                };
-                $templateRequest(baseurl + "assets/templates/forms/structure-form.html").then(function (html) {
-                    template = angular.element(html);
-                    element.append(template);
-                    $compile(template)(scope);
-                });
-
-            }
-        };
-    });
-
-    ginasForms.directive('nameForm', function (substanceFactory, $q, $timeout, resolver, toggler, spinnerService) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/name-form.html",
-            link: function (scope) {
-                scope.stage = true;
-                scope.duplicateCheck = function (name) {
-                    var result = angular.element(document.getElementsByClassName('nameForm'));
-                    result.empty();
-                    var resolve = resolver.resolve(name).then(function (response) {
-                        if (response.data.length > 0) {
-                            return response.data;
-                        }
-                        return [];
-                    });
-                    var duplicate = substanceFactory.getSubstances(name).then(function (response) {
-                        var duplicate = [];
-                        scope.nameForm.name.$error.duplicate = (response.data.count > 0);
-                        if (response.data.count > 0) {
-                            _.forEach(response.data.content, function (sub) {
-                                _.set(sub, 'refType', 'duplicate');
-                                duplicate.push(sub);
-                            });
-                        }
-                        return duplicate;
-                    });
-                    if (!_.isUndefined(name) && name !== "") {
-                        spinnerService.show('nameSpinner');
-                        var template;
-                        $q.all([resolve, duplicate]).then(function (results) {
-                            scope.data = [];
-                            var temp = [];
-                            _.forEach(results, function (result) {
-                                if (!_.isUndefined(result)) {
-                                    temp.push(result);
-                                }
-                                scope.data = _.flattenDeep(temp);
-                            });
-                        }).finally(function () {
-                            if (_.isEmpty(scope.data)) {
-                                scope.data.push("empty");
-                            }
-                            template = angular.element('<substance-viewer data = data parent = parent obj = name></substance-viewer>');
-                            toggler.refresh(scope, 'nameForm', template);
-                        });
-                    } else {
-                        spinnerService.hideAll();
-                    }
-                };
-
-            }
-        };
-    });
-
-    ginasForms.directive('nameOrgForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '=',
-                referenceobj: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/name-org-form.html",
-            link: function (scope) {
-                scope.validate = function () {
-                    if (_.has(scope.referenceobj, 'nameOrgs')) {
-                        var temp = _.get(scope.referenceobj, 'nameOrgs');
-                        temp.push(scope.org);
-                        _.set(scope.referenceobj, 'nameOrgs', temp);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(scope.org));
-                        _.set(scope.referenceobj, 'nameOrgs', x);
-                    }
-                    scope.org = {};
-                    scope.orgForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj, path) {
-                    var arr = _.get(scope.referenceobj, path);
-                    arr.splice(arr.indexOf(obj), 1);
-                };
-            }
-        };
-    });
 
     ginasForms.directive('newCvForm', function () {
         return {
@@ -1154,16 +1252,7 @@
         };
     });
 
-    ginasForms.directive('noteForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/note-form.html"
-        };
-    });
+
 
     ginasForms.directive('nucleicAcidDetailsForm', function () {
         return {
@@ -1503,37 +1592,7 @@
         };
     });
 
-    ginasForms.directive('parameterForm', function () {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
-            link: function (scope, element, attrs) {
 
-                scope.validate = function () {
-                    if (_.has(scope.referenceobj, 'parameters')) {
-                        var temp = _.get(scope.referenceobj, 'parameters');
-                        temp.push(scope.parameter);
-                        _.set(scope.referenceobj, 'parameters', temp);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(scope.parameter));
-                        _.set(scope.referenceobj, 'parameters', x);
-                    }
-                    scope.parameter = {};
-                    scope.parameterForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj, parent) {
-                    parent.splice(_.indexOf(parent, obj), 1);
-                };
-            }
-        };
-    });
 
     ginasForms.directive('parentForm', function () {
         return {
@@ -1640,16 +1699,7 @@
         };
     });
 
-    ginasForms.directive('propertyForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/property-form.html"
-        };
-    });
+
 
     ginasForms.directive('proteinDetailsForm', function () {
         return {
@@ -1670,67 +1720,8 @@
         };
     });
 
-    ginasForms.directive('referenceApply', function ($compile) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                apply: '=?ngModel',
-                obj: '=?',
-                referenceobj: '=',
-                parent: '='
-            },
-            link: function (scope, element, attrs) {
-                var uuid;
-                var index;
-                var template;
-                scope.apply = true;
-                if (_.isUndefined(scope.referenceobj)) {
-                    scope.referenceobj = {};
-                }
-
-                if (_.isUndefined(scope.referenceobj.references)) {
-                    var x = [];
-                    _.set(scope.referenceobj, 'references', x);
-                }
-
-                scope.isReferenced = function () {
-                    return index >= 0;
-                };
-
-                switch (attrs.type) {
-                    case "view":
-                        template = angular.element('<div class = "text-center"><label for="apply" class="text-capitalize">Apply</label><br/><input type="checkbox" ng-model= apply placeholder="Apply" title="Apply" id="apply" checked/></div>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        break;
-                    case "edit":
-                        template = angular.element('<div class = "text-center"><input type="checkbox" ng-model="obj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        uuid = scope.obj.uuid;
-                        index = _.indexOf(scope.referenceobj.references, uuid);
-                        scope.obj.apply = scope.isReferenced();
-                        scope.parent.references = _.orderBy(scope.parent.references, ['apply'], ['desc']);
-                        break;
-                }
-
-                scope.updateReference = function () {
-                    index = _.indexOf(scope.referenceobj.references, uuid);
-                    if (index >= 0) {
-                        scope.referenceobj.references.splice(index, 1);
-                        scope.obj.apply = false;
-                    } else {
-                        scope.referenceobj.references.push(uuid);
-                        scope.obj.apply = true;
-                    }
-                };
-
-            }
-        };
-    });
     
-    ginasForms.directive('referenceModalForm', function ($http, UUID) {
+  /*  ginasForms.directive('referenceModalForm', function ($http, UUID) {
         return {
             restrict: 'E',
             replace: 'true',
@@ -1804,129 +1795,10 @@
                 };
             }
         };
-    });
-
-    ginasForms.directive('referenceFormOnly', function ($http) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
-            link: function (scope, element, attrs) {
-
-                scope.submitFile = function (obj) {
-                    //create form data object
-                    var fd = new FormData();
-                    if (obj) {
-                        scope.$$uploadFile = obj.$$uploadFile;
-                    }
-                    fd.append('file-name', scope.$$uploadFile);
-                    fd.append('file-type', scope.$$uploadFile.type);
-                    //send the file / data to your server
-                    $http.post(baseurl + 'upload', fd, {
-                        transformRequest: angular.identity,
-                        headers: {'Content-Type': undefined}
-                    }).success(function (data) {
-                        if (obj) {
-                            _.set(obj, 'uploadedFile', data.url);
-                            _.set(scope, 'uploadDoc', false);
-                            delete obj.$$uploadFile;
-                        } else {
-                            _.set(scope.reference, 'uploadedFile', data.url);
-                        }
-                    }).error(function (err) {
-                    });
-                    _.set(scope, 'uploadDoc', false);
-                    delete scope.$$uploadFile;
-                };
+    });*/
 
 
-                scope.validate = function () {
-                    scope.saveReference(scope.reference, scope.parent);
-                    scope.reference = {};
-                    scope.reference.apply = true;
-                    scope.refForm.$setPristine();
-                };
 
-                scope.saveReference = function (reference, parent) {
-                    if (_.has(parent, 'references')) {
-                        var temp = _.get(parent, 'references');
-                        temp.push(reference);
-                        _.set(parent, 'references', temp);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(reference));
-                        _.set(parent, 'references', x);
-                    }
-                };
-
-
-                scope.deleteObjectReferences = function (obj, id) {
-                    var index;
-                    var refs = _.get((obj), 'references');
-                    index = _.findIndex(refs, function (o) {
-                        return o == id;
-                    });
-                    if (index > -1) {
-                        refs.splice(index, 1);
-                        obj.references = refs;
-                    }
-                };
-
-                scope.deleteReference = function (ref) {
-                    scope.parent.references.splice(scope.parent.references.indexOf(ref), 1);
-                };
-
-                scope.deleteObj = function (obj, ref) {
-                    _.forEach(_.keysIn(obj), function (field) {
-                        if (_.isObject(obj[field])) {
-                            if (_.isArray(obj[field])) {
-                                _.forEach((obj[field]), function (value, key) {
-                                    if (_.isObject(value)) {
-                                        if (_.indexOf(_.keysIn(value), 'references') > -1) {
-                                            scope.deleteObjectReferences(value, ref.uuid);
-                                        } else {
-                                            scope.deleteObj(value, ref);
-                                        }
-                                    }
-                                });
-                            } else {
-                                scope.deleteObj(obj[field], ref);
-                            }
-                        }
-                    });
-                };
-            }
-        };
-    });
-
-    ginasForms.directive('relationshipForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/relationship-form.html",
-            link: function (scope) {
-              /*  scope.validate = function (obj, form, path) {
-                    scope.$emit('validate', scope.obj, scope.form, scope.path);*/
-                  /*  console.log(scope);
-                    console.log(obj);
-                    console.log(form);
-                    console.log(path);
-                    if (!scope.parent.relationships) {
-                        scope.parent.relationships = [];
-                    }
-                    scope.parent.relationships.push(obj);
-                    obj = null;
-                   form.$setPristine();*/
-          //      };
-            }
-        };
-    });
 
     ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
         return {
@@ -2056,7 +1928,7 @@
                 scope.validate = function () {
                     if (!scope.$parent.validate) {
                         scope.$emit('validate', scope.obj, scope.form, scope.path);
-                           scope.reset();
+                        scope.reset();
                     } else {
                         if (scope.$parent.validate(scope.obj, scope.form, scope.path)) {
                             scope.reset();
@@ -2125,26 +1997,6 @@
         };
     });
 
-    ginasForms.directive('headerForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                // name: '=',
-                parent: '='
-            },
-            link: function (scope, element, attrs) {
-                if (scope.parent._name) {
-                    scope.formType = 'Editing';
-                    scope.name = scope.parent._name;
-                } else {
-                    scope.formType = 'Registering new';
-                    scope.name = _.startCase(scope.parent.substanceClass);
-                }
-            },
-            templateUrl: baseurl + "assets/templates/forms/header-form.html"
-        };
-    });
 
 
     ginasForms.directive('isolateForm', [function () {

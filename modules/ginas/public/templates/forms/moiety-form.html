@@ -1,63 +1,97 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
-        <form-header type="moieties" name="moietyForm" id ="addMoietyForm" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="moieties" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
-        <div class="col-md-12" uib-collapse="iscollapsed">
-            <div ng-repeat="(index, obj) in parent.moieties track by obj.id">
-                <div class ="row">
-                    <hr>
-                    <div class="col-md-2">
-                        <label>Moiety Structure</label>
-                        <rendered id="{{obj.id}}"></rendered>
-                    </div>
-                    <div class = "col-md-10">
-                        <div class ="row">
-                    <div class="col-md-1">
-<!--
-                        <label for="count">Count</label>
--->
-                        <form-selector referenceobj=obj field="countAmount" label = "Count Amount" divid=moiety-{{index}} type="amount"></form-selector>
-<!--
-                        <span class="badge badge-primary" id = "count">{{obj.countAmount.average || obj.count}}</span>
--->
-                    </div>
-                            <div class="col-md-3 text-center">
-                                <text-view-edit obj = "obj" field = "formula" id = "formula"></text-view-edit>
-                            </div>
-                    <div class="col-md-2">
-                        <dropdown-view-edit obj= "obj" field = "stereochemistry" label="Stereochemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
-                    </div>
-                    <div class="col-md-2">
-
-                        <dropdown-view-edit obj= "obj" field = "opticalActivity" label ="Optical Activity" cv = "OPTICAL_ACTIVITY"></dropdown-view-edit>
-                    </div>
-                    <div class="col-md-3">
-                        <dropdown-view-edit obj= "obj" field = "atropisomerism" label="Additional Stereochemistry" cv = "ATROPISOMERISM"></dropdown-view-edit>
-                    </div>
-                    </div>
-                        <br>
-                        <div class = "row">
-                    <div class="col-md-2">
-                        <label for="mwt">Molecular Weight</label>
-                        <span id ="mwt">{{obj.mwt}}</span></div>
-                    <div class="col-md-2">
-                        <label for="stereo">Defined Stereocenters</label>
-                        <span id = "stereo" class="badge">{{obj.definedStereo}} / {{obj.stereoCenters}}</span></div>
-                    <div class="col-md-2">
-                        <label for="ez">EZ Centers</label><br>
-                        <span id ="ez" class="badge">{{obj.ezCenters}}</span></div>
-                    <div class="col-md-2">
-                        <label for="charge">Moiety Charge</label><br>
-                        <span id ="charge" class="badge">{{obj.charge}}</span>
-                    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="moietyForm" role="form" id="addMoietyForm" novalidate>
+            <div ng-repeat="(index,obj) in parent.moieties">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
                             <div class="col-md-2">
-                                <form-selector referenceobj= "obj" formname="moietyForm" field ="stereoComments" label="Stereo Comments" parent = parent type = "textbox" divid=moiety-{{index}} mode="edit" id = "comments"></form-selector>
+                                <label>Moiety Structure</label>
+                                <rendered id="{{obj.id}}"></rendered>
+                                <br>
+                                <modal-form-button type="amount"
+                                                   field="countAmount"
+                                                   referenceobj = "obj"
+                                                   label ="Count Amount"
+                                                   parent="parent">
+                                </modal-form-button>
                             </div>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <gsrs-input type="text"
+                                                    ng-model="obj.formula"
+                                                    field="formula"
+                                                    required="true"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="parent.structure.stereochemistry"
+                                                    field="stereochemistry"
+                                                    cv="STEREOCHEMISTRY_TYPE"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="parent.structure.opticalActivity"
+                                                    field="opticalActivity"
+                                                    label="Optical Activity"
+                                                    cv="OPTICAL_ACTIVITY"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="parent.structure.atropisomerism"
+                                                    field="atropisomerism"
+                                                    cv="ATROPISOMERISM"
+                                                    label="Additional Stereochemistry"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="mwt">Molecular Weight</label><br>
+                                        <span id="mwt">{{obj.mwt}}</span></div>
+                                    <div class="col-md-2">
+                                        <label for="stereo">Defined Stereocenters</label>
+                                        <span id="stereo"
+                                              class="badge">{{obj.definedStereo}} / {{obj.stereoCenters}}</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="ez">EZ Centers</label><br>
+                                        <span id="ez" class="badge">{{obj.ezCenters}}</span></div>
+                                    <div class="col-md-2">
+                                        <label for="charge">Moiety Charge</label><br>
+                                        <span id="charge" class="badge">{{obj.charge}}</span>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <gsrs-input type="text-box"
+                                                    ng-model="obj.stereoComments"
+                                                    field="stereoComments"
+                                                    label="Stereo Comments"
+                                                    rows=2
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                </div>
-                <div class = moiety-{{index}}></div>
+                    </div>
+                    <hr>
+                </ng-form>
             </div>
-        </div>
-
+        </form>
+    </div>
 </div>

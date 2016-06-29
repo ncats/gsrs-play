@@ -164,7 +164,7 @@
         substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
             return substance;
-        };
+        }; 
 
         substance.$$setSubstance = function (sub) {
             _.forEach(sub, function (value, key) {
@@ -1032,6 +1032,7 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
             	scope.formatValue = function (v){
             		if (v) {
                             if(typeof v === "object"){
@@ -1311,7 +1312,7 @@
         };
     });
 
-    ginasApp.directive('comment', function () {
+/*    ginasApp.directive('comment', function () {
 
         return {
             restrict: 'E',
@@ -1321,6 +1322,25 @@
             },
             template: '<div><span id="comment-text">{{value|limitTo:40}}...</span></div>'
         };
+    });*/
+
+
+
+    ginasApp.service('APIFetcher', function ($http) {
+        var url = baseurl + "api/v1/substances(";
+        var fetcher = {
+            fetch: function (uuid) {
+                return $http.get(url + uuid + ")",{cache: true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response) {
+                    return response.data;
+                });
+            }
+        };
+        return fetcher;
+
     });
 
     ginasApp.directive('access', function () {
@@ -1343,7 +1363,10 @@
             scope: {
                 parameters: '='
             },
-            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.value"></amount></div>'
+            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.value"></amount></div>',
+            link: function(scope){
+                console.log(scope);
+            }
         };
     });
 
@@ -1409,23 +1432,6 @@
                 };
             }
         };
-    });
-
-    ginasApp.service('APIFetcher', function ($http) {
-        var url = baseurl + "api/v1/substances(";
-        var fetcher = {
-            fetch: function (uuid) {
-                return $http.get(url + uuid + ")",{cache: true},{
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).then(function (response) {
-                    return response.data;
-                });
-            }
-        };
-        return fetcher;
-
     });
 
     ginasApp.directive('subunit', function (CVFields, APIFetcher) {
@@ -1635,106 +1641,6 @@
         };
     });
 
-    ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile, toggler, substanceFactory, spinnerService, CVFields) {
-        return {
-            replace: true,
-            restrict: 'E',
-            scope: {
-                subref: '=ngModel',
-                referenceobj: '=',
-                formname: '@',
-                field: '@',
-                label: '@',
-                type: '@'
-            },
-            link: function (scope, element, attrs, ngModel) {
-                var template;
-                scope.toggle = function () {
-                    if (scope.stage == false) {
-                        scope.q = null;
-                    }
-                    toggler.toggle(scope, scope.formname, template, scope.referenceobj);
-                };
-
-                scope.stage = true;
-
-                scope.fetch = function (term, skip) {
-                    if (_.isUndefined(scope.referenceobj) || scope.referenceobj == null) {
-                        scope.referenceobj = {};
-                    }
-                    spinnerService.show('subrefSpinner');
-                    substanceFactory.getSubstances(scope.q).then(function (response) {
-                        scope.data = response.data.content;
-                        spinnerService.hide('subrefSpinner');
-                        template = angular.element('<substance-viewer data = data obj =referenceobj format= "subref"></substance-viewer>');
-                        toggler.refresh(scope, scope.formname, template);
-                    });
-                };
-
-                scope.createSubref = function (selectedItem) {
-                    var temp = {};
-                    temp.refuuid = selectedItem.uuid;
-                    temp.refPname = selectedItem._name;
-                    temp.approvalID = selectedItem.approvalID;
-                    temp.substanceClass = "reference";
-                    if (attrs.definition) {
-                        var r = {relatedSubstance: temp};
-                        CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
-                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
-                            //var type = _.find(response.data.content[0].terms, ['value', 'Alternative Definition']);
-                            r.type = type;
-                        });
-                        if (!_.has(scope.referenceobj, 'relationships')) {
-                            _.set(scope.referenceobj, 'relationships', []);
-                        }
-                        scope.referenceobj.relationships.push(r);
-                    }
-
-                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
-                    scope.q = null;
-                    scope.stage = false;
-                    toggler.toggle(scope, scope.formname);
-                };
-
-
-                switch (scope.type) {
-                    case "lite":
-                        $templateRequest(baseurl + "assets/templates/substance-select.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        break;
-                    case "search":
-                        $templateRequest(baseurl + "assets/templates/substance-search.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        if (attrs.definition) {
-                            scope.definition = attrs.definition;
-                        }
-                        break;
-                }
-            }
-        };
-    });
-
-    ginasApp.directive('substanceView', function ($compile) {
-        return {
-            replace: true,
-            restrict: 'E',
-            scope: {
-                subref: '=',
-                size: '='
-            },
-            link: function (scope, element) {
-                var template = angular.element('<div><rendered id = {{subref.refuuid}} size = {{size}}></rendered><br/><code>{{subref.refPname}}</code></div>');
-                element.append(template);
-                $compile(template)(scope);
-            }
-        };
-    });
 
     //this is solely to set the molfile in the sketcher externally
     ginasApp.service('molChanger', function ($http, CVFields, UUID) {
@@ -1755,7 +1661,7 @@
         };
     });
 
-    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger) {
+    ginasApp.directive('sketcher', function ($compile, $http, $timeout, UUID, polymerUtils, CVFields, localStorageService, molChanger, Substance) {
         return {
             restrict: 'E',
             replace: true,
@@ -1825,10 +1731,19 @@
                             }
                             var defChange = scope.merge(scope.parent.structure, data.structure);
 
-                            if (defChange) {
+                            if (defChange) {  
                                 scope.parent.moieties = [];
                                 _.forEach(data.moieties, function (m) {
                                     m["$$new"] = true;
+                                    //this is used to make a cv element out of the moiety units, which are re-written as strings with each round trip
+                                    if(!_.isObject(m.countAmount.type)){
+                                        var temp = {value: m.countAmount.type, display: m.countAmount.type};
+                                        m.countAmount.type = temp;
+                                    }
+                                    if(!_.isObject(m.countAmount.units)){
+                                        var temp = {value: m.countAmount.units, display: m.countAmount.units};
+                                        m.countAmount.units = temp;
+                                    }
                                     var moi = {};
                                     scope.merge(moi, m);
                                     scope.parent.moieties.push(moi);
@@ -2030,51 +1945,7 @@
         }
     });
 
-    ginasApp.directive('referenceModalButton', function ($uibModal, $templateRequest, $compile) {
-        return {
-            scope: {
-                referenceobj: '=?',
-                parent: '=',
-                label: '@?',
-                edit: '=?',
-                subclass: '@?'
-            },
-            link: function(scope, element){
-                if(_.isUndefined(scope.referenceobj)){
-                    scope.subClass = scope.parent.substanceClass;
-                    if(scope.subClass ==="chemical"){
-                        scope.subClass = "structure";
-                    }
-                    if(scope.subClass ==="specifiedSubstanceG1"){
-                        scope.subClass = "specifiedSubstance";
-                    }
-                    scope.referenceobj = scope.parent[scope.subClass];
-                }
-            },
-            templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
-            controller: function ($scope) {
-                var modalInstance;
-                $scope.close = function () {
-                    $scope.$broadcast('save');
-                    modalInstance.close();
-                };
-
-                $scope.open = function () {
-                    modalInstance = $uibModal.open({
-                        templateUrl: baseurl + "assets/templates/modals/reference-modal.html",
-                        size: 'xl',
-                        scope: $scope,
-                        resolve: {
-                            parent: function () {
-                                return $scope.substance;
-                            }
-                        }
-                    });
-                }
-            }
-        }
-    });
-
+    
     ginasApp.directive('switch', function () {
         return {
             restrict: 'AE',
@@ -2105,26 +1976,7 @@
         };
     });
 
-    ginasApp.directive('deleteButton', function () {
-        return {
-            restrict: 'E',
-            template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
-            link: function (scope, element, attrs) {
-                if(attrs.showlabel){
-                    scope.showlabel= attrs.showlabel;
-                }
-                scope.deleteObj = function () {
-                    if (scope.parent) {
-                        var arr = _.get(scope.parent, attrs.path);
-                        arr.splice(arr.indexOf(scope.obj), 1);
-                    } else {
-                        scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
-                    }
-                };
-            }
-        };
-    });
-
+    
     ginasApp.directive('errorMessage', function () {
         return {
             restrict: 'E',

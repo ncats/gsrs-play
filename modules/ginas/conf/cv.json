@@ -2116,6 +2116,7 @@
     ],
     "fields": [
       "amount.type",
+      "countAmount.type",
       "value.type"
     ]
   },
@@ -2327,10 +2328,21 @@
         "hidden": false,
         "selected": false,
         "filters": []
+      },{
+        "version": 1,
+        "created": 1459191943853,
+        "modified": 1462481431444,
+        "deprecated": false,
+        "value": "MOL RATIO",
+        "display": "MOL RATIO",
+        "hidden": false,
+        "selected": false,
+        "filters": []
       }
     ],
     "fields": [
       "amount.units",
+      "countAmount.units",
       "value.units"
     ]
   },
@@ -3134,7 +3146,7 @@
     "deprecated": false,
     "domain": "DEFINITION_TYPE",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
-    "editable": true,
+    "editable": false,
     "filterable": false,
     "terms": [
       {
@@ -3145,7 +3157,7 @@
         "value": "PRIMARY",
         "display": "Primary",
         "hidden": false,
-        "selected": false,
+        "selected": true,
         "filters": []
       },
       {
@@ -18840,7 +18852,7 @@
     "deprecated": false,
     "domain": "DEFINITION_LEVEL",
     "vocabularyTermType": "ix.ginas.models.v1.ControlledVocabulary",
-    "editable": true,
+    "editable": false,
     "filterable": false,
     "terms": [
       {
@@ -18851,7 +18863,7 @@
         "value": "COMPLETE",
         "display": "Complete",
         "hidden": false,
-        "selected": false,
+        "selected": true,
         "filters": []
       },
       {

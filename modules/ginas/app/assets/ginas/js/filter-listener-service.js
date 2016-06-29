@@ -14,7 +14,6 @@ angular.module('filterListener', [])
                             });
                         }
                     }else{
-                        console.log("clearing object");
                         scope.obj ={};
                     }
                 });
@@ -37,7 +36,6 @@ angular.module('filterListener', [])
                 }else {
                     var filter = scope.filter;
                     scope.$watch('filter', function (newValue) {
-                        console.log(newValue);
                         if (!_.isUndefined(newValue)) {
                             var obj = {};
                             //this returns the object to be filtered by the form
@@ -50,12 +48,8 @@ angular.module('filterListener', [])
                                         obj = scope.values[0];
                                     }
                                     if (edit) {
-                                        console.log("setting field object");
-
                                         scope.obj[scope.field] = obj;
                                     } else {
-                                        console.log("setting object");
-
                                         scope.obj = obj;
                                     }
                                 });

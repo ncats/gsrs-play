@@ -1,9 +1,9 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
         <form-header type="{{type}}" path ="{{}}" parent="parent"></form-header>
     </div>
-    <div class="col-md-12" id="structureSearcher">
-        <form name = "structureForm" id = "addStructureForm" role="form" novalidate>
+    <div class="col-md-12" id="structureSearcher" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="structureForm" role="form" id="addStructureForm" novalidate>
             <div class="row">
                 <div class = "col-md-12" id="jsdraw">
                     <sketcher parent =parent ng-model=parent.structure.molfile></sketcher>
@@ -13,10 +13,10 @@
                 <div class="col-md-12 pull-right">
                     <button ng-show="parent.substanceClass=='chemical'"  class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
                     <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
-                        <modal-button class= "pull-right padded" type= "import"></modal-button>
+                    <modal-button class= "pull-right padded" type= "import"></modal-button>
                 </div>
             </div>
-<hr>
+
             <div class = "row" ng-repeat="err in structureErrorsArray track by $index">
                 <div class="col-md-12">
                     <div class="alert alert-{{err.class}} alert-dismissible" role="alert">
@@ -32,48 +32,102 @@
                     </div>
                 </div>
             </div>
-            <div ng-show="parent.substanceClass=='chemical'">
-                    <div class ="row">
-                        <div class="col-md-3">
-                            <text-view-edit obj = "parent.structure" field = "formula" id = "formula" label="Molecular Formula"></text-view-edit>
-                        </div>
-                        <div class="col-md-2">
-                            <dropdown-view-edit obj= "parent.structure" field = "stereochemistry" label="Stereochemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
-                        </div>
-                        <div class="col-md-2">
 
-                            <dropdown-view-edit obj= "parent.structure" field = "opticalActivity" label ="Optical Activity" cv = "OPTICAL_ACTIVITY"></dropdown-view-edit>
-                        </div>
-                        <div class="col-md-3">
-                            <dropdown-view-edit obj= "parent.structure" field = "atropisomerism" label="Additional Stereochemistry" cv = "ATROPISOMERISM"></dropdown-view-edit>
-                        </div>
+            <div ng-show="parent.substanceClass =='chemical'">
+                <div class ="row">
+                    <div class="col-md-3">
+                        <gsrs-input type="text"
+                                    ng-model="parent.structure.formula"
+                                    field="formula"
+                                    required="true"
+                                    label="Molecular Formula"
+                                    formname=form>
+                        </gsrs-input>
                     </div>
-                    <br>
-                    <div class = "row">
-                        <div class="col-md-2">
-                            <label for="mwt">Molecular Weight</label>
-                            <span id ="mwt">{{parent.structure.mwt}}</span></div>
-                        <div class="col-md-2">
-                            <label for="stereo">Defined Stereocenters</label>
-                            <span id = "stereo" class="badge">{{parent.structure.definedStereo}} / {{parent.structure.stereoCenters}}</span></div>
-                        <div class="col-md-2">
-                            <label for="ez">EZ Centers</label><br>
-                            <span id ="ez" class="badge">{{parent.structure.ezCenters}}</span></div>
-                        <div class="col-md-2">
-                            <label for="charge">Moiety Charge</label><br>
-                            <span id ="charge" class="badge">{{parent.structure.charge}}</span>
-                        </div>
-                        <div class="col-md-2">
-                            <form-selector referenceobj= "parent.structure" formname="structureForm" field ="stereoComments" label="Stereo Comments" parent = parent type = "textbox" divid="structureForm" mode="edit"></form-selector>
-                        </div>
-                        <div class="col-md-1 pull-right">
-                            <form-selector referenceobj="parent.structure" parent="parent" divid="structureForm"
-                                           type="access"></form-selector>
-                        </div>
+                    <div class="col-md-2">
+                        <gsrs-input type="dropdown"
+                                    ng-model="parent.structure.stereochemistry"
+                                    field="stereochemistry"
+                                    cv="STEREOCHEMISTRY_TYPE"
+                                    formname=form>
+                        </gsrs-input>
                     </div>
-                    
+                    <div class="col-md-2">
+                        <gsrs-input type="dropdown"
+                                    ng-model="parent.structure.opticalActivity"
+                                    field="opticalActivity"
+                                    label="Optical Activity"
+                                    cv="OPTICAL_ACTIVITY"
+                                    formname=form>
+                        </gsrs-input>
+                    </div>
+                    <div class="col-md-3">
+                        <gsrs-input type="dropdown"
+                                    ng-model="parent.structure.atropisomerism"
+                                    field="atropisomerism"
+                                    cv="ATROPISOMERISM"
+                                    label="Additional Stereochemistry"
+                                    formname=form>
+                        </gsrs-input>
+                    </div>
+                </div>
+                <br>
+
+                <div class = "row">
+                    <div class="col-md-3">
+                        <label for="mwt">Molecular Weight</label><br>
+                        <span id ="mwt">{{parent.structure.mwt}}</span></div>
+                    <div class="col-md-2">
+                        <label for="stereo">Defined Stereocenters</label>
+                        <span id = "stereo" class="badge">{{parent.structure.definedStereo}} / {{parent.structure.stereoCenters}}</span></div>
+                    <div class="col-md-2">
+                        <label for="ez">EZ Centers</label><br>
+                        <span id ="ez" class="badge">{{parent.structure.ezCenters}}</span></div>
+                    <div class="col-md-2">
+                        <label for="charge">Moiety Charge</label><br>
+                        <span id ="charge" class="badge">{{parent.structure.charge}}</span>
+                    </div>
+
+                    <div class="col-md-1 pull-right">
+                        <modal-form-button type="access"
+                                           referenceobj="parent.structure"
+                                           parent="parent">
+                        </modal-form-button>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-12">
+                        <gsrs-input type="text-box"
+                                    ng-model="parent.structure.stereoComments"
+                                    field="stereoComments"
+                                    label="Stereo Comments"
+                                    rows=2
+                                    formname=form>
+                        </gsrs-input>
+                    </div>
+                </div>
             </div>
-            </form>
-            <div class = "structureForm"></div>
+        </form>
+            </div>
     </div>
-</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,47 +1,39 @@
-<div class="row info" id="nameOrgs">
-    <div class="row">
-        <form-header type="nameOrgs" parent="parent" label="Naming Organizations"></form-header>
-        <close-button></close-button>
-    </div>
-    <div class="col-md-12">
-        <form class="form-horizontal" name="orgForm" id="addNameOrgForm" role="form" novalidate>
-            <div class="row form-row">
+<div class="row">
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="nameOrgForm" role="form" id="addNameOrgForm" novalidate>
+            <div ng-repeat="(index,obj) in parent.nameOrgs">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="names"></delete-button>
+                            </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="org.nameOrg" field="nameOrg" label="Naming Organization"
-                                     cv="NAME_ORG"></dropdown-select>
+                    <gsrs-input type="dropdown"
+                                ng-model="obj.nameOrg"
+                                field="nameOrg"
+                                cv="NAME_ORG"
+                                required="true"
+                                label="Naming Organization"
+                                formname=form>
+                    </gsrs-input>
                 </div>
                 <div class="col-md-1">
-                    <check-box ng-model="org.deprecated" field="deprecated"></check-box>
+                    <check-box ng-model="obj.deprecated" field="deprecated"></check-box>
                 </div>
-                <div class="col-md-2" ng-if="org.deprecated">
-                    <date-picker ng-model="org.deprecatedDate" field="deprecatedDate"></date-picker>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col-md-1 pull-right">
-                    <a ng-click="reset()" aria-label="Clear" uib-tooltip="Clear"><i
-                            class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate()" uib-tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                <div class="col-md-2" ng-if="obj.deprecated">
+                    <date-picker ng-model="obj.deprecatedDate" field="deprecatedDate"></date-picker>
                 </div>
             </div>
+                        </div>
+                    <hr>
+                    </ng-form>
+                </div>
         </form>
-        </div>
-        <div ng-repeat="obj in referenceobj.nameOrgs track by $index">
-            <div class="row">
-                <hr>
-                <div class="col-md-1">
-                  <a ng-click="deleteObj(obj, 'nameOrgs')" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj="obj" field="nameOrg" cv="NAME_ORG" label="Naming Organization"></dropdown-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="deprecated"></check-box-view-edit>
-                </div>
-                <div class="col-md-1"  ng-if="obj.deprecated">
-                    <date-picker-view-edit obj="obj" field="deprecatedDate" label ="Date Accessed"></date-picker-view-edit>
-                </div>
-            </div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(nameOrgForm, 'nameOrgs')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="parent.nameOrgs.length>0">nother</span> naming org
+        </button>
     </div>
+</div>

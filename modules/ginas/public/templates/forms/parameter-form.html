@@ -1,50 +1,33 @@
-<div class="row info">
-    <div class="row">
-        <form-header type="parameter" parent="substance"></form-header>
-        <close-button></close-button>
-    </div>
+<div class="row">
     <div class="col-md-12">
         <form class="form-horizontal" name="parameterForm" id="addParameterForm" role="form" novalidate>
-            <div class="row form-row">
+            <div ng-repeat="(index,obj) in parent.parameters">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
                 <div class="col-md-4">
-                    <text-input ng-model="parameter.name" field="name"></text-input>
+                    <gsrs-input type = "text"
+                                ng-model= obj.name
+                                field="name">
+                    </gsrs-input>
                 </div>
-<!--                <div class="col-md-2">
-                    <text-input ng-model="parameter.type" field="type"></text-input>
-                </div>-->
-                <div class="col-md-2">
-                    <form-selector referenceobj="parameter" field="value" divid="parameterForm"
-                                   type="amount"></form-selector>
-                </div>
+                            <div class="col-md-3">
+                                <modal-form-button type="amount"
+                                                   referenceobj="obj"
+                                                   field="value"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
             </div>
-            <div class="row">
-                <div class="col-md-2 pull-right">
-                    <a ng-click="parameter=null; reset();" aria-label="Clear" uib-tooltip="Clear"><i
-                            class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate();" uib-tooltip="Save"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                        </div>
+                    <hr>
+                    </ng-form>
                 </div>
-            </div>
-            <div class="parameterForm"></div>
         </form>
-        <div ng-repeat="(index, param) in referenceobj.parameters track by $index">
-            <div class="row">
-                <hr>
-                <div class="col-md-1">
-                    <a ng-click="deleteObj(param, referenceobj.parameters)"><i class="fa fa-times fa-2x danger"></i></a>
-                </div>
-                <div class="col-md-4">
-                    <text-view-edit obj="param" field="name"></text-view-edit>
-                </div>
-<!--                <div class="col-md-2">
-                    <text-view-edit obj="param" field="type"></text-view-edit>
-                </div>-->
-                <div class="col-md-2">
-                    <form-selector referenceobj="param" parent="substance" formname="parameterForm" field="value"
-                                   type="amount"
-                                   divid=parameter-{{index}}></form-selector>
-                </div>
-            </div>
-            <div class=parameter-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(parameterForm, 'parameters')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="parent.parameters.length>0">nother</span> parameter
+        </button>
     </div>
 </div>
