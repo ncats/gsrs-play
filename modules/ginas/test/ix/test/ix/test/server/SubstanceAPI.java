@@ -3,6 +3,8 @@ package ix.test.ix.test.server;
 import com.fasterxml.jackson.databind.JsonNode;
 import play.libs.ws.WSResponse;
 
+import ix.seqaln.SequenceIndexer.CutoffType;
+
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Objects;
@@ -30,6 +32,7 @@ public class SubstanceAPI {
 
     private static final String UI_URL_SUBSTANCE_SEARCH_FLEX="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE_SEARCH_SUB="ginas/app/substances";
+    private static final String UI_URL_SUBSTANCE_SEARCH_SEQ="ginas/app/sequence";
     private static final String UI_URL_SUBSTANCE_BROWSE="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
@@ -146,6 +149,23 @@ public class SubstanceAPI {
     
     public String getSubstructureMatchHTML(String smiles){
     	WSResponse wsr= getSubstructureMatch(smiles);
+    	return wsr.getBody();
+    }
+    
+    public WSResponse getSequenceSearch(String seq, CutoffType cot, double cutoff){
+    	return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_SEQ)
+    			.setContentType("application/x-www-form-urlencoded; charset=utf-8") 
+    			.post("identityType=" + cot.toString() + "&sequence=" +seq + "&identity=" +cutoff 
+    				//	+"&wait=true"
+    					)
+        		//.setQueryParameter("identityType", cot.toString())
+        		//.setQueryParameter("identity", cutoff + "")
+                //.setQueryParameter("sequence", seq)
+                //.execute("POST")
+                .get(timeout);
+    }
+    public String getSequenceSearchHTML(String seq, CutoffType cot, double cutoff){
+    	WSResponse wsr= getSequenceSearch(seq, cot, cutoff);
     	return wsr.getBody();
     }
     

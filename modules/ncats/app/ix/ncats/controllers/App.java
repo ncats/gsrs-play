@@ -1833,11 +1833,11 @@ public class App extends Authentication {
         if(!context.finished() ) {
 
             if (isWaitSet()) {
-                System.out.println("Waiting for finished product for search:" + context.id);
+               // System.out.println("Waiting for finished product for search:" + context.id);
                 context.getDeterminedFuture().get();
 
             } else {
-                System.out.println("Not waiting for finished product for search:" + context.id);
+               // System.out.println("Not waiting for finished product for search:" + context.id);
             }
         }
         
