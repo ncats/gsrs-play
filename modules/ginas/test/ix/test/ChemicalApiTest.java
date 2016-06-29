@@ -2,6 +2,7 @@ package ix.test;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -37,6 +38,7 @@ public class ChemicalApiTest {
     public GinasTestServer ts = new GinasTestServer(9001);
 	
 	final File resource=new File("test/testJSON/racemic-unicode.json");
+	final File chemicalResource=new File("test/testJSON/editChemical.json");
 	
     @Rule
     public TestRule watcher = new TestWatcher() {
@@ -44,7 +46,6 @@ public class ChemicalApiTest {
             System.out.println("Starting test: " + description.getMethodName());
         }
     };
-    
     @Test
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
     	String molfile="\n" + 
@@ -402,6 +403,60 @@ public class ChemicalApiTest {
         ensureExport(api,jsn.at("/moieties/1"));
         //C1CCCCC1
     }
+
+	@Test
+	public void testSubmitChemicalSubstanceTwice() throws Exception {
+
+		String molfile1 = "\n   JSDraw206141615102D\n\n 14 14  0  0  0  0              0 V2000\n   26.8331   -7.2982    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -8.0599    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -8.0599    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331   -5.7326    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -9.6199    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   29.5328   -7.2672    0.0000 Se  0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -9.6199    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -4.9766    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -4.9766    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331  -10.4154    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   30.8869   -8.0599    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   32.2325   -7.2672    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   30.8869   -9.5775    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8442  -11.9754    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  2  0  0  0  0\n  1  3  1  0  0  0  0\n  1  4  1  0  0  0  0\n  2  5  1  0  0  0  0\n  2  6  1  0  0  0  0\n  3  7  2  0  0  0  0\n  4  8  1  0  0  0  0\n  4  9  2  0  0  0  0\n  5 10  2  0  0  0  0\n  6 11  1  0  0  0  0\n 11 12  1  0  0  0  0\n 11 13  2  0  0  0  0\n  7 10  1  0  0  0  0\n 10 14  1  0  0  0  0\nM  END";
+		String molfile2 = "\n   JSDraw206141615142D\n\n 19 20  0  0  0  0              0 V2000\n   26.8331   -6.5182    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -7.2799    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331   -4.9526    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   29.5328   -6.4872    0.0000 Se  0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -4.1966    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -4.1966    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   30.8869   -7.2799    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   32.2325   -6.4872    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   30.8869   -8.7975    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1841   -8.8582    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4821   -7.2982    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4821   -8.8582    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331   -9.6382    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331  -11.1982    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1841  -11.9782    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1841  -13.5382    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4821  -11.9782    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4821  -13.5382    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331  -14.3182    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  3  1  0  0  0  0\n  2  4  1  0  0  0  0\n  3  5  1  0  0  0  0\n  3  6  2  0  0  0  0\n  4  7  1  0  0  0  0\n  7  8  1  0  0  0  0\n  7  9  2  0  0  0  0\n  1  2  2  0  0  0  0\n  2 10  1  0  0  0  0\n  1 11  1  0  0  0  0\n 11 12  2  0  0  0  0\n 12 13  1  0  0  0  0\n 13 10  2  0  0  0  0\n 13 14  1  0  0  0  0\n 14 15  2  0  0  0  0\n 15 16  1  0  0  0  0\n 14 17  1  0  0  0  0\n 17 18  2  0  0  0  0\n 18 19  1  0  0  0  0\n 19 16  2  0  0  0  0\nM  END";
+
+
+		RestSession session = ts.newRestSession(ts.getFakeUser1());
+		SubstanceAPI api = new SubstanceAPI(session);
+		JsonNode entered= SubstanceJsonUtil
+				.prepareUnapprovedPublic(JsonUtil.parseJsonFile(chemicalResource));
+		String uuid=entered.get("uuid").asText();
+		ensurePass(api.submitSubstance(entered));
+		JsonNode fetched=api.fetchSubstanceJsonByUuid(uuid);
+		String version = fetched.get("version").asText();
+		System.out.println("version: " + version);
+		JsonNode structure = fetched.at("/structure");
+		String molFile = structure.get("molfile").asText();
+		System.out.println("molfile: " + molFile);
+		assertFalse(molFile.contains("26.8442  -11.9754    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0"));
+		assertEquals(version, "1");
+
+		JsonNode updated1 = new JsonUtil
+				.JsonNodeBuilder(fetched)
+				.set("/structure/molfile", molfile1)
+				.build();
+
+		assertEquals(updated1.get("version").asText(), "1");
+
+		ensurePass(api.updateSubstance(updated1));
+		JsonNode fetched2nd=api.fetchSubstanceJsonByUuid(uuid);
+		String version2 = fetched2nd.get("version").asText();
+		System.out.println("version: " + version2);
+		JsonNode structure2ndfetch = fetched2nd.at("/structure");
+		String molFile2ndfetch = structure2ndfetch.get("molfile").asText();
+		assertEquals(version2, "2");
+		assertTrue(molFile2ndfetch.contains("26.8442  -11.9754    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0"));
+
+		JsonNode updated2 = new JsonUtil
+				.JsonNodeBuilder(fetched2nd)
+				.set("/structure/molfile", molfile2)
+				.build();
+		assertEquals(updated2.get("version").asText(), "2");
+
+		ensurePass(api.updateSubstance(updated2));
+		JsonNode fetched3rd=api.fetchSubstanceJsonByUuid(uuid);
+		String version3 = fetched3rd.get("version").asText();
+		System.out.println("version: " + version3);
+		JsonNode structure3rdfetch = fetched3rd.at("/structure");
+		String molFile3rdfetch = structure3rdfetch.get("molfile").asText();
+		assertTrue(molFile3rdfetch.contains("26.8331  -11.1982    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0"));
+		assertEquals(version3, "3");
+	}
     
     public static void ensureExport(SubstanceAPI api, JsonNode structure){
     	String id = structure.at("/id").asText();

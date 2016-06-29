@@ -503,6 +503,7 @@
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
+        $scope.submitting = false;
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
@@ -775,10 +776,11 @@
             var sub = {};
             $scope.close();
             //this should cascade to all forms to check and see if validation is ok
-            $scope.$broadcast('show-errors-check-validity');
+          //  $scope.$broadcast('show-errors-check-validity');
             //this is the api error checking
-            $scope.checkErrors();
+          //  $scope.checkErrors();
             console.log($scope);
+            $scope.submitting = true;
             /*console.log($scope.nameForm);
              if($scope.nameForm.$dirty){
              alert('Name Form not saved');
@@ -802,6 +804,7 @@
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
                     $scope.open(url);
                 });
             } else {
@@ -814,10 +817,12 @@
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
+                    $scope.submitting = false;
                     $scope.open(url);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
                     $scope.open(url);
                 });
             }
@@ -908,6 +913,18 @@
             $window.location.search = null;
             $window.location.href = baseurl + 'substance/' + $scope.postRedirect.split('-')[0];
             //  $window.location.search =null;
+        };
+
+        $scope.addSameSubstanceType = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'wizard?kind=' + $scope.substanceClass;
+        };
+
+        $scope.addDifferentSubstance = function () {
+            $scope.updateNav = false;
+            $window.location.search = null;
+            $window.location.href = baseurl + 'register';
         };
 
         $scope.redirect = function () {

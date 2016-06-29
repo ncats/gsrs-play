@@ -139,7 +139,7 @@ public class Validation {
 	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions must specify a primary substance"));
 	        	}else{
 	        		if(s.relationships.size()>1){
-	        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions may only have 1 relationship (to the parent definition)"));
+	        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions may only have 1 relationship (to the parent definition), found:" + s.relationships.size()));
 	        		}else{
 		        		SubstanceReference sr=s.getPrimaryDefinitionReference();
 		        		if(sr==null){

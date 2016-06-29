@@ -998,7 +998,7 @@ public class GinasApp extends App {
                         }
                     });
             } catch (Exception ex) {
-                return _internalServerError(ex);
+                throw new IllegalStateException(ex);
             }
         }
 
@@ -1404,6 +1404,11 @@ public class GinasApp extends App {
         return r1;
         
     }
+
+	public static Result structure2(final String id) {
+		return structure(id,"svg",150,null);
+
+	}
     
     public static Result placeHolderImage(Substance s){
         String placeholderFile="polymer.svg";

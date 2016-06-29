@@ -49,6 +49,9 @@ public class Relationship extends CommonDataElementOfCollection {
     public SubstanceReference mediatorSubstance;
     
     
+    public String originatorUuid=null;
+    
+    
     @Indexable(facet=true,name="Relationships")
     @JSONEntity(title = "Relationship Type", format = JSONConstants.CV_RELATIONSHIP_TYPE, isRequired = true)
     public String type;
@@ -63,6 +66,7 @@ public class Relationship extends CommonDataElementOfCollection {
         return type;
     }
     
+    
     @PrePersist
     @PreUpdate
     public void fixNewLine(){
@@ -71,7 +75,62 @@ public class Relationship extends CommonDataElementOfCollection {
 		if (comments != null) {
 			comments = comments.replaceAll("[\\\\][\\\\]*n", "\n");
 		}
-
+		if(originatorUuid==null){
+			originatorUuid=this.getOrGenerateUUID().toString();
+		}
 		//System.out.println("Persisted");
     }
+   
+    /**
+     * Returns true if this relationship is made directly, and not from another relationship
+     * @return
+     */
+    @JsonIgnore
+    public boolean isGenerator(){
+    	if(this.originatorUuid==null||this.originatorUuid.equals(this.uuid.toString())){
+    		return true;
+    	}
+    	return false;
+    }
+    
+    /**
+     * Returns true if this relationship is invertable
+     * @return
+     */
+    @JsonIgnore
+    public boolean isAutomaticInvertable(){
+    	if(this.fetchOwner().getOrGenerateUUID().toString().equals(this.relatedSubstance.refuuid)){
+    		return false;
+    	}
+    	//Explicitly ignore alternative relationships
+    	if(this.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || this.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
+    		return false;
+    	}
+    	String[] types=this.type.split("->");
+    	if(types.length>=2)return true;
+    	return false;
+    }
+    
+    public Relationship fetchInverseRelationship(){
+    	if(!isAutomaticInvertable()){
+    		throw new IllegalStateException("Relationship :" + this.type + " is not invertable");
+    	}
+    	Relationship r=new Relationship();
+    	String[] types=this.type.split("->");
+    	r.type=types[1] + "->" + types[0];
+    	r.setAccess(this.getAccess());
+    	return r;
+    }
+    
+    //This flag is used to explicitly allow deleting of this relationship
+    private transient boolean okToRemoveFlag=false;
+    
+    public void setOkToRemove(){
+    	okToRemoveFlag=true;
+    }
+    
+    public boolean isOkToRemove(){
+    	return okToRemoveFlag;
+    }
+    
 }

@@ -26,7 +26,6 @@
                         <li role="presentation" ><a href="#pridefinition" prevent-default="" ng-click="scrollTo('pridefinition')">
                             Primary Definition </a></li>
                     }
-
                     @breadcrumb
                     @defining(sub.getModificationCount()) { gcount =>
                         @if(gcount > 0) {
@@ -81,7 +80,7 @@
                     @sub.substanceClass Details</button>
                 <div class ="col-md-12">
                     <div class = "row">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <code class="text-uppercase">Record Status: @sub.getDisplayStatus()</code> <br>
                             <code class ="text-uppercase"> version:
                                 <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-model-options="{ getterSetter: true }" ng-change = "redirectVersion()">
@@ -96,6 +95,16 @@
                             } else {
                                 <h3 class= "appid">@sub.getApprovalIDDisplay()</h3>
                             }
+                            <div class = "pull-left">
+                                <ul class= "list-inline pull-right list-unstyled">
+                                    <li>
+                                        <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" target="_self" uib-tooltip="Edit Substance" aria-label="Edit Substance">
+                                            <span class="sr-only">Edit Substance</span>
+                                            <span class="fa fa-pencil fa-2x success"></span></a>
+                                    </li>
+                                    <li> <download-button uuid="@sub.getUuid" format = format>Download</download-button></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     <div class = "row table-responsive">
@@ -194,7 +203,7 @@
                     </div>
             </div>
 
-            <div class="row info table-responsive" id="audit">
+            <td class="row info table-responsive" id="audit">
                 <button class="btn btn-primary label-offset det">
                 Audit Information</button>
                     <table class="table table-striped keyvalue">
@@ -205,7 +214,10 @@
                         <tr><td> Created By </td><td>@sub.createdBy</td></tr>
                         <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
                         <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
+                        @if(sub.changeReason != null){
+                            <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
+                        }
                 </tbody></table>
         </div>
-</div></div>
+</div>
 }

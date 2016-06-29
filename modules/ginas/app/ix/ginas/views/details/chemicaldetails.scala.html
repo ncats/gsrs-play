@@ -24,25 +24,22 @@
         <h3>
             <span class="label label-primary label-offset" id = "struc-label">Structure</span>
         </h3>
-        <div class="col-md-5">
-            <div class = "row">
-            @structureImage(sub.structure, 400)
-            </div>
-            <div class = "row">
-                <div class = "col-md-6 col-md-offset-6">
-                    <ul class= "list-inline pull-right list-unstyled">
-                        <li class = "padded"> <export-button structureid ="'@sub.structure.id'" format="'sdf'" ></export-button></li>
-                        <li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" uib-tooltip="search for structure" target="_self" ng-click="passStructure('@sub.structure.id')" class="btn btn-primary" aria-label="Structure Search">
-                            <span class="sr-only">Structure Search</span>
-                            <span class="fa fa-search chem-button"></span></a>
-                        </li>
-                        <li class = "padded">
-                            <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" target="_self" uib-tooltip="edit substance" class="btn btn-primary" aria-label="Edit Substance">
-                                <span class="sr-only">Edit Substance</span>
-                                <span class="fa fa-pencil"></span></a>
-                    </ul>
+            <div class="col-md-5">
+                <div class = "row">
+                @structureImage(sub.structure, 400)
                 </div>
-            </div>
+                <div class = "row">
+                    <div class = "col-md-6 col-md-offset-6">
+                        <ul class= "list-inline pull-right list-unstyled">
+                            <li class = "padded"> <modal-button type= "export" structureid ="'@sub.structure.id'" format="sdf" ></modal-button>
+                            </li>
+                            <li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" uib-tooltip="search for structure" target="_self" ng-click="passStructure('@sub.structure.id')" aria-label="Structure Search">
+                                <span class="sr-only">Structure Search</span>
+                                <span class="fa fa-search fa-2x success"></span></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
         </div>
         <div class="col-md-7">
             <div class="table-responsive">

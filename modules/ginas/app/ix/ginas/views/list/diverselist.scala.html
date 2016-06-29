@@ -21,19 +21,18 @@
             <div class = "col-md-3 text-center">
                 <div class = "row">
                     <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt ="structurally diverse" src="@routes.Assets.at("ginas/images/structurally-diverse.svg")" />
-                    </div>
+                </div>
                 <div class = "row">
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Structurally Diverse Substance">
-                                    <span class="sr-only">Edit Structurally Diverse</span>
-                                    <span class="fa fa-pencil fa-2x success"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Structurally Diverse Substance"><span class="sr-only">
+                                    Edit Structurally Diverse</span><span class="fa fa-pencil fa-2x success"></span></a>
                             </li>
                         </ul>
                     </div>
                 </div>
-                </div>
+            </div>
             <div class = "col-md-7">
            		@commonlistdetails(sub)
                 @if(sub.structurallyDiverse.part.size() > 0){

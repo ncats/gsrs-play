@@ -19,4 +19,8 @@ import ix.ginas.models.v1.Substance;
 public abstract class CommonDataElementOfCollection extends GinasCommonSubData{
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Substance owner;
+	
+	public Substance fetchOwner(){
+		return this.owner;
+	}
 }

@@ -128,8 +128,11 @@ public class Substance extends GinasCommonData {
 	@Indexable(facet = true, name = "Approved Date", sortable=true)
 	@JsonDeserialize(using = DateDeserializer.class)
 	public Date approved;
-	
-	
+
+	@Indexable(name="Change Reason", suggest=true)
+	public String changeReason;
+
+
 	public Date getApproved(){
 		return this.approved;
 	}

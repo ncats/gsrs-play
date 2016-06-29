@@ -179,7 +179,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
       libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
-      libraryDependencies  += "junit" % "junit" % "4.11" % Test,
+      libraryDependencies  += "junit" % "junit" % "4.12" % Test,
       libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
 
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
