@@ -89,10 +89,12 @@ public class JsonUtil {
 
 
             if(change !=null){
-                for(ChangeFilter filter : filters){
-                    if(filter.filterOut(change)){
-                        continue NODE_LOOP;
-                    }
+                if(filters!=null){
+	            	for(ChangeFilter filter : filters){
+	                    if(filter.filterOut(change)){
+	                        continue NODE_LOOP;
+	                    }
+	                }
                 }
                 //if we get this far we didn't filter out change
                 changes.put(change.getKey(), change);

@@ -66,17 +66,18 @@ public class SubstanceAlternativeTest {
 
         //check alternative relationship with primary
         JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
-        String refUuidA = SubstanceJsonUtil.getRefUuid(fetchedA);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
         assertTrue(refUuidA.equals(uuid));
 
         //check primary relationship with alternative
         JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
-        String refUuid = SubstanceJsonUtil.getRefUuid(fetched);
+        String refUuid = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetched);
         assertTrue(refUuid.equals(uuidA));
     }
 
     @Test
     public void testAPIAlternativeSubstanceUpdate()   throws Exception {
+    	try{
         //submit primary
         resource = new File("test/testJSON/alternative/Prim1.json");
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
@@ -96,12 +97,12 @@ public class SubstanceAlternativeTest {
 
         //check alternative relationship with primary
         JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
-        String refUuidA = SubstanceJsonUtil.getRefUuid(fetchedA);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
         assertTrue(refUuidA.equals(uuid));
 
         //check primary relationship with alternative
         JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
-        String refUuid = SubstanceJsonUtil.getRefUuid(fetched);
+        String refUuid = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetched);
         assertTrue(refUuid.equals(uuidA));
 
         //submit new primary
@@ -118,6 +119,7 @@ public class SubstanceAlternativeTest {
         JsonPatch jsp = JsonDiff.asJsonPatch(jsA,jsAUpdate);
         JsonNode newAVersion =jsp.apply(fetchedA);
         String uuidAUpdate = newAVersion.get("uuid").asText();
+        System.out.println("These are the relationships:" + newAVersion.get("relationships").size());
         JsonNode validationResultAUpdate = api.validateSubstanceJson(newAVersion);
         SubstanceJsonUtil.ensureIsValid(validationResultAUpdate);
         ensurePass(api.updateSubstance(newAVersion));
@@ -128,12 +130,16 @@ public class SubstanceAlternativeTest {
 
          //check alternative relationship with New primary
         JsonNode fetchedAUpdate = api.fetchSubstanceJsonByUuid(uuidAUpdate);
-        String refUuidAUpdate = SubstanceJsonUtil.getRefUuid(fetchedAUpdate);
+        String refUuidAUpdate = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedAUpdate);
         assertTrue(refUuidAUpdate.equals(uuidNew));
 
         //check New primary relationship with alternative
         JsonNode fetchedNew = api.fetchSubstanceJsonByUuid(uuidNew);
-        String refUuidNew = SubstanceJsonUtil.getRefUuid(fetchedNew);
+        String refUuidNew = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedNew);
         assertTrue(refUuidNew.equals(uuidAUpdate));
+    	}catch(Throwable t){
+    		t.printStackTrace();
+    		throw t;
+    	}
     }
 }

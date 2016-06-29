@@ -83,8 +83,9 @@ my $startReq = HTTP::Request->new(GET => $startUpURL);
 my $startResponse;
 my $tries=0;
 do{
-	#wait 10 seconds for ginas to start up...
-  sleep(10);
+	#wait 30 seconds for ginas to start up...
+	#NOTE: PERL SLEEP IS IN SECS NOT MILLIS
+  sleep(30);
   $startResponse = $ua->request($startReq);
   $tries++;
   print "$tries\n";

@@ -306,7 +306,7 @@ public class EntityFactory extends Controller {
     protected static class EditHistory implements PropertyChangeListener {
         List<Edit> edits = new ArrayList<Edit>();
         ObjectMapper mapper = getEntityMapper ();
-        final public Edit edit;
+        public Edit edit;
         
         
         
@@ -1483,7 +1483,6 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, new DefaultValidator());
     }
     
-    
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
@@ -1494,11 +1493,12 @@ public class EntityFactory extends Controller {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
     	InxightTransaction tx = InxightTransaction.beginTransaction();
+    	FetchedValue oldValueContainer = null;
         try {       
             Object newValue = mapper.treeToValue(json, type);
 
             //Fetch old value
-            FetchedValue oldValueContainer=getCurrentValue(newValue);
+            oldValueContainer=getCurrentValue(newValue);
             String oldVersion=EntityUtils.getVersionForBeanAsString(oldValueContainer.value);
 
             
@@ -1518,7 +1518,7 @@ public class EntityFactory extends Controller {
             EditHistory eh = new EditHistory (json.toString());
             
             //this saves and everything
-            EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
+            eh.edit=EntityPersistAdapter.storeEditForPossibleUpdate(oldValueContainer.value);
             
             boolean usePojoPatch=true;
             if(!oldValueContainer.cls.equals(type)){
@@ -1539,7 +1539,7 @@ public class EntityFactory extends Controller {
 	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
 					@Override
 					public void handleChange(ix.utils.pojopatch.Change c) {
-						System.out.println("Change IS:" + c);
+						//System.out.println("Change IS:" + c);
 						if("remove".equals(c.op)){
 							removed.add(c.oldValue);
 						}
@@ -1632,10 +1632,14 @@ public class EntityFactory extends Controller {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
             ex.printStackTrace();
+            
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
         finally {
+        	if(oldValueContainer!=null){
+        		EntityPersistAdapter.popEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id);
+        	}
             tx.end();
         }
     }
