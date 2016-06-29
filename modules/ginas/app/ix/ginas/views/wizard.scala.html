@@ -97,6 +97,12 @@
                 @wizardfields(kind)
 
                 <div class = "row info">
+                        <div class="col-md-2">
+                            <text-input name ="updateReason" required="true" label="Update Reason" ng-model="substance.changeReason"/>
+                        </div>
+                </div>
+
+                <div class = "row info">
                     <div class="col-md-4">
                         <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSONBtn">
                             Show JSON</button>

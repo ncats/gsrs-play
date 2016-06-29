@@ -905,6 +905,7 @@ create table ix_ginas_substance (
   version                   varchar(255),
   approved_by_id            bigint,
   approved                  timestamp,
+  change_reason             varchar(255),
   modifications_uuid        varchar(40),
   approval_id               varchar(10),
   internal_version          bigint not null,
