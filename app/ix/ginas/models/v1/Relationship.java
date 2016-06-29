@@ -99,13 +99,14 @@ public class Relationship extends CommonDataElementOfCollection {
      */
     @JsonIgnore
     public boolean isAutomaticInvertable(){
+        //Explicitly ignore alternative relationships
+        if(this.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || this.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
+            return false;
+        }
     	if(this.fetchOwner().getOrGenerateUUID().toString().equals(this.relatedSubstance.refuuid)){
     		return false;
     	}
-    	//Explicitly ignore alternative relationships
-    	if(this.type.equals(Substance.ALTERNATE_SUBSTANCE_REL) || this.type.equals(Substance.PRIMARY_SUBSTANCE_REL)){
-    		return false;
-    	}
+
     	String[] types=this.type.split("->");
     	if(types.length>=2)return true;
     	return false;
