@@ -1,13 +1,12 @@
 package ix.test.crawler;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
+import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceLoader;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import play.libs.ws.WSResponse;
 
 import java.io.File;
@@ -26,18 +25,23 @@ import static org.junit.Assert.*;
  */
 public class WebCrawlerTest {
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
+    @ClassRule
+    public static GinasTestServer ts = new GinasTestServer();
 
-    private GinasTestServer.User admin;
+    private static GinasTestServer.User admin;
 
-    @Before
-    public void createAdminAndLoadData() throws Exception{
+    @BeforeClass
+    public static void createAdminAndLoadData() throws Exception{
         admin = ts.createAdmin("admin2", "adminPass");
         loadRep90();
     }
 
-    private void loadRep90() throws Exception {
+    @Before
+    public void clearCache(){
+        IxCache.clearCache();
+    }
+
+    private static void loadRep90() throws Exception {
         try (BrowserSession session = ts.newBrowserSession(admin)) {
 
             SubstanceLoader loader = new SubstanceLoader(session);
@@ -55,41 +59,61 @@ public class WebCrawlerTest {
 
 
         WebCrawlerSpy spy = new WebCrawlerSpy();
-        WebCrawler crawler = new WebCrawler.Builder (spy).build();
-        URL url = ts.getHomeUrl();
+        try(BrowserSession session =  ts.notLoggedInBrowserSession()){
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
+            URL url = ts.getHomeUrl();
 
-        long elapsed = StopWatch.timeElapsed(() -> crawler.crawl(url));
+            long elapsed = StopWatch.timeElapsed(() -> crawler.crawl(url));
 
-        System.out.println("done... in " + elapsed + "ms");
+            System.out.println("done... in " + elapsed + "ms");
 
-        assertEquals(90, spy.getSubstancesVisited().size());
+            assertEquals(90, spy.getSubstancesVisited().size());
+        }
     }
 
 
     @Test
     public void restrictedLinksAreForbiddenWhenUnAuthenticated() throws IOException {
         WebCrawlerSpy spy = new WebCrawlerSpy();
-        WebCrawler crawler = new WebCrawler.Builder (spy).build();
-        URL url = ts.getHomeUrl();
+        try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
+            URL url = ts.getHomeUrl();
 
-        crawler.crawl(url);
+            crawler.crawl(url);
 
-        assertFalse(spy.get401Links().isEmpty());
+            assertFalse(spy.get401Links().isEmpty());
+        }
+
+    }
+
+    @Test
+    public void nothingRestrictedForAdmin() throws IOException {
+        WebCrawlerSpy spy = new WebCrawlerSpy();
+        try(BrowserSession session =  ts.newBrowserSession(admin)) {
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
+            URL url = ts.getHomeUrl();
+
+            crawler.crawl(url);
+
+            assertTrue(spy.get401Links().isEmpty());
+        }
 
     }
 
     @Test
     public void restrictedLinksAreAccessibleFromAdmin() throws IOException {
         WebCrawlerSpy spy = new WebCrawlerSpy();
-        WebCrawler crawler = new WebCrawler.Builder (spy).build();
+        try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
 
-        crawler.crawl(ts.getHomeUrl());
+            crawler.crawl(ts.getHomeUrl());
 
-        Set<URL> links = spy.get401Links();
-        try(BrowserSession session = ts.newBrowserSession(admin)){
-            for(URL url : links) {
-                WSResponse response = session.get(url);
-                assertEquals(200, response.getStatus());
+            Set<URL> links = spy.get401Links();
+            try (BrowserSession adminSession = ts.newBrowserSession(admin)) {
+                for (URL url : links) {
+                    WSResponse response = adminSession.get(url);
+                    assertEquals(200, response.getStatus());
+                }
             }
         }
 

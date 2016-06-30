@@ -60,6 +60,13 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
 
     @Override
+    public void clear() {
+        keyMaster.removeAll();
+        evictableCache.removeAll();
+        nonEvictableCache.removeAll();
+    }
+
+    @Override
     public boolean remove(String key) {
         String adaptedKey = keyMaster.adaptKey(key);
         return removeRaw(adaptedKey);

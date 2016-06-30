@@ -165,7 +165,9 @@ public class IxCache extends Plugin {
     
     
     
-    
+    public static void clearCache(){
+        _instance.gateKeeper.clear();
+    }
     
     public static <T> T getOrElseRaw (String key, Callable<T> generator,
             int seconds) throws Exception {
