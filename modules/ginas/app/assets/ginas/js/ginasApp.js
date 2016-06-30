@@ -595,8 +595,9 @@
 
         $scope.canApprove = function () {
             var lastEdit = $scope.substance.lastEditedBy;
-            if (!lastEdit)
+            if (!lastEdit){
                 return false;
+                }
             if ($scope.substance.status === "approved") {
                 return false;
             }
@@ -829,9 +830,9 @@
             $scope.open(url);
         };
         $scope.approveSubstance = function () {
-            var sub = angular.toJson(sub.$$flattenSubstance());
-            var keyid = sub.uuid.substr(0, 8);
-            //  location.href = baseurl + "substance/" + keyid + "/approve";
+            var sub = angular.toJson($scope.substance.$$flattenSubstance());
+            var keyid = $scope.substance.uuid.substr(0, 8);
+            location.href = baseurl + "substance/" + keyid + "/approve";
         };
 
         /*
