@@ -1,10 +1,10 @@
+package ix.test.crawler;
 
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.io.*;
 import java.net.*;
-import java.security.*;
 
 import javax.swing.text.*;
 import javax.swing.text.html.*;
@@ -18,13 +18,38 @@ import javax.swing.text.html.parser.DTD;
 public class WebCrawler {
     static final Logger logger = Logger.getLogger(WebCrawler.class.getName());
 
-    static final String[] AGENTS = {
-        "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 1.1.4322)",
-        "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.1 SUSE/6.0.428.0 (KHTML, like Gecko) Chrome/6.0.428.0 Safari/534.1",
-        "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.1 (KHTML, like Gecko) Chrome/6.0.428.0 Safari/534.1",
-        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-US) AppleWebKit/534.1 (KHTML, like Gecko) Chrome/6.0.428.0 Safari/534.1",
-        "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"
-    };
+
+    public enum UserAgent {
+
+        WINDOWS_IE ("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 1.1.4322)"),
+        WINDOWS_MOZILLA("Mozilla/5.0 (Windows; U; Windows NT 5.0; it-IT; rv:1.7.12) Gecko/20050915"),
+        LINUX_MOZILLA("Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0.1) Gecko/20020919"),
+        WINDOWS_CHROME("Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.19 (KHTML, like Gecko) Chrome/1.0.154.53 Safari/525.19");
+
+        private final String header;
+
+        private UserAgent(String header){
+            this.header = header;
+        }
+
+        void setUserAgentHeader(HttpURLConnection connection){
+            connection.setRequestProperty("User-Agent", header);
+        }
+
+    }
+//    static final String[] AGENTS = {
+//        "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 1.1.4322)",
+//        "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.1 SUSE/6.0.428.0 (KHTML, like Gecko) Chrome/6.0.428.0 Safari/534.1",
+//        "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.1 (KHTML, like Gecko) Chrome/6.0.428.0 Safari/534.1",
+//        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-US) AppleWebKit/534.1 (KHTML, like Gecko) Chrome/6.0.428.0 Safari/534.1",
+//        "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.3) Gecko/20100401"
+//    };
+
+    public interface WebCrawlerVisitor{
+        boolean shouldVisit(URL url);
+
+        void visited(URL url, int statusCode, String statusMessage);
+    }
 
     static class HtmlParser extends HTMLEditorKit.ParserCallback {
         HTML.Tag tag;
@@ -34,15 +59,17 @@ public class WebCrawler {
         int status;
         int length;
 
-        HtmlParser (URL url) throws Exception {
-            this.url = url;
-            
-            URLConnection http = url.openConnection();
-            http.setRequestProperty
-                ("User-Agent", AGENTS[RAND.nextInt(AGENTS.length)]);
 
-            status = ((HttpURLConnection)http).getResponseCode();
+        HtmlParser (URL url, UserAgent agent,  WebCrawlerVisitor visitor) throws Exception {
+            this.url = url;
+
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+            agent.setUserAgentHeader(http);
+
+            status = http.getResponseCode();
             length = http.getContentLength();
+
+            visitor.visited(url, status, http.getResponseMessage());
             
             DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
             doc.parse(new InputStreamReader
@@ -102,26 +129,58 @@ public class WebCrawler {
     }
     
     static int MAXDEPTH = Integer.getInteger("maxdepth", 10);
-    static final Random RAND = new Random ();
-    
+
     private int maxdepth;
-    private int pause = 1000; // in millis
-    private Set<URL> visited = new HashSet<URL>();
+    private Set<URL> visited = new HashSet<>();
+    private final WebCrawlerVisitor visitor;
 
-    public WebCrawler () {
-        this (MAXDEPTH);
+    private UserAgent agent;
+
+
+    public static class Builder{
+        UserAgent agent = UserAgent.LINUX_MOZILLA;
+
+        private int maxDepth = MAXDEPTH;
+
+        private final  WebCrawlerVisitor visitor;
+
+        public Builder(WebCrawlerVisitor visitor){
+            Objects.requireNonNull(visitor);
+            this.visitor = visitor;
+        }
+
+        public Builder userAgent(UserAgent agent){
+            Objects.requireNonNull(agent);
+            this.agent = agent;
+            return this;
+        }
+
+        public Builder maxDepth( int max){
+            if(max < 1){
+                throw new IllegalArgumentException("max depth can not be less than 1 : "+ max);
+            }
+            maxDepth = max;
+            return this;
+        }
+
+        public WebCrawler build(){
+            return new WebCrawler(this);
+        }
     }
 
-    public WebCrawler (int depth) {
-        this.maxdepth = depth;
+
+    private WebCrawler (Builder builder) {
+
+        this.visitor = builder.visitor;
+        this.maxdepth = builder.maxDepth;
+        this.agent = builder.agent;
     }
 
-    public void crawl (URL url) throws Exception {
+    public void crawl (URL url)  {
         depthFirstCrawl (0, url);
     }
 
-    void depthFirstCrawl (int depth, URL url)
-        throws Exception {
+    void depthFirstCrawl (int depth, URL url){
         if (depth >= maxdepth) {
             /*
             logger.warning("Max depth ("+maxdepth
@@ -135,19 +194,24 @@ public class WebCrawler {
                 long start = System.currentTimeMillis();
                 String s = url.toString().replaceAll("\\s", "+");
                 String u = s.substring(s.indexOf(url.getPath()));
-                System.out.println(u);
-                HtmlParser parser = new HtmlParser (url);
+              //  System.out.println(u);
+
+                if(!visitor.shouldVisit(url)){
+                    return;
+                }
+                HtmlParser parser = new HtmlParser (url, agent, visitor);
+
                 /*
                 for (int i = 0; i <= depth; ++i)
                     System.out.print(" ");
                 */
 
-                System.out.println
-                    ("..."+String.format("%1$3d %2$6d %3$5dms",
-                                         parser.getStatus(),
-                                         parser.getLength(),
-                                         System.currentTimeMillis()-start)
-                     +" "+u);
+//                System.out.println
+//                    ("..."+String.format("%1$3d %2$6d %3$5dms",
+//                                         parser.getStatus(),
+//                                         parser.getLength(),
+//                                         System.currentTimeMillis()-start)
+//                     +" "+u);
                 
                 for (URL uu : parser.getLinks()) {
                     if (!visited.contains(uu)) {
@@ -158,7 +222,7 @@ public class WebCrawler {
             catch (Exception ex) {
                 logger.warning(url+": "+ex.getMessage());
             }
-            visited.remove(url);
+           // visited.remove(url);
         }
     }
 
@@ -168,9 +232,26 @@ public class WebCrawler {
             System.exit(1);
         }
 
-        WebCrawler crawler = new WebCrawler ();
+        WebCrawler crawler = new WebCrawler.Builder (DefaultWebCrawlerVisitor.INSTANCE).build();
         for (String u : argv) {
             crawler.crawl(new URL (u));
         }
+    }
+
+    public enum DefaultWebCrawlerVisitor implements WebCrawlerVisitor{
+        INSTANCE;
+
+
+        @Override
+        public boolean shouldVisit(URL url) {
+            return true;
+        }
+
+        @Override
+        public void visited(URL url, int statusCode, String statusMessage) {
+            //no-op
+        }
+
+
     }
 }

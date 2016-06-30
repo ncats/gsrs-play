@@ -11,7 +11,7 @@ public final class StopWatch {
         //can not instantiate
     }
 
-    public static long timeElaspsed(Runnable r){
+    public static long timeElapsed(Runnable r){
         long start = System.currentTimeMillis();
         r.run();
         long end = System.currentTimeMillis();

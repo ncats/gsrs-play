@@ -534,7 +534,7 @@ public class SequenceIndexer {
         threadPool.submit(new Runnable () {
                 public void run () {
 
-                    ix.core.util.StopWatch.timeElaspsed(()->{
+                    ix.core.util.StopWatch.timeElapsed(()->{
                     try {
 
                         search (out, query, identity, gap, rt);

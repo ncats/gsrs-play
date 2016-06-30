@@ -312,16 +312,8 @@ public class SubstanceSearch {
             DECREASING{
                 @Override
                 public int compare(Integer o1, Integer o2) {
-                    if(o1 ==null && o2==null){
-                        return 0;
-                    }
-                    if(o1 ==null){
-                        return -1;
-                    }
-                    if(o2 ==null){
-                        return 1;
-                    }
-                    return Integer.compare(o2,o1);
+                    //note parameter order is swapped
+                   return INCREASING.compare(o2, o1);
                 }
             };
 

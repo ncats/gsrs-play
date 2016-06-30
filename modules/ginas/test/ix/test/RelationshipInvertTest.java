@@ -34,7 +34,9 @@ public class RelationshipInvertTest {
     public TestNamePrinter printer = new TestNamePrinter();
 
 
-    File resource ;
+    File invrelate1 =  new File("test/testJSON/invrelate1.json");
+    File invrelate2 =  new File("test/testJSON/invrelate2.json");
+
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
     private SubstanceAPI api;
@@ -55,10 +57,9 @@ public class RelationshipInvertTest {
 
     
     @Test 
-    public void testAPIAddSubstanceWithRelationshipThenAddRelatedSubstanceShouldResultInBirectionalRelationship()   throws Exception {
+    public void addSubstanceWithRelationshipThenAddRelatedSubstanceShouldResultInBirectionalRelationship()   throws Exception {
         //submit primary, with dangling relationship
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         String uuid = js.get("uuid").asText();
         JsonNode validationResult = api.validateSubstanceJson(js);
         SubstanceJsonUtil.ensureIsValid(validationResult);
@@ -67,8 +68,7 @@ public class RelationshipInvertTest {
         String[] parts=type1.split("->");
         
         //submit the dangled
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -87,8 +87,7 @@ public class RelationshipInvertTest {
     public void testRemoveSourceRelationshipShouldRemoveInvertedRelationship()   throws Exception {
     	
     	 //submit primary, with dangling relationship
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         String uuid = js.get("uuid").asText();
         JsonNode validationResult = api.validateSubstanceJson(js);
         SubstanceJsonUtil.ensureIsValid(validationResult);
@@ -96,8 +95,8 @@ public class RelationshipInvertTest {
         String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(js);
         String[] parts=type1.split("->");
         //submit the dangled
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -131,8 +130,7 @@ public class RelationshipInvertTest {
     public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationship()   throws Exception {
     	
         //submit primary
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
         js=new JsonUtil.JsonNodeBuilder(js)
 			.remove("/relationships/1")
@@ -148,8 +146,7 @@ public class RelationshipInvertTest {
         
         
         //submit alternative
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -177,8 +174,7 @@ public class RelationshipInvertTest {
     public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndIncrementVersion()   throws Exception {
     	
         //submit primary
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
         js=new JsonUtil.JsonNodeBuilder(js)
 			.remove("/relationships/1")
@@ -194,8 +190,7 @@ public class RelationshipInvertTest {
         
         
         //submit alternative
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -222,8 +217,7 @@ public class RelationshipInvertTest {
     public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {
     	
         //submit primary
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
         js=new JsonUtil.JsonNodeBuilder(js)
 			.remove("/relationships/1")
@@ -239,8 +233,7 @@ public class RelationshipInvertTest {
         
         
         //submit alternative
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -276,8 +269,7 @@ public class RelationshipInvertTest {
     public void testAddRelationshipAfterAddingEachSubstanceThenRemovingInvertedRelationshipShouldFail()   throws Exception {
     	
         //submit primary
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
         js=new JsonUtil.JsonNodeBuilder(js)
 			.remove("/relationships/1")
@@ -293,8 +285,7 @@ public class RelationshipInvertTest {
         
         
         //submit alternative
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         JsonNode validationResultA = api.validateSubstanceJson(jsA);
         SubstanceJsonUtil.ensureIsValid(validationResultA);
@@ -326,8 +317,7 @@ public class RelationshipInvertTest {
     public void testDontAddRelationshipIfOneLikeItAlreadyExists()   throws Exception {
     	
         //submit primary
-        resource = new File("test/testJSON/invrelate1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
         String uuid = js.get("uuid").asText();
         String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(js);
@@ -348,8 +338,7 @@ public class RelationshipInvertTest {
         
         
         //submit alternative
-        resource = new File("test/testJSON/invrelate2.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
         jsA=new JsonUtil.JsonNodeBuilder(jsA)
 		.add("/relationships/-",newRelate)

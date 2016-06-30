@@ -123,4 +123,8 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         webClient.getCookieManager().clearCookies();
         return wsResponse1;
     }
+
+    public WSResponse get(URL url) {
+        return url(url.toString()).get().get(timeout);
+    }
 }
