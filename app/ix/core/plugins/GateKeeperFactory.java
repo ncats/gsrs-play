@@ -121,5 +121,10 @@ public final class GateKeeperFactory {
                 }
             }
         }
+
+        @Override
+        public void removeAll() {
+            thekeys.clear();
+        }
     }
 }
