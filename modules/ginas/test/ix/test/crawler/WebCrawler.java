@@ -1,5 +1,8 @@
 package ix.test.crawler;
 
+import ix.test.ix.test.server.BrowserSession;
+import play.libs.ws.WSResponse;
+
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -52,28 +55,31 @@ public class WebCrawler {
     }
 
     static class HtmlParser extends HTMLEditorKit.ParserCallback {
-        HTML.Tag tag;
-        MutableAttributeSet attr;
         URL url;
         List<URL> hrefs = new ArrayList<URL>();
-        int status;
-        int length;
 
+        private BrowserSession session;
 
-        HtmlParser (URL url, UserAgent agent,  WebCrawlerVisitor visitor) throws Exception {
+        HtmlParser (URL url, BrowserSession session,  WebCrawlerVisitor visitor) throws Exception {
             this.url = url;
 
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            agent.setUserAgentHeader(http);
-
-            status = http.getResponseCode();
-            length = http.getContentLength();
-
-            visitor.visited(url, status, http.getResponseMessage());
-            
-            DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
-            doc.parse(new InputStreamReader
-                      (http.getInputStream()), this, true);
+            WSResponse resp = session.get(url);
+            int status = resp.getStatus();
+            String message = resp.getStatusText();
+            visitor.visited(url, status, resp.getStatusText());
+            if(status == 200){
+                DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
+                doc.parse(new StringReader(resp.getBody()), this, true);
+            }
+//            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+//            agent.setUserAgentHeader(http);
+//
+//
+//            visitor.visited(url, http.getResponseCode(), http.getResponseMessage());
+//
+//            DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
+//            doc.parse(new InputStreamReader
+//                      (http.getInputStream()), this, true);
         }
 
         @Override
@@ -88,8 +94,7 @@ public class WebCrawler {
         @Override
         public void handleSimpleTag 
             (HTML.Tag t, MutableAttributeSet a, int pos) {
-            tag = t;
-            attr = new SimpleAttributeSet (a);
+            MutableAttributeSet attr = new SimpleAttributeSet (a);
             //logger.info("simpletag: "+t);
             if (t == HTML.Tag.A) {
                 String url = (String)attr.getAttribute(HTML.Attribute.HREF);
@@ -124,8 +129,6 @@ public class WebCrawler {
         }
 
         public List<URL> getLinks () { return hrefs; }
-        public int getStatus () { return status; }
-        public int getLength () { return length; }
     }
     
     static int MAXDEPTH = Integer.getInteger("maxdepth", 10);
@@ -136,6 +139,7 @@ public class WebCrawler {
 
     private UserAgent agent;
 
+    private final BrowserSession session;
 
     public static class Builder{
         UserAgent agent = UserAgent.LINUX_MOZILLA;
@@ -144,9 +148,13 @@ public class WebCrawler {
 
         private final  WebCrawlerVisitor visitor;
 
-        public Builder(WebCrawlerVisitor visitor){
+        private final BrowserSession session;
+
+        public Builder(BrowserSession session, WebCrawlerVisitor visitor){
+            Objects.requireNonNull(session);
             Objects.requireNonNull(visitor);
             this.visitor = visitor;
+            this.session = session;
         }
 
         public Builder userAgent(UserAgent agent){
@@ -174,6 +182,8 @@ public class WebCrawler {
         this.visitor = builder.visitor;
         this.maxdepth = builder.maxDepth;
         this.agent = builder.agent;
+        this.session = builder.session;
+
     }
 
     public void crawl (URL url)  {
@@ -199,7 +209,7 @@ public class WebCrawler {
                 if(!visitor.shouldVisit(url)){
                     return;
                 }
-                HtmlParser parser = new HtmlParser (url, agent, visitor);
+                HtmlParser parser = new HtmlParser (url, session, visitor);
 
                 /*
                 for (int i = 0; i <= depth; ++i)
@@ -226,17 +236,17 @@ public class WebCrawler {
         }
     }
 
-    public static void main (String[] argv) throws Exception {
-        if (argv.length == 0) {
-            System.err.println("Usage: WebCrawler URL...");
-            System.exit(1);
-        }
-
-        WebCrawler crawler = new WebCrawler.Builder (DefaultWebCrawlerVisitor.INSTANCE).build();
-        for (String u : argv) {
-            crawler.crawl(new URL (u));
-        }
-    }
+//    public static void main (String[] argv) throws Exception {
+//        if (argv.length == 0) {
+//            System.err.println("Usage: WebCrawler URL...");
+//            System.exit(1);
+//        }
+//
+//        WebCrawler crawler = new WebCrawler.Builder (DefaultWebCrawlerVisitor.INSTANCE).build();
+//        for (String u : argv) {
+//            crawler.crawl(new URL (u));
+//        }
+//    }
 
     public enum DefaultWebCrawlerVisitor implements WebCrawlerVisitor{
         INSTANCE;
