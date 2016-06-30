@@ -2474,4 +2474,12 @@ public class App extends Authentication {
 		}
 		return toRemove.size()>0;
 	}
+	
+	public static int getNumberOfRunningThreads(){
+		int nbRunning = 0;
+		for (Thread t : Thread.getAllStackTraces().keySet()) {
+		    if (t.getState()==Thread.State.RUNNABLE) nbRunning++;
+		}
+		return nbRunning;
+	}
 }
