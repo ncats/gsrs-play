@@ -382,12 +382,15 @@ public class GinasApp extends App {
 		if(s==null || s.length==0)return def;
 		return s[0];
 	}
+	
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
                    maxLength = 10_000)
     public static Result sequenceSearch () {
 
         if (request().body().isMaxSizeExceeded()) {
-
+        	System.out.println("Too big a sequence, cuz it's:" +
+        			request().body().asFormUrlEncoded()
+        			);
             return badRequest ("Sequence is too large!");
         }
         
@@ -396,6 +399,7 @@ public class GinasApp extends App {
         String[] values = params.get("sequence");
         String ident=getFirstOrElse(params.get("identity"),"0.5");
         String identType=getFirstOrElse(params.get("identityType"),"SUB");
+        String wait=getFirstOrElse(params.get("wait"),null);
         
         if (values != null && values.length > 0) {
             String seq = values[0];
@@ -404,7 +408,7 @@ public class GinasApp extends App {
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
-                return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType);
+                return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType + ((wait!=null)?"&wait=" + wait:""));
             }
             catch (Exception ex) {
                 ex.printStackTrace();
