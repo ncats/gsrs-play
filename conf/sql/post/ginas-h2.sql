@@ -9,3 +9,5 @@ CREATE INDEX ref_id_index on ix_ginas_reference (id);
 CREATE INDEX interaction_index on ix_ginas_relationship (interaction_type);
 CREATE INDEX qualification_index on ix_ginas_relationship (qualification);
 CREATE INDEX type_index on ix_ginas_relationship (type);
+CREATE INDEX sub_ref_index on ix_ginas_substanceref (refuuid);
+CREATE INDEX relate_originate_index on ix_ginas_relationship (originator_uuid);

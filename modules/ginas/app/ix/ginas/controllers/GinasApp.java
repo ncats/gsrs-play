@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
 
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -382,12 +383,15 @@ public class GinasApp extends App {
 		if(s==null || s.length==0)return def;
 		return s[0];
 	}
+	
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
                    maxLength = 10_000)
     public static Result sequenceSearch () {
 
         if (request().body().isMaxSizeExceeded()) {
-
+        	System.out.println("Too big a sequence, cuz it's:" +
+        			request().body().asFormUrlEncoded()
+        			);
             return badRequest ("Sequence is too large!");
         }
         
@@ -396,6 +400,7 @@ public class GinasApp extends App {
         String[] values = params.get("sequence");
         String ident=getFirstOrElse(params.get("identity"),"0.5");
         String identType=getFirstOrElse(params.get("identityType"),"SUB");
+        String wait=getFirstOrElse(params.get("wait"),null);
         
         if (values != null && values.length > 0) {
             String seq = values[0];
@@ -404,7 +409,7 @@ public class GinasApp extends App {
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
-                return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType);
+                return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType + ((wait!=null)?"&wait=" + wait:""));
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -805,26 +810,29 @@ public class GinasApp extends App {
             }
         }
         else {
+            TextIndexer.SearchResult result;
             try(TextIndexer indexer = getTextIndexer().createEmptyInstance()) {
-                for (Substance sub : substances)
+                for (Substance sub : substances) {
                     indexer.add(sub);
+                }
 
-                TextIndexer.SearchResult result = SearchFactory.search
+               result = SearchFactory.search
                         (indexer, Substance.class, null, null, indexer.size(),
                                 0, FACET_DIM, request().queryString());
-                if (result.count() < substances.size()) {
-                    substances.clear();
-                    for (int i = 0; i < result.count(); ++i) {
-                        substances.add((Substance) result.get(i));
-                    }
-                }
-                TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
-
-
-                return ok(ix.ginas.views.html.substances.render
-                        (1, result.count(), result.count(), new int[0],
-                                decorate(facets), substances, null, null));
             }
+            if (result.count() < substances.size()) {
+                substances.clear();
+                for (int i = 0; i < result.count(); ++i) {
+                    substances.add((Substance) result.get(i));
+                }
+            }
+            TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
+
+
+            return ok(ix.ginas.views.html.substances.render
+                    (1, result.count(), result.count(), new int[0],
+                            decorate(facets), substances, null, null));
+
         }
     }
 
@@ -1653,7 +1661,7 @@ public class GinasApp extends App {
                     }
                 };
 
-            new Thread(r).start();
+            ForkJoinPool.commonPool().submit(r);
             updateKey=UUID.randomUUID().toString();
 
             return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));

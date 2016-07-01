@@ -17,6 +17,7 @@ import com.typesafe.config.ConfigFactory;
 
 import chemaxon.struc.MolAtom;
 import chemaxon.struc.Molecule;
+import com.typesafe.config.ConfigValue;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.jchemical.Jchemical;
 import ix.core.chem.StructureProcessor;
@@ -79,7 +80,10 @@ public class Validation {
     	Configuration conf=Play.application().configuration();
 		URL validationUrl = Play.application().classloader().getResource("validation.conf");
 		if(validationUrl != null) {
-			validationConf = ConfigFactory.load("validation.conf");
+			validationConf = ConfigFactory.load(Play.application().classloader(), "validation.conf");
+//			for(Map.Entry<String, ConfigValue> entry : validationConf.entrySet()){
+//				System.out.println(entry.getKey() + " = " + entry.getValue().toString());
+//			}
 			requireName = validationConf.getBoolean("requireNames");
 		}
         _payload = Play.application().plugin(PayloadPlugin.class);

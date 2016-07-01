@@ -35,6 +35,13 @@ public class SingleCacheGateKeeper implements GateKeeper {
         this.evictableCache = evictableCache;
 
     }
+
+    @Override
+    public void clear() {
+        keyMaster.removeAll();
+        evictableCache.removeAll();
+    }
+
     private <T> Callable<T> createRaw(Callable<T> delegate, String key){
 
         return createRaw(delegate, key, 0);

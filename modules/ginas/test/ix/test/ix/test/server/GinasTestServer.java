@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -140,6 +141,10 @@ public class GinasTestServer extends ExternalResource{
     private Map<String, Object> testSpecificAdditionalConfiguration = new HashMap<>();
     private File storage;
     private CacheManager cacheManager;
+
+    public URL getHomeUrl() throws IOException{
+        return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
+    }
 
     public static class User{
     	private final String username;

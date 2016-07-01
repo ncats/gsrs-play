@@ -71,6 +71,14 @@
            <td>JRE Version</td>
            <td>@{System.getProperty("java.version")}</td>
          </tr>
+         <tr>
+           <td>Number of Threads</td>
+           <td>@{Thread.getAllStackTraces().keySet().size()}</td>
+         </tr>
+         <tr>
+           <td>Number of Running Threads</td>
+           <td>@{App.getNumberOfRunningThreads()}</td>
+         </tr>
        </table>
       }
     </div>

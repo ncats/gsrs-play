@@ -33,4 +33,5 @@ public interface KeyMaster {
         return adaptedKey.substring(1, adaptedKey.lastIndexOf('#'));
     }
 
+    void removeAll();
 }

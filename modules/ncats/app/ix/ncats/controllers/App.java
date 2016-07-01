@@ -1459,7 +1459,7 @@ public class App extends Authentication {
          */
         public Future<Void> getDeterminedFuture(){
         	SearchResultContextDeterminedFuture future= new SearchResultContextDeterminedFuture(this);
-            new Thread(future).start();
+            ForkJoinPool.commonPool().submit(future);
             return future;
         }
         
@@ -1833,11 +1833,11 @@ public class App extends Authentication {
         if(!context.finished() ) {
 
             if (isWaitSet()) {
-                System.out.println("Waiting for finished product for search:" + context.id);
+               // System.out.println("Waiting for finished product for search:" + context.id);
                 context.getDeterminedFuture().get();
 
             } else {
-                System.out.println("Not waiting for finished product for search:" + context.id);
+               // System.out.println("Not waiting for finished product for search:" + context.id);
             }
         }
         
@@ -2473,5 +2473,13 @@ public class App extends Authentication {
 			c.removeAtom(ca);
 		}
 		return toRemove.size()>0;
+	}
+	
+	public static int getNumberOfRunningThreads(){
+		int nbRunning = 0;
+		for (Thread t : Thread.getAllStackTraces().keySet()) {
+		    if (t.getState()==Thread.State.RUNNABLE) nbRunning++;
+		}
+		return nbRunning;
 	}
 }

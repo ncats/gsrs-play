@@ -29,7 +29,7 @@
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
       <!-- this quadruples logging throughput -->
-      <immediateFlush>false</immediateFlush>
+      <immediateFlush>true</immediateFlush>
     </encoder>
   </appender>
   

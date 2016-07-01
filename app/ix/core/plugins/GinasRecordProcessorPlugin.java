@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 import play.Application;
@@ -314,6 +315,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         for(ExecutorService s : executorServices){
             s.shutdownNow();
         }
+        executorServices.clear();
       //  executorService.shutdown();
         Logger.info("Plugin " + getClass().getName() + " stopped!");
     }
@@ -349,65 +351,67 @@ public class GinasRecordProcessorPlugin extends Plugin {
         final PersistRecordWorkerFactory factory = getPersistRecordWorkerFactory();
 
         executorServices.add(executorService);
-		new Thread() {
-			@Override
-			public void run() {
+        Runnable r= new Runnable() {
+            @Override
+            public void run() {
 
-				try (RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
+                try (RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
 
-					Estimate es = extractorInstance.estimateRecordCount(pp.payload);
-					{
-						Logger.debug("Counted records");
-						Statistics stat = getStatisticsForJob(pp.key);
-						if (stat == null) {
-							stat = new Statistics();
-						}
-						stat.totalRecords = es;
-						stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
-						storeStatisticsForJob(pp.key, stat);
-						Logger.debug(stat.toString());
-					}
-					job.status = ProcessingJob.Status.RUNNING;
-					job.payload = pp.payload;
-					job.message="Loading data";
-					job.save();
-					
-					Object record;
-					do {
-						try {
-							record = extractorInstance.getNextRecord();
-							final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
+                    Estimate es = extractorInstance.estimateRecordCount(pp.payload);
+                    {
+                        Logger.debug("Counted records");
+                        Statistics stat = getStatisticsForJob(pp.key);
+                        if (stat == null) {
+                            stat = new Statistics();
+                        }
+                        stat.totalRecords = es;
+                        stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
+                        storeStatisticsForJob(pp.key, stat);
+                        Logger.debug(stat.toString());
+                    }
+                    job.status = ProcessingJob.Status.RUNNING;
+                    job.payload = pp.payload;
+                    job.message = "Loading data";
+                    job.save();
 
-							if (record != null) {
+                    Object record;
+                    do {
+                        try {
+                            record = extractorInstance.getNextRecord();
+                            final PayloadExtractedRecord prg = new PayloadExtractedRecord(job, record);
 
-								executorService.submit(factory.newWorkerFor(prg));
+                            if (record != null) {
 
-							}
-						} catch (Exception e) {
-							Statistics stat = getStatisticsForJob(pp.key);
-							stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
-							storeStatisticsForJob(pp.key, stat);
-							Global.ExtractFailLogger
-									.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
-							// hack to keep iterator going...
-							record = new Object();
-						}
-					} while (record != null);
-					executorService.shutdown();
+                                executorService.submit(factory.newWorkerFor(prg));
 
-				}
-				try {
-					executorService.awaitTermination(2, TimeUnit.DAYS);
-					Statistics stat = getStatisticsForJob(pp.key);
-					stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
-					executorServices.remove(executorService);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				
+                            }
+                        } catch (Exception e) {
+                            Statistics stat = getStatisticsForJob(pp.key);
+                            stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
+                            storeStatisticsForJob(pp.key, stat);
+                            Global.ExtractFailLogger
+                                    .info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
+                            // hack to keep iterator going...
+                            record = new Object();
+                        }
+                    } while (record != null);
+                    executorService.shutdown();
 
-			}
-		}.start();
+                }
+                try {
+                    executorService.awaitTermination(2, TimeUnit.DAYS);
+                    Statistics stat = getStatisticsForJob(pp.key);
+                    stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
+                    executorServices.remove(executorService);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
+            }
+        };
+
+        ForkJoinPool.commonPool().submit(r);
 
 
         return pp.key;

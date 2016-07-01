@@ -7,13 +7,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -309,7 +303,7 @@ public class SequenceIndexer {
 
     
     private SequenceIndexer (File dir, boolean readOnly) throws IOException {
-        this (dir, readOnly, Executors.newCachedThreadPool());
+        this (dir, readOnly, ForkJoinPool.commonPool());
         localThreadPool = true;
     }
 
@@ -534,7 +528,7 @@ public class SequenceIndexer {
         threadPool.submit(new Runnable () {
                 public void run () {
 
-                    ix.core.util.StopWatch.timeElaspsed(()->{
+                    ix.core.util.StopWatch.timeElapsed(()->{
                     try {
 
                         search (out, query, identity, gap, rt);

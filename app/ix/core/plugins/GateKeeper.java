@@ -49,4 +49,6 @@ public interface GateKeeper extends Closeable {
     Stream<Element> elements(int top, int skip);
 
     Statistics getStatistics ();
+
+    void clear();
 }
