@@ -304,11 +304,13 @@
                 label: '@',  //used if the label needs to display something other than the field
                 formatter: '=?', //form object to watch to format values with. example: filtering code validation based on codeSystem type, mainly if the vocabulary term has a regex associated with it
                 formattercheck: '@formatter', //string literal ofthe object name. this is a placeholder to check and see if there is supposed to be a formatter to watch.
+                formatterFunction: '&?', //Formatters change how model values will appear in the view, like subunit display
                 filter: '=?', //form object to watch to filter values with. example: filtering codeSystemType validation based on codeSystem
                 filterFunction: '&?', // function called to filter input variables
                 //validator function should accept a model object, and return an array of errors
                 validator: '&?', //optional function passed in from the form directive and used to validate on init and change, used in conjunction with a formatter if available.
-                blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur, so it should be used if the regular validation fires too much
+                blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur
+                changeFunction:'&?', //validators happen in the background, and mainly set validation, so scope variable changes should go here
                 required: '=?'  //optional variable that enables required form validation
             },
             link: function (scope, element, attrs, ngModelCtrl) {
@@ -320,20 +322,35 @@
                 var templateurl;
                 switch (attrs.type) {
                     case "dropdown":
-                        templateurl = baseurl + "assets/templates/elements/dropdown-select2.html";
+                        templateurl = baseurl + "assets/templates/elements/dropdown-select.html";
                         break;
                     case "multi":
-                        templateurl = baseurl + "assets/templates/elements/multi-select2.html";
+                        //used for the multiselect to filter and return the cv
+                        scope.loadItems = function ($query) {
+                            var filtered = _.filter(scope.values, function (cv) {
+                                return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
+                            });
+                            var sorted = _.orderBy(filtered, function (cv) {
+                                return _.startsWith(cv.display.toLowerCase(), $query.toLowerCase());
+                            }, ['desc']);
+                            return sorted;
+                        };
+
+                        //used to delete a multi -select list
+                        scope.empty= function(){
+                            scope.obj =[];
+                        };
+                        templateurl = baseurl + "assets/templates/elements/multi-select.html";
                         break;
                     case "text":
-                        templateurl = baseurl + "assets/templates/elements/text-view-edit2.html";
+                        templateurl = baseurl + "assets/templates/elements/text-view-edit.html";
                         break;
                     case "text-box":
                         //this passes along the desired row count for a text box, without making it a scope variable
                         if (attrs.rows) {
                             scope.rows = attrs.rows;
                         }
-                        templateurl = baseurl + "assets/templates/elements/text-box-view-edit2.html";
+                        templateurl = baseurl + "assets/templates/elements/text-box-view-edit.html";
                         break;
                 }
                 var temp = scope.obj;
@@ -361,6 +378,13 @@
                         }
                     };
 
+                    //this is used to:  1. filter one dropdown list based on the input of another down to one automatically selected value
+                    //                  2. filter one dropdown list based on the input of another to a subset
+                    //                  3. select a different cv for a dropdown, based on the input of another (structural modification residue)
+                    if (scope.filter) {
+                        filterService._register(scope, true);
+                    }
+
                     //this will manage the cv retrieval for dropdown/multi select
                     if(attrs.cv){
                         scope.cv = attrs.cv;
@@ -386,22 +410,6 @@
                             }
 
                         });
-
-                        //used for the multiselect to filter and return the cv
-                        scope.loadItems = function ($query) {
-                            var filtered = _.filter(scope.values, function (cv) {
-                                return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
-                            });
-                            var sorted = _.orderBy(filtered, function (cv) {
-                                return _.startsWith(cv.display.toLowerCase(), $query.toLowerCase());
-                            }, ['desc']);
-                            return sorted;
-                        };
-
-                        //used to delete a multi -select list
-                        scope.empty= function(){
-                            scope.obj =[];
-                        };
 
                         //adds a new cv element to the cv. the update cv function is not working however, and should be fixed
                         /////////////////////////////fix updateCV method
@@ -434,12 +442,6 @@
                         };
 
                     }
-                    //this is used to:  1. filter one dropdown list based on the input of another down to one automatically selected value
-                    //                  2. filter one dropdown list based on the input of another to a subset
-                    //                  3. select a different cv for a dropdown, based on the input of another
-                    if (scope.filter) {
-                        filterService._register(scope, true);
-                    }
 
                     //this sets a validator if there is a formatter/regex available. could also be set as ngModelCtrl.$formatters
                     //using the string literal for initialization
@@ -468,19 +470,36 @@
                         });
                     }
 
-                    //validator with no formatting control
+                    //validator with no formatting control -- used to parse subunits. nothing is returned for validation
                     if (scope.validator && !scope.formattercheck) {
-                        console.log("no formatting!");
-                        //just pass the object, probably for async validation, so this might have to be moved
                         ngModelCtrl.$validators.custom = function (modelValue) {
                             scope.errorMessages = scope.validator({model: modelValue});
-                            console.log(scope.errorMessages);
-                            console.log("setting anyways no format");
-                            scope.obj = modelValue;
-                            return !scope.errorMessages.length > 0;
+                           if(!_.isUndefined(scope.errorMessages)) {
+                               scope.obj = modelValue;
+                               return !scope.errorMessages.length > 0;
+                           }
+                            return true;
                         };
-                }
+                    }
 
+                    //nothing uses this yet, it changes the viewValue of the model, but not the modelValue
+                    if(scope.formatterFunction) {
+                        ngModelCtrl.$formatters.format = function (modelValue) {
+                            var ret = scope.formatterFunction({model: modelValue});
+                        };
+                    }
+
+                    //blur function is a wrapper for the function passed in from the form, it adds the edit toggling.
+                    scope.blurFunction = function() {
+                        if (scope.blurValidator) {
+                            ngModelCtrl.$validators.blur = function (modelValue) {
+                                scope.errorMessages = scope.blurValidator({model: modelValue});
+                                scope.obj = modelValue;
+                                return !scope.errorMessages.length > 0;
+                            };
+                        }
+                        scope.edit = false;
+                    };
                     //multi select max allowed tags
                     if (attrs.max) {
                         scope.max = attrs.max;
@@ -525,6 +544,52 @@
 
         return resolver;
     });
+
+    ginasFormElements.directive('formHeader', function ($compile, $templateRequest) {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                type: '@',
+                referenceobj: '=?',
+                parent: '=',
+                path: '@',
+                iscollapsed: '=?',
+                heading: '@'
+            },
+            link: function (scope, element, attrs) {
+                scope.getLength = function () {
+                    if (!_.isUndefined(_.get(scope.parent, scope.path))) {
+                        scope.length = _.get(scope.parent, scope.path).length;
+                    } else {
+                        scope.length = 0;
+                    }
+                    return scope.length;
+                };
+                scope.toggle = function () {
+                    scope.iscollapsed = !scope.iscollapsed;
+                };
+
+                scope.heading = _.startCase(scope.type);
+
+                if (_.isUndefined(scope.path)) {
+                    scope.path = scope.type;
+                }
+                scope.length = scope.getLength();
+
+                if (scope.length == 0) {
+                    scope.iscollapsed = true;
+                }
+
+                $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
+                    template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                });
+            }
+        };
+    });
+
 
     ginasFormElements.directive('substanceViewer', function (molChanger, UUID) {
         return {
@@ -628,7 +693,6 @@
             link: function (scope, element, attrs) {
 
                 scope.createSubref = function (selectedItem) {
-                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
@@ -787,14 +851,6 @@
     
     //////////////BUTTONS///////////////////////////
 
-/////////////////////////////////is this one used???
-    ginasFormElements.directive('closeButton', function () {
-        return {
-            restrict: 'E',
-            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
-        };
-    });
-
     ginasFormElements.directive('downloadButton', function ($compile, $timeout, download) {
         return {
             restrict: 'E',
@@ -942,6 +998,9 @@
                     case "reference":
                         templateurl =  baseurl + "assets/templates/selectors/reference-selector.html";
                         break;
+                    case "sites":
+                        templateurl =  baseurl + "assets/templates/selectors/site-selector.html";
+                        break;
                 }
                 return templateurl;
             },
@@ -998,6 +1057,10 @@
                                     break;
                                 case "reference":
                                     templateurl =  baseurl + "assets/templates/modals/reference-modal.html";
+                                    break;
+                                case "sites":
+                                  $scope.formtype=$attrs.formtype;
+                                    templateurl =  baseurl + "assets/templates/modals/site-modal.html";
                                     break;
                             }
                             return templateurl;
@@ -1076,637 +1139,4 @@
             }
         };
     });
-
-
-
-
-    ginasFormElements.directive('textBox', function () {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-box.html",
-            require: '^ngModel',
-            replace: true,
-            scope: {
-                obj: '=ngModel',
-                field: '@',
-                name: '=',
-                label: '@',
-                required: '=?',
-                rows: '=?'
-            },
-            link: function (scope, element) {
-                if (_.isUndefined(scope.rows)) {
-                    scope.rows = 7;
-                }
-            }
-        };
-    });
-
-    ginasFormElements.directive('textBoxViewEdit', function () {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-box-view-edit.html",
-            replace: true,
-            scope: {
-                obj: '=',
-                field: '@',
-                label: '@',
-                name: '=',
-                validator: '&',
-                changeValidator: '&',
-                required: '=?'
-            },
-            link: function (scope, element, attrs, ngModel) {
-
-                scope.editing = function (obj) {
-                    scope.errors = [];
-                    try {
-                        scope.validator(obj);
-                        if (_.has(obj, '_editing')) {
-                            obj._editing = !obj._editing;
-                        } else {
-                            _.set(obj, '_editing', true);
-                        }
-                    } catch (e) {
-                        scope.errors.push(e);
-                    }
-                };
-                scope.errors = [];
-
-                if (!scope.validator) {
-                    scope.validator = function () {
-                    };
-                }
-
-                if (!scope.changeValidator) {
-                    scope.changeValidator = function () {
-                    };
-                }
-
-            }
-        };
-    });
-    ginasFormElements.directive('gsrsTextBox', function () {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-box-view-edit2.html",
-            replace: true,
-            require: '?ngModel',
-            scope: {
-                //the actual object of the form -- used for validation
-                formname: '=',
-                //angular ng-model of obj.field type
-                obj: '=ngModel',
-                // text name of the field -- used for labels and firm field retrieval
-                field: '@',
-                //used if the label needs to display something other than the field
-                label: '@',
-                //name of the element
-                name: '=',
-                //optional function passed in from the form directive and used to validate on init and change
-                validator: '&?',
-                //optional validation function that is passed in from the form. this only fires on blur, so it should be used if the regular validation fires too much
-                blurValidator: '&?',
-                //optional variable that enables required form validation
-                required: '=?'
-            },
-            link: function (scope, element, attrs, ngModelCtrl) {
-                if (!_.isUndefined(scope.obj)) {
-                    scope.edit = false;
-                } else {
-                    scope.edit = true;
-                }
-
-                if (scope.required === true && _.isEmpty(scope.obj)) {
-                    ngModelCtrl.$setValidity('required', true);
-                }
-
-                scope.editing = function () {
-                    scope.edit = !scope.edit;
-                };
-
-                if (_.isUndefined(scope.rows)) {
-                    scope.rows = 7;
-                }
-
-                scope.errors = [];
-
-                scope.validatorFunction = function () {
-                    if (scope.validator) {
-                        scope.errorMessages = scope.validator({model: scope.obj});
-                    }
-                };
-
-                scope.changeValidatorFunction = function () {
-                    if (scope.changeValidator) {
-                        console.log("change");
-                        scope.errorMessages = scope.changeValidator({model: scope.obj});
-                    }
-                };
-            }
-        };
-    });
-
-    ginasFormElements.directive('textInput', function (filterService) {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-input.html",
-            require: '^ngModel',
-            replace: true,
-            scope: {
-                obj: '=ngModel',
-                field: '@',
-                label: '@',
-                form: '=?',
-                filter: '=?',
-                filterFunction: '&?',
-                validator: '&?',
-                required: '=?'
-            },
-            link: function (scope, elem, attrs, ngModel) {
-
-                scope.validatorFunction = function () {
-                    if (scope.validator) {
-                        scope.errorMessages = scope.validator({model: scope.obj});
-                    }
-                };
-
-                if (scope.filter && !_.isEmpty(scope.filter)) {
-                    var filter = scope.filter;
-                    scope.$watch('filter', function (newValue) {
-                        if (!_.isUndefined(newValue)) {
-                            scope.errorMessages = scope.validator({model: scope.obj});
-                        }
-                    });
-                }
-            }
-        };
-    });
-
-    ginasFormElements.directive('textViewEdit', function () {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/text-view-edit.html",
-            replace: true,
-            scope: {
-                obj: '=',
-                field: '@',
-                label: '@',
-                form: '=?',
-                filter: '=',
-                filterFunction: '&',
-                validator: '&',
-                required: '=?'
-            },
-            link: function (scope, element, attrs, ngModel) {
-                scope.edit = true;
-
-                if (scope.required === true && _.isEmpty(scope.obj)) {
-                    ngModelCtrl.$setValidity('required', true);
-                }
-
-                scope.validatorFunction = function () {
-                    scope.errorMessages = scope.validator({model: scope.obj});
-                };
-
-                if (scope.filter) {
-                    var filter = scope.filter;
-                    scope.$watch('filter', function (newValue) {
-                        if (!_.isUndefined(newValue)) {
-                            scope.errorMessages = scope.validator({model: scope.obj});
-                        }
-                    });
-                }
-            }
-        };
-    });
-
-
-    //filterFunction allows for choosing which cv to be loaded for each dropdown. Foe example, displaying amino acid vs nucleic acid bases based on input.
-    //filter is an object that a $watch is set on. when that object changes, the currently loaded cv is filtered based on the value. these filtering options are set in the cv
-    ginasFormElements.directive('dropdownSelect', function (CVFields, filterService) {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/dropdown-select.html",
-            replace: true,
-            scope: {
-                obj: '=ngModel',
-                cv: '@',
-                field: '@',
-                label: '@',
-                values: '=?',
-                filter: '=',
-                filterField: '@filter',
-                filterFunction: '&?',
-                required: '=?'
-            },
-            link: function (scope, element, attrs) {
-                var other = [{
-                    display: "Other",
-                    value: "Other",
-                    filter: " = ",
-                    selected: false
-                }];
-                if (_.isUndefined(scope.obj)) {
-                    //  scope.obj={};
-                }
-                if (scope.cv) {
-                    CVFields.getCV(scope.cv).then(function (response) {
-                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-
-                        if (response.data.content[0].filterable == true) {
-                            filterService._register(scope);
-                        }
-
-                        if (response.data.content[0].editable == true) {
-                            scope.values = _.union(scope.values, other);
-                        }
-
-                        _.forEach(scope.values, function (term) {
-                            if (term.selected == true) {
-                                scope.obj = term;
-                            }
-                        });
-                    });
-                }
-
-                scope.makeNewCV = function () {
-                    if (_.isUndefined(scope.obj)) {
-                        scope.obj = {};
-                    }
-                    var exists = _.find(scope.values, function (cv) {
-                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
-                    });
-                    if (!exists && scope.obj.new !== '') {
-                        var cv = {};
-                        cv.display = scope.obj.new;
-                        cv.value = scope.obj.new;
-                        scope.values.push(cv);
-                        CVFields.updateCV(attrs.cv, cv);
-                        scope.obj = cv;
-                    } else {
-                        alert(scope.obj.new + ' exists in the cv');
-                        scope.obj = {};
-                    }
-                };
-            }
-        };
-    });
-
-    ginasFormElements.directive('dropdownViewEdit', function (CVFields, filterService) {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/dropdown-view-edit.html",
-            replace: true,
-            require: '?ngModel',
-            scope: {
-                formname: '@',
-                cv: '@',
-                obj: '=ngModel',
-                field: '@',
-                label: '@',
-                values: '=?',
-                filter: '=',
-                filterField: '@filter',
-                filterFunction: '&?',
-                required: '=?'
-            },
-            link: function (scope, element, attrs, ngModelCtrl) {
-
-                var other = [{
-                    display: "Other",
-                    value: "Other",
-                    filter: " = ",
-                    selected: false
-                }];
-                // var temp= scope.obj[scope.field];
-                var temp = scope.obj;
-                if (scope.cv) {
-                    CVFields.getCV(scope.cv).then(function (response) {
-                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-                        if (response.data.content[0].filterable == true) {
-                            filterService._register(scope, true);
-                        }
-
-                        if (response.data.content[0].editable == true) {
-                            scope.values = _.union(scope.values, other);
-                        }
-                    });
-                }
-
-                if (scope.required) {
-                    console.log(ngModelCtrl);
-                    if (_.isUndefined(scope.obj)) {
-                        console.log(scope);
-                        scope.formname[scope.field].$setValidity("requiredssss", false);
-                    }
-                    console.log(scope.obj);
-                }
-
-                scope.makeNewCV = function () {
-                    var exists = _.find(scope.values, function (cv) {
-                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj[scope.field].new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj[scope.field].new));
-                    });
-                    if (!exists && scope.obj[scope.field].new !== '') {
-                        var cv = {};
-                        cv.display = scope.obj[scope.field].new;
-                        cv.value = scope.obj[scope.field].new;
-                        scope.values.push(cv);
-                        CVFields.updateCV(attrs.cv, cv);
-                        scope.obj[scope.field] = cv;
-                    } else {
-                        alert(scope.obj[scope.field].new + ' exists in the cv');
-                        scope.obj[scope.field] = {};
-                    }
-                };
-
-                scope.undo = function () {
-                    if (scope.obj[scope.field].changed == true) {
-                        scope.obj[scope.field] = temp;
-                        scope.obj[scope.field].changed = false;
-                        scope.obj[scope.field].$editing = false;
-                    }
-                };
-
-                scope.change = function () {
-                    if (scope.obj[scope.field]) {
-                        scope.obj[scope.field].$editing = false;
-                        scope.obj[scope.field].changed = true;
-                    } else {
-                        _.unset(scope.obj, scope.field);
-                    }
-                };
-
-                scope.toggleEdit = function () {
-                    if (scope.obj[scope.field]) {
-                        scope.obj[scope.field].$editing = false;
-                    }
-                };
-
-                scope.editing = function (obj) {
-                    if (_.has(obj, '$editing')) {
-                        obj.$editing = !obj.$editing;
-                    } else {
-                        _.set(obj, '$editing', true);
-                    }
-                };
-            }
-        };
-    });
-
-
-    ginasFormElements.directive('dropdownSelecto', function (CVFields, filterService) {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/dropdown-select2.html",
-            replace: true,
-            require: '?ngModel',
-            scope: {
-                formname: '=',
-                cv: '@',
-                obj: '=ngModel',
-                field: '@',
-                label: '@',
-                values: '=?',
-                filter: '=',
-                filterField: '@filter',
-                filterFunction: '&?',
-                validation: '&?',
-                required: '=?'
-            },
-            link: function (scope, element, attrs, ngModelCtrl) {
-                var other = [{
-                    display: "Other",
-                    value: "Other",
-                    filter: " = ",
-                    selected: false
-                }];
-                if (_.isUndefined(scope.obj)) {
-                    //   scope.obj = {};
-                }
-                // var temp= scope.obj;
-                var temp = scope.obj;
-                if (scope.required === true && _.isEmpty(scope.obj)) {
-                    ngModelCtrl.$setValidity('required', true);
-                }
-
-                if (scope.cv) {
-                    CVFields.getCV(scope.cv).then(function (response) {
-                        scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
-                        if (response.data.content[0].filterable == true) {
-                            filterService._register(scope, true);
-                        }
-
-                        if (response.data.content[0].editable == true) {
-                            scope.values = _.union(scope.values, other);
-                        }
-                    });
-                }
-
-                scope.makeNewCV = function () {
-                    var exists = _.find(scope.values, function (cv) {
-                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
-                    });
-                    if (!exists && scope.obj.new !== '') {
-                        var cv = {};
-                        cv.display = scope.obj.new;
-                        cv.value = scope.obj.new;
-                        scope.values.push(cv);
-                        CVFields.updateCV(attrs.cv, cv);
-                        scope.obj = cv;
-                    } else {
-                        alert(scope.obj.new + ' exists in the cv');
-                        scope.obj = {};
-                    }
-                };
-
-                scope.undo = function () {
-                    if (scope.obj.changed == true) {
-                        scope.obj = temp;
-                        scope.obj.changed = false;
-                        scope.obj.$editing = false;
-                        if (!_.isEmpty(scope.obj) && scope.required) {
-                            _.set(scope, 'invali', ngModelCtrl.$invalid);
-                        }
-
-                    }
-                };
-
-                scope.change = function () {
-                    if (scope.obj) {
-                        scope.obj.$editing = false;
-                        if (!_.isEmpty(temp)) {
-                            scope.obj.changed = true;
-                        }
-                    }
-                    if (scope.required) {
-                        console.log(ngModelCtrl);
-                        _.set(scope, 'invali', ngModelCtrl.$invalid);
-                    }
-                };
-
-
-                scope.toggleEdit = function () {
-                    if (scope.obj) {
-                        scope.obj.$editing = false;
-                    }
-                    if (scope.required) {
-                        _.set(scope, 'invali', ngModelCtrl.$invalid);
-                    }
-                };
-
-                scope.editing = function () {
-                    if (_.has(scope.obj, '$editing')) {
-                        scope.obj.$editing = !scope.obj.$editing;
-                    } else {
-                        _.set(scope.obj, '$editing', true);
-                    }
-                };
-            }
-        };
-    });
-
-    ginasFormElements.directive('multiSelect', function (CVFields) {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/multi-select.html",
-            replace: true,
-            scope: {
-                obj: '=ngModel',
-                tags: '=?',
-                field: '@',
-                cv: '@',
-                label: '@',
-                filter: '=',
-                filterFunction: '&',
-                required: '=?'
-            },
-            link: function (scope, element, attrs) {
-                if (attrs.max) {
-                    scope.max = attrs.max;
-                } else {
-                    scope.max = 'MAX_SAFE_INTEGER';
-                }
-
-                //this allows the switching of cv depending on an external value
-                if (scope.filter) {
-                    scope.$watch('filter', function (newValue) {
-                        if (!_.isUndefined(newValue)) {
-                            var cv = scope.filterFunction({type: newValue});
-                            CVFields.getCV(cv).then(function (response) {
-                                scope.obj = [];
-                                scope.tags = response.data.content[0].terms;
-                            });
-                        }
-                    });
-                }
-
-                if (attrs.cv) {
-                    scope.tags = [];
-                    CVFields.getCV(attrs.cv).then(function (response) {
-                        scope.tags = response.data.content[0].terms;
-                        _.forEach(scope.tags, function (term) {
-                            if (term.selected == true) {
-                                if (_.isUndefined(scope.obj)) {
-                                    scope.obj = [];
-                                }
-                                scope.obj.push(term);
-                            }
-                        });
-                        /*if (scope.cv == 'LANGUAGE') {
-                         var values = _.orderBy(response.data.content[0].terms, function (cv) {
-                         return cv.display == 'English';
-                         }, ['desc']);
-                         scope.tags = values;
-                         } else {*/
-                        scope.tags = response.data.content[0].terms;
-                        //}
-                    });
-                }
-
-                scope.loadItems = function ($query) {
-                    var filtered = _.filter(scope.tags, function (cv) {
-                        return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
-                    });
-                    var sorted = _.orderBy(filtered, function (cv) {
-                        return _.startsWith(cv.display.toLowerCase(), $query.toLowerCase());
-                    }, ['desc']);
-                    return sorted;
-                };
-            }
-        };
-    });
-
-    ginasFormElements.directive('multiViewEdit', function (CVFields) {
-        return {
-            restrict: 'E',
-            templateUrl: baseurl + "assets/templates/elements/multi-view-edit.html",
-            replace: true,
-            scope: {
-                obj: '=',
-                values: '=?',
-                field: '@',
-                tags: '=?',
-                cv: '@',
-                label: '@',
-                filter: '=',
-                filterFunction: '&',
-                required: '=?'
-            },
-            link: function (scope, element, attrs) {
-                scope.tags = [];
-
-                if (attrs.max) {
-                    scope.max = attrs.max;
-                } else {
-                    scope.max = 'MAX_SAFE_INTEGER';
-                }
-
-                if (scope.filter) {
-                    scope.$watch('filter', function (newValue, oldValue) {
-                        if (!_.isUndefined(newValue)) {
-                            var cv = scope.filterFunction({type: newValue});
-                            if (!_.isNull(cv)) {
-                                CVFields.getCV(cv).then(function (response) {
-                                    if (!_.isEqual(newValue, oldValue)) {
-                                        scope.obj[scope.field] = [];
-                                    }
-                                    // scope.obj[scope.field] = [];
-                                    scope.tags = response.data.content[0].terms;
-                                });
-                            }
-                        }
-                    });
-                }
-
-                if (scope.cv) {
-                    CVFields.getCV(scope.cv).then(function (data) {
-                        var values = _.orderBy(data.data.content[0].terms, function (cv) {
-                            return cv.display == 'English';
-                        }, ['desc']);
-                        scope.tags = values;
-
-                    });
-                }
-                scope.loadItems = function ($query) {
-                    var filtered = _.filter(scope.tags, function (cv) {
-                        return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
-                    });
-                    var sorted = _.orderBy(filtered, function (cv) {
-                        return _.startsWith(cv.display.toLowerCase(), $query.toLowerCase());
-                    }, ['desc']);
-                    return sorted;
-                };
-
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
-                };
-            }
-        };
-    });
-
 })();

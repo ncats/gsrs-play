@@ -1,27 +1,65 @@
-<div class = "row info" >
+<div class="row info">
     <div class="row">
-        <form-header type="organismDetails" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="organismDetails" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="diverseOrganismForm" id="addDiverseOrganismForm" role="form" novalidate>
-        <div class="row form-row">
-            <div class="col-md-2">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismFamily" label="Organism Family"></text-view-edit>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <gsrs-input type="text"
+                                ng-model="parent.structurallyDiverse.organismFamily"
+                                field="organismFamily"
+                                label="Organism Family">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-3">
+                    <gsrs-input type="text"
+                                ng-model="parent.structurallyDiverse.organismGenus"
+                                field="organismGenus"
+                                label="Organism Genus">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-3">
+                    <gsrs-input type="text"
+                                ng-model="parent.structurallyDiverse.organismSpecies"
+                                field="organismSpecies">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-3">
+                    <gsrs-input type="text"
+                                ng-model="parent.structurallyDiverse.organismAuthor"
+                                field="organismAuthor"
+                                label="Organism Author">
+                    </gsrs-input>
+                </div>
             </div>
-            <div class="col-md-3">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismGenus" label="Organism Genus"></text-view-edit>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.infraSpecificType"
+                                field="infraSpecificType"
+                                cv="INFRA_SPECIFIC_TYPE"
+                                label="Infraspecific Type">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-3">
+                    <gsrs-input type="text"
+                                ng-model="parent.structurallyDiverse.name"
+                                field="infraSpecificName"
+                                label="Infraspecific Name">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-2" ng-if="parent.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && parent.structurallyDiverse.sourceMaterialType.value !== 'PLANT'">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.developmentalStage"
+                                field="developmentalStage"
+                                cv="NAME_TYPE"
+                                cv="DEVELOPMENTAL_STAGE"
+                                label="Developmental Stage">
+                    </gsrs-input>
+                </div>
             </div>
-            <div class="col-md-3">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></text-view-edit>
-            </div>
-            <div class="col-md-2">
-                <text-view-edit obj = "parent.structurallyDiverse" field="organismAuthor" label="Organism Author"></text-view-edit>
-            </div>
-            <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.structurallyDiverse" field="developmentalStage" cv = "DEVELOPMENTAL_STAGE" label="Developmental Stage"></dropdown-view-edit>
-            </div>
-        </div>
-        <p></p>
-            </form>
+            <p></p>
+        </form>
     </div>
 </div>

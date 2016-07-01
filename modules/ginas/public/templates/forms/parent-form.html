@@ -1,21 +1,31 @@
-<div class = "row info" >
+<div class="row info">
     <div class="row">
-        <form-header type="parents" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="parents" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="parentForm" id="addParentForm" role="form" novalidate>
-        <div class="row form-row">
+            <div class="row form-row">
                 <div class="col-md-3" ng-if="parent.$$diverseType=='part'">
-                    <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="parentSubstance" name ="parentSubstance" label ="Parent Substance" formname ="parentForm" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj="parent.structurallyDiverse" field="parentSubstance"
+                                                name="parentSubstance" label="Parent Substance" formname="parentForm"
+                                                type="search"></substance-chooser-selector>
                 </div>
-                <div class="col-md-3">
-                    <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" formname ="parentForm" label ="Hybrid Paternal Organism" type = "search"></substance-chooser-selector>
+                <div class="col-md-3" ng-if="parent.$$diverseType!='part'">
+                    <substance-chooser-selector referenceobj="parent.structurallyDiverse"
+                                                field="hybridSpeciesPaternalOrganism"
+                                                name="hybridSpeciesPaternalOrganism" formname="parentForm"
+                                                label="Hybrid Paternal Organism"
+                                                type="search"></substance-chooser-selector>
                 </div>
-                <div class="col-md-3">
-                    <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" formname ="parentForm" label ="Hybrid Maternal Organism" type = "search"></substance-chooser-selector>
+                <div class="col-md-3" ng-if="parent.$$diverseType!='part'">
+                    <substance-chooser-selector referenceobj="parent.structurallyDiverse"
+                                                field="hybridSpeciesMaternalOrganism"
+                                                name="hybridSpeciesMaternalOrganism" formname="parentForm"
+                                                label="Hybrid Maternal Organism"
+                                                type="search"></substance-chooser-selector>
                 </div>
             </div>
-        <div class = "parentForm"></div>
-            </form>
+            <div class="parentForm"></div>
+        </form>
     </div>
 </div>

@@ -295,6 +295,7 @@
             return disp;
         };
         utils.sruDisplayToConnectivity = function (display) {
+            var errors =[];
             var connections = display.split(";");
             var regex = /^\s*[A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)[-][A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
 
@@ -308,7 +309,8 @@
                 regex.lastIndex = 0;
                 var res = regex.exec(con);
                 if (res == null) {
-                  //  throw "Connection '" + con + "' is not properly formatted";
+                   var text =  "Connection '" + con + "' is not properly formatted";
+                    errors.push({text: text, type: 'warning'});
                 } else {
                     if (!map[res[1]]) {
                         map[res[1]] = [];
@@ -316,6 +318,7 @@
                     map[res[1]].push(res[2]);
                 }
             }
+            map.errors = errors;
             return map;
         };
         utils.setSRUConnectivityDisplay = function (srus) {
@@ -1395,6 +1398,7 @@
                 acid: '='
             },
             link: function (scope, element, attrs) {
+              //  console.log(scope);
                 scope.bridged = false;
                 var aa = scope.acid;
                 var template;
@@ -1465,7 +1469,7 @@
             },
             link: function (scope, element, attrs) {
                 scope.numbers = true;
-                scope.edit = false;
+                scope.edit = true;
 
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
@@ -1475,12 +1479,16 @@
                     if (scope.parent.substanceClass === 'protein') {
                         CVFields.getCV("AMINO_ACID_RESIDUE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
-                            scope.parseSubunit();
+                            if(!_.isUndefined(scope.obj.sequence)) {
+                                scope.parseSubunit();
+                            }
                         });
                     } else {
                         CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
-                            scope.parseSubunit();
+                            if(!_.isUndefined(scope.obj.sequence)) {
+                                scope.parseSubunit();
+                            }
                         });
                     }
                 };
@@ -1488,7 +1496,7 @@
 
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
-                        return '-';
+                        return 'D-';
                     }
                     else {
                         return 'L-';
@@ -1542,9 +1550,6 @@
                 };
 
                 scope.parseSubunit = function () {
-                    if (!_.has(scope.parent, '$$subunitDisplay')) {
-                        _.set(scope.parent, '$$subunitDisplay', []);
-                    }
                     scope.obj.$$cysteineIndices = [];
                     var display = [];
                     _.forEach(scope.obj.sequence, function (aa, index) {
@@ -1559,7 +1564,7 @@
                             if (scope.obj.subunitIndex) {
                                 obj.subunitIndex = scope.obj.subunitIndex;
                             } else {
-                                obj.subunitIndex = scope.obj.index;
+                                obj.subunitIndex = scope.index;
                             }
                             obj.residueIndex = index - 0 + 1;
 
@@ -1603,13 +1608,10 @@
                         } else {
                             obj.valid = false;
                         }
-
-
                         display.push(obj);
                     });
                     display = _.chunk(display, 10);
-                    _.set(scope.obj, '$$subunitDisplay', display);
-                    scope.parent.$$subunitDisplay.push(display);
+                    _.set(scope.obj, 'subunitDisplay', display);
                 };
 
                 scope.highlight = function (acid) {
@@ -1624,8 +1626,6 @@
                     targetElement.isolateScope().showBridge();
                 };
 
-
-//******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
@@ -1638,6 +1638,7 @@
 
                 var display = [];
                 if (_.isUndefined(scope.parent)) {
+                    console.log("no parent");
                     APIFetcher.fetch(scope.uuid).then(function (data) {
                         scope.parent = data;
                         if (_.has(data, 'protein')) {
@@ -1654,7 +1655,7 @@
                 }
 
             },
-            templateUrl: baseurl + "assets/templates/subunit.html"
+            templateUrl: baseurl + "assets/templates/elements/subunit.html"
         };
     });
 

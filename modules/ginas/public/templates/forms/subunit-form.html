@@ -1,29 +1,38 @@
 <div class="row info">
     <div class="row">
-        <form-header type="subunits" path={{::substanceClass}}.subunits parent = parent
+        <form-header type="subunits" path={{::substanceClass}}.subunits parent=parent
                      iscollapsed="iscollapsed"></form-header>
 
-        <div class ="col-md-3 col-md-offset-5 text-right" id ="formSwitch">
-        <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>' off='<i class="fa fa-bars fa-2x"></i>'></switch>
-            </div>
+        <div class="col-md-3 col-md-offset-5 text-right" id="formSwitch">
+            <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>'
+                    off='<i class="fa fa-bars fa-2x"></i>'></switch>
+        </div>
     </div>
-    <div uib-collapse="iscollapsed">
-        <div ng-repeat="(index, obj) in parent[substanceClass].subunits track by $index">
-            <div class="col-md-12">
-
-                <subunit obj=obj parent=parent numbers = numbers index = {{index+1}}></subunit>
-            </div>
-        </div>
-        <div class="col-md-12">
-            <form class="form-horizontal" name="subunitForm" id="addSubunitForm" role="form" novalidate>
-                <div class="row form-row">
-                    <div class="col-md-12">
-                      <h5 ng-show="substanceClass=='protein'" ><em>Lower case letters correspond to "</em><span class ="smallcaps">d</span><em>-" amino acids. Capital letters indicate "</em><span class ="smallcaps">l</span><em>-" amino acids</em></h5>
-                        <text-box ng-model="subunit.sequence" field="sequence" required></text-box>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <h5 ng-show="substanceClass=='protein'"><em>Lower case letters correspond to "</em><span
+                class="smallcaps">d</span><em>-" amino acids. Capital letters indicate
+            "</em><span
+                class="smallcaps">l</span><em>-" amino acids</em></h5>
+        <form class="form-horizontal" name="subunitForm" id="addSubunitForm" role="form" novalidate>
+            <div ng-repeat="(index, obj) in parent[substanceClass].subunits">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <subunit obj=obj parent=parent numbers=numbers index={{index+1}}></subunit>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <submit-buttons submit="subunit" form="subunitForm" path="subunits"></submit-buttons>
-            </form>
-        </div>
+                    <hr>
+                </ng-form>
+            </div>
+
+        </form>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNewSubunit(subunitForm)"><i
+                class="fa fa-plus"></i> Add a<span
+                ng-if="parent[substanceClass].subunits.length>0">nother</span> subunit
+        </button>
     </div>
 </div>

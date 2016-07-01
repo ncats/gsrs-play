@@ -6,10 +6,20 @@
         <form class="form-horizontal" name="mixtureDetailsForm" id="addMixtureDetailsForm" role="form" novalidate>
         <div class="row form-row">
                 <div class="col-md-3">
-                    <substance-chooser-selector referenceobj ="parent.mixture" field ="parentSubstance" name ="parentSubstance" label ="Source Material Parent" formname ="mixtureDetailsForm" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector
+                            referenceobj ="parent.mixture"
+                            field ="parentSubstance"
+                            name ="parentSubstance"
+                            label ="Source Material Parent"
+                            formname ="mixtureDetailsForm"
+                            type = "search">
+                    </substance-chooser-selector>
                 </div>
             <div class="col-md-1 pull-right">
-                <form-selector referenceobj ="component" parent = "parent" divid="mixtureDetailsForm" type = "access"></form-selector>
+                <modal-form-button type="access"
+                                   referenceobj="parent.mixture"
+                                   parent="parent">
+                </modal-form-button>
             </div>
             </div>
         <div class = "mixtureDetailsForm"></div>

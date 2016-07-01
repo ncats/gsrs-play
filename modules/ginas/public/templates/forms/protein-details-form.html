@@ -1,27 +1,51 @@
-<div class = "row info" >
+<div class="row info">
     <div class="row">
-        <form-header type="proteinDetails" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="proteinDetails" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="detailsForm" id="addDetailsForm" id="add-name" role="form" novalidate>
-        <div class="row form-row">
-            <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.protein.proteinType"
+                                field="proteinType"
+                                cv="PROTEIN_TYPE"
+                                label="Protein Type">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-3">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.protein.proteinSubType"
+                                field="proteinSubType"
+                                cv="PROTEIN_SUBTYPE"
+                                label="Protein Subtype">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-2">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.protein.sequenceOrigin"
+                                field="sequenceOrigin"
+                                cv="SEQUENCE_ORIGIN"
+                                label="Sequence Origin">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-2">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.protein.sequenceType"
+                                field="sequenceType"
+                                cv="SEQUENCE_TYPE"
+                                label="Sequence Type">
+                    </gsrs-input>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <modal-form-button type="access"
+                                       referenceobj="parent.protein"
+                                       parent="parent">
+                    </modal-form-button>
+                </div>
+
             </div>
-            <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.protein" field="proteinSubType" cv = "PROTEIN_SUBTYPE" label="Protein Subtype"></dropdown-view-edit>
-            </div>
-            <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.protein" field="sequenceOrigin" cv = "SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
-            </div>
-            <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.protein" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
-            </div>
-            <div class="col-md-1 pull-right">
-                <form-selector referenceobj ="parent.protein" parent = "parent" divid="detailsForm" type = "access"></form-selector>
-            </div>
-        </div>
-        <div class="detailsForm"></div>
-            </form>
+            <div class="detailsForm"></div>
+        </form>
     </div>
 </div>

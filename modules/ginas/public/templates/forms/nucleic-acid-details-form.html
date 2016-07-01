@@ -1,28 +1,51 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
         <form-header type="nucleicAcidClassification" parent="parent"></form-header>
     </div>
-    <div class="col-md-12">
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="nucleicAcidClassificationForm" id="addNucleicAcidClassificationForm" role="form" novalidate>
-        <div class="row form-row">
-                <div class="col-md-2 err-check">
-                    <dropdown-view-edit obj = "parent.nucleicAcid" field="nucleicAcidType" cv = "NUCLEIC_ACID_TYPE" label="Nucleic Acid Type"></dropdown-view-edit>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.nucleicAcid.nucleicAcidType"
+                                field="nucleicAcidType"
+                                cv = "NUCLEIC_ACID_TYPE"
+                                label="Nucleic Acid Type">
+                    </gsrs-input>
                 </div>
-                <div class="col-md-2 err-check">
-                    <dropdown-view-edit obj = "parent.nucleicAcid" field="nucleicAcidSubType" cv = "NUCLEIC_ACID_SUBTYPE" label="Nucleic Acid Subtype"></dropdown-view-edit>
+                <div class="col-md-3">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.nucleicAcid.nucleicAcidSubType"
+                                field="nucleicAcidSubType"
+                                cv = "NUCLEIC_ACID_SUBTYPE"
+                                label="Nucleic Acid Subtype">
+                    </gsrs-input>
                 </div>
-                <div class="col-md-2 err-check">
-                    <dropdown-view-edit obj = "parent.nucleicAcid" field="sequenceOrigin" cv = "NUCLEIC_ACID_SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
+                <div class="col-md-2">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.nucleicAcid.sequenceOrigin"
+                                field="sequenceOrigin"
+                                cv="NUCLEIC_ACID_SEQUENCE_ORIGIN"
+                                label="Sequence Origin">
+                    </gsrs-input>
                 </div>
-                <div class="col-md-2 err-check">
-                    <dropdown-view-edit obj = "parent.nucleicAcid" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
+                <div class="col-md-2">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.nucleicAcid.sequenceType"
+                                field="sequenceType"
+                                cv="SEQUENCE_TYPE"
+                                label="Sequence Type">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="parent.nucleicAcid" parent = "parent" divid="naDetailsForm" type = "access"></form-selector>
+                    <modal-form-button type="access"
+                                       referenceobj="parent.nucleicAcid"
+                                       parent="parent">
+                    </modal-form-button>
                 </div>
-            </div>
-            <div class="naDetailsForm"></div>
-            </form>
-        </div>
-    </div>
 
+            </div>
+            <div class="detailsForm"></div>
+        </form>
+    </div>
+</div>

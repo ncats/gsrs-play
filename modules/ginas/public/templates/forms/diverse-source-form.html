@@ -7,20 +7,29 @@
               novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialClass"
-                                        cv="SOURCE_MATERIAL_CLASS"
-                                        label="Source Material Class"></dropdown-view-edit>
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.sourceMaterialClass"
+                                field="sourceMaterialClass"
+                                cv="SOURCE_MATERIAL_CLASS"
+                                label="Source Material Class">
+                    </gsrs-input>
                 </div>
-                <div class="col-md-3">
-                    <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialType"
-                                        cv="SOURCE_MATERIAL_TYPE"
-                                        label="Source Material Type"></dropdown-view-edit>
+                <div class="col-md-3" ng-if="parent.structurallyDiverse.sourceMaterialClass.display=='ORGANISM'">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.sourceMaterialType"
+                                field="sourceMaterialType"
+                                cv="SOURCE_MATERIAL_TYPE"
+                                label="Source Material Type">
+                    </gsrs-input>
                 </div>
-                <div class="col-md-3"
-                     ng-if="parent.structurallyDiverse.sourceMaterialClass.display=='ORGANISM'">
-                    <dropdown-view-edit obj="parent.structurallyDiverse" field="sourceMaterialState"
-                                        cv="SOURCE_MATERIAL_STATE"
-                                        label="Source Material State"></dropdown-view-edit>
+                <div class="col-md-3" ng-if="parent.structurallyDiverse.sourceMaterialClass.display=='ORGANISM'">
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.sourceMaterialState"
+                                field="sourceMaterialState"
+                                cv="SOURCE_MATERIAL_STATE"
+                                label="Source Material State"
+                                formname=diverseSourceForm>
+                    </gsrs-input>
                 </div>
             </div>
         </form>

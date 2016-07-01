@@ -1,0 +1,17 @@
+<div>
+    <div class="modal-header">
+        <div class="row">
+            <form-header type="parameters" parent="parent"></form-header>
+            <a type="button" class="close" ng-click="close()" uib-tooltip="Close" aria-label="Close"><i
+                    class="fa fa-times danger"></i></a>
+        </div>
+    </div>
+    <div class="modal-body">
+        <physical-parameter-form referenceobj=obj parent=referenceobj ng-cloak></physical-parameter-form>
+        <br>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-primary" ng-click="close()">Close</button>
+    </div>
+</div>
+

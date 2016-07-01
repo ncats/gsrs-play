@@ -1,10 +1,40 @@
-<div ng-cloak>
-    <div>
-        <label id ="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
-        <select ng-hide = "obj.display =='Other'" class="form-control" title="{{::field}}" name="{{::field}}" aria-labelledby="{{::field}}-label" id="{{::field}}" ng-model= obj
-                ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display" >
-            <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
-        </select>
-        <input type="text" class="form-control" name ="{{::field}}" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" aria-labelledby="{{::field}}-label" ng-if="obj.display=='Other'"/>
+<div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
+    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span>
+    </label>
+    <br>
+    <a ng-show="!edit || !obj.display =='Other'" ng-click="edit=!edit">{{obj.display}}</a>
+    <span class= "float-right" ng-if="changed==true">
+        <a ng-click="undo()"><i class="fa fa-undo danger" aria-hidden="true" uib-tooltip="Undo"></i></a>
+    </span>
+    <select ng-show="edit || !obj || !obj.display =='Other'"
+            class="form-control"
+            ng-model= obj
+            ng-change="change();"
+            ng-blur = toggleEdit();
+            ng-options="r.display for r in values track by r.display"
+            placeholder ="{{::field}}"
+            title="{{::field}}"
+            name="{{::field}}"
+            id ="{{::field}}"
+            aria-labelledby="{{::field}}-label"
+            ng-required="required">
+        <option class= "text-capitalize" value="" selected>{{label || field}}...</option>
+    </select>
+    <input type="text"
+           class="form-control"
+           name ="{{::field}}"
+           ng-model=obj.new
+           placeholder = "Add new value..."
+           ng-blur ="makeNewCV();"
+           aria-labelledby="{{::field}}-label"
+           ng-if="obj.display=='Other'"
+           required
+    />
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+        <div ng-message="required" class ="danger">required field</div>
+        <div ng-repeat="errorMessage in errorMessages">
+            <!-- use ng-message-exp for a message whose key is given by an expression -->
+            <div ng-message-exp="errorMessage.type">{{ errorMessage.text }}</div>
+        </div>
     </div>
 </div>

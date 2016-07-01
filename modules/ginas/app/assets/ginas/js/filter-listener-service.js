@@ -36,23 +36,37 @@ angular.module('filterListener', [])
                 }else {
                     var filter = scope.filter;
                     scope.$watch('filter', function (newValue) {
+                        console.log(newValue);
+                        console.log(scope);
                         if (!_.isUndefined(newValue)) {
                             var obj = {};
                             //this returns the object to be filtered by the form
                             if (scope.filterFunction) {
+                                console.log("filter function");
+                                //this filter function returns a string cv name to retrieve
                                 var cv = scope.filterFunction({type: newValue});
-                                CVFields.getCV(cv).then(function (response) {
-                                    //obj = [];
-                                    scope.values = response.data.content[0].terms;
-                                    if (scope.values.length == 1) {
-                                        obj = scope.values[0];
-                                    }
-                                    if (edit) {
-                                        scope.obj[scope.field] = obj;
-                                    } else {
-                                        scope.obj = obj;
-                                    }
-                                });
+                                console.log(cv);
+                                if(!_.isNull(cv)) {
+                                    CVFields.getCV(cv).then(function (response) {
+                                        //obj = [];
+                                        scope.values = response.data.content[0].terms;
+                                        if (scope.values.length == 1) {
+                                            obj = scope.values[0];
+                                        }
+                                        //this sets the object to be empty if the filter value/cv changes,
+                                        if (_.isUndefined(scope.obj)) {
+                                            scope.obj = {};
+                                        }
+                                        if (edit) {
+                                            console.log("empty");
+                                            scope.empty();
+                                            scope.obj[scope.field] = obj;
+                                        } else {
+                                            scope.empty();
+                                            scope.obj = obj;
+                                        }
+                                    });
+                                }
                             } else {
                                 //this filters within the VocabularyTerm object
                                 CVFields.getCV(scope.cv).then(function (response) {
@@ -81,6 +95,9 @@ angular.module('filterListener', [])
                                     }
                                     if (scope.values.length == 1) {
                                         obj = scope.values[0];
+                                    }
+                                    if (_.isUndefined(scope.obj)) {
+                                        scope.obj = {};
                                     }
                                     if (edit) {
                                         scope.obj[scope.field] = obj;

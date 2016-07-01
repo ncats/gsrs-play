@@ -12,6 +12,13 @@
                     </gsrs-input>
                 </div>
                             <div class="col-md-3">
+                    <gsrs-input type = "dropdown"
+                                ng-model= obj.type
+                                field="type"
+                    cv="PROPERTY_TYPE">
+                    </gsrs-input>
+                </div>
+                            <div class="col-md-3">
                                 <modal-form-button type="amount"
                                                    referenceobj="obj"
                                                    field="value"
@@ -24,8 +31,6 @@
                     </ng-form>
                 </div>
         </form>
-        <br>
-        <br>
         <button class="btn btn-primary" ng-click="addNew(parameterForm, 'parameters')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.parameters.length>0">nother</span> parameter
         </button>

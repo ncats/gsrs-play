@@ -64,26 +64,28 @@
     //generic controller that all forms will have. has acces to specific form scopes, and the more specific forms can call these methods
     ginasForms.controller('formController', function ($scope, $http) {
 
-        $scope.addNew = function (mainForm, list, obj) {
-            console.log("clicked add new in form controller");
-            console.log($scope);
+        //mainform is the form obj
+        //location is the string of the array, can be nested
+        //obj is a modified object that will be added
+        $scope.addNew = function (mainForm, location, obj) {
             var temp = {};
             if (obj) {
                 temp= obj;
             }
-            if ($scope.parent[list] && $scope.parent[list].length > 0) {
+            var listObj = _.get($scope.parent, location);
+            if (!_.isUndefined(listObj) && listObj.length > 0) {
                 if (mainForm.form && mainForm.form.$invalid) {
                     mainForm.form.$flagged = true;
                 }
-
-                $scope.parent[list].push(temp);
+                listObj.push(temp);
+                _.set($scope.parent, location, listObj);
             } else {
-                _.set($scope.parent, list, []);
-                $scope.parent[list].push(temp);
+                listObj =[];
+                listObj.push(temp);
+                _.set($scope.parent, location, listObj);
             }
         };
-
-
+        
         $scope.submitFile = function (obj) {
             //create form data object
             var fd = new FormData();
@@ -126,6 +128,18 @@
         };
     });
 
+    ginasForms.directive('agentModificationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html"
+        };
+    });
+
     ginasForms.directive('amountForm', function () {
         return {
             restrict: 'E',
@@ -151,7 +165,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.parse = function (code) {
                     var errors = [];
                     if (_.isUndefined(code.formatter)) {
@@ -170,6 +183,87 @@
         };
     });
 
+    ginasForms.directive('conceptUpgradeForm', function ($window, localStorageService) {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/concept-upgrade-form.html",
+            scope: {
+                parent: '='
+            },
+            link: function (scope, element, attrs) {
+
+                scope.iscollapsed = false;
+                if (scope.parent.uuid) {
+                    scope.editid = scope.parent.uuid.split('-')[0];
+                }
+
+                scope.changeClass = function (newClass) {
+                    var upgradeSub = scope.parent.$$setClass(newClass);
+                    _.set(upgradeSub, 'update', true);
+                    localStorageService.set('tempsubstance', upgradeSub);
+                    $window.location.href = $window.location.origin + baseurl + "wizard?kind=" + newClass;
+                };
+            }
+        };
+    });
+
+    ginasForms.directive('disulfideLinkForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=',
+                formype: '@',
+                residueregex: '@'
+
+            },
+            templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
+            link: function (scope, element, attrs) {
+
+                scope.getAllCysteinesWithoutLinkage = function () {
+                    var count = 0;
+                    _.forEach(scope.parent.protein.subunits, function (subunit) {
+                        if (!_.isUndefined(subunit.$$cysteineIndices)) {
+                            count += subunit.$$cysteineIndices.length;
+                        }
+                    });
+                    if (_.has(scope.parent, 'disulfideLinks')) {
+                        count -= scope.parent.protein.disulfideLinks.length * 2;
+                    }
+                    return count;
+                };
+            }
+        };
+    });
+
+    ginasForms.directive('diverseOrganismForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
+        };
+    });
+
+    ginasForms.directive('diverseSourceForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html",
+            link: function(scope){
+                scope.iscollapsed = false;
+            }
+        };
+    });
+
     ginasForms.directive('diverseTypeForm', function () {
         return {
             restrict: 'E',
@@ -180,6 +274,9 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
                 scope.parent.$$diverseType = "whole";
+                if(_.isUndefined(scope.parent.structurallyDiverse.part)){
+                    scope.parent.structurallyDiverse.part = [];
+                }
                 if (scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
                     _.set(scope.parent, '$$diverseType', 'part');
                     _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
@@ -196,6 +293,26 @@
                         }
                     }
                 };
+            }
+        };
+    });
+
+    ginasForms.directive('glycosylationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
+            link: function (scope, element, attrs) {
+                _.forEach(scope.parent.protein.glycosylation, function (value) {
+                    if (_.isArray(value) && value.length > 0) {
+                        scope.iscollapsed = false;
+                    }
+                });
             }
         };
     });
@@ -217,6 +334,29 @@
                 }
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
+        };
+    });
+
+    ginasForms.directive('mixtureComponentSelectForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/mixture-component-select-form.html"
+        };
+    });
+
+    ginasForms.directive('mixtureDetailsForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/mixture-details-form.html"
         };
     });
 
@@ -318,6 +458,137 @@
         };
     });
 
+    ginasForms.directive('nucleicAcidDetailsForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-details-form.html"
+        };
+    });
+
+    ginasForms.directive('nucleicAcidSugarForm', function (siteList, siteAdder) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
+            link: function (scope, attrs, element) {
+                console.log(scope);
+
+                scope.getAllSites = function () {
+                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
+                };
+
+                scope.applyAll = function (obj) {
+                    console.log(obj);
+                    siteAdder.applyAll('sugar', scope.parent, obj);
+                };
+
+
+//this is called every time something is hovered over -- ned to fix
+                scope.noSugars = function () {
+                    var count = scope.getAllSites();
+                    _.forEach(scope.parent.nucleicAcid.sugars, function (sugar) {
+                        if(_.isArray(sugar.sites)) {
+                            count -= sugar.sites.length
+                        }
+                    });
+                    return count;
+                }
+            }
+        };
+    });
+
+    ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
+            link: function (scope, attrs, element) {
+                scope.linkage = {};
+                scope.noLinkages = 0;
+                if (!scope.parent.nucleicAcid.linkages) {
+                    scope.parent.nucleicAcid.linkages = [];
+                }
+
+                scope.getAllSites = function () {
+                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
+                };
+
+                scope.applyAll = function () {
+                    siteAdder.applyAll('linkage', scope.parent, scope.linkage, 'linkage');
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                };
+
+                scope.validate = function () {
+                    _.forEach(scope.linkage.sites.sites, function (site) {
+                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
+                    });
+                    scope.parent.nucleicAcid.linkages.push(scope.linkage);
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                    scope.linkage = {};
+                    scope.linkageForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj) {
+                    scope.parent.nucleicAcid.linkages.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
+                    siteAdder.clearSites('linkage', scope.parent, obj.sites);
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                };
+
+                scope.noLinkages = function () {
+                    var count = scope.getAllSites('linkage') - 1;
+                    _.forEach(scope.parent.nucleicAcid.linkages, function (link) {
+                        count -= link.sites.length
+                    });
+                    return count;
+                }
+            }
+        };
+    });
+
+
+    ginasForms.directive('otherLinksForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=',
+                displayType: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/other-links-form.html",
+            link: function (scope, element, attrs) {
+
+                scope.validate = function () {
+                    if (!scope.parent.protein.otherLinks) {
+                        scope.parent.protein.otherLinks = [];
+                    }
+                    scope.parent.protein.otherLinks.push(scope.otherLink);
+                    scope.otherLink = {};
+                    scope.otherLinksForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj) {
+                    scope.parent.protein.otherLinks.splice(scope.parent.protein.otherLinks.indexOf(obj), 1);
+                };
+            }
+        };
+    });
+
     ginasForms.directive('parameterForm', function () {
         return {
             restrict: 'E',
@@ -328,6 +599,100 @@
                 referenceobj: '=?'// this is the object from the form that is getting the parameter added to it
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html"
+        };
+    });
+
+    ginasForms.directive('parentForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/parent-form.html"
+        };
+    });
+
+    ginasForms.directive('partForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/part-form.html"
+        };
+    });
+
+    ginasForms.directive('physicalModificationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=?'// this is the object from the form that is getting the property added to it
+            },
+            templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html",
+            link: function(scope){
+               
+            }
+        };
+    });
+
+    ginasForms.directive('physicalParameterForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            controller: 'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '=?'// this is the object from the form that is getting the parameter added to it
+            },
+            templateUrl: baseurl + "assets/templates/forms/physical-parameter-form.html",
+        };
+    });
+
+    ginasForms.directive('polymerClassificationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-classification-form.html"
+        };
+    });
+
+    ginasForms.directive('polymerMonomerForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-monomer-form.html"
+        };
+    });
+
+    ginasForms.directive('polymerSruForm', function (polymerUtils) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
+            link: function (scope) {
+                scope.validateConnectivity = function (obj) {
+                   // console.log(obj);
+                    var map = polymerUtils.sruDisplayToConnectivity(obj);
+                   // console.log(map);
+                   return map.errors;
+                }
+            }
         };
     });
 
@@ -344,6 +709,25 @@
         };
     });
 
+    ginasForms.directive('proteinDetailsForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            link: function (scope) {
+                /* var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
+                 _.forEach(fields, function(field){
+                 if(!_.isNull(scope.parent.protein[field])){
+                 scope.iscollapsed=false;
+                 }
+                 });*/
+            },
+            templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
+        };
+    });
+
     ginasForms.directive('referenceForm', function (UUID) {
         return {
             restrict: 'E',
@@ -353,7 +737,7 @@
                 parent: '=',
                 referenceobj: '=?'// this is the object from the form that is getting the references added to it
             },
-            templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
+            templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
                 
                 scope.addNewRef = function (mainform, list) {
@@ -456,6 +840,42 @@
         };
     });
 
+    ginasForms.directive('ssConstituentForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/ss-constituent-form.html"
+        };
+    });
+
+    ginasForms.directive('structuralModificationForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                referenceobj: '=?',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
+            link: function (scope) {
+                scope.getCV = function (mod) {
+                    if (mod == "AMINO_ACID_SUBSTITUTION") {
+                        return "AMINO_ACID_RESIDUE";
+                    } else if (mod == "NUCLEOSIDE_SUBSTITUTION") {
+                        return "NUCLEIC_ACID_BASE";
+                    } else {
+                        return null;
+                    }
+                };
+            }
+        };
+    });
+
     ginasForms.directive('structureForm', function ($http, $templateRequest, $compile, molChanger) {
         return {
             restrict: 'E',
@@ -508,92 +928,60 @@
         };
     });
 
-
-
-    ginasForms.directive('formHeader', function ($compile, $templateRequest) {
+    ginasForms.directive('subunitForm', function ($compile, $templateRequest, $uibModal) {
         return {
             restrict: 'E',
-            replace: 'true',
+            replace: true,
+            controller: 'formController',
             scope: {
-                type: '@',
-                referenceobj: '=?',
-                parent: '=',
-                path: '@',
-                iscollapsed: '=?',
-                heading: '@'
+                parent: '='
             },
+            templateUrl: baseurl + "assets/templates/forms/subunit-form.html",
             link: function (scope, element, attrs) {
-                scope.getLength = function () {
-                    if (!_.isUndefined(_.get(scope.parent, scope.path))) {
-                        scope.length = _.get(scope.parent, scope.path).length;
-                    } else {
-                        scope.length = 0;
+
+                scope.substanceClass = scope.parent.$$getClass();
+                scope.numbers = true;
+
+                    scope.addNewSubunit= function (form) {
+                        var r =  scope.substanceClass +'.subunits';
+                        scope.addNew(form, r);
+                    };
+
+
+
+                scope.validate = function () {
+                    if (scope.subunit.sequence.length > 10000) {
+                        scope.open();
                     }
-                    return scope.length;
+                    scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
+                    scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
+                    scope.subunit = {};
+                    scope.subunitForm.$setPristine();
                 };
-                scope.toggle = function () {
-                    scope.iscollapsed = !scope.iscollapsed;
+
+                scope.close = function () {
+                    var obj = _.last(scope.parent[scope.parent.substanceClass].subunits);
+                    scope.deleteObj(obj);
+                    modalInstance.close();
                 };
 
-                scope.heading = _.startCase(scope.type);
-
-                if (_.isUndefined(scope.path)) {
-                    scope.path = scope.type;
-                }
-                scope.length = scope.getLength();
-
-                if (scope.length == 0) {
-                    scope.iscollapsed = true;
-                }
-
-                $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
-                    template = angular.element(html);
+                scope.open = function () {
+                    modalInstance = $uibModal.open({
+                        templateUrl: baseurl + "assets/templates/modals/subunit-warning.html",
+                        scope: scope
+                    });
+                };
+                /*$templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
+                    var template = angular.element(html);
                     element.append(template);
                     $compile(template)(scope);
-                });
+                });*/
             }
-            /*link: function (scope, element, attrs) {
-             scope.getLength = function(){
-             if (!_.isUndefined(_.get(scope.parent, scope.path))) {
-             scope.length = _.get(scope.parent, scope.path).length;
-             }else{
-             scope.length =0;
-             }
-             return scope.length;
-             };
-             scope.toggle = function () {
-             scope.iscollapsed = !scope.iscollapsed;
-             };
-             if(!scope.heading || scope.heading==""){
-             scope.heading=scope.title;
-             }
-             if(!scope.heading || scope.heading==""){
-             scope.heading = _.startCase(scope.type);
-             console.log("heading wasn't defined");
-             console.log(scope.heading);
-             }else{
-             console.log("heading was defined");
-             }
-             scope.title=scope.heading;
-
-
-             if (_.isUndefined(scope.path)) {
-             scope.path = scope.type;
-             }
-             scope.length = scope.getLength();
-
-             if (scope.length == 0) {
-             scope.iscollapsed = true;
-             }
-
-             $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
-             template = angular.element(html);
-             element.append(template);
-             $compile(template)(scope);
-             });
-             }*/
         };
     });
+
+
+
 
     ginasForms.directive('formmanager', function ($compile, $templateRequest, toggler) {
         return {
@@ -632,61 +1020,6 @@
     });
 
     
-
-
-    ginasForms.directive('agentModificationForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            controller: 'formController',
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html"
-        };
-    });
-
-
-    ginasForms.directive('conceptUpgradeForm', function ($window, localStorageService) {
-        return {
-            restrict: 'E',
-            replace: true,
-            templateUrl: baseurl + "assets/templates/forms/concept-upgrade-form.html",
-            scope: {
-                parent: '='
-            },
-            link: function (scope, element, attrs) {
-
-                scope.iscollapsed = false;
-                if (scope.parent.uuid) {
-                    scope.editid = scope.parent.uuid.split('-')[0];
-                }
-
-                scope.changeClass = function (newClass) {
-                    var upgradeSub = scope.parent.$$setClass(newClass);
-                    _.set(upgradeSub, 'update', true);
-                    localStorageService.set('tempsubstance', upgradeSub);
-                    $window.location.href = $window.location.origin + baseurl + "wizard?kind=" + newClass;
-                };
-            }
-        };
-    });
-
-    ginasForms.directive('commentForm', function () {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                referenceobj: '=',
-                parent: '=',
-                label: '=',
-                field: '=',
-                name: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/comment-form.html"
-        };
-    });
-
     ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
         return {
             restrict: 'E',
@@ -749,129 +1082,8 @@
         };
     });
 
-    ginasForms.directive('disulfideLinkForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '=',
-                referenceobj: '=',
-                formype: '@',
-                residueregex: '@'
 
-            },
-            templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
-            link: function (scope, element, attrs) {
 
-                scope.getAllCysteinesWithoutLinkage = function () {
-                    var count = 0;
-                    _.forEach(scope.parent.protein.subunits, function (subunit) {
-                        if (!_.isUndefined(subunit.$$cysteineIndices)) {
-                            count += subunit.$$cysteineIndices.length;
-                        }
-                    });
-                    if (_.has(scope.parent, 'disulfideLinks')) {
-                        count -= scope.parent.protein.disulfideLinks.length * 2;
-                    }
-                    return count;
-                };
-
-                scope.validate = function () {
-                    if (!scope.parent.protein.disulfideLinks) {
-                        scope.parent.protein.disulfideLinks = [];
-
-                    }
-                    scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
-                    scope.disulfideLink = {};
-                    scope.disulfideLinksForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.disulfideLinks.splice(scope.parent.protein.disulfideLinks.indexOf(obj), 1);
-                };
-            }
-        };
-    });
-
-    ginasForms.directive('diverseDetailsForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/diverse-details-form.html"
-        };
-    });
-
-    ginasForms.directive('diversePlantForm', function (CVFields) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
-            link: function (scope) {
-            }
-        };
-    });
-
-    ginasForms.directive('diverseOrganismForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: function (scope) {
-                return baseurl + "assets/templates/forms/diverse-organism-form.html";
-            }
-        };
-        /*            templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
-         };*/
-    });
-
-    ginasForms.directive('diverseSourceForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html"
-        };
-    });
-
-    ginasForms.directive('diverseTypeForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
-            link: function (scope, element, attrs) {
-                scope.parent.$$diverseType = "whole";
-                if (scope.parent.structurallyDiverse.part.length>0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
-                    _.set(scope.parent, '$$diverseType', 'part');
-                    _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
-                }
-                scope.checkType = function () {
-                    if (scope.parent.$$diverseType === 'whole') {
-                        scope.parent.$$diverseType = 'whole';
-                        _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
-                    } else {
-                        if (scope.$$temp) {
-                            _.set(scope.parent.structurallyDiverse, 'part', scope.$$temp);
-                        } else {
-                            _.set(scope.parent.structurallyDiverse, 'part', []);
-                        }
-                    }
-                };
-            }
-        };
-    });
 
     ginasForms.directive('cvTermsForm', function (CVFields) {
         return {
@@ -999,169 +1211,6 @@
         };
     });
 
-    ginasForms.directive('formSelector', function ($compile, $templateRequest, toggler) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                referenceobj: '=',
-                type: '@',
-                parent: '=',
-                filter: '=',
-                field: '@',
-                label: '@',
-                divid: '@',
-                name: '@referenceobj'
-            },
-            link: function (scope, element, attrs) {
-                var formHolder;
-                var template;
-
-                if (_.isUndefined(scope.referenceobj)) {
-                    var x = {};
-                    _.set(scope, 'referenceobj', x);
-                }
-
-                if (scope.filter) {
-                }
-
-                scope.toggle = function () {
-                    toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
-                };
-                scope.stage = true;
-
-                switch (scope.type) {
-                    case "amount":
-                        if (!scope.field) {
-                            scope.field = 'amount';
-                        }
-                        $templateRequest(baseurl + "assets/templates/selectors/amount-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-
-                        });
-                        formHolder = '<amount-form referenceobj = referenceobj parent = parent field=field amount=referenceobj.amount filter = filter></amount-form>';
-                        break;
-                    case "site":
-                        scope.formtype = attrs.formtype;
-                        scope.residueregex = attrs.residueregex;
-                        scope.mode = attrs.mode;
-                        $templateRequest(baseurl + "assets/templates/selectors/site-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-
-                        });
-                        formHolder = '<site-string-form referenceobj = referenceobj field=field parent = parent residueregex=residueregex formtype = formtype></site-string-form>';
-                        break;
-                    case "reference":
-                        $templateRequest(baseurl + "assets/templates/selectors/reference-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        formHolder = '<reference-form referenceobj = referenceobj parent = parent></reference-form>';
-                        break;
-                    case "parameter":
-                        $templateRequest(baseurl + "assets/templates/selectors/parameter-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        formHolder = '<parameter-form referenceobj = referenceobj field="field" parent = parent></parameter-form>';
-                        break;
-                    case "physicalParameter":
-                        if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj.parameters"></parameters></a>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        } else {
-                            $templateRequest(baseurl + "assets/templates/selectors/parameter-selector.html").then(function (html) {
-                                template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                            });
-                        }
-                        formHolder = '<physical-parameter-form referenceobj = referenceobj field = field parent = parent></physical-parameter-form>';
-                        break;
-                    case "nameOrgs":
-                        $templateRequest(baseurl + "assets/templates/selectors/name-org-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        //   }
-                        formHolder = '<name-org-form referenceobj = referenceobj field = field parent = parent></name-org-form>';
-                        break;
-                    case "access":
-                        $templateRequest(baseurl + "assets/templates/selectors/access-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        formHolder = '<access-form referenceobj = referenceobj parent = parent></access-form>';
-                        break;
-                    case "textbox":
-                        /*                        if (attrs.mode == "edit") {
-                         template = angular.element('<div><label for="comments" class="text-capitalize">{{label || field}}</label><a ng-click ="toggle()"><comment value = "referenceobj[field]" id="comment-directive"></comment></a></div>');
-                         element.append(template);
-                         $compile(template)(scope);
-                         } else {*/
-                        $templateRequest(baseurl + "assets/templates/selectors/comment-selector.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        //    }
-                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field name = name ></comment-form>';
-                        break;
-                }
-
-
-                /*scope.toggleStage = function () {
-                 if (_.isUndefined(scope.referenceobj)) {
-                 var x = {};
-                 _.set(scope, 'referenceobj', x);
-                 }
-                 var result = document.getElementsByClassName(attrs.divid);
-                 var elementResult = angular.element(result);
-                 if (scope.stage === true) {
-                 scope.stage = false;
-                 childScope = scope.$new();
-                 var compiledDirective = $compile(formHolder);
-                 var directiveElement = compiledDirective(childScope);
-                 elementResult.append(directiveElement);
-                 } else {
-                 childScope.$destroy();
-                 elementResult.empty();
-                 scope.stage = true;
-
-                 }
-                 };*/
-            }
-        };
-    });
-
-    ginasForms.directive('glycosylationForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '=',
-                referenceobj: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
-            link: function (scope, element, attrs) {
-                _.forEach(scope.parent.protein.glycosylation, function (value) {
-                    if (_.isArray(value) && value.length > 0) {
-                        scope.iscollapsed = false;
-                    }
-                });
-            }
-        };
-    });
-
     ginasForms.directive('loadCvForm', function (FileReader, CVFields) {
         return {
             restrict: 'E',
@@ -1240,27 +1289,6 @@
         };
     });
 
-    ginasForms.directive('mixtureComponentSelectForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/mixture-component-select-form.html"
-        };
-    });
-
-    ginasForms.directive('mixtureDetailsForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/mixture-details-form.html"
-        };
-    });
 
 
 
@@ -1281,16 +1309,6 @@
 
 
 
-    ginasForms.directive('nucleicAcidDetailsForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-details-form.html"
-        };
-    });
 
     ginasForms.service('siteList', function () {
 
@@ -1401,6 +1419,7 @@
         this.allSites = function (parent, type, linkage) {
             var sites = "";
             var subs = parent[type].subunits;
+            console.log(subs);
             for (var i in subs) {
                 var subunit = subs[i];
                 if (sites !== "") {
@@ -1420,22 +1439,21 @@
 
         this.getAll = function (type, display) {
             var temp = [];
-            _.forEach(display, function (arr) {
-                _.forEach(arr, function (subunit) {
+           // _.forEach(display, function (arr) {
+                _.forEach(display, function (subunit) {
                     temp = _.filter(subunit, function (su) {
                         return su[type];
                     });
-                });
+            //    });
             });
             return temp;
         };
 
-        this.getCount = function (display) {
-            var temp = [];
+        this.getCount = function (subunits) {
             var count = 0;
-            _.forEach(display, function (arr) {
-                _.forEach(arr, function (subunit) {
-                    count += subunit.length;
+            _.forEach(subunits, function (subunit) {
+                _.forEach(subunit.subunitDisplay, function (chunk) {
+                    count += chunk.length;
                 });
             });
             return count;
@@ -1444,12 +1462,12 @@
 
         this.getAllSitesWithout = function (type, display) {
             var temp = [];
-            _.forEach(display, function (arr) {
-                _.forEach(arr, function (subunit) {
-                    //    console.log(subunit);
-                    temp = _.reject(subunit, function (su) {
+            _.forEach(display, function (subunit) {
+                _.forEach(subunit.subunitDisplay, function (chunk) {
+                       console.log(chunk);
+                    temp = _.reject(chunk, function (aa) {
                         //    console.log(su[type]);
-                        return su[type];
+                        return aa[type];
                     });
                 });
             });
@@ -1470,364 +1488,42 @@
                 }
                 obj.sites = siteList.siteList(obj.$$displayString);
 
-                //this applies the sugar property to the display object
-                _.forEach(obj.sites, function (site) {
-                    _.set(parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type, true);
-                });
+
             } else {
-                obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.$$subunitDisplay));
+                console.log(obj);
+                obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.nucleicAcid.subunits));
                 obj.sites = siteList.siteList(obj.$$displayString);
             }
+            //this applies the sugar property to the display object
+            _.forEach(obj.sites, function (site) {
+                console.log(site);
+                console.log(parent.nucleicAcid.subunits[site.subunitIndex - 1].subunitDisplay);
+                console.log(site.residueIndex % 10);
+                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
+            });
         };
 
         this.clearSites = function (type, parent, obj) {
             _.forEach(obj, function (site) {
-                parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1] = _.omit(parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type);
+                parent.nucleicAcid.subunits[site.subunitIndex - 1][site.residueIndex - 1] = _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1][site.residueIndex - 1], type);
             });
         };
     });
 
-    ginasForms.directive('nucleicAcidSugarForm', function (siteList, siteAdder) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '=',
-                referenceobj: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
-            link: function (scope, attrs, element) {
-                scope.sugar = {};
-
-                if (!scope.parent.nucleicAcid.sugars) {
-                    scope.parent.nucleicAcid.sugars = [];
-                }
-
-                scope.getAllSites = function () {
-                    return siteAdder.getCount(scope.parent.$$subunitDisplay);
-                };
-
-                scope.applyAll = function () {
-                    siteAdder.applyAll('sugar', scope.parent, scope.sugar);
-                    //    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
-                };
-
-                scope.validate = function () {
-                    _.forEach(scope.sugar.sites.sites, function (site) {
-                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
-                    });
-                    scope.parent.nucleicAcid.sugars.push(scope.sugar);
-                    // scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
-                    scope.sugar = {};
-                    scope.sugarForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.nucleicAcid.sugars.splice(scope.parent.nucleicAcid.sugars.indexOf(obj), 1);
-                    siteAdder.clearSites('sugar', scope.parent, obj.sites);
-                    //    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
-                };
-
-                scope.noSugars = function () {
-                    var count = scope.getAllSites();
-                    _.forEach(scope.parent.nucleicAcid.sugars, function (sugar) {
-                        count -= sugar.sites.length
-                    });
-                    return count;
-                }
-            }
-        };
-    });
-
-    ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
-            link: function (scope, attrs, element) {
-                scope.linkage = {};
-                scope.noLinkages = 0;
-                if (!scope.parent.nucleicAcid.linkages) {
-                    scope.parent.nucleicAcid.linkages = [];
-                }
-
-                scope.getAllSites = function () {
-                    return siteAdder.getCount(scope.parent.$$subunitDisplay);
-                };
-
-                scope.applyAll = function () {
-                    siteAdder.applyAll('linkage', scope.parent, scope.linkage, 'linkage');
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                };
-
-                scope.validate = function () {
-                    _.forEach(scope.linkage.sites.sites, function (site) {
-                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
-                    });
-                    scope.parent.nucleicAcid.linkages.push(scope.linkage);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                    scope.linkage = {};
-                    scope.linkageForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.nucleicAcid.linkages.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
-                    siteAdder.clearSites('linkage', scope.parent, obj.sites);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                };
-
-                scope.noLinkages = function () {
-                    var count = scope.getAllSites('linkage') - 1;
-                    _.forEach(scope.parent.nucleicAcid.linkages, function (link) {
-                        count -= link.sites.length
-                    });
-                    return count;
-                }
-            }
-        };
-    });
-
-    ginasForms.directive('otherLinksForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '=',
-                referenceobj: '=',
-                displayType: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/other-links-form.html",
-            link: function (scope, element, attrs) {
-
-                scope.validate = function () {
-                    if (!scope.parent.protein.otherLinks) {
-                        scope.parent.protein.otherLinks = [];
-                    }
-                    scope.parent.protein.otherLinks.push(scope.otherLink);
-                    scope.otherLink = {};
-                    scope.otherLinksForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.otherLinks.splice(scope.parent.protein.otherLinks.indexOf(obj), 1);
-                };
-            }
-        };
-    });
 
 
 
-    ginasForms.directive('parentForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/parent-form.html"
-        };
-    });
-
-    ginasForms.directive('partForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/part-form.html"
-        };
-    });
-
-    ginasForms.directive('physicalModificationForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html"
-        };
-    });
-
-    ginasForms.directive('physicalParameterForm', function () {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/physical-parameter-form.html",
-            link: function (scope, element, attrs) {
-
-                scope.validate = function () {
-                    if (_.has(scope.referenceobj, 'parameters')) {
-                        var temp = _.get(scope.referenceobj, 'parameters');
-                        temp.push(scope.physicalParameter);
-                        _.set(scope.referenceobj, 'parameters', temp);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(scope.physicalParameter));
-                        _.set(scope.referenceobj, 'parameters', x);
-                    }
-                    scope.physicalParameter = {};
-                    scope.physicalParameterForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj, parent) {
-                    parent.splice(_.indexOf(parent, obj), 1);
-                };
-            }
-        };
-    });
-
-    ginasForms.directive('polymerClassificationForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/polymer-classification-form.html"
-        };
-    });
-
-    ginasForms.directive('polymerMonomerForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/polymer-monomer-form.html"
-        };
-    });
-
-    ginasForms.directive('polymerSruForm', function (polymerUtils) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
-            link: function (scope) {
-                scope.validateConnectivity = function (obj) {
-                    console.log("validatying");
-                    var map = polymerUtils.sruDisplayToConnectivity(obj._displayConnectivity);
-                    console.log(map);
-                }
-            }
-        };
-    });
 
 
 
-    ginasForms.directive('proteinDetailsForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            link: function (scope) {
-                /* var fields =['sequenceType','proteinType','proteinSubType','sequenceOrigin'];
-                 _.forEach(fields, function(field){
-                 if(!_.isNull(scope.parent.protein[field])){
-                 scope.iscollapsed=false;
-                 }
-                 });*/
-            },
-            templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
-        };
-    });
+
+
+
+
+
 
     
-  /*  ginasForms.directive('referenceModalForm', function ($http, UUID) {
-        return {
-            restrict: 'E',
-            replace: 'true',
-            scope: {
-                referenceobj: '=?',
-                parent: '=',
-                edit: '=?'
-            },
-            templateUrl: baseurl + "assets/templates/modals/reference-modal-form.html",
-            link: function (scope, element, attrs) {
-                scope.reference = {};
-
-                if (scope.edit) {
-                    scope.active = 2;
-                }
-
-                scope.submitFile = function (obj) {
-                    //create form data object
-                    var fd = new FormData();
-                    if (obj) {
-                        scope.reference.$$uploadFile = obj.$$uploadFile;
-                    }
-                    //  fd.append('file', scope.$$uploadFile);
-                    fd.append('file-name', scope.reference.$$uploadFile);
-                    fd.append('file-type', scope.reference.$$uploadFile.type);
-                    //send the file / data to your server
-                    $http.post(baseurl + 'upload', fd, {
-                        transformRequest: angular.identity,
-                        headers: {'Content-Type': undefined}
-                    }).success(function (data) {
-                        if (obj) {
-                            _.set(obj, 'uploadedFile', data.url);
-                            _.set(scope, 'uploadDoc', false);
-                            delete obj.$$uploadFile;
-                        } else {
-                            _.set(scope.reference, 'uploadedFile', data.url);
-                        }
-                    }).error(function (err) {
-                    });
-                    _.set(scope, 'uploadDoc', false);
-                    delete scope.$$uploadFile;
-                };
-
-                scope.$on('save', function (e) {
-                    scope.validate();
-                });
-
-
-                scope.validate = function () {
-                    if (!_.isUndefined(scope.reference.citation)) {
-                        _.set(scope.reference, "uuid", UUID.newID());
-                        if (scope.reference.apply) {
-                            scope.saveReference(scope.reference.uuid, scope.referenceobj);
-                            scope.saveReference(_.cloneDeep(scope.reference), scope.parent);
-                        } else {
-                            scope.saveReference(scope.reference, scope.parent);
-                        }
-                        scope.reference = {};
-                        scope.reference.apply = true;
-                        //  scope.refForm.$setPristine();
-                    }
-                };
-                scope.saveReference = function (reference, parent) {
-                    if (_.has(parent, 'references')) {
-                        parent['references'].push(reference);
-                    } else {
-                        var x = [];
-                        x.push(_.cloneDeep(reference));
-                        _.set(parent, 'references', x);
-                    }
-                };
-            }
-        };
-    });*/
-
-
-
-
-    ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
+     ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
         return {
             restrict: 'E',
             replace: true,
@@ -1905,127 +1601,20 @@
         };
     });
 
-    ginasForms.directive('ssConstituentForm', function () {
+    
+    ginasForms.directive('diversePlantForm', function (CVFields) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/ss-constituent-form.html"
-        };
-    });
-
-    ginasForms.directive('structuralModificationForm', function (CVFields) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
+            templateUrl: baseurl + "assets/templates/forms/diverse-plant-form.html",
             link: function (scope) {
-                scope.getCV = function (mod) {
-                    if (mod == "AMINO_ACID_SUBSTITUTION") {
-                        return "AMINO_ACID_RESIDUE";
-                    } else if (mod == "NUCLEOSIDE_SUBSTITUTION") {
-                        return "NUCLEIC_ACID_BASE";
-                    } else {
-                        return null;
-                    }
-                };
             }
         };
     });
-
-    ginasForms.directive('submitButtons', function ($rootScope) {
-
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                obj: '=submit',
-                form: '=form',
-                path: '@path',
-                name: '@submit'
-            },
-            templateUrl: baseurl + "assets/templates/submit-buttons.html",
-            link: function (scope, element, attrs) {
-                scope.validate = function () {
-                    if (!scope.$parent.validate) {
-                        scope.$emit('validate', scope.obj, scope.form, scope.path);
-                        scope.reset();
-                    } else {
-                        if (scope.$parent.validate(scope.obj, scope.form, scope.path)) {
-                            scope.reset();
-                        }
-                    }
-                    scope.$broadcast('show-errors-reset');
-                };
-                scope.reset = function () {
-                    scope.obj = null;
-                    if (!scope.$parent.reset) {
-                        scope.$parent.$parent.reset(scope.form);
-
-                    } else {
-                        scope.$parent.reset(scope.form);
-                    }
-                };
-            }
-        };
-    });
-
-    ginasForms.directive('subunitForm', function ($compile, $templateRequest, $uibModal) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            link: function (scope, element, attrs) {
-                scope.numbers = true;
-                scope.parent.$$subunitDisplay = [];
-                $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                    scope.substanceClass = scope.parent.$$getClass();
-                    var template = angular.element(html);
-                    element.append(template);
-                    $compile(template)(scope);
-                });
-
-                scope.validate = function () {
-                    if (scope.subunit.sequence.length > 10000) {
-                        scope.open();
-                    }
-                    scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
-                    scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
-                    scope.subunit = {};
-                    scope.subunitForm.$setPristine();
-                };
-
-                //******************************************************************this needs to reassign subunit indexes
-                scope.deleteObj = function (obj) {
-                    scope.parent[scope.parent.substanceClass].subunits.splice(scope.parent[scope.parent.substanceClass].subunits.indexOf(obj), 1);
-                };
-
-                scope.close = function () {
-                    var obj = _.last(scope.parent[scope.parent.substanceClass].subunits);
-                    scope.deleteObj(obj);
-                    modalInstance.close();
-                };
-
-                scope.open = function () {
-                    modalInstance = $uibModal.open({
-                        templateUrl: baseurl + "assets/templates/modals/subunit-warning.html",
-                        scope: scope
-                    });
-                };
-            }
-        };
-    });
-
-
-
+    
     ginasForms.directive('isolateForm', [function () {
         return {
             restrict: 'A',

@@ -1,59 +1,60 @@
-<div class = "row info" >
+<div class="row info">
     <div class="row">
-        <form-header type="constituents" path= "specifiedSubstance.constituents" parent="parent"></form-header>
+        <form-header type="constituents" path="specifiedSubstance.constituents" parent="parent"></form-header>
     </div>
-    <div class="col-md-12">
-        <form class="form-horizontal" name="constituentForm" id="addConstituentForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-3">
-                    <substance-chooser-selector referenceobj ="component" field ="substance" name ="substance" formname ="constituentForm" label ="Constituent Substance" type = "search"></substance-chooser-selector>
-                </div>
-<!--                <div class="col-md-3">
-                    <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
-                </div>-->
-                <div class="col-md-3">
-                    <dropdown-select ng-model="component.role" field="role" cv = "CONSTITUENT_ROLE"></dropdown-select>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "component" divid="constituentForm" type = "amount"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="component" parent = "parent" divid="constituentForm" type = "access"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "component" parent = "parent"></reference-modal-button>
-                </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="constituentForm" role="form" id="addConstituentForm" novalidate>
+            <div ng-repeat="(index,obj) in parent.specifiedSubstance.constituents">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="constituents"></delete-button>
+                            </div>
+                            <div class="col-md-3">
+                                <substance-chooser-selector referenceobj="obj" field="relatedSubstance"
+                                                            name="relatedSubstance" formname="constituentForm"
+                                                            label="Related Substance"
+                                                            type="search">
+                                </substance-chooser-selector>
+                            </div>
+                            <div class="col-md-3">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.role"
+                                            field="role"
+                                            cv="CONSTITUENT_ROLE"
+                                            formname=form>
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1">
+                                <modal-form-button type="amount"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1 pull-right">
+                                <modal-form-button type="reference"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </ng-form>
             </div>
-            <div class="constituentForm"></div>
-            <submit-buttons submit="component" form="constituentForm" path="specifiedSubstance.constituents"></submit-buttons>
         </form>
-
-        <div ng-repeat="(index, obj) in parent.specifiedSubstance.constituents track by $index">
-            <div class ="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path="constituents"></delete-button>
-                </div>
-                <div class="col-md-2">
-                    <substance-chooser-view-edit obj = "obj" field ="substance"></substance-chooser-view-edit>
-                </div>
-<!--                <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
-                </div>-->
-                <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="role" cv = "CONSTITUENT_ROLE"></dropdown-view-edit>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj= "obj" formname="constituentForm" type = "amount" divid=constituent-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="constituentForm" type = "access" divid=constituent-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <reference-modal-button referenceobj= "obj" parent = "parent" edit="true"></reference-modal-button>
-                </div>
-            </div>
-            <div class = constituent-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(constituentForm, 'specifiedSubstance.constituents')"><i
+                class="fa fa-plus"></i> Add a<span
+                ng-if="parent.constituents.length>0">nother</span> constituent
+        </button>
     </div>
 </div>

@@ -1,43 +1,41 @@
-<div class="row info" id ="disulfide">
+<div class="row info">
     <div class="row">
         <form-header type="disulfideLinks" path ="protein.disulfideLinks" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <span>Number of unspecified Cysteine residues: {{getAllCysteinesWithoutLinkage()}}</span>
-
         <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-1">
-                    <form-selector referenceobj="disulfideLink" parent="parent" field="sites"
-                                   divid="disulfideLinksForm"
-                                   type="site" residueregex='C' formtype="pair"></form-selector>
-                </div>
-            </div>
-            <div class="disulfideLinksForm"></div>
-            <div class="row">
-                <div class="col-md-1 pull-right">
-                    <a ng-click="reset()" aria-label="Clear" uib-tooltip="Clear"><i
-                            class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate()" uib-tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
+            <div ng-repeat="(index,obj) in parent.protein.disulfideLinks">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="protein.disulfideLinks"></delete-button>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <modal-form-button type="sites"
+                                                           referenceobj="obj"
+                                                           field="sites"
+                                                           parent="parent"
+                                                           residueregex='C'
+                                                           formtype="pair">
+                                        </modal-form-button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-form>
+                <hr>
             </div>
         </form>
-
-
-        <div ng-repeat="(index, obj) in parent.protein.disulfideLinks track by $index">
-            <div class="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path="protein.disulfideLinks"></delete-button>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent=parent type="site" field="sites" divid=disulfide-{{index}}
-                                   mode="edit" formtype="pair"></form-selector>
-                </div>
-            </div>
-            <div class=disulfide-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(disulfideLinksForm, 'protein.disulfideLinks')"><i
+                class="fa fa-plus"></i> Add a<span
+                ng-if="parent.protein.disulfideLinks.length>0">nother</span> link
+        </button>
     </div>
 </div>
-
-

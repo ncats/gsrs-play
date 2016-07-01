@@ -1,41 +1,49 @@
-<div class = "row info">
+<div class="row info">
     <div class="row">
-        <form-header type="physicalModifications" path ="modifications.physicalModification" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="physicalModifications" path="modifications.physicalModifications" parent="parent"
+                     iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="physicalModForm" id="addPhysicalModForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-3">
-                    <dropdown-select ng-model="physicalModification.physicalModificationRole" field="physicalModificationRole" label="Modification Role" cv = "PHYSICAL_MODIFICATION_ROLE" ></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj= "physicalModification" divid="physicalModForm" field = "physicalParameter" type = "physicalParameter"></form-selector>
-                </div>
-                <div class = "col-md-1">
-                    <text-input ng-model="physicalModification.group" field="group" name ="group" form="physicalModForm"></text-input>
-                </div>
+            <div ng-repeat="(index, obj) in parent.modifications.physicalModifications">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="modifications.physicalModifications"></delete-button>
+                            </div>
+                            <div class="col-md-3">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.physicalModificationRole"
+                                            field="physicalModificationRole"
+                                            cv="PHYSICAL_MODIFICATION_ROLE"
+                                            label="Modification Role">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2">
+                                <modal-form-button type="parameter"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1">
+                                <gsrs-input type="text"
+                                            ng-model="obj.group"
+                                            field="group">
+                                </gsrs-input>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </ng-form>
             </div>
-            <div class="physicalModForm"></div>
-            <submit-buttons submit="physicalModification" form="physicalModForm" path="modifications.physicalModifications"></submit-buttons>
         </form>
-
-        <div ng-repeat="(index, obj) in parent.modifications.physicalModifications track by $index">
-            <div class ="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path = "modifications.physicalModifications"></delete-button>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj = "obj" field="type" cv = "PHYSICAL_MODIFICATION_ROLE" ></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj= "obj" formname="physicalModForm" type = "physicalParameter" divid=physical-mod-{{index}} field = "physicalParameter" mode="edit"></form-selector>
-                </div>
-                <div class="col-md-1">
-                    <text-view-edit obj = "obj" field = "group"></text-view-edit>
-                </div>
-            </div>
-            <div class = physical-mod-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(physicalModForm, 'modifications.physicalModifications')"><i
+                class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.modifications.physicalModifications.length>0">nother</span> modification
+        </button>
     </div>
 </div>

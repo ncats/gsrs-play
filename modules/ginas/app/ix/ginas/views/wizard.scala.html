@@ -44,19 +44,13 @@
                         </div>
                     }
                     case "structurallyDiverse" => {
+                        <diverse-source-form  parent = substance></diverse-source-form>
                         <diverse-type-form parent = substance></diverse-type-form>
                         <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
-                            <diverse-source-form  parent = substance></diverse-source-form>
                             <diverse-organism-form ng-if="substance.$$diverseType=='whole'" ng-show="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
-                            <diverse-details-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value !== 'PLANT'" parent = substance></diverse-details-form>
-                            @*
+@*
                             <diverse-plant-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM' && substance.structurallyDiverse.sourceMaterialType.value == 'PLANT'" parent = substance></diverse-plant-form>
-                            *@
-
-                            @*
-                            <diverse-plant-form parent = substance></diverse-plant-form>
-                            *@
-
+*@
                             <parent-form parent = substance></parent-form>
                             <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
                         </div>
@@ -89,11 +83,11 @@
                         <h2>Unknown substance class: @kind</h2>
                     }
                 }
-               @* <div ng-if="substance.substanceClass !== 'chemical'">
+                <div ng-if="substance.substanceClass !== 'chemical'">
                     <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
                     <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
                     <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-                </div>*@
+                </div>
 
                 <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
                 <relationship-form parent = substance ng-cloak></relationship-form>

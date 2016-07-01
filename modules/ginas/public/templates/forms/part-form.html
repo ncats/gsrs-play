@@ -7,20 +7,34 @@
         <form class="form-horizontal" name="partForm" id="addPartForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <dropdown-view-edit obj="parent.structurallyDiverse" field="partLocation" cv="PART_LOCATION"
-                                        name="partLocation" label="Part Location"></dropdown-view-edit>
+                    <gsrs-input type = "multi"
+                                ng-model= parent.structurallyDiverse.part
+                                field="part"
+                                cv="PART">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-3">
-                    <multi-view-edit obj="parent.structurallyDiverse" field="part" cv="PART"
-                                     id="part"></multi-view-edit>
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.partLocation"
+                                field="partLocation"
+                                cv="PART_LOCATION"
+                                label="Part Location">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-3">
-                    <text-view-edit obj="parent.structurallyDiverse" field="fractionName"
-                                    label="Fraction Name"></text-view-edit>
+                    <gsrs-input type="text"
+                                ng-model="parent.structurallyDiverse.fractionName"
+                                field="fractionName"
+                                label="Fraction Name">
+                    </gsrs-input>
                 </div>
                 <div class="col-md-3">
-                    <dropdown-view-edit obj="parent.structurallyDiverse" field="fractionMaterialType"
-                                        cv="FRACTION_MATERIAL_TYPE" label="Fraction Material Type"></dropdown-view-edit>
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.structurallyDiverse.fractionMaterialType"
+                                field="fractionMaterialType"
+                                cv="FRACTION_MATERIAL_TYPE"
+                                label="Fraction Material Type">
+                    </gsrs-input>
                 </div>
             </div>
             <p></p>

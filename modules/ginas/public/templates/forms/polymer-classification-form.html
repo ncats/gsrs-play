@@ -6,25 +6,54 @@
         <form class="form-horizontal" name="polymerClassificationForm" id="addPolymerClassificationForm" role="form" novalidate>
         <div class="row form-row">
             <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.polymer.classification" field="polymerClass" cv = "POLYMER_CLASS" label="Polymer Class"></dropdown-view-edit>
+                <gsrs-input type="dropdown"
+                            ng-model = "parent.polymer.classification.polymerClass"
+                            field="polymerClass"
+                            cv = "POLYMER_CLASS"
+                            label="Polymer Class">
+                </gsrs-input>
             </div>
             <div class="col-md-2">
-                <multi-view-edit obj = "parent.polymer.classification" field="polymerSubclass" cv = "POLYMER_SUBCLASS" label="Polymer Subclass"></multi-view-edit>
+                <gsrs-input type="multi"
+                            ng-model = "parent.polymer.classification.polymerSubclass"
+                            field="polymerSubclass"
+                            cv = "POLYMER_SUBCLASS"
+                            label="Polymer Subclass">
+                    </gsrs-input>
             </div>
             <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.polymer.classification" field="polymerGeometry" cv = "POLYMER_GEOMETRY" label="Polymer Geometry"></dropdown-view-edit>
+                <gsrs-input type="dropdown"
+                            ng-model = "parent.polymer.classification.polymerGeometry"
+                            field="polymerGeometry"
+                            cv = "POLYMER_GEOMETRY"
+                            label="Polymer Geometry">
+                </gsrs-input>
             </div>
             <div class="col-md-2">
-                <dropdown-view-edit obj = "parent.polymer.classification" field="sourceType" cv = "POLYMER_SOURCE_TYPE" label="Polymer Source Type"></dropdown-view-edit>
+                <gsrs-input type="dropdown"
+                            ng-model = "parent.polymer.classification.sourceType"
+                            field="sourceType"
+                            cv = "POLYMER_SOURCE_TYPE"
+                            label="Polymer Source Type">
+                </gsrs-input>
             </div>
             <div class="col-md-2">
-                <substance-chooser-selector referenceobj ="parent.polymer.classification" field ="parentSubstance" name ="parentSubstance" formname ="polymerClassificationForm" label ="Parent Substance" type = "search"></substance-chooser-selector>
+                <substance-chooser-selector 
+                        referenceobj ="parent.polymer.classification" 
+                        field ="parentSubstance" 
+                        name ="parentSubstance" 
+                        formname ="polymerClassificationForm" 
+                        label ="Parent Substance" 
+                        type = "search">
+                </substance-chooser-selector>
             </div>
             <div class="col-md-1 pull-right">
-                <form-selector referenceobj ="parent.polymer" parent = "parent" divid="polymerClassificationForm" type = "access"></form-selector>
+                <modal-form-button type="access"
+                                   referenceobj="parent.polymer"
+                                   parent="parent">
+                </modal-form-button>
             </div>
         </div>
-        <div class="polymerClassificationForm"></div>
             </form>
     </div>
 </div>

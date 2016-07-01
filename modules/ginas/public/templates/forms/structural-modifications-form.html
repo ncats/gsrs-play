@@ -1,95 +1,95 @@
-<div class="row info" id ="modification">
+<div class="row info">
     <div class="row">
-        <form-header type="structuralModifications" path="modifications.structuralModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="structuralModifications" path="modifications.structuralModifications" parent="parent"
+                     iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="strucModForm" id="addStrucModForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-2">
-                    <dropdown-select ng-model="mod.structuralModificationType" field="structuralModificationType"
-                                     cv="STRUCTURAL_MODIFICATION_TYPE" label="Modification Type"></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <substance-chooser-selector referenceobj="mod" field="molecularFragment"
-                                                name="molecularFragment" formname="strucModForm"
-                                                label="Molecular Fragment" type="search"></substance-chooser-selector>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="mod.locationType" field="locationType" cv="LOCATION_TYPE"
-                                     label="Location Type"></dropdown-select>
-                </div>
-                <div class ="col-md-2" ng-if="mod.structuralModificationType && mod.locationType.value=='RESIDUE_SPECIFIC'">
-                        <multi-select ng-model="mod.$$residueModified" field="$$residueModified" label = "Residue Modified" filter= "mod.structuralModificationType" filter-function="getCV(mod.structuralModificationType.value)"></multi-select>
-<!--
-                <text-input ng-model="mod.residueModified" field="residueModified" name ="residueModified" label="Residue Modified" form="strucModForm"></text-input>
--->
-                    </div>
-                <div class="col-md-1" ng-if="mod.locationType && mod.locationType.value!='RESIDUE_SPECIFIC'">
-                    <form-selector referenceobj="mod" parent="parent" field = "sites" divid="strucModForm"
-                                   type="site"></form-selector>
-                    <!--<input type="text" class="form-control" ng-model="structuralModification._displaySites"
-                           title="Modification Sites" id="modsites" name="modsites"
-                           na-sites={{structuralModification}}/>-->
-                    <small class="error" ng-show="strucModForm.modsites.$error.siteInvalid">
-                        {{strucModForm.modsites.$errorMsg.naSites}}
-                    </small>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="mod.extent" field="extent" cv="EXTENT_TYPE"
-                                     label="Extent"></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <form-selector referenceobj="mod" parent="parent" field="extentAmount" divid="strucModForm"
-                                   type="amount"></form-selector>
-                </div>
-                <div class = "col-md-1">
-                    <text-input ng-model="mod.group" field="group" name ="group" form="strucModForm"></text-input>
-                </div>
+        <form class="form-horizontal" name="structuralModForm" id="addStructuralModForm" role="form" novalidate>
+            <div ng-repeat="(index, obj) in parent.modifications.structuralModifications">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj"
+                                               path="modifications.structuralModifications"></delete-button>
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.structuralModificationType"
+                                            field="structuralModificationType"
+                                            cv="STRUCTURAL_MODIFICATION_TYPE"
+                                            label="Modification Type">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2">
+                                <substance-chooser-selector referenceobj="obj"
+                                                            field="relatedSubstance"
+                                                            name="relatedSubstance"
+                                                            formname="structuralModForm"
+                                                            label="Related Substance"
+                                                            type="search">
+                                </substance-chooser-selector>
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.locationType"
+                                            field="locationType"
+                                            cv="LOCATION_TYPE"
+                                            label="Location Type">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2" ng-if="(obj.structuralModificationType.display=='Amino Acid Replacement'||obj.structuralModificationType.display=='NUCLEOSIDE SUBSTITUTION') && obj.locationType.value=='RESIDUE_SPECIFIC'">
+                                <gsrs-input type="multi"
+                                            ng-model="obj.$$residueModified"
+                                            field="$$residueModified"
+                                            label="Residue Modified"
+                                            filter="obj.structuralModificationType"
+                                            filter-function="getCV(obj.structuralModificationType.value)">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1"
+                                 ng-if="parent.substanceClass!='structurallyDiverse' && obj.locationType && obj.locationType.value!='RESIDUE_SPECIFIC'">
+                                <modal-form-button type="sites"
+                                                   referenceobj="obj"
+                                                   parent="parent"
+                                                   formtype="site">
+                                </modal-form-button>
+                                <!--<form-selector referenceobj="obj"
+                                               parent="parent"
+                                               field="sites"
+                                               divid="{{index}}-strucModForm"
+                                               >
+                                </form-selector>-->
+                                <small class="error" ng-show="strucModForm.modsites.$error.siteInvalid">
+                                    {{strucModForm.modsites.$errorMsg.naSites}}
+                                </small>
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.extent"
+                                            field="extent"
+                                            cv="EXTENT_TYPE">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1">
+                                <gsrs-input type="text"
+                                            ng-model="obj.group"
+                                            field="group">
+                                </gsrs-input>
+                            </div>
+                            </div>
+                        </div>
+                    <div class={{index}}-strucModForm""></div>
+                            <hr>
+                </ng-form>
             </div>
-            <div class="strucModForm"></div>
-            <submit-buttons submit="mod" form="strucModForm" path="modifications.structuralModifications"></submit-buttons>
         </form>
-
-
-        <div ng-repeat="(index, obj) in parent.modifications.structuralModifications track by $index">
-            <div class="row">
-                <hr>
-                <div class="col-md-1">
-                    <delete-button delete="obj" path="modifications.structuralModifications"></delete-button>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj="obj" field="structuralModificationType"
-                                        cv="STRUCTURAL_MODIFICATION_TYPE"
-                                        label="Modification Type"></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <substance-chooser-selector referenceobj="obj" field="molecularFragment" name ="molecularFragment" formname =struc-mod-{{index}} label="Molecular Fragment" type ="search"></substance-chooser-selector>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj="obj" field="locationType" cv="LOCATION_TYPE"
-                                        label="Location Type"></dropdown-view-edit>
-                </div>
-                <div class="col-md-2" ng-if="obj.locationType && obj.locationType.value=='RESIDUE_SPECIFIC'">
-                    <multi-view-edit obj="obj" field="$$residueModified" label = "Residue Modified" filter= "obj.structuralModificationType" filter-function="getCV(obj.structuralModificationType.value)"></multi-view-edit>
-<!--
-                    <text-view-edit obj = "obj" field = "residueModified"></text-view-edit>
--->
-                </div>
-                <div class="col-md-1" ng-if="obj.locationType && obj.locationType.value!='RESIDUE_SPECIFIC'">
-                        <form-selector referenceobj="obj" parent="parent" field="sites" type="site" divid=struc-mod-{{index}}></form-selector>
-                    </div>
-                <div class="col-md-1">
-                    <dropdown-view-edit obj="obj" field="extent" cv="EXTENT_TYPE"
-                                        label="Extent"></dropdown-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="parent" field="extentAmount" type="amount" divid=struc-mod-{{index}}></form-selector>
-                </div>
-                <div class="col-md-1">
-                    <text-view-edit obj = "obj" field = "group"></text-view-edit>
-                </div>
-            </div>
-            <div class=struc-mod-{{index}}></div>
-        </div>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(structuralModForm, 'modifications.structuralModifications')"><i
+                class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.modifications.structuralModifications.length>0">nother</span> modification
+        </button>
     </div>
 </div>

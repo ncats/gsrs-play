@@ -1,6 +1,6 @@
-<div class="row info" id ="glycosylation">
+<div class="row info" id="glycosylation">
     <div class="row">
-        <form-header type="glycosylation" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="glycosylation" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
 
 
@@ -8,23 +8,43 @@
         <form class="form-horizontal" name="glycosylationForm" id="addGlycosylationForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <dropdown-view-edit obj="parent.protein.glycosylation" field="glycosylationType"
-                                        cv="GLYCOSYLATION_TYPE"
-                                        label="Glycosylation Type"></dropdown-view-edit>
+                    <gsrs-input type="dropdown"
+                                ng-model="parent.protein.glycosylation.glycosylationType"
+                                field="glycosylationType"
+                                cv="GLYCOSYLATION_TYPE"
+                                label="Glycosylation Type"
+                                required="true"
+                                formname=form>
+                    </gsrs-input>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj="parent.protein.glycosylation" field="CGlycosylationSites" label = "C Glycosylation Sites" parent=parent type="site" divid="glycosylationForm" formtype="string"></form-selector>
+                    <modal-form-button type="sites"
+                                       referenceobj="parent.protein.glycosylation"
+                                       field="CGlycosylationSites"
+                                       label="C Glycosylation Sites"
+                                       parent="parent"
+                                       formtype="site">
+                    </modal-form-button>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj="parent.protein.glycosylation" field="NGlycosylationSites" label = "N Glycosylation Sites" parent=parent type="site" divid="glycosylationForm" formtype="string"></form-selector>
+                    <modal-form-button type="sites"
+                                       referenceobj="parent.protein.glycosylation"
+                                       field="NGlycosylationSites"
+                                       label="N Glycosylation Sites"
+                                       parent="parent"
+                                       formtype="site">
+                    </modal-form-button>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj="parent.protein.glycosylation" field="OGlycosylationSites" label = "O Glycosylation Sites" parent=parent type="site" divid="glycosylationForm" formtype="string"></form-selector>
+                    <modal-form-button type="sites"
+                                       referenceobj="parent.protein.glycosylation"
+                                       field="OGlycosylationSites"
+                                       label="O Glycosylation Sites"
+                                       parent="parent"
+                                       formtype="site">
+                    </modal-form-button>
                 </div>
             </div>
-            </form>
-        <br>
-
-            <div class="glycosylationForm"></div>
+        </form>
     </div>
 </div>

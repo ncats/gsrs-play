@@ -1,20 +1,33 @@
-<div>
-        <label for="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span></label>
-        <a href="#" ng-hide="obj._editing" ng-click="editing(obj);">
-        <pre ng-if = "obj[field]">{{obj[field]}}</pre>
-        </a>
-        <textarea 
-        		ng-change="changeValidator(obj)" 
-        		ng-show="obj._editing || !obj[field]" 
-        		type="text" 
-        		class="form-control" 
-        		ng-model=obj[field] 
-        		ng-blur="editing(obj);"
-               placeholder ="{{label || field}}" title="{{::field}}" name="{{::field}}"></textarea>
-		
-		<span style="color:red" ng-repeat="err in errors" >
-			{{err}}
-		</span>
+<div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
+    <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class="danger"> *</span></label><br>
+        <span ng-hide="edit" ng-click="edit = !edit">
+        <pre ng-if="!edit && !obj==''">{{obj}}</pre>
+        </span>
+    <span ng-hide="edit" ng-click="edit = !edit">
+        <span ng-if="!edit && obj==''" uib-tooltip="Add {{label || field}}"><i
+                class="fa fa-plus fa-2x success"></i></a></span>
+        </span>
+        <textarea
+                ng-show="edit"
+                type="text"
+                class="form-control"
+                ng-model=obj
+                ng-change="changeFunction();"
+                ng-blur="blurFunction();"
+                ng-required="required"
+                placeholder="{{label || field}}"
+                title="{{::field}}"
+                name="{{::field}}"
+                rows={{rows}}
+        ></textarea>
+
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+        <div ng-message="required" class="danger">required field</div>
+    </div>
+    <!--moving this outside of the above div seems to be more responsive-->
+    <div ng-repeat="errorMessage in errorMessages">
+        <div ng-class="errorMessage.type">{{ errorMessage.text }}</div>
+    </div>
 </div>
 
 
