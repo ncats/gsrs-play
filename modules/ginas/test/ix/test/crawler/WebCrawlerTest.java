@@ -73,7 +73,7 @@ public class WebCrawlerTest {
 
 
     @Test
-    public void restrictedLinksAreForbiddenWhenUnAuthenticated() throws IOException {
+    public void restrictedLinksAreForbiddenWhenUnAuthenticated() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
@@ -87,7 +87,7 @@ public class WebCrawlerTest {
     }
 
     @Test
-    public void nothingRestrictedForAdmin() throws IOException {
+    public void nothingRestrictedForAdmin() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.newBrowserSession(admin)) {
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
@@ -101,7 +101,7 @@ public class WebCrawlerTest {
     }
 
     @Test
-    public void restrictedLinksAreAccessibleFromAdmin() throws IOException {
+    public void restrictedLinksAreAccessibleFromAdmin() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();

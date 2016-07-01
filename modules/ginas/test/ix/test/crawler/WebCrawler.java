@@ -4,6 +4,12 @@ import ix.test.ix.test.server.BrowserSession;
 import play.libs.ws.WSResponse;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.io.*;
@@ -20,7 +26,7 @@ import javax.swing.text.html.parser.DTD;
  */
 public class WebCrawler {
     static final Logger logger = Logger.getLogger(WebCrawler.class.getName());
-
+   
 
     public enum UserAgent {
 
@@ -140,7 +146,7 @@ public class WebCrawler {
     private UserAgent agent;
 
     private final BrowserSession session;
-
+    ExecutorService executor = Executors.newFixedThreadPool(1);
     public static class Builder{
         UserAgent agent = UserAgent.LINUX_MOZILLA;
 
@@ -186,11 +192,16 @@ public class WebCrawler {
 
     }
 
-    public void crawl (URL url)  {
-        depthFirstCrawl (0, url);
+    public void crawl (URL url) {
+    	try{
+    		depthFirstCrawl (0, url, new ArrayList<URL>());
+    	}catch(Exception e){
+    		throw new IllegalStateException(e);
+    	}
     }
 
-    void depthFirstCrawl (int depth, URL url){
+    void depthFirstCrawl (int depth, final URL url, List<URL> path) throws TimeoutException{
+    	path.add(url);
         if (depth >= maxdepth) {
             /*
             logger.warning("Max depth ("+maxdepth
@@ -206,34 +217,54 @@ public class WebCrawler {
                 String u = s.substring(s.indexOf(url.getPath()));
               //  System.out.println(u);
 
-                if(!visitor.shouldVisit(url)){
-                    return;
+                if(visitor.shouldVisit(url)){
+	                    
+	                Callable<HtmlParser> c = new Callable<HtmlParser>(){
+	
+						@Override
+						public HtmlParser call() throws Exception {
+							HtmlParser parser = new HtmlParser (url, session, visitor);
+							return parser;
+						}
+	                	
+	                };
+	                Future<HtmlParser> futureParse = executor.submit(c);
+	                //fail after 10 seconds
+	                HtmlParser parser=futureParse.get(60, TimeUnit.SECONDS);
+	
+	                /*
+	                for (int i = 0; i <= depth; ++i)
+	                    System.out.print(" ");
+	                */
+	
+	//                System.out.println
+	//                    ("..."+String.format("%1$3d %2$6d %3$5dms",
+	//                                         parser.getStatus(),
+	//                                         parser.getLength(),
+	//                                         System.currentTimeMillis()-start)
+	//                     +" "+u);
+	                
+	                for (URL uu : parser.getLinks()) {
+	                    if (!visited.contains(uu)) {
+	                        depthFirstCrawl (depth+1, uu,path);
+	                    }
+	                }
                 }
-                HtmlParser parser = new HtmlParser (url, session, visitor);
+            }
+            catch (TimeoutException ex) {
+            	
+                logger.severe(path.toString()+": "+ex.getMessage());
+                System.out.println("Timeout in path: " + path.toString()+": "+ex.getMessage());
 
-                /*
-                for (int i = 0; i <= depth; ++i)
-                    System.out.print(" ");
-                */
-
-//                System.out.println
-//                    ("..."+String.format("%1$3d %2$6d %3$5dms",
-//                                         parser.getStatus(),
-//                                         parser.getLength(),
-//                                         System.currentTimeMillis()-start)
-//                     +" "+u);
-                
-                for (URL uu : parser.getLinks()) {
-                    if (!visited.contains(uu)) {
-                        depthFirstCrawl (depth+1, uu);
-                    }
-                }
+                path.remove(path.size()-1);
+                throw ex;
             }
             catch (Exception ex) {
                 logger.warning(url+": "+ex.getMessage());
             }
            // visited.remove(url);
         }
+        path.remove(path.size()-1);
     }
 
 //    public static void main (String[] argv) throws Exception {
