@@ -1459,7 +1459,7 @@ public class App extends Authentication {
          */
         public Future<Void> getDeterminedFuture(){
         	SearchResultContextDeterminedFuture future= new SearchResultContextDeterminedFuture(this);
-            new Thread(future).start();
+            ForkJoinPool.commonPool().submit(future);
             return future;
         }
         

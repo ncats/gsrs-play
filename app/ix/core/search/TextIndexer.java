@@ -522,7 +522,8 @@ public class TextIndexer implements Closeable{
          */
         public Future<List> getMatchesFuture(){
             SearchResultFuture future= new SearchResultFuture(this);
-            new Thread(future).start();
+           // new Thread(future).start();
+            ForkJoinPool.commonPool().submit(future);
             return future;
         }
 
@@ -538,7 +539,8 @@ public class TextIndexer implements Closeable{
          */
         public Future<List> getMatchesFuture(int numberOfRecords){
             SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
-            new Thread(future).start();
+            ForkJoinPool.commonPool().submit(future);
+           // new Thread(future).start();
             return future;
         }
 
@@ -1078,6 +1080,8 @@ public class TextIndexer implements Closeable{
     
     private ExecutorService threadPool;
     private ScheduledExecutorService scheduler;
+
+    private boolean isEmptyPool;
     
    // private Future[] fetchWorkers;
 //    private BlockingQueue<SearchResultPayload> fetchQueue =
@@ -1200,9 +1204,13 @@ public class TextIndexer implements Closeable{
     }
 
     private TextIndexer () {
-        threadPool = Executors.newFixedThreadPool(FETCH_WORKERS);
+        //empty instance should only be used for
+        //facet subsearching so we only need to have
+        //a single thread...
+        threadPool = ForkJoinPool.commonPool();
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
+        isEmptyPool = true;
       //  setFetchWorkers (FETCH_WORKERS);
     }
     
@@ -1211,6 +1219,7 @@ public class TextIndexer implements Closeable{
         threadPool = Executors.newFixedThreadPool(FETCH_WORKERS);
         scheduler =  Executors.newSingleThreadScheduledExecutor();
         isShutDown = false;
+        isEmptyPool = false;
 
         Path dirPath  = baseDir.toPath();
         if (dir.exists() && !dir.isDirectory())
@@ -2798,10 +2807,12 @@ public class TextIndexer implements Closeable{
             System.out.println("removed baseDir " + baseDir);
             //System.out.println("indexers left after shutdown =" + indexers.keySet());
             threadPool.shutdown();
-            try{
-                threadPool.awaitTermination(1, TimeUnit.MINUTES);
-            }catch(Exception e){
-                e.printStackTrace();
+            if(!isEmptyPool) {
+                try {
+                    threadPool.awaitTermination(1, TimeUnit.MINUTES);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             isShutDown=true;
         }

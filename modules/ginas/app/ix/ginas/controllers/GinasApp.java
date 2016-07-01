@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
 
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -809,26 +810,29 @@ public class GinasApp extends App {
             }
         }
         else {
+            TextIndexer.SearchResult result;
             try(TextIndexer indexer = getTextIndexer().createEmptyInstance()) {
-                for (Substance sub : substances)
+                for (Substance sub : substances) {
                     indexer.add(sub);
+                }
 
-                TextIndexer.SearchResult result = SearchFactory.search
+               result = SearchFactory.search
                         (indexer, Substance.class, null, null, indexer.size(),
                                 0, FACET_DIM, request().queryString());
-                if (result.count() < substances.size()) {
-                    substances.clear();
-                    for (int i = 0; i < result.count(); ++i) {
-                        substances.add((Substance) result.get(i));
-                    }
-                }
-                TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
-
-
-                return ok(ix.ginas.views.html.substances.render
-                        (1, result.count(), result.count(), new int[0],
-                                decorate(facets), substances, null, null));
             }
+            if (result.count() < substances.size()) {
+                substances.clear();
+                for (int i = 0; i < result.count(); ++i) {
+                    substances.add((Substance) result.get(i));
+                }
+            }
+            TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
+
+
+            return ok(ix.ginas.views.html.substances.render
+                    (1, result.count(), result.count(), new int[0],
+                            decorate(facets), substances, null, null));
+
         }
     }
 
@@ -1657,7 +1661,7 @@ public class GinasApp extends App {
                     }
                 };
 
-            new Thread(r).start();
+            ForkJoinPool.commonPool().submit(r);
             updateKey=UUID.randomUUID().toString();
 
             return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));

@@ -4,12 +4,7 @@ import ix.test.ix.test.server.BrowserSession;
 import play.libs.ws.WSResponse;
 
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.io.*;
@@ -146,7 +141,7 @@ public class WebCrawler {
     private UserAgent agent;
 
     private final BrowserSession session;
-    ExecutorService executor = Executors.newFixedThreadPool(1);
+    //ExecutorService executor = Executors.newFixedThreadPool(1);
     public static class Builder{
         UserAgent agent = UserAgent.LINUX_MOZILLA;
 
@@ -228,7 +223,8 @@ public class WebCrawler {
 						}
 	                	
 	                };
-	                Future<HtmlParser> futureParse = executor.submit(c);
+
+	                Future<HtmlParser> futureParse =  ForkJoinPool.commonPool().submit(c);
 	                //fail after 10 seconds
 	                HtmlParser parser=futureParse.get(60, TimeUnit.SECONDS);
 	
