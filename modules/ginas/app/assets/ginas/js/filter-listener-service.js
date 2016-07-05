@@ -36,8 +36,6 @@ angular.module('filterListener', [])
                 }else {
                     var filter = scope.filter;
                     scope.$watch('filter', function (newValue) {
-                        console.log(newValue);
-                        console.log(scope);
                         if (!_.isUndefined(newValue)) {
                             var obj = {};
                             //this returns the object to be filtered by the form

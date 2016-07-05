@@ -1,8 +1,8 @@
 <div class ="text-center">
     <label id={{type}} class="text-capitalize">Parameters</label>
-        <a ng-show="referenceobj.parameters" ng-click="open();" role="button"><parameters parameters="referenceobj.parameters"></parameters></a>
+        <a ng-show="referenceobj.parameters.length > 0" ng-click="open();" role="button"><parameters parameters="referenceobj.parameters"></parameters></a>
     <div class="text-center">
-        <a ng-hide="referenceobj.parameters" ng-click="open()" role="button" aria-label="Add a parameter" uib-tooltip="Add a parameter" id="{{name}}-{{type}}"><i
+        <a ng-hide="referenceobj.parameters.length > 0" ng-click="open()" role="button" aria-label="Add a parameter" uib-tooltip="Add a parameter" id="{{name}}-{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-class="{'disabled': opened == true}"></i></a>
     </div>
 </div>

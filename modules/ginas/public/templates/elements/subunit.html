@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.subunitDisplay">
+        <div class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
             <span class="pull-right count" ng-hide=numbers>{{($index+1)*10}}</span><br>
             <span ng-repeat="(index, aa) in chunk track by $index">
                 <amino-acid acid=aa index = {{index}}></amino-acid>
@@ -24,7 +24,7 @@
         </div>
     <br>
     <div class="row">
-        <div class="col-md-12" ng-show="!obj.subunitDisplay || edit">
+        <div class="col-md-12" ng-show="!obj.$$subunitDisplay || edit">
             <gsrs-input type="text-box"
                         ng-model="obj.sequence"
                         validator="parseSubunit()"

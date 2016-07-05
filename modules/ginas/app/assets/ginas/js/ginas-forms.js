@@ -559,7 +559,6 @@
         };
     });
 
-
     ginasForms.directive('otherLinksForm', function () {
         return {
             restrict: 'E',
@@ -592,13 +591,16 @@
     ginasForms.directive('parameterForm', function () {
         return {
             restrict: 'E',
-            replace: 'true',
+            replace: true,
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '=?'// this is the object from the form that is getting the parameter added to it
+                referenceobj: '=?'
             },
-            templateUrl: baseurl + "assets/templates/forms/parameter-form.html"
+            templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
+            link: function(scope){
+        console.log(scope);
+    }
         };
     });
 
@@ -702,8 +704,7 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '=',
-                referenceobj: '=?'// this is the object from the form that is getting the property added to it
+                parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/property-form.html"
         };
@@ -753,7 +754,6 @@
 
                 //called on close of the modal reference form. saves all applied references to the array
                 scope.$on('save', function (e) {
-                    console.log("saviunig");
                     scope.validate();
                 });
 
@@ -769,22 +769,11 @@
                         })
                         .map('uuid')
                         .value();
-                    console.log(objreferences);
-
-                    //pushes this array to the reference object
-                    console.log(scope.referenceobj);
-                    if (_.has(scope.referenceobj, 'references') && scope.referenceobj.references.length > 0) {
-                        _.union(scope.referenceobj.references, objreferences);
-                    } else {
                         _.set(scope.referenceobj, 'references', objreferences);
-                    }
                 };
 
                 //the delete button emits the delete object, which is used here to remove the reference form all arrays that use it
                 scope.$on('delete', function (e) {
-                    console.log(e.targetScope.obj);
-                    console.log("form delete");
-                    console.log(scope.obj);
                     var obj = scope.parent;
                     var del = e.targetScope.obj.uuid;
                     scope.deleteObj(obj, del);
@@ -797,7 +786,6 @@
                             if (_.isArray(obj[field])) {
                                 _.forEach((obj[field]), function (value, key) {
                                     if (_.isObject(value)) {
-                                        console.log(value);
                                         if (_.indexOf(_.keysIn(value), 'references') > -1) {
                                             scope.deleteObjectReferences(value, ref);
                                         } else {
@@ -1452,7 +1440,7 @@
         this.getCount = function (subunits) {
             var count = 0;
             _.forEach(subunits, function (subunit) {
-                _.forEach(subunit.subunitDisplay, function (chunk) {
+                _.forEach(subunit.$$subunitDisplay, function (chunk) {
                     count += chunk.length;
                 });
             });
@@ -1463,7 +1451,7 @@
         this.getAllSitesWithout = function (type, display) {
             var temp = [];
             _.forEach(display, function (subunit) {
-                _.forEach(subunit.subunitDisplay, function (chunk) {
+                _.forEach(subunit.$$subunitDisplay, function (chunk) {
                        console.log(chunk);
                     temp = _.reject(chunk, function (aa) {
                         //    console.log(su[type]);
@@ -1497,9 +1485,9 @@
             //this applies the sugar property to the display object
             _.forEach(obj.sites, function (site) {
                 console.log(site);
-                console.log(parent.nucleicAcid.subunits[site.subunitIndex - 1].subunitDisplay);
+                console.log(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay);
                 console.log(site.residueIndex % 10);
-                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
+                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
             });
         };
 

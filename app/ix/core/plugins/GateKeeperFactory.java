@@ -3,6 +3,7 @@ package ix.core.plugins;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.MemoryUnit;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -58,7 +59,10 @@ public final class GateKeeperFactory {
             if(evictableMaxElements ==null){
                 //single cache
                 supplier = ()->{
-                    Cache evictableCache = new Cache( new CacheConfiguration(IX_CACHE_EVICTABLE, maxElements)
+
+                    Cache evictableCache = new Cache( new CacheConfiguration()
+                            .name(IX_CACHE_NOT_EVICTABLE)
+                            .maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     CacheManager.getInstance().removeCache(evictableCache.getName());
@@ -70,11 +74,15 @@ public final class GateKeeperFactory {
                 };
             }else{
                 supplier = ()->{
-                    Cache evictableCache = new Cache( new CacheConfiguration(IX_CACHE_EVICTABLE, maxElements)
+                    Cache evictableCache = new Cache(new CacheConfiguration()
+                            .name(IX_CACHE_EVICTABLE)
+                            .maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
 
-                    Cache nonEvictableCache = new Cache ( new CacheConfiguration (IX_CACHE_NOT_EVICTABLE, evictableMaxElements)
+                    Cache nonEvictableCache = new Cache ( new CacheConfiguration()
+                            .name(IX_CACHE_NOT_EVICTABLE)
+                            .maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(evictableTimeToLive)
                             .timeToIdleSeconds(evictableTimeToIdle));
 

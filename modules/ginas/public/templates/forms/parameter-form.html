@@ -1,23 +1,24 @@
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="parameterForm" id="addParameterForm" role="form" novalidate>
+            {{parent}}
             <div ng-repeat="(index,obj) in parent.parameters">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
-                <div class="col-md-4">
-                    <gsrs-input type = "text"
-                                ng-model= obj.name
-                                field="name">
-                    </gsrs-input>
-                </div>
+                            <div class="col-md-4">
+                                <gsrs-input type="text"
+                                            ng-model=obj.name
+                                            field="name">
+                                </gsrs-input>
+                            </div>
                             <div class="col-md-3">
-                    <gsrs-input type = "dropdown"
-                                ng-model= obj.type
-                                field="type"
-                    cv="PROPERTY_TYPE">
-                    </gsrs-input>
-                </div>
+                                <gsrs-input type="dropdown"
+                                            ng-model=obj.type
+                                            field="type"
+                                            cv="PROPERTY_TYPE">
+                                </gsrs-input>
+                            </div>
                             <div class="col-md-3">
                                 <modal-form-button type="amount"
                                                    referenceobj="obj"
@@ -25,14 +26,15 @@
                                                    parent="parent">
                                 </modal-form-button>
                             </div>
-            </div>
                         </div>
+                    </div>
                     <hr>
-                    </ng-form>
-                </div>
+                </ng-form>
+            </div>
         </form>
-        <button class="btn btn-primary" ng-click="addNew(parameterForm, 'parameters')"><i class="fa fa-plus"></i> Add a<span
-                ng-if="parent.parameters.length>0">nother</span> parameter
+        <button class="btn btn-primary" ng-click="addNew(parameterForm, 'parameters')"><i class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.parameters.length>0">nother</span> parameter
         </button>
     </div>
 </div>
