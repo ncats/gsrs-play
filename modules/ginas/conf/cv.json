@@ -14289,7 +14289,7 @@
         "modified": 1462481431876,
         "deprecated": false,
         "value": "MOL_WEIGHT:NUMBER AVERAGE",
-        "display": "MOL_WEIGHT:NUMBER AVERAGE",
+        "display": "MOL_WEIGHT: NUMBER AVERAGE",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -14300,7 +14300,7 @@
         "modified": 1462481431876,
         "deprecated": false,
         "value": "MOL_WEIGHT:NUMBER(CALCULATED)",
-        "display": "MOL_WEIGHT:NUMBER(CALCULATED)",
+        "display": "MOL_WEIGHT: NUMBER(CALCULATED)",
         "hidden": false,
         "selected": false,
         "filters": []
@@ -14311,7 +14311,7 @@
         "modified": 1462481431876,
         "deprecated": false,
         "value": "MOL_WEIGHT:WEIGHT AVERAGE",
-        "display": "MOL_WEIGHT:WEIGHT AVERAGE",
+        "display": "MOL_WEIGHT: WEIGHT AVERAGE",
         "hidden": false,
         "selected": false,
         "filters": []

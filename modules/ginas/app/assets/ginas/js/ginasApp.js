@@ -545,7 +545,6 @@
         $scope.gridView = localStorageService.get('gridView') || false;
         $scope.diff = false;
         $scope.scrollTo = function (prmElementToScrollTo) {
-            console.log('scrolling');
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
@@ -656,7 +655,6 @@
 
                 /// form.$setSubmitted(true);
                 obj = null;
-                console.log(form);
                 form.$setPristine();
                 form.$setUntouched();
                 $scope.$broadcast('show-errors-reset');
@@ -671,7 +669,6 @@
 
         $scope.checkErrors = function () {
             if (_.has($scope.substanceForm, '$error')) {
-                //console.log($scope.substanceForm.$error);
                 _.forEach($scope.substanceForm.$error, function (error) {
                     //console.log(error);
                 });
@@ -722,7 +719,6 @@
         };
 
         $scope.parseErrorArray = function (errorArr) {
-            console.log(errorArr);
             _.forEach(errorArr, function (value) {
                 if (value.messageType == "WARNING")
                     value.class = "warning";
@@ -738,14 +734,12 @@
         };
 
         $scope.validateSubstance = function (callback) {
-            console.log($scope);
-          //  console.log("validate");
+
             //this should cascade to all forms to check and see if validation is ok
             $scope.$broadcast('show-errors-check-validity');
             //this is the api error checking
             $scope.checkErrors();
-            console.log($scope);
-            console.log($scope.substanceForm.codeForm);
+
 
              /*console.log($scope.nameForm);
              if($scope.nameForm.$dirty){
@@ -758,11 +752,9 @@
 
 
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-       //    console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(function (response) {
                 $scope.validating = false;
-                console.log(response);
                 $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
                 // if (callback) {
@@ -770,7 +762,6 @@
                 // }
             }).finally(function () {
                 $scope.validating = false;
-                console.log($scope.validating);
             });
         };
 
@@ -783,7 +774,6 @@
           //  $scope.$broadcast('show-errors-check-validity');
             //this is the api error checking
           //  $scope.checkErrors();
-            console.log($scope);
             $scope.submitting = true;
             /*console.log($scope.nameForm);
              if($scope.nameForm.$dirty){
@@ -1053,7 +1043,6 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
             	scope.formatValue = function (v){
             		if (v) {
                             if(typeof v === "object"){
@@ -1384,10 +1373,8 @@
             scope: {
                 parameters: '='
             },
-            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.value"></amount></div>',
-            link: function(scope){
-                console.log(scope);
-            }
+            template: '<div ng-repeat="p in parameters">{{p.name || p.parameterName || \'Please add a name\'}} <amount value="p.value"></amount></div>'
+
         };
     });
 
@@ -1612,7 +1599,7 @@
                         display.push(obj);
                     });
                     display = _.chunk(display, 10);
-                    _.set(scope.obj, 'subunitDisplay', display);
+                    _.set(scope.obj, '$$subunitDisplay', display);
                 };
 
                 scope.highlight = function (acid) {

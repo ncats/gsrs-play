@@ -9,9 +9,8 @@
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
-                                <reference-apply ng-if ="applyRefs" ng-model="obj.apply" obj=obj referenceobj=reference parent=parent
-                                                 type="view"></reference-apply>
-                                <delete-button ng-if ="!applyRefs" pre="print()" path="references"></delete-button>
+                                <reference-apply ng-if ="applyRefs" ng-model="obj.apply" obj=obj referenceobj=referenceobj parent=parent></reference-apply>
+                                <delete-button ng-if ="!applyRefs" path="references"></delete-button>
                             </div>
                             <div class="col-md-10">
                                 <div class="row">
