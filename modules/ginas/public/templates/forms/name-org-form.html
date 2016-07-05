@@ -8,27 +8,27 @@
                             <div class="col-md-1 text-center">
                                 <delete-button delete="obj" path="names"></delete-button>
                             </div>
-                <div class="col-md-2">
-                    <gsrs-input type="dropdown"
-                                ng-model="obj.nameOrg"
-                                field="nameOrg"
-                                cv="NAME_ORG"
-                                required="true"
-                                label="Naming Organization"
-                                formname=form>
-                    </gsrs-input>
-                </div>
-                <div class="col-md-1">
-                    <check-box ng-model="obj.deprecated" field="deprecated"></check-box>
-                </div>
-                <div class="col-md-2" ng-if="obj.deprecated">
-                    <date-picker ng-model="obj.deprecatedDate" field="deprecatedDate"></date-picker>
-                </div>
-            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.nameOrg"
+                                            field="nameOrg"
+                                            cv="NAME_ORG"
+                                            required="true"
+                                            label="Naming Organization"
+                                            formname=form>
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1">
+                                <check-box ng-model="obj.deprecated" field="deprecated"></check-box>
+                            </div>
+                            <div class="col-md-2" ng-if="obj.deprecated">
+                                <date-picker ng-model="obj.deprecatedDate" field="deprecatedDate"></date-picker>
+                            </div>
                         </div>
+                    </div>
                     <hr>
-                    </ng-form>
-                </div>
+                </ng-form>
+            </div>
         </form>
         <br>
         <br>

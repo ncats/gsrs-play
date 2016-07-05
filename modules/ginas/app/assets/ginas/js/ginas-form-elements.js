@@ -167,13 +167,10 @@
     ginasFormElements.service('download', function ($location, $http) {
         createURL = function (id) {
             var current = ($location.$$url).split('app')[1];
-            console.log("current");
-            console.log(current);
             var ret;
             var c = current.split('?');
             if(id){
                 ret = baseurl + "api/v1/substances(" + id + ")?view=full";
-                console.log(ret);
                 return ret;
             } else {
 
@@ -195,7 +192,6 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function (data) {
-                console.log(data.content);
                 return data.content;
             });
 
@@ -315,8 +311,6 @@
             },
             link: function (scope, element, attrs, ngModelCtrl) {
 
-               // console.log(scope);
-
                 //this function returns different templates, based on input. all above scope variables are callable
                 //doing this first makes sure everything is attached to the scope before compiling the directive
                 var templateurl;
@@ -370,7 +364,6 @@
                     };
 
                     scope.undo = function () {
-                        console.log(temp);
                         if (scope.changed == true) {
                             scope.obj = temp;
                             scope.edit = false;
@@ -1010,7 +1003,7 @@
 ////////////See if this is can be moved to reference form or header form///////////////////////////////
             //this is used in the reference form to apply the references to structure/protein etc.
             link: function(scope, element){
-                if(_.isUndefined(scope.referenceobj)){
+               /* if(_.isUndefined(scope.referenceobj)){
                     scope.subClass = scope.parent.substanceClass;
                     if(scope.subClass ==="chemical"){
                         scope.subClass = "structure";
@@ -1019,7 +1012,7 @@
                         scope.subClass = "specifiedSubstance";
                     }
                     scope.referenceobj = scope.parent[scope.subClass];
-                }
+                }*/
             },
 
          //   templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
@@ -1034,6 +1027,8 @@
                     $scope.$broadcast('save');
                     modalInstance.close();
                 };
+
+
 
                 $scope.open = function () {
                     modalInstance = $uibModal.open({
@@ -1053,6 +1048,7 @@
                                     templateurl =  baseurl + "assets/templates/modals/name-org-modal.html";
                                     break;
                                 case "parameter":
+                                    console.log($scope);
                                     templateurl =  baseurl + "assets/templates/modals/parameter-modal.html";
                                     break;
                                 case "reference":
@@ -1066,7 +1062,6 @@
                             return templateurl;
 
                         },
-                       // templateUrl:
                         size: 'xl',
                         scope: $scope,
                         resolve: {
@@ -1075,7 +1070,14 @@
                             }
                         }
                     });
-                }
+                    modalInstance.result.then(function(){
+                        $scope.close();
+                    }, function(){
+                        //this handles clicking outside of the modal to close it
+                        $scope.close();
+                    });
+
+                };
             }
         }
     });
@@ -1086,7 +1088,7 @@
             replace: true,
             scope: {
                 apply: '=?ngModel',
-                obj: '=?',
+                obj: '=?', //this is the reference object itself from the form,
                 referenceobj: '=',
                 parent: '='
             },
@@ -1094,7 +1096,7 @@
                 var uuid;
                 var index;
                 var template;
-             //   scope.apply = false;
+               // scope.apply = false;
                 if (_.isUndefined(scope.referenceobj)) {
                     scope.referenceobj = {};
                 }
@@ -1108,22 +1110,14 @@
                     return index >= 0;
                 };
 
-                switch (attrs.type) {
-                    case "view":
-                        template = angular.element('<div class = "text-center"><label for="apply" class="text-capitalize">Apply</label><br/><input type="checkbox" ng-model= apply placeholder="Apply" title="Apply" id="apply" checked/></div>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        break;
-                    case "edit":
                         template = angular.element('<div class = "text-center"><input type="checkbox" ng-model="obj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
                         element.append(template);
                         $compile(template)(scope);
                         uuid = scope.obj.uuid;
                         index = _.indexOf(scope.referenceobj.references, uuid);
-                        scope.obj.apply = scope.isReferenced();
+                        _.set(scope.obj, 'apply', index >= 0);
                         scope.parent.references = _.orderBy(scope.parent.references, ['apply'], ['desc']);
-                        break;
-                }
+
 
                 scope.updateReference = function () {
                     index = _.indexOf(scope.referenceobj.references, uuid);
