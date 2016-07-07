@@ -43,7 +43,7 @@ public final class GateKeeperFactory {
         return supplier.get();
     }
 
-    public static enum DoNothingDBCacheWriter implements CacheWriter, CacheEntryFactory{
+    public enum DoNothingDBCacheWriter implements GinasFileBasedCacheAdapter{
     	INSTANCE;
     	
 		@Override
@@ -110,17 +110,14 @@ public final class GateKeeperFactory {
         private final int maxElements, timeToLive, timeToIdle;
         private Integer evictableMaxElements, evictableTimeToLive,evictableTimeToIdle;
 
-        private CacheWriter cacheWriter;
-        private CacheEntryFactory cacheEntryFactory;
+        private GinasFileBasedCacheAdapter cacheAdapter =DoNothingDBCacheWriter.INSTANCE;
         
         
         public Builder(int maxElements, int timeToLive, int timeToIdle){
             this.maxElements = maxElements;
             this.timeToIdle = timeToIdle;
             this.timeToLive = timeToLive;
-            DoNothingDBCacheWriter nothingWriter = DoNothingDBCacheWriter.INSTANCE;
-            cacheWriter=nothingWriter;
-            cacheEntryFactory=nothingWriter;
+
         }
 
         public Builder debugLevel(int level){
@@ -128,14 +125,11 @@ public final class GateKeeperFactory {
             return this;
         }
         
-        public Builder withCacheWriter(CacheWriter cacheWriter){
-        	this.cacheWriter=cacheWriter;
+        public Builder cacheAdapter(GinasFileBasedCacheAdapter adapter){
+        	this.cacheAdapter=adapter;
         	return this;
         }
-        public Builder withCacheEntryFactory(CacheEntryFactory cacheEntryFactory){
-        	this.cacheEntryFactory=cacheEntryFactory;
-        	return this;
-        }
+
 
         public Builder useNonEvictableCache(int maxElements, int timeToLive, int timeToIdle){
             this.evictableMaxElements = maxElements;
@@ -146,29 +140,31 @@ public final class GateKeeperFactory {
 
         public GateKeeperFactory build(){
             Supplier<GateKeeper> supplier;
-            if(evictableMaxElements ==null){
+          //  if(evictableMaxElements ==null){
                 //single cache
+
                 supplier = ()->{
 
                     Cache evictableCache = new Cache( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
-                            .maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
+                            //.maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
+                            .maxEntriesLocalHeap(maxElements)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     CacheManager.getInstance().removeCache(evictableCache.getName());
                     CacheManager.getInstance().addCache(evictableCache);
 
-                    evictableCache.registerCacheWriter(cacheWriter);
+                    evictableCache.registerCacheWriter(cacheAdapter);
                     evictableCache.setSampledStatisticsEnabled(true);
-                    Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheEntryFactory);
+                    Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheAdapter);
                     return new SingleCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), eh_evictableCache);
-                };
-            }else{
+               };
+         /*   }else{
                 supplier = ()->{
                     Cache evictableCache = new Cache(new CacheConfiguration()
                             .name(IX_CACHE_EVICTABLE)
                             //.maxElementsInMemory(maxElements)
-                            .maxElementsInMemory(10000)
+                            .maxEntriesLocalHeap(10000)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     
@@ -197,7 +193,7 @@ public final class GateKeeperFactory {
                     return new TwoCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), eh_evictableCache, eh_nonEvictableCache);
                 };
             }
-
+*/
             return new GateKeeperFactory(supplier);
         }
     }

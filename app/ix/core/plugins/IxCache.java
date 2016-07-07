@@ -1,5 +1,6 @@
 package ix.core.plugins;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class IxCache extends Plugin {
     }
 
 
-    public IxCache(int debugLevel, int maxElements, int timeToLive, int timeToIdle) {
+    public IxCache(File cacheDir, int debugLevel, int maxElements, int timeToLive, int timeToIdle) {
 
         app = null;
 
@@ -75,9 +76,10 @@ public class IxCache extends Plugin {
 //
 //        gateKeeper = new TwoCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), evictableCache, nonEvictableCache);
 
-        gateKeeper = new GateKeeperFactory.Builder(maxElements, timeToLive, timeToIdle)
+        gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
                                             .debugLevel(debugLevel)
                                             .useNonEvictableCache(maxElements,timeToLive,timeToIdle)
+                                            .cacheAdapter( new FileDbCache(cacheDir, "inMemCache"))
                                             .build()
         .                                    create();
     }
@@ -86,7 +88,8 @@ public class IxCache extends Plugin {
     @Override
     public void onStart () {
         Logger.info("Loading plugin "+getClass().getName()+"...");
-        int debugLevel = app.plugin(IxContext.class).getDebugLevel();
+        IxContext context = app.plugin(IxContext.class);
+        int debugLevel = context.getDebugLevel();
         
         int maxElements = app.configuration()
             .getInt(CACHE_MAX_ELEMENTS, MAX_ELEMENTS);
@@ -100,7 +103,7 @@ public class IxCache extends Plugin {
     System.out.println("####################");
         System.out.println("max elements = " + maxElements);
 
-        _instance = new IxCache(debugLevel,maxElements,timeToLive,timeToIdle);
+        _instance = new IxCache(context.cache(), debugLevel,maxElements,timeToLive,timeToIdle);
     }
 
     @Override
@@ -404,7 +407,7 @@ public class IxCache extends Plugin {
     }
     
     */
-}
+//}
 
 	
 }

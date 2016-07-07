@@ -148,7 +148,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
         Element e = evictableCache.get(key);
 
 
-        if(e ==null || regeneratePredicate.test(e)){
+        if(e ==null || e.getObjectValue() ==null || regeneratePredicate.test(e)){
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
@@ -188,7 +188,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
     public Object getRaw(String key){
         Element e = getRawElement(key);
 
-        if(e ==null){
+        if(e ==null ){
             return null;
         }
         return e.getObjectValue();
