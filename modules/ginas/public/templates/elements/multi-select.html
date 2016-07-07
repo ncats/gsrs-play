@@ -3,6 +3,7 @@
                                                                             class="danger"> *</span></label><br>
             <span ng-show="!edit && obj.length!=0" ng-click="edit = true;">
                             <span ng-repeat="tag in obj"  class="badge" uib-tooltip="{{tag.display}}">{{tag.display}} </span></span>
+    {{obj}}
     <a ng-show="!edit && obj.length!=0" ng-click = "empty();"><i class="fa fa-trash danger" uib-tooltip="Clear List"></i></a>
     <tags-input
             ng-show="edit || !obj || obj.length == 0"
@@ -11,8 +12,10 @@
             placeholder="{{label || field}}"
             name="{{::field}}"
             id="{{::field}}"
-            ng-model=obj
+            ng-model= obj
             ng-blur="edit = false"
+            ng-change="changeFunction();"
+            on-tag-removing="removetag($tag);"
             display-property="display"
             key-property="value"
             max-tags={{::max}}>

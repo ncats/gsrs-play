@@ -140,7 +140,7 @@ public final class GateKeeperFactory {
 
         public GateKeeperFactory build(){
             Supplier<GateKeeper> supplier;
-          //  if(evictableMaxElements ==null){
+            if(evictableMaxElements ==null){
                 //single cache
 
                 supplier = ()->{
@@ -148,7 +148,7 @@ public final class GateKeeperFactory {
                     Cache evictableCache = new Cache( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
                             //.maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
-                            .maxEntriesLocalHeap(maxElements)
+                            .maxElementsInMemory(10)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     CacheManager.getInstance().removeCache(evictableCache.getName());
@@ -159,26 +159,26 @@ public final class GateKeeperFactory {
                     Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheAdapter);
                     return new SingleCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), eh_evictableCache);
                };
-         /*   }else{
+            }else{
                 supplier = ()->{
                     Cache evictableCache = new Cache(new CacheConfiguration()
                             .name(IX_CACHE_EVICTABLE)
-                            //.maxElementsInMemory(maxElements)
-                            .maxEntriesLocalHeap(10000)
+                            .maxElementsInMemory(maxElements)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     
-                    evictableCache.registerCacheWriter(cacheWriter);
-                    Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheEntryFactory);
+                    evictableCache.registerCacheWriter(cacheAdapter);
+                    Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheAdapter);
                     Cache nonEvictableCache = new Cache ( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
-                            .maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
+                            .maxElementsInMemory(maxElements)
+                            //.maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(evictableTimeToLive)
                             .sizeOfPolicy((new SizeOfPolicyConfiguration()).maxDepth(0).maxDepthExceededBehavior(SizeOfPolicyConfiguration.MaxDepthExceededBehavior.CONTINUE))
                             .timeToIdleSeconds(evictableTimeToIdle));
-                    nonEvictableCache.registerCacheWriter(cacheWriter);
+                    nonEvictableCache.registerCacheWriter(cacheAdapter);
 
-                    Ehcache eh_nonEvictableCache= new SelfPopulatingCache(nonEvictableCache,cacheEntryFactory);
+                    Ehcache eh_nonEvictableCache= new SelfPopulatingCache(nonEvictableCache,cacheAdapter);
 
                     CacheManager.getInstance().removeCache(evictableCache.getName());
                     CacheManager.getInstance().addCache(evictableCache);
@@ -193,7 +193,7 @@ public final class GateKeeperFactory {
                     return new TwoCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), eh_evictableCache, eh_nonEvictableCache);
                 };
             }
-*/
+
             return new GateKeeperFactory(supplier);
         }
     }

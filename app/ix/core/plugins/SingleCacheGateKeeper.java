@@ -7,6 +7,8 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -125,8 +127,10 @@ public class SingleCacheGateKeeper implements GateKeeper {
    }
 
     @Override
-    public Statistics getStatistics() {
-        return evictableCache.getStatistics();
+    public List<Statistics> getStatistics() {
+    	List<Statistics> statlist=new ArrayList<Statistics>();
+    	statlist.add(evictableCache.getStatistics());
+        return statlist;
     }
 
     @Override

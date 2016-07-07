@@ -275,10 +275,12 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
 
     @Override
-    public Statistics getStatistics() {
+    public List<Statistics> getStatistics() {
         //TODO how to handle 2 caches?
-
-        return evictableCache.getStatistics();
+    	List<Statistics> stats= new ArrayList<Statistics>();
+    	stats.add(evictableCache.getStatistics());
+    	stats.add(nonEvictableCache.getStatistics());
+        return stats;
     }
 
     private static boolean isEvictable(Object o){

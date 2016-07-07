@@ -3,6 +3,7 @@ package ix.core.plugins;
 import java.io.File;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -226,7 +227,7 @@ public class IxCache extends Plugin {
     
    
     
-    public static Statistics getStatistics () {
+    public static List<Statistics> getStatistics () {
         //TODO how to handle multiple caches
        checkInitialized();
         return _instance.gateKeeper.getStatistics();

@@ -4,6 +4,7 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 
 import java.io.Closeable;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
@@ -48,7 +49,7 @@ public interface GateKeeper extends Closeable {
 
     Stream<Element> elements(int top, int skip);
 
-    Statistics getStatistics ();
+    List<Statistics> getStatistics ();
 
     void clear();
 }

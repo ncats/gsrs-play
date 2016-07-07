@@ -38,12 +38,12 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
     @Override
     public Object createEntry(Object key) throws Exception {
 
-        System.out.println("in create entry");
+        
         if (!(key instanceof Serializable)) {
             throw new IllegalArgumentException
                     ("Cache key "+key+" is not serliazable!");
         }
-        System.out.println("is serializable");
+        
         Element elm = null;
         try {
             DatabaseEntry dkey = getKeyEntry (key);
@@ -53,9 +53,10 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
                 try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data.getData(), data.getOffset(), data.getSize()))) {
                     elm = new Element(key, ois.readObject());
                 }
+        
             }
             else if (status == OperationStatus.NOTFOUND) {
-                //
+        
             }
             else {
                 Logger.warn("Unknown status for key "+key+": "+status);
@@ -69,7 +70,7 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public CacheWriter clone(Ehcache cache) throws CloneNotSupportedException {
-        System.out.println("trying to clone!!!");
+        
         throw new CloneNotSupportedException();
     }
 
@@ -95,9 +96,7 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
     @Override
     public void dispose() throws CacheException {
 
-        System.out.println("# serializable = " + serializableCount);
-        System.out.println("# not serializable = " + notSerializableCount);
-
+        
         if (db != null) {
             try {
                 Logger.debug("#### closing cache writer "+cacheName
@@ -115,17 +114,15 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
     }
     @Override
     public void write(Element elm) throws CacheException {
-        System.out.println("# serializable = " + serializableCount);
-        System.out.println("# not serializable = " + notSerializableCount);
-
+     
         if(!elm.isSerializable()){
             notSerializableCount++;
-            System.out.println(" not = " + elm.getObjectValue().getClass());
+            
             return;
+        }else{
+        	
         }
         serializableCount++;
-
-        System.out.println("calling write");
         //TODO is this a safe cast?
 
 
@@ -141,7 +138,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
                         (Util.serialize(elm.getObjectValue()));
                 OperationStatus status = db.put(null, dkey, data);
                 if (status != OperationStatus.SUCCESS) {
-                    System.out.println(status.name());
                     Logger.warn
                             ("** PUT for key " + key + " returns status " + status);
                 }
@@ -153,7 +149,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
             }
         }
         else {
-            System.out.println("not serializable");
             Logger.warn("Key "+elm.getObjectKey()+" isn't serializable!");
         }
     }

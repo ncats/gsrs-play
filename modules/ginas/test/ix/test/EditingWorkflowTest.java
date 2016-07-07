@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -70,7 +71,7 @@ public class EditingWorkflowTest {
 
 
 
-    @Test
+    @Test 
     public void testFailUpdateNoUserProtein() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         RestSession session = ts.newRestSession(fakeUser1);
@@ -88,7 +89,7 @@ public class EditingWorkflowTest {
     
    
     
-    @Test
+    @Test 
    	public void testSubmitProtein() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(fakeUser1)) {
@@ -98,7 +99,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testCleanNewlinesInComments() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         entered=(new JsonUtil.JsonNodeBuilder(entered))
@@ -128,7 +129,7 @@ public class EditingWorkflowTest {
    	}
     
     
-    @Test
+    @Test 
    	public void testChangeProteinLocal() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(fakeUser1)) {
@@ -141,7 +142,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testUnicodeProblem() throws Exception {
         final File resource=new File("test/testJSON/racemic-unicode.json");
         try( RestSession session = ts.newRestSession(fakeUser1)) {
@@ -168,7 +169,7 @@ public class EditingWorkflowTest {
 
     
     
-    @Test
+    @Test 
    	public void testChangeProteinRemote() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(fakeUser1)) {
@@ -180,7 +181,7 @@ public class EditingWorkflowTest {
             renameServer(api, uuid);
         }
    	}
-    @Test
+    @Test 
    	public void testAddNameOrgProtein() throws Exception {
         try( RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -193,7 +194,7 @@ public class EditingWorkflowTest {
         }
    	}
    
-    @Test
+    @Test 
    	public void testFailDoubleEditProtein() throws Exception {
         try( RestSession session1 = ts.newRestSession(fakeUser1);
         	 RestSession session2 = ts.newRestSession(fakeUser2);
@@ -227,7 +228,7 @@ public class EditingWorkflowTest {
    	}
     
 
-    @Test
+    @Test 
    	public void testAllowReferenceReverseAndGranularChange() throws Exception {
 
         String someNew="SOME_NEW_TAG";
@@ -287,7 +288,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testAddUsers() throws Exception {
 
     	try(RestSession session1 = ts.newRestSession(ts.createUser(Role.Admin));
@@ -306,7 +307,7 @@ public class EditingWorkflowTest {
    	}
     
     
-    @Test
+    @Test 
    	public void onlySuperUsersAllowedToLoadWithoutAccessRulesSet() throws Exception {
         /*
           private static final List<Role> superUserRoles = Role.roles(Role.SuperUpdate,Role.SuperDataEntry );
@@ -343,7 +344,7 @@ public class EditingWorkflowTest {
     //Can't submit an preapproved substance via this mechanism
     //Also, can't change an approvalID here, unless an admin
     //TODO: add the admin part
-    @Test
+    @Test 
    	public void testSubmitPreApprovedRemote() throws Exception {
 
         JsonNode entered = JsonUtil.parseJsonFile(resource);
@@ -369,7 +370,7 @@ public class EditingWorkflowTest {
         }
    	}
 
-    @Test
+    @Test 
    	public void testAddNameRemote() throws Exception {
         JsonNode entered = parseJsonFile(resource);
 
@@ -381,7 +382,7 @@ public class EditingWorkflowTest {
             addNameServer(api, uuid);
         }
    	}
-    @Test
+    @Test 
    	public void testAddRemoveNameRemote()  throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try(RestSession session = ts.newRestSession(fakeUser1)) {
@@ -395,7 +396,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testChangeHistoryProteinRemote() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try(RestSession session = ts.newRestSession(fakeUser1)) {
@@ -410,7 +411,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testFacetUpdateRemote()  throws Exception {
         JsonNode entered= parseJsonFile(resource);
 
@@ -444,7 +445,7 @@ public class EditingWorkflowTest {
        	return 0;
     }
 
-    @Test
+    @Test 
    	public void testChangeDisuflideProteinRemote() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -461,7 +462,7 @@ public class EditingWorkflowTest {
    	}
     
     
-    @Test
+    @Test 
    	public void testChangeDisuflideProteinHistoryRemote() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -478,7 +479,7 @@ public class EditingWorkflowTest {
         }
    	}
 
-    @Test
+    @Test 
    	public void testRemoveAllDisuflidesProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -491,7 +492,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testAddAccessGroupToExistingProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -504,7 +505,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void testAddReferenceToExistingProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
                SubstanceAPI api = new SubstanceAPI(session);
@@ -517,7 +518,7 @@ public class EditingWorkflowTest {
            }
    	}
     
-    @Test
+    @Test 
    	public void testAddLanguageToExistingProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
                SubstanceAPI api = new SubstanceAPI(session);
@@ -530,7 +531,7 @@ public class EditingWorkflowTest {
            }
    	}
     
-    @Test
+    @Test 
    	public void testFailOnPublicMissingPublicReleaseTag() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
                SubstanceAPI api = new SubstanceAPI(session);
@@ -545,7 +546,7 @@ public class EditingWorkflowTest {
     
     
     
-    @Test
+    @Test 
    	public void testAddAccessGroupToNewProtein() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -557,7 +558,7 @@ public class EditingWorkflowTest {
 
    	}
 
-    @Test
+    @Test 
    	public void cantSubmitSubstanceTwice() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -573,7 +574,7 @@ public class EditingWorkflowTest {
         }
    	}
     
-    @Test
+    @Test 
    	public void failedRecordsDontChangeFacets() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -593,7 +594,7 @@ public class EditingWorkflowTest {
     
     
 
-    @Test
+    @Test 
    	public void lookupSubstanceBeforeRegisiteringItFails() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -606,7 +607,7 @@ public class EditingWorkflowTest {
 
    	}
 
-    @Test
+    @Test 
    	public void testFailUpdateNewSubstance() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -624,7 +625,7 @@ public class EditingWorkflowTest {
     
     
     
-    @Test
+    @Test 
    	public void testHistoryViews() throws Exception{
 
 
@@ -642,7 +643,7 @@ public class EditingWorkflowTest {
         }
    	}
 
-    @Test
+    @Test 
     public void revertChangeShouldMakeNewVersionWithOldValues() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -673,7 +674,7 @@ public class EditingWorkflowTest {
 
         }
     }
-    @Test
+    @Test 
     public void updateShouldUpdateListView() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -696,7 +697,7 @@ public class EditingWorkflowTest {
         }
     }
 
-    @Test
+    @Test 
     public void historyNewValueShouldBeOldValueOfNextVersion() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -724,7 +725,7 @@ public class EditingWorkflowTest {
 
 
     }
-    @Test
+    @Test 
     public void revertHistoryShouldBeTheSameAsOldValuesExceptMetaData() throws Exception {
         try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -757,23 +758,35 @@ public class EditingWorkflowTest {
 
 
     }
+    @Test
+    public void ensureDeprecatingRecordDisappearsFromBrowse() throws Exception {
+        try(RestSession session = ts.newRestSession(fakeUser1)) {
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            JsonNode entered = parseJsonFile(resource);
+            String uuid = entered.get("uuid").asText();
+
+            ensurePass(api.submitSubstance(entered));
+            String htmlbrowseBefore=api.fetchSubstancesUIBrowseHTML();
+            deprecateServer(api, uuid);
+            String htmlbrowseAfter=api.fetchSubstancesUIBrowseHTML();
+            LineChanges lineChanges=LineChanges.changesFor(htmlbrowseBefore, htmlbrowseAfter);
+            
+        	assertTrue("Deprecating only record should yeild no results", htmlbrowseAfter.contains("There are no results to show."));
+        	String htmlbrowseAfterDep=api.fetchSubstancesWithDeprecatedUIBrowseHTML();
+        	assertFalse("Deprecating only record, and browsing deprecated records should yeild 1 result", htmlbrowseAfterDep.contains("There are no results to show."));
+            
+            
+        }
+
+
+    }
 
     public void retrieveHistoryView(SubstanceAPI api, String uuid, int version){
     	String newHTML=api.fetchSubstanceByUuid(uuid).getBody();
     	String oldHTML=api.fetchSubstance(uuid,version).getBody();
 
-    	Set<String> oldlines = new LinkedHashSet<String>();
-    	for(String line: oldHTML.split("\n")){
-    		oldlines.add(line);
-    	}
-    	Set<String> newlines = new LinkedHashSet<String>();
-    	for(String line: newHTML.split("\n")){
-    		newlines.add(line);
-    	}
-    	Set<String> inOldButNotNew=new LinkedHashSet<String>(oldlines);
-    	inOldButNotNew.removeAll(newlines);
-    	Set<String> inNewButNotOld=new LinkedHashSet<String>(newlines);
-    	inNewButNotOld.removeAll(oldlines);
+    	LineChanges lineChanges=LineChanges.changesFor(oldHTML, newHTML);
     	
 //    	System.out.println("Lines in old version view, but not new:" + inOldButNotNew.size());
 //    	for(String oline:inOldButNotNew){
@@ -787,10 +800,37 @@ public class EditingWorkflowTest {
     	int distance=StringUtils.getLevenshteinDistance(oldHTML, newHTML);
 
     	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (0)",distance>0);
-    	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (0)",inNewButNotOld.size()>0);
-    	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (0)",inOldButNotNew.size()>0);
+    	assertTrue("New lines (" + lineChanges.inNewButNotOld.size() + ") of page HTML should be greater than (0)",lineChanges.inNewButNotOld.size()>0);
+    	assertTrue("Removed lines (" + lineChanges.inOldButNotNew.size() + ") of page HTML should be greater than (0)",lineChanges.inOldButNotNew.size()>0);
     	
     }
+    
+    public static class LineChanges{
+    	Set<String> inOldButNotNew;
+    	Set<String> inNewButNotOld;
+    	public LineChanges(Set<String> inOldButNotNew,Set<String> inNewButNotOld){
+    		this.inNewButNotOld=inNewButNotOld;
+    		this.inOldButNotNew=inOldButNotNew;
+    	}
+    	public static LineChanges changesFor(String oldHTML, String newHTML){
+    		
+
+        	Set<String> oldlines = new LinkedHashSet<String>();
+        	for(String line: oldHTML.split("\n")){
+        		oldlines.add(line);
+        	}
+        	Set<String> newlines = new LinkedHashSet<String>();
+        	for(String line: newHTML.split("\n")){
+        		newlines.add(line);
+        	}
+        	Set<String> inOldButNotNew=new LinkedHashSet<String>(oldlines);
+        	inOldButNotNew.removeAll(newlines);
+        	Set<String> inNewButNotOld=new LinkedHashSet<String>(newlines);
+        	inNewButNotOld.removeAll(oldlines);
+        	return new LineChanges(inOldButNotNew, inNewButNotOld);
+    	}
+    }
+    
     private void renameLocal(SubstanceAPI api, String uuid, String oldName, String newName){
         JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
         JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
@@ -877,7 +917,34 @@ public class EditingWorkflowTest {
 		return fetched;
     }
     
-    @Test
+   /**
+    * Deprecate on the server
+    * @param session
+    * @param uuid
+    * @return
+    */
+    public JsonNode deprecateServer(SubstanceAPI session, String uuid){
+    	
+    	JsonNode fetched = session.fetchSubstanceJsonByUuid(uuid);
+
+    	String oldVersion=fetched.at("/version").asText();
+    
+    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).set("/deprecated", true).build();
+		session.updateSubstanceJson(updated);
+		JsonNode updateFetched = session.fetchSubstanceJsonByUuid(uuid);
+		
+		assertEquals(Integer.parseInt(oldVersion) + 1, Integer.parseInt(updateFetched.at("/version").asText()));
+		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+								.replace("/version")
+								.replace("/lastEdited")
+								.build();
+		
+		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
+    @Test 
     public void validateGeneratedCodeAddition(){
     	try(RestSession session = ts.newRestSession(fakeUser1)) {
             SubstanceAPI api = new SubstanceAPI(session);

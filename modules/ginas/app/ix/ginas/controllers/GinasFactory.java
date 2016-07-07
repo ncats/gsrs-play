@@ -16,6 +16,7 @@ import ix.core.models.Principal;
 import ix.core.models.UserProfile;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
+import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Unit;
@@ -250,6 +251,12 @@ public class GinasFactory extends EntityFactory {
                 }
                 return p;
         }
+
+    public static Result loadCV (){
+        ControlledVocabularyFactory.loadCVFile();
+        return ok(ix.ginas.views.html.index.render());
+    }
+
 
        
 }

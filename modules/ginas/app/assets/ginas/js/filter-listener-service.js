@@ -7,7 +7,7 @@ angular.module('filterListener', [])
                     if (!_.isUndefined(newValue) && !_.isNull(newValue)) {
                         var obj = {};
                         if (!_.isUndefined(newValue.systemCategory)) {
-                            CVFields.searchTags(scope.cv, newValue.systemCategory).then(function (response) {
+                            CVFields.search(scope.cv, newValue.systemCategory).then(function (response) {
                                 obj = response[0];
                                     scope.obj = obj;
                                 scope.edit = false;

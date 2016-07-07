@@ -1702,7 +1702,7 @@
 								oldStructure[key]=value;
 						}
 						if(cvname!==null){
-							CVFields.searchTags(cvname, value).then(function(response){
+							CVFields.search(cvname, value).then(function(response){
 									oldStructure[key]=response[0];
 								});
 						}

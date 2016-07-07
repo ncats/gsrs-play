@@ -13,8 +13,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import ix.core.DefaultValidator;
+import ix.core.models.Payload;
+import ix.core.plugins.PayloadPlugin;
 import ix.ginas.utils.GinasProcessingStrategy;
 import play.*;
+import play.mvc.Http.MultipartFormData;
+import play.data.DynamicForm;
+import play.data.Form;
 import play.db.ebean.*;
 import play.mvc.*;
 import ix.ginas.models.v1.*;
@@ -25,7 +30,12 @@ import ix.core.controllers.EntityFactory;
 public class ControlledVocabularyFactory extends EntityFactory {
 	static public final Model.Finder<Long, ControlledVocabulary> finder = new Model.Finder(
 			Long.class, ControlledVocabulary.class);
-	
+
+	public static Result _internalServerError(Throwable t) {
+		t.printStackTrace();
+		return internalServerError(ix.ginas.views.html.error.render(500,
+				"Internal server error: " + t.getMessage()));
+	}
 
 /*	private static Class<? extends VocabularyTerm> getTermClass (String domain){
 
@@ -79,6 +89,21 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		return finder.where().select("domain").findList();
 	}
 
+	// TODO: 7/7/16 Need to a function to delete the old cv before adding a new one
+	
+	
+	public static void loadCVFile() {
+		MultipartFormData requestData = request().body().asMultipartFormData();
+		MultipartFormData.FilePart filepart = requestData.getFile("file-name");
+		File file = filepart.getFile();
+		try {
+				FileInputStream is = new FileInputStream(file);
+			loadCVJson(is);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+	}
+
 	public static void loadCVJson(InputStream is) {
 		JsonFactory f = new JsonFactory();
 		ObjectMapper mapper = new ObjectMapper ();
@@ -95,7 +120,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 					parser.skipChildren();
 				}
 				catch (IOException ex) {
-					ex.printStackTrace();
+
 					Logger.error
 							("Unable to handle unknown property!", ex);
 					return false;
