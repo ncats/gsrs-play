@@ -80,6 +80,8 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         //because it will throw IOException with reason why dir couldn't be created
         //mkdirs just returns boolean
         try{
+        	System.out.println("Resetting persist cache");
+        	Util.tryToDeleteRecursively(dir);
             Files.createDirectories(dir.toPath());
         }catch(IOException e){
             throw new RuntimeException("error creating dir", e);
