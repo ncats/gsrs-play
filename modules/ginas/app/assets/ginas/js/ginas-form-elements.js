@@ -394,6 +394,20 @@
                                 }];
                                 scope.values = _.union(scope.values, other);
                             }
+                            _.forEach(scope.values, function(term){
+                                if(term.selected == true){
+                                    if(attrs.type =='multi'){
+                                        if(_.isUndefined(scope.obj)){
+                                            scope.obj =[];
+                                        }
+                                        scope.obj.push(term);
+                                    }else {
+                                        //push to array if array
+                                        scope.obj = term;
+                                    }
+                                    scope.edit= false;
+                                }
+                                });
 
                         });
 
