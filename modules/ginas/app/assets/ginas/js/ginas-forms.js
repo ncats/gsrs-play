@@ -749,21 +749,24 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
-                
+
+               
+
                 scope.addNewRef = function (mainform, list) {
                     //passes a new uuid for reference tracking
                     var obj = {
                         uuid: UUID.newID(),
-                        apply: true
+                        $$apply: ''
                     };
                     scope.addNew(mainform, list, obj);
                 };
 
+                console.log(attrs);
                 scope.applyRefs = attrs.apply;
 
                 //called on close of the modal reference form. saves all applied references to the array
                 scope.$on('save', function (e) {
-                    scope.validate();
+                        scope.validate();
                 });
 
                 scope.validate = function () {
@@ -772,12 +775,13 @@
                     var objreferences = _
                         .chain(scope.parent.references)
                         .filter(function (ref) {
-                            if (ref.apply) {
+                            if (ref.$$apply) {
                                 return ref;
                             }
                         })
                         .map('uuid')
                         .value();
+                    console.log(objreferences);
                         _.set(scope.referenceobj, 'references', objreferences);
                 };
 
