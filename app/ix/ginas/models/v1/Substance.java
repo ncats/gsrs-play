@@ -454,9 +454,9 @@ public class Substance extends GinasCommonData {
 
 	@JsonIgnore
 	public boolean isSubstanceVariant() {
-		if (this.substanceClass.toString().equals("concept")) {
+		if ("concept".equals(this.substanceClass.toString())) {
 			for (Relationship r : relationships) {
-				if (r.type.equals("SUBSTANCE->SUB_CONCEPT")) {
+				if ("SUBSTANCE->SUB_CONCEPT".equals(r.type)) {
 					return true;
 				}
 			}
