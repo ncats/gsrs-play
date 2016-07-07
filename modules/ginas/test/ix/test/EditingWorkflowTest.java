@@ -936,10 +936,8 @@ public class EditingWorkflowTest {
 		assertEquals(Integer.parseInt(oldVersion) + 1, Integer.parseInt(updateFetched.at("/version").asText()));
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
-		
 								.replace("/version")
 								.replace("/lastEdited")
-								
 								.build();
 		
 		assertEquals(expectedChanges, changes);

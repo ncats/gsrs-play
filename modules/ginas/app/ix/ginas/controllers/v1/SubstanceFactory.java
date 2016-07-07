@@ -230,7 +230,8 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static List<Substance> getSubstances(int top, int skip, String filter) {
-		SubstanceFilter subFilter = new SubstanceFilter();
+		EntityFilter<Substance> subFilter = new UserGroupAccessSubstanceFilter();
+		
 		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder);
 		return subFilter.filter(substances);
 	}
@@ -396,14 +397,14 @@ public class SubstanceFactory extends EntityFactory {
 	 * 
 	 * 
 	 */
-	public static class SubstanceFilter extends EntityFilter<Substance> {
+	public static class UserGroupAccessSubstanceFilter extends EntityFilter<Substance> {
 
 		UserProfile profile = UserFetcher.getActingUserProfile(true);
 		Principal user = profile != null ? profile.user : null;
 		boolean hasAdmin = false;
 		Set<Group> groups=null;
 		
-		public SubstanceFilter(){
+		public UserGroupAccessSubstanceFilter(){
 			if(profile!=null){
 				groups=new HashSet<Group>(profile.getGroups());
 			}
@@ -417,6 +418,7 @@ public class SubstanceFactory extends EntityFactory {
 
 		public boolean accept(Substance sub) {
 			if(hasAdmin)return true;
+			//System.out.println("looking for access");
 			//Group group = (Group) grp;
 			Substance substance = (Substance) sub;
 			Set<Group> accessG = substance.getAccess();
@@ -424,8 +426,8 @@ public class SubstanceFactory extends EntityFactory {
 			if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
 				return true;
 			}
-			System.out.println("Group 1:" + accessG);
-			System.out.println("Group 2:" + groups);
+			//System.out.println("Group 1:" + accessG);
+			//System.out.println("Group 2:" + groups);
 			if(Collections.disjoint(accessG, groups)){
 				//System.out.println("Won't show:" + sub.getName());
 				return false;
@@ -433,6 +435,14 @@ public class SubstanceFactory extends EntityFactory {
 			return true;
 		}
 
+	}
+	public static class AcceptAllFilter extends EntityFilter<Substance> {
+
+		@Override
+		public boolean accept(Substance sub) {
+			return true;
+		}
+		
 	}
 
 	public static SequenceIndexer getSeqIndexer() {

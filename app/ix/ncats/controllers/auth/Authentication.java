@@ -274,6 +274,7 @@ public class Authentication extends Controller {
         		cred = AdminFactory.externalAuthenticate(username,password);
         }
         if (cred == null) {
+        	flash("message", "Invalid username or password");
             throw new IllegalArgumentException("Invalid credentials!");
         }
         try{
