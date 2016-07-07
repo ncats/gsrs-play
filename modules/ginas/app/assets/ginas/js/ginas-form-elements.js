@@ -61,19 +61,11 @@
                 });
             },
             //not currently used, but may become useful
-            search: function (field, query) {
-                return _.chain(CV[field])
-                    .filter(function (x) {
-                        return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                    })
-                    .sortBy('display').value();
-            },
-            //not currently used, but may become useful
-            searchTags: function (domain, query) {
+            search: function (domain, query) {
                 return CV.getCV(domain).then(function (data) {
                     return _.chain(data.data.content[0].terms)
                         .filter(function (x) {
-                            return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                            return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
                         })
                         .sortBy('display')
                         .value();
@@ -356,7 +348,7 @@
                     scope.change = function () {
                         if (scope.obj) {
                             scope.edit = false;
-                            if (!_.isEmpty(temp)) {
+                            if (!_.isEmpty(temp) && temp.value) {
                                 scope.changed = true;
                             }
                         }
@@ -364,6 +356,7 @@
                     };
 
                     scope.undo = function () {
+                        console.log(temp);
                         if (scope.changed == true) {
                             scope.obj = temp;
                             scope.edit = false;
@@ -401,6 +394,20 @@
                                 }];
                                 scope.values = _.union(scope.values, other);
                             }
+                            _.forEach(scope.values, function(term){
+                                if(term.selected == true){
+                                    if(attrs.type =='multi'){
+                                        if(_.isUndefined(scope.obj)){
+                                            scope.obj =[];
+                                        }
+                                        scope.obj.push(term);
+                                    }else {
+                                        //push to array if array
+                                        scope.obj = term;
+                                    }
+                                    scope.edit= false;
+                                }
+                                });
 
                         });
 
@@ -853,6 +860,7 @@
                 uuid: '@'
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 var json;
                 scope.url = '';
                 scope.make = function () {
@@ -994,6 +1002,9 @@
                     case "sites":
                         templateurl =  baseurl + "assets/templates/selectors/site-selector.html";
                         break;
+                    case "terms":
+                        templateurl =  baseurl + "assets/templates/selectors/cv-terms-selector.html";
+                        break;
                 }
                 return templateurl;
             },
@@ -1003,7 +1014,7 @@
 ////////////See if this is can be moved to reference form or header form///////////////////////////////
             //this is used in the reference form to apply the references to structure/protein etc.
             link: function(scope, element){
-               /* if(_.isUndefined(scope.referenceobj)){
+                if(_.isUndefined(scope.referenceobj)){
                     scope.subClass = scope.parent.substanceClass;
                     if(scope.subClass ==="chemical"){
                         scope.subClass = "structure";
@@ -1012,7 +1023,7 @@
                         scope.subClass = "specifiedSubstance";
                     }
                     scope.referenceobj = scope.parent[scope.subClass];
-                }*/
+                }
             },
 
          //   templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
@@ -1057,6 +1068,9 @@
                                 case "sites":
                                   $scope.formtype=$attrs.formtype;
                                     templateurl =  baseurl + "assets/templates/modals/site-modal.html";
+                                    break;
+                                case "terms":
+                                    templateurl =  baseurl + "assets/templates/modals/cv-terms-modal.html";
                                     break;
                             }
                             return templateurl;

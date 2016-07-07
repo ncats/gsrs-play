@@ -2,14 +2,14 @@
     <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span>
     </label>
     <br>
-    <a ng-show="!edit || !obj.display =='Other'" ng-click="edit=!edit">{{obj.display}}</a>
+    <a ng-show="!edit || !obj.display =='Other'" uib-tooltip="click to edit" ng-click="edit=!edit">{{obj.display}}</a>
     <span class= "float-right" ng-if="changed==true">
         <a ng-click="undo()"><i class="fa fa-undo danger" aria-hidden="true" uib-tooltip="Undo"></i></a>
     </span>
     <select ng-show="edit || !obj || !obj.display =='Other'"
             class="form-control"
             ng-model= obj
-            ng-change="change();"
+            ng-change="change(); changeFunction(obj);"
             ng-blur = toggleEdit();
             ng-options="r.display for r in values track by r.display"
             placeholder ="{{::field}}"

@@ -811,6 +811,12 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
 
 .plain {
    color: black;
+    opacity: 1;
+}
+
+ .plain a{
+   color: black;
+    opacity: 1;
 }
 
 .modification{
