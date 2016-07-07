@@ -13,7 +13,7 @@
                             <div class="col-md-3">
                                 <gsrs-input type="text"
                                             ng-model="obj.domain"
-                                            ng-class="{'disabled' : !obj.$$unlocked}"
+                                            ng-class="{'disabled plain' : !obj.$$unlocked}"
                                             field="domain"
                                             change-function="fieldChange(obj);"
                                             name="domain">
@@ -22,7 +22,7 @@
                             <div class="col-md-3">
                                 <gsrs-input type="dropdown"
                                             ng-model="obj.vocabularyTermType"
-                                            ng-class="{'disabled' : !obj.$$unlocked}"
+                                            ng-class="{'disabled plain' : !obj.$$unlocked}"
                                             cv ="VOCAB_TYPE"
                                             field="vocabularyTermType"
                                             change-function="fieldChange(obj);"
@@ -32,7 +32,7 @@
                             <div class="col-md-3">
                                 <gsrs-input type="multi"
                                              ng-model="obj.fields"
-                                             ng-class="{'disabled' : !obj.$$unlocked}"
+                                             ng-class="{'disabled plain' : !obj.$$unlocked}"
                                              field="fields"
                                              label="Form Fields"
                                             change-function="fieldChange(obj);"
@@ -41,7 +41,7 @@
                             </div>
                             <div class="col-md-1">
                                 <check-box ng-model="obj.editable" field="editable"
-                                           ng-class="{'disabled' : !obj.$$unlocked}"
+                                           ng-class="{'disabled plain' : !obj.$$unlocked}"
                                 ></check-box>
                             </div>
                             <div class="col-md-1">

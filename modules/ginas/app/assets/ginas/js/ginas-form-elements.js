@@ -507,6 +507,10 @@
                         scope.max = 'MAX_SAFE_INTEGER';
                     }
 
+                        scope.removetag= function(tag){
+                        console.log(tag);
+                            console.log(scope.obj);
+                    }
 
                     var template = angular.element(html);
                     element.append(template);
@@ -1012,23 +1016,28 @@
 
 
 ////////////See if this is can be moved to reference form or header form///////////////////////////////
-            //this is used in the reference form to apply the references to structure/protein etc.
             link: function(scope, element){
+                //this is used in the reference form to apply the references to structure/protein etc.
                 if(_.isUndefined(scope.referenceobj)){
-                    scope.subClass = scope.parent.substanceClass;
-                    if(scope.subClass ==="chemical"){
-                        scope.subClass = "structure";
+                    var subClass = scope.parent.substanceClass;
+                    console.log(subClass);
+                    if(subClass ==="chemical"){
+                        subClass = "structure";
                     }
-                    if(scope.subClass ==="specifiedSubstanceG1"){
-                        scope.subClass = "specifiedSubstance";
+                    if(subClass ==="specifiedSubstanceG1"){
+                        subClass = "specifiedSubstance";
                     }
-                    scope.referenceobj = scope.parent[scope.subClass];
+                    scope.referenceobj = _.get(scope.parent, subClass);
+                    console.log(scope);
                 }
+
             },
 
          //   templateUrl: baseurl + "assets/templates/selectors/reference-selector.html",
 
             controller: function ($scope, $element, $attrs) {
+
+                                
                 $scope.opened=false;
                 var modalInstance;
                 $scope.close = function () {
@@ -1101,12 +1110,13 @@
             restrict: 'E',
             replace: true,
             scope: {
-                apply: '=?ngModel',
+                apply: '=?ngModel', //obj.apply
                 obj: '=?', //this is the reference object itself from the form,
                 referenceobj: '=',
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 var uuid;
                 var index;
                 var template;
@@ -1124,23 +1134,29 @@
                     return index >= 0;
                 };
 
-                        template = angular.element('<div class = "text-center"><input type="checkbox" ng-model="obj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
+                        template = angular.element('<div class = "text-center"><label>Apply</label><br><input type="checkbox" ng-model="apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
                         element.append(template);
                         $compile(template)(scope);
                         uuid = scope.obj.uuid;
                         index = _.indexOf(scope.referenceobj.references, uuid);
-                        _.set(scope.obj, 'apply', index >= 0);
-                        scope.parent.references = _.orderBy(scope.parent.references, ['apply'], ['desc']);
+                        _.set(scope.obj, '$$apply', index >= 0);
+                        scope.parent.references = _.orderBy(scope.parent.references, ['$$apply'], ['desc']);
 
 
                 scope.updateReference = function () {
                     index = _.indexOf(scope.referenceobj.references, uuid);
+                    console.log(uuid);
+                    console.log(index);
+                    console.log(scope.obj);
                     if (index >= 0) {
+                        console.log("removing from list");
                         scope.referenceobj.references.splice(index, 1);
-                        scope.obj.apply = false;
+                        scope.obj.$$apply = false;
                     } else {
+                        console.log("applying to list");
                         scope.referenceobj.references.push(uuid);
-                        scope.obj.apply = true;
+                        scope.obj.$$apply = true;
+                        console.log(scope);
                     }
                 };
 

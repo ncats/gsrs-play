@@ -9,7 +9,7 @@
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
-                                <reference-apply ng-if ="applyRefs" ng-model="obj.apply" obj=obj referenceobj=referenceobj parent=parent></reference-apply>
+                                <reference-apply ng-if ="applyRefs" ng-model="obj.$$apply" obj=obj referenceobj=referenceobj parent=parent></reference-apply>
                                 <delete-button ng-if ="!applyRefs" path="references"></delete-button>
                             </div>
                             <div class="col-md-10">
@@ -76,7 +76,7 @@
 
                                     <div class="col-md-2">
                                         <gsrs-input type="multi"
-                                                    ng-model=referenceobj.tags
+                                                    ng-model=obj.tags
                                                     field="tags"
                                                     cv="DOCUMENT_COLLECTION">
                                         </gsrs-input>
