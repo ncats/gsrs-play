@@ -4,6 +4,8 @@ package ix.test;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.util.TestNamePrinter;
+
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -28,7 +30,7 @@ public class FunctionalTest {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
              String content = session.get("ginas/app").getBody();
 
-             assertTrue(content.contains("logout"));
+             assertContains(content,"logout");
 
          }
 
@@ -39,26 +41,24 @@ public class FunctionalTest {
        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
            String content = session.get("ginas/app/substances").getBody();
 
-           assertTrue(content.contains("substances"));
+           assertContains(content,"substances");
 
        }
     }
-
     @Test
     public void testRouteLogin() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/login").getBody();
 
-            assertTrue(content.contains("ginas"));
+            assertContains(content,"ginas");
         }
     }
-
     @Test
     public void testRouteChemicalWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/wizard?kind=chemical").getBody();
-            assertTrue(content.contains("structure-form"));
-            assertTrue(content.contains("moiety-form"));
+            assertContains(content,"structure-form");
+            assertContains(content,"moiety-form");
             testCommonWizardElements(content);
         }catch(Throwable t){
         	t.printStackTrace();
@@ -70,74 +70,82 @@ public class FunctionalTest {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/wizard?kind=protein").getBody();
 
-            assertTrue(content.contains("other-links-form"));
-            assertTrue(content.contains("protein-details-form"));
-            assertTrue(content.contains("subunit-form"));
-            assertTrue(content.contains("disulfide-link-form"));
-            assertTrue(content.contains("glycosylation-form"));
-            assertTrue(content.contains("agent-modification-form"));
-            assertTrue(content.contains("structural-modification-form"));
-            assertTrue(content.contains("physical-modification-form"));
+            assertContains(content,"other-links-form");
+            assertContains(content,"protein-details-form");
+            assertContains(content,"subunit-form");
+            assertContains(content,"disulfide-link-form");
+            assertContains(content,"glycosylation-form");
+            assertContains(content,"agent-modification-form");
+            assertContains(content,"structural-modification-form");
+            assertContains(content,"physical-modification-form");
             testCommonWizardElements(content);
         }
     }
-    
     @Test
     public void testRouteStructurallyDiverseWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
             String content = session.get("ginas/app/wizard?kind=structurallyDiverse").getBody();
-            assertTrue(content.contains("diverse-type-form"));
-            assertTrue(content.contains("diverse-source-form"));
-            assertTrue(content.contains("diverse-organism-form"));
-            assertTrue(content.contains("diverse-details-form"));
-            assertTrue(content.contains("parent-form"));
-            assertTrue(content.contains("part-form"));
+            assertContains(content,"diverse-type-form");
+            assertContains(content,"diverse-source-form");
+            assertContains(content,"diverse-organism-form");
+            assertContains(content,"parent-form");
+            assertContains(content,"part-form");
             testCommonWizardElements(content);
         }
     }
-
+    
     //@Ignore("waiting on login rewrite")
     @Test
     public void testRoutePolymerWizard()  throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/wizard?kind=polymer").getBody();
-            assertTrue(content.contains("polymer-classification-form"));
-            assertTrue(content.contains("polymer-monomer-form"));
-            assertTrue(content.contains("polymer-sru-form"));
+            assertContains(content,"polymer-classification-form");
+            assertContains(content,"polymer-monomer-form");
+            assertContains(content,"polymer-sru-form");
             //assertThat(content).contains("Structural Units");
             testCommonWizardElements(content);
        }
     }
+   
     @Test
     public void testRouteNucleicAcidWizard() throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
 
             String content = session.get("ginas/app/wizard?kind=nucleicAcid").getBody();
-            assertTrue(content.contains("nucleic-acid-details-form"));
-            assertTrue(content.contains("subunit-form"));
-            assertTrue(content.contains("nucleic-acid-sugar-form"));
-            assertTrue(content.contains("nucleic-acid-linkage-form"));
+            assertContains(content,"nucleic-acid-details-form");
+            assertContains(content,"subunit-form");
+            assertContains(content,"nucleic-acid-sugar-form");
+            assertContains(content,"nucleic-acid-linkage-form");
             testCommonWizardElements(content);
         }
     }
 
     @Test
     public void testRouteConceptWizard() throws Exception {
+    	
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
             String content = session.get("ginas/app/wizard?kind=concept").getBody();
-
+            
             testCommonWizardElements(content);
         }
     }
 
     public void testCommonWizardElements(String content){
-        assertTrue(content.contains("name-form"));
-        assertTrue(content.contains("code-form"));
-        assertTrue(content.contains("relationship-form"));
-        assertTrue(content.contains("note-form"));
-        assertTrue(content.contains("property-form"));
-        assertTrue(content.contains("reference-form-only"));
+    	assertContains(content,"name-form");
+    	assertContains(content,"code-form");
+    	assertContains(content,"relationship-form");
+    	assertContains(content,"note-form");
+    	assertContains(content,"property-form");
+    	assertContains(content,"reference-form");
+    }
+    
+    public static void assertContains(String within,String find){
+    	String rep=within;
+    	if(rep.length()>20){
+    		rep=rep.substring(0, 20) + " ... {" + (within.length()-20) +"}" ;
+    	}
+    	assertTrue("Should have found:'" + find + "' in '" + rep + "'" ,within.contains(find));
     }
 
 }
