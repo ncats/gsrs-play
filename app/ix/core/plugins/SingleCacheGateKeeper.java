@@ -2,6 +2,7 @@ package ix.core.plugins;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Logger;
@@ -19,14 +20,14 @@ public class SingleCacheGateKeeper implements GateKeeper {
 
 
     private final KeyMaster keyMaster;
-    private final Cache evictableCache;
+    private final Ehcache evictableCache;
 
     private volatile boolean isClosed;
 
 
     private final int debugLevel;
 
-    public SingleCacheGateKeeper(int debugLevel, KeyMaster keyMaster, Cache evictableCache){
+    public SingleCacheGateKeeper(int debugLevel, KeyMaster keyMaster, Ehcache evictableCache){
         Objects.requireNonNull(keyMaster);
         Objects.requireNonNull(evictableCache);
 
@@ -224,7 +225,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
             return;
         }
 
-        evictableCache.put(new Element(adaptedKey, value, expiration <= 0, expiration, expiration));
+        evictableCache.putWithWriter(new Element(adaptedKey, value, expiration <= 0, expiration, expiration));
 
     }
 
@@ -276,7 +277,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
         disposeCache(evictableCache);
     }
 
-    private void disposeCache(Cache c){
+    private void disposeCache(Ehcache c){
         try {
             //shouldn't call dispose, the CacheManager will do that for us
             CacheManager.getInstance().removeCache(c.getName());

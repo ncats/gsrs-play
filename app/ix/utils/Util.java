@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -42,6 +43,27 @@ public class Util {
         return UserAgents[rand.nextInt(UserAgents.length)];
     }
 
+    /**
+     * This method is only to get what the current stack trace would be for debugging
+     * It returns a string which is essentially the stack trace of a thrown and caught
+     * exception.
+     * @return
+     */
+    public static String getExecutionPath(){
+    	StringBuilder sb=new StringBuilder();
+    	
+    	try{
+    		throw new Exception("");
+    	}catch(Exception e){
+    		StackTraceElement[] stes=e.getStackTrace();
+    		for(int i=1;i<stes.length;i++){
+    			StackTraceElement ste=stes[i];
+    			sb.append("\n +" +ste.toString());
+    		}
+    	}
+    	return sb.toString();
+    }
+    
     public static String sha1 (Http.Request req) {
         return sha1 (req, (String[])null);
     }
@@ -287,5 +309,13 @@ public class Util {
         long sleepTime = milliseconds*1000000L; // convert to nanoseconds
         long startTime = System.nanoTime();
         while ((System.nanoTime() - startTime) < sleepTime) {}
+    }
+    
+    public static byte[] serialize (Object obj) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream ();
+        ObjectOutputStream oos = new ObjectOutputStream (bos);
+        oos.writeObject(obj);
+        oos.close();
+        return bos.toByteArray();
     }
 }
