@@ -1,0 +1,109 @@
+<div class="row">
+    <div class="col-md-12">
+        <form class="form-horizontal" name="termForm" role="form" id="addCVTermForm" novalidate>
+            <div ng-repeat="(index,obj) in  referenceobj.terms">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row" ng-class="{'disabled plain' : !referenceobj.$$unlocked}">
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="text"
+                                            ng-model="obj.value"
+                                            field="value"
+                                            name="value">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="text"
+                                            ng-model="obj.display"
+                                            field="display"
+                                            name="display">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="text"
+                                            ng-model="obj.description"
+                                            field="description"
+                                            name="description">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-2">
+                                <gsrs-input type="text"
+                                            ng-model="obj.origin"
+                                            field="origin"
+                                            name="origin">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1">
+                                <check-box ng-model="obj.hidden" field="hidden"></check-box>
+                            </div>
+                            <div class="col-md-1">
+                                <check-box ng-model="obj.selected" field="selected"></check-box>
+                            </div>
+                            <div class="col-md-1">
+                                <label>Filters</label><br>
+                                <i class="fa fa-filter fa-2x success" ng-click="" uib-tooltip="Add filters"></i>
+                            </div>
+                        </div>
+                        <div class="row"
+                             ng-if="obj.systemCategory">
+                            <div class="col-md-4">
+                                <gsrs-input type="text"
+                                            ng-model="subject"
+                                            cv="CV_DOMAIN"
+                                            field="subject"
+                                            name="subject">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-4">
+                                <gsrs-input type="test"
+                                            ng-model="predicate"
+                                            field="predicate"
+                                            label="predicate">
+                                </gsrs-input>
+                            </div>
+                        </div>
+
+                        <div class="row"
+                             ng-if="obj.simplifiedStructure">
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-4">
+                                <gsrs-input type="text" ng-model="obj.simplifiedStructure"
+                                            field="simplifiedStructure"></gsrs-input>
+                                <rendered smiles={{obj.simplifiedStructure}}></rendered>
+                            </div>
+                            <div class="col-md-4">
+                                <gsrs-input type="text" ng-model="obj.fragmentStructure"
+                                            field="fragmentStructure"></gsrs-input>
+                                <rendered smiles={{obj.fragmentStructure}}></rendered>
+                            </div>
+                        </div>
+                        <div class="row"
+                             ng-if="obj.systemCategory">
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-4">
+                            <gsrs-input type="test"
+                                        ng-model="obj.systemCategory"
+                                        field="systemCategory"
+                                        label="System Category">
+                            </gsrs-input>
+</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-1 pull-right">
+                                <label>Save</label><br>
+                                <i class="fa fa-floppy-o fa-2x success" ng-click="addCV(term);"
+                                   uib-tooltip="Update Term to database"></i>
+                            </div>
+                        </div>
+                    </div>
+                </ng-form>
+            </div>
+        </form>
+    </div>
+</div>
+

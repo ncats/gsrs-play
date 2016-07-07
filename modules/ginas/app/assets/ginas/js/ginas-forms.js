@@ -96,6 +96,7 @@
             fd.append('file-name', $scope.$$uploadFile);
             fd.append('file-type', $scope.$$uploadFile.type);
             //send the file / data to your server
+            console.log(fd);
             $http.post(baseurl + 'upload', fd, {
                 transformRequest: angular.identity,
                 headers: {'Content-Type': undefined}
@@ -114,6 +115,14 @@
         };
 
 
+    });
+
+    ginasForms.controller('cvFormController', function ($scope, CVFields) {
+        CVFields.all(false).then(function (response) {
+            console.log(response);
+            $scope.cv = response.data.content;
+            $scope.count = $scope.cv.length;
+        });
     });
 
     ginasForms.directive('accessForm', function () {
@@ -1011,17 +1020,16 @@
     ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
         return {
             restrict: 'E',
-            replace: 'true',
-            scope: {},
+            replace: true,
+            controller: 'cvFormController',
+          //  scope:{},
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
-            link: function (scope, element, attrs) {
-                var formHolder;
-                // scope.stage= true;
-                CVFields.count().then(function (response) {
-                    scope.count = response.data.total;
-                });
+          link: function (scope, element, attrs) {
 
-                scope.edit = function () {
+
+              console.log(scope);
+
+              /*     scope.edit = function () {
                     formHolder = '<edit-cv-form></edit-cv-form>';
                     scope.toggleStage();
                 };
@@ -1036,14 +1044,7 @@
                     scope.toggleStage();
                 };
 
-                scope.download = function () {
-                    scope.cv = {};
-                    CVFields.all(false).then(function (response) {
-                        scope.cv = response.data.content;
-                        formHolder = '<save-cv-form cv = cv></save-cv-form>';
-                        scope.toggleStage();
-                    });
-                };
+
 
 
                 scope.close = function () {
@@ -1065,7 +1066,7 @@
                     var compiledDirective = $compile(formHolder);
                     var directiveElement = compiledDirective(childScope);
                     elementResult.append(directiveElement);
-                };
+                };*/
             }
         };
     });
@@ -1077,11 +1078,11 @@
         return {
             restrict: 'E',
             replace: true,
-            /*scope: {
-             terms: '=',
-             domain: '='
-             },*/
-            templateUrl: baseurl + "assets/templates/admin/cv-terms.html",
+            scope: {
+             parent: '=',
+             referenceobj: '='
+             },
+            templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html",
             link: function (scope) {
                 console.log(scope);
             }
@@ -1093,14 +1094,23 @@
         return {
             restrict: 'E',
             replace: true,
-            scope: {
-                parent: '='
-            },
+            controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
+                console.log(scope);
                 CVFields.all().then(function (response) {
+                    _.forEach(response.data.content, function (domain){
+                        CVFields. search("VOCAB_TYPE", domain.vocabularyTermType).then(function(response){
+                            domain.vocabularyTermType = response[0];
+                        })
+                    });
                     scope.domains = response.data.content;
                 });
+
+                scope.fieldChange = function(obj){
+                    obj.$$changed = true;
+                };
+
 
                 scope.stage = true;
 
@@ -1147,15 +1157,18 @@
                 };
 
 
-                scope.addDomain = function (domain) {
+                scope.update = function (domain, index) {
                     if (!domain.terms) {
                         _.set(domain, 'terms', []);
                     }
+                    domain = scope.flattenFields(domain);
                     domain.fields = scope.flattenFields(domain.fields);
-                    CVFields.addDomain(domain).then(function (response) {
-                        // scope.domains.push(response.data);
+                    CVFields.updateCV(domain).then(function (response) {
+                        scope.domains[index] =response.data;
+                        CVFields. search("VOCAB_TYPE", response.data.vocabularyTermType).then(function(vt){
+                            response.data.vocabularyTermType = vt[0];
+                        })
                     });
-                    scope.domain = {};
                 };
 
                 scope.updateCV = function (obj) {
@@ -1199,12 +1212,32 @@
         };
     });
 
-    ginasForms.directive('loadCvForm', function (FileReader, CVFields) {
+    ginasForms.directive('loadCvForm', function (FileReader, CVFields, $http) {
         return {
             restrict: 'E',
             replace: true,
+            controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
             link: function (scope, element, attrs) {
+
+                scope.submitFile = function(){
+                    console.log(scope.cvFile);
+                    var fd = new FormData();
+                    console.log(scope);
+                    fd.append('file-name', scope.cvFile);
+                    fd.append('file-type', scope.cvFile.type);
+                    //fd.append('file', scope.cvFile);
+                    console.log(fd);
+                    //send the file / data to your server
+                    $http.post(baseurl + 'cv/upload', fd, {
+                        transformRequest: angular.identity,
+                        headers: {'Content-Type': undefined}
+                    }).success(function (data) {
+                        console.log("success?");
+                        console.log(data);
+                    });
+                };
+
 
                 scope.cv = {};
 
@@ -1219,6 +1252,9 @@
                     }
                     return arr.indexOf(item);
                 };
+
+
+
 
                 scope.loadCVFile = function (file) {
                     var tempValues = [];
@@ -1262,16 +1298,21 @@
         };
     });
 
-    ginasForms.directive('saveCvForm', function () {
+    ginasForms.directive('saveCvForm', function (CVFields) {
         return {
             restrict: 'E',
             replace: true,
-            scope: {
-                cv: '='
-            },
+            controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
             link: function (scope, element, attrs) {
-
+                console.log(scope);
+                scope.download=function() {
+                    CVFields.all(false).then(function (response) {
+                        console.log(response);
+                  //      scope.cv = response.data.content;
+                    });
+                    console.log(scope);
+                }
 
             }
         };

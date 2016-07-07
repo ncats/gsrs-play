@@ -1,0 +1,12 @@
+<div>
+   <label for={{name}}-{{type}} class="text-capitalize">{{label || 'Terms'}}<span class="danger">*</span></label>
+    <br/>
+    <a ng-show="referenceobj.terms.length>0" ng-click="open()" role="button" uib-tooltip ="{{referenceobj.terms.length}} term(s)">
+        <span class="badge">{{referenceobj.terms.length}}</span></a>
+    <div class="text-center" uib-tooltip="Add a term">
+    <a ng-hide="referenceobj.terms.length>0" ng-click="open()" role="button" aria-label="Add a term"  id="{{name}}-{{type}}">
+        <span class="sr-only">Add Terms</span>
+        <i class="fa fa-plus fa-2x success" ng-class="{'disabled': opened == true}"></i></a>
+    </div>
+</div>
+

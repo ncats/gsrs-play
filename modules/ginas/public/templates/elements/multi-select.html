@@ -13,6 +13,7 @@
             id="{{::field}}"
             ng-model=obj
             ng-blur="edit = false"
+            ng-change="changeFunction();"
             display-property="display"
             key-property="value"
             max-tags={{::max}}>
