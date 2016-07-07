@@ -76,13 +76,15 @@ public final class GateKeeperFactory {
                 supplier = ()->{
                     Cache evictableCache = new Cache(new CacheConfiguration()
                             .name(IX_CACHE_EVICTABLE)
-                            .maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
+                            .maxEntriesLocalHeap(maxElements)
+                            //.maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
 
                     Cache nonEvictableCache = new Cache ( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
-                            .maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
+                            .maxEntriesLocalHeap(maxElements)
+                            //.maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(evictableTimeToLive)
                             .timeToIdleSeconds(evictableTimeToIdle));
 
