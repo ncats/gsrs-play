@@ -70,17 +70,23 @@ public class ReIndexService {
         File ginasIx = new File(Play.application().configuration().getString("ix.home"));
 
         System.out.println("#################### Deleting everything");
+        System.out.println("stopping seq indexer");
         Play.application().plugin(SequenceIndexerPlugin.class).onStop();
+        System.out.println("stopping structure indexer");
         Play.application().plugin(StructureIndexerPlugin.class).onStop();
 
         TextIndexerPlugin.prepareTestRestart();
+        System.out.println("stopping text indexer");
         Play.application().plugin(TextIndexerPlugin.class).onStop();
-
+        System.out.println("deleting sequence dir");
         IOUtil.deleteRecursivelyQuitely(new File(ginasIx, "sequence"));
+        System.out.println("deleting structure dir");
         File structureDir = new File(ginasIx, "structure");
         IOUtil.deleteRecursivelyQuitely(structureDir);
+        System.out.println("deleting text indexer storage root dir");
         IOUtil.deleteRecursivelyQuitely(TextIndexerPlugin.getStorageRootDir());
 
+        System.out.println("deleting ginas ix dir");
         try {
 			IOUtil.printDirectoryStructure(ginasIx);
 		} catch (IOException e1) {

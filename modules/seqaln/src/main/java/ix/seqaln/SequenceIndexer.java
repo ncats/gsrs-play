@@ -397,16 +397,12 @@ public class SequenceIndexer {
 
         closeAndIgnore(kmerDir);
         closeAndIgnore(indexDir);
-
+        System.out.println("in shutdown");
         if (localThreadPool) {
-            threadPool.shutdown();
-            try {
-                threadPool.awaitTermination(1, TimeUnit.HOURS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+            threadPool.shutdownNow();
 
+        }
+        System.out.println("done shutdown");
 
     }
 
@@ -583,6 +579,10 @@ public class SequenceIndexer {
         final Map<String, List<HSP>> hsp = new TreeMap<String, List<HSP>>();
 
         for (Map.Entry<String, BitSet> entry : kmers.positionEntrySet()) {
+
+            if(Thread.currentThread().isInterrupted()){
+                return;
+            }
             String kmer = entry.getKey();
             TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
             TopDocs docs = searcher.search(tq, ndocs);
@@ -607,6 +607,9 @@ public class SequenceIndexer {
         // process in the background and return immediately
         String qs = query;
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
+            if(Thread.currentThread().isInterrupted()){
+                return;
+            }
             String seq = getSeq(me.getKey());
             if(seq ==null){
                 System.err.println("error sequence indexer cache invalid for key " + me.getKey());
