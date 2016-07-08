@@ -66,7 +66,7 @@ public abstract class EntityVarcharConverter<K> extends ScalarTypeBase<K> {
 	@Override
 	public K read(DataReader reader) throws SQLException {
 		// TODO Auto-generated method stub
-		String b=reader.getStringClob();
+		String b=reader.getString();
 		try{
 			return convertFromString(b);
 		}catch(Exception e){
@@ -105,7 +105,6 @@ public abstract class EntityVarcharConverter<K> extends ScalarTypeBase<K> {
 
 	@Override
 	public void writeData(DataOutput dataOutput, Object v) throws IOException {
-		System.out.println("WritingData");
 		if (v == null) {
 		      dataOutput.writeBoolean(false);
 		    } else {
