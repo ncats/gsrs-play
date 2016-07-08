@@ -118,11 +118,61 @@
     });
 
     ginasForms.controller('cvFormController', function ($scope, CVFields) {
+
         CVFields.all(false).then(function (response) {
-            console.log(response);
+            _.forEach(response.data.content, function (domain){
+                CVFields. search("VOCAB_TYPE", domain.vocabularyTermType).then(function(response){
+                    domain.vocabularyTermType = response[0];
+                })
+            });
             $scope.cv = response.data.content;
             $scope.count = $scope.cv.length;
         });
+
+        $scope.fieldChange = function(obj){
+            obj.$$changed = true;
+        };
+
+        $scope.flattenFields = function (fields) {
+            _.forEach(fields, function (value, key) {
+                if (!value.value && value.display) {
+                    fields[key] = value.display;
+                } else if (!value.value && !value.display) {
+                    fields[key] = value;
+                } else {
+                    fields[key] = value.value;
+                }
+            });
+            return fields;
+        };
+
+        $scope.update = function (domain, index) {
+            console.log(domain);
+            if (!domain.terms) {
+                _.set(domain, 'terms', []);
+            }
+            domain = $scope.flattenFields(domain);
+            domain.fields = $scope.flattenFields(domain.fields);
+            CVFields.updateCV(domain).then(function (response) {
+                console.log(response);
+               // domain = response.data;
+                CVFields.search("VOCAB_TYPE", response.data.vocabularyTermType).then(function(vt){
+                    response.data.vocabularyTermType = vt[0];
+                });
+                _.set($scope.cv, index, response.data);
+                console.log($scope);
+            });
+        };
+
+        $scope.download = function(){
+            console.log($scope);
+            return $scope.cv;
+        };
+
+        $scope.flush = function(event, index){
+            console.log(event);
+            console.log(index);
+        }
     });
 
     ginasForms.directive('accessForm', function () {
@@ -1029,48 +1079,6 @@
           //  scope:{},
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
           link: function (scope, element, attrs) {
-
-
-              console.log(scope);
-
-              /*     scope.edit = function () {
-                    formHolder = '<edit-cv-form></edit-cv-form>';
-                    scope.toggleStage();
-                };
-
-                scope.create = function () {
-                    formHolder = '<new-cv-form></new-cv-form>';
-                    scope.toggleStage();
-                };
-
-                scope.import = function () {
-                    formHolder = '<load-cv-form></load-cv-form>';
-                    scope.toggleStage();
-                };
-
-
-
-
-                scope.close = function () {
-                    modalInstance.close();
-                };
-
-                scope.open = function (url) {
-                    modalInstance = $uibModal.open({
-                        templateUrl: url,
-                        scope: scope
-                    });
-                };
-
-                scope.toggleStage = function () {
-                    var result = document.getElementsByClassName('cvForm');
-                    var elementResult = angular.element(result);
-                    elementResult.empty();
-                    childScope = scope.$new();
-                    var compiledDirective = $compile(formHolder);
-                    var directiveElement = compiledDirective(childScope);
-                    elementResult.append(directiveElement);
-                };*/
             }
         };
     });
@@ -1082,13 +1090,32 @@
         return {
             restrict: 'E',
             replace: true,
+            controller: 'cvFormController',
             scope: {
              parent: '=',
-             referenceobj: '='
+             referenceobj: '=',
+             index: '='
              },
             templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html",
             link: function (scope) {
                 console.log(scope);
+                scope.addNewTerm = function(){
+                    scope.referenceobj.terms.push({});
+                };
+
+                scope.$on('save', function (e) {
+                    console.log("Save");
+
+                    scope.update(scope.referenceobj, scope.index);
+                });
+
+                //the delete button emits the delete object, which is used here to remove the reference form all arrays that use it
+                scope.$on('delete', function (e) {
+                    scope.referenceobj.terms.splice(scope.referenceobj.terms.indexOf(e.targetScope.obj), 1);
+
+
+                });
+
             }
         };
     });
@@ -1101,116 +1128,7 @@
             controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
-                console.log(scope);
-                CVFields.all().then(function (response) {
-                    _.forEach(response.data.content, function (domain){
-                        CVFields. search("VOCAB_TYPE", domain.vocabularyTermType).then(function(response){
-                            domain.vocabularyTermType = response[0];
-                        })
-                    });
-                    scope.domains = response.data.content;
-                });
-
-                scope.fieldChange = function(obj){
-                    obj.$$changed = true;
-                };
-
-
-                scope.stage = true;
-
-                scope.flattenFields = function (fields) {
-                    _.forEach(fields, function (value, key) {
-                        if (!value.value && value.display) {
-                            fields[key] = value.display;
-                        } else if (!value.value && !value.display) {
-                            fields[key] = value;
-                        } else {
-                            fields[key] = value.value;
-                        }
-                    });
-                    return fields;
-                };
-
-                scope.getValues = function () {
-                    CVFields.getCV(scope.vocab.display).then(function (data) {
-                        scope.domain = data.data.content[0];
-                    });
-                    scope.create = true;
-                };
-
-                scope.deleteCV = function (obj) {
-                    var r = confirm("Are you sure you want to delete this CV?");
-                    if (r == true) {
-                        var terms = scope.domain.terms.splice(scope.domain.terms.indexOf(obj), 1);
-                        if (scope.domain.fields) {
-                            scope.domain.fields = scope.flattenFields(scope.domain.fields);
-                        }
-                        CVFields.updateCV(scope.domain);
-                    }
-                };
-
-                scope.addCV = function (term) {
-                    scope.domain.terms.push(term);
-                    if (scope.domain.fields) {
-                        scope.domain.fields = scope.flattenFields(scope.domain.fields);
-                    }
-                    CVFields.updateCV(scope.domain).then(function (response) {
-                        scope.domain.terms = response.data.terms;
-                        scope.term = {};
-                    });
-                };
-
-
-                scope.update = function (domain, index) {
-                    if (!domain.terms) {
-                        _.set(domain, 'terms', []);
-                    }
-                    domain = scope.flattenFields(domain);
-                    domain.fields = scope.flattenFields(domain.fields);
-                    CVFields.updateCV(domain).then(function (response) {
-                        scope.domains[index] =response.data;
-                        CVFields. search("VOCAB_TYPE", response.data.vocabularyTermType).then(function(vt){
-                            response.data.vocabularyTermType = vt[0];
-                        })
-                    });
-                };
-
-                scope.updateCV = function (obj) {
-                    if (obj) {
-                        obj.fields = scope.flattenFields(obj.fields);
-                        CVFields.updateCV(obj).then(function (response) {
-                            _.forEach(response.data.fields, function (value, key) {
-                                obj.fields[key] = {'value': value, 'display': value};
-                            });
-                        });
-                    } else {
-                        if (scope.domain.fields) {
-                            scope.domain.fields = scope.flattenFields(scope.domain.fields);
-                        }
-                        CVFields.updateCV(scope.domain).then(function (response) {
-                            _.forEach(response.data.fields, function (value, key) {
-                                scope.domain.fields[key] = {'value': value, 'display': value};
-                            });
-                            scope.domain.terms = response.data.terms;
-                        });
-                    }
-                };
-
-                scope.showTerms = function (obj, divid) {
-                    if (!obj.terms) {
-                        _.set(obj, 'terms', []);
-                    }
-                    scope.domain = obj;
-
-                    if (!divid) {
-                        scope.type = obj.id;
-                    }
-                    // var formHolder = '<cv-terms-form domain = domain terms = {{terms}} ></cv-terms-form>';
-                    var url = baseurl + "assets/templates/admin/cv-terms.html";
-                    toggler.show(scope, divid, url);
-
-
-                }
+               
 
             }
         };
@@ -1243,7 +1161,7 @@
                 };
 
 
-                scope.cv = {};
+    //            scope.cv = {};
 
                 scope.getPos = function (item, arr) {
                     if (scope.cv.domains.indexOf(item) == -1
@@ -1309,16 +1227,7 @@
             controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
-                scope.download=function() {
-                    CVFields.all(false).then(function (response) {
-                        console.log(response);
-                  //      scope.cv = response.data.content;
-                    });
-                    console.log(scope);
-                }
-
-            }
+                         }
         };
     });
 

@@ -73,6 +73,7 @@
             },
 
             updateCV: function (domainobj) {
+                console.log(domainobj);
                 var url;
                 var promise;
                 if (domainobj.id) {
@@ -396,14 +397,11 @@
                             }
                             _.forEach(scope.values, function(term){
                                 if(term.selected == true){
-                                    if(attrs.type =='multi'){
-                                        if(_.isUndefined(scope.obj)){
-                                            scope.obj =[];
+                                    if(attrs.type =='multi') {
+                                        if (_.isUndefined(scope.obj)) {
+                                            scope.obj = [];
+                                            scope.obj.push(term);
                                         }
-                                        scope.obj.push(term);
-                                    }else {
-                                        //push to array if array
-                                        scope.obj = term;
                                     }
                                     scope.edit= false;
                                 }
@@ -498,7 +496,9 @@
                                 return !scope.errorMessages.length > 0;
                             };
                         }
-                        scope.edit = false;
+                        if(scope.obj) {
+                            scope.edit = false;
+                        }
                     };
                     //multi select max allowed tags
                     if (attrs.max) {
@@ -859,15 +859,25 @@
         return {
             restrict: 'E',
             scope: {
-                data: '=',
-                format: '=',
-                uuid: '@'
+                data: '=?',
+                format: '=?',
+                uuid: '@?',
+                retriever:'&?'
             },
             link: function (scope, element, attrs) {
                 console.log(scope);
                 var json;
                 scope.url = '';
+
                 scope.make = function () {
+                    console.log("GGGGGGG");
+                    if(scope.retriever){
+                        console.log("HHHH");
+                        var r = scope.retriever();
+                        console.log(r);
+                        _.set(scope, 'data', r);
+                        console.log(scope);
+                    }
                     if (_.isUndefined(scope.data) && _.isUndefined(scope.uuid) ) {
                         download.fetch().then(function (data) {
                             json = JSON.stringify(data.data);
@@ -916,7 +926,7 @@
                         }, 100);
                     }
                 }
-            },
+             },
             template: '<a class="btn btn-primary" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
         };
     });
@@ -933,8 +943,10 @@
                     if (scope.parent) {
                         var arr = _.get(scope.parent, attrs.path);
                         arr.splice(arr.indexOf(scope.obj), 1);
-                    } else {
+                    } else if(scope.substance) {
                         scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
+                    }else{
+                       // console.log("not a substance");
                     }
                 };
 
@@ -1040,8 +1052,9 @@
                                 
                 $scope.opened=false;
                 var modalInstance;
+
                 $scope.close = function () {
-                    $scope.opened=false;
+                    $scope.opened= false;
                     //this has a listener in the reference form that applies the reference to the array of the object
                     //might need to check the type before calling it.
                     $scope.$broadcast('save');
@@ -1068,7 +1081,6 @@
                                     templateurl =  baseurl + "assets/templates/modals/name-org-modal.html";
                                     break;
                                 case "parameter":
-                                    console.log($scope);
                                     templateurl =  baseurl + "assets/templates/modals/parameter-modal.html";
                                     break;
                                 case "reference":
@@ -1079,6 +1091,9 @@
                                     templateurl =  baseurl + "assets/templates/modals/site-modal.html";
                                     break;
                                 case "terms":
+                                    if($attrs.index){
+                                        $scope.index = $attrs.index;
+                                    }
                                     templateurl =  baseurl + "assets/templates/modals/cv-terms-modal.html";
                                     break;
                             }
@@ -1093,10 +1108,9 @@
                             }
                         }
                     });
+                    //this handles clicking outside of the modal to close it
                     modalInstance.result.then(function(){
-                        $scope.close();
                     }, function(){
-                        //this handles clicking outside of the modal to close it
                         $scope.close();
                     });
 

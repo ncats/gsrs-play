@@ -18,7 +18,7 @@
                         <load-cv-form cv = cv></load-cv-form>
 
                     </uib-tab>
-                    <uib-tab select ="download();">
+                    <uib-tab deselect = "flush($event, $selectedIndex);">
                         <uib-tab-heading>
                             <i class="fa fa-download fa-4x "></i><br>Download CV</a>
                         </uib-tab-heading>

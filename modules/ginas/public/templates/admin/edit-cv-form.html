@@ -6,7 +6,7 @@
     <div class="col-md-12">
 
         <form class="form-horizontal" name="termForm" role="form" id="addDomainForm" novalidate>
-            <div ng-repeat="(index,obj) in domains">
+            <div ng-repeat="(index,obj) in cv">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
@@ -46,6 +46,7 @@
                             </div>
                             <div class="col-md-1">
                                 <modal-form-button type="terms"
+                                                   index = {{index}}
                                                    referenceobj="obj"
                                                    parent="parent">
                                 </modal-form-button>

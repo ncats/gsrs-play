@@ -3,10 +3,7 @@
         <span ng-hide="edit" ng-click="edit = !edit">
         <pre ng-if="!edit && !obj==''">{{obj}}</pre>
         </span>
-    <span ng-hide="edit" ng-click="edit = !edit">
-        <span ng-if="!edit && obj==''" uib-tooltip="Add {{label || field}}"><i
-                class="fa fa-plus fa-2x success"></i></a></span>
-        </span>
+
         <textarea
                 ng-show="edit"
                 type="text"

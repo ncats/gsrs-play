@@ -22,7 +22,7 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <gsrs-input type="dropdown"
                                                     ng-model="obj.propertyType"
                                                     field="propertyType"
@@ -30,8 +30,9 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         <modal-form-button type="amount"
+                                                           field="value"
                                                            referenceobj="obj"
                                                            parent="parent">
                                         </modal-form-button>
@@ -52,6 +53,7 @@
                                         </check-box-view-edit>
                                     </div>
                                 </div>
+                                <br>
                                 <div class="row">
                                     <div class="col-md-12 pull-left">
                                         <modal-form-button type="parameter"
