@@ -39,7 +39,9 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         this.cacheName = cacheName;
        this.dir = dir;
     }
-boolean init=false;
+
+    private volatile boolean init=false;
+
     @Override
     public Object createEntry(Object key) throws Exception {
 
@@ -114,6 +116,7 @@ boolean init=false;
                 Logger.debug("#### closing cache writer "+cacheName
                         +"; "+db.count()+" entries #####");
                 db.close();
+                db =null;
             }
             catch (Exception ex) {
                 Logger.error("Can't close lucene index!", ex);
