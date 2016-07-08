@@ -1208,7 +1208,7 @@ public class TextIndexer implements Closeable{
         //facet subsearching so we only need to have
         //a single thread...
         threadPool = ForkJoinPool.commonPool();
-        scheduler =  Executors.newSingleThreadScheduledExecutor();
+        scheduler =  null;
         isShutDown = false;
         isEmptyPool = true;
       //  setFetchWorkers (FETCH_WORKERS);
@@ -2770,7 +2770,9 @@ public class TextIndexer implements Closeable{
             System.out.println("Shutting down scheduler");
           //  scheduler.shutdown();
            // scheduler.awaitTermination(1, TimeUnit.MINUTES);
-            scheduler.shutdownNow();
+            if(scheduler !=null){
+                scheduler.shutdownNow();
+            }
             System.out.println("scheduler shut down");
             //System.out.println("done waiting for termination");
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);

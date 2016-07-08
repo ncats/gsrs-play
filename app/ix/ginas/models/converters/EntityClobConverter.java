@@ -62,9 +62,12 @@ public abstract class EntityClobConverter<K> extends ScalarTypeBase<K> {
 	@Override
 	public K read(DataReader reader) throws SQLException {
 		// TODO Auto-generated method stub
-		String b=reader.getStringClob();
+		String b;
+
 		try{
-			return convertFromString(b);
+			b = reader.getString();
+			K thing=convertFromString(b);
+			return thing;
 		}catch(Exception e){
 			e.printStackTrace();
 			throw new SQLException(e);

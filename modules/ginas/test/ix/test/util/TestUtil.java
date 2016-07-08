@@ -1,5 +1,7 @@
 package ix.test.util;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -63,4 +65,13 @@ public class TestUtil {
 
         });
     }
+    public static void assertContains(String within,String find){
+    	String rep=within;
+    	if(rep.length()>20){
+    		rep=rep.substring(0, 20) + " ... {" + (within.length()-20) +"}" ;
+    	}
+    	assertTrue("Should have found:'" + find + "' in '" + rep + "'" ,within.contains(find));
+    }
+    
+    
 }

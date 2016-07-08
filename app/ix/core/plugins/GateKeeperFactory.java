@@ -7,16 +7,12 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.MemoryUnit;
-
-import ix.utils.Util;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sf.ehcache.config.SizeOfPolicyConfiguration;
-import net.sf.ehcache.constructs.blocking.CacheEntryFactory;
 import net.sf.ehcache.writer.CacheWriter;
 import net.sf.ehcache.writer.writebehind.operations.SingleOperationType;
 
@@ -108,7 +104,7 @@ public final class GateKeeperFactory {
         private int debugLevel = 2;
 
         private final int maxElements, timeToLive, timeToIdle;
-        private Integer evictableMaxElements, evictableTimeToLive,evictableTimeToIdle;
+        private Integer nonEvictableMaxElements, nonEvictableTimeToLive, nonEvictableTimeToIdle;
 
         private GinasFileBasedCacheAdapter cacheAdapter =DoNothingDBCacheWriter.INSTANCE;
         
@@ -132,15 +128,15 @@ public final class GateKeeperFactory {
 
 
         public Builder useNonEvictableCache(int maxElements, int timeToLive, int timeToIdle){
-            this.evictableMaxElements = maxElements;
-            this.evictableTimeToLive = timeToLive;
-            this.evictableTimeToIdle = timeToIdle;
+            this.nonEvictableMaxElements = maxElements;
+            this.nonEvictableTimeToLive = timeToLive;
+            this.nonEvictableTimeToIdle = timeToIdle;
             return this;
         }
 
         public GateKeeperFactory build(){
             Supplier<GateKeeper> supplier;
-            if(evictableMaxElements ==null){
+            if(nonEvictableMaxElements ==null){
                 //single cache
 
                 supplier = ()->{
@@ -148,7 +144,7 @@ public final class GateKeeperFactory {
                     Cache evictableCache = new Cache( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
                             //.maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
-                            .maxElementsInMemory(10)
+                            .maxEntriesLocalHeap(10)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     CacheManager.getInstance().removeCache(evictableCache.getName());
@@ -163,7 +159,7 @@ public final class GateKeeperFactory {
                 supplier = ()->{
                     Cache evictableCache = new Cache(new CacheConfiguration()
                             .name(IX_CACHE_EVICTABLE)
-                            .maxElementsInMemory(maxElements)
+                            .maxEntriesLocalHeap(maxElements)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     
@@ -171,11 +167,11 @@ public final class GateKeeperFactory {
                     Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheAdapter);
                     Cache nonEvictableCache = new Cache ( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
-                            .maxElementsInMemory(maxElements)
-                            //.maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
-                            .timeToLiveSeconds(evictableTimeToLive)
-                            .sizeOfPolicy((new SizeOfPolicyConfiguration()).maxDepth(0).maxDepthExceededBehavior(SizeOfPolicyConfiguration.MaxDepthExceededBehavior.CONTINUE))
-                            .timeToIdleSeconds(evictableTimeToIdle));
+                            .maxEntriesLocalHeap(nonEvictableMaxElements)
+                            //.maxBytesLocalHeap(nonEvictableMaxElements, MemoryUnit.MEGABYTES)
+                            .timeToLiveSeconds(nonEvictableTimeToLive)
+                           // .sizeOfPolicy((new SizeOfPolicyConfiguration()).maxDepth(0).maxDepthExceededBehavior(SizeOfPolicyConfiguration.MaxDepthExceededBehavior.CONTINUE))
+                            .timeToIdleSeconds(nonEvictableTimeToIdle));
                     nonEvictableCache.registerCacheWriter(cacheAdapter);
 
                     Ehcache eh_nonEvictableCache= new SelfPopulatingCache(nonEvictableCache,cacheAdapter);
