@@ -1,5 +1,6 @@
 package ix.ginas.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -11,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ix.core.models.Keyword;
 
 
-public class EmbeddedKeywordList implements List<Keyword>{
+public class EmbeddedKeywordList implements List<Keyword>, Serializable{
 	@JsonIgnore
 	private List<Keyword> keywords = new ArrayList<Keyword>();
 	

@@ -8,11 +8,13 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name="ix_core_value")
 @Inheritance
 @DiscriminatorValue("VAL")
-public class Value extends LongBaseModel {
+public class Value extends LongBaseModel implements Serializable{
     @Id
     public Long id;
     public String label;

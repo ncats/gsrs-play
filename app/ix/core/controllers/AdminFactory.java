@@ -1,7 +1,6 @@
 package ix.core.controllers;
 
 import ix.core.models.*;
-import ix.core.models.Role;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authenticator;
@@ -360,15 +359,9 @@ public class AdminFactory extends Controller {
 
     public static List<Group> groupsByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Group> groupByUser = new ArrayList<Group>();
-        String sql = "select IX_CORE_GROUP_ID from IX_CORE_GROUP_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
-        SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
-        sqlQuery.setParameter("userId", userId);
-        Set<SqlRow> sqlRows = sqlQuery.findSet();
-
-        for (SqlRow row : sqlRows) {
-            groupByUser.add(groupfinder.byId(((Number) row.get("ix_core_group_id")).longValue()));
-        }
+        
+        
+        List<Group> groupByUser = AdminFactory.groupfinder.where().eq("members.id", userId).findList();
         return groupByUser;
     }
 
