@@ -26,6 +26,8 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
     private final File dir;
     private final String cacheName;
 
+    private volatile boolean initialized;
+
     private int serializableCount=0, notSerializableCount=0;
     public FileDbCache(File dir, String cacheName){
         Objects.requireNonNull(dir);
@@ -76,23 +78,27 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void init() {
-        //use this instead of dir.mkdirs()
-        //because it will throw IOException with reason why dir couldn't be created
-        //mkdirs just returns boolean
-        try{
-        	System.out.println("Resetting persist cache");
-        	Util.tryToDeleteRecursively(dir);
-            Files.createDirectories(dir.toPath());
-        }catch(IOException e){
-            throw new RuntimeException("error creating dir", e);
-        }
+        if(!initialized) {
+            //use this instead of dir.mkdirs()
+            //because it will throw IOException with reason why dir couldn't be created
+            //mkdirs just returns boolean
+            try {
+                System.out.println("Resetting persist cache");
+                Util.tryToDeleteRecursively(dir);
+                Files.createDirectories(dir.toPath());
+            } catch (IOException e) {
+                throw new RuntimeException("error creating dir", e);
+            }
 
-        EnvironmentConfig envconf = new EnvironmentConfig ();
-        envconf.setAllowCreate(true);
-        Environment env = new Environment (dir, envconf);
-        DatabaseConfig dbconf = new DatabaseConfig ();
-        dbconf.setAllowCreate(true);
-        db = env.openDatabase(null, cacheName, dbconf);
+            EnvironmentConfig envconf = new EnvironmentConfig();
+            envconf.setAllowCreate(true);
+            Environment env = new Environment(dir, envconf);
+            DatabaseConfig dbconf = new DatabaseConfig();
+            dbconf.setAllowCreate(true);
+            db = env.openDatabase(null, cacheName, dbconf);
+
+            initialized=true;
+        }
     }
 
     @Override

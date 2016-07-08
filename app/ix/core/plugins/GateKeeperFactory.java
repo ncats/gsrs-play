@@ -148,7 +148,7 @@ public final class GateKeeperFactory {
                     Cache evictableCache = new Cache( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
                             //.maxBytesLocalHeap(maxElements, MemoryUnit.MEGABYTES)
-                            .maxElementsInMemory(10)
+                            .maxEntriesLocalHeap(10)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     CacheManager.getInstance().removeCache(evictableCache.getName());
@@ -163,7 +163,7 @@ public final class GateKeeperFactory {
                 supplier = ()->{
                     Cache evictableCache = new Cache(new CacheConfiguration()
                             .name(IX_CACHE_EVICTABLE)
-                            .maxElementsInMemory(maxElements)
+                            .maxEntriesLocalHeap(maxElements)
                             .timeToLiveSeconds(timeToLive)
                             .timeToIdleSeconds(timeToIdle));
                     
@@ -171,7 +171,7 @@ public final class GateKeeperFactory {
                     Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheAdapter);
                     Cache nonEvictableCache = new Cache ( new CacheConfiguration()
                             .name(IX_CACHE_NOT_EVICTABLE)
-                            .maxElementsInMemory(maxElements)
+                            .maxEntriesLocalHeap(maxElements)
                             //.maxBytesLocalHeap(evictableMaxElements, MemoryUnit.MEGABYTES)
                             .timeToLiveSeconds(evictableTimeToLive)
                             .sizeOfPolicy((new SizeOfPolicyConfiguration()).maxDepth(0).maxDepthExceededBehavior(SizeOfPolicyConfiguration.MaxDepthExceededBehavior.CONTINUE))
