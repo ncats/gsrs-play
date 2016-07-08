@@ -11,8 +11,10 @@
             placeholder="{{label || field}}"
             name="{{::field}}"
             id="{{::field}}"
-            ng-model=obj
+            ng-model= obj
             ng-blur="edit = false"
+            ng-change="changeFunction();"
+            on-tag-removing="removetag($tag);"
             display-property="display"
             key-property="value"
             max-tags={{::max}}>

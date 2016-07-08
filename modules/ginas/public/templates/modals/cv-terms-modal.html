@@ -1,0 +1,22 @@
+<div>
+    <div class="modal-header">
+        <div class="row">
+            <form-header type="Edit Terms" parent="parent"></form-header>
+            <a type="button" class="close" ng-click="close()" uib-tooltip="Close" aria-label="Close"><i
+                    class="fa fa-times danger"></i></a>
+        </div>
+    </div>
+    <div class="modal-body">
+        <div class = "row" ng-if="!referenceobj.$$unlocked">
+            <div class ="col-md-3"><span class ="danger">These terms are un-editable. Click the lock to unlock them.</span></div>
+            <a ng-click="referenceobj.$$unlocked = true" role="button" aria-label="Edit Terms">
+                <i class="fa fa-lock fa-2x warning"></i></a>
+            </div>
+        <cv-terms-form referenceobj= referenceobj parent=parent ng-cloak></cv-terms-form>
+        <br>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-primary" ng-click="close()">Close</button>
+    </div>
+</div>
+

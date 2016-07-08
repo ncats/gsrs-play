@@ -76,6 +76,7 @@ object ApplicationBuild extends Build {
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"be.objectify" %% "deadbolt-java" % "2.3.3"
+      ,"com.sleepycat" % "je" % "5.0.73"
   )
 
   val scalaBuildOptions = Seq(

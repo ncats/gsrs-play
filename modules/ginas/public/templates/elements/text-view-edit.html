@@ -6,6 +6,7 @@
                class="form-control"
                ng-model= obj
                ng-blur="edit = !edit"
+               ng-change="changeFunction({model: obj});"
                ng-required="required"
                placeholder ="{{label || field}}"
                title="{{::field}}"

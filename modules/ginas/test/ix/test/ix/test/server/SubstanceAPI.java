@@ -196,11 +196,38 @@ public class SubstanceAPI {
     public WSResponse fetchSubstancesSearch() {
         return session.createRequestHolder(API_URL_SUBSTANCES_SEARCH).get().get(timeout);
     }
-    public WSResponse fetchSubstancesUIBrowse() {
-        return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE).get().get(timeout);
+    public WSResponse fetchSubstancesUIBrowse(boolean showDeprecated) {
+        if(showDeprecated){
+	    	return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE)
+	    			.setQueryParameter("showDeprecated", "true")
+	        		.get().get(timeout);
+        }else{
+        	return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE)
+            		.get().get(timeout);
+        		
+    	}
+    }
+    
+    public WSResponse fetchSubstancesUISearch(String searchString,String facet) {
+        if(facet==null){
+        	return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE)
+        		.setQueryParameter("q", searchString)
+        		.get().get(timeout);
+        }else{
+        	return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE)
+            		.setQueryParameter("q", searchString)
+            		.setQueryParameter("facet", facet)
+            		.get().get(timeout);
+        }
+    }
+    public String fetchSubstancesUISearchHTML(String searchString, String facet) {
+    	return fetchSubstancesUISearch(searchString,facet).getBody();
     }
     public String fetchSubstancesUIBrowseHTML() {
-        return fetchSubstancesUIBrowse().getBody();
+        return fetchSubstancesUIBrowse(false).getBody();
+    }
+    public String fetchSubstancesWithDeprecatedUIBrowseHTML() {
+        return fetchSubstancesUIBrowse(true).getBody();
     }
     
 
