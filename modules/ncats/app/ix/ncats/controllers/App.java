@@ -868,16 +868,17 @@ public class App extends Authentication {
         return null;
     }
     static protected String formatKey(String key){
-    	if (key.length() > 10) {
-            key = key.substring(0, 10);
-        }
+//    	if (key.length() > 10) {
+//            key = key.substring(0, 10);
+//        }
     	return key;
     }
 
     static protected SearchResult cacheKey (SearchResult result, String key) {
     	key=formatKey(key);
-        IxCache.set(key, result); // create alias       
+//      IxCache.set(key, result); // create alias       
         result.setKey(key);
+    	
         return result;
     }
 
