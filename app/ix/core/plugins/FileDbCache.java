@@ -78,6 +78,7 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void init() {
+        System.out.println("calling init");
         if(!initialized) {
             //use this instead of dir.mkdirs()
             //because it will throw IOException with reason why dir couldn't be created
@@ -103,15 +104,16 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void dispose() throws CacheException {
-
-        
         if (db != null) {
+            System.out.println("calling dispose");
             try {
                 Logger.debug("#### closing cache writer "+cacheName
                         +"; "+db.count()+" entries #####");
                 db.close();
+                db =null;
             }
             catch (Exception ex) {
+                ex.printStackTrace();
                 Logger.error("Can't close lucene index!", ex);
             }
         }
