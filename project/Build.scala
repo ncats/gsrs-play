@@ -38,8 +38,8 @@ object ApplicationBuild extends Build {
     "commons-io" % "commons-io" % "2.4",
 
     "net.sourceforge.htmlunit" % "htmlunit" % "2.20" % Test,
-    "com.zaxxer" % "HikariCP-java6" % "2.3.8"
-      ,"com.edulify" %% "play-hikaricp" % "2.0.6"
+    "com.zaxxer" % "HikariCP" % "2.4.6"
+      ,"com.edulify" %% "play-hikaricp" % "2.1.0"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
       ,"com.hazelcast" % "hazelcast" % "3.5.2" 
