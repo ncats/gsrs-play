@@ -83,7 +83,9 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void init() {
-    	if(init)return;
+    	if(init){
+            return;
+        }
     	//use this instead of dir.mkdirs()
         //because it will throw IOException with reason why dir couldn't be created
         //mkdirs just returns boolean
