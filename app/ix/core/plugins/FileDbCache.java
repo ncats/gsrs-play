@@ -1,6 +1,8 @@
 package ix.core.plugins;
 
 import com.sleepycat.je.*;
+
+import ix.core.models.BaseModel;
 import ix.utils.Util;
 import net.sf.ehcache.CacheEntry;
 import net.sf.ehcache.CacheException;
@@ -16,6 +18,9 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Objects;
 
+
+import play.db.ebean.Model;
+
 /**
  * Created by katzelda on 7/7/16.
  */
@@ -26,8 +31,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
     private final File dir;
     private final String cacheName;
 
-    private volatile boolean initialized;
-
     private int serializableCount=0, notSerializableCount=0;
     public FileDbCache(File dir, String cacheName){
         Objects.requireNonNull(dir);
@@ -36,11 +39,11 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         this.cacheName = cacheName;
        this.dir = dir;
     }
-
+boolean init=false;
     @Override
     public Object createEntry(Object key) throws Exception {
 
-        
+        //System.out.println("Finding key:" + key);
         if (!(key instanceof Serializable)) {
             throw new IllegalArgumentException
                     ("Cache key "+key+" is not serliazable!");
@@ -55,7 +58,7 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
                 try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data.getData(), data.getOffset(), data.getSize()))) {
                     elm = new Element(key, ois.readObject());
                 }
-        
+                //System.out.println("Found object for:" + key);
             }
             else if (status == OperationStatus.NOTFOUND) {
         
@@ -78,42 +81,41 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void init() {
-        System.out.println("calling init");
-        if(!initialized) {
-            //use this instead of dir.mkdirs()
-            //because it will throw IOException with reason why dir couldn't be created
-            //mkdirs just returns boolean
-            try {
-                System.out.println("Resetting persist cache");
-                Util.tryToDeleteRecursively(dir);
-                Files.createDirectories(dir.toPath());
-            } catch (IOException e) {
-                throw new RuntimeException("error creating dir", e);
-            }
-
-            EnvironmentConfig envconf = new EnvironmentConfig();
-            envconf.setAllowCreate(true);
-            Environment env = new Environment(dir, envconf);
-            DatabaseConfig dbconf = new DatabaseConfig();
-            dbconf.setAllowCreate(true);
-            db = env.openDatabase(null, cacheName, dbconf);
-
-            initialized=true;
+    	if(init)return;
+    	//use this instead of dir.mkdirs()
+        //because it will throw IOException with reason why dir couldn't be created
+        //mkdirs just returns boolean
+        try{
+            Files.createDirectories(dir.toPath());
+        }catch(IOException e){
+            throw new RuntimeException("error creating dir", e);
         }
+
+        EnvironmentConfig envconf = new EnvironmentConfig ();
+        envconf.setAllowCreate(true);
+        Environment env = new Environment (dir, envconf);
+        try{
+        	env.removeDatabase(null, cacheName);
+        }catch(Exception e){
+        	Logger.error("No persist cache to delete", e);
+        }
+        DatabaseConfig dbconf = new DatabaseConfig ();
+        dbconf.setAllowCreate(true);
+        db = env.openDatabase(null, cacheName, dbconf);
+        init=true;
     }
 
     @Override
     public void dispose() throws CacheException {
+
+        
         if (db != null) {
-            System.out.println("calling dispose");
             try {
                 Logger.debug("#### closing cache writer "+cacheName
                         +"; "+db.count()+" entries #####");
                 db.close();
-                db =null;
             }
             catch (Exception ex) {
-                ex.printStackTrace();
                 Logger.error("Can't close lucene index!", ex);
             }
         }
@@ -130,8 +132,14 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
             
             return;
         }else{
-        	
+        	//Ebean models are not seralizable, as much as we would like to 
+        	//believe they are :-[
+        	if(elm.getObjectValue() instanceof Model){
+        		notSerializableCount++;
+        		return;
+        	}
         }
+        //System.out.println("Writing key:" + elm.getObjectKey());
         serializableCount++;
         //TODO is this a safe cast?
 
