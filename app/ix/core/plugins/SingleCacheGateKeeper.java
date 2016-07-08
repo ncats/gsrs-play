@@ -2,10 +2,13 @@ package ix.core.plugins;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -19,14 +22,14 @@ public class SingleCacheGateKeeper implements GateKeeper {
 
 
     private final KeyMaster keyMaster;
-    private final Cache evictableCache;
+    private final Ehcache evictableCache;
 
     private volatile boolean isClosed;
 
 
     private final int debugLevel;
 
-    public SingleCacheGateKeeper(int debugLevel, KeyMaster keyMaster, Cache evictableCache){
+    public SingleCacheGateKeeper(int debugLevel, KeyMaster keyMaster, Ehcache evictableCache){
         Objects.requireNonNull(keyMaster);
         Objects.requireNonNull(evictableCache);
 
@@ -124,8 +127,10 @@ public class SingleCacheGateKeeper implements GateKeeper {
    }
 
     @Override
-    public Statistics getStatistics() {
-        return evictableCache.getStatistics();
+    public List<Statistics> getStatistics() {
+    	List<Statistics> statlist=new ArrayList<Statistics>();
+    	statlist.add(evictableCache.getStatistics());
+        return statlist;
     }
 
     @Override
@@ -147,7 +152,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
         Element e = evictableCache.get(key);
 
 
-        if(e ==null || regeneratePredicate.test(e)){
+        if(e ==null || e.getObjectValue() ==null || regeneratePredicate.test(e)){
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
@@ -187,7 +192,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
     public Object getRaw(String key){
         Element e = getRawElement(key);
 
-        if(e ==null){
+        if(e ==null ){
             return null;
         }
         return e.getObjectValue();
@@ -224,7 +229,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
             return;
         }
 
-        evictableCache.put(new Element(adaptedKey, value, expiration <= 0, expiration, expiration));
+        evictableCache.putWithWriter(new Element(adaptedKey, value, expiration <= 0, expiration, expiration));
 
     }
 
@@ -276,7 +281,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
         disposeCache(evictableCache);
     }
 
-    private void disposeCache(Cache c){
+    private void disposeCache(Ehcache c){
         try {
             //shouldn't call dispose, the CacheManager will do that for us
             CacheManager.getInstance().removeCache(c.getName());

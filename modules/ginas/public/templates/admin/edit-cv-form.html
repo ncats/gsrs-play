@@ -4,63 +4,77 @@
     </button>
     <span><i class="fa fa-question-circle fa-lg"></i></span>
     <div class="col-md-12">
-        <ng-form name="termForm" id="addDomainForm" novalidate>
-            <div class="row form-row">
-                <div class="col-md-3">
-                    <text-input ng-model="domain.domain" field="domain" name="domain"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="domain.vocabularyTermType" field="vocabularyTermType"
-                                name="vocabularyTermType" label="Vocabulary Term Type"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <multi-select ng-model="domain.fields" field="fields" label="Form Fields"
-                                  CV="CV_DOMAIN"></multi-select>
-                </div>
-                <div class="col-md-1">
-                    <check-box ng-model="domain.editable" field="editable"></check-box>
-                </div>
-                <div class="col-md-1">
-                    <label>Add Terms</label><br>
-                    <i class="fa  fa-plus fa-2x success" ng-click="showTerms(domain, 'termForm');"
-                       uib-tooltip="Add Terms"></i>
 
-                </div>
-                <div class="col-md-1 pull-right">
-                    <label>Save</label><br>
-                    <i class="fa fa-floppy-o fa-2x success" ng-click="addDomain(domain);"
-                       uib-tooltip="Add cv to database"></i>
-                </div>
-            </div>
-            <div class="termForm"></div>
-        </ng-form>
-        <div ng-repeat="obj in domains">
-            <div class="row">
-                <hr>
-                <div class="col-md-3">
-                    <text-view-edit obj="obj" field="domain"></text-view-edit>
-                </div>
-                <div class="col-md-3">
-                    <text-view-edit obj="obj" field="vocabularyTermType" label="Vocabulary Term Type"></text-view-edit>
-                </div>
-                <div class="col-md-3">
-                    <multi-view-edit obj="obj" field="fields" label="Form Fields" CV="CV_DOMAIN"></multi-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj="obj" field="editable"></check-box-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <label>Terms ({{obj.terms.length}})</label><br>
-                    <i class="fa  fa-list-ul fa-2x success" ng-click="showTerms(obj);" uib-tooltip="View Terms"></i>
+        <form class="form-horizontal" name="termForm" role="form" id="addDomainForm" novalidate>
+            <div ng-repeat="(index,obj) in domains">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <gsrs-input type="text"
+                                            ng-model="obj.domain"
+                                            ng-class="{'disabled plain' : !obj.$$unlocked}"
+                                            field="domain"
+                                            change-function="fieldChange(obj);"
+                                            name="domain">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-3">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.vocabularyTermType"
+                                            ng-class="{'disabled plain' : !obj.$$unlocked}"
+                                            cv ="VOCAB_TYPE"
+                                            field="vocabularyTermType"
+                                            change-function="fieldChange(obj);"
+                                            label="Vocabulary Term Type">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-3">
+                                <gsrs-input type="multi"
+                                             ng-model="obj.fields"
+                                             ng-class="{'disabled plain' : !obj.$$unlocked}"
+                                             field="fields"
+                                             label="Form Fields"
+                                            change-function="fieldChange(obj);"
+                                            CV="CV_DOMAIN">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-1">
+                                <check-box ng-model="obj.editable" field="editable"
+                                           ng-class="{'disabled plain' : !obj.$$unlocked}"
+                                ></check-box>
+                            </div>
+                            <div class="col-md-1">
+                                <modal-form-button type="terms"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                                <!--<label>Add Terms</label><br>
+                                <i class="fa  fa-plus fa-2x success" ng-click="showTerms(obj, 'termForm');"
+                                   uib-tooltip="Add Terms"></i>
+-->
+                            </div>
+                            <div class="col-md-1 pull-right" ng-hide="obj.$$unlocked">
+                                <label>Edit</label><br>
+                                <a ng-click="obj.$$unlocked = true" role="button" aria-label="Edit CV">
+                                    <i class="fa fa-lock fa-2x warning"></i></a>
+                                </div>
+                            <div class="col-md-1 pull-right" ng-hide="!obj.$$unlocked">
+                            <label>Save</label><br>
+                                <i class="fa fa-floppy-o fa-2x success" ng-click="update(obj, index);"
+                                   uib-tooltip="Save Changes" ng-class="{'disabled' : !obj.$$changed}"></i>
+                            </div>
+                        </div>
 
-                </div>
-                <div class="col-md-1 pull-right">
-                    <label>Save</label><br>
-                    <i class="fa fa-floppy-o fa-2x success" ng-click="updateCV(obj);"
-                       uib-tooltip="Update Domain in database"></i>
-                </div>
+                        <div class="termForm"></div>
+                        </div>
+                </ng-form>
             </div>
-            <div class={{obj.id}}></div>
-        </div>
+        </form>
+        <br>
+        <br>
+        <button class="btn btn-primary" ng-click="addNew(termForm, 'domains')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="domains.length>0">nother</span> CV
+        </button>
     </div>
 </div>

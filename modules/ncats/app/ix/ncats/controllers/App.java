@@ -941,9 +941,10 @@ public class App extends Authentication {
     public static Result render (final String value, final int size) {
         String key = Util.sha1(value)+"::"+size;
         try {
+        	
             response().setContentType("image/svg+xml");
-            return getOrElse (0l, key, new Callable<Result>() {
-                    public Result call () throws Exception {
+            byte[] resp = getOrElse (0l, key, new Callable<byte[]>() {
+                    public byte[] call () throws Exception {
                         MolHandler mh = new MolHandler (value);
                         Molecule mol = mh.getMolecule();
                         if (mol.getDim() < 2) {
@@ -951,9 +952,10 @@ public class App extends Authentication {
                         }
                         
                         Logger.info("ok");
-                        return ok (render (mol, "svg", size, null));
+                        return render (mol, "svg", size, null);
                     }
                 });
+            return ok(resp);
         }
         catch (Exception ex) {
             Logger.error("Not a valid molecule:\n"+value, ex);
@@ -1153,18 +1155,18 @@ public class App extends Authentication {
                 + ":" + atomMap;
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
-                Result result = getOrElse (key, new Callable<Result> () {
-                        public Result call () throws Exception {
+                byte[] result = getOrElse (key, new Callable<byte[]> () {
+                        public byte[] call () throws Exception {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
-                                return ok (render (struc, format, size, amap));
+                                return render (struc, format, size, amap);
                             }
                             return null;
                         }
                     });
                 if (result != null) {
                     response().setContentType(mime);
-                    return result;
+                    return ok(result);
                 }
             }
             catch (Exception ex) {

@@ -1,17 +1,28 @@
 package ix.core.plugins;
 
 import ix.core.CacheStrategy;
+import ix.core.models.BaseModel;
+import ix.utils.Util;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 import play.Logger;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
 
 /**
  * Created by katzelda on 5/19/16.
@@ -20,15 +31,15 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
     private final KeyMaster keyMaster;
-    private final Cache evictableCache;
-    private final Cache nonEvictableCache;
+    private final Ehcache evictableCache;
+    private final Ehcache nonEvictableCache;
 
     private volatile boolean isClosed;
 
 
     private final int debugLevel;
 
-    public TwoCacheGateKeeper(int debugLevel, KeyMaster keyMaster, Cache evictableCache, Cache nonEvictableCache){
+    public TwoCacheGateKeeper(int debugLevel, KeyMaster keyMaster, Ehcache evictableCache, Ehcache nonEvictableCache){
         Objects.requireNonNull(keyMaster);
         Objects.requireNonNull(evictableCache);
         Objects.requireNonNull(nonEvictableCache);
@@ -73,10 +84,10 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
 
     private boolean removeRaw(String adaptedKey) {
-        if(evictableCache.remove(adaptedKey)){
+        if(evictableCache.removeWithWriter(adaptedKey)){
             return true;
         }
-        return nonEvictableCache.remove(adaptedKey);
+        return nonEvictableCache.removeWithWriter(adaptedKey);
     }
 
     @Override
@@ -127,6 +138,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
        @Override
        public T call() throws Exception {
+    	   
            T t = delegate.call();
            keyMaster.addKey(key, adaptedKey);
            addToCache(adaptedKey, t, seconds);
@@ -152,19 +164,23 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
     private  <T> T getOrElseRaw(String key, Callable<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
-        Element e = evictableCache.get(key);
-        if(e ==null){
+    	
+    	Element e = evictableCache.get(key);
+    	
+    	
+        if(e ==null || e.getObjectValue() == null){
             e = nonEvictableCache.get(key);
         }
+        
 
-        if(e ==null || regeneratePredicate.test(e)){
+        if(e ==null || e.getObjectValue() == null || regeneratePredicate.test(e)){
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
             return generator.call();
         }
         try {
-            return (T) e.getObjectValue();
+            return (T) getObjectFromElement(e);
         }catch(Exception ex){
             //in case there is a cast problem
             //or some other problem with the cached value
@@ -190,7 +206,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
     public Element getRawElement(String key){
         Element e = evictableCache.get(key);
-        if(e ==null){
+        if(e ==null || e.getObjectValue()==null){
             e = nonEvictableCache.get(key);
         }
         return e;
@@ -199,10 +215,21 @@ public class TwoCacheGateKeeper implements GateKeeper {
     public Object getRaw(String key){
         Element e = getRawElement(key);
 
+        
+        return getObjectFromElement(e);
+    }
+    
+    public static Object getObjectFromElement(Element e){
+
         if(e ==null){
             return null;
         }
-        return e.getObjectValue();
+        Object val=e.getObjectValue();
+        if(val instanceof NonSerializedWrapper){
+        	//return null;
+        	return ((NonSerializedWrapper)val).getObject();
+        }
+        return val;
     }
 
     @Override
@@ -231,22 +258,29 @@ public class TwoCacheGateKeeper implements GateKeeper {
         keyMaster.addKey(key, key);
     }
 
+    List<Object> cachedValues = new ArrayList<Object>();
+    
+    
     private void addToCache(String adaptedKey, Object value, int expiration) {
         if(value ==null ){
             return;
         }
+        Object setvalue=value;
         if(isEvictable(value)){
-            evictableCache.put(new Element(adaptedKey, value, expiration <= 0, expiration, expiration));
+        	Element e=new Element(adaptedKey, setvalue, expiration <= 0, expiration, expiration);
+        	evictableCache.putWithWriter(e);
         }else{
-            nonEvictableCache.put(new Element (adaptedKey, value, expiration <= 0, expiration, expiration));
+            nonEvictableCache.putWithWriter(new Element (adaptedKey, setvalue, expiration <= 0, expiration, expiration));
         }
     }
 
     @Override
-    public Statistics getStatistics() {
+    public List<Statistics> getStatistics() {
         //TODO how to handle 2 caches?
-
-        return evictableCache.getStatistics();
+    	List<Statistics> stats= new ArrayList<Statistics>();
+    	stats.add(evictableCache.getStatistics());
+    	stats.add(nonEvictableCache.getStatistics());
+        return stats;
     }
 
     private static boolean isEvictable(Object o){
@@ -299,12 +333,32 @@ public class TwoCacheGateKeeper implements GateKeeper {
         disposeCache(nonEvictableCache);
     }
 
-    private void disposeCache(Cache c){
+    private void disposeCache(Ehcache c){
         try {
             //shouldn't call dispose, the CacheManager will do that for us
             CacheManager.getInstance().removeCache(c.getName());
         }catch(Exception e){
             Logger.trace("Disposing cache " + c.getName(), e);
         }
+    }
+    
+    
+    /**
+     * This is a wrapper to stop ehcache from trying to see the size of the value
+     * contained
+     * @author tyler
+     *
+     * @param <K>
+     */
+    @IgnoreSizeOf
+    public class NonSerializedWrapper<K> {
+    	
+    	private transient K realValue;
+    	public NonSerializedWrapper(K value){
+    		this.realValue=value;
+    	}
+    	public K getObject(){
+    		return this.realValue;
+    	}
     }
 }

@@ -1,6 +1,8 @@
 package ix.core.search;
 
-public class FieldFacet {
+import java.io.Serializable;
+
+public class FieldFacet implements Serializable{
 	public int count;
 	public String field;
 	public String displayField;
@@ -42,7 +44,7 @@ public class FieldFacet {
 		return getIndexedField() + ":\"" + query + "\"";
 	}
 	
-	public static enum MATCH_TYPE{
+	public enum MATCH_TYPE{
 		FULL,
 		WORD,
 		WORD_STARTS_WITH,

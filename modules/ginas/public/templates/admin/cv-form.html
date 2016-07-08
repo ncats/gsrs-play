@@ -3,22 +3,28 @@
         Controlled Vocabulary&nbsp;<span class="badge">
                         {{count}}</span></button>
     <span><i class="fa fa-question-circle fa-lg"></i></span>
+    <div class = "col-md-12">
                 <uib-tabset justified="true">
-                    <uib-tab select="edit()">
+                    <uib-tab >
                         <uib-tab-heading>
-                            <i class="fa fa-pencil-square fa-4x"></i><br>Edit Domain</a>
+                            <i class="fa fa-pencil-square fa-4x"></i><br>Edit CV</a>
                         </uib-tab-heading>
+                        <edit-cv-form cv=cv></edit-cv-form>
                     </uib-tab>
-                    <uib-tab select="import()">
+                    <uib-tab >
                         <uib-tab-heading>
                             <i class="fa fa-upload fa-4x success"></i><br>Import CV</a>
                         </uib-tab-heading>
+                        <load-cv-form cv = cv></load-cv-form>
+
                     </uib-tab>
-                    <uib-tab select="download()">
+                    <uib-tab select ="download();">
                         <uib-tab-heading>
                             <i class="fa fa-download fa-4x "></i><br>Download CV</a>
                         </uib-tab-heading>
+                        <save-cv-form cv = cv></save-cv-form>
                     </uib-tab>
                 </uib-tabset>
                 <div class="cvForm"></div>
+</div>
 </div>

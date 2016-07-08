@@ -1,6 +1,10 @@
 package ix.test.ix;
 
+import java.io.File;
+
 import ix.core.plugins.IxCache;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -8,9 +12,9 @@ import org.junit.Test;
  */
 public class IxCacheTest {
 
-    @Test
+    @Test @Ignore
     public void emptyCache(){
-        IxCache cache = new IxCache(2, 5,5,5);
+        IxCache cache = new IxCache(new File("testcache"),2, 5,5,5);
 
        // cache.
     }
