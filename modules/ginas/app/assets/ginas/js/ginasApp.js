@@ -512,6 +512,21 @@
         $scope.validating = false;
         $scope.submitting = false;
 
+        $window.SDFFields = {};
+
+        $scope.getClass = function (path) {
+            var t = $location.path().split('/');
+            var r = (_.indexOf(t, path) >= 0) ? 'active' : '';
+            return r;
+        };
+
+        $scope.submitq= function(qinput) {
+            if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {
+                $scope.q = "\"" + $scope.q + "\"";
+            }
+            return true;
+        };
+
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
@@ -1463,6 +1478,7 @@
                 scope.numbers = true;
                 scope.edit = true;
 
+                scope.obj.subunitIndex = scope.index;
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
                 };
