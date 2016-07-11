@@ -292,6 +292,7 @@
                     }
                 }
             }
+	    if(disp === "") return undefined;
             return disp;
         };
         utils.sruDisplayToConnectivity = function (display) {
