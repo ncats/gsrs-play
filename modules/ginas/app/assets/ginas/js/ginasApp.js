@@ -292,9 +292,13 @@
                     }
                 }
             }
+	    if(disp === "") return undefined;
             return disp;
         };
         utils.sruDisplayToConnectivity = function (display) {
+            if(!display){
+		return {};
+	    }
             var errors =[];
             var connections = display.split(";");
             var regex = /^\s*[A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)[-][A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;

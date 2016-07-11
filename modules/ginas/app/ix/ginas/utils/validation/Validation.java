@@ -803,6 +803,29 @@ public class Validation {
         if(cs.protein==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
         }else{
+        	
+        	for(int i=0;i<cs.protein.subunits.size();i++){
+        		Subunit su = cs.protein.subunits.get(i);
+        		if(su.subunitIndex==null){
+        			GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein subunit (at " + (i+1) +" position) has no subunit index, defaulting to:" + (i+1)).appliableChange(true);
+            		gpm.add(mes);
+            		strat.processMessage(mes);
+            		
+            		switch(mes.actionType){
+    					case APPLY_CHANGE:
+    						su.subunitIndex=i+1;
+    						break;
+    					case DO_NOTHING:
+    						break;
+    					case FAIL:
+    						break;
+    					case IGNORE:
+    						break;
+    					default:
+    						break;
+            		}
+        		}
+        	}
 
             
             Set<String> unknownRes= new HashSet<String>();
