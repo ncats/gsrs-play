@@ -73,7 +73,6 @@
             },
 
             updateCV: function (domainobj) {
-                console.log(domainobj);
                 var url;
                 var promise;
                 if (domainobj.id) {
@@ -158,6 +157,7 @@
     }]);
 
     ginasFormElements.service('download', function ($location, $http) {
+        var cache = true;
         createURL = function (id) {
             var current = ($location.$$url).split('app')[1];
             var ret;
@@ -171,7 +171,14 @@
                 var q= c[0] + '/search?'+ c[1];
                 ret = baseurl + "api/v1" + q + '&view=full';
             } else {
-                ret = baseurl + "api/v1" + current + '?view=full';
+                //quick fix to download vocabularies /cv's
+                //should probably just be able to take a substance type
+                if(current =="/admin"){
+                    ret = baseurl + "api/v1/vocabularies?view=full&top=99";
+                    cache = false;
+                }else {
+                    ret = baseurl + "api/v1" + current + '?view=full';
+                }
             }
             return ret;
         }};
@@ -180,7 +187,7 @@
 
         download.fetch = function (id) {
             var url = createURL(id);
-            return $http.get(url, {cache: true}, {
+            return $http.get(url, {cache: cache}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -855,29 +862,23 @@
     
     //////////////BUTTONS///////////////////////////
 
-    ginasFormElements.directive('downloadButton', function ($compile, $timeout, download) {
+    ginasFormElements.directive('downloadButton', function ($compile, $timeout, download, CVFields) {
         return {
             restrict: 'E',
             scope: {
                 data: '=?',
                 format: '=?',
                 uuid: '@?',
-                retriever:'&?'
+                refresh: '='
             },
             link: function (scope, element, attrs) {
                 console.log(scope);
                 var json;
                 scope.url = '';
-
+                if(scope.refresh){
+                    element.empty();
+                }
                 scope.make = function () {
-                    console.log("GGGGGGG");
-                    if(scope.retriever){
-                        console.log("HHHH");
-                        var r = scope.retriever();
-                        console.log(r);
-                        _.set(scope, 'data', r);
-                        console.log(scope);
-                    }
                     if (_.isUndefined(scope.data) && _.isUndefined(scope.uuid) ) {
                         download.fetch().then(function (data) {
                             json = JSON.stringify(data.data);
@@ -903,6 +904,7 @@
                                 '</a>'
                             )(scope));
                             document.getElementById('download').click();
+
                         });
                     }else {
                         var b;

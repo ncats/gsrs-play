@@ -92,11 +92,9 @@
             if (obj) {
                 $scope.$$uploadFile = obj.$$uploadFile;
             }
-            console.log($scope);
             fd.append('file-name', $scope.$$uploadFile);
             fd.append('file-type', $scope.$$uploadFile.type);
             //send the file / data to your server
-            console.log(fd);
             $http.post(baseurl + 'upload', fd, {
                 transformRequest: angular.identity,
                 headers: {'Content-Type': undefined}
@@ -154,13 +152,10 @@
             domain = $scope.flattenFields(domain);
             domain.fields = $scope.flattenFields(domain.fields);
             CVFields.updateCV(domain).then(function (response) {
-                console.log(response);
-               // domain = response.data;
                 CVFields.search("VOCAB_TYPE", response.data.vocabularyTermType).then(function(vt){
                     response.data.vocabularyTermType = vt[0];
                 });
                 _.set($scope.cv, index, response.data);
-                console.log($scope);
             });
         };
 
@@ -169,10 +164,7 @@
             return $scope.cv;
         };
 
-        $scope.flush = function(event, index){
-            console.log(event);
-            console.log(index);
-        }
+
     });
 
     ginasForms.directive('accessForm', function () {
@@ -1220,14 +1212,28 @@
         };
     });
 
-    ginasForms.directive('saveCvForm', function (CVFields) {
+    ginasForms.directive('saveCvForm', function ($compile, download) {
         return {
             restrict: 'E',
             replace: true,
             controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
             link: function (scope, element, attrs) {
-                         }
+
+
+                scope.downloadCV = function(){
+                            var json = JSON.stringify(scope.cv);
+                            var b = new Blob([json], {type: "application/json"});
+                            scope.url = URL.createObjectURL(b);
+                            var download = angular.element(
+                                '<a class="btn btn-primary" download="results.json"' +
+                                'href="' + scope.url + '" target = "_self" id ="download">' +
+                                '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
+                                '</a>');
+                            download[0].click();
+                }
+
+                }
         };
     });
 
