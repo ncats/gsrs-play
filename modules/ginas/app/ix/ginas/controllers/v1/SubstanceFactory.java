@@ -149,6 +149,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getFullSubstance(SubstanceReference subRef) {
+		if(subRef==null)return null;
 		return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
 	}
 
