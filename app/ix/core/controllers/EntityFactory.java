@@ -1030,7 +1030,7 @@ public class EntityFactory extends Controller {
             	return ok(validationResponse(vr,false));
             }
         } catch (Throwable ex) {
-        	ex.printStackTrace();
+        	//ex.printStackTrace();
             return internalServerError(ex.getMessage());
         }
     }
@@ -1042,7 +1042,13 @@ public class EntityFactory extends Controller {
     	if(full){
     		mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
     	}
-    	return mapper.valueToTree(vr);
+    	try{
+    		JsonNode jsn = mapper.valueToTree(vr);
+    		return jsn;
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		return EntityMapper.COMPACT_ENTITY_MAPPER().valueToTree(vr);
+    	}
     }
 
     protected static <K,T extends Model> 
