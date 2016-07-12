@@ -152,7 +152,6 @@
             if (!substance.references) {
                 substance.references = [];
             }
-            substance.definitionType = {value: "PRIMARY", display: "Primary"};
             substance.access = [{value: 'protected', display: 'PROTECTED'}];
             return substance;
         };
