@@ -100,6 +100,7 @@ import ix.core.CacheStrategy;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
+import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
@@ -1023,9 +1024,29 @@ public class TextIndexer implements Closeable{
         FlushDaemon () {
         }
 
+        
         public void run () {
         	//Don't execute if already shutdown
         	if(isShutDown)return;
+        	execute();
+        }
+        
+        /**
+         * Execute the flush, with debugging statistics, without looking at the shutdown state
+         */
+        public void execute(){
+        	int i= (int)(Math.random()*100);
+        	System.out.println("STARTED DAEMON==================== " +i);
+        	long time = StopWatch.timeElapsed(this::flush);
+        	
+        	System.out.println("DAEMON FINIHSED=================== "  + i + " Elapsed:" + time);
+            
+        }
+
+		private void flush() {
+			
+        	
+        	//Util.debugSpin(20000);
             File file = getFacetsConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 Logger.debug(Thread.currentThread()
@@ -1060,7 +1081,8 @@ public class TextIndexer implements Closeable{
                 for (SuggestLookup lookup : lookups.values())
                     lookup.refreshIfDirty();
             }
-        }
+            
+		}
     }
 
 
@@ -1095,6 +1117,7 @@ public class TextIndexer implements Closeable{
     
     private static Map<Class,SearchContextAnalyzerGenerator> defaultSearchAnalyzers = new HashMap<Class,SearchContextAnalyzerGenerator>();
 
+    private FlushDaemon flushDaemon;
 
     SearcherManager searchManager;
 
@@ -1295,9 +1318,10 @@ public class TextIndexer implements Closeable{
 
        // setFetchWorkers (FETCH_WORKERS);
 
-        // run daemon every 5s
+        flushDaemon=new FlushDaemon ();
+        // run daemon every 20s
         scheduler.scheduleAtFixedRate
-            (new FlushDaemon (), 10, 20, TimeUnit.SECONDS);
+            (flushDaemon, 10, 20, TimeUnit.SECONDS);
         
     }
 
@@ -2758,23 +2782,27 @@ public class TextIndexer implements Closeable{
 
     public void shutdown () {
         if(isShutDown){
-            //System.out.println("already shutdown");
             return;
         }
-        //System.out.println("shutting down " + System.identityHashCode(this));
         try {
-//            for(int i=0; i< fetchWorkers.length; i++) {
-//                fetchQueue.put(POISON_PAYLOAD);
-//            }
 
             System.out.println("Shutting down scheduler");
-          //  scheduler.shutdown();
-           // scheduler.awaitTermination(1, TimeUnit.MINUTES);
             if(scheduler !=null){
-                scheduler.shutdownNow();
+                try{
+                	isShutDown=true;
+                	scheduler.shutdown();
+                	System.out.println("Awaiting shutdown");
+                	scheduler.awaitTermination(1, TimeUnit.MINUTES);
+                	System.out.println("finished shutdown");
+                	System.out.println("final daemon run");
+                	flushDaemon.execute();
+                }catch(Throwable e){
+                	e.printStackTrace();
+                	throw new RuntimeException(e);
+                }
             }
-            System.out.println("scheduler shut down");
-            //System.out.println("done waiting for termination");
+           
+            
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
             saveSorters (getSorterConfigFile (), sorters);
 
