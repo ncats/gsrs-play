@@ -409,6 +409,8 @@
                                             scope.obj = [];
                                             scope.obj.push(term);
                                         }
+                                    }else{
+                                        scope.obj = term;
                                     }
                                     scope.edit= false;
                                 }
