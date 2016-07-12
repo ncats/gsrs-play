@@ -16,7 +16,7 @@
     </div>
     <div class="row">
         <div class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
-            <span class="pull-right count" ng-hide=numbers>{{($index+1)*10}}</span><br>
+            <span class="pull-right count" ng-hide=numbers>{{($index)*10 + chunk.length}}</span><br>
             <span ng-repeat="(index, aa) in chunk track by $index">
                 <amino-acid acid=aa index = {{index}}></amino-acid>
             </span>
