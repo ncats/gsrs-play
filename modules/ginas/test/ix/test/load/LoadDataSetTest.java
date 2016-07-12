@@ -91,7 +91,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test @Ignore
+    @Test 
     public void loadMultipleFiles() throws IOException {
 
         try(BrowserSession session = ts.newBrowserSession(admin)){
@@ -108,7 +108,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test @Ignore
+    @Test 
     public void loadAsAdmin() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -124,7 +124,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test @Ignore
+    @Test 
     public void substructureSearchOnRep90ShouldReturnDeterministicResults() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -142,7 +142,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test @Ignore
+    @Test 
     public void substructureSearchOnRep90ShouldAllowPaging() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -159,7 +159,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         }
     }
     
-    @Test @Ignore
+    @Test 
     public void substructureSearchOnRep90ShouldPreserveHighlightingAfterPaging() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -202,7 +202,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test @Ignore
+    @Test 
     public void nonAdminCanNotLoad() throws IOException{
         GinasTestServer.User normalUser = ts.createNormalUser("peon", "pass");
 
@@ -219,7 +219,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
     
-    @Test @Ignore
+    @Test 
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
         SubstanceSearch searcher = new SubstanceSearch(ts.notLoggedInBrowserSession());
@@ -233,7 +233,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     
     
-    @Test @Ignore
+    @Test 
     public void deleteLuceneIndexesButNOTDatabaseShouldReturnZeroResults() throws IOException{
         try(BrowserSession session = ts.newBrowserSession(admin)) {
 
