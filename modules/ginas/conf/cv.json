@@ -13720,7 +13720,7 @@
       }
     ],
     "fields": [
-      "polymerClassification.polymerClass"
+      "classification.polymerClass"
     ]
   },
   {
@@ -13780,7 +13780,7 @@
       }
     ],
     "fields": [
-      "polymerClassification.polymerGeometry"
+      "classification.polymerGeometry"
     ]
   },
   {
@@ -13876,7 +13876,7 @@
       }
     ],
     "fields": [
-      "polymerClassification.sourceType"
+      "classification.sourceType"
     ]
   },
   {
@@ -14005,7 +14005,7 @@
       }
     ],
     "fields": [
-      "polymerClassification.polymerSubclass"
+      "classification.polymerSubclass"
     ]
   },
   {
