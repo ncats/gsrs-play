@@ -830,6 +830,7 @@ public class Validation {
         	}
         	
         	for(DisulfideLink l:cs.protein.getDisulfideLinks()){
+        		
         		List<Site> sites=l.getSites();
         		if(sites.size()!=2){
         			GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Disulfide Link \""  + sites.toString() + "\" has " + sites.size() + " sites, should have 2");
