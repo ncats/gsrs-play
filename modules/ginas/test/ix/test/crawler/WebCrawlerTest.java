@@ -125,6 +125,8 @@ public class WebCrawlerTest {
         private final Set<String> substancesVisited = new LinkedHashSet<>();
 
         private final Set<URL> _401Links = new LinkedHashSet<>();
+        private final Set<URL> _404Links = new LinkedHashSet<>();
+        private final Set<URL> _InternalErrorLinks = new LinkedHashSet<>();
         @Override
         public boolean shouldVisit(URL url) {
             return true;
@@ -144,6 +146,10 @@ public class WebCrawlerTest {
         protected void visitErrorURL(URL url, int statusCode, String statusMessage) {
             if(statusCode ==401){
                 _401Links.add(url);
+            }else if(statusCode == 404){
+            	_404Links.add(url);
+            }else if(statusCode >= 500){
+            	_InternalErrorLinks.add(url);
             }
         }
 

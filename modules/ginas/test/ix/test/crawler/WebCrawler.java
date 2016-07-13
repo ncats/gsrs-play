@@ -58,14 +58,16 @@ public class WebCrawler {
     static class HtmlParser extends HTMLEditorKit.ParserCallback {
         URL url;
         List<URL> hrefs = new ArrayList<URL>();
-
+        int status;
+        
         private BrowserSession session;
 
         HtmlParser (URL url, BrowserSession session,  WebCrawlerVisitor visitor) throws Exception {
             this.url = url;
 
             WSResponse resp = session.get(url);
-            int status = resp.getStatus();
+            status = resp.getStatus();
+            
             String message = resp.getStatusText();
             visitor.visited(url, status, resp.getStatusText());
             if(status == 200){
@@ -219,15 +221,18 @@ public class WebCrawler {
 						@Override
 						public HtmlParser call() throws Exception {
 							HtmlParser parser = new HtmlParser (url, session, visitor);
+							
 							return parser;
 						}
 	                	
 	                };
 
 	                Future<HtmlParser> futureParse =  ForkJoinPool.commonPool().submit(c);
-	                //fail after 10 seconds
+	                //fail after 60 seconds
 	                HtmlParser parser=futureParse.get(60, TimeUnit.SECONDS);
-	
+	                if(parser.status==404){
+	                	System.out.println("404:" + path.toString());
+	                }
 	                /*
 	                for (int i = 0; i <= depth; ++i)
 	                    System.out.print(" ");
