@@ -1510,8 +1510,9 @@ public class TextIndexer implements Closeable{
                         rank.put(id, ++r);
                 }
                 
-                if (!rank.isEmpty())
+                if (!rank.isEmpty() && options.order.isEmpty()){
                     searchResult.setRank(rank);
+                }
             }
             else if (options.kind != null) {
                 Set<String> kinds = new TreeSet<String>();
@@ -1614,7 +1615,6 @@ public class TextIndexer implements Closeable{
                     // a ROOT prefix for the full path. If the root prefix is not
                     // present, this will add it.
                     
-                    
                     SortField.Type type = sorters.get(TextIndexer.SORT_PREFIX + f);
                     if(type == null){
                     	type = sorters.get(TextIndexer.SORT_PREFIX + ROOT + "_" + f);
@@ -1628,6 +1628,7 @@ public class TextIndexer implements Closeable{
                         fields.add(sf);
                     }
                     else {
+                    	System.out.println("Couldn't find sorter:" + f + " in " + sorters.keySet().toString());
                         Logger.warn("Unknown sort field: \""+f+"\"");
                     }
                 }
@@ -1687,12 +1688,13 @@ public class TextIndexer implements Closeable{
             }
             
             if (drills.isEmpty()) {
-                hits = sorter != null 
-                    ? (FacetsCollector.search
-                       (searcher, query, filter, options.max(), sorter, fc))
-                    : (FacetsCollector.search
-                       (searcher, query, filter, options.max(), fc));
-                
+            	if(sorter!=null){
+            		hits = (FacetsCollector.search
+                            (searcher, query, filter, options.max(), sorter, fc));
+            	}else{
+            		hits = (FacetsCollector.search
+                            (searcher, query, filter, options.max(), fc));
+            	}
                 Facets facets = new FastTaxonomyFacetCounts
                      (taxon, facetsConfig, fc);
                 
@@ -1757,11 +1759,14 @@ public class TextIndexer implements Closeable{
                     hits = swResult.hits;
                 }
                 else { // drilldown
-                    hits = sorter != null 
-                        ? (FacetsCollector.search
-                           (searcher, ddq, filter, options.max(), sorter, fc))
-                        : (FacetsCollector.search
-                           (searcher, ddq, filter, options.max(), fc));
+                	
+                	if(sorter!=null){
+                		hits = (FacetsCollector.search
+                                (searcher, ddq, filter, options.max(), sorter, fc));
+                	}else{
+                		hits = (FacetsCollector.search
+                                (searcher, ddq, filter, options.max(), fc));
+                	}
                     
                     facets = new FastTaxonomyFacetCounts
                         (taxon, facetsConfig, fc);

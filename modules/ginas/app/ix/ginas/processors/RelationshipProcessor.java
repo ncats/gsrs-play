@@ -153,7 +153,11 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	}
 	
 	public static RelationshipProcessor getInstance(){
-		return RelationshipProcessor._instance;
+		RelationshipProcessor rp =RelationshipProcessor._instance;
+		if(rp==null){
+			rp=new RelationshipProcessor(); 
+		}
+		return rp;
 	}
 
 }
