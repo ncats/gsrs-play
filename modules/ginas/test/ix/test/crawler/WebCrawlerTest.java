@@ -122,6 +122,24 @@ public class WebCrawlerTest {
         }
 
     }
+    
+    @Test
+    public void findNoInternalServerErrorsOnCrawl() throws Exception {
+        WebCrawlerSpy spy = new WebCrawlerSpy();
+        try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
+            URL url = ts.getHomeUrl();
+
+            crawler.crawl(url);
+            if(!spy.getErrorPaths().isEmpty()){
+            	System.err.println("Internal Error links:");
+            	System.err.println(spy.get404Paths().toString());
+            }
+            assertTrue(spy.getErrorPaths().isEmpty());
+            
+        }
+
+    }
 
     @Test
     public void restrictedLinksAreAccessibleFromAdmin() throws Exception {
@@ -188,6 +206,9 @@ public class WebCrawlerTest {
         }
         public Set<List<URL>> get404Paths() {
 			return _404Paths;
+		}
+        public Set<List<URL>> getErrorPaths() {
+			return _InternalErrorPaths;
 		}
     }
 
