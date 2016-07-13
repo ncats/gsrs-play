@@ -1036,10 +1036,10 @@ public class TextIndexer implements Closeable{
          */
         public void execute(){
         	int i= (int)(Math.random()*100);
-        	System.out.println("STARTED DAEMON==================== " +i);
+        	///System.out.println("STARTED DAEMON==================== " +i);
         	long time = StopWatch.timeElapsed(this::flush);
         	
-        	System.out.println("DAEMON FINIHSED=================== "  + i + " Elapsed:" + time);
+        	//System.out.println("DAEMON FINISHED=================== "  + i + " Elapsed:" + time);
             
         }
 
