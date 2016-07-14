@@ -74,9 +74,13 @@ public class SubstanceValidateFailTest{
             assertEquals(OK, wsResponse1.getStatus());
 
             assertFalse(SubstanceJsonUtil.isLiteralNull(jsonNode1));
+            //System.out.println(jsonNode1);
             assertFalse(SubstanceJsonUtil.isValid(jsonNode1));
 
 
+        }catch(Throwable e){
+        	e.printStackTrace();
+        	throw e;
         }
 
     }

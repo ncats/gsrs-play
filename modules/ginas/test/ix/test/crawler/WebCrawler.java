@@ -52,35 +52,29 @@ public class WebCrawler {
     public interface WebCrawlerVisitor{
         boolean shouldVisit(URL url);
 
-        void visited(URL url, int statusCode, String statusMessage);
+        void visited(URL url, int statusCode, String statusMessage, List<URL> path);
     }
 
     static class HtmlParser extends HTMLEditorKit.ParserCallback {
         URL url;
         List<URL> hrefs = new ArrayList<URL>();
-
+        int status;
+        
         private BrowserSession session;
 
-        HtmlParser (URL url, BrowserSession session,  WebCrawlerVisitor visitor) throws Exception {
+        HtmlParser (URL url, BrowserSession session,  WebCrawlerVisitor visitor, List<URL> path) throws Exception {
             this.url = url;
 
             WSResponse resp = session.get(url);
-            int status = resp.getStatus();
+            status = resp.getStatus();
+            
             String message = resp.getStatusText();
-            visitor.visited(url, status, resp.getStatusText());
+            visitor.visited(url, status, resp.getStatusText(),path);
             if(status == 200){
                 DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
                 doc.parse(new StringReader(resp.getBody()), this, true);
             }
-//            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-//            agent.setUserAgentHeader(http);
-//
-//
-//            visitor.visited(url, http.getResponseCode(), http.getResponseMessage());
-//
-//            DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
-//            doc.parse(new InputStreamReader
-//                      (http.getInputStream()), this, true);
+            
         }
 
         @Override
@@ -132,7 +126,7 @@ public class WebCrawler {
         public List<URL> getLinks () { return hrefs; }
     }
     
-    static int MAXDEPTH = Integer.getInteger("maxdepth", 10);
+    static int MAXDEPTH = Integer.getInteger("maxdepth", 20);
 
     private int maxdepth;
     private Set<URL> visited = new HashSet<>();
@@ -195,7 +189,7 @@ public class WebCrawler {
     	}
     }
 
-    void depthFirstCrawl (int depth, final URL url, List<URL> path) throws TimeoutException{
+    void depthFirstCrawl (int depth, final URL url, final List<URL> path) throws TimeoutException{
     	path.add(url);
         if (depth >= maxdepth) {
             /*
@@ -218,27 +212,16 @@ public class WebCrawler {
 	
 						@Override
 						public HtmlParser call() throws Exception {
-							HtmlParser parser = new HtmlParser (url, session, visitor);
+							HtmlParser parser = new HtmlParser (url, session, visitor, path);
+							
 							return parser;
 						}
 	                	
 	                };
 
 	                Future<HtmlParser> futureParse =  ForkJoinPool.commonPool().submit(c);
-	                //fail after 10 seconds
+	                //fail after 60 seconds
 	                HtmlParser parser=futureParse.get(60, TimeUnit.SECONDS);
-	
-	                /*
-	                for (int i = 0; i <= depth; ++i)
-	                    System.out.print(" ");
-	                */
-	
-	//                System.out.println
-	//                    ("..."+String.format("%1$3d %2$6d %3$5dms",
-	//                                         parser.getStatus(),
-	//                                         parser.getLength(),
-	//                                         System.currentTimeMillis()-start)
-	//                     +" "+u);
 	                
 	                for (URL uu : parser.getLinks()) {
 	                    if (!visited.contains(uu)) {
@@ -285,7 +268,7 @@ public class WebCrawler {
         }
 
         @Override
-        public void visited(URL url, int statusCode, String statusMessage) {
+        public void visited(URL url, int statusCode, String statusMessage, List<URL> path) {
             //no-op
         }
 

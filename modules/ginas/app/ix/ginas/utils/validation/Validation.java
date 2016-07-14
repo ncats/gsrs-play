@@ -31,6 +31,7 @@ import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
+import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
@@ -42,6 +43,7 @@ import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
@@ -826,6 +828,29 @@ public class Validation {
             		}
         		}
         	}
+        	
+        	for(DisulfideLink l:cs.protein.getDisulfideLinks()){
+        		
+        		List<Site> sites=l.getSites();
+        		if(sites.size()!=2){
+        			GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Disulfide Link \""  + sites.toString() + "\" has " + sites.size() + " sites, should have 2");
+            		gpm.add(mes);
+        		}else{
+        			for(Site s: sites){
+        				String res=cs.protein.getResidueAt(s);
+        				if(res==null){
+        					GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Site \""  + s.toString() + "\" does not exist");
+        					gpm.add(mes);
+        				}else{
+        					if(!res.equalsIgnoreCase("C")){
+        						GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Site \""  + s.toString() + "\" in disulfide link is not a Cysteine, found: \"" + res + "\"");
+            					gpm.add(mes);	
+        					}
+        				}
+        			}
+        		}
+        		
+        	}
 
             
             Set<String> unknownRes= new HashSet<String>();
@@ -839,7 +864,7 @@ public class Validation {
         	List<Property> molprops=ProteinUtils.getMolWeightProperties(cs);
         	if(molprops.size()<=0){
         		
-        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value").appliableChange(true);
+        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value of: " + tot).appliableChange(true);
         		gpm.add(mes);
         		strat.processMessage(mes);
         		

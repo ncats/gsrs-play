@@ -13,7 +13,9 @@ import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -99,6 +101,45 @@ public class WebCrawlerTest {
         }
 
     }
+    @Test
+    @Ignore
+    /*
+     * This should work, but does not right now. Waiting on issue #920
+     */
+    public void findNo404sOnCrawl() throws Exception {
+        WebCrawlerSpy spy = new WebCrawlerSpy();
+        try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
+            URL url = ts.getHomeUrl();
+
+            crawler.crawl(url);
+            if(!spy.get404Paths().isEmpty()){
+            	System.err.println("404 links:");
+            	System.err.println(spy.get404Paths().toString());
+            }
+            assertTrue(spy.get404Paths().isEmpty());
+            
+        }
+
+    }
+    
+    @Test
+    public void findNoInternalServerErrorsOnCrawl() throws Exception {
+        WebCrawlerSpy spy = new WebCrawlerSpy();
+        try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
+            WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
+            URL url = ts.getHomeUrl();
+
+            crawler.crawl(url);
+            if(!spy.getErrorPaths().isEmpty()){
+            	System.err.println("Internal Error links:");
+            	System.err.println(spy.get404Paths().toString());
+            }
+            assertTrue(spy.getErrorPaths().isEmpty());
+            
+        }
+
+    }
 
     @Test
     public void restrictedLinksAreAccessibleFromAdmin() throws Exception {
@@ -125,12 +166,16 @@ public class WebCrawlerTest {
         private final Set<String> substancesVisited = new LinkedHashSet<>();
 
         private final Set<URL> _401Links = new LinkedHashSet<>();
+        private final Set<List<URL>> _404Paths = new LinkedHashSet<List<URL>>();
+        private final Set<List<URL>> _InternalErrorPaths = new LinkedHashSet<List<URL>>();
         @Override
         public boolean shouldVisit(URL url) {
             return true;
         }
 
-        @Override
+       
+
+		@Override
         public void visitValidURL(URL url) {
 
             Matcher matcher = SUBSTANCES_ROOT_PATTERN.matcher(url.toString());
@@ -141,9 +186,14 @@ public class WebCrawlerTest {
         }
 
         @Override
-        protected void visitErrorURL(URL url, int statusCode, String statusMessage) {
+        protected void visitErrorURL(URL url, int statusCode, String statusMessage, List<URL> path) {
             if(statusCode ==401){
                 _401Links.add(url);
+            }else if(statusCode == 404){
+            	System.out.println(url + "\t" + path.size());
+            	_404Paths.add(new ArrayList<URL>(path));
+            }else if(statusCode >= 500){
+            	_InternalErrorPaths.add(new ArrayList<URL>(path));
             }
         }
 
@@ -154,6 +204,12 @@ public class WebCrawlerTest {
         public Set<URL> get401Links() {
             return _401Links;
         }
+        public Set<List<URL>> get404Paths() {
+			return _404Paths;
+		}
+        public Set<List<URL>> getErrorPaths() {
+			return _InternalErrorPaths;
+		}
     }
 
     private static abstract class AbstractWebCrawlerSpy implements WebCrawler.WebCrawlerVisitor{
@@ -162,11 +218,11 @@ public class WebCrawlerTest {
             return true;
         }
 
-        public void visited(URL url, int statusCode, String statusMessage) {
+        public void visited(URL url, int statusCode, String statusMessage, List<URL> path) {
             if(statusCode == 200 || statusCode == 201){
                 visitValidURL(url);
             }else{
-                visitErrorURL(url, statusCode, statusMessage);
+                visitErrorURL(url, statusCode, statusMessage, path);
             }
         }
 
@@ -174,7 +230,7 @@ public class WebCrawlerTest {
 
         }
 
-        protected void visitErrorURL(URL url, int statusCode, String statusMessage){
+        protected void visitErrorURL(URL url, int statusCode, String statusMessage, List<URL> path){
 
         }
 

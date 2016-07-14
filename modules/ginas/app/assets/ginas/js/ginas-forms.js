@@ -330,14 +330,15 @@
                     if(scope.cysteines){
                         count = scope.cysteines.length;
                     }
-                    /*_.forEach(scope.parent.protein.subunits, function (subunit) {
-                        if (!_.isUndefined(subunit.$$cysteineIndices)) {
+                 //   _.forEach(scope.parent.protein.subunits, function (subunit) {
+                   /*     if (!_.isUndefined(subunit.$$cysteineIndices)) {
                             count += subunit.$$cysteineIndices.length;
                         }
-                    });*/
-                    if (_.has(scope.parent, 'disulfideLinks')) {
+
+                    if (_.has(scope.parent.protein, 'disulfideLinks')) {
+
                         count -= scope.parent.protein.disulfideLinks.length * 2;
-                    }
+                    }*/
                     return count;
                 };
 

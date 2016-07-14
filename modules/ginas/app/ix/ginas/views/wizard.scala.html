@@ -38,8 +38,8 @@
                         <protein-details-form parent = substance></protein-details-form>
                         <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
                         <div ng-if = "substance.protein.subunits.length>0">
-                            <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
                             <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
+                            <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
                             <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
                         </div>
                     }
