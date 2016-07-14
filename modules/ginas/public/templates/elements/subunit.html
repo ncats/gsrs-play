@@ -9,8 +9,8 @@
                                class="subunitButtons"></delete-button>
                 <a ng-click="cleanSequence()" uib-tooltip="Clean sequence" class="subunitButtons"><i
                         class="fa fa-magic fa-2x success"></i></a>
-                <a ng-click="toggleEdit()" uib-tooltip="Edit sequence" class="subunitButtons"><i
-                        class="fa fa-pencil fa-2x"></i></a>
+              <!--  <a ng-click="toggleEdit()" uib-tooltip="Edit sequence" class="subunitButtons"><i
+                        class="fa fa-pencil fa-2x"></i></a>-->
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
         </div>
         </div>
     <br>
-    <div class="row">
+    <div class="row" ng-if="view !== 'subunits'">
         <div class="col-md-12" ng-show="!obj.$$subunitDisplay || edit">
             <gsrs-input type="text-box"
                         ng-model="obj.sequence"
