@@ -10,7 +10,6 @@
         <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
             <div ng-repeat="(index,obj) in parent.protein.disulfideLinks">
                 <ng-form name="form">
-                    {{obj}}
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
