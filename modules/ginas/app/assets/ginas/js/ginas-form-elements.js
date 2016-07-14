@@ -961,7 +961,8 @@
             replace: 'true',
             scope: {
                 type: '@',
-                path: '@'
+                path: '@',
+		heading: '@'
             },
             link: function (scope, element, attrs) {
                 scope.stage = true;

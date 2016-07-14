@@ -1157,3 +1157,21 @@ pre.fixedsize{
     padding-top: 1%;
     padding-bottom: 1%;
 }
+.helper-info{
+    padding: 5px;
+    margin: 5px;
+    background-color: #e3eaf7;
+}
+.helper-info i {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+span.helper-title {
+    font-weight: bold;
+    background-color: #a4c7e2;
+    width: 106%;
+    display: block;
+    margin-left: -3%;
+    color: #333333;
+    font-size: medium;
+}
