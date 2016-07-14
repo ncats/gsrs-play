@@ -1234,6 +1234,7 @@ public class TextIndexer implements Closeable{
         scheduler =  null;
         isShutDown = false;
         isEmptyPool = true;
+
       //  setFetchWorkers (FETCH_WORKERS);
     }
     
@@ -1322,7 +1323,6 @@ public class TextIndexer implements Closeable{
         // run daemon every 20s
         scheduler.scheduleAtFixedRate
             (flushDaemon, 10, 20, TimeUnit.SECONDS);
-        
     }
 
 //    public void setFetchWorkers (int n) {
@@ -2837,12 +2837,17 @@ public class TextIndexer implements Closeable{
             Logger.trace("Closing index", ex);
         }
         finally {
-            System.out.println("indexers... before shutdown " + indexers.keySet());
-            TextIndexer indexer = indexers.remove(baseDir);
+        	if(indexers!=null){
+        		
+        		if(baseDir!=null){
+        			TextIndexer indexer = indexers.remove(baseDir);
+        		}
+        	}
             System.out.println("removed baseDir " + baseDir);
             //System.out.println("indexers left after shutdown =" + indexers.keySet());
-            threadPool.shutdown();
+            
             if(!isEmptyPool) {
+            	threadPool.shutdown();
                 try {
                     threadPool.awaitTermination(1, TimeUnit.MINUTES);
                 } catch (Exception e) {

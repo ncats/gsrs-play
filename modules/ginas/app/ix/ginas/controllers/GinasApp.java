@@ -768,7 +768,12 @@ public class GinasApp extends App {
     public static final GetResult<Substance> SubstanceResult =
             new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
                 public Result getResult(List<Substance> substances) throws Exception {
-                    return _getSubstanceResult(substances);
+                	try{
+                		return _getSubstanceResult(substances);
+                	}catch(Exception e){
+                		e.printStackTrace();
+                		throw e;
+                	}
                 }
             };
 
@@ -822,9 +827,7 @@ public class GinasApp extends App {
             }
             if (result.count() < substances.size()) {
                 substances.clear();
-                for (int i = 0; i < result.count(); ++i) {
-                    substances.add((Substance) result.get(i));
-                }
+                result.copyTo(substances, 0, result.count());
             }
             TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
 
