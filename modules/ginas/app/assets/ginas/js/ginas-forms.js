@@ -145,7 +145,6 @@
         };
 
         $scope.update = function (domain, index) {
-            console.log(domain);
             if (!domain.terms) {
                 _.set(domain, 'terms', []);
             }
@@ -160,7 +159,6 @@
         };
 
         $scope.download = function(){
-            console.log($scope);
             return $scope.cv;
         };
 
@@ -274,18 +272,87 @@
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
 
+
+                scope.$on('subunit', function (e) {
+                    console.log("subunit");
+                    console.log(e);
+                });
+
+                scope.$on('subunits', function (e) {
+                    console.log("subunit");
+                    console.log(e);
+                });
+               /* scope.getCysteines = function() {
+                    if (!scope.cysteines) {
+                        if (scope.parent.protein.subunits) {
+                            var r = angular.copy(scope.parent.protein.subunits);
+                            console.log(r);
+                            scope.cysteines = [];
+                            _.forEach(r, function (subunit, index) {
+                                console.log(subunit);
+                                console.log(subunit.$$cysteineIndices);
+                                scope.cysteines = _.concat(scope.cysteines, subunit.$$cysteineIndices);
+                            });
+                        }
+                    }
+                };
+*/
+
+                scope.addLink = function(form, path) {
+                  //  scope.getCysteines();
+                    scope.cysteines = scope.parent.$$cysteines;
+                    scope.getAllCysteinesWithoutLinkage();
+                    scope.addNew(form, path);
+                };
+
+/////////////TODO: finish / fix this///////////////////////////////
+                scope.clean = function(model, site, index) {
+                    scope.cysteines = scope.parent.$$cysteines;
+
+                    if (model) {
+                        /*                        if(_.isUndefined(scope.obj)){
+                         _.set(scope, 'obj', {});
+                         }
+                         if(_.isUndefined(scope.obj.sites)){
+                         _.set(scope.obj, 'sites', []);
+                         }
+                         var r = _.clone(model);
+                         console.log(r==model);
+                         scope.obj.sites[site] = r;
+                         scope.parent.protein.disulfideLinks[index].sites[site] = r;*/
+                        //  scope.cysteines= _.reject(scope.cysteines, model);
+
+                    }
+                };
+
                 scope.getAllCysteinesWithoutLinkage = function () {
                     var count = 0;
-                    _.forEach(scope.parent.protein.subunits, function (subunit) {
+                    if(scope.cysteines){
+                        count = scope.cysteines.length;
+                    }
+                    /*_.forEach(scope.parent.protein.subunits, function (subunit) {
                         if (!_.isUndefined(subunit.$$cysteineIndices)) {
                             count += subunit.$$cysteineIndices.length;
                         }
-                    });
+                    });*/
                     if (_.has(scope.parent, 'disulfideLinks')) {
                         count -= scope.parent.protein.disulfideLinks.length * 2;
                     }
                     return count;
                 };
+
+                if(scope.parent.protein.disulfideLinks){
+                    _.forEach(scope.parent.protein.disulfideLinks, function(link) {
+                        _.forEach(link.sites, function (site) {
+                            if (!site.display){
+                                _.set(site, 'display', site.subunitIndex +'_'+site.residueIndex);
+                                _.set(site, 'value', site.subunitIndex +'_'+site.residueIndex);
+                            }
+                        });
+                    });
+                    scope.cysteines = scope.parent.$$cysteines;
+                }
+                scope.cysteines = scope.parent.$$cysteines;
             }
         };
     });
@@ -435,7 +502,6 @@
 
                 scope.duplicateCheck = function (name) {
                     var errors = [];
-                    console.log("Duplicate");
                     var result = angular.element(document.getElementsByClassName('nameForm'));
                     result.empty();
                     var resolve = resolver.resolve(name).then(function (response) {
@@ -531,14 +597,12 @@
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
-                console.log(scope);
 
                 scope.getAllSites = function () {
                     return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
                 };
 
                 scope.applyAll = function (obj) {
-                    console.log(obj);
                     siteAdder.applyAll('sugar', scope.parent, obj);
                 };
 
@@ -650,7 +714,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
             link: function(scope){
-        console.log(scope);
     }
         };
     });
@@ -740,9 +803,7 @@
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
                 scope.validateConnectivity = function (obj) {
-                   // console.log(obj);
                     var map = polymerUtils.sruDisplayToConnectivity(obj);
-                   // console.log(map);
                    return map.errors;
                 }
             }
@@ -802,8 +863,6 @@
                     };
                     scope.addNew(mainform, list, obj);
                 };
-
-                console.log(attrs);
                 scope.applyRefs = attrs.apply;
 
                 //called on close of the modal reference form. saves all applied references to the array
@@ -812,7 +871,6 @@
                 });
 
                 scope.validate = function () {
-                    console.log(scope);
                     //grabs an array of all the uuids of the references where apply checkbox is true
                     var objreferences = _
                         .chain(scope.parent.references)
@@ -823,7 +881,6 @@
                         })
                         .map('uuid')
                         .value();
-                    console.log(objreferences);
                         _.set(scope.referenceobj, 'references', objreferences);
                 };
 
@@ -1062,8 +1119,7 @@
         };
     });
 
-    
-    ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
+       ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
         return {
             restrict: 'E',
             replace: true,
@@ -1074,9 +1130,6 @@
             }
         };
     });
-
-
-
 
     ginasForms.directive('cvTermsForm', function (CVFields) {
         return {
@@ -1090,14 +1143,11 @@
              },
             templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html",
             link: function (scope) {
-                console.log(scope);
                 scope.addNewTerm = function(){
                     scope.referenceobj.terms.push({});
                 };
 
                 scope.$on('save', function (e) {
-                    console.log("Save");
-
                     scope.update(scope.referenceobj, scope.index);
                 });
 
@@ -1111,7 +1161,6 @@
             }
         };
     });
-
 
     ginasForms.directive('editCvForm', function ($templateRequest, CVFields, toggler) {
         return {
@@ -1135,20 +1184,15 @@
             link: function (scope, element, attrs) {
 
                 scope.submitFile = function(){
-                    console.log(scope.cvFile);
                     var fd = new FormData();
-                    console.log(scope);
                     fd.append('file-name', scope.cvFile);
                     fd.append('file-type', scope.cvFile.type);
                     //fd.append('file', scope.cvFile);
-                    console.log(fd);
                     //send the file / data to your server
                     $http.post(baseurl + 'cv/upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        console.log("success?");
-                        console.log(data);
                     });
                 };
 
@@ -1254,6 +1298,7 @@
             }
         };
     });
+
 
 
 
@@ -1367,7 +1412,6 @@
         this.allSites = function (parent, type, linkage) {
             var sites = "";
             var subs = parent[type].subunits;
-            console.log(subs);
             for (var i in subs) {
                 var subunit = subs[i];
                 if (sites !== "") {
@@ -1412,9 +1456,7 @@
             var temp = [];
             _.forEach(display, function (subunit) {
                 _.forEach(subunit.$$subunitDisplay, function (chunk) {
-                       console.log(chunk);
                     temp = _.reject(chunk, function (aa) {
-                        //    console.log(su[type]);
                         return aa[type];
                     });
                 });
@@ -1422,7 +1464,6 @@
             if (type == 'linkage') {
                 temp = _.dropRight(temp);
             }
-            // console.log(temp);
             return temp;
         };
 
@@ -1438,15 +1479,11 @@
 
 
             } else {
-                console.log(obj);
                 obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.nucleicAcid.subunits));
                 obj.sites = siteList.siteList(obj.$$displayString);
             }
             //this applies the sugar property to the display object
             _.forEach(obj.sites, function (site) {
-                console.log(site);
-                console.log(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay);
-                console.log(site.residueIndex % 10);
                 _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
             });
         };
@@ -1470,7 +1507,9 @@
 
 
 
+
     
+
      ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
         return {
             restrict: 'E',
@@ -1528,6 +1567,7 @@
                     }
                 };
 
+
                 scope.getSubunitRange = function () {
                     return _.range(1, scope.subunits.length + 1);
                 };
@@ -1548,6 +1588,7 @@
             }
         };
     });
+
 
     
     ginasForms.directive('diversePlantForm', function (CVFields) {
