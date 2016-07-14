@@ -320,6 +320,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     m.invoke(bean);
                 }
                 catch (Exception ex) {
+                	ex.printStackTrace();
 					Logger.trace("Can't invoke method "
 					        +clazz+"["+m.getName()+"]", ex);
                 	throw new IllegalStateException(ex);

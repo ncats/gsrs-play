@@ -203,4 +203,27 @@ public class Protein extends GinasCommonSubData {
     	return getModifiedSites().get(subunitIndex + "_" + residueIndex);    	
     }
     
+    /**
+     * Get the residue string at the specified site. Returns null if it does not exist.
+     * @param site
+     * @return
+     */
+    public String getResidueAt(Site site){
+    	Integer i=site.subunitIndex;
+    	Integer j=site.residueIndex;
+    	
+    	try{
+	    	for(Subunit su: this.subunits){
+	    		if(su.subunitIndex.equals(i)){
+	    			if(j-1>=su.sequence.length()|| j-1<0)return null;
+	    			char res=su.sequence.charAt(j-1);
+	    			return res + "";
+	    		}
+	    	}
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+    
 }

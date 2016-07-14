@@ -84,8 +84,8 @@
                         <label for="ez">EZ Centers</label><br>
                         <span id ="ez" class="badge">{{parent.structure.ezCenters}}</span></div>
                     <div class="col-md-2">
-                        <label for="charge">Moiety Charge</label><br>
-                        <span id ="charge" class="badge">{{parent.structure.charge}}</span>
+                        <label for="charge">Structure Charge</label><br>
+                        <span id="charge" class="badge"><span ng-if="parent.structure.charge>0">+</span>{{parent.structure.charge}}</span>
                     </div>
 
                     <div class="col-md-1 pull-right">

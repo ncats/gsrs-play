@@ -10,7 +10,7 @@
 
 <button class="btn btn-primary label-offset det">
     Variant Concepts&nbsp;<span class="badge"> @sub.getChildConceptReferences().size</span></button>
-<div class="col-md-12">
+<div class="col-md-12 table-responsive">
         @for(sref <- sub.getChildConceptReferences()) {
 						@if(SubstanceFactory.getFullSubstance(sref) != null) {
                             @subref(sref)

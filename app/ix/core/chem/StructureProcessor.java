@@ -7,6 +7,8 @@ import ix.core.models.Value;
 
 import java.security.MessageDigest;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -336,6 +338,8 @@ public class StructureProcessor {
                 }
             }
         }
+       
+        
         //System.out.print(mol.toFormat("mol"));
         
         String[] hash = LyChIStandardizer.hashKeyArray(stdmol);
@@ -348,7 +352,8 @@ public class StructureProcessor {
         struc.stereoCenters = stereo;
         struc.ezCenters = ez;
         struc.charge = charge;
-        struc.formula = mol.getFormula();
+        //struc.formula = mol.getFormula();
+        Chem.setFormula(struc);
         struc.mwt = mol.getMass();
         struc.smiles = ChemUtil.canonicalSMILES(mol);
         

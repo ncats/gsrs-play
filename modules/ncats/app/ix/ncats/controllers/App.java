@@ -868,16 +868,17 @@ public class App extends Authentication {
         return null;
     }
     static protected String formatKey(String key){
-    	if (key.length() > 10) {
-            key = key.substring(0, 10);
-        }
+//    	if (key.length() > 10) {
+//            key = key.substring(0, 10);
+//        }
     	return key;
     }
 
     static protected SearchResult cacheKey (SearchResult result, String key) {
     	key=formatKey(key);
-        IxCache.set(key, result); // create alias       
+//      IxCache.set(key, result); // create alias       
         result.setKey(key);
+    	
         return result;
     }
 
@@ -1317,6 +1318,9 @@ public class App extends Authentication {
         Collection results = new LinkedBlockingDeque();
         String id = randvar (10);
         Integer total;
+        String key;
+        
+        
         
         public static class SearchResultContextDeterminedFuture extends FutureTask<Void>{
         	public SearchResultContextDeterminedFuture(final SearchResultContext context){
@@ -1451,7 +1455,12 @@ public class App extends Authentication {
             	l.onStatusChange(newStatus, oldStatus);
             }
         }
-        
+        public void setKey(String key){
+        	this.key=key;
+        }
+        public String getKey(){
+        	return key;
+        }
         
         /**
          * Get a future which will return only when
@@ -1516,141 +1525,92 @@ public class App extends Authentication {
             Logger.debug(getClass().getName()+" "+self ()+" stopped!");
         }
     }
+    
+    public static String getKeyForCurrentRequest(){
+    	 String query = request().getQueryString("q") +request().getQueryString("order");
+         String type = request().getQueryString("type");
+
+         Logger.debug("checkStatus: q=" + query + " type=" + type);
+         if (type != null && query != null) {
+             try {
+                 String key = null;
+                 if (type.equalsIgnoreCase("substructure")) {
+                     key = "substructure/"+Util.sha1(query);
+                 }
+                 else if (type.equalsIgnoreCase("similarity")) {
+                     String c = request().getQueryString("cutoff");
+                     key = "similarity/"+getKey (query, Double.parseDouble(c));
+                 }
+                 else if (type.equalsIgnoreCase("sequence")) {
+                 	String iden = request().getQueryString("identity");
+                     if (iden == null) {
+                         iden = "0.5";
+                     }
+                     String idenType = request().getQueryString("identityType");
+                     if(idenType==null){
+                     	idenType="GLOBAL";
+                     }
+                     key = "sequence/"+getKey (getSequence(request().getQueryString("q")) +idenType + request().getQueryString("order"), Double.parseDouble(iden));
+
+                 }
+                 else {
+                 }
+
+                 return key;
+                 
+             }
+             catch (Exception ex) {
+                 ex.printStackTrace();
+             }
+         }
+         else {
+             String key = signature (query, getRequestQuery ());
+             return key;
+         }
+         return null;
+    }
 
     /**
      * This method will return a proper Call only if the query isn't already
      * finished in one way or another
      */
     public static Call checkStatus () {
-        String query = request().getQueryString("q");
-        String type = request().getQueryString("type");
-        Logger.debug("checkStatus: q=" + query + " type=" + type);
-        if (type != null && query != null) {
-            try {
-                String key = null;
-                if (type.equalsIgnoreCase("substructure")) {
-                    key = "substructure/"+Util.sha1(query);
-                }
-                else if (type.equalsIgnoreCase("similarity")) {
-                    String c = request().getQueryString("cutoff");
-                    key = "similarity/"+getKey (query, Double.parseDouble(c));
-                }
-                else if (type.equalsIgnoreCase("sequence")) {
-                    String iden = request().getQueryString("identity");
-                    if (iden == null) {
-                        iden = "0.5";
-                    }
-                    String idenType = request().getQueryString("identityType");
-                    if(idenType==null){
-                    	idenType="GLOBAL";
-                    }
-                    key = "sequence/"+getKey (getSequence(query) +idenType, Double.parseDouble(iden));
-                }
-                else {
-                }
-
-                Logger.debug("status: key="+key);
-                Object value = IxCache.get(key);
-                if (value != null) {
-                    SearchResultContext context = (SearchResultContext)value;
-                    Logger.debug("checkStatus: status="+context.getStatus()
-                                 +" count="+context.getCount()
-                                 +" total="+context.getTotal());
-                    switch (context.getStatus()) {
-	                    case Done:
-	                    case Failed:
-	                        break;
-	                        
-	                    default:
-	                    	return routes.App.status(key);
-                    }
-                    //return routes.App.status(type.toLowerCase(), query);
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-        else {
-        	
-            String key = signature (query, getRequestQuery ());
-            
-            Object value = IxCache.get(key);
-            Logger.debug("checkStatus: key="+key+" value="+value);
-            if (value != null) {
-                SearchResult result = (SearchResult)value;
-                
-                SearchResultContext ctx = new SearchResultContext (result);
-                Logger.debug("status: key="+key+" finished="+ctx.finished());
-
-                if (!ctx.finished()){
-                    return routes.App.status(key);
-                }
-            }else{
-            	//perform magic
-            }
-        }
+    	SearchResultContext ctx=checkStatusDirect();
+    	if(ctx==null)return null;
+        switch (ctx.getStatus()) {
+	        case Done:
+	        case Failed:
+	            break;
+	            
+	        default:
+	        	return routes.App.status(ctx.getKey());
+	    }
         return null;
     }
     
+    
     public static SearchResultContext checkStatusDirect () {
-        String query = request().getQueryString("q");
-        String type = request().getQueryString("type");
-
-        Logger.debug("checkStatus: q=" + query + " type=" + type);
-        if (type != null && query != null) {
+    	String key = getKeyForCurrentRequest();
+    	SearchResultContext context=null;
             try {
-                String key = null;
-                if (type.equalsIgnoreCase("substructure")) {
-                    key = "substructure/"+Util.sha1(query);
-                }
-                else if (type.equalsIgnoreCase("similarity")) {
-                    String c = request().getQueryString("cutoff");
-                    key = "similarity/"+getKey (query, Double.parseDouble(c));
-                }
-                else if (type.equalsIgnoreCase("sequence")) {
-                	String iden = request().getQueryString("identity");
-                    if (iden == null) {
-                        iden = "0.5";
-                    }
-                    String idenType = request().getQueryString("identityType");
-                    if(idenType==null){
-                    	idenType="GLOBAL";
-                    }
-                    key = "sequence/"+getKey (getSequence(query) +idenType, Double.parseDouble(iden));
-
-                }
-                else {
-                }
-
-                Logger.debug("status: key="+key);
                 Object value = IxCache.get(key);
                 if (value != null) {
-                    SearchResultContext context = (SearchResultContext)value;
-                    Logger.debug("checkStatus: status="+context.getStatus()
-                                 +" count="+context.getCount()
-                                 +" total="+context.getTotal());
-                    return context;
+                	if(value instanceof SearchResultContext){
+	                    context = (SearchResultContext)value;
+                	}else if(value instanceof SearchResult){
+                		SearchResult result = (SearchResult)value;
+                		context = new SearchResultContext (result);
+                        Logger.debug("status: key="+key+" finished="+context.finished());
+                	}
                 }
             }
             catch (Exception ex) {
                 ex.printStackTrace();
             }
+        if(context!=null){
+        	context.setKey(key);
         }
-        else {
-            String key = signature (query, getRequestQuery ());
-            Object value = IxCache.get(key);
-            Logger.debug("checkStatus: key="+key+" value="+value);
-            if (value != null) {
-                SearchResult result = (SearchResult)value;
-                
-                SearchResultContext ctx = new SearchResultContext (result);
-                Logger.debug("status: key="+key+" finished="+ctx.finished());
-                
-                return ctx;
-            }
-        }
-        return null;
+        return context;
     }
 
     public static Result status (String key) {
@@ -1713,7 +1673,7 @@ public class App extends Authentication {
         (final String seq, final double identity, final int rows,
          final int page, CutoffType ct, final SearchResultProcessor processor) {
         try {
-            final String key = "sequence/"+getKey (seq + ct.toString(), identity);
+            final String key = "sequence/"+getKey (seq + ct.toString() + request().getQueryString("order"), identity);
             return getOrElse
                 (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
                  new Callable<SearchResultContext> () {
@@ -1735,7 +1695,7 @@ public class App extends Authentication {
         (final String query, final int rows,
          final int page, final SearchResultProcessor processor) {
         try {
-            final String key = "substructure/"+Util.sha1(query);
+            final String key = "substructure/"+Util.sha1(query + request().getQueryString("order"));
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
             return getOrElse
@@ -1766,7 +1726,7 @@ public class App extends Authentication {
          final int rows, final int page,
          final SearchResultProcessor processor) {
         try {
-            final String key = "similarity/"+getKey (query, threshold);
+            final String key = "similarity/"+getKey (query + request().getQueryString("order"), threshold);
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
                  key, new Callable<SearchResultContext> () {

@@ -17,7 +17,7 @@ public class PublicCleanProcessor implements EntityProcessor<Substance>{
 	
 	public void preFlightFormat(Substance obj){
 		for(Reference r:obj.references){
-			if(r.citation.contains(":<SRS_LEGACY_DATA>")){
+			if(r.citation!=null && r.citation.contains(":<SRS_LEGACY_DATA>")){
 				r.citation=r.citation.substring(0,r.citation.indexOf(":<SRS_LEGACY_DATA>"));
 			}
 		}

@@ -9,6 +9,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static ix.test.util.TestUtil.*;
 
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -38,7 +39,9 @@ public class FunctionalTest {
 
    @Test
     public void testRouteSubstance() throws Exception {
+	   System.out.println("Starting route to substance");
        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+    	   System.out.println("Fetching list");
            String content = session.get("ginas/app/substances").getBody();
 
            assertContains(content,"substances");
@@ -140,12 +143,5 @@ public class FunctionalTest {
     	assertContains(content,"reference-form");
     }
     
-    public static void assertContains(String within,String find){
-    	String rep=within;
-    	if(rep.length()>20){
-    		rep=rep.substring(0, 20) + " ... {" + (within.length()-20) +"}" ;
-    	}
-    	assertTrue("Should have found:'" + find + "' in '" + rep + "'" ,within.contains(find));
-    }
 
 }

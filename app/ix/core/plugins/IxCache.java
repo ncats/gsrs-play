@@ -1,38 +1,26 @@
 package ix.core.plugins;
 
 import java.io.File;
-import java.io.Serializable;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.constructs.blocking.CacheEntryFactory;
-import net.sf.ehcache.writer.CacheWriter;
 import play.Application;
 import play.Logger;
 import play.Plugin;
 
-import com.sleepycat.je.*;
-
 public class IxCache extends Plugin {
-    private static final String IX_CACHE_EVICTABLE = "IxCache-Evictable";
-    private static final String IX_CACHE_NOT_EVICTABLE = "IxCache-Not-Evictable";
-    
-    static final int MAX_ELEMENTS = 10000;
-    static final int TIME_TO_LIVE = 60*60; // 1hr
-    static final int TIME_TO_IDLE = 60*60; // 1hr
 
-    public static final String CACHE_MAX_ELEMENTS = "ix.cache.maxMemoryInMB";
+    static final int DEFAULT_MAX_ELEMENTS = 10000;
+    static final int DEFAULT_TIME_TO_LIVE = 60*60; // 1hr
+    static final int DEFAULT_TIME_TO_IDLE = 60*60; // 1hr
+
+    public static final String CACHE_MAX_ELEMENTS = "ix.cache.maxElements";
+    public static final String CACHE_MAX_NOT_EVICTABLE_ELEMENTS = "ix.cache.maxElementsNotEvictable";
     public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
     public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
 
@@ -50,39 +38,12 @@ public class IxCache extends Plugin {
     }
 
 
-    public IxCache(File cacheDir, int debugLevel, int maxElements, int timeToLive, int timeToIdle) {
+    public IxCache( GateKeeper gateKeeper) {
 
         app = null;
 
 
-//        evictableCache = new Cache ( new CacheConfiguration (IX_CACHE_EVICTABLE, maxElements)
-//                .timeToLiveSeconds(timeToLive)
-//                .timeToIdleSeconds(timeToIdle));
-//
-//        nonEvictableCache = new Cache ( new CacheConfiguration (IX_CACHE_NOT_EVICTABLE, 1)
-//                .timeToLiveSeconds(timeToLive)
-//                .timeToIdleSeconds(timeToIdle));
-//
-//
-//
-//        CacheManager.getInstance().removeCache(evictableCache.getName());
-//        CacheManager.getInstance().addCache(evictableCache);
-//
-//
-//        CacheManager.getInstance().removeCache(nonEvictableCache.getName());
-//        CacheManager.getInstance().addCache(nonEvictableCache);
-//
-//
-//        evictableCache.setSampledStatisticsEnabled(true);
-//
-//        gateKeeper = new TwoCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), evictableCache, nonEvictableCache);
-
-        gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
-                                            .debugLevel(debugLevel)
-                                            .useNonEvictableCache(maxElements,timeToLive,timeToIdle)
-                                            .cacheAdapter( new FileDbCache(cacheDir, "inMemCache"))
-                                            .build()
-        .                                    create();
+        this.gateKeeper =gateKeeper;
     }
 
 
@@ -93,18 +54,27 @@ public class IxCache extends Plugin {
         int debugLevel = context.getDebugLevel();
         
         int maxElements = app.configuration()
-            .getInt(CACHE_MAX_ELEMENTS, MAX_ELEMENTS);
+            .getInt(CACHE_MAX_ELEMENTS, DEFAULT_MAX_ELEMENTS);
+
+        int notEvictableMaxElements = app.configuration()
+                .getInt(CACHE_MAX_NOT_EVICTABLE_ELEMENTS, DEFAULT_MAX_ELEMENTS);
 
         int timeToLive = app.configuration()
-                .getInt(CACHE_TIME_TO_LIVE, TIME_TO_LIVE);
+                .getInt(CACHE_TIME_TO_LIVE, DEFAULT_TIME_TO_LIVE);
 
         int timeToIdle = app.configuration()
-                .getInt(CACHE_TIME_TO_IDLE, TIME_TO_IDLE);
+                .getInt(CACHE_TIME_TO_IDLE, DEFAULT_TIME_TO_IDLE);
 
     System.out.println("####################");
         System.out.println("max elements = " + maxElements);
 
-        _instance = new IxCache(context.cache(), debugLevel,maxElements,timeToLive,timeToIdle);
+        GateKeeper gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
+                .debugLevel(debugLevel)
+                .useNonEvictableCache(notEvictableMaxElements,timeToLive,timeToIdle)
+                .cacheAdapter( new FileDbCache(context.cache(), "inMemCache"))
+                .build()
+                .create();
+        _instance = new IxCache(gateKeeper);
     }
 
     @Override

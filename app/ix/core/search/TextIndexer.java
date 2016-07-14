@@ -100,6 +100,7 @@ import ix.core.CacheStrategy;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
+import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
@@ -1023,9 +1024,29 @@ public class TextIndexer implements Closeable{
         FlushDaemon () {
         }
 
+        
         public void run () {
         	//Don't execute if already shutdown
         	if(isShutDown)return;
+        	execute();
+        }
+        
+        /**
+         * Execute the flush, with debugging statistics, without looking at the shutdown state
+         */
+        public void execute(){
+        	int i= (int)(Math.random()*100);
+        	///System.out.println("STARTED DAEMON==================== " +i);
+        	long time = StopWatch.timeElapsed(this::flush);
+        	
+        	//System.out.println("DAEMON FINISHED=================== "  + i + " Elapsed:" + time);
+            
+        }
+
+		private void flush() {
+			
+        	
+        	//Util.debugSpin(20000);
             File file = getFacetsConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 Logger.debug(Thread.currentThread()
@@ -1060,7 +1081,8 @@ public class TextIndexer implements Closeable{
                 for (SuggestLookup lookup : lookups.values())
                     lookup.refreshIfDirty();
             }
-        }
+            
+		}
     }
 
 
@@ -1095,6 +1117,7 @@ public class TextIndexer implements Closeable{
     
     private static Map<Class,SearchContextAnalyzerGenerator> defaultSearchAnalyzers = new HashMap<Class,SearchContextAnalyzerGenerator>();
 
+    private FlushDaemon flushDaemon;
 
     SearcherManager searchManager;
 
@@ -1208,9 +1231,10 @@ public class TextIndexer implements Closeable{
         //facet subsearching so we only need to have
         //a single thread...
         threadPool = ForkJoinPool.commonPool();
-        scheduler =  Executors.newSingleThreadScheduledExecutor();
+        scheduler =  null;
         isShutDown = false;
         isEmptyPool = true;
+
       //  setFetchWorkers (FETCH_WORKERS);
     }
     
@@ -1295,10 +1319,10 @@ public class TextIndexer implements Closeable{
 
        // setFetchWorkers (FETCH_WORKERS);
 
-        // run daemon every 5s
+        flushDaemon=new FlushDaemon ();
+        // run daemon every 20s
         scheduler.scheduleAtFixedRate
-            (new FlushDaemon (), 10, 20, TimeUnit.SECONDS);
-        
+            (flushDaemon, 10, 20, TimeUnit.SECONDS);
     }
 
 //    public void setFetchWorkers (int n) {
@@ -1486,8 +1510,9 @@ public class TextIndexer implements Closeable{
                         rank.put(id, ++r);
                 }
                 
-                if (!rank.isEmpty())
+                if (!rank.isEmpty() && options.order.isEmpty()){
                     searchResult.setRank(rank);
+                }
             }
             else if (options.kind != null) {
                 Set<String> kinds = new TreeSet<String>();
@@ -1590,7 +1615,6 @@ public class TextIndexer implements Closeable{
                     // a ROOT prefix for the full path. If the root prefix is not
                     // present, this will add it.
                     
-                    
                     SortField.Type type = sorters.get(TextIndexer.SORT_PREFIX + f);
                     if(type == null){
                     	type = sorters.get(TextIndexer.SORT_PREFIX + ROOT + "_" + f);
@@ -1604,6 +1628,7 @@ public class TextIndexer implements Closeable{
                         fields.add(sf);
                     }
                     else {
+                    	System.out.println("Couldn't find sorter:" + f + " in " + sorters.keySet().toString());
                         Logger.warn("Unknown sort field: \""+f+"\"");
                     }
                 }
@@ -1663,12 +1688,13 @@ public class TextIndexer implements Closeable{
             }
             
             if (drills.isEmpty()) {
-                hits = sorter != null 
-                    ? (FacetsCollector.search
-                       (searcher, query, filter, options.max(), sorter, fc))
-                    : (FacetsCollector.search
-                       (searcher, query, filter, options.max(), fc));
-                
+            	if(sorter!=null){
+            		hits = (FacetsCollector.search
+                            (searcher, query, filter, options.max(), sorter, fc));
+            	}else{
+            		hits = (FacetsCollector.search
+                            (searcher, query, filter, options.max(), fc));
+            	}
                 Facets facets = new FastTaxonomyFacetCounts
                      (taxon, facetsConfig, fc);
                 
@@ -1733,11 +1759,14 @@ public class TextIndexer implements Closeable{
                     hits = swResult.hits;
                 }
                 else { // drilldown
-                    hits = sorter != null 
-                        ? (FacetsCollector.search
-                           (searcher, ddq, filter, options.max(), sorter, fc))
-                        : (FacetsCollector.search
-                           (searcher, ddq, filter, options.max(), fc));
+                	
+                	if(sorter!=null){
+                		hits = (FacetsCollector.search
+                                (searcher, ddq, filter, options.max(), sorter, fc));
+                	}else{
+                		hits = (FacetsCollector.search
+                                (searcher, ddq, filter, options.max(), fc));
+                	}
                     
                     facets = new FastTaxonomyFacetCounts
                         (taxon, facetsConfig, fc);
@@ -2758,21 +2787,27 @@ public class TextIndexer implements Closeable{
 
     public void shutdown () {
         if(isShutDown){
-            //System.out.println("already shutdown");
             return;
         }
-        //System.out.println("shutting down " + System.identityHashCode(this));
         try {
-//            for(int i=0; i< fetchWorkers.length; i++) {
-//                fetchQueue.put(POISON_PAYLOAD);
-//            }
 
             System.out.println("Shutting down scheduler");
-          //  scheduler.shutdown();
-           // scheduler.awaitTermination(1, TimeUnit.MINUTES);
-            scheduler.shutdownNow();
-            System.out.println("scheduler shut down");
-            //System.out.println("done waiting for termination");
+            if(scheduler !=null){
+                try{
+                	isShutDown=true;
+                	scheduler.shutdown();
+                	System.out.println("Awaiting shutdown");
+                	scheduler.awaitTermination(1, TimeUnit.MINUTES);
+                	System.out.println("finished shutdown");
+                	System.out.println("final daemon run");
+                	flushDaemon.execute();
+                }catch(Throwable e){
+                	e.printStackTrace();
+                	throw new RuntimeException(e);
+                }
+            }
+           
+            
             saveFacetsConfig (getFacetsConfigFile (), facetsConfig);
             saveSorters (getSorterConfigFile (), sorters);
 
@@ -2802,12 +2837,17 @@ public class TextIndexer implements Closeable{
             Logger.trace("Closing index", ex);
         }
         finally {
-            System.out.println("indexers... before shutdown " + indexers.keySet());
-            TextIndexer indexer = indexers.remove(baseDir);
+        	if(indexers!=null){
+        		
+        		if(baseDir!=null){
+        			TextIndexer indexer = indexers.remove(baseDir);
+        		}
+        	}
             System.out.println("removed baseDir " + baseDir);
             //System.out.println("indexers left after shutdown =" + indexers.keySet());
-            threadPool.shutdown();
+            
             if(!isEmptyPool) {
+            	threadPool.shutdown();
                 try {
                     threadPool.awaitTermination(1, TimeUnit.MINUTES);
                 } catch (Exception e) {

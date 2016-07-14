@@ -71,7 +71,7 @@
                                         <span id="ez" class="badge">{{obj.ezCenters}}</span></div>
                                     <div class="col-md-2">
                                         <label for="charge">Moiety Charge</label><br>
-                                        <span id="charge" class="badge">{{obj.charge}}</span>
+                                        <span id="charge" class="badge"><span ng-if="obj.charge>0">+</span>{{obj.charge}}</span>
                                     </div>
                                 </div>
                                 <br>

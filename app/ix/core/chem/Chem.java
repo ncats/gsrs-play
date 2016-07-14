@@ -57,11 +57,12 @@ public class Chem {
         List<String> order = new ArrayList<String>(formula.keySet());
         Collections.sort(order, new Comparator<String>() {
                 public int compare (String s1, String s2) {
-                    Integer c1 = formula.get(s1);
-                    Integer c2 = formula.get(s2);
-                    int d = c2 - c1;
+                	int d=s2.length() - s1.length();
+                    
                     if (d == 0) {
-                        d = s2.length() - s1.length();
+                    	Integer c1 = formula.get(s1);
+                        Integer c2 = formula.get(s2);
+                        d = c1 - c2;
                         if (d == 0)
                             d = s1.compareTo(s2);
                     }

@@ -5,7 +5,8 @@
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row" ng-class="{'disabled plain' : !referenceobj.$$unlocked}">
-                            <div class="col-md-1">
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="terms"></delete-button>
                             </div>
                             <div class="col-md-2">
                                 <gsrs-input type="text"
@@ -41,10 +42,10 @@
                             <div class="col-md-1">
                                 <check-box ng-model="obj.selected" field="selected"></check-box>
                             </div>
-                            <div class="col-md-1">
+                           <!-- <div class="col-md-1">
                                 <label>Filters</label><br>
                                 <i class="fa fa-filter fa-2x success" ng-click="" uib-tooltip="Add filters"></i>
-                            </div>
+                            </div>-->
                         </div>
                         <div class="row"
                              ng-if="obj.systemCategory">
@@ -93,19 +94,19 @@
 </div>
                         </div>
 
-                        <div class="row">
+<!--                        <div class="row">
                             <div class="col-md-1 pull-right">
                                 <label>Save</label><br>
                                 <i class="fa fa-floppy-o fa-2x success" ng-click="addCV(term);"
                                    uib-tooltip="Update Term to database"></i>
                             </div>
-                        </div>
+                        </div>-->
                     </div>
                 </ng-form>
             </div>
         </form>
         <hr>
-        <button class="btn btn-primary" ng-click="addNew(termForm, 'terms')"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary" ng-click="addNewTerm(termForm, 'terms')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="referenceobj.terms.length>0">nother</span> term
         </button>
     </div>

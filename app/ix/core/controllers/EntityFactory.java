@@ -58,6 +58,7 @@ import ix.core.DefaultValidator;
 import ix.core.IgnoredModel;
 import ix.core.SingleParent;
 import ix.core.ValidationResponse;
+import ix.core.ExceptionValidationMessage;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
@@ -1030,8 +1031,11 @@ public class EntityFactory extends Controller {
             	return ok(validationResponse(vr,false));
             }
         } catch (Throwable ex) {
-        	ex.printStackTrace();
-            return internalServerError(ex.getMessage());
+        	ValidationResponse vr = new ValidationResponse(null);
+        	vr.setInvalid();
+        	vr.addValidationMessage(new ExceptionValidationMessage(ex));
+        	//should this be ok? Or internalServerError?
+            return ok(validationResponse(vr,false));
         }
     }
     protected static JsonNode validationResponse(ValidationResponse vr){

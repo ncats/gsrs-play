@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -40,26 +41,34 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
      */
     private void runRepTests(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearch searcher = new SubstanceSearch(session);
+    	SubstanceSearch.SearchResult all = searcher.all();
+        assertEquals(90, all.numberOfResults());
+        
+    	
         SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
         assertEquals(17, results.numberOfResults());
-        SubstanceSearch.SearchResult all = searcher.all();
-        assertEquals(90, all.numberOfResults());
+        
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
-        
-        
         
     }
     
     
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearch searcher = new SubstanceSearch(session);
+    	searcher.setSearchOrder("Name Count");
     	SubstanceSearch.SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
     	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
     	
     	SubstanceSearch.SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
     	//System.out.println("Found results size:" + results2.getUuids().toString());
     	assertEquals(1, results2.getUuids().size());
-        assertTrue("15th page of substructure search should have the same substance every time",results2.getUuids().contains("0a707d18"));
+    	String findUUID="445d5a83";
+		assertTrue(
+				"15th page of substructure search should have the same substance every time: looking for \""
+						+ findUUID
+						+ "\" but found \""
+						+ results2.getUuids().toString() + "\"", results2
+						.getUuids().contains(findUUID));
         assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);        
     }
     
@@ -89,7 +98,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test
+    @Test 
     public void loadMultipleFiles() throws IOException {
 
         try(BrowserSession session = ts.newBrowserSession(admin)){
@@ -106,7 +115,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test
+    @Test 
     public void loadAsAdmin() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -122,7 +131,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test
+    @Test 
     public void substructureSearchOnRep90ShouldReturnDeterministicResults() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -140,7 +149,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test
+    @Test 
     public void substructureSearchOnRep90ShouldAllowPaging() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -157,7 +166,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         }
     }
     
-    @Test
+    @Test 
     public void substructureSearchOnRep90ShouldPreserveHighlightingAfterPaging() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -180,7 +189,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test
+    @Test 
     public void loadedDataPersistedAcrossRestarts() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)) {
 
@@ -200,7 +209,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test
+    @Test 
     public void nonAdminCanNotLoad() throws IOException{
         GinasTestServer.User normalUser = ts.createNormalUser("peon", "pass");
 
@@ -217,7 +226,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
     
-    @Test
+    @Test 
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
         SubstanceSearch searcher = new SubstanceSearch(ts.notLoggedInBrowserSession());
@@ -231,7 +240,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     
     
-    @Test
+    @Test 
     public void deleteLuceneIndexesButNOTDatabaseShouldReturnZeroResults() throws IOException{
         try(BrowserSession session = ts.newBrowserSession(admin)) {
 
