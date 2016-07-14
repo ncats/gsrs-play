@@ -216,6 +216,7 @@ public class Validation {
 	        
 	       
         }catch(Exception e){
+        	e.printStackTrace();
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
         }
     	long dur=System.currentTimeMillis()-start;
@@ -566,10 +567,20 @@ public class Validation {
         	if(cs.mixture.components==null || cs.mixture.components.size()<2){
         		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture substance must have at least 2 mixture components"));
         	}else{
+        		Set<String> mixtureIDs = new HashSet<String>();
         		for(Component c:cs.mixture.components){
-        			Substance comp=SubstanceFactory.getFullSubstance(c.substance);
-        			if(comp==null){
-        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
+        			if(c.substance==null){
+        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture components must reference a substance record, found:\"null\""));
+        			}else{
+	        			Substance comp=SubstanceFactory.getFullSubstance(c.substance);
+	        			if(comp==null){
+	        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
+	        			}
+	        			if(!mixtureIDs.contains(c.substance.refuuid)){
+	        				mixtureIDs.add(c.substance.refuuid);
+	        			}else{
+	        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot reference the same mixture substance twice in a mixture:\"" + c.substance.refPname + "\""));
+	        			}
         			}
         		}
         	}
