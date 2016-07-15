@@ -1458,11 +1458,15 @@
             var temp = [];
             _.forEach(display, function (subunit) {
                 _.forEach(subunit.$$subunitDisplay, function (chunk) {
-                    temp = _.reject(chunk, function (aa) {
+                    var tempadd = _.reject(chunk, function (aa) {
                         return aa[type];
                     });
+		    for(var i=0;i<tempadd.length;i++){
+			temp.push(tempadd[i]);
+		    }
                 });
             });
+	 
             if (type == 'linkage') {
                 temp = _.dropRight(temp);
             }
@@ -1481,12 +1485,17 @@
 
 
             } else {
-                obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.nucleicAcid.subunits));
+                var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
+                obj.$$displayString = siteList.siteString(sites2);
                 obj.sites = siteList.siteList(obj.$$displayString);
             }
             //this applies the sugar property to the display object
             _.forEach(obj.sites, function (site) {
-                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
+		//technically, this can be a problem, as the index of the array is not guaranteed
+		//to correspond to the subunitIndex of the subunit
+		var chunkIndex=Math.floor((site.residueIndex-1) / 10);
+		var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
+                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type, true);
             });
         };
 

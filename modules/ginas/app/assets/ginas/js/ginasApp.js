@@ -1301,7 +1301,7 @@
 
     });
 
- /*   ginasApp.directive('siteView', function (siteList) {
+    ginasApp.directive('siteView', function (siteList) {
 
         return {
             restrict: 'E',
@@ -1322,9 +1322,9 @@
                             }
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         } else {
-                            /!*
+                            /*
                              alert('error');
-                             *!/
+                             */
                         }
 
                     }
@@ -1332,7 +1332,7 @@
             },
             template: '<div><div><span>{{referenceobj.$$displayString || referenceobj[field].$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
         };
-    });*/
+    });
 
 /*    ginasApp.directive('comment', function () {
 
