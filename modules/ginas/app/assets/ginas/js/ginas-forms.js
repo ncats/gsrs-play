@@ -164,6 +164,179 @@
 
     });
 
+    ginasForms.factory('subunitParser', function(CVFields){
+        var factoryResidues;
+        var objectParser = function (subObj, siteObj, name) {
+            var cv;
+            var newobj;
+            _.forEach(subObj, function (value, key) {
+                if (_.isArray(value) && value.length > 0) {
+                    _.forEach(value, function (mod) {
+                        if (name === 'glycosylation') {
+                            if (mod.subunitIndex == siteObj.subunitIndex && mod.residueIndex == siteObj.residueIndex) {
+                                _.set(siteObj, name, true);
+                            }
+                        } else if (name === 'structuralModifications') {
+                            _.forEach(mod.sites, function (site) {
+                                if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
+                                    _.set(siteObj, name, mod.molecularFragment);
+                                }
+                            });
+                        } else if (name === 'sugar' || name === 'linkage') {
+                            _.forEach(mod.sites, function (site) {
+                                if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
+                                    var obj = mod[name];
+                                    _.set(siteObj, name, obj);
+                                    if (!_.has(obj, 'display')) {
+                                        var type = _.toUpper(name);
+                                        type = 'NUCLEIC_ACID_' + type;
+                                        CVFields.getCV(type).then(function (data) {
+                                            cv = data.data.content[0].terms;
+                                            newobj = _.find(cv, ['value', obj]);
+                                            _.set(siteObj, name, newobj);
+                                        });
+                                    }
+                                }
+                            });
+                        } else {
+                            //if the subunit changes while an empty link exists breaks this, hence the sites check
+                            if(mod.sites && mod.sites.length > 0) {
+                                if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
+                                    var bridge = mod.sites[1];
+                                    _.set(siteObj, name, bridge);
+                                } else if (mod.sites[1].subunitIndex == siteObj.subunitIndex && mod.sites[1].residueIndex == siteObj.residueIndex) {
+                                    var bridge = mod.sites[0];
+                                    _.set(siteObj, name, bridge);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        };
+
+        var factory = {};
+        factory.getResidues= function(substanceClass){
+            console.log(substanceClass);
+            var residues;
+            var cls;
+            if (substanceClass === 'protein') {
+                cls = "AMINO_ACID_RESIDUE";
+            }else {
+                cls = "NUCLEIC_ACID_BASE";
+            }
+            CVFields.getCV(cls).then(function (response) {
+                console.log(response);
+                factoryResidues = response.data.content[0].terms;
+                return response.data.content[0].terms;
+            });
+
+        };
+
+        factory.cleanSequence = function (sequence) {
+            if(_.isUndefined(factoryResidues)) {
+                factory.getResidues(subclass);
+            }
+            sequence = _.filter(sequence, function (aa) {
+                var temp = (_.find(factoryResidues, ['value', aa.toUpperCase()]));
+                if (!_.isUndefined(temp)) {
+                    return temp;
+                }
+            }).toString().replace(/,/g, '');
+           // scope.parseSubunit();
+            return sequence;
+        };
+
+        factory.getType = function (aa) {
+            if (aa == aa.toLowerCase()) {
+                return 'D-';
+            }
+            else {
+                return 'L-';
+            }
+        };
+
+        factory.parseSubunit = function (parent, proteinobj, proteinindex) {
+var subclass = parent.substanceClass;
+            if(_.isUndefined(factoryResidues)) {
+                factory.getResidues(subclass);
+            }
+           parent.$$cysteines = [];
+            var display = [];
+            _.forEach(proteinobj.sequence, function (aa, index) {
+                var obj = {};
+                obj.value = aa;
+                var temp = (_.find(factoryResidues, ['value', aa.toUpperCase()]));
+                if (!_.isUndefined(temp)) {
+                    obj = _.pickBy(temp, _.isString);
+                    obj.value = aa;
+                    //obj.name = temp.display;
+                    obj.valid = true;
+                    if (proteinobj.subunitIndex) {
+                        obj.subunitIndex = proteinobj.subunitIndex;
+                    } else {
+                        obj.subunitIndex = proteinindex;
+                    }
+                    obj.residueIndex = index - 0 + 1;
+
+                    //parse out cysteines first
+                    if (aa.toUpperCase() == 'C') {
+                        obj.cysteine = true;
+                       parent.$$cysteines.push(
+                            {subunitIndex: _.toInteger(proteinindex),
+                                residueIndex: index + 1,
+                                display: proteinindex +'_'+ (index+1),
+                                value: proteinindex +'_'+ (index+1)
+                            });
+                    }
+
+                    if (_.has(parent, 'modifications.structuralModifications')) {
+                        objectParser(parent.modifications, obj, 'structuralModifications');
+                    }
+
+                    if (parent.substanceClass === 'protein') {
+                        obj.type = factory.getType(aa);
+                        if (_.has(parent.protein, 'glycosylation')) {
+                            objectParser(parent.protein.glycosylation, obj, 'glycosylation');
+                        }
+                        if (_.has(parent.protein, 'disulfideLinks')) {
+                            var linksObj = {};
+                            _.set(linksObj, 'links',parent.protein.disulfideLinks);
+                            objectParser(linksObj, obj, 'disulfide');
+                        }
+                        if (_.has(parent.protein, 'otherLinks')) {
+                            var linksObj = {};
+                            _.set(linksObj, 'otherLinks',parent.protein.otherLinks);
+                            objectParser(linksObj, obj, 'otherLinks');
+                        }
+
+                    } else {
+                        if (_.has(parent.nucleicAcid, 'sugars')) {
+                            var linksObj = {};
+                            _.set(linksObj, 'sugar',parent.nucleicAcid.sugars);
+                            objectParser(linksObj, obj, 'sugar');
+                        }
+                        if (_.has(parent.nucleicAcid, 'linkages')) {
+                            var linksObj = {};
+                            _.set(linksObj, 'linkage', parent.nucleicAcid.linkages);
+                            objectParser(linksObj, obj, 'linkage');
+                        }
+                    }
+
+
+                } else {
+                    obj.valid = false;
+                }
+                display.push(obj);
+            });
+            display = _.chunk(display, 10);
+            _.set(proteinobj, '$$subunitDisplay', display);
+        };
+return factory;
+    });
+    
+    
+    
     ginasForms.directive('accessForm', function () {
         return {
             restrict: 'E',
@@ -288,49 +461,33 @@
 
                     //this removes the sites from the cv
                     _.forEach(ret, function (used) {
-                        var t =  _.remove(cys, function (c) {
-                            return c.value === used.value
+                         _.remove(cys, function (c) {
+                            return c.value === used.value;
                         });
                     });
 
-                    console.log(cys);
                     //set the cv to be the copied array
                     scope.cysteines = cys;
 
                 };
 
-
+                //this is called before the object is deleted, so removing used doesn't work
                 scope.$on('delete', function (e) {
-                    console.log("delete");
-                    console.log(e);
-                    e.preventDefault = true;
-                //    e.targetScope.deleteObj();
-                    scope.cysteines = angular.copy(scope.parent.$$cysteines);
-                    console.log(scope.cysteines);
-console.log(scope);
+
+                    //get all sites/
                     scope.removeUsed();
+                    //retrieve sites
+                    var cys = angular.copy(scope.cysteines);
+
+                    //iterate over sites and remove the 2 sites contained in the delete obj
+                    _.forEach(e.targetScope.obj.sites, function (site) {
+                        cys.push(site);
+                    });
+                    scope.cysteines  = _.orderBy(cys, 'value');
                 });
 
-/////////////TODO: finish / fix this///////////////////////////////
                 scope.clean = function (model, site, index) {
                    scope.removeUsed();
-                };
-
-                scope.getAllCysteinesWithoutLinkage = function () {
-                    var count = 0;
-                    if (scope.cysteines) {
-                        count = scope.cysteines.length;
-                    }
-                    //   _.forEach(scope.parent.protein.subunits, function (subunit) {
-                    /*     if (!_.isUndefined(subunit.$$cysteineIndices)) {
-                     count += subunit.$$cysteineIndices.length;
-                     }
-
-                     if (_.has(scope.parent.protein, 'disulfideLinks')) {
-
-                     count -= scope.parent.protein.disulfideLinks.length * 2;
-                     }*/
-                    return count;
                 };
 
                 //set the views on loading/editing a substance
@@ -345,17 +502,12 @@ console.log(scope);
                     });
                 }
 
-
-                //scope.cysteines = angular.copy(scope.parent.$$cysteines);
-
                 scope.$watchCollection('parent.$$cysteines', function (newValue, oldValue, scope) {
                     var ret;
 
                     //this will update the cv on subunit change, excluding used subunits.
                     //this doesn't remove them from the cv if they are added to the disulfide links
                     if (!_.isUndefined(newValue)) {
-                        console.log(newValue);
-                        console.log(scope);
                         if (scope.parent.protein.disulfideLinks && scope.parent.protein.disulfideLinks.length > 0) {
                             scope.cysteines = newValue;
                             scope.removeUsed();
@@ -367,6 +519,334 @@ console.log(scope);
             }
         };
     });
+
+    ginasForms.directive('nucleicAcidSugarForm', function (siteList, siteAdder, subunitParser) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller:'formController',
+            scope: {
+                parent: '=',
+                referenceobj: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
+            link: function (scope, attrs, element) {
+                console.log(scope);
+
+                scope.getAllSites = function () {
+                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
+                };
+
+                scope.applyAll = function (obj, index) {
+                    console.log(obj);
+                    console.log(scope.obj);
+                    siteAdder.applyAll('sugar', scope.parent, obj);
+                    subunitParser.parseSubunit(scope.parent, obj, index);
+
+//                    subunitParser.parseSubunit(scope.parent, obj, scope.residues, scope.index);
+                };
+
+
+//this is called every time something is hovered over -- ned to fix
+                scope.noSugars = function () {
+                    var count = scope.getAllSites();
+                    _.forEach(scope.parent.nucleicAcid.sugars, function (sugar) {
+                        if (_.isArray(sugar.sites)) {
+                            count -= sugar.sites.length
+                        }
+                    });
+                    return count;
+                };
+                scope.$on('delete', function (e) {
+                    console.log(e);
+                    siteAdder.clearSites('sugar', scope.parent, e.targetScope.obj.sites, e.targetScope.index);
+                 //   subunitParser.parseSubunit(scope.parent, e.targetScope.obj, e.targetScope.index);
+                });
+
+
+/*                scope.deleteObj = function (obj) {
+//                  scope.parent.nucleicAcid.sug.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
+                    siteAdder.clearSites('sugar', scope.parent, obj.sites);
+
+                };*/
+
+            }
+        };
+    });
+
+    ginasForms.service('siteList', function () {
+
+        //string to array hepler
+        function siteDisplayToSite(site) {
+            var subres = site.split("_");
+
+            if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
+                throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
+            }
+
+            return {
+                subunitIndex: subres[0] - 0,
+                residueIndex: subres[1] - 0
+            };
+        }
+
+        //string to array
+        this.siteList = function (slist) {
+            var toks = slist.split(";");
+            var sites = [];
+            for (var i in toks) {
+                var l = toks[i];
+                if (l === "")continue;
+                var rng = l.split("-");
+                if (rng.length > 1) {
+                    var site1 = siteDisplayToSite(rng[0]);
+                    var site2 = siteDisplayToSite(rng[1]);
+                    if (site1.subunitIndex != site2.subunitIndex) {
+                        throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
+                    }
+                    if (site2.residueIndex <= site1.residueIndex) {
+                        throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
+                    }
+                    sites.push(site1);
+                    for (var j = site1.residueIndex + 1; j < site2.residueIndex; j++) {
+                        sites.push({
+                            subunitIndex: site1.subunitIndex,
+                            residueIndex: j
+                        });
+                    }
+                    sites.push(site2);
+                } else {
+                    sites.push(siteDisplayToSite(rng[0]));
+                }
+            }
+            return sites;
+
+        };
+
+        //array to String
+        this.siteString = function (sitest) {
+            var sites = [];
+            angular.extend(sites, sitest);
+            sites.sort(function (site1, site2) {
+                var d = site1.subunitIndex - site2.subunitIndex;
+                if (d === 0) {
+                    d = site1.residueIndex - site2.residueIndex;
+                }
+                return d;
+
+            });
+            var csub = 0;
+            var cres = 0;
+            var rres = 0;
+            var finish = false;
+            var disp = "";
+            for (var i = 0; i < sites.length; i++) {
+
+                var site = sites[i];
+                if (site.subunitIndex == csub && site.residueIndex == cres)
+                    continue;
+                finish = false;
+                if (site.subunitIndex == csub) {
+                    if (site.residueIndex == cres + 1) {
+                        if (rres === 0) {
+                            rres = cres;
+                        }
+                    } else {
+                        finish = true;
+                    }
+                } else {
+                    finish = true;
+                }
+                if (finish && csub !== 0) {
+                    if (rres !== 0) {
+                        disp += csub + "_" + rres + "-" + csub + "_" + cres + ";";
+                    } else {
+                        disp += csub + "_" + cres + ";";
+                    }
+                    rres = 0;
+                }
+                csub = site.subunitIndex;
+                cres = site.residueIndex;
+            }
+            if (sites.length > 0) {
+                if (rres !== 0) {
+                    disp += csub + "_" + rres + "-" + csub + "_" + cres;
+                } else {
+                    disp += csub + "_" + cres;
+                }
+            }
+            return disp;
+        };
+
+
+        //make string from all indexes
+        this.allSites = function (parent, type, linkage) {
+            var sites = "";
+            var subs = parent[type].subunits;
+            for (var i in subs) {
+                var subunit = subs[i];
+                if (sites !== "") {
+                    sites += ";";
+                }
+                if (linkage) {
+                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + (subunit.sequence.length - 1);
+                } else {
+                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + subunit.sequence.length;
+                }
+            }
+            return sites;
+        };
+    });
+
+    ginasForms.service('siteAdder', function (siteList, subunitParser) {
+
+        this.getAll = function (type, display) {
+            var temp = [];
+            // _.forEach(display, function (arr) {
+            _.forEach(display, function (subunit) {
+                temp = _.filter(subunit, function (su) {
+                    return su[type];
+                });
+                //    });
+            });
+            return temp;
+        };
+
+        this.getCount = function (subunits) {
+            var count = 0;
+            _.forEach(subunits, function (subunit) {
+                _.forEach(subunit.$$subunitDisplay, function (chunk) {
+                    count += chunk.length;
+                });
+            });
+            return count;
+        };
+
+
+        this.getAllSitesWithout = function (type, display) {
+            var temp = [];
+            _.forEach(display, function (subunit) {
+                _.forEach(subunit.$$subunitDisplay, function (chunk) {
+                    var tempadd = _.reject(chunk, function (aa) {
+                        if(aa[type]){
+                            console.log(aa);
+                        }
+                        return aa[type];
+                    });
+                    console.log(tempadd);
+                    temp = _.concat(tempadd, temp);
+                    /*for(var i=0;i<tempadd.length;i++){
+                        temp.push(tempadd[i]);
+                    }*/
+                });
+            });
+
+            if (type == 'linkage') {
+                temp = _.dropRight(temp);
+            }
+            return temp;
+        };
+
+        this.applyAll = function (type, parent, obj) {
+            var plural = type + "s";
+            if (parent.nucleicAcid[plural].length == 0) {
+                if (type == 'linkage') {
+                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
+                } else {
+                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
+                }
+                obj.sites = siteList.siteList(obj.$$displayString);
+
+
+            } else {
+                var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
+                console.log("Sites:" + sites2.length);
+                obj.$$displayString = siteList.siteString(sites2);
+                obj.sites = siteList.siteList(obj.$$displayString);
+            }
+            //this applies the sugar property to the display object
+            _.forEach(obj.sites, function (site) {
+                //technically, this can be a problem, as the index of the array is not guaranteed
+                //to correspond to the subunitIndex of the subunit
+                var chunkIndex=Math.floor((site.residueIndex-1) / 10);
+                var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
+                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type, true);
+            });
+        };
+
+        this.clearSites = function (type, parent, obj, index) {
+            console.log(type);
+            console.log(angular.copy(parent));
+            console.log(obj);
+            console.log(index);
+            _.forEach(obj, function (site) {
+                console.log(site);
+                var chunkIndex=Math.floor((site.residueIndex-1) / 10);
+                var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
+                parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex] = _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type);
+
+               // _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[(site.residueIndex - 1) % 10][site.residueIndex - 1], type);
+              //  subunitParser.parseSubunit(parent, obj, index);
+            });
+            console.log(parent);
+
+        };
+    });
+
+    ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder, subunitParser) {
+        return {
+            restrict: 'E',
+            replace: true,
+            controller: 'formController',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
+            link: function (scope, attrs, element) {
+                /*scope.linkage = {};
+                scope.noLinkages = 0;
+                if (!scope.parent.nucleicAcid.linkages) {
+                    scope.parent.nucleicAcid.linkages = [];
+                }
+*/
+                scope.getAllSites = function () {
+                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
+                };
+
+                scope.applyAll = function (obj, index) {
+                    siteAdder.applyAll('linkage', scope.parent, obj, 'linkage');
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                    subunitParser.parseSubunit(scope.parent, obj, index);
+                };
+
+               /* scope.validate = function () {
+                    _.forEach(scope.linkage.sites.sites, function (site) {
+                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
+                    });
+                    scope.parent.nucleicAcid.linkages.push(scope.linkage);
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                    scope.linkage = {};
+                    scope.linkageForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj) {
+                    scope.parent.nucleicAcid.linkages.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
+                    siteAdder.clearSites('linkage', scope.parent, obj.sites);
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                };
+*/
+                scope.noLinkages = function () {
+                    var count = scope.getAllSites('linkage') - 1;
+                    _.forEach(scope.parent.nucleicAcid.linkages, function (link) {
+                        count -= link.sites.length
+                    });
+                    return count;
+                }
+            }
+        };
+    });
+
 
     ginasForms.directive('diverseOrganismForm', function () {
         return {
@@ -597,93 +1077,6 @@ console.log(scope);
         };
     });
 
-    ginasForms.directive('nucleicAcidSugarForm', function (siteList, siteAdder) {
-        return {
-            restrict: 'E',
-            replace: true,
-            controller: 'formController',
-            scope: {
-                parent: '=',
-                referenceobj: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
-            link: function (scope, attrs, element) {
-
-                scope.getAllSites = function () {
-                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
-                };
-
-                scope.applyAll = function (obj) {
-                    siteAdder.applyAll('sugar', scope.parent, obj);
-                };
-
-
-//this is called every time something is hovered over -- ned to fix
-                scope.noSugars = function () {
-                    var count = scope.getAllSites();
-                    _.forEach(scope.parent.nucleicAcid.sugars, function (sugar) {
-                        if (_.isArray(sugar.sites)) {
-                            count -= sugar.sites.length
-                        }
-                    });
-                    return count;
-                }
-            }
-        };
-    });
-
-    ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder) {
-        return {
-            restrict: 'E',
-            replace: true,
-            controller: 'formController',
-            scope: {
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
-            link: function (scope, attrs, element) {
-                scope.linkage = {};
-                scope.noLinkages = 0;
-                if (!scope.parent.nucleicAcid.linkages) {
-                    scope.parent.nucleicAcid.linkages = [];
-                }
-
-                scope.getAllSites = function () {
-                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
-                };
-
-                scope.applyAll = function () {
-                    siteAdder.applyAll('linkage', scope.parent, scope.linkage, 'linkage');
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                };
-
-                scope.validate = function () {
-                    _.forEach(scope.linkage.sites.sites, function (site) {
-                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
-                    });
-                    scope.parent.nucleicAcid.linkages.push(scope.linkage);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                    scope.linkage = {};
-                    scope.linkageForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.nucleicAcid.linkages.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
-                    siteAdder.clearSites('linkage', scope.parent, obj.sites);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                };
-
-                scope.noLinkages = function () {
-                    var count = scope.getAllSites('linkage') - 1;
-                    _.forEach(scope.parent.nucleicAcid.linkages, function (link) {
-                        count -= link.sites.length
-                    });
-                    return count;
-                }
-            }
-        };
-    });
 
     ginasForms.directive('otherLinksForm', function () {
         return {
@@ -1302,197 +1695,8 @@ console.log(scope);
     });
 
 
-    ginasForms.service('siteList', function () {
-
-        //string to array hepler
-        function siteDisplayToSite(site) {
-            var subres = site.split("_");
-
-            if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
-                throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
-            }
-
-            return {
-                subunitIndex: subres[0] - 0,
-                residueIndex: subres[1] - 0
-            };
-        }
-
-        //string to array
-        this.siteList = function (slist) {
-            var toks = slist.split(";");
-            var sites = [];
-            for (var i in toks) {
-                var l = toks[i];
-                if (l === "")continue;
-                var rng = l.split("-");
-                if (rng.length > 1) {
-                    var site1 = siteDisplayToSite(rng[0]);
-                    var site2 = siteDisplayToSite(rng[1]);
-                    if (site1.subunitIndex != site2.subunitIndex) {
-                        throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
-                    }
-                    if (site2.residueIndex <= site1.residueIndex) {
-                        throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
-                    }
-                    sites.push(site1);
-                    for (var j = site1.residueIndex + 1; j < site2.residueIndex; j++) {
-                        sites.push({
-                            subunitIndex: site1.subunitIndex,
-                            residueIndex: j
-                        });
-                    }
-                    sites.push(site2);
-                } else {
-                    sites.push(siteDisplayToSite(rng[0]));
-                }
-            }
-            return sites;
-
-        };
-
-        //array to String
-        this.siteString = function (sitest) {
-            var sites = [];
-            angular.extend(sites, sitest);
-            sites.sort(function (site1, site2) {
-                var d = site1.subunitIndex - site2.subunitIndex;
-                if (d === 0) {
-                    d = site1.residueIndex - site2.residueIndex;
-                }
-                return d;
-
-            });
-            var csub = 0;
-            var cres = 0;
-            var rres = 0;
-            var finish = false;
-            var disp = "";
-            for (var i = 0; i < sites.length; i++) {
-
-                var site = sites[i];
-                if (site.subunitIndex == csub && site.residueIndex == cres)
-                    continue;
-                finish = false;
-                if (site.subunitIndex == csub) {
-                    if (site.residueIndex == cres + 1) {
-                        if (rres === 0) {
-                            rres = cres;
-                        }
-                    } else {
-                        finish = true;
-                    }
-                } else {
-                    finish = true;
-                }
-                if (finish && csub !== 0) {
-                    if (rres !== 0) {
-                        disp += csub + "_" + rres + "-" + csub + "_" + cres + ";";
-                    } else {
-                        disp += csub + "_" + cres + ";";
-                    }
-                    rres = 0;
-                }
-                csub = site.subunitIndex;
-                cres = site.residueIndex;
-            }
-            if (sites.length > 0) {
-                if (rres !== 0) {
-                    disp += csub + "_" + rres + "-" + csub + "_" + cres;
-                } else {
-                    disp += csub + "_" + cres;
-                }
-            }
-            return disp;
-        };
 
 
-        //make string from all indexes
-        this.allSites = function (parent, type, linkage) {
-            var sites = "";
-            var subs = parent[type].subunits;
-            for (var i in subs) {
-                var subunit = subs[i];
-                if (sites !== "") {
-                    sites += ";";
-                }
-                if (linkage) {
-                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + (subunit.sequence.length - 1);
-                } else {
-                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + subunit.sequence.length;
-                }
-            }
-            return sites;
-        };
-    });
-
-    ginasForms.service('siteAdder', function (siteList) {
-
-        this.getAll = function (type, display) {
-            var temp = [];
-            // _.forEach(display, function (arr) {
-            _.forEach(display, function (subunit) {
-                temp = _.filter(subunit, function (su) {
-                    return su[type];
-                });
-                //    });
-            });
-            return temp;
-        };
-
-        this.getCount = function (subunits) {
-            var count = 0;
-            _.forEach(subunits, function (subunit) {
-                _.forEach(subunit.$$subunitDisplay, function (chunk) {
-                    count += chunk.length;
-                });
-            });
-            return count;
-        };
-
-
-        this.getAllSitesWithout = function (type, display) {
-            var temp = [];
-            _.forEach(display, function (subunit) {
-                _.forEach(subunit.$$subunitDisplay, function (chunk) {
-                    temp = _.reject(chunk, function (aa) {
-                        return aa[type];
-                    });
-                });
-            });
-            if (type == 'linkage') {
-                temp = _.dropRight(temp);
-            }
-            return temp;
-        };
-
-        this.applyAll = function (type, parent, obj) {
-            var plural = type + "s";
-            if (parent.nucleicAcid[plural].length == 0) {
-                if (type == 'linkage') {
-                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
-                } else {
-                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
-                }
-                obj.sites = siteList.siteList(obj.$$displayString);
-
-
-            } else {
-                obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.nucleicAcid.subunits));
-                obj.sites = siteList.siteList(obj.$$displayString);
-            }
-            //this applies the sugar property to the display object
-            _.forEach(obj.sites, function (site) {
-                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
-            });
-        };
-
-        this.clearSites = function (type, parent, obj) {
-            _.forEach(obj, function (site) {
-                parent.nucleicAcid.subunits[site.subunitIndex - 1][site.residueIndex - 1] = _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1][site.residueIndex - 1], type);
-            });
-        };
-    });
 
 
     ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
