@@ -26,11 +26,21 @@ public class SubstanceSearch {
     
     private static final Pattern ROW_PATTERN = Pattern.compile("(un)?checked\\s+(\\S+(\\s+\\S+)?)\\s+(\\d+)");
 
+    
+    private String defaultSearchOrder =null;
+    
     public SubstanceSearch(BrowserSession session) {
         Objects.requireNonNull(session);
 
         this.session = session;
     }
+    
+    public void setSearchOrder(String order){
+    	this.defaultSearchOrder=order;
+    }
+    
+    
+    
 
     /**
      * Get the UUIDs of all the loaded substances that have this substructure.
@@ -109,6 +119,10 @@ public class SubstanceSearch {
     	// completely ready
     	// This may be a problem, as URLEncoder may over encode some smiles strings
     	String rootUrl = "ginas/app/substances?type=Substructure&q="+URLEncoder.encode(smiles, "UTF-8") + "&wait=" + wait + "&rows=" + rows;
+    	
+    	if(defaultSearchOrder!=null){
+    		rootUrl+="&order=" + defaultSearchOrder;
+    	}
     	return getPage(rootUrl, page);
     }
     
@@ -127,6 +141,9 @@ public class SubstanceSearch {
     public SearchResult all() throws IOException {
 
         String rootUrl = "ginas/app/substances?wait=true";
+        if(defaultSearchOrder!=null){
+    		rootUrl+="&order=" + defaultSearchOrder;
+    	}
         int page=1;
 
         Set<String> substances = new LinkedHashSet<>();

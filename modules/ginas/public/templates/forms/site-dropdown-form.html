@@ -3,6 +3,17 @@
         <form class="form-horizontal" name="siteForm" id="addSiteForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
+                    <gsrs-input type="dropdown"
+                                ng-model="referenceobj[field][0]"
+                                field="docType"
+
+                                label="Source Type"
+                                required="true"
+                                formname=form>
+                    </gsrs-input>
+
+
+
                     <label for="subunitIndex" class="text-capitalize">Subunit Index</label>
                     <select ng-model="referenceobj[field][0].subunitIndex" ng-change="redraw()" class="form-control"
                             id="subunitIndex" ng-options="r for r in getSubunitRange()">
@@ -10,6 +21,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    {{referenceobj[field][0].residueIndex}}
                     <label for="residueIndex" class="text-capitalize">Residue Index</label>
                     <select ng-model="referenceobj[field][0].residueIndex" ng-change="redraw()" class="form-control"
                             id="residueIndex"

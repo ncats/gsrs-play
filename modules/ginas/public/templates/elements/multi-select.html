@@ -12,12 +12,14 @@
             name="{{::field}}"
             id="{{::field}}"
             ng-model= obj
+            ng-click = "changeFunction({model:obj});"
             ng-blur="edit = false"
-            ng-change="changeFunction();"
-            on-tag-removing="removetag($tag);"
             display-property="display"
             key-property="value"
-            max-tags={{::max}}>
+
+            max-tags={{::max}}
+            enforce-max-tags
+    >
         <!--addFromAutocompleteOnly="true"-->
         <auto-complete source="loadItems($query)"
                        min-length="1"
@@ -28,4 +30,14 @@
                        load-on-down-arrow="true">
         </auto-complete>
     </tags-input>
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+        <div ng-message="required" class ="danger">required field</div>
+
+    </div>
+    <!--moving this outside of the above div seems to be more responsive-->
+    <div ng-repeat="errorMessage in errorMessages">
+        <div ng-class="errorMessage.type">{{ errorMessage.text }}</div>
+    </div>
+</div>
+
 </div>

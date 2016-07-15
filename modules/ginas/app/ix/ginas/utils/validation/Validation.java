@@ -31,6 +31,7 @@ import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
+import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
@@ -42,6 +43,7 @@ import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
@@ -214,6 +216,7 @@ public class Validation {
 	        
 	       
         }catch(Exception e){
+        	e.printStackTrace();
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
         }
     	long dur=System.currentTimeMillis()-start;
@@ -564,10 +567,20 @@ public class Validation {
         	if(cs.mixture.components==null || cs.mixture.components.size()<2){
         		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture substance must have at least 2 mixture components"));
         	}else{
+        		Set<String> mixtureIDs = new HashSet<String>();
         		for(Component c:cs.mixture.components){
-        			Substance comp=SubstanceFactory.getFullSubstance(c.substance);
-        			if(comp==null){
-        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
+        			if(c.substance==null){
+        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture components must reference a substance record, found:\"null\""));
+        			}else{
+	        			Substance comp=SubstanceFactory.getFullSubstance(c.substance);
+	        			if(comp==null){
+	        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
+	        			}
+	        			if(!mixtureIDs.contains(c.substance.refuuid)){
+	        				mixtureIDs.add(c.substance.refuuid);
+	        			}else{
+	        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot reference the same mixture substance twice in a mixture:\"" + c.substance.refPname + "\""));
+	        			}
         			}
         		}
         	}
@@ -803,6 +816,52 @@ public class Validation {
         if(cs.protein==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
         }else{
+        	
+        	for(int i=0;i<cs.protein.subunits.size();i++){
+        		Subunit su = cs.protein.subunits.get(i);
+        		if(su.subunitIndex==null){
+        			GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein subunit (at " + (i+1) +" position) has no subunit index, defaulting to:" + (i+1)).appliableChange(true);
+            		gpm.add(mes);
+            		strat.processMessage(mes);
+            		
+            		switch(mes.actionType){
+    					case APPLY_CHANGE:
+    						su.subunitIndex=i+1;
+    						break;
+    					case DO_NOTHING:
+    						break;
+    					case FAIL:
+    						break;
+    					case IGNORE:
+    						break;
+    					default:
+    						break;
+            		}
+        		}
+        	}
+        	
+        	for(DisulfideLink l:cs.protein.getDisulfideLinks()){
+        		
+        		List<Site> sites=l.getSites();
+        		if(sites.size()!=2){
+        			GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Disulfide Link \""  + sites.toString() + "\" has " + sites.size() + " sites, should have 2");
+            		gpm.add(mes);
+        		}else{
+        			for(Site s: sites){
+        				String res=cs.protein.getResidueAt(s);
+        				if(res==null){
+        					GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Site \""  + s.toString() + "\" does not exist");
+        					gpm.add(mes);
+        				}else{
+        					if(!res.equalsIgnoreCase("C")){
+        						GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Site \""  + s.toString() + "\" in disulfide link is not a Cysteine, found: \"" + res + "\"");
+            					gpm.add(mes);	
+        					}
+        				}
+        			}
+        		}
+        		
+        	}
 
             
             Set<String> unknownRes= new HashSet<String>();
@@ -816,7 +875,7 @@ public class Validation {
         	List<Property> molprops=ProteinUtils.getMolWeightProperties(cs);
         	if(molprops.size()<=0){
         		
-        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value").appliableChange(true);
+        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value of: " + tot).appliableChange(true);
         		gpm.add(mes);
         		strat.processMessage(mes);
         		

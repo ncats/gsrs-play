@@ -175,7 +175,7 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "angularjs" % "1.5.0",
-      libraryDependencies += "org.webjars" % "angular-ui-bootstrap" % "1.2.1",
+      libraryDependencies += "org.webjars" % "angular-ui-bootstrap" % "1.3.3",
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
       libraryDependencies += "org.webjars" % "lodash" % "4.0.0",

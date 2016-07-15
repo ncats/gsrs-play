@@ -39,7 +39,9 @@ public class FunctionalTest {
 
    @Test
     public void testRouteSubstance() throws Exception {
+	   System.out.println("Starting route to substance");
        try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
+    	   System.out.println("Fetching list");
            String content = session.get("ginas/app/substances").getBody();
 
            assertContains(content,"substances");

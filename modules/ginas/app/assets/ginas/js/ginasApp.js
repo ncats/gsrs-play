@@ -16,7 +16,7 @@
             });
         });
 
-    ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils) {
+    ginasApp.factory('Substance', function ($q, CVFields, UUID, polymerUtils, siteList) {
 
         function isCV(ob) {
             if (typeof ob !== "object") return false;
@@ -152,7 +152,6 @@
             if (!substance.references) {
                 substance.references = [];
             }
-            substance.definitionType = {value: "PRIMARY", display: "Primary"};
             substance.access = [{value: 'protected', display: 'PROTECTED'}];
             return substance;
         };
@@ -182,14 +181,10 @@
 
             if (sub.substanceClass === 'protein') {
                 if (_.has(sub.protein, 'disulfideLinks')) {
-                    _.forEach(sub.protein.disulfideLinks, function (value, key) {
-                        var disulfideLink = {};
-                        var sites = _.toArray(value.sites);
-                        if (sites.length % 2 != 0) {
-                            sites = _.dropRight(sites);
-                        }
-                        disulfideLink.sites = sites;
-                        sub.protein.disulfideLinks[key] = disulfideLink;
+                    _.forEach(sub.protein.disulfideLinks, function (link, key) {
+                         _.forEach(link.sites, function (site, sitekey) {
+                            link.sites[sitekey] = _.pick(site, ['subunitIndex','residueIndex']);
+                            });
                     });
                 }
                 if (_.has(sub.protein, 'otherLinks')) {
@@ -203,7 +198,6 @@
                     });
                 }
             }
-
             sub = flattenCV(sub);
             if (_.has(sub, 'moieties')) {
                 _.forEach(sub.moieties, function (m) {
@@ -216,7 +210,6 @@
                 //apparently needs to be reset as well
                 if (!_.has(sub, '$$update')) {
 					var nid=UUID.newID();
-                   // console.log("Was :" + sub.structure.id + " is " + nid);
                     sub.structure.id = nid;
                 }
                 //sub.structure.id = UUID.newID();
@@ -292,9 +285,13 @@
                     }
                 }
             }
+	    if(disp === "") return undefined;
             return disp;
         };
         utils.sruDisplayToConnectivity = function (display) {
+            if(!display){
+		return {};
+	    }
             var errors =[];
             var connections = display.split(";");
             var regex = /^\s*[A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)[-][A-Z][A-Z]*[0-9]*_(R[0-9][0-9]*)\s*$/g;
@@ -507,6 +504,21 @@
         $scope.updateNav = false;
         $scope.validating = false;
         $scope.submitting = false;
+
+        $window.SDFFields = {};
+
+        $scope.getClass = function (path) {
+            var t = $location.path().split('/');
+            var r = (_.indexOf(t, path) >= 0) ? 'active' : '';
+            return r;
+        };
+
+        $scope.submitq= function(qinput) {
+            if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {
+                $scope.q = "\"" + $scope.q + "\"";
+            }
+            return true;
+        };
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
@@ -1289,7 +1301,7 @@
 
     });
 
-    ginasApp.directive('siteView', function (siteList) {
+ /*   ginasApp.directive('siteView', function (siteList) {
 
         return {
             restrict: 'E',
@@ -1310,9 +1322,9 @@
                             }
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         } else {
-                            /*
+                            /!*
                              alert('error');
-                             */
+                             *!/
                         }
 
                     }
@@ -1320,7 +1332,7 @@
             },
             template: '<div><div><span>{{referenceobj.$$displayString || referenceobj[field].$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
         };
-    });
+    });*/
 
 /*    ginasApp.directive('comment', function () {
 
@@ -1447,6 +1459,7 @@
 
         return {
             restrict: 'E',
+            controller: 'formController',
             scope: {
                 parent: '=?',
                 obj: '=?',
@@ -1458,6 +1471,10 @@
             link: function (scope, element, attrs) {
                 scope.numbers = true;
                 scope.edit = true;
+
+                if(scope.obj) {
+                    scope.obj.subunitIndex = _.toInteger(scope.index);
+                }
 
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
@@ -1524,12 +1541,15 @@
                                         }
                                     });
                                 } else {
-                                    if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
-                                        var bridge = mod.sites[1];
-                                        _.set(siteObj, name, bridge);
-                                    } else if (mod.sites[1].subunitIndex == siteObj.subunitIndex && mod.sites[1].residueIndex == siteObj.residueIndex) {
-                                        var bridge = mod.sites[0];
-                                        _.set(siteObj, name, bridge);
+                                    //if the subunit changes while an empty link exists breaks this, hence the sites check
+                                    if(mod.sites && mod.sites.length > 0) {
+                                        if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
+                                            var bridge = mod.sites[1];
+                                            _.set(siteObj, name, bridge);
+                                        } else if (mod.sites[1].subunitIndex == siteObj.subunitIndex && mod.sites[1].residueIndex == siteObj.residueIndex) {
+                                            var bridge = mod.sites[0];
+                                            _.set(siteObj, name, bridge);
+                                        }
                                     }
                                 }
                             });
@@ -1538,7 +1558,7 @@
                 };
 
                 scope.parseSubunit = function () {
-                    scope.obj.$$cysteineIndices = [];
+                    scope.parent.$$cysteines = [];
                     var display = [];
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
@@ -1555,6 +1575,17 @@
                                 obj.subunitIndex = scope.index;
                             }
                             obj.residueIndex = index - 0 + 1;
+
+                            //parse out cysteines first
+                            if (aa.toUpperCase() == 'C') {
+                                obj.cysteine = true;
+                                scope.parent.$$cysteines.push(
+                                    {subunitIndex: _.toInteger(scope.index),
+                                        residueIndex: index + 1,
+                                        display: scope.index +'_'+ (index+1),
+                                        value: scope.index +'_'+ (index+1)
+                                    });
+                            }
 
                             if (_.has(scope.parent, 'modifications.structuralModifications')) {
                                 scope.objectParser(scope.parent.modifications, obj, 'structuralModifications');
@@ -1588,10 +1619,7 @@
                                     scope.objectParser(linksObj, obj, 'linkage');
                                 }
                             }
-                            if (aa.toUpperCase() == 'C') {
-                                obj.cysteine = true;
-                                scope.obj.$$cysteineIndices.push(index + 1);
-                            }
+
 
                         } else {
                             obj.valid = false;
@@ -1626,7 +1654,6 @@
 
                 var display = [];
                 if (_.isUndefined(scope.parent)) {
-                    console.log("no parent");
                     APIFetcher.fetch(scope.uuid).then(function (data) {
                         scope.parent = data;
                         if (_.has(data, 'protein')) {
@@ -2012,7 +2039,6 @@
                 var template = '<div>';
                 _.forEach(scope.text.split('|'), function (c) {
                     scope.link.push(c);
-                    ;
                     scope.codes.push(c.split('['));
                 });
                 _.forEach(scope.codes, function (c, key) {

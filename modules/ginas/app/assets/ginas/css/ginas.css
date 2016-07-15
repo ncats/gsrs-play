@@ -20,6 +20,24 @@ body, html {
     padding-top: 0px;
 }
 
+#left-menu{
+    padding-top: .7%;
+    height: 50px;
+}
+
+#right-menu{
+    padding-top: .4%;
+}
+
+#logo{
+    height: 35px;
+}
+
+#search-bar {
+    padding-top: .7%;
+}
+
+/*
 #logo-banner {
     height: 80px;
     padding: 0px;
@@ -29,10 +47,20 @@ body, html {
     z-index: 999;
     background-color: #ffffff;
 }
+*/
 
+/*
 #main-banner {
     height: 100%;
-}
+    position: fixed;
+    right: 0;
+    left: 0;
+    z-index: 999;
+}*/
+/*
+#gsrs-menu{
+    position: fixed;
+}*/
 
 #content {
     padding-top: 150px;
@@ -117,10 +145,6 @@ body, html {
     margin-left: -20px
 }
 
-#logo {
-    max-height: 80px;
-}
-
 #version {
     padding-top: 55px;
     text-align: left;
@@ -165,10 +189,6 @@ div.box .on {
     border: 1px solid #e8e8e8;
     padding-top: 15px;
     padding-bottom: 15px;
-}
-
-#search-bar {
-    padding-top: 40px;
 }
 
 /*PAGINATION CSS */
@@ -757,21 +777,25 @@ h3.display-name {
     overflow-wrap: break-word;
 }
 
+/*
 input#search {
-    -webkit-transition: all 0.3s ease 0s;
-    -moz-transition: all 0.3s ease 0s;
-    -o-transition: all 0.3s ease 0s;
-    transition: all 0.3s ease 0s;
+    -webkit-transition: width 0.3s;
+    -moz-transition: width 0.3s;
+    -o-transition: width 0.3s ;
+    transition: width 0.3s;
     width: 200px;
+    background-color: #ffffff !important;
+
+    !*
     margin-right: -1px;
+    *!
+}*/
 
-}
-
-input#search:focus {
+/*input#search:focus {
     width: 400px;
-}
+}*/
 
-#searchtop {
+/*#searchtop {
     position: absolute;
     top: 0px;
     right: 0px;
@@ -780,7 +804,7 @@ input#search:focus {
 
 div#searchbarmobile {
     height: 300px;
-}
+}*/
 
 .appid {
     margin-top: -10px;
@@ -1132,4 +1156,22 @@ pre.fixedsize{
 .form-div{
     padding-top: 1%;
     padding-bottom: 1%;
+}
+.helper-info{
+    padding: 5px;
+    margin: 5px;
+    background-color: #e3eaf7;
+}
+.helper-info i {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+span.helper-title {
+    font-weight: bold;
+    background-color: #a4c7e2;
+    width: 106%;
+    display: block;
+    margin-left: -3%;
+    color: #333333;
+    font-size: medium;
 }

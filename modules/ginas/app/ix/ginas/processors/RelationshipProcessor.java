@@ -35,14 +35,22 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	}
 	
 	public void addInverse(final Relationship obj){
+		//System.out.println("Adding inverse relationship");
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
+			//System.out.println("It's a real invertable thing");
 			final SubstanceReference oldSub=obj.fetchOwner().asSubstanceReference();
 			final Substance newSub=SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+			
 			EntityPersistAdapter.performChange(newSub,new Callable(){
 				@Override
 				public Object call() throws Exception {
+					//System.out.println("Performing change");
 					if(createAndAddInvertedRelationship(obj,oldSub,newSub)!=null){
+						//System.out.println("Forcing update");
 						newSub.forceUpdate();	
+						//System.out.println("Done");
+					}else{
+						//System.out.println("Failed to create");
 					}
 					return null;
 				}
@@ -57,27 +65,31 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
 			if(newSub==null){
 				//TODO: Look into this
+				//System.out.println("It doesn't exist");
 				obj.relatedSubstance.substanceClass="mention";
 			}else{
 				Relationship r = obj.fetchInverseRelationship();
 				r.originatorUuid=obj.getOrGenerateUUID().toString();
 				r.relatedSubstance=oldSub;
 				for(Relationship rOld:newSub.relationships){
-					if(r.type.equals(r.type) && r.relatedSubstance.refuuid.equals(rOld.relatedSubstance.refuuid)){
+					if(r.type.equals(rOld.type) && r.relatedSubstance.refuuid.equals(rOld.relatedSubstance.refuuid)){
+						//System.out.println("Inverted already exists?");
 						return null;
 					}
 				}
 				
-				
+				//System.out.println("Making citation");
 				Reference ref1 = Reference.SYSTEM_GENERATED();
 				ref1.citation="Generated from relationship on:'" + oldSub.refPname + "'"; 
 				r.addReference(ref1.getOrGenerateUUID().toString());
 				
 				newSub.relationships.add(r);
 				newSub.references.add(ref1);
+				//System.out.println("Returning R");
 				return r;
 			}
 		}
+		//System.out.println("It wasn't invertable, I guess");
 		return null;
 	}
 	
@@ -110,7 +122,7 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			for(final Relationship r1 : rel){
 				if(!r1.isGenerator()){
 					r1.setOkToRemove();
-					System.out.println("Removing:" + r1.uuid);
+					//System.out.println("Removing:" + r1.uuid);
 					final Substance osub=r1.fetchOwner();
 					EntityPersistAdapter.performChange(osub,new Callable(){
 						@Override
@@ -153,7 +165,11 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	}
 	
 	public static RelationshipProcessor getInstance(){
-		return RelationshipProcessor._instance;
+		RelationshipProcessor rp =RelationshipProcessor._instance;
+		if(rp==null){
+			rp=new RelationshipProcessor(); 
+		}
+		return rp;
 	}
 
 }

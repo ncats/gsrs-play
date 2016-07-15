@@ -15,6 +15,7 @@
             if (_.isUndefined(scope.stage)) {
                 scope.stage = true;
             }
+
             var template = "";
             var result = document.getElementsByClassName(scope.type);
             var elementResult = angular.element(result);
@@ -70,7 +71,7 @@
         $scope.addNew = function (mainForm, location, obj) {
             var temp = {};
             if (obj) {
-                temp= obj;
+                temp = obj;
             }
             var listObj = _.get($scope.parent, location);
             if (!_.isUndefined(listObj) && listObj.length > 0) {
@@ -80,23 +81,21 @@
                 listObj.push(temp);
                 _.set($scope.parent, location, listObj);
             } else {
-                listObj =[];
+                listObj = [];
                 listObj.push(temp);
                 _.set($scope.parent, location, listObj);
             }
         };
-        
+
         $scope.submitFile = function (obj) {
             //create form data object
             var fd = new FormData();
             if (obj) {
                 $scope.$$uploadFile = obj.$$uploadFile;
             }
-            console.log($scope);
             fd.append('file-name', $scope.$$uploadFile);
             fd.append('file-type', $scope.$$uploadFile.type);
             //send the file / data to your server
-            console.log(fd);
             $http.post(baseurl + 'upload', fd, {
                 transformRequest: angular.identity,
                 headers: {'Content-Type': undefined}
@@ -113,15 +112,13 @@
             });
             delete $scope.$$uploadFile;
         };
-
-
     });
 
     ginasForms.controller('cvFormController', function ($scope, CVFields) {
 
         CVFields.all(false).then(function (response) {
-            _.forEach(response.data.content, function (domain){
-                CVFields. search("VOCAB_TYPE", domain.vocabularyTermType).then(function(response){
+            _.forEach(response.data.content, function (domain) {
+                CVFields.search("VOCAB_TYPE", domain.vocabularyTermType).then(function (response) {
                     domain.vocabularyTermType = response[0];
                 })
             });
@@ -129,7 +126,7 @@
             $scope.count = $scope.cv.length;
         });
 
-        $scope.fieldChange = function(obj){
+        $scope.fieldChange = function (obj) {
             obj.$$changed = true;
         };
 
@@ -147,32 +144,24 @@
         };
 
         $scope.update = function (domain, index) {
-            console.log(domain);
             if (!domain.terms) {
                 _.set(domain, 'terms', []);
             }
             domain = $scope.flattenFields(domain);
             domain.fields = $scope.flattenFields(domain.fields);
             CVFields.updateCV(domain).then(function (response) {
-                console.log(response);
-               // domain = response.data;
-                CVFields.search("VOCAB_TYPE", response.data.vocabularyTermType).then(function(vt){
+                CVFields.search("VOCAB_TYPE", response.data.vocabularyTermType).then(function (vt) {
                     response.data.vocabularyTermType = vt[0];
                 });
                 _.set($scope.cv, index, response.data);
-                console.log($scope);
             });
         };
 
-        $scope.download = function(){
-            console.log($scope);
+        $scope.download = function () {
             return $scope.cv;
         };
 
-        $scope.flush = function(event, index){
-            console.log(event);
-            console.log(index);
-        }
+
     });
 
     ginasForms.directive('accessForm', function () {
@@ -282,18 +271,99 @@
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
 
+                scope.addLink = function (form, path) {
+                    scope.addNew(form, path);
+                };
+
+                scope.removeUsed = function(){
+                    var ret = [];
+                    var cys = angular.copy(scope.cysteines);
+
+                    //this sets the array of used sites
+                    _.forEach(scope.parent.protein.disulfideLinks, function (link) {
+                        _.forEach(link.sites, function (site) {
+                            ret.push(_.omit(site, '$$hashKey'));
+                        });
+                    });
+
+                    //this removes the sites from the cv
+                    _.forEach(ret, function (used) {
+                        var t =  _.remove(cys, function (c) {
+                            return c.value === used.value
+                        });
+                    });
+
+                    console.log(cys);
+                    //set the cv to be the copied array
+                    scope.cysteines = cys;
+
+                };
+
+
+                scope.$on('delete', function (e) {
+                    console.log("delete");
+                    console.log(e);
+                    e.preventDefault = true;
+                //    e.targetScope.deleteObj();
+                    scope.cysteines = angular.copy(scope.parent.$$cysteines);
+                    console.log(scope.cysteines);
+console.log(scope);
+                    scope.removeUsed();
+                });
+
+/////////////TODO: finish / fix this///////////////////////////////
+                scope.clean = function (model, site, index) {
+                   scope.removeUsed();
+                };
+
                 scope.getAllCysteinesWithoutLinkage = function () {
                     var count = 0;
-                    _.forEach(scope.parent.protein.subunits, function (subunit) {
-                        if (!_.isUndefined(subunit.$$cysteineIndices)) {
-                            count += subunit.$$cysteineIndices.length;
-                        }
-                    });
-                    if (_.has(scope.parent, 'disulfideLinks')) {
-                        count -= scope.parent.protein.disulfideLinks.length * 2;
+                    if (scope.cysteines) {
+                        count = scope.cysteines.length;
                     }
+                    //   _.forEach(scope.parent.protein.subunits, function (subunit) {
+                    /*     if (!_.isUndefined(subunit.$$cysteineIndices)) {
+                     count += subunit.$$cysteineIndices.length;
+                     }
+
+                     if (_.has(scope.parent.protein, 'disulfideLinks')) {
+
+                     count -= scope.parent.protein.disulfideLinks.length * 2;
+                     }*/
                     return count;
                 };
+
+                //set the views on loading/editing a substance
+                if (scope.parent.protein.disulfideLinks) {
+                    _.forEach(scope.parent.protein.disulfideLinks, function (link) {
+                        _.forEach(link.sites, function (site) {
+                            if (!site.display) {
+                                _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
+                                _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
+                            }
+                        });
+                    });
+                }
+
+
+                //scope.cysteines = angular.copy(scope.parent.$$cysteines);
+
+                scope.$watchCollection('parent.$$cysteines', function (newValue, oldValue, scope) {
+                    var ret;
+
+                    //this will update the cv on subunit change, excluding used subunits.
+                    //this doesn't remove them from the cv if they are added to the disulfide links
+                    if (!_.isUndefined(newValue)) {
+                        console.log(newValue);
+                        console.log(scope);
+                        if (scope.parent.protein.disulfideLinks && scope.parent.protein.disulfideLinks.length > 0) {
+                            scope.cysteines = newValue;
+                            scope.removeUsed();
+                        } else {
+                            scope.cysteines = newValue;
+                        }
+                    }
+                });
             }
         };
     });
@@ -317,7 +387,7 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html",
-            link: function(scope){
+            link: function (scope) {
                 scope.iscollapsed = false;
             }
         };
@@ -333,7 +403,7 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
                 scope.parent.$$diverseType = "whole";
-                if(_.isUndefined(scope.parent.structurallyDiverse.part)){
+                if (_.isUndefined(scope.parent.structurallyDiverse.part)) {
                     scope.parent.structurallyDiverse.part = [];
                 }
                 if (scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
@@ -443,7 +513,6 @@
 
                 scope.duplicateCheck = function (name) {
                     var errors = [];
-                    console.log("Duplicate");
                     var result = angular.element(document.getElementsByClassName('nameForm'));
                     result.empty();
                     var resolve = resolver.resolve(name).then(function (response) {
@@ -539,14 +608,12 @@
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
-                console.log(scope);
 
                 scope.getAllSites = function () {
                     return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
                 };
 
                 scope.applyAll = function (obj) {
-                    console.log(obj);
                     siteAdder.applyAll('sugar', scope.parent, obj);
                 };
 
@@ -555,7 +622,7 @@
                 scope.noSugars = function () {
                     var count = scope.getAllSites();
                     _.forEach(scope.parent.nucleicAcid.sugars, function (sugar) {
-                        if(_.isArray(sugar.sites)) {
+                        if (_.isArray(sugar.sites)) {
                             count -= sugar.sites.length
                         }
                     });
@@ -657,9 +724,8 @@
                 referenceobj: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
-            link: function(scope){
-        console.log(scope);
-    }
+            link: function (scope) {
+            }
         };
     });
 
@@ -695,8 +761,8 @@
                 referenceobj: '=?'// this is the object from the form that is getting the property added to it
             },
             templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html",
-            link: function(scope){
-               
+            link: function (scope) {
+
             }
         };
     });
@@ -748,10 +814,8 @@
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
             link: function (scope) {
                 scope.validateConnectivity = function (obj) {
-                   // console.log(obj);
                     var map = polymerUtils.sruDisplayToConnectivity(obj);
-                   // console.log(map);
-                   return map.errors;
+                    return map.errors;
                 }
             }
         };
@@ -800,7 +864,6 @@
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
 
-               
 
                 scope.addNewRef = function (mainform, list) {
                     //passes a new uuid for reference tracking
@@ -810,17 +873,14 @@
                     };
                     scope.addNew(mainform, list, obj);
                 };
-
-                console.log(attrs);
                 scope.applyRefs = attrs.apply;
 
                 //called on close of the modal reference form. saves all applied references to the array
                 scope.$on('save', function (e) {
-                        scope.validate();
+                    scope.validate();
                 });
 
                 scope.validate = function () {
-                    console.log(scope);
                     //grabs an array of all the uuids of the references where apply checkbox is true
                     var objreferences = _
                         .chain(scope.parent.references)
@@ -831,8 +891,7 @@
                         })
                         .map('uuid')
                         .value();
-                    console.log(objreferences);
-                        _.set(scope.referenceobj, 'references', objreferences);
+                    _.set(scope.referenceobj, 'references', objreferences);
                 };
 
                 //the delete button emits the delete object, which is used here to remove the reference form all arrays that use it
@@ -970,7 +1029,7 @@
                     });
                 };
                 $templateRequest(baseurl + "assets/templates/forms/structure-form.html").then(function (html) {
-                   var template = angular.element(html);
+                    var template = angular.element(html);
                     element.append(template);
                     $compile(template)(scope);
                 });
@@ -993,11 +1052,10 @@
                 scope.substanceClass = scope.parent.$$getClass();
                 scope.numbers = true;
 
-                    scope.addNewSubunit= function (form) {
-                        var r =  scope.substanceClass +'.subunits';
-                        scope.addNew(form, r);
-                    };
-
+                scope.addNewSubunit = function (form) {
+                    var r = scope.substanceClass + '.subunits';
+                    scope.addNew(form, r);
+                };
 
 
                 scope.validate = function () {
@@ -1023,15 +1081,13 @@
                     });
                 };
                 /*$templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                    var template = angular.element(html);
-                    element.append(template);
-                    $compile(template)(scope);
-                });*/
+                 var template = angular.element(html);
+                 element.append(template);
+                 $compile(template)(scope);
+                 });*/
             }
         };
     });
-
-
 
 
     ginasForms.directive('formmanager', function ($compile, $templateRequest, toggler) {
@@ -1070,21 +1126,17 @@
         };
     });
 
-    
     ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
         return {
             restrict: 'E',
             replace: true,
             controller: 'cvFormController',
-          //  scope:{},
+            //  scope:{},
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
-          link: function (scope, element, attrs) {
+            link: function (scope, element, attrs) {
             }
         };
     });
-
-
-
 
     ginasForms.directive('cvTermsForm', function (CVFields) {
         return {
@@ -1092,20 +1144,17 @@
             replace: true,
             controller: 'cvFormController',
             scope: {
-             parent: '=',
-             referenceobj: '=',
-             index: '='
-             },
+                parent: '=',
+                referenceobj: '=',
+                index: '='
+            },
             templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html",
             link: function (scope) {
-                console.log(scope);
-                scope.addNewTerm = function(){
+                scope.addNewTerm = function () {
                     scope.referenceobj.terms.push({});
                 };
 
                 scope.$on('save', function (e) {
-                    console.log("Save");
-
                     scope.update(scope.referenceobj, scope.index);
                 });
 
@@ -1120,7 +1169,6 @@
         };
     });
 
-
     ginasForms.directive('editCvForm', function ($templateRequest, CVFields, toggler) {
         return {
             restrict: 'E',
@@ -1128,7 +1176,7 @@
             controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
-               
+
 
             }
         };
@@ -1142,26 +1190,21 @@
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
             link: function (scope, element, attrs) {
 
-                scope.submitFile = function(){
-                    console.log(scope.cvFile);
+                scope.submitFile = function () {
                     var fd = new FormData();
-                    console.log(scope);
                     fd.append('file-name', scope.cvFile);
                     fd.append('file-type', scope.cvFile.type);
                     //fd.append('file', scope.cvFile);
-                    console.log(fd);
                     //send the file / data to your server
                     $http.post(baseurl + 'cv/upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        console.log("success?");
-                        console.log(data);
                     });
                 };
 
 
-    //            scope.cv = {};
+                //            scope.cv = {};
 
                 scope.getPos = function (item, arr) {
                     if (scope.cv.domains.indexOf(item) == -1
@@ -1174,8 +1217,6 @@
                     }
                     return arr.indexOf(item);
                 };
-
-
 
 
                 scope.loadCVFile = function (file) {
@@ -1220,19 +1261,30 @@
         };
     });
 
-    ginasForms.directive('saveCvForm', function (CVFields) {
+    ginasForms.directive('saveCvForm', function ($compile, download) {
         return {
             restrict: 'E',
             replace: true,
             controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
             link: function (scope, element, attrs) {
-                         }
+
+
+                scope.downloadCV = function () {
+                    var json = JSON.stringify(scope.cv);
+                    var b = new Blob([json], {type: "application/json"});
+                    scope.url = URL.createObjectURL(b);
+                    var download = angular.element(
+                        '<a class="btn btn-primary" download="results.json"' +
+                        'href="' + scope.url + '" target = "_self" id ="download">' +
+                        '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
+                        '</a>');
+                    download[0].click();
+                }
+
+            }
         };
     });
-
-
-
 
 
     ginasForms.directive('newCvForm', function () {
@@ -1248,8 +1300,6 @@
             }
         };
     });
-
-
 
 
     ginasForms.service('siteList', function () {
@@ -1361,7 +1411,6 @@
         this.allSites = function (parent, type, linkage) {
             var sites = "";
             var subs = parent[type].subunits;
-            console.log(subs);
             for (var i in subs) {
                 var subunit = subs[i];
                 if (sites !== "") {
@@ -1381,12 +1430,12 @@
 
         this.getAll = function (type, display) {
             var temp = [];
-           // _.forEach(display, function (arr) {
-                _.forEach(display, function (subunit) {
-                    temp = _.filter(subunit, function (su) {
-                        return su[type];
-                    });
-            //    });
+            // _.forEach(display, function (arr) {
+            _.forEach(display, function (subunit) {
+                temp = _.filter(subunit, function (su) {
+                    return su[type];
+                });
+                //    });
             });
             return temp;
         };
@@ -1406,9 +1455,7 @@
             var temp = [];
             _.forEach(display, function (subunit) {
                 _.forEach(subunit.$$subunitDisplay, function (chunk) {
-                       console.log(chunk);
                     temp = _.reject(chunk, function (aa) {
-                        //    console.log(su[type]);
                         return aa[type];
                     });
                 });
@@ -1416,7 +1463,6 @@
             if (type == 'linkage') {
                 temp = _.dropRight(temp);
             }
-            // console.log(temp);
             return temp;
         };
 
@@ -1432,15 +1478,11 @@
 
 
             } else {
-                console.log(obj);
                 obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.nucleicAcid.subunits));
                 obj.sites = siteList.siteList(obj.$$displayString);
             }
             //this applies the sugar property to the display object
             _.forEach(obj.sites, function (site) {
-                console.log(site);
-                console.log(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay);
-                console.log(site.residueIndex % 10);
                 _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[site.residueIndex % 10][site.residueIndex - 1], type, true);
             });
         };
@@ -1453,19 +1495,7 @@
     });
 
 
-
-
-
-
-
-
-
-
-
-
-
-    
-     ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
+    ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
         return {
             restrict: 'E',
             replace: true,
@@ -1522,6 +1552,7 @@
                     }
                 };
 
+
                 scope.getSubunitRange = function () {
                     return _.range(1, scope.subunits.length + 1);
                 };
@@ -1543,7 +1574,7 @@
         };
     });
 
-    
+
     ginasForms.directive('diversePlantForm', function (CVFields) {
         return {
             restrict: 'E',
@@ -1556,7 +1587,7 @@
             }
         };
     });
-    
+
     ginasForms.directive('isolateForm', [function () {
         return {
             restrict: 'A',

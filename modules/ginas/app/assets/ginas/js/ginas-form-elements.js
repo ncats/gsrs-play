@@ -73,7 +73,6 @@
             },
 
             updateCV: function (domainobj) {
-                console.log(domainobj);
                 var url;
                 var promise;
                 if (domainobj.id) {
@@ -158,6 +157,7 @@
     }]);
 
     ginasFormElements.service('download', function ($location, $http) {
+        var cache = true;
         createURL = function (id) {
             var current = ($location.$$url).split('app')[1];
             var ret;
@@ -171,7 +171,14 @@
                 var q= c[0] + '/search?'+ c[1];
                 ret = baseurl + "api/v1" + q + '&view=full';
             } else {
-                ret = baseurl + "api/v1" + current + '?view=full';
+                //quick fix to download vocabularies /cv's
+                //should probably just be able to take a substance type
+                if(current =="/admin"){
+                    ret = baseurl + "api/v1/vocabularies?view=full&top=99";
+                    cache = false;
+                }else {
+                    ret = baseurl + "api/v1" + current + '?view=full';
+                }
             }
             return ret;
         }};
@@ -180,7 +187,7 @@
 
         download.fetch = function (id) {
             var url = createURL(id);
-            return $http.get(url, {cache: true}, {
+            return $http.get(url, {cache: cache}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -300,7 +307,8 @@
                 validator: '&?', //optional function passed in from the form directive and used to validate on init and change, used in conjunction with a formatter if available.
                 blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur
                 changeFunction:'&?', //validators happen in the background, and mainly set validation, so scope variable changes should go here
-                required: '=?'  //optional variable that enables required form validation
+                required: '=?',  //optional variable that enables required form validation
+                values: '=?' //array that can be passed with a custom cv for dropdowns and multi select
             },
             link: function (scope, element, attrs, ngModelCtrl) {
 
@@ -357,7 +365,6 @@
                     };
 
                     scope.undo = function () {
-                        console.log(temp);
                         if (scope.changed == true) {
                             scope.obj = temp;
                             scope.edit = false;
@@ -365,6 +372,9 @@
                         }
                     };
 
+                    scope.print = function(){
+                        console.log("ffffff");
+                    }
                     //this is used to:  1. filter one dropdown list based on the input of another down to one automatically selected value
                     //                  2. filter one dropdown list based on the input of another to a subset
                     //                  3. select a different cv for a dropdown, based on the input of another (structural modification residue)
@@ -402,6 +412,8 @@
                                             scope.obj = [];
                                             scope.obj.push(term);
                                         }
+                                    }else{
+                                        scope.obj = term;
                                     }
                                     scope.edit= false;
                                 }
@@ -505,11 +517,6 @@
                         scope.max = attrs.max;
                     } else {
                         scope.max = 'MAX_SAFE_INTEGER';
-                    }
-
-                        scope.removetag= function(tag){
-                        console.log(tag);
-                            console.log(scope.obj);
                     }
 
                     var template = angular.element(html);
@@ -855,29 +862,22 @@
     
     //////////////BUTTONS///////////////////////////
 
-    ginasFormElements.directive('downloadButton', function ($compile, $timeout, download) {
+    ginasFormElements.directive('downloadButton', function ($compile, $timeout, download, CVFields) {
         return {
             restrict: 'E',
             scope: {
                 data: '=?',
                 format: '=?',
                 uuid: '@?',
-                retriever:'&?'
+                refresh: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var json;
                 scope.url = '';
-
+                if(scope.refresh){
+                    element.empty();
+                }
                 scope.make = function () {
-                    console.log("GGGGGGG");
-                    if(scope.retriever){
-                        console.log("HHHH");
-                        var r = scope.retriever();
-                        console.log(r);
-                        _.set(scope, 'data', r);
-                        console.log(scope);
-                    }
                     if (_.isUndefined(scope.data) && _.isUndefined(scope.uuid) ) {
                         download.fetch().then(function (data) {
                             json = JSON.stringify(data.data);
@@ -903,6 +903,7 @@
                                 '</a>'
                             )(scope));
                             document.getElementById('download').click();
+
                         });
                     }else {
                         var b;
@@ -960,7 +961,8 @@
             replace: 'true',
             scope: {
                 type: '@',
-                path: '@'
+                path: '@',
+		heading: '@'
             },
             link: function (scope, element, attrs) {
                 scope.stage = true;
@@ -1032,7 +1034,6 @@
                 //this is used in the reference form to apply the references to structure/protein etc.
                 if(_.isUndefined(scope.referenceobj)){
                     var subClass = scope.parent.substanceClass;
-                    console.log(subClass);
                     if(subClass ==="chemical"){
                         subClass = "structure";
                     }
@@ -1040,7 +1041,6 @@
                         subClass = "specifiedSubstance";
                     }
                     scope.referenceobj = _.get(scope.parent, subClass);
-                    console.log(scope);
                 }
 
             },
@@ -1088,6 +1088,7 @@
                                     break;
                                 case "sites":
                                   $scope.formtype=$attrs.formtype;
+                                    $scope.residueregex = $attrs.residueregex;
                                     templateurl =  baseurl + "assets/templates/modals/site-modal.html";
                                     break;
                                 case "terms":
@@ -1130,7 +1131,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var uuid;
                 var index;
                 var template;
@@ -1159,21 +1159,33 @@
 
                 scope.updateReference = function () {
                     index = _.indexOf(scope.referenceobj.references, uuid);
-                    console.log(uuid);
-                    console.log(index);
-                    console.log(scope.obj);
                     if (index >= 0) {
-                        console.log("removing from list");
                         scope.referenceobj.references.splice(index, 1);
                         scope.obj.$$apply = false;
                     } else {
-                        console.log("applying to list");
                         scope.referenceobj.references.push(uuid);
                         scope.obj.$$apply = true;
-                        console.log(scope);
                     }
                 };
 
+            }
+        };
+    });
+
+    ginasFormElements.directive('enforceMaxTags', function() {
+        return {
+            require: 'ngModel',
+            link: function(scope, element, attrs, ngCtrl) {
+                var maxTags = attrs.maxTags ? parseInt(attrs.maxTags, '10') : null;
+                ngCtrl.$validators.checkLength = function(value) {
+                    if (value && maxTags && value.length > maxTags) {
+/*
+                        errors.push({text: 'Max number allowed is '+maxTags , type: 'danger'});
+*/
+                        value.splice(value.length - 1, 1);
+                    }
+                    return value;
+                };
             }
         };
     });

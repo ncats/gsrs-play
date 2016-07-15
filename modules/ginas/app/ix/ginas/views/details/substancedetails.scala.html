@@ -145,57 +145,57 @@
                 </div>
             }
             @if(sub.getAllNames().size() > 0) {
-                <div class="row info table-responsive" id="names">
+                <div class="row info" id="names">
                 @properties.names(sub.getAllNames(), sub)
                 </div>
             }
              @if(sub.codes.size() > 0) {
-                <div class="row info table-responsive" id="codes">
+                <div class="row info " id="codes">
                 @properties.codes(sub.codes, sub.uuid.toString)
                 </div>
             }
             @if(sub.hasChildConceptReferences()) {
-                <div class="row info table-responsive" id="variants">
+                <div class="row info " id="variants">
                 @properties.variantconcepts(sub)
                 </div>
             }
 
             @if(sub.getActiveMoieties().size() > 0) {
-                <div class="row info table-responsive" id="activemoieties">
+                <div class="row info " id="activemoieties">
                 @properties.relationships(sub.getActiveMoieties(), "Active Moieties", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.getMetabolites().size() > 0) {
-                <div class="row info table-responsive" id="metabolites">
+                <div class="row info " id="metabolites">
                 @properties.relationships(sub.getMetabolites(), "Metabolites", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.getImpurities().size() > 0) {
-                <div class="row info table-responsive" id="impurities">
+                <div class="row info " id="impurities">
                 @properties.relationships(sub.getImpurities(), "Impurities", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.getFilteredRelationships().size() > 0) {
-                <div class="row info table-responsive" id="relationships">
+                <div class="row info " id="relationships">
                 @properties.relationships(sub.getFilteredRelationships(), "Relationships", sub.uuid.toString)
                 </div>
             }
 
             @if(sub.properties != null && sub.properties.size() > 0) {
-                <div class="row info table-responsive" id="properties">
+                <div class="row info " id="properties">
                 @properties.properties(sub.properties, sub.uuid.toString)
                 </div>
             }
             @if(sub.notes != null && sub.notes.size() > 0) {
-                <div class="row info table-responsive" id="notes">
+                <div class="row info " id="notes">
                 @properties.notes(sub.getDisplayNotes(), sub.uuid.toString)
                 </div>
             }
 
-            <div class="row info table-responsive" id="refs">
+            <div class="row info " id="refs">
                 <button class="btn btn-primary label-offset det">
                     References&nbsp;<span class="badge"> @sub.references.size()</span></button>
                 <div class="table-responsive">
@@ -208,8 +208,10 @@
                 Audit Information</button>
                     <table class="table table-striped keyvalue">
                     <tbody>
-                        <tr><td> Approved </td><td>@sub.approved</td></tr>
-                        <tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
+                    	@if(sub.approved!=null){
+                        	<tr><td> Approved </td><td>@sub.approved</td></tr>
+                        	<tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
+                        }
                         <tr><td> Created </td><td>@sub.created</td></tr>
                         <tr><td> Created By </td><td>@sub.createdBy</td></tr>
                         <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>

@@ -3,7 +3,10 @@
         <form-header type="disulfideLinks" path ="protein.disulfideLinks" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+<!--
         <span>Number of unspecified Cysteine residues: {{getAllCysteinesWithoutLinkage()}}</span>
+-->
+        <span>Number of unspecified Cysteine residues: {{cysteines.length}}</span>
         <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
             <div ng-repeat="(index,obj) in parent.protein.disulfideLinks">
                 <ng-form name="form">
@@ -12,20 +15,19 @@
                             <div class="col-md-1 text-center">
                                 <delete-button delete="obj" path="protein.disulfideLinks"></delete-button>
                             </div>
-                            <div class="col-md-9">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <modal-form-button type="sites"
-                                                           referenceobj="obj"
-                                                           field="sites"
-                                                           parent="parent"
-                                                           residueregex='C'
-                                                           formtype="pair">
-                                        </modal-form-button>
-                                    </div>
-                                </div>
+                            <div class = "col-md-2">
+                                <gsrs-input type="multi"
+                                            ng-model="obj.sites"
+                                            field="sites"
+                                            values = cysteines
+                                            change-function="clean(model)"
+                                            max = 2
+                                            enforce = true
+                                            required="true"
+                                            formname=form>
+                                </gsrs-input>
                             </div>
-                        </div>
+                                </div>
                     </div>
                 </ng-form>
                 <hr>
@@ -33,7 +35,7 @@
         </form>
         <br>
         <br>
-        <button class="btn btn-primary" ng-click="addNew(disulfideLinksForm, 'protein.disulfideLinks')"><i
+        <button class="btn btn-primary" ng-click="addLink(disulfideLinksForm, 'protein.disulfideLinks')"><i
                 class="fa fa-plus"></i> Add a<span
                 ng-if="parent.protein.disulfideLinks.length>0">nother</span> link
         </button>
