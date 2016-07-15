@@ -6,7 +6,7 @@
 <!--
         <span>Number of unspecified Cysteine residues: {{getAllCysteinesWithoutLinkage()}}</span>
 -->
-        <span>Number of Cysteine residues: {{cysteines.length}}</span>
+        <span>Number of unspecified Cysteine residues: {{cysteines.length}}</span>
         <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
             <div ng-repeat="(index,obj) in parent.protein.disulfideLinks">
                 <ng-form name="form">
