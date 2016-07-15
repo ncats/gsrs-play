@@ -288,49 +288,34 @@
 
                     //this removes the sites from the cv
                     _.forEach(ret, function (used) {
-                        var t =  _.remove(cys, function (c) {
-                            return c.value === used.value
+                         _.remove(cys, function (c) {
+                            return c.value === used.value;
                         });
                     });
 
-                    console.log(cys);
                     //set the cv to be the copied array
                     scope.cysteines = cys;
 
                 };
 
 
+                //this is called before the object is deleted, so removing used doesn't work
                 scope.$on('delete', function (e) {
-                    console.log("delete");
-                    console.log(e);
-                    e.preventDefault = true;
-                //    e.targetScope.deleteObj();
-                    scope.cysteines = angular.copy(scope.parent.$$cysteines);
-                    console.log(scope.cysteines);
-console.log(scope);
+
+                    //get all sites/
                     scope.removeUsed();
+                    //retrieve sites
+                    var cys = angular.copy(scope.cysteines);
+
+                    //iterate over sites and remove the 2 sites contained in the delete obj
+                    _.forEach(e.targetScope.obj.sites, function (site) {
+                        cys.push(site);
+                    });
+                    scope.cysteines  = _.orderBy(cys, 'value');
                 });
 
-/////////////TODO: finish / fix this///////////////////////////////
                 scope.clean = function (model, site, index) {
                    scope.removeUsed();
-                };
-
-                scope.getAllCysteinesWithoutLinkage = function () {
-                    var count = 0;
-                    if (scope.cysteines) {
-                        count = scope.cysteines.length;
-                    }
-                    //   _.forEach(scope.parent.protein.subunits, function (subunit) {
-                    /*     if (!_.isUndefined(subunit.$$cysteineIndices)) {
-                     count += subunit.$$cysteineIndices.length;
-                     }
-
-                     if (_.has(scope.parent.protein, 'disulfideLinks')) {
-
-                     count -= scope.parent.protein.disulfideLinks.length * 2;
-                     }*/
-                    return count;
                 };
 
                 //set the views on loading/editing a substance
@@ -345,17 +330,12 @@ console.log(scope);
                     });
                 }
 
-
-                //scope.cysteines = angular.copy(scope.parent.$$cysteines);
-
                 scope.$watchCollection('parent.$$cysteines', function (newValue, oldValue, scope) {
                     var ret;
 
                     //this will update the cv on subunit change, excluding used subunits.
                     //this doesn't remove them from the cv if they are added to the disulfide links
                     if (!_.isUndefined(newValue)) {
-                        console.log(newValue);
-                        console.log(scope);
                         if (scope.parent.protein.disulfideLinks && scope.parent.protein.disulfideLinks.length > 0) {
                             scope.cysteines = newValue;
                             scope.removeUsed();
