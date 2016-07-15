@@ -1459,6 +1459,7 @@
 
         return {
             restrict: 'E',
+            controller: 'formController',
             scope: {
                 parent: '=?',
                 obj: '=?',
@@ -1540,7 +1541,8 @@
                                         }
                                     });
                                 } else {
-                                    if(mod.sites.length > 0) {
+                                    //if the subunit changes while an empty link exists breaks this, hence the sites check
+                                    if(mod.sites && mod.sites.length > 0) {
                                         if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
                                             var bridge = mod.sites[1];
                                             _.set(siteObj, name, bridge);
@@ -1574,6 +1576,17 @@
                             }
                             obj.residueIndex = index - 0 + 1;
 
+                            //parse out cysteines first
+                            if (aa.toUpperCase() == 'C') {
+                                obj.cysteine = true;
+                                scope.parent.$$cysteines.push(
+                                    {subunitIndex: _.toInteger(scope.index),
+                                        residueIndex: index + 1,
+                                        display: scope.index +'_'+ (index+1),
+                                        value: scope.index +'_'+ (index+1)
+                                    });
+                            }
+
                             if (_.has(scope.parent, 'modifications.structuralModifications')) {
                                 scope.objectParser(scope.parent.modifications, obj, 'structuralModifications');
                             }
@@ -1606,15 +1619,7 @@
                                     scope.objectParser(linksObj, obj, 'linkage');
                                 }
                             }
-                            if (aa.toUpperCase() == 'C') {
-                                obj.cysteine = true;
-                                scope.parent.$$cysteines.push(
-                                    {subunitIndex: _.toInteger(scope.index),
-                                    residueIndex: index + 1,
-                                    display: scope.index +'_'+ (index+1),
-                                    value: scope.index +'_'+ (index+1)
-                                    });
-                            }
+
 
                         } else {
                             obj.valid = false;
@@ -1623,9 +1628,6 @@
                     });
                     display = _.chunk(display, 10);
                     _.set(scope.obj, '$$subunitDisplay', display);
-                    scope.$broadcast('subunit');
-                    scope.$emit('subunits');
-                    console.log("done parsing");
                 };
 
                 scope.highlight = function (acid) {
