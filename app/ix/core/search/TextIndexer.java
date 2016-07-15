@@ -73,6 +73,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.IndexableFieldType;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.sorter.EarlyTerminatingSortingCollector;
 import org.apache.lucene.queries.ChainedFilter;
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
@@ -674,12 +675,54 @@ public class TextIndexer implements Closeable{
         public CharSequence getHighlight () { return highlight; }
         public Long getWeight () { return weight; }
     }
+   public static class InxightInfixSuggester extends AnalyzingInfixSuggester{
+    	private static final Sort SORT2 = new Sort(new SortField("weight", SortField.Type.LONG, true));
+		public InxightInfixSuggester(Version matchVersion, Directory dir,
+				Analyzer analyzer) throws IOException {
+			super(matchVersion, dir, analyzer);
+		}
+		
+		/**
+		 * 
+		 * This method will get the assigned weight for the exact match text provided
+		 * 
+		 * @param text
+		 * @return
+		 */
+		public long getWeightFor(BytesRef text){
+			try{
+				Term t=new Term(EXACT_TEXT_FIELD_NAME, text.utf8ToString());
+				TermQuery tq=new TermQuery(t);
+				
+				// Sort by weight, descending:
+			    TopFieldCollector c = TopFieldCollector.create(SORT2, 2, true, false, false, false);
+	
+			    // We sorted postings by weight during indexing, so we
+			    // only retrieve the first num hits now:
+			    Collector c2 = new EarlyTerminatingSortingCollector(c, SORT2, 2);
+				
+				IndexSearcher searcher = searcherMgr.acquire();
+				searcher.search(tq, c2);
+				TopFieldDocs hits = (TopFieldDocs) c.topDocs();
+				
+				if(hits.totalHits>=1){
+					int i=0;
+					FieldDoc fd = (FieldDoc) hits.scoreDocs[i];
+				    long score = (Long) fd.fields[0];
+				    return score;
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+	    	return 0;
+		}
+    }
 
     class SuggestLookup implements Closeable{
         String name;
         File dir;
         AtomicInteger dirty = new AtomicInteger ();
-        AnalyzingInfixSuggester lookup;
+        InxightInfixSuggester lookup;
         long lastRefresh;
 
         
@@ -709,7 +752,7 @@ public class TextIndexer implements Closeable{
             else if (!dir.isDirectory()) 
                 throw new IllegalArgumentException ("Not a directory: "+dir);
 
-            lookup = new AnalyzingInfixSuggester 
+            lookup = new InxightInfixSuggester 
                 (LUCENE_VERSION, new NIOFSDirectory 
                  (dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
             
@@ -778,15 +821,9 @@ public class TextIndexer implements Closeable{
         	synchronized(dirty){
         		synchronized(additions){
 	        		for(Addition add : additions.values()){
-	        			List<Lookup.LookupResult> looklist=lookup.lookup(add.text, 4, true, true);
-	        			for(Lookup.LookupResult lr:looklist){
-	        				if(add.text.equalsIgnoreCase(lr.key.toString())){
-	        					add.addToWeight(lr.value);
-	        				}
-	        			}
 	        			BytesRef ref = new BytesRef (add.text);
+	        			add.addToWeight(lookup.getWeightFor(ref));
 	        			lookup.update(ref, null, add.weight, ref);
-	        			
 	        		}
 	        		additions.clear();
         		}
@@ -822,7 +859,7 @@ public class TextIndexer implements Closeable{
         List<SuggestResult> suggest (CharSequence key, int max)
             throws IOException {
         	refreshIfDirty ();
-
+        	
             List<Lookup.LookupResult> results = lookup.lookup
                 (key, null, false, max);
 
