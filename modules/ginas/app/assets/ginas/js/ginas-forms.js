@@ -257,11 +257,12 @@
         };
 
         factory.parseSubunit = function (parent, proteinobj, proteinindex) {
-var subclass = parent.substanceClass;
+            var subclass = parent.substanceClass;
             if(_.isUndefined(factoryResidues)) {
                 factory.getResidues(subclass);
             }
-           parent.$$cysteines = [];
+            console.log(proteinobj);
+            parent.$$cysteines = [];
             var display = [];
             _.forEach(proteinobj.sequence, function (aa, index) {
                 var obj = {};
@@ -538,10 +539,12 @@ return factory;
                 };
 
                 scope.applyAll = function (obj, index) {
-                    console.log(obj);
-                    console.log(scope.obj);
+                    obj.$$displayString="";
+                    obj.length=0;
+                    console.log("Flushed, and ready to go");
+		    subunitParser.parseSubunit(scope.parent, scope.parent.nucleicAcid.subunits, index);
                     siteAdder.applyAll('sugar', scope.parent, obj);
-                    subunitParser.parseSubunit(scope.parent, obj, index);
+                    subunitParser.parseSubunit(scope.parent, scope.parent.nucleicAcid.subunits, index);
 
 //                    subunitParser.parseSubunit(scope.parent, obj, scope.residues, scope.index);
                 };
@@ -728,16 +731,9 @@ return factory;
             _.forEach(display, function (subunit) {
                 _.forEach(subunit.$$subunitDisplay, function (chunk) {
                     var tempadd = _.reject(chunk, function (aa) {
-                        if(aa[type]){
-                            console.log(aa);
-                        }
                         return aa[type];
                     });
-                    console.log(tempadd);
                     temp = _.concat(tempadd, temp);
-                    /*for(var i=0;i<tempadd.length;i++){
-                        temp.push(tempadd[i]);
-                    }*/
                 });
             });
 
@@ -749,6 +745,8 @@ return factory;
 
         this.applyAll = function (type, parent, obj) {
             var plural = type + "s";
+	    
+
             if (parent.nucleicAcid[plural].length == 0) {
                 if (type == 'linkage') {
                     obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
@@ -760,9 +758,8 @@ return factory;
 
             } else {
                 var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
-                console.log("Sites:" + sites2.length);
                 obj.$$displayString = siteList.siteString(sites2);
-                obj.sites = siteList.siteList(obj.$$displayString);
+                obj.sites = siteList.siteList(obj.$$displayString);		
             }
             //this applies the sugar property to the display object
             _.forEach(obj.sites, function (site) {
@@ -775,12 +772,7 @@ return factory;
         };
 
         this.clearSites = function (type, parent, obj, index) {
-            console.log(type);
-            console.log(angular.copy(parent));
-            console.log(obj);
-            console.log(index);
             _.forEach(obj, function (site) {
-                console.log(site);
                 var chunkIndex=Math.floor((site.residueIndex-1) / 10);
                 var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
                 parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex] = _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type);
@@ -788,9 +780,15 @@ return factory;
                // _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[(site.residueIndex - 1) % 10][site.residueIndex - 1], type);
               //  subunitParser.parseSubunit(parent, obj, index);
             });
-            console.log(parent);
-
         };
+
+	this.toZeroIndexChunks = function (site){
+		var chunkIndex=Math.floor((site.residueIndex-1) / 10);
+                var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
+		var subIndex = site.subunitIndex -1;
+		return [subIndex,residueSubIndex,chunkIndex];
+	}
+	
     });
 
     ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder, subunitParser) {
@@ -1764,16 +1762,25 @@ return factory;
                 scope.makeSiteList = function () {
                     var temp = angular.copy(scope.referenceobj[scope.field].$$displayString);
                     _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
+		    //why is this necessary?
                     scope.referenceobj[scope.field].$$displayString = temp;
                 };
 
                 scope.redraw = function () {
-                    scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
+                    console.log("redrawing");
+                    scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                 };
 
                 scope.deleteObj = function (obj) {
                     scope.referenceobj.splice(scope.referenceobj.indexOf(obj), 1);
                 };
+
+
+		//If there is no stored shorthand (handled by $$displayString)
+		//then it needs to be generated. This call will do that:
+		if(!scope.referenceobj[scope.field].$$displayString){
+			scope.redraw();
+		}
             }
         };
     });

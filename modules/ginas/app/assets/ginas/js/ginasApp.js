@@ -1333,7 +1333,7 @@
                     }
                 }
             },
-            template: '<div><div><span>{{referenceobj.$$displayString || referenceobj[field].$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
+            template: '<div><div><span>{{referenceobj[field].$$displayString || referenceobj.$$displayString}}</span><br></div><div ng-if="referenceobj[field].length"><span>({{referenceobj[field].length}} sites)</span></div></div>'
         };
     });
 
