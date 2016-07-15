@@ -256,6 +256,9 @@
         };
 
         factory.parseSubunit = function (parent, proteinobj, proteinindex) {
+            console.log(parent);
+            console.log(proteinobj);
+            console.log(proteinindex);
             var subclass = parent.substanceClass;
             if(_.isUndefined(factoryResidues)) {
                 factory.getResidues(subclass);

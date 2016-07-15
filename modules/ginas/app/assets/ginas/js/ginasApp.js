@@ -1468,6 +1468,11 @@
                 numbers: '='
             },
             link: function (scope, element, attrs) {
+if(attrs.subclass){
+    subunitParser.getResidues(attrs.subclass);
+
+}
+
                 scope.numbers = true;
                 scope.edit = true;
 
@@ -1631,6 +1636,7 @@
 */
 
                 scope.parseSubunit = function(){
+                    console.log(scope);
                     subunitParser.parseSubunit(scope.parent, scope.obj, scope.index);
                 };
 
