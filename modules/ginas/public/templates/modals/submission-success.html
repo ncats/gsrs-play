@@ -12,7 +12,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" ng-click="addDifferentSubstance()" target ="_self">Add a different substance type</button>
-                    <button type="button" class="btn btn-success" ng-click="viewSubstance()">View Substance</button>
+                    <button type="button" class="btn btn-success" ng-click="viewSubstance()">View <span ng-if="getSubstanceClass() !== 'concept'">Substance</span><span ng-if="getSubstanceClass() === 'concept'">Concept</span></button>
                 </div>
             </div>
         </div>

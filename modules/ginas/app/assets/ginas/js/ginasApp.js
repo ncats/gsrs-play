@@ -777,6 +777,9 @@
             });
         };
 
+		$scope.getSubstanceClass = function() {
+			return $scope.substance.substanceClass;
+		}
 
         $scope.submitSubstance = function () {
             var url;
