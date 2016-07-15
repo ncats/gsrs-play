@@ -304,7 +304,7 @@
                     console.log("delete");
                     console.log(e);
                     e.preventDefault = true;
-                    e.targetScope.deleteObj();
+                //    e.targetScope.deleteObj();
                     scope.cysteines = angular.copy(scope.parent.$$cysteines);
                     console.log(scope.cysteines);
 console.log(scope);
