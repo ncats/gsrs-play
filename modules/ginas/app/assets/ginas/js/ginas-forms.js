@@ -793,7 +793,7 @@ return factory;
         };
     });
 
-    ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder) {
+    ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder, subunitParser) {
         return {
             restrict: 'E',
             replace: true,
@@ -804,22 +804,23 @@ return factory;
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
             link: function (scope, attrs, element) {
-                scope.linkage = {};
+                /*scope.linkage = {};
                 scope.noLinkages = 0;
                 if (!scope.parent.nucleicAcid.linkages) {
                     scope.parent.nucleicAcid.linkages = [];
                 }
-
+*/
                 scope.getAllSites = function () {
                     return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
                 };
 
-                scope.applyAll = function () {
-                    siteAdder.applyAll('linkage', scope.parent, scope.linkage, 'linkage');
+                scope.applyAll = function (obj, index) {
+                    siteAdder.applyAll('linkage', scope.parent, obj, 'linkage');
                     scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
+                    subunitParser.parseSubunit(scope.parent, obj, index);
                 };
 
-                scope.validate = function () {
+               /* scope.validate = function () {
                     _.forEach(scope.linkage.sites.sites, function (site) {
                         _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
                     });
@@ -834,7 +835,7 @@ return factory;
                     siteAdder.clearSites('linkage', scope.parent, obj.sites);
                     scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                 };
-
+*/
                 scope.noLinkages = function () {
                     var count = scope.getAllSites('linkage') - 1;
                     _.forEach(scope.parent.nucleicAcid.linkages, function (link) {
