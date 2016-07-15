@@ -217,7 +217,6 @@
 
         var factory = {};
         factory.getResidues= function(substanceClass){
-            console.log(substanceClass);
             var residues;
             var cls;
             if (substanceClass === 'protein') {
@@ -257,11 +256,10 @@
         };
 
         factory.parseSubunit = function (parent, proteinobj, proteinindex) {
-var subclass = parent.substanceClass;
+            var subclass = parent.substanceClass;
             if(_.isUndefined(factoryResidues)) {
                 factory.getResidues(subclass);
             }
-           parent.$$cysteines = [];
             var display = [];
             _.forEach(proteinobj.sequence, function (aa, index) {
                 var obj = {};
@@ -282,14 +280,7 @@ var subclass = parent.substanceClass;
                     //parse out cysteines first
                     if (aa.toUpperCase() == 'C') {
                         obj.cysteine = true;
-                       parent.$$cysteines.push(
-                            {subunitIndex: _.toInteger(proteinindex),
-                                residueIndex: index + 1,
-                                display: proteinindex +'_'+ (index+1),
-                                value: proteinindex +'_'+ (index+1)
-                            });
                     }
-
                     if (_.has(parent, 'modifications.structuralModifications')) {
                         objectParser(parent.modifications, obj, 'structuralModifications');
                     }
@@ -429,7 +420,7 @@ return factory;
         };
     });
 
-    ginasForms.directive('disulfideLinkForm', function () {
+    ginasForms.directive('disulfideLinkForm', function (siteAdder, subunitParser) {
         return {
             restrict: 'E',
             replace: true,
@@ -443,15 +434,14 @@ return factory;
             },
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
-
                 scope.addLink = function (form, path) {
                     scope.addNew(form, path);
                 };
 
                 scope.removeUsed = function(){
                     var ret = [];
-                    var cys = angular.copy(scope.cysteines);
 
+                    var cys = angular.copy(scope.cysteines);
                     //this sets the array of used sites
                     _.forEach(scope.parent.protein.disulfideLinks, function (link) {
                         _.forEach(link.sites, function (site) {
@@ -465,7 +455,6 @@ return factory;
                             return c.value === used.value;
                         });
                     });
-
                     //set the cv to be the copied array
                     scope.cysteines = cys;
 
@@ -475,17 +464,23 @@ return factory;
                 scope.$on('delete', function (e) {
 
                     //get all sites/
-                    scope.removeUsed();
-                    //retrieve sites
-                    var cys = angular.copy(scope.cysteines);
-
-                    //iterate over sites and remove the 2 sites contained in the delete obj
-                    _.forEach(e.targetScope.obj.sites, function (site) {
-                        cys.push(site);
+                   var cys = angular.copy(siteAdder.getByType('cysteine', scope.parent.protein.subunits));
+                    _.forEach(cys, function (site) {
+                        _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
+                        _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
                     });
-                    scope.cysteines  = _.orderBy(cys, 'value');
+
+                    //this removes everything that has a cysteine set before deleting the selected one
+                    scope.removeUsed();
+
+                     //iterate over sites and remove the 2 sites contained in the delete obj
+                          _.forEach(e.targetScope.obj.sites, function (site) {
+                              scope.cysteines.push(site);
+                          });
+                   scope.cysteines  = _.orderBy(scope.cysteines, 'value');
                 });
 
+                
                 scope.clean = function (model, site, index) {
                    scope.removeUsed();
                 };
@@ -502,20 +497,19 @@ return factory;
                     });
                 }
 
-                scope.$watchCollection('parent.$$cysteines', function (newValue, oldValue, scope) {
-                    var ret;
-
+                scope.$watch(function(scope){return scope.parent.protein.subunits;}, function (newValue, oldValue, scope) {
                     //this will update the cv on subunit change, excluding used subunits.
                     //this doesn't remove them from the cv if they are added to the disulfide links
-                    if (!_.isUndefined(newValue)) {
-                        if (scope.parent.protein.disulfideLinks && scope.parent.protein.disulfideLinks.length > 0) {
-                            scope.cysteines = newValue;
-                            scope.removeUsed();
-                        } else {
-                            scope.cysteines = newValue;
-                        }
-                    }
-                });
+
+                    //have to use angular.copy so the display value doesn't change for the subunit display
+                    var t = angular.copy(siteAdder.getByType('cysteine', scope.parent.protein.subunits));
+                        _.forEach(t, function (site) {
+                                _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
+                                _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
+                        });
+                    scope.cysteines= t;
+                    scope.removeUsed();
+                }, true);
             }
         };
     });
@@ -701,15 +695,31 @@ return factory;
     ginasForms.service('siteAdder', function (siteList, subunitParser) {
 
         this.getAll = function (type, display) {
+            console.log(type);
+            console.log(display);
             var temp = [];
             // _.forEach(display, function (arr) {
             _.forEach(display, function (subunit) {
+                console.log(subunit);
                 temp = _.filter(subunit, function (su) {
                     return su[type];
                 });
                 //    });
             });
             return temp;
+        };
+
+        this.getByType = function (type, display) {
+            var ret = [];
+            // _.forEach(display, function (arr) {
+            _.forEach(display, function (subunit) {
+               var temp = _.filter(_.flattenDeep(subunit.$$subunitDisplay), function (su) {
+                    return su[type];
+                });
+                ret = _.concat(ret, temp);
+                //    });
+            });
+            return ret;
         };
 
         this.getCount = function (subunits) {
@@ -775,6 +785,7 @@ return factory;
         };
 
         this.clearSites = function (type, parent, obj, index) {
+            var subclass= parent.substanceClass;
             console.log(type);
             console.log(angular.copy(parent));
             console.log(obj);
@@ -783,7 +794,7 @@ return factory;
                 console.log(site);
                 var chunkIndex=Math.floor((site.residueIndex-1) / 10);
                 var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
-                parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex] = _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type);
+                parent[subclass].subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex] = _.omit(parent[subclass].subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type);
 
                // _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[(site.residueIndex - 1) % 10][site.residueIndex - 1], type);
               //  subunitParser.parseSubunit(parent, obj, index);
