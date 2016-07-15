@@ -9,12 +9,12 @@
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
-                                <delete-button delete="obj" path="components"></delete-button>
+                                <delete-button delete="obj" path="mixture.components"></delete-button>
                             </div>
                             <div class="col-md-3">
-                                <substance-chooser-selector referenceobj="obj" field="relatedSubstance"
-                                                            name="relatedSubstance" formname="componentForm"
-                                                            label="Related Substance"
+                                <substance-chooser-selector referenceobj="obj" field="substance"
+                                                            name="substance" formname="componentForm"
+                                                            label="Component Substance"
                                                             type="search">
                                 </substance-chooser-selector>
                             </div>
@@ -31,6 +31,7 @@
                     <hr>
                 </ng-form>
             </div>
+            <div class = "componentForm"></div>
         </form>
         <br>
         <br>

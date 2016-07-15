@@ -70,6 +70,10 @@ public class Util {
     	return sb.toString();
     }
     
+    public static void printExecutionStackTrace(){
+    	System.out.println(getExecutionPath());
+    }
+    
     public static String sha1 (Http.Request req) {
         return sha1 (req, (String[])null);
     }

@@ -15,6 +15,7 @@
             if (_.isUndefined(scope.stage)) {
                 scope.stage = true;
             }
+
             var template = "";
             var result = document.getElementsByClassName(scope.type);
             var elementResult = angular.element(result);
