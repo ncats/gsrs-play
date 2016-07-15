@@ -628,6 +628,12 @@ console.log(scope);
                     });
                     return count;
                 }
+		scope.deleteObj = function (obj) {
+//                  scope.parent.nucleicAcid.sug.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
+                    siteAdder.clearSites('sugar', scope.parent, obj.sites);
+                    
+                };
+
             }
         };
     });
@@ -1483,6 +1489,7 @@ console.log(scope);
 
             } else {
                 var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
+console.log("Sites:" + sites2.length);
                 obj.$$displayString = siteList.siteString(sites2);
                 obj.sites = siteList.siteList(obj.$$displayString);
             }
