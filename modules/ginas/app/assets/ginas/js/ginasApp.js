@@ -1458,11 +1458,10 @@
         };
     });
 
-    ginasApp.directive('subunit', function (CVFields, APIFetcher) {
+    ginasApp.directive('subunit', function (CVFields, APIFetcher, subunitParser) {
 
         return {
             restrict: 'E',
-            controller: 'formController',
             scope: {
                 parent: '=?',
                 obj: '=?',
@@ -1483,7 +1482,7 @@
                     scope.edit = !scope.edit;
                 };
 
-                scope.getResidues = function () {
+                /*scope.getResidues = function () {
                     if (scope.parent.substanceClass === 'protein') {
                         CVFields.getCV("AMINO_ACID_RESIDUE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
@@ -1500,18 +1499,18 @@
                         });
                     }
                 };
+*/
 
-
-                scope.getType = function (aa) {
+                /*scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
                         return 'D-';
                     }
                     else {
                         return 'L-';
                     }
-                };
+                };*/
 
-                scope.objectParser = function (subObj, siteObj, name) {
+               /* scope.objectParser = function (subObj, siteObj, name) {
                     var cv;
                     var newobj;
                     _.forEach(subObj, function (value, key) {
@@ -1632,6 +1631,11 @@
                     display = _.chunk(display, 10);
                     _.set(scope.obj, '$$subunitDisplay', display);
                 };
+*/
+
+                scope.parseSubunit = function(){
+                    subunitParser.parseSubunit(scope.parent, scope.obj, scope.index);
+                };
 
                 scope.highlight = function (acid) {
                     var bridge = {};
@@ -1646,12 +1650,14 @@
                 };
 
                 scope.cleanSequence = function () {
+                    scope.obj.sequence = subunitParser.cleanSequence(scope.obj.sequence);
+                   /* var residues = subunitParser.getResidues(scope.parent.substanceClass);
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
                             return temp;
                         }
-                    }).toString().replace(/,/g, '');
+                    }).toString().replace(/,/g, '');*/
                     scope.parseSubunit();
                 };
 
@@ -1666,10 +1672,14 @@
                             scope.obj = data.nucleicAcid.subunits[scope.index];
                             scope.index = scope.index-1+2;
                         }
-                        scope.getResidues();
+                      //  scope.getResidues();
+                        scope.parseSubunit();
+
                     });
                 } else {
-                    scope.getResidues();
+//                    scope.getResidues();
+                    scope.parseSubunit();
+
                 }
 
             },
