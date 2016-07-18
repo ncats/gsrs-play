@@ -23,10 +23,10 @@
                             </div>
                             <div class="col-md-2">
                                 <substance-chooser-selector referenceobj="obj"
-                                                            field="relatedSubstance"
-                                                            name="relatedSubstance"
+                                                            field="molecularFragment"
+                                                            name="molecularFragment"
                                                             formname="structuralModForm"
-                                                            label="Related Substance"
+                                                            label="Fragment"
                                                             type="search">
                                 </substance-chooser-selector>
                             </div>
@@ -51,6 +51,7 @@
                                  ng-if="parent.substanceClass!='structurallyDiverse' && obj.locationType && obj.locationType.value!='RESIDUE_SPECIFIC'">
                                 <modal-form-button type="sites"
                                                    referenceobj="obj"
+                                                   field="sites"
                                                    parent="parent"
                                                    formtype="site">
                                 </modal-form-button>
@@ -83,6 +84,7 @@
                             <hr>
                 </ng-form>
             </div>
+            <div class = "structuralModForm"></div>
         </form>
         <br>
         <br>

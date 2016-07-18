@@ -167,67 +167,6 @@
     ginasForms.factory('subunitParser', function(CVFields){
         var factoryResidues;
 
-        /**
-          * Does some parsing on the site object???
-          *
-          */
-        var objectParser = function (subObj, siteObj, name) {
-            var cv;
-            var newobj;
-            _.forEach(subObj, function (value, key) {
-                if (_.isArray(value) && value.length > 0) {
-                    _.forEach(value, function (mod) {
-                        if (name === 'glycosylation') {
-                            if (mod.subunitIndex == siteObj.subunitIndex && mod.residueIndex == siteObj.residueIndex) {
-                                _.set(siteObj, name, true);
-                            }
-                        } else if (name === 'structuralModifications') {
-                            _.forEach(mod.sites, function (site) {
-                                if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
-                                    _.set(siteObj, name, mod.molecularFragment);
-                                }
-                            });
-                        } else if (name === 'sugar' || name === 'linkage') {
-                            _.forEach(mod.sites, function (site) {
-                                if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
-                                    var obj = mod[name];
-                                    _.set(siteObj, name, obj);
-                                    if (!_.has(obj, 'display')) {
-                                        var type = _.toUpper(name);
-                                        type = 'NUCLEIC_ACID_' + type;
-                                        CVFields.getCV(type).then(function (data) {
-                                            cv = data.data.content[0].terms;
-                                            newobj = _.find(cv, ['value', obj]);
-                                            _.set(siteObj, name, newobj);
-                                        });
-                                    }
-                                }
-                            });
-                        } else {
-                            //if the subunit changes while an empty link exists breaks this, hence the sites check
-                            if(mod.sites && mod.sites.length > 0) {
-                                if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
-                                    var bridge = mod.sites[1];
-                                    _.set(siteObj, name, bridge);
-                                } else if (mod.sites[1].subunitIndex == siteObj.subunitIndex && mod.sites[1].residueIndex == siteObj.residueIndex) {
-                                    var bridge = mod.sites[0];
-                                    _.set(siteObj, name, bridge);
-                                }
-                            }
-                        }
-                    });
-                }
-            });
-        };
-
-         var objectParser2 = function (siteList, siteObj, name, generator) {
-            _.forEach(subObj, function (value, key) {
-                if(value.subunitIndex === siteObj.subunitIndex && value.residueIndex === siteObj.residueIndex){
-                        _.set(siteObj, name, generator(siteObj, name));
-                }
-            });
-        };
-
         var factory = this;
         factory.getResidues= function(substanceClass){
             var residues;
@@ -266,25 +205,7 @@
             }
         };
 
-        /**
-          * Recalculates the subunit display chunks, used both as a rendering aid,
-          * and in some other methods as a quick cache of what sites are modified
-          * or otherwise enhanced.
-          *
-          */
-        factory.parseSubunits = function (substance) {
-            var subclass = substance.substanceClass;
-            var subunits;
-            if(subclass === "protein"){
-                subunits=substance.protein.subunits;
-            }else if(subclass === "nucleicAcid"){
-                subunits=substance.nucleicAcid.subunits;
-            }        
-            _.forEach(subunits, function (su, index) {
-                factory.parseSubunit(substance,su,index+1);
-            });
-                
-        };
+       
         factory.getOtherSite = function(site,sites){
                 var retsite=site;
                 _.forEach(sites, function(s){
@@ -299,15 +220,20 @@
           * including sugars, linkages, structural modifications,
           * disulfides, other links, and glycosylation sites
           *
-          * Sites references may be duplicated
+          * Sites references may be duplicated, in that more than
+          * one site may have the same shorthand notation.
+          *
+          * If "asmap" is true, the returned object will be an 
+	  * associative array of the shorthand site keys to the 
+          * objects
           *
           */
-        factory.getAllModifiedSites = function (parent){
+        factory.getAllModifiedSites = function (parent, asmap){
                 var sites = [];
 
                 if (_.has(parent, 'modifications.structuralModifications')) {
                         _.forEach(parent.modifications.structuralModifications, function(mod, index){
-                                 sites=_.concat(sites,factory.markSites(mod.sites, "mod"));
+                                 sites=_.concat(sites,factory.markSites(mod.sites, "structuralModifications", mod.molecularFragment));
                         });
                 }
                 if (parent.substanceClass === 'protein') {
@@ -338,6 +264,9 @@
                             });
                         }
                 }
+		if(asmap){
+			return factory.sitesAsMap(sites);
+		}
                 return sites;
         };
 
@@ -366,6 +295,12 @@
 
         factory.markSites = function (sites, mark, gen){
                 var ret=[];
+		var ogen=gen;
+		if(ogen && typeof ogen !== "function"){
+			gen = function(){
+				return ogen;
+			};
+		}
                 if(!gen){
                         gen = function(){
                                 return true;
@@ -382,21 +317,29 @@
                 return ret;
         }
 
+	 /**
+          * Recalculates the subunit display chunks, used both as a rendering aid,
+          * and in some other methods as a quick cache of what sites are modified
+          * or otherwise enhanced.
+          * 
+          */
+        factory.parseSubunits = function (substance) {
+            var subclass = substance.substanceClass;
+            var subunits;
+            if(subclass === "protein"){
+                subunits=substance.protein.subunits;
+            }else if(subclass === "nucleicAcid"){
+                subunits=substance.nucleicAcid.subunits;
+            }        
+            _.forEach(subunits, function (su, index) {
+                factory.parseSubunit(substance,su,index+1);
+            });
+                
+        };
         /**
-          * Ok, this is what this method does:
-          *
-          *  1. It takes in a substance, a subunit, and an index
-          *  2. If the canonical set of residues isn't calculated, it grabs them (asynchronously)
-          *     from the API. (this may cause problems)
-          *  3. It looks through every character in the sequence of the subunit
-          *  4. For each character, it grabs "right" details about it (name, structure, etc) from CV
-          *  5. If there are no details, it flags it as invalid, and skips to step 12
-          *  6. If it is valid, it makes a copy of the CV returned, with only the string properties
-          *  7. If it's a protein, do the following:
-          *          7a. Mark the site as a cystein, if it is a "C"
-          *          7b. Calculate the stereo (L vs D), and flag the site object accordingly
-          *          7c. Calculate the stereo (L vs D), and flag the site object accordingly        
-          *  8. If it is valid, it makes a copy of the CV returned, with only the string properties
+          * This method accepts a substance, a subunit, and an optional subunit index
+          * and then computes a chunked display cache of the residue sites contained
+          * within, storing it as '$$subunitDisplay'
           *
           */
         factory.parseSubunit = function (parent, subunit, subunitIndex) {
@@ -596,7 +539,7 @@
                           _.forEach(e.targetScope.obj.sites, function (site) {
                               scope.cysteines.push(site);
                           });
-                   scope.cysteines  = _.orderBy(scope.cysteines, 'value');
+                    scope.cysteines  = _.orderBy(scope.cysteines, 'value');
                 });
 
                 scope.$on('removed', function (e) {
@@ -1457,7 +1400,7 @@
         };
     });
 
-    ginasForms.directive('structuralModificationForm', function (CVFields) {
+    ginasForms.directive('structuralModificationForm', function (CVFields,subunitParser) {
         return {
             restrict: 'E',
             replace: true,
@@ -1477,6 +1420,12 @@
                         return null;
                     }
                 };
+		scope.$on('removed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
+                scope.$on('changed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
             }
         };
     });
