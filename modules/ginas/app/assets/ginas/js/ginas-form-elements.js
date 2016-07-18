@@ -372,9 +372,6 @@
                         }
                     };
 
-                    scope.print = function(){
-                        console.log("ffffff");
-                    }
                     //this is used to:  1. filter one dropdown list based on the input of another down to one automatically selected value
                     //                  2. filter one dropdown list based on the input of another to a subset
                     //                  3. select a different cv for a dropdown, based on the input of another (structural modification residue)
@@ -939,17 +936,18 @@
             link: function (scope, element, attrs) {
                     scope.showlabel= attrs.showlabel;
 
-                scope.deleteObj = function () {
-                    scope.$emit('delete');
-                    if (scope.parent) {
-                        var arr = _.get(scope.parent, attrs.path);
-                        arr.splice(arr.indexOf(scope.obj), 1);
-                    } else if(scope.substance) {
-                        scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
-                    }else{
-                       // console.log("not a substance");
-                    }
-                };
+                    scope.deleteObj = function () {
+                            scope.$emit('delete');
+                            if (scope.parent) {
+                                var arr = _.get(scope.parent, attrs.path);
+                                arr.splice(arr.indexOf(scope.obj), 1);
+                            } else if(scope.substance) {
+                                scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
+                            }else{
+                               // console.log("not a substance");
+                            }
+                            scope.$emit('removed');
+                    };
 
             }
         };
@@ -962,7 +960,7 @@
             scope: {
                 type: '@',
                 path: '@',
-		heading: '@'
+                heading: '@'
             },
             link: function (scope, element, attrs) {
                 scope.stage = true;

@@ -1175,3 +1175,6 @@ span.helper-title {
     color: #333333;
     font-size: medium;
 }
+amino-acid.selected-acid a {
+    background: #00faff !important;
+}

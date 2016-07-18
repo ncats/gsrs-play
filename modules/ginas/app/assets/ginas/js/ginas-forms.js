@@ -167,12 +167,10 @@
     ginasForms.factory('subunitParser', function(CVFields){
         var factoryResidues;
 
-	/**
-	  * Recalculates the subunit display chunks, used both as a rendering aid,
-	  * and in some other methods as a quick cache of what sites are modified
-	  * or otherwise enhanced.
-	  *
-	  */
+        /**
+          * Does some parsing on the site object???
+          *
+          */
         var objectParser = function (subObj, siteObj, name) {
             var cv;
             var newobj;
@@ -222,7 +220,13 @@
             });
         };
 
-	var 
+         var objectParser2 = function (siteList, siteObj, name, generator) {
+            _.forEach(subObj, function (value, key) {
+                if(value.subunitIndex === siteObj.subunitIndex && value.residueIndex === siteObj.residueIndex){
+                        _.set(siteObj, name, generator(siteObj, name));
+                }
+            });
+        };
 
         var factory = this;
         factory.getResidues= function(substanceClass){
@@ -250,11 +254,10 @@
                     return temp;
                 }
             }).toString().replace(/,/g, '');
-           // scope.parseSubunit();
             return sequence;
         };
 
-        factory.getType = function (aa) {
+        factory.getStereoType = function (aa) {
             if (aa == aa.toLowerCase()) {
                 return 'D-';
             }
@@ -263,47 +266,147 @@
             }
         };
 
-<<<<<<< HEAD
-	/**
-	  * Recalculates the subunit display chunks, used both as a rendering aid,
-	  * and in some other methods as a quick cache of what sites are modified
-	  * or otherwise enhanced.
-	  *
-	  */
-	factory.parseSubunits = function (substance) {
+        /**
+          * Recalculates the subunit display chunks, used both as a rendering aid,
+          * and in some other methods as a quick cache of what sites are modified
+          * or otherwise enhanced.
+          *
+          */
+        factory.parseSubunits = function (substance) {
             var subclass = substance.substanceClass;
             var subunits;
             if(subclass === "protein"){
                 subunits=substance.protein.subunits;
             }else if(subclass === "nucleicAcid"){
                 subunits=substance.nucleicAcid.subunits;
-            }	
+            }        
             _.forEach(subunits, function (su, index) {
                 factory.parseSubunit(substance,su,index+1);
             });
-		
-	}
+                
+        };
+        factory.getOtherSite = function(site,sites){
+                var retsite=site;
+                _.forEach(sites, function(s){
+                        if(s!==site){
+                                retsite=s;
+                        }
+                });
+                return retsite;
+        };
+        /**
+          * Returns a list of all modified sites in the substance
+          * including sugars, linkages, structural modifications,
+          * disulfides, other links, and glycosylation sites
+          *
+          * Sites references may be duplicated
+          *
+          */
+        factory.getAllModifiedSites = function (parent){
+                var sites = [];
 
-	/**
-	  * Ok, this is what this method does:
-	  *
-	  *  1. It takes in a substance, a subunit, and an index
-	  *  2. If the canonical set of residues isn't calculated, it grabs them (asynchronously)
-	  *     from the API. (this may cause problems)
-	  *  3. It looks through every character in the sequence of the subunit
-	  *  4. For each character, it grabs "right" details about it (name, structure, etc) from CV
-	  *  5. If there are no details, it flags it as invalid, and skips to step 12
-	  *  6. If it is valid, it makes a copy of the CV returned, with only the string properties
-	  *  7. Determine if 
-	  *  8. If it is valid, it makes a copy of the CV returned, with only the string properties
-	  *
-	  */
-	factory.parseSubunit = function (parent, subunit, proteinindex) {
+                if (_.has(parent, 'modifications.structuralModifications')) {
+                        _.forEach(parent.modifications.structuralModifications, function(mod, index){
+                                 sites=_.concat(sites,factory.markSites(mod.sites, "mod"));
+                        });
+                }
+                if (parent.substanceClass === 'protein') {
+                        if (_.has(parent.protein, 'glycosylation')) {
+                            sites=_.concat(sites,factory.markSites(parent.protein.glycosylation.CGlycosylationSites, "glycosylation"));
+                            sites=_.concat(sites,factory.markSites(parent.protein.glycosylation.NGlycosylationSites, "glycosylation"));  
+                            sites=_.concat(sites,factory.markSites(parent.protein.glycosylation.OGlycosylationSites, "glycosylation"));  
+                        }
+                        if (_.has(parent.protein, 'disulfideLinks')) {
+                            _.forEach(parent.protein.disulfideLinks, function(link, index){
+                                 sites=_.concat(sites,factory.markSites(link.sites, "disulfide", factory.getOtherSite));
+                            });
+                        }
+                        if (_.has(parent.protein, 'otherLinks')) {
+                            _.forEach(parent.protein.otherLinks, function(link, index){
+                                  sites=_.concat(sites,factory.markSites(link.sites, "otherLinks", factory.getOtherSite));
+                            });
+                        }
+                } else if (parent.substanceClass === 'nucleicAcid') {
+                        if (_.has(parent.nucleicAcid, 'sugars')) {
+                            _.forEach(parent.nucleicAcid.sugars, function(link, index){
+                                 sites=_.concat(sites,factory.markSites(link.sites, "sugar"));
+                            });
+                        }
+                        if (_.has(parent.nucleicAcid, 'linkages')) {
+                            _.forEach(parent.nucleicAcid.linkages, function(link, index){
+                                 sites=_.concat(sites,factory.markSites(link.sites, "linkage"));
+                            });
+                        }
+                }
+                return sites;
+        };
+
+        /**
+          * Return a site array as a map, with the key being the
+          * shorthand form of the site. All properties are merged
+          * if there is a key collision, with the older list attributes
+          * being honored preferentially
+          */
+        factory.sitesAsMap = function (sites){
+                var map = {};
+                _.forEach(sites, function(site, index){
+                        var key=site.subunitIndex + "_" + site.residueIndex;
+                        oldsite = map[key];
+                        if(oldsite){
+                                site=_.merge(oldsite,site);
+                        }
+                        map[key]=site;
+                });
+                map.get = function (site){
+                        var key=site.subunitIndex + "_" + site.residueIndex;
+                        return this[key];
+                };
+                return map;
+         }
+
+        factory.markSites = function (sites, mark, gen){
+                var ret=[];
+                if(!gen){
+                        gen = function(){
+                                return true;
+                        };
+                }
+                if(sites){
+                        _.forEach(sites, function(site){
+                                        var cp=angular.copy(site);
+                                        _.set(cp,mark,gen(site,sites));
+                                        ret.push(cp);
+                                }
+                        );
+                }
+                return ret;
+        }
+
+        /**
+          * Ok, this is what this method does:
+          *
+          *  1. It takes in a substance, a subunit, and an index
+          *  2. If the canonical set of residues isn't calculated, it grabs them (asynchronously)
+          *     from the API. (this may cause problems)
+          *  3. It looks through every character in the sequence of the subunit
+          *  4. For each character, it grabs "right" details about it (name, structure, etc) from CV
+          *  5. If there are no details, it flags it as invalid, and skips to step 12
+          *  6. If it is valid, it makes a copy of the CV returned, with only the string properties
+          *  7. If it's a protein, do the following:
+          *          7a. Mark the site as a cystein, if it is a "C"
+          *          7b. Calculate the stereo (L vs D), and flag the site object accordingly
+          *          7c. Calculate the stereo (L vs D), and flag the site object accordingly        
+          *  8. If it is valid, it makes a copy of the CV returned, with only the string properties
+          *
+          */
+        factory.parseSubunit = function (parent, subunit, subunitIndex) {
             var subclass = parent.substanceClass;
             if(_.isUndefined(factoryResidues)) {
                 factory.getResidues(subclass);
             }
             var display = [];
+            var modifiedSitesMap = factory.sitesAsMap(factory.getAllModifiedSites(parent));
+
             _.forEach(subunit.sequence, function (aa, index) {
                 var obj = {};
                 obj.value = aa;
@@ -312,50 +415,25 @@
                     obj = _.pickBy(temp, _.isString);
                     obj.value = aa;
                     obj.valid = true;
+                    
                     if (subunit.subunitIndex) {
                         obj.subunitIndex = subunit.subunitIndex;
                     } else {
-                        obj.subunitIndex = proteinindex;
+                        obj.subunitIndex = subunitIndex;
                     }
                     obj.residueIndex = index - 0 + 1;
-
-                    //parse out cysteines first
-                    if (aa.toUpperCase() == 'C') {
-                        obj.cysteine = true;
-                    }
-                    if (_.has(parent, 'modifications.structuralModifications')) {
-                        objectParser(parent.modifications, obj, 'structuralModifications');
-                    }
-
-                    if (parent.substanceClass === 'protein') {
-                        obj.type = factory.getType(aa);
-                        if (_.has(parent.protein, 'glycosylation')) {
-                            objectParser(parent.protein.glycosylation, obj, 'glycosylation');
-                        }
-                        if (_.has(parent.protein, 'disulfideLinks')) {
-                            var linksObj = {};
-                            _.set(linksObj, 'links',parent.protein.disulfideLinks);
-                            objectParser(linksObj, obj, 'disulfide');
-                        }
-                        if (_.has(parent.protein, 'otherLinks')) {
-                            var linksObj = {};
-                            _.set(linksObj, 'otherLinks',parent.protein.otherLinks);
-                            objectParser(linksObj, obj, 'otherLinks');
-                        }
-
-                    } else {
-                        if (_.has(parent.nucleicAcid, 'sugars')) {
-                            var linksObj = {};
-                            _.set(linksObj, 'sugar',parent.nucleicAcid.sugars);
-                            objectParser(linksObj, obj, 'sugar');
-                        }
-                        if (_.has(parent.nucleicAcid, 'linkages')) {
-                            var linksObj = {};
-                            _.set(linksObj, 'linkage', parent.nucleicAcid.linkages);
-                            objectParser(linksObj, obj, 'linkage');
+                     if (parent.substanceClass === 'protein') {
+                        //parse out cysteines first
+                        if (aa.toUpperCase() == 'C') {
+                            obj.cysteine = true;
+                        }else{
+                            obj.cysteine = false;
                         }
                     }
-
+                    var modc = modifiedSitesMap.get(obj);
+                    if(modc){
+                        obj=_.merge(modc,obj);
+                    }
 
                 } else {
                     obj.valid = false;
@@ -365,7 +443,7 @@
             display = _.chunk(display, 10);
             _.set(subunit, '$$subunitDisplay', display);
         };
-	return factory;
+        return factory;
     });
     
     
@@ -505,7 +583,7 @@
                 //this is called before the object is deleted, so removing used doesn't work
                 scope.$on('delete', function (e) {
 
-                   var cys = angular.copy(siteAdder.getAllSitesWith('cysteine', scope.parent.protein.subunits));
+                   var cys = angular.copy(siteAdder.getAllSitesWithValue('C', scope.parent.protein.subunits));
                     _.forEach(cys, function (site) {
                         _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
                         _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
@@ -521,9 +599,14 @@
                    scope.cysteines  = _.orderBy(scope.cysteines, 'value');
                 });
 
+                scope.$on('removed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
                 
+
                 scope.clean = function (model, site, index) {
                    scope.removeUsed();
+                   subunitParser.parseSubunits(scope.parent);
                 };
 
                 //set the views on loading/editing a substance
@@ -543,7 +626,7 @@
                     //this doesn't remove them from the cv if they are added to the disulfide links
 
                     //have to use angular.copy so the display value doesn't change for the subunit display
-                    var t = angular.copy(siteAdder.getAllSitesWith('cysteine', scope.parent.protein.subunits));
+                    var t = angular.copy(siteAdder.getAllSitesWithValue('C', scope.parent.protein.subunits));
                         _.forEach(t, function (site) {
                                 _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
                                 _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
@@ -552,7 +635,7 @@
                     scope.removeUsed();
                 }, true);
             }
-        };
+        }
     });
 
     ginasForms.directive('nucleicAcidSugarForm', function (siteList, siteAdder, subunitParser) {
@@ -566,7 +649,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
-                console.log(scope);
 
                 scope.getAllSites = function () {
                     return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
@@ -574,38 +656,22 @@
 
                 scope.applyAll = function (obj, index) {
                     obj.$$displayString="";
-                    obj.length=0;
-                    console.log("Flushed, and ready to go");
-		    subunitParser.parseSubunits(scope.parent);
+                    obj.sites.$$displayString="";
+                    obj.sites.length=0;
                     siteAdder.applyAll('sugar', scope.parent, obj);
-                    subunitParser.parseSubunits(scope.parent);
-
-//                    subunitParser.parseSubunit(scope.parent, obj, scope.residues, scope.index);
                 };
 
 
-//this is called every time something is hovered over -- ned to fix
+                //this is called every time something is hovered over -- need to fix
                 scope.noSugars = function () {
-                    var count = scope.getAllSites();
-                    _.forEach(scope.parent.nucleicAcid.sugars, function (sugar) {
-                        if (_.isArray(sugar.sites)) {
-                            count -= sugar.sites.length
-                        }
-                    });
-                    return count;
+                      return siteAdder.getAllSitesWithout('sugar',scope.parent.nucleicAcid.subunits).length;
                 };
-                scope.$on('delete', function (e) {
-                    console.log(e);
-                    siteAdder.clearSites('sugar', scope.parent, e.targetScope.obj.sites, e.targetScope.index);
-                 //   subunitParser.parseSubunit(scope.parent, e.targetScope.obj, e.targetScope.index);
+                scope.$on('removed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
                 });
-
-
-/*                scope.deleteObj = function (obj) {
-//                  scope.parent.nucleicAcid.sug.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
-                    siteAdder.clearSites('sugar', scope.parent, obj.sites);
-
-                };*/
+                scope.$on('changed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
 
             }
         };
@@ -629,6 +695,7 @@
 
         //string to array
         this.siteList = function (slist) {
+            if(!slist)return [];
             var toks = slist.split(";");
             var sites = [];
             for (var i in toks) {
@@ -738,16 +805,11 @@
     ginasForms.service('siteAdder', function (siteList, subunitParser) {
 
         this.getAll = function (type, display) {
-            console.log(type);
-            console.log(display);
             var temp = [];
-            // _.forEach(display, function (arr) {
             _.forEach(display, function (subunit) {
-                console.log(subunit);
                 temp = _.filter(subunit, function (su) {
                     return su[type];
                 });
-                //    });
             });
             return temp;
         };
@@ -757,6 +819,36 @@
             _.forEach(display, function (subunit) {
                var temp = _.filter(_.flattenDeep(subunit.$$subunitDisplay), function (su) {
                     return su[type];
+                });
+                ret = _.concat(ret, temp);
+            });
+            return ret;
+        };
+        
+        this.getAllSitesWithout = function (type, display) {
+            var temp = [];
+            _.forEach(display, function (subunit) {
+                if(!subunit) return;
+                if(!subunit.sequence) return;
+                _.forEach(subunit.$$subunitDisplay, function (chunk) {
+                    var tempadd = _.reject(chunk, function (aa) {
+                        return aa[type];
+                    });
+                    temp = _.concat(temp,tempadd);
+                });
+                if (type === 'linkage' && subunit.sequence.length>0) {
+                        temp = _.dropRight(temp);
+                    }
+            });
+            return temp;
+        };
+
+        
+        this.getAllSitesWithValue = function (residue, display) {
+            var ret = [];
+            _.forEach(display, function (subunit) {
+               var temp = _.filter(_.flattenDeep(subunit.$$subunitDisplay), function (su) {
+                    return su.value === residue;
                 });
                 ret = _.concat(ret, temp);
             });
@@ -774,26 +866,12 @@
         };
 
 
-        this.getAllSitesWithout = function (type, display) {
-            var temp = [];
-            _.forEach(display, function (subunit) {
-                _.forEach(subunit.$$subunitDisplay, function (chunk) {
-                    var tempadd = _.reject(chunk, function (aa) {
-                        return aa[type];
-                    });
-                    temp = _.concat(tempadd, temp);
-                });
-            });
-
-            if (type == 'linkage') {
-                temp = _.dropRight(temp);
-            }
-            return temp;
-        };
 
         this.applyAll = function (type, parent, obj) {
+            subunitParser.parseSubunits(parent);
+        
             var plural = type + "s";
-	    
+            
 
             if (parent.nucleicAcid[plural].length == 0) {
                 if (type == 'linkage') {
@@ -803,41 +881,24 @@
                 }
                 obj.sites = siteList.siteList(obj.$$displayString);
 
-
             } else {
                 var sites2=this.getAllSitesWithout(type, parent.nucleicAcid.subunits);
                 obj.$$displayString = siteList.siteString(sites2);
-                obj.sites = siteList.siteList(obj.$$displayString);		
+                obj.sites = siteList.siteList(obj.$$displayString);                
+                obj.sites.$$displayString=obj.$$displayString;
             }
-            //this applies the sugar property to the display object
-            _.forEach(obj.sites, function (site) {
-                //technically, this can be a problem, as the index of the array is not guaranteed
-                //to correspond to the subunitIndex of the subunit
-                var chunkIndex=Math.floor((site.residueIndex-1) / 10);
-                var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
-                _.set(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type, true);
-            });
+            subunitParser.parseSubunits(parent);
+
         };
 
-        this.clearSites = function (type, parent, obj, index) {
-            var subclass= parent.substanceClass;
-            _.forEach(obj, function (site) {
+
+        this.toZeroIndexChunks = function (site){
                 var chunkIndex=Math.floor((site.residueIndex-1) / 10);
                 var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
-                parent[subclass].subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex] = _.omit(parent[subclass].subunits[site.subunitIndex - 1].$$subunitDisplay[chunkIndex][residueSubIndex], type);
-
-               // _.omit(parent.nucleicAcid.subunits[site.subunitIndex - 1].$$subunitDisplay[(site.residueIndex - 1) % 10][site.residueIndex - 1], type);
-              //  subunitParser.parseSubunit(parent, obj, index);
-            });
-        };
-
-	this.toZeroIndexChunks = function (site){
-		var chunkIndex=Math.floor((site.residueIndex-1) / 10);
-                var residueSubIndex=Math.floor((site.residueIndex-1) % 10);
-		var subIndex = site.subunitIndex -1;
-		return [subIndex,chunkIndex,residueSubIndex];
-	}
-	
+                var subIndex = site.subunitIndex -1;
+                return [subIndex,chunkIndex,residueSubIndex];
+        }
+        
     });
 
     ginasForms.directive('nucleicAcidLinkageForm', function (siteList, siteAdder, subunitParser) {
@@ -851,45 +912,28 @@
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-linkage-form.html",
             link: function (scope, attrs, element) {
-                /*scope.linkage = {};
-                scope.noLinkages = 0;
-                if (!scope.parent.nucleicAcid.linkages) {
-                    scope.parent.nucleicAcid.linkages = [];
-                }
-*/
+
                 scope.getAllSites = function () {
-                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits);
+                    return siteAdder.getCount(scope.parent.nucleicAcid.subunits) - scope.parent.nucleicAcid.subunits.length;
                 };
 
                 scope.applyAll = function (obj, index) {
-                    siteAdder.applyAll('linkage', scope.parent, obj, 'linkage');
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                    subunitParser.parseSubunit(scope.parent, obj, index);
+                    obj.$$displayString="";
+                    obj.sites.$$displayString="";
+                    obj.sites.length=0;
+                    siteAdder.applyAll('linkage', scope.parent, obj);
                 };
 
-               /* scope.validate = function () {
-                    _.forEach(scope.linkage.sites.sites, function (site) {
-                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
-                    });
-                    scope.parent.nucleicAcid.linkages.push(scope.linkage);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                    scope.linkage = {};
-                    scope.linkageForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.nucleicAcid.linkages.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
-                    siteAdder.clearSites('linkage', scope.parent, obj.sites);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
-                };
-*/
                 scope.noLinkages = function () {
-                    var count = scope.getAllSites('linkage') - 1;
-                    _.forEach(scope.parent.nucleicAcid.linkages, function (link) {
-                        count -= link.sites.length
-                    });
-                    return count;
+                    return siteAdder.getAllSitesWithout('linkage',scope.parent.nucleicAcid.subunits).length;
                 }
+
+                 scope.$on('removed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
+                scope.$on('changed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
             }
         };
     });
@@ -953,7 +997,7 @@
         };
     });
 
-    ginasForms.directive('glycosylationForm', function () {
+    ginasForms.directive('glycosylationForm', function (subunitParser) {
         return {
             restrict: 'E',
             replace: true,
@@ -969,7 +1013,11 @@
                         scope.iscollapsed = false;
                     }
                 });
+                scope.$on('changed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
             }
+
         };
     });
 
@@ -1125,7 +1173,7 @@
     });
 
 
-    ginasForms.directive('otherLinksForm', function () {
+    ginasForms.directive('otherLinksForm', function (subunitParser) {
         return {
             restrict: 'E',
             replace: true,
@@ -1150,6 +1198,13 @@
                 scope.deleteObj = function (obj) {
                     scope.parent.protein.otherLinks.splice(scope.parent.protein.otherLinks.indexOf(obj), 1);
                 };
+                scope.$on('changed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
+                scope.$on('removed', function (e) {
+                    subunitParser.parseSubunits(scope.parent);
+                });
+
             }
         };
     });
@@ -1484,11 +1539,13 @@
             replace: true,
             controller: 'formController',
             scope: {
-                parent: '='
+                parent: '=',
+                view: '@',
+                selected: '=',
+                initcollapsed: '@iscollapsed'
             },
             templateUrl: baseurl + "assets/templates/forms/subunit-form.html",
             link: function (scope, element, attrs) {
-
                 scope.substanceClass = scope.parent.$$getClass();
                 scope.numbers = true;
 
@@ -1496,10 +1553,12 @@
                     var r = scope.substanceClass + '.subunits';
                     scope.addNew(form, r);
                 };
-
+                if(scope.initcollapsed){
+                        scope.iscollapsed=false;
+                }
 
                 scope.validate = function () {
-                    if (scope.subunit.sequence.length > 10000) {
+                    if (scope.subunit.sequence.length > 4000) {
                         scope.open();
                     }
                     scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
@@ -1809,27 +1868,54 @@
                 };
 
                 scope.makeSiteList = function () {
+                    if(!scope.referenceobj[scope.field]){
+                        scope.referenceobj[scope.field]=[];
+                    }        
                     var temp = angular.copy(scope.referenceobj[scope.field].$$displayString);
                     _.set(scope.referenceobj, scope.field, siteList.siteList(scope.referenceobj[scope.field].$$displayString));
-		    //why is this necessary?
+                    //why is this necessary?
                     scope.referenceobj[scope.field].$$displayString = temp;
+                    scope.$emit("changed");
                 };
 
                 scope.redraw = function () {
-                    console.log("redrawing");
+                    if(!scope.referenceobj[scope.field]){
+                        scope.referenceobj[scope.field]=[];
+                    }
                     scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                 };
 
                 scope.deleteObj = function (obj) {
                     scope.referenceobj.splice(scope.referenceobj.indexOf(obj), 1);
                 };
+                scope.toggleSiteInclusion = function(site){
+                    scope.makeSiteList();
+                    var sites = scope.referenceobj[scope.field];
+                    var alreadyIndex=-1;
+                    _.forEach(sites, function(osite, index){
+                        if(site.subunitIndex===osite.subunitIndex && site.residueIndex=== osite.residueIndex){
+                                alreadyIndex=index;
+                        }
+                    });
+                    if(alreadyIndex>=0){
+                        sites.splice(alreadyIndex,1);
+                    }else{
+                        sites.push({subunitIndex:site.subunitIndex,residueIndex:site.residueIndex});
+                    }
+                    
+                    scope.redraw();
+                    scope.makeSiteList();
+                };
 
+                scope.$on('selected', function (e,a){
+                    scope.toggleSiteInclusion(a);
+                });
 
-		//If there is no stored shorthand (handled by $$displayString)
-		//then it needs to be generated. This call will do that:
-		if(!scope.referenceobj[scope.field].$$displayString){
-			scope.redraw();
-		}
+                //If there is no stored shorthand (handled by $$displayString)
+                //then it needs to be generated. This call will do that:
+                if(!scope.referenceobj[scope.field] || scope.referenceobj[scope.field].$$displayString){
+                        scope.redraw();
+                }
             }
         };
     });

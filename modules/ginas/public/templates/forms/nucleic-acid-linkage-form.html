@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="linkageForm" role="form" id="addlinkageForm" novalidate>
-            <span>Number of unspecified linkages: {{nolinkages()}}</span>
+            <span>Number of unspecified linkages: {{noLinkages()}}</span>
             <div ng-repeat="(index,obj) in parent.nucleicAcid.linkages">
                 <ng-form name="form">
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">

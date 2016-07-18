@@ -2,7 +2,7 @@
     <a href="" class ="aminoAcid {{acidClass}}" prevent-default="" ng-mouseenter ="$parent.highlight(acid)"
        tooltip-placement="auto "
        tooltip-popup-close-delay='100' ng-mouseleave="$parent.highlight(acid)" tooltip-is-open="bridged"
-       ng-click ="scrollTo(acidClass, acid);" tooltip-class= "white"
+       ng-click ="clicked()" tooltip-class= "white"
        uib-tooltip-template="baseurl +'app/assets/templates/tooltips/{{acidClass}}-tooltip.html'">{{acid.value}}</a>
 
 
