@@ -263,6 +263,7 @@
             }
         };
 
+<<<<<<< HEAD
 	/**
 	  * Recalculates the subunit display chunks, used both as a rendering aid,
 	  * and in some other methods as a quick cache of what sites are modified
@@ -504,7 +505,6 @@
                 //this is called before the object is deleted, so removing used doesn't work
                 scope.$on('delete', function (e) {
 
-                    //get all sites/
                    var cys = angular.copy(siteAdder.getAllSitesWith('cysteine', scope.parent.protein.subunits));
                     _.forEach(cys, function (site) {
                         _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
@@ -754,13 +754,11 @@
 
         this.getAllSitesWith = function (type, display) {
             var ret = [];
-
             _.forEach(display, function (subunit) {
                var temp = _.filter(_.flattenDeep(subunit.$$subunitDisplay), function (su) {
                     return su[type];
                 });
                 ret = _.concat(ret, temp);
-
             });
             return ret;
         };
