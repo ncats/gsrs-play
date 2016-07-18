@@ -1087,7 +1087,7 @@
                                     templateurl =  baseurl + "assets/templates/modals/reference-modal.html";
                                     break;
                                 case "sites":
-                                  $scope.formtype=$attrs.formtype;
+                                    $scope.formtype=$attrs.formtype;
                                     $scope.residueregex = $attrs.residueregex;
                                     templateurl =  baseurl + "assets/templates/modals/site-modal.html";
                                     break;
