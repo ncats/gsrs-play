@@ -13,7 +13,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
+        <div class="col-lg-2 col-md-3 col-sm-3 subunit-chunk" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
             <span class="pull-right count" ng-show=numbers>{{($index)*10 + chunk.length}}</span><br>
             <span ng-repeat="(index, aa) in chunk track by $index">
             	<span ng-switch on="isSelected(aa)">
