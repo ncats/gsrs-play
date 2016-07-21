@@ -16,7 +16,6 @@
           <th>Residue Modified</th>
           <th>Extent</th>
           <th>Fragment Name</th>
-          <th>Fragment Class</th>
           <th>Fragment Approval</th>
         </tr>
       </thead>
@@ -34,11 +33,12 @@
           <td>@m.residueModified</td>
           <td>@m.extent<br>
           @if(m.extentAmount != null){
+          	<br>
+          	<b>Amount:</b>
             <amount value="@GinasApp.getAsJson(m.extentAmount)"></amount>
           }
           </td>
           <td>@m.molecularFragment.refPname</td>
-          <td>@m.molecularFragment.substanceClass</td>
           <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())"  target="_self">@m.molecularFragment.getLinkingID()</a></td>
         </tr>
       }

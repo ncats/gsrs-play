@@ -9,16 +9,18 @@
                                class="subunitButtons"></delete-button>
                 <a ng-click="cleanSequence()" uib-tooltip="Clean sequence" class="subunitButtons"><i
                         class="fa fa-magic fa-2x success"></i></a>
-              <!--  <a ng-click="toggleEdit()" uib-tooltip="Edit sequence" class="subunitButtons"><i
-                        class="fa fa-pencil fa-2x"></i></a>-->
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-lg-2 col-md-3 col-sm-3" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
-            <span class="pull-right count" ng-hide=numbers>{{($index)*10 + chunk.length}}</span><br>
+        <div class="col-lg-2 col-md-3 col-sm-3 subunit-chunk" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
+            <span class="pull-right count" ng-show=numbers>{{($index)*10 + chunk.length}}</span><br>
             <span ng-repeat="(index, aa) in chunk track by $index">
-                <amino-acid acid=aa index = {{index}}></amino-acid>
+            	<span ng-switch on="isSelected(aa)">
+            			<amino-acid ng-switch-when="true" class="selected-acid" acid=aa index = {{index}}></amino-acid>
+            			<amino-acid ng-switch-default acid=aa index = {{index}}></amino-acid>
+            	</span>
+                
             </span>
         </div>
         </div>

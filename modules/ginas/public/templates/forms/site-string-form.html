@@ -3,9 +3,11 @@
         <form class="form-horizontal" name="siteStringForm" id="addSiteStringForm" role="form" novalidate>
         <label for="{{field}}" class="text-capitalize">{{referenceobj.field || 'Sites'}}</label>
             <h5><em>Sites should be of form</em><code>subunit_residue</code><em>. "-" indicates a range.</em></h5>
-        <textarea type="text" class="form-control"  ng-blur="makeSiteList()"
+        	<textarea type="text" class="form-control"  ng-blur="makeSiteList()"
                   ng-model="referenceobj[field].$$displayString" name="{{field}}" title="{{field}}"
                   id="{{field}}" placeholder="{{field}}"></textarea>
+            <subunit-form iscollapsed=false showNumbers=true selected=referenceobj[field] referenceobj ="referenceobj" view='subunits' numbers="numbers" parent = parent></subunit-form>
+            
             </form>
     </div>
     </div>
