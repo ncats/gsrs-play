@@ -21,7 +21,8 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		CREATE,
 		UPDATE,
 		APPROVE, 
-		BATCH
+		BATCH,
+		IGNORE
 	}
 	METHOD_TYPE method=null;
 	
@@ -45,7 +46,9 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	public static DefaultSubstanceValidator NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy strategy){
 		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.CREATE);
 	}
-	
+	public static DefaultSubstanceValidator IGNORE_SUBSTANCE_VALIDATOR() {
+		return new DefaultSubstanceValidator(null,METHOD_TYPE.IGNORE);
+	}
 	public static DefaultSubstanceValidator UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy strategy){
 		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.UPDATE);
 	}
@@ -58,6 +61,10 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		String TIME_KEY="validating";
 		//TimeProfiler.addGlobalTime(TIME_KEY);
 		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
+		if(this.method==METHOD_TYPE.IGNORE){
+			vr.setValid();
+			return vr;
+		}
 		vr.setInvalid();
 		try{
 			List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(objnew, _strategy);			
@@ -181,6 +188,8 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot give an approvalID to a new substance"));
 		}
 	}
+
+
 	
 
 	

@@ -214,12 +214,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					long start=TimeUtil.getCurrentTimeMillis();
 					rec.job.getPersister().persist(this);
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
-					long done=TimeUtil.getCurrentTimeMillis()-start;
-//					System.out.println(     "Persisted at \t" + 
-//							System.currentTimeMillis() + "\t" + 
-//							this.theRecordToPersist.getClass().getName() + "\t" + 
-//							done);
-					
+				
 					
 					TimeProfiler.stopGlobalTime("persist");
 					TimeProfiler.stopGlobalTime("full submit");
