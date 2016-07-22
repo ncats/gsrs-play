@@ -3,7 +3,9 @@
                                                                             class="danger"> *</span></label><br>
             <span ng-show="!edit && obj.length!=0" ng-click="edit = true;">
                             <span ng-repeat="tag in obj"  class="badge" uib-tooltip="{{tag.display}}">{{tag.display}} </span></span>
+<!--
     <a ng-show="!edit && obj.length!=0" ng-click = "empty();"><i class="fa fa-trash danger" uib-tooltip="Clear List"></i></a>
+-->
     <tags-input
             ng-show="edit || !obj || obj.length == 0"
             custom-class="form-control"
@@ -12,12 +14,14 @@
             name="{{::field}}"
             id="{{::field}}"
             ng-model= obj
+            ng-click = "changeFunction({model:obj});"
             ng-blur="edit = false"
-            ng-change="changeFunction();"
-            on-tag-removing="removetag($tag);"
             display-property="display"
             key-property="value"
-            max-tags={{::max}}>
+
+            max-tags={{::max}}
+            enforce-max-tags
+    >
         <!--addFromAutocompleteOnly="true"-->
         <auto-complete source="loadItems($query)"
                        min-length="1"
@@ -28,4 +32,14 @@
                        load-on-down-arrow="true">
         </auto-complete>
     </tags-input>
+    <div ng-if="formname[field].$invalid && formname.$flagged" ng-messages="formname[field].$error" role="alert">
+        <div ng-message="required" class ="danger">required field</div>
+
+    </div>
+    <!--moving this outside of the above div seems to be more responsive-->
+    <div ng-repeat="errorMessage in errorMessages">
+        <div ng-class="errorMessage.type">{{ errorMessage.text }}</div>
+    </div>
+</div>
+
 </div>

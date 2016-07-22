@@ -19,7 +19,7 @@
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-12">
-                                <subunit obj=obj parent=parent numbers=numbers index={{index+1}}></subunit>
+                            	<subunit selected=selected obj=obj view="{{view}}" parent=parent numbers=numbers index={{index+1}}></subunit>
                             </div>
                         </div>
                     </div>
@@ -30,9 +30,11 @@
         </form>
         <br>
         <br>
+        <div ng-if="view!=='subunits'">
         <button class="btn btn-primary" ng-click="addNewSubunit(subunitForm)"><i
                 class="fa fa-plus"></i> Add a<span
                 ng-if="parent[substanceClass].subunits.length>0">nother</span> subunit
         </button>
+        </div>
     </div>
 </div>

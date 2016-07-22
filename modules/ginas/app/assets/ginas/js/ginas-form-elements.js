@@ -307,7 +307,8 @@
                 validator: '&?', //optional function passed in from the form directive and used to validate on init and change, used in conjunction with a formatter if available.
                 blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur
                 changeFunction:'&?', //validators happen in the background, and mainly set validation, so scope variable changes should go here
-                required: '=?'  //optional variable that enables required form validation
+                required: '=?',  //optional variable that enables required form validation
+                values: '=?' //array that can be passed with a custom cv for dropdowns and multi select
             },
             link: function (scope, element, attrs, ngModelCtrl) {
 
@@ -364,7 +365,6 @@
                     };
 
                     scope.undo = function () {
-                        console.log(temp);
                         if (scope.changed == true) {
                             scope.obj = temp;
                             scope.edit = false;
@@ -514,11 +514,6 @@
                         scope.max = attrs.max;
                     } else {
                         scope.max = 'MAX_SAFE_INTEGER';
-                    }
-
-                        scope.removetag= function(tag){
-                        console.log(tag);
-                            console.log(scope.obj);
                     }
 
                     var template = angular.element(html);
@@ -874,7 +869,6 @@
                 refresh: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var json;
                 scope.url = '';
                 if(scope.refresh){
@@ -942,17 +936,18 @@
             link: function (scope, element, attrs) {
                     scope.showlabel= attrs.showlabel;
 
-                scope.deleteObj = function () {
-                    scope.$emit('delete');
-                    if (scope.parent) {
-                        var arr = _.get(scope.parent, attrs.path);
-                        arr.splice(arr.indexOf(scope.obj), 1);
-                    } else if(scope.substance) {
-                        scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
-                    }else{
-                       // console.log("not a substance");
-                    }
-                };
+                    scope.deleteObj = function () {
+                            scope.$emit('delete');
+                            if (scope.parent) {
+                                var arr = _.get(scope.parent, attrs.path);
+                                arr.splice(arr.indexOf(scope.obj), 1);
+                            } else if(scope.substance) {
+                                scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
+                            }else{
+                               // console.log("not a substance");
+                            }
+                            scope.$emit('removed');
+                    };
 
             }
         };
@@ -964,7 +959,8 @@
             replace: 'true',
             scope: {
                 type: '@',
-                path: '@'
+                path: '@',
+                heading: '@'
             },
             link: function (scope, element, attrs) {
                 scope.stage = true;
@@ -1036,7 +1032,6 @@
                 //this is used in the reference form to apply the references to structure/protein etc.
                 if(_.isUndefined(scope.referenceobj)){
                     var subClass = scope.parent.substanceClass;
-                    console.log(subClass);
                     if(subClass ==="chemical"){
                         subClass = "structure";
                     }
@@ -1044,7 +1039,6 @@
                         subClass = "specifiedSubstance";
                     }
                     scope.referenceobj = _.get(scope.parent, subClass);
-                    console.log(scope);
                 }
 
             },
@@ -1091,7 +1085,8 @@
                                     templateurl =  baseurl + "assets/templates/modals/reference-modal.html";
                                     break;
                                 case "sites":
-                                  $scope.formtype=$attrs.formtype;
+                                    $scope.formtype=$attrs.formtype;
+                                    $scope.residueregex = $attrs.residueregex;
                                     templateurl =  baseurl + "assets/templates/modals/site-modal.html";
                                     break;
                                 case "terms":
@@ -1134,7 +1129,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var uuid;
                 var index;
                 var template;
@@ -1163,21 +1157,33 @@
 
                 scope.updateReference = function () {
                     index = _.indexOf(scope.referenceobj.references, uuid);
-                    console.log(uuid);
-                    console.log(index);
-                    console.log(scope.obj);
                     if (index >= 0) {
-                        console.log("removing from list");
                         scope.referenceobj.references.splice(index, 1);
                         scope.obj.$$apply = false;
                     } else {
-                        console.log("applying to list");
                         scope.referenceobj.references.push(uuid);
                         scope.obj.$$apply = true;
-                        console.log(scope);
                     }
                 };
 
+            }
+        };
+    });
+
+    ginasFormElements.directive('enforceMaxTags', function() {
+        return {
+            require: 'ngModel',
+            link: function(scope, element, attrs, ngCtrl) {
+                var maxTags = attrs.maxTags ? parseInt(attrs.maxTags, '10') : null;
+                ngCtrl.$validators.checkLength = function(value) {
+                    if (value && maxTags && value.length > maxTags) {
+/*
+                        errors.push({text: 'Max number allowed is '+maxTags , type: 'danger'});
+*/
+                        value.splice(value.length - 1, 1);
+                    }
+                    return value;
+                };
             }
         };
     });

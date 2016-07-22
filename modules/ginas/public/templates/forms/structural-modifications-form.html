@@ -23,10 +23,10 @@
                             </div>
                             <div class="col-md-2">
                                 <substance-chooser-selector referenceobj="obj"
-                                                            field="relatedSubstance"
-                                                            name="relatedSubstance"
+                                                            field="molecularFragment"
+                                                            name="molecularFragment"
                                                             formname="structuralModForm"
-                                                            label="Related Substance"
+                                                            label="Fragment"
                                                             type="search">
                                 </substance-chooser-selector>
                             </div>
@@ -48,18 +48,13 @@
                                 </gsrs-input>
                             </div>
                             <div class="col-md-1"
-                                 ng-if="parent.substanceClass!='structurallyDiverse' && obj.locationType && obj.locationType.value!='RESIDUE_SPECIFIC'">
+                                 ng-if="parent.substanceClass!='structurallyDiverse'">
                                 <modal-form-button type="sites"
                                                    referenceobj="obj"
+                                                   field="sites"
                                                    parent="parent"
                                                    formtype="site">
                                 </modal-form-button>
-                                <!--<form-selector referenceobj="obj"
-                                               parent="parent"
-                                               field="sites"
-                                               divid="{{index}}-strucModForm"
-                                               >
-                                </form-selector>-->
                                 <small class="error" ng-show="strucModForm.modsites.$error.siteInvalid">
                                     {{strucModForm.modsites.$errorMsg.naSites}}
                                 </small>
@@ -70,6 +65,16 @@
                                             field="extent"
                                             cv="EXTENT_TYPE">
                                 </gsrs-input>
+                            </div>
+                            <div class="col-md-2"
+                            	ng-if="obj.extent.value=='PARTIAL'"
+                            	>
+                                <modal-form-button type="amount"
+                                                   referenceobj="obj"
+                                                   label="Extent Amount"
+                                                   field="extentAmount"
+                                                   parent="parent">
+                                </modal-form-button>
                             </div>
                             <div class="col-md-1">
                                 <gsrs-input type="text"
@@ -83,6 +88,7 @@
                             <hr>
                 </ng-form>
             </div>
+            <div class = "structuralModForm"></div>
         </form>
         <br>
         <br>

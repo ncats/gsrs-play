@@ -1,6 +1,7 @@
 <div class="row info">
     <div class="row">
-        <form-header type="parents" parent="parent" iscollapsed="iscollapsed"></form-header>
+        <form-header ng-if="parent.$$diverseType!='part'" type="parents" parent="parent" iscollapsed="iscollapsed" heading="Hybrid Organism Details"></form-header>
+        <form-header ng-if="parent.$$diverseType=='part'" type="parents" parent="parent" iscollapsed="iscollapsed" heading="Parent Organism Details"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="parentForm" id="addParentForm" role="form" novalidate>

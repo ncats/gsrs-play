@@ -74,7 +74,7 @@
         </div>
         <div class = "col-md-12">
             @for(i <- 0 until sub.nucleicAcid.getSubunits.size()) {
-                <subunit uuid="'@sub.getUuid'" index ='@i' view='subunits' numbers="numbers"></subunit>
+                <subunit uuid="'@sub.getUuid'" index ='@i' view='subunits' numbers="numbers" subclass="nucleicAcid"></subunit>
             }
          @*   <br/>
         @for(i <- 0 until sub.nucleicAcid.getSubunits().size()) {
