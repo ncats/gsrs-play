@@ -345,15 +345,6 @@ public class Authentication extends Controller {
     	}
     }
     
-    
-    
-
-    
-    //TODO: revert
-    public static Principal fakeThing(){
-    	return getUser();
-    }
-    
     public static UserProfile getUserProfile() {
         Session session = getSession();
         if(session!=null){
