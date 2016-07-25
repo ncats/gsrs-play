@@ -690,6 +690,7 @@ public class TextIndexer implements Closeable{
 		 * @return
 		 */
 		public long getWeightFor(BytesRef text){
+			IndexSearcher searcher=null;
 			try{
 				Term t=new Term(EXACT_TEXT_FIELD_NAME, text.utf8ToString());
 				TermQuery tq=new TermQuery(t);
@@ -700,11 +701,11 @@ public class TextIndexer implements Closeable{
 			    // We sorted postings by weight during indexing, so we
 			    // only retrieve the first num hits now:
 			    Collector c2 = new EarlyTerminatingSortingCollector(c, SORT2, 2);
-				
-				IndexSearcher searcher = searcherMgr.acquire();
+			    
+				searcher = searcherMgr.acquire();
 				searcher.search(tq, c2);
-				TopFieldDocs hits = (TopFieldDocs) c.topDocs();
 				
+				TopFieldDocs hits = (TopFieldDocs) c.topDocs();
 				if(hits.totalHits>=1){
 					int i=0;
 					FieldDoc fd = (FieldDoc) hits.scoreDocs[i];
@@ -713,6 +714,10 @@ public class TextIndexer implements Closeable{
 				}
 			}catch(Exception e){
 				e.printStackTrace();
+			} finally{
+				if(searcher!=null){
+					searcherMgr.release(searcher);
+				}
 			}
 	    	return 0;
 		}
