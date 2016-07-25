@@ -716,11 +716,17 @@ public class TextIndexer implements Closeable{
 				e.printStackTrace();
 			} finally{
 				if(searcher!=null){
-					searcherMgr.release(searcher);
+					try{
+						searcherMgr.release(searcher);
+					}catch(Exception e){
+						e.printStackTrace();
+					}
 				}
 			}
+			
 	    	return 0;
 		}
+
     }
 
     class SuggestLookup implements Closeable{
@@ -827,9 +833,11 @@ public class TextIndexer implements Closeable{
         		synchronized(additions){
 	        		for(Addition add : additions.values()){
 	        			BytesRef ref = new BytesRef (add.text);
+	        			
 	        			add.addToWeight(lookup.getWeightFor(ref));
 	        			lookup.update(ref, null, add.weight, ref);
 	        		}
+	        		
 	        		additions.clear();
         		}
 	            long start = System.currentTimeMillis();
@@ -1078,7 +1086,7 @@ public class TextIndexer implements Closeable{
          */
         public void execute(){
         	int i= (int)(Math.random()*100);
-        	///System.out.println("STARTED DAEMON==================== " +i);
+        	//System.out.println("STARTED DAEMON==================== " +i);
         	long time = StopWatch.timeElapsed(this::flush);
         	
         	//System.out.println("DAEMON FINISHED=================== "  + i + " Elapsed:" + time);
@@ -1088,7 +1096,7 @@ public class TextIndexer implements Closeable{
 		private void flush() {
 			
         	
-        	//Util.debugSpin(20000);
+        	//Util.debugSpin(20);
             File file = getFacetsConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 Logger.debug(Thread.currentThread()
@@ -1362,9 +1370,9 @@ public class TextIndexer implements Closeable{
        // setFetchWorkers (FETCH_WORKERS);
 
         flushDaemon=new FlushDaemon ();
-        // run daemon every 20s
-        scheduler.scheduleAtFixedRate
-            (flushDaemon, 10, 20, TimeUnit.SECONDS);
+        // run daemon every 10s
+        scheduler.scheduleWithFixedDelay
+            (flushDaemon, 10, 10, TimeUnit.SECONDS);
     }
 
 //    public void setFetchWorkers (int n) {
