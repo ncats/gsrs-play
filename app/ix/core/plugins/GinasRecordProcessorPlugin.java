@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import play.Application;
 import play.Logger;
+import play.Play;
 import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
@@ -212,14 +213,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					TimeProfiler.addGlobalTime("persist");
 					
 					long start=TimeUtil.getCurrentTimeMillis();
-					rec.job.getPersister().persist(this);
+					if(Play.application().configuration().getBoolean("ix.ginas.batch.persist",true)){
+						rec.job.getPersister().persist(this);
+					}
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
-					long done=TimeUtil.getCurrentTimeMillis()-start;
-//					System.out.println(     "Persisted at \t" + 
-//							System.currentTimeMillis() + "\t" + 
-//							this.theRecordToPersist.getClass().getName() + "\t" + 
-//							done);
-					
+				
 					
 					TimeProfiler.stopGlobalTime("persist");
 					TimeProfiler.stopGlobalTime("full submit");
