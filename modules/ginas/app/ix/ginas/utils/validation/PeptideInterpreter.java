@@ -50,11 +50,8 @@ public class PeptideInterpreter {
 			try {
 				int[] pos = longestPeptideBackbone(c,1);
 				int chi=c.getStereo()[pos[0]];
-				//System.out.println(chi);
-				//int chi=m.getChirality(pos[0]);
 				AAmapCHI.put(s.split("\t")[0], chi);
 			} catch (Exception e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			
@@ -649,7 +646,7 @@ public class PeptideInterpreter {
 	 */
 	public static Protein getAminoAcidSequence(Chemical impMol) {
 		if(impMol==null)return null;
-		if(impMol.getAtomCount()>=1024)throw new IllegalArgumentException("Too many atoms, does not support> 1024");
+		if(impMol.getAtomCount()>=1024)throw new IllegalArgumentException("Too many atoms, does not support > 1024");
 		//System.out.println("Number of atoms:" + impMol.getAtomCount());
 		List<String> sequences1Let = new ArrayList<String>();
 		Map<Integer,Integer> canonicalSequenceMap = new HashMap<Integer,Integer>();

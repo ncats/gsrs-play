@@ -121,7 +121,6 @@ public class Evolution {
                     Table tab = (Table)c.getAnnotation(Table.class);
                     if (tab != null) {
                         symbols.put(tab.name(), c.getName());
-                        //System.out.println(c.getName()+" => "+tab.name());
                     }
                     classes.add(c.getName());
                 }

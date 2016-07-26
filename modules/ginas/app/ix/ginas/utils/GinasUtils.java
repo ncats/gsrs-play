@@ -23,6 +23,7 @@ import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.ValidationMessage;
 import ix.core.ValidationResponse;
+import ix.core.Validator;
 import ix.core.chem.Chem;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
@@ -421,11 +422,12 @@ public class GinasUtils {
 
 	}
 	
-	public static class GinasDumpExtractor extends RecordExtractor<JsonNode> {
+	public static class GinasDumpExtractor extends GinasJSONExtractor {
 		BufferedReader buff;
 
 		private static final Pattern TOKEN_SPLIT_PATTERN = Pattern.compile("\t");
 		public GinasDumpExtractor(InputStream is) {
+			
 			super(is);
 			try {
 				buff = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
@@ -476,15 +478,11 @@ public class GinasUtils {
 			return new GinasDumpExtractor(is);
 		}
 
-		@Override
-		public RecordTransformer getTransformer() {
-			return new GinasSubstanceTransformer(
-					DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
-		}
-
 	}
 
 	public static class GinasJSONExtractor extends RecordExtractor<JsonNode> {
+		boolean validation=Play.application().configuration().getBoolean("ix.ginas.batch.validation", true);
+		
 		public GinasJSONExtractor() {
 			super(null);
 		}
@@ -535,8 +533,13 @@ public class GinasUtils {
 
 		@Override
 		public RecordTransformer getTransformer() {
-			return new GinasSubstanceTransformer(
-					DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
+			
+			if(validation){
+				return new GinasSubstanceTransformer(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
+			}else{
+				return new GinasSubstanceTransformer(DefaultSubstanceValidator.IGNORE_SUBSTANCE_VALIDATOR());
+			}
+			
 		}
 
 	}
