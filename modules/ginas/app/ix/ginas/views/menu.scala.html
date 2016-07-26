@@ -49,18 +49,23 @@
                 </form>
                 </li>
             </ul>
+
             <ul class="nav navbar-nav pull-right" id="right-menu">
-          @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                <li>
+                    <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/feedback" target="_self"><i class="fa fa-envelope-o fa-2x" data-toggle="tooltip" title="send feedback"></i></a>
+                </li>
+              @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
                         <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile" id ="profile-button" target="_self"><button class="btn btn-default"><i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</button></a>
                     </li>
+
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">Logout</button></a></li>
                 }
 
-                @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a></li>
-                }{
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">
-                        Logout</button></a></li>
+                @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                    <li>
+                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a>
+                    </li>
                 }
             </ul>
         </div>
