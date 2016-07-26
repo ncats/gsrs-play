@@ -1181,3 +1181,8 @@ amino-acid.selected-acid a {
 .subunit-chunk{
 	min-width: 165px;
 }
+h3.title-name{
+overflow: hidden;
+white-space: nowrap;
+text-overflow: ellipsis;
+}

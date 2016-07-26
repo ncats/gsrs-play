@@ -100,7 +100,6 @@ public class Validation {
     	
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
     	
-    	
 		
 		
     	try{
@@ -219,11 +218,6 @@ public class Validation {
         	e.printStackTrace();
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
         }
-    	long dur=System.currentTimeMillis()-start;
-    	
-    	
-    	//System.out.println("@Validation time:\t" + dur/(1000.0));
-    	
         return gpm;
     }
 	
@@ -898,16 +892,19 @@ public class Validation {
         		}
         	}else{
         		Property p=molprops.get(0);
-        		double delta=tot-p.getValue().average;
-        		double pdiff=delta/(p.getValue().average);
-        		int len=0;
-        		for(Subunit su:cs.protein.subunits){
-        			len += su.sequence.length();
-        		}
-        		double avgoff=delta/len;
-        		//System.out.println("Diff:" + pdiff + "\t" + avgoff);
-        		if(Math.abs(pdiff)>.05){
-        			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.getValue().average + "]").appliableChange(true));
+        		if(p.getValue()!=null){
+	        		double delta=tot-p.getValue().average;
+	        		double pdiff=delta/(p.getValue().average);
+	        		
+	        		int len=0;
+	        		for(Subunit su:cs.protein.subunits){
+	        			len += su.sequence.length();
+	        		}
+	        		double avgoff=delta/len;
+	        		//System.out.println("Diff:" + pdiff + "\t" + avgoff);
+	        		if(Math.abs(pdiff)>.05){
+	        			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.getValue().average + "]").appliableChange(true));
+	        		}
         		}
         	}
         	//System.out.println("calc:" + tot);

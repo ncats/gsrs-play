@@ -497,8 +497,6 @@
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
                                                      spinnerService) {
-        // var ginasCtrl = this;
-//        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
@@ -512,6 +510,7 @@
             return r;
         };
 
+	
         $scope.submitq= function(qinput) {
             if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {
                 $scope.q = "\"" + $scope.q + "\"";

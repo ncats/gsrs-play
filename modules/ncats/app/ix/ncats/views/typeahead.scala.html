@@ -37,20 +37,16 @@ $(document).ready(function () {
        }, sources);
        
     $('.typeahead').on("typeahead:selected", function (evt, val, d) {
-        console.log('typeahead selected: '+val+' type: '+d);
-
-        for (var f in val) {
-            console.log(f+' '+val[f]);
-        }
         if (d == 'MeSH') {
-        }
-        else {
+        
+        }else {
             $('.typeahead').typeahead('val', '"'+val.key+'"');
+            $('.typeahead').trigger("input");
         }
     });
     
     $('.typeahead').on("typeahead:closed", function (evt) {
-        console.log('typeahead closed!');
+        
     });
 });
 </script>

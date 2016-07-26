@@ -58,8 +58,14 @@
         $scope.refresh = function (id, pollin) {
             $scope.id = id;
             $scope.monitor = pollin;
+            var onError=function (data, status, headers, config) {
+                $scope.monitor = false;
+                $scope.mess = "Polling error!";
+                $scope.monitor = false;
+            };
             var responsePromise = $http.get(baseurl + "api/v1/jobs/" + id + "/");
             responsePromise.success(function (data, status, headers, config) {
+            	try{
             	//$scope.myData.fromServer = data.title;
                 if ($scope.status !== data.status && $scope.status!=="UNKNOWN") {
                 	location.reload();
@@ -108,18 +114,17 @@
 	                $scope.humanTimeEstimate.simple = dur.humanize();
 	                $scope.humanTimeEstimate.full = $scope.toFullHumanTime(dur);
                 }
+                
+                }catch(e){
+                
+                }
                 if ($scope.monitor) {
                     $scope.monitor = true;
                     $scope.mess = "Polling ... " + data.status;
                     $scope.refresh(id, $scope.monitor);
                 }
             });
-            responsePromise.error(function (data, status, headers, config) {
-                $scope.monitor = false;
-                $scope.mess = "Polling error!";
-                $scope.monitor = false;
-//                      refresh(id,pollin);
-            });
+            responsePromise.error(onError);
 
         };
         $scope.stopMonitor = function () {

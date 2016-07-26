@@ -32,7 +32,6 @@ $(document).ready(function () {
     disease.initialize();
     gene.initialize();
     mesh.initialize();
-    
     $('.typeahead').typeahead({
         hint: true,
         highlight: true,
