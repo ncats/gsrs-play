@@ -828,18 +828,19 @@ public class TextIndexer implements Closeable{
             }
         }
 
-        private void refresh () throws IOException {
-        	synchronized(dirty){
-        		synchronized(additions){
-	        		for(Addition add : additions.values()){
-	        			BytesRef ref = new BytesRef (add.text);
-	        			
+        private synchronized void refresh () throws IOException {
+        			Iterator<Addition> additionIterator=additions.values().iterator();
+        			
+        			while(additionIterator.hasNext()){
+        				Addition add=additionIterator.next();
+        				BytesRef ref = new BytesRef (add.text);
 	        			add.addToWeight(lookup.getWeightFor(ref));
 	        			lookup.update(ref, null, add.weight, ref);
-	        		}
+	        			additionIterator.remove();
+        			}
 	        		
-	        		additions.clear();
-        		}
+	        		
+        		
 	            long start = System.currentTimeMillis();
 	            lookup.refresh();
 	            lastRefresh = System.currentTimeMillis();
@@ -848,10 +849,12 @@ public class TextIndexer implements Closeable{
 	                         +String.format("%1$.2fs", 
 	                                        1e-3*(lastRefresh - start)));
 	            dirty.set(0);
-        	}
+        	
         }
+        
         @Override
         public void close () throws IOException {
+        	refreshIfDirty ();
             lookup.close();
         }
 
@@ -1085,7 +1088,7 @@ public class TextIndexer implements Closeable{
          * Execute the flush, with debugging statistics, without looking at the shutdown state
          */
         public void execute(){
-        	int i= (int)(Math.random()*100);
+        	//int i= (int)(Math.random()*100);
         	//System.out.println("STARTED DAEMON==================== " +i);
         	long time = StopWatch.timeElapsed(this::flush);
         	
