@@ -745,7 +745,7 @@ public class TextIndexer implements Closeable{
         		this.text=text;
         		this.weight=new AtomicLong(weight);
         	}
-        	public synchronized void incrementWeight(){
+        	public void incrementWeight(){
         		weight.incrementAndGet();
         	}
 			public void addToWeight(long value) {
