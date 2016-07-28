@@ -732,7 +732,7 @@ public class TextIndexer implements Closeable{
     class SuggestLookup implements Closeable{
         String name;
         File dir;
-        AtomicInteger dirty = new AtomicInteger ();
+        AtomicBoolean dirty = new AtomicBoolean (false);
         InxightInfixSuggester lookup;
         long lastRefresh;
 
@@ -740,16 +740,17 @@ public class TextIndexer implements Closeable{
         ConcurrentHashMap<String,Addition> additions=new ConcurrentHashMap<String,Addition>();
         class Addition{
         	String text;
-        	long weight;
+        	AtomicLong weight;
         	public Addition(String text, long weight){
         		this.text=text;
-        		this.weight=weight;
+        		this.weight=new AtomicLong(weight);
         	}
         	public synchronized void incrementWeight(){
-        		weight++;
+        		weight.incrementAndGet();
         	}
 			public void addToWeight(long value) {
-				weight+=value;
+				weight.getAndAdd(value);
+
 			}
         }
 
@@ -813,11 +814,11 @@ public class TextIndexer implements Closeable{
             incr ();
         }
         void incr ()  {
-            dirty.incrementAndGet();
+            dirty.compareAndSet(false, true);
         }
 
         public void refreshIfDirty () {
-            if (dirty.get() > 0) {
+            if (dirty.get()) {
                 try {
                     refresh ();
                 }
@@ -835,7 +836,7 @@ public class TextIndexer implements Closeable{
         				Addition add=additionIterator.next();
         				BytesRef ref = new BytesRef (add.text);
 	        			add.addToWeight(lookup.getWeightFor(ref));
-	        			lookup.update(ref, null, add.weight, ref);
+	        			lookup.update(ref, null, add.weight.get(), ref);
 	        			additionIterator.remove();
         			}
 	        		
@@ -848,7 +849,7 @@ public class TextIndexer implements Closeable{
 	                         +" refreshs "+lookup.getCount()+" entries in "
 	                         +String.format("%1$.2fs", 
 	                                        1e-3*(lastRefresh - start)));
-	            dirty.set(0);
+	            dirty.set(false);
         	
         }
         
