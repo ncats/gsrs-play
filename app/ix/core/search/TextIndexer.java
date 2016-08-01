@@ -1376,7 +1376,7 @@ public class TextIndexer implements Closeable{
         flushDaemon=new FlushDaemon ();
         // run daemon every 10s
         scheduler.scheduleWithFixedDelay
-            (flushDaemon, 10, 10, TimeUnit.SECONDS);
+            (flushDaemon, 10, 35, TimeUnit.SECONDS);
     }
 
 //    public void setFetchWorkers (int n) {
