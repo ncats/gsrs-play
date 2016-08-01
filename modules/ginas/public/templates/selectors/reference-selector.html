@@ -3,7 +3,7 @@
     <br/>
     <a ng-show="referenceobj.references.length>0" ng-click="open()" role="button" uib-tooltip ="{{referenceobj.references.length}} reference(s)">
         <span class="badge">{{referenceobj.references.length}}</span></a>
-    <div class="text-center" uib-tooltip="Add a reference">
+    <div class="text-center" tooltip-placement="auto bottom" uib-tooltip="Add a reference">
     <a ng-hide="referenceobj.references.length>0" ng-click="open()" role="button" aria-label="Add a reference"  id="{{name}}-{{type}}">
         <span class="sr-only">Add References</span>
         <i class="fa fa-plus fa-2x success" ng-class="{'disabled': opened == true}"></i></a>
