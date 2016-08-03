@@ -23,7 +23,7 @@ import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.utils.validation.Validation;
+import ix.ginas.utils.validation.ValidationUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -422,7 +422,7 @@ public class GinasTestServer extends ExternalResource{
 
         App.init();
       //  TextIndexer.init();
-        Validation.init();
+        ValidationUtils.init();
         AdminFactory.init();
         RouteFactory.init();
         Authentication.init();

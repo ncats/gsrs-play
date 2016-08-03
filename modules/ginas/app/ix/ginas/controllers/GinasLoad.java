@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import ix.ginas.utils.validation.Validation;
+import ix.ginas.utils.validation.ValidationUtils;
 
 import play.Logger;
 import play.Play;
@@ -352,7 +352,7 @@ public class GinasLoad extends App {
 			sub = GinasUtils.makeSubstance(jn);
 			if (sub instanceof ChemicalSubstance) {
 				messages.addAll(
-						Validation.validateAndPrepareChemical(
+						ValidationUtils.validateAndPrepareChemical(
 								(ChemicalSubstance) sub,
 								GinasProcessingStrategy.ACCEPT_APPLY_ALL()								
 								));
