@@ -67,7 +67,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		}
 		vr.setInvalid();
 		try{
-			List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(objnew, _strategy);			
+			List<GinasProcessingMessage> vlad =ValidationUtils.validateAndPrepare(objnew, _strategy);			
 			
 			//only for non-batch loads
 			if(this.method!=METHOD_TYPE.BATCH){
