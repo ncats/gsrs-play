@@ -114,47 +114,18 @@
         };
     });
 
-    ginasForms.controller('cvFormController', function ($scope, CVFields) {
-
-        CVFields.all(false).then(function (response) {
-            _.forEach(response.data.content, function (domain) {
-                CVFields.search("VOCAB_TYPE", domain.vocabularyTermType).then(function (response) {
-                    domain.vocabularyTermType = response[0];
-                })
-            });
-            $scope.cv = response.data.content;
-            $scope.count = $scope.cv.length;
-        });
-
-        $scope.fieldChange = function (obj) {
-            obj.$$changed = true;
-        };
-
-        $scope.flattenFields = function (fields) {
-            _.forEach(fields, function (value, key) {
-                if (!value.value && value.display) {
-                    fields[key] = value.display;
-                } else if (!value.value && !value.display) {
-                    fields[key] = value;
-                } else {
-                    fields[key] = value.value;
-                }
-            });
-            return fields;
-        };
-
-        $scope.update = function (domain, index) {
-            if (!domain.terms) {
-                _.set(domain, 'terms', []);
-            }
-            domain = $scope.flattenFields(domain);
-            domain.fields = $scope.flattenFields(domain.fields);
-            CVFields.updateCV(domain).then(function (response) {
-                CVFields.search("VOCAB_TYPE", response.data.vocabularyTermType).then(function (vt) {
-                    response.data.vocabularyTermType = vt[0];
+    ginasForms.controller('cvFormController', function ($scope, CVFields, spinnerService) {
+        $scope.load = function () {
+            CVFields.all(false).then(function (response) {
+                _.forEach(response.data.content, function (domain) {
+                    CVFields.search("VOCAB_TYPE", domain.vocabularyTermType).then(function (response) {
+                        domain.vocabularyTermType = response[0];
+                    })
                 });
-                _.set($scope.cv, index, response.data);
+                _.set($scope, 'cv', response.data.content);
+                $scope.count = $scope.cv.length;
             });
+
         };
 
         $scope.download = function () {
@@ -291,7 +262,7 @@
                         return this[key];
                 };
                 return map;
-         }
+         };
 
         factory.markSites = function (sites, mark, gen){
                 var ret=[];
@@ -315,7 +286,7 @@
                         );
                 }
                 return ret;
-        }
+        };
 
 	 /**
           * Recalculates the subunit display chunks, used both as a rendering aid,
@@ -881,7 +852,6 @@
         };
     });
 
-
     ginasForms.directive('diverseOrganismForm', function () {
         return {
             restrict: 'E',
@@ -919,6 +889,7 @@
                 scope.parent.$$diverseType = "whole";
                 if (_.isUndefined(scope.parent.structurallyDiverse.part)) {
                     scope.parent.structurallyDiverse.part = [];
+                    _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                 }
                 if (scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
                     _.set(scope.parent, '$$diverseType', 'part');
@@ -1114,7 +1085,6 @@
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-details-form.html"
         };
     });
-
 
     ginasForms.directive('otherLinksForm', function (subunitParser) {
         return {
@@ -1537,7 +1507,6 @@
         };
     });
 
-
     ginasForms.directive('formmanager', function ($compile, $templateRequest, toggler) {
         return {
             controller: function ($scope) {
@@ -1574,14 +1543,40 @@
         };
     });
 
-    ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
+    ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields, spinnerService) {
         return {
             restrict: 'E',
             replace: true,
-            controller: 'cvFormController',
-            //  scope:{},
+           controller: 'cvFormController',
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
-            link: function (scope, element, attrs) {
+            link: function (scope, element, attrs, ngModel) {
+        //        spinnerService.show('cvSpinner');
+
+                scope.vocabTermChange = function(model, obj){
+                    var temp ={};
+                    switch(model.value){
+                        case "ix.ginas.models.v1.CodeSystemControlledVocabulary":
+                            temp = {
+                                systemCategory:'',
+                                regex:''
+                            };
+                            break;
+                        case "ix.ginas.models.v1.FragmentControlledVocabulary":
+                            temp = {
+                                fragmentStructure:'',
+                                simplifiedStructure:''
+                            };
+                            break;
+
+
+                    }
+                    _.forEach(obj.terms, function(vocabTerm){
+                        vocabTerm = _.merge(vocabTerm, temp);
+                        return vocabTerm;
+                    });
+                    obj.$$changed = true;
+                };
+               
             }
         };
     });
@@ -1590,21 +1585,103 @@
         return {
             restrict: 'E',
             replace: true,
-            controller: 'cvFormController',
-            scope: {
-                parent: '=',
-                referenceobj: '=',
-                index: '='
+            templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html"
+        };
+    });
+
+    ginasForms.directive('editCvForm', function ($templateRequest, CVFields, $uibModal) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                cv: '='
             },
-            templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html",
+          //  controller: 'cvFormController',
+            templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
+                var modalInstance;
+                var temp;
+
                 scope.addNewTerm = function () {
                     scope.referenceobj.terms.push({});
                 };
 
-                scope.$on('save', function (e) {
+                scope.close = function () {
+                    scope.opened = false;
                     scope.update(scope.referenceobj, scope.index);
-                });
+                    modalInstance.close();
+                };
+
+                scope.cancel = function () {
+                    scope.opened = false;
+                    scope.load();
+                    modalInstance.close();
+                };
+
+                scope.open = function (obj, index) {
+                    temp = angular.copy(obj);
+                    scope.referenceobj = obj;
+                    scope.index = index;
+                     modalInstance = $uibModal.open({
+                        templateUrl: baseurl + "assets/templates/modals/cv-terms-modal.html",
+                        size: 'xl',
+                        scope: scope
+                    });
+                    //this handles clicking outside of the modal to close it
+                    modalInstance.result.then(function(){
+                    }, function(){
+                        scope.cancel();
+                    });
+
+                };
+
+
+                scope.load = function() {
+                    CVFields.all(false).then(function (response) {
+                               _.forEach(response.data.content, function (domain) {
+                         CVFields.search("VOCAB_TYPE", domain.vocabularyTermType).then(function (response) {
+                         domain.vocabularyTermType = response[0];
+                         })
+                         });
+                        _.set(scope, 'cv', response.data.content);
+                        scope.count = scope.cv.length;
+                        //   spinnerService.hideAll();
+                    });
+
+                };
+                scope.flattenFields = function (fields) {
+                    _.forEach(fields, function (value, key) {
+                        if (!value.value && value.display) {
+                            fields[key] = value.display;
+                        } else if (!value.value && !value.display) {
+                            fields[key] = value;
+                        } else {
+                            fields[key] = value.value;
+                        }
+                    });
+                    return fields;
+                };
+
+                scope.fieldChange = function (obj) {
+                    obj.$$changed = true;
+                };
+
+
+
+                scope.update = function (domain, index) {
+                    if (!domain.terms) {
+                        _.set(domain, 'terms', []);
+                    }
+                    domain = scope.flattenFields(domain);
+                    domain.fields = scope.flattenFields(domain.fields);
+
+                    CVFields.updateCV(domain).then(function (response) {
+                        domain.$$unlocked = false;
+                        CVFields.search("VOCAB_TYPE", response.vocabularyTermType).then(function (response) {
+                            domain.vocabularyTermType = response[0];
+                        })
+                    });
+                };
 
                 //the delete button emits the delete object, which is used here to remove the reference form all arrays that use it
                 scope.$on('delete', function (e) {
@@ -1612,19 +1689,6 @@
 
 
                 });
-
-            }
-        };
-    });
-
-    ginasForms.directive('editCvForm', function ($templateRequest, CVFields, toggler) {
-        return {
-            restrict: 'E',
-            replace: true,
-            controller: 'cvFormController',
-            templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
-            link: function (scope) {
-
 
             }
         };
@@ -1770,20 +1834,13 @@
                 var template;
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
-                if (scope.formtype == "pair") {
-                    $templateRequest(baseurl + "assets/templates/forms/site-dropdown-form.html").then(function (html) {
-                        template = angular.element(html);
-                        element.append(template);
-                        $compile(template)(scope);
-                    });
-                } else {
                     $templateRequest(baseurl + "assets/templates/forms/site-string-form.html").then(function (html) {
                         template = angular.element(html);
                         element.append(template);
                         $compile(template)(scope);
 
                     });
-                }
+
 
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
                 //this gets called when the siteform is open, and on hovering over subunits...
