@@ -995,7 +995,9 @@
                 label: '@?',
                 edit: '=?',
                 subclass: '@?',
-                field: "@?"
+                field: '@?',
+                formname: '=', //the actual object of the form -- used for validation
+                required: '='
             },
             templateUrl: function(tElem, tAttrs){
                 var templateurl;
