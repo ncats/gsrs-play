@@ -49,6 +49,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
+import ix.core.search.TextIndexer.FV;
 import ix.core.search.TextIndexer.Facet;
 import ix.core.search.TextIndexer.SearchResult;
 import ix.ginas.controllers.v1.CV;
@@ -305,6 +306,18 @@ public class GinasApp extends App {
     static class GinasFacetDecorator extends FacetDecorator {
         GinasFacetDecorator(Facet facet) {
             super(facet, true, 10);
+            boolean isrange=true;
+            //look for range filter to sort by value
+            //uses regex now
+            for(FV fv:facet.getValues()){
+            	if(!fv.getLabel().matches("^[>]*[<]*[0-9][0-9]*[:]*[0-9]*$")){
+            		isrange=false;
+            		break;
+            	}
+            }
+            if(isrange){
+            	facet.sortLabels(false);
+            }
         }
 
 
