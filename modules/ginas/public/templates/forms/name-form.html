@@ -34,6 +34,7 @@
                             <gsrs-input type = "multi"
                                         ng-model= obj.languages
                                         field="languages"
+                                        formname=form
                                         cv="LANGUAGE">
                             </gsrs-input>
                         </div>
@@ -91,7 +92,8 @@
                             <div class="col-md-1 pull-right">
                                 <modal-form-button type="reference"
                                                    referenceobj="obj"
-                                                   parent="parent">
+                                                   parent="parent"
+                                                   formname=form>
                                 </modal-form-button>
                             </div>
                             </div>
