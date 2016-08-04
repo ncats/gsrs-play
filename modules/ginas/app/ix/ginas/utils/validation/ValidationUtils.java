@@ -484,13 +484,18 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			} else {
-				if (cd.code == null) {
+				if (cd.code == null || cd.code.equals("")) {
 					GinasProcessingMessage mes = GinasProcessingMessage
 							.ERROR_MESSAGE(
 									"'Code' should not be null in code objects")
 							.appliableChange(true);
-					gpm.add(mes);
 					strat.processMessage(mes);
+					if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+						cd.code="<no code>";
+						mes.appliedChange = true;
+					}
+					gpm.add(mes);
+					
 				}
 			}
 			if (!validateReferenced(s, cd, gpm, strat, ReferenceAction.FAIL)) {
