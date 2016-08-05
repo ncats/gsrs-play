@@ -55,6 +55,13 @@
                             </dd>
                         }
                     }
+            @if(sub.nucleicAcid.getReferences() != null && sub.nucleicAcid.getReferences().size > 0) {
+                    <dt>References</dt>
+                    <dd>
+                        <referencesmanager indices substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.nucleicAcid.getReferences())"></referencesmanager>
+                    </dd>
+                <dd class ="'@sub.getUuid()'" colspan="2"></dd>
+            }
 
         </dl>
 
@@ -76,69 +83,6 @@
             @for(i <- 0 until sub.nucleicAcid.getSubunits.size()) {
                 <subunit uuid="'@sub.getUuid'" index ='@i' view='subunits' numbers="numbers" subclass="nucleicAcid"></subunit>
             }
-         @*   <br/>
-        @for(i <- 0 until sub.nucleicAcid.getSubunits().size()) {
-            @for(s <- sub.nucleicAcid.getSubunits()) {
-                @if(s.subunitIndex == i + 1) {
-                    <div class="panel panel-default subunit-panel">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Subunit @s.subunitIndex</h3>
-                        </div>
-                        <div class="panel-body">
-                            <div class = "row">
-                            @defining(s.sequence.toArray) { sequence =>
-                                @defining(s.sequence.length) { length =>
-                                    @for(j <- 0 until (length / 10)) {
-                                        <div class = "col-md-2 aaBlock">
-                                            <div class = "row">
-                                                <div class = "col-md-12 text-right">
-                                                    <span class = "count" ng-hide="numbers">@((j + 1) * 10)</span>
-                                                </div>
-                                            </div>
-                                            <div class = "row">
-                                                <div class = "col-md-12 string">
-                                                @defining(s.sequence.subSequence((j * 10), ((j + 1) * 10))) { subArr =>
-                                                    @for(k <- 0 until subArr.length) {
-                                                        @defining(k + (j * 10) + 1) { index =>
-                                                            <span class = "highlight @GinasApp.siteCheckNA(sub.nucleicAcid, s.subunitIndex, index)" tooltip="@s.subunitIndex-@index @subArr.charAt(k):@GinasApp.getNAName(subArr.charAt(k))">@subArr.charAt(k)</span>
-                                                        }
-                                                    }
-                                                }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-
-                                <div class = "col-md-2 aaBlock">
-                                    <div class = "row">
-                                        <div class = "col-md-12 text-right">
-                                            <span class = "count" ng-hide="numbers">@length</span>
-                                        </div>
-                                    </div>
-                                    <div class = "row">
-                                        <div class = "col-md-12 string">
-                                        @defining(s.sequence.subSequence((length - length % 10), (length))) { subArr =>
-                                            @for(k <- 0 until subArr.length) {
-                                                @defining(length - length % 10) { index =>
-                                                    <span class = "highlight @GinasApp.siteCheckNA(sub.nucleicAcid, s.subunitIndex, (index + k + 1))" tooltip="@s.subunitIndex-@(index + k + 1) @subArr.charAt(k):@GinasApp.getNAName(subArr.charAt(k))">@subArr.charAt(k)</span>
-
-                                                }
-                                            }
-                                        </div>
-                                        }
-
-                                </div>
-                                </div>
-                                </div>
-                        </div>
-                    </div>
-
-                }
-                }
-                }
-
-            }
-        }*@
         </div>
     </div>
 	@defining(sub.nucleicAcid.getSugars().length) { count =>
