@@ -50,9 +50,6 @@
             </ul>
 
             <ul class="nav navbar-nav pull-right" id="right-menu">
-                <li>
-                    <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/feedback" target="_self"><i class="fa fa-envelope-o fa-2x" data-toggle="tooltip" title="send feedback"></i></a>
-                </li>
               @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
                         <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile" id ="profile-button" target="_self"><button class="btn btn-default"><i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</button></a>
