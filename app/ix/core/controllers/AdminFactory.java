@@ -359,8 +359,6 @@ public class AdminFactory extends Controller {
 
     public static List<Group> groupsByPrincipal(Principal cred) {
         Long userId = cred.id;
-        
-        
         List<Group> groupByUser = AdminFactory.groupfinder.where().eq("members.id", userId).findList();
         return groupByUser;
     }
@@ -368,15 +366,7 @@ public class AdminFactory extends Controller {
 
     public static List<Acl> permissionByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Acl> perByUser = new ArrayList<Acl>();
-        String sql = "select IX_CORE_ACL_ID from IX_CORE_ACL_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
-        SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
-        sqlQuery.setParameter("userId", userId);
-        Set<SqlRow> sqlRows = sqlQuery.findSet();
-
-        for (SqlRow row : sqlRows) {
-            perByUser.add(aclFinder.byId(((Number) row.get("ix_core_acl_id")).longValue()));
-        }
+        List<Acl> perByUser = AdminFactory.aclFinder.where().eq("principals.id", userId).findList();
         return perByUser;
     }
 

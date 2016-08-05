@@ -143,10 +143,11 @@
         return CV;
     });
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances";
+        var url = baseurl + "api/v1/substances/search?q=";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
+           // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
+            return $http.get(url + "root_names_name='" + name + "'", {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -155,7 +156,7 @@
         return substanceFactory;
     }]);
 
-    ginasFormElements.service('download', function ($location, $http) {
+   ginasFormElements.service('download', function ($location, $http) {
         var cache = true;
         createURL = function (id) {
             var current = ($location.$$url).split('app')[1];
