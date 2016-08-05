@@ -31,7 +31,32 @@ public class Evolution {
     DataSource datasource;
     MessageDigest md;
     Map<String, String> symbols = new TreeMap<String, String>();
-    
+    private List<String> getResourceFiles( String path ) throws IOException {
+        List<String> filenames = new ArrayList<>();
+
+        try(
+          InputStream in = getResourceAsStream( path );
+          BufferedReader br = new BufferedReader( new InputStreamReader( in ) ) ) {
+          String resource;
+
+          while( (resource = br.readLine()) != null ) {
+            filenames.add( resource );
+          }
+        }
+
+        return filenames;
+      }
+
+      private InputStream getResourceAsStream( String resource ) {
+        final InputStream in
+          = getContextClassLoader().getResourceAsStream( resource );
+
+        return in == null ? getClass().getResourceAsStream( resource ) : in;
+      }
+
+      private ClassLoader getContextClassLoader() {
+        return Thread.currentThread().getContextClassLoader();
+      }
     public Evolution (String file, String source) throws Exception {
         this.source = source;
         this.md = MessageDigest.getInstance("SHA1");
@@ -39,32 +64,38 @@ public class Evolution {
 
         System.out.println("=============================");
 
-        String postSQL=null;    
+        String postSQL=null;
+       
+        
+        Config root = ConfigFactory.parseFile(new File (file));
+        
+        Config dbconf = root.getConfig("db");
+        Config ebean = root.getConfig("ebean");
+        
+        String models = ebean.getString(source);           
+        System.err.println("Evolving "+source+ " => "+models);
+
+        Config db = dbconf.getConfig(source);
+        
         if(source.equals("default")){
+        	String dbname=db.getString("url").split(":")[1];
+        	System.out.println("loading post info for:" + dbname);
 	        try {
-	            File postsqlfile = new File ("conf/sql/post/ginas-oracle.sql");
+	        	File postsqlfile = new File ("conf/sql/post/ginas-" + dbname +".sql");
 	            if (postsqlfile.exists()) {
 	                postSQL = new Scanner(postsqlfile).useDelimiter("\\Z").next();
 	            }
 	            else {
 	                postSQL = new Scanner
-	                    (getClass().getResourceAsStream("ginas-oracle.sql"))
+	                    (getClass().getResourceAsStream("/sql/post/ginas-" + dbname +".sql"))
 	                    .useDelimiter("\\Z").next();
 	            }
 	        }catch(Exception e){
 	            e.printStackTrace();
 	        }
         }
-        System.out.println("postSQL:" + postSQL);
-        
-        Config root = ConfigFactory.parseFile(new File (file));
-        Config ebean = root.getConfig("ebean");
-        Config dbconf = root.getConfig("db");
-        
-        String models = ebean.getString(source);           
-        System.err.println("Evolving "+source+ " => "+models);
 
-        Config db = dbconf.getConfig(source);
+        System.out.println("postSQL:" + postSQL);
         String driver = db.getString("driver");
         BoneCPDataSource ds = new BoneCPDataSource ();
         ds.setJdbcUrl(db.getString("url"));

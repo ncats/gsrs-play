@@ -1,6 +1,6 @@
 <div>
    <label for={{name}}-{{type}} class="text-capitalize">Access</label>
-    <a ng-show="referenceobj.access.length>0" ng-click="open()" role="button"  uib-tooltip="Edit user access">
+    <a ng-show="referenceobj.access.length>0" ng-click="open()" role="button"  uib-tooltip="Edit user access"  ng-class="{'disabled': opened == true}">
         <access value = "referenceobj.access"></access>
     </a>
     <div class="text-center" uib-tooltip="Set user access">

@@ -762,6 +762,7 @@
             });
         };
 
+//this is already a function the substance object has, not really needed.
                 $scope.getSubstanceClass = function() {
                         return $scope.substance.substanceClass;
                 }
@@ -836,40 +837,6 @@
             var keyid = $scope.substance.uuid.substr(0, 8);
             location.href = baseurl + "substance/" + keyid + "/approve";
         };
-
-        /*
-         $scope.getSiteResidue = function (subunits, site) {
-         var si = site.subunitIndex;
-         var ri = site.residueIndex;
-         for (var i = 0; i < subunits.length; i++) {
-         if (subunits[i].subunitIndex === si) {
-         var res = subunits[i].sequence.substr(ri - 1, 1);
-         return res;
-         }
-         }
-         return "";
-         };
-         */
-
-        /*$scope.getAllSitesMatching = function (regexFilter) {
-         var subs = $scope.getSubunits();
-         var list = [];
-         if (regexFilter) {
-         var re = new RegExp(regexFilter, 'ig');
-         var match;
-         for (var i = 0; i < subs.length; i++) {
-         var sub = subs[i];
-         while ((match = re.exec(sub.sequence)) !== null) {
-         list.push({
-         subunitIndex: sub.subunitIndex,
-         residueIndex: match.index + 1
-         });
-         }
-         }
-         return list;
-         }
-         return $scope.getAllSites();
-         };*/
 
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {

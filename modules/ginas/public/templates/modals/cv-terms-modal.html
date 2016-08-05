@@ -2,13 +2,13 @@
     <div class="modal-header">
         <div class="row">
             <form-header type="Edit Terms" parent="parent"></form-header>
-            <a type="button" class="close" ng-click="close()" uib-tooltip="Close" aria-label="Close"><i
+            <a type="button" class="close" ng-click="cancel()" uib-tooltip="Close" aria-label="Close"><i
                     class="fa fa-times danger"></i></a>
         </div>
     </div>
     <div class="modal-body">
         <div class = "row" ng-if="!referenceobj.$$unlocked">
-            <div class ="col-md-3"><span class ="danger">These terms are un-editable. Click the lock to unlock them.</span></div>
+            <div class ="col-md-3"><span class ="danger">These terms are not editable. Click the lock to unlock them.</span></div>
             <a ng-click="referenceobj.$$unlocked = true" role="button" aria-label="Edit Terms">
                 <i class="fa fa-lock fa-2x warning"></i></a>
             </div>
@@ -16,6 +16,7 @@
         <br>
     </div>
     <div class="modal-footer">
+        <button type="button" class="btn btn-danger" ng-click="cancel()">Cancel</button>
         <button type="button" class="btn btn-primary" ng-click="close()">Save & Close</button>
     </div>
 </div>

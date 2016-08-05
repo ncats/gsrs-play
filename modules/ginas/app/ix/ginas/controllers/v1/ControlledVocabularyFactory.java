@@ -98,10 +98,10 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		File file = filepart.getFile();
 		try {
 				FileInputStream is = new FileInputStream(file);
-			loadCVJson(is);
-			} catch (IOException ex) {
+				loadCVJson(is);
+		} catch (IOException ex) {
 				ex.printStackTrace();
-			}
+		}
 	}
 
 	public static void loadCVJson(InputStream is) {
