@@ -169,6 +169,13 @@ public class BuildInfo {
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(marvin).aggregate(marvin)
 
+  val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
+    .settings(commonSettings: _*).settings(
+    libraryDependencies ++= commonDependencies,
+    libraryDependencies += "com.typesafe" % "config" % "1.2.0",
+    mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
+  ).dependsOn(ncats).aggregate(ncats)
+
 
   val ginasTestOptions = "-Dconfig.file=" + Option(System.getProperty("testconfig")).getOrElse("application.conf")
   val ginas = Project("ginas", file("modules/ginas"))
@@ -189,7 +196,7 @@ public class BuildInfo {
 
     javaOptions in Test += ginasTestOptions,
     cleanFiles += file("modules/ginas/ginas.ix")
-  ).dependsOn(ncats).aggregate(ncats)
+  ).dependsOn(ginasEvo).aggregate(ginasEvo)
 
 
   val hcs = Project("hcs", file("modules/hcs"))
@@ -252,10 +259,4 @@ public class BuildInfo {
       javacOptions in (doc) ++= javaDocOptions
   ).dependsOn(ncats).aggregate(ncats)
 
-  val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
-    .settings(commonSettings: _*).settings(
-    libraryDependencies ++= commonDependencies,
-      libraryDependencies += "com.typesafe" % "config" % "1.2.0",
-      mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
-  ).dependsOn(ginas).aggregate(ginas)
 }
