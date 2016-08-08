@@ -60,7 +60,8 @@ public class Evolution {
     public Evolution (String file, String source) throws Exception {
         this.source = source;
         this.md = MessageDigest.getInstance("SHA1");
-        this.ddl = new File ("modules/ginas/conf/evolutions/"+source+"/1.sql");
+        //this.ddl = new File ("modules/ginas/conf/evolutions/"+source+"/1.sql");
+        this.ddl = new File ("conf/evolutions/"+source+"/1.sql");
 
         System.out.println("=============================");
 
