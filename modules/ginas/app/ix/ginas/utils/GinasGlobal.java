@@ -53,7 +53,19 @@ public class GinasGlobal extends Global {
 			String real = req.getHeader("X-Real-IP");
 
             UserProfile p = authenticator.authenticate(AuthenticationCredentials.create(ctx));
-
+            
+            String uri=req.uri();
+            char[] cs = uri.toCharArray();
+            
+            for(int i=0;i<cs.length;i++){
+            	char c=cs[i];
+            	if(Character.isISOControl(c)){
+            		return wrapResult(GinasApp.error(500, "Illegal character at position [" +
+    						i
+    						+ "]"));
+            	}
+            }
+            
 
 			if(p ==null && !Authentication.allowNonAuthenticated()){
 
@@ -80,8 +92,11 @@ public class GinasGlobal extends Global {
 	
 	@Override
     public Action<?> onRequest(Http.Request request,java.lang.reflect.Method actionMethod) {
+		
         return new LoginWrapper(super.onRequest(request, actionMethod));
     }
+	
+	
 	public static Promise<Result> wrapResult(final Result r) {
 		  return Promise.promise(
 		    new Function0<Result>() {
@@ -98,33 +113,10 @@ public class GinasGlobal extends Global {
 		super.onStart(app);
 		
 		if (!ControlledVocabularyFactory.isloaded()) {
-		//	ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
 			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv.json"));
-//			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
-//			if(codeSystem!= null){
-//				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
-//				boolean addNew=true;
-//				for(VocabularyTerm vt1 : cvv.terms){
-//					if(vt1.value.equals(codeSystem)){
-//						addNew=false;
-//						break;
-//					}
-//				}
-//				if(addNew){
-//					CodeSystemVocabularyTerm vt = new CodeSystemVocabularyTerm();
-//					vt.display=codeSystem;
-//					vt.value=codeSystem;
-//					vt.hidden=true;
-//					vt.save();
-//					cvv.addTerms(vt);
-//					cvv.save();
-//				}
-//			}
 			if(!Play.isTest()){
 				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
 			}
-		}else{
-			//System.out.println("CV already loaded:" + ControlledVocabularyFactory.size());
 		}
 		for(Runnable r:startRunners){
 			r.run();
