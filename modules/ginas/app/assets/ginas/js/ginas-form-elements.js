@@ -73,7 +73,6 @@
             },
 
             updateCV: function (domainobj) {
-                var url;
                 var promise;
                 if (domainobj.id) {
                     promise = $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
@@ -144,10 +143,11 @@
         return CV;
     });
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances";
+        var url = baseurl + "api/v1/substances/search?q=";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
+           // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
+            return $http.get(url + "root_names_name='" + name + "'", {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -156,7 +156,7 @@
         return substanceFactory;
     }]);
 
-    ginasFormElements.service('download', function ($location, $http) {
+   ginasFormElements.service('download', function ($location, $http) {
         var cache = true;
         createURL = function (id) {
             var current = ($location.$$url).split('app')[1];
@@ -307,6 +307,7 @@
                 validator: '&?', //optional function passed in from the form directive and used to validate on init and change, used in conjunction with a formatter if available.
                 blurValidator: '&?',  //optional validation function that is passed in from the form. this only fires on blur
                 changeFunction:'&?', //validators happen in the background, and mainly set validation, so scope variable changes should go here
+                //change functions happen before the field is set, so you can't get the new value without a watch
                 required: '=?',  //optional variable that enables required form validation
                 values: '=?' //array that can be passed with a custom cv for dropdowns and multi select
             },
@@ -404,15 +405,15 @@
                             }
                             _.forEach(scope.values, function(term){
                                 if(term.selected == true){
-                                    if(attrs.type =='multi') {
-                                        if (_.isUndefined(scope.obj)) {
+                                    if (_.isUndefined(scope.obj)) {
+                                        if (attrs.type == 'multi') {
                                             scope.obj = [];
                                             scope.obj.push(term);
+                                        } else {
+                                            scope.obj = term;
                                         }
-                                    }else{
-                                        scope.obj = term;
+                                        scope.edit = false;
                                     }
-                                    scope.edit= false;
                                 }
                                 });
 
@@ -995,7 +996,9 @@
                 label: '@?',
                 edit: '=?',
                 subclass: '@?',
-                field: "@?"
+                field: '@?',
+                formname: '=', //the actual object of the form -- used for validation
+                required: '='
             },
             templateUrl: function(tElem, tAttrs){
                 var templateurl;
@@ -1018,9 +1021,9 @@
                     case "sites":
                         templateurl =  baseurl + "assets/templates/selectors/site-selector.html";
                         break;
-                    case "terms":
+                   /* case "terms":
                         templateurl =  baseurl + "assets/templates/selectors/cv-terms-selector.html";
-                        break;
+                        break;*/
                 }
                 return templateurl;
             },
@@ -1059,6 +1062,12 @@
                     modalInstance.close();
                 };
 
+                $scope.cancel = function () {
+                    $scope.opened= false;
+                    $scope.$broadcast('cancel');
+                    modalInstance.close();
+                };
+
 
 
                 $scope.open = function () {
@@ -1092,6 +1101,9 @@
                                 case "terms":
                                     if($attrs.index){
                                         $scope.index = $attrs.index;
+                                    }
+                                    if($scope.cv){
+                                        $scope.cv = $attrs.cv;
                                     }
                                     templateurl =  baseurl + "assets/templates/modals/cv-terms-modal.html";
                                     break;

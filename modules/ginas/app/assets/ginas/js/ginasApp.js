@@ -370,10 +370,11 @@
     }]);
 
     ginasApp.service('substanceRetriever', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances";
+        var url = baseurl + "api/v1/substances/search?q=";
         var substanceRet = {
             getSubstances: function (name) {
-                var promise = $http.get(url, {params: {"filter": "names.name='" + name.toUpperCase() + "'"}, cache: true}, {
+              //  var promise = $http.get(url, {params: {"filter": "names.name='" + name.toUpperCase() + "'"}, cache: true}, {
+                var promise = $http.get(url + "root_names_name='" + name + "'", {cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -497,8 +498,6 @@
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
                                                      spinnerService) {
-        // var ginasCtrl = this;
-//        $scope.select = ['Substructure', 'Similarity'];
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
@@ -512,6 +511,7 @@
             return r;
         };
 
+	
         $scope.submitq= function(qinput) {
             if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {
                 $scope.q = "\"" + $scope.q + "\"";
@@ -762,6 +762,7 @@
             });
         };
 
+//this is already a function the substance object has, not really needed.
                 $scope.getSubstanceClass = function() {
                         return $scope.substance.substanceClass;
                 }
@@ -836,40 +837,6 @@
             var keyid = $scope.substance.uuid.substr(0, 8);
             location.href = baseurl + "substance/" + keyid + "/approve";
         };
-
-        /*
-         $scope.getSiteResidue = function (subunits, site) {
-         var si = site.subunitIndex;
-         var ri = site.residueIndex;
-         for (var i = 0; i < subunits.length; i++) {
-         if (subunits[i].subunitIndex === si) {
-         var res = subunits[i].sequence.substr(ri - 1, 1);
-         return res;
-         }
-         }
-         return "";
-         };
-         */
-
-        /*$scope.getAllSitesMatching = function (regexFilter) {
-         var subs = $scope.getSubunits();
-         var list = [];
-         if (regexFilter) {
-         var re = new RegExp(regexFilter, 'ig');
-         var match;
-         for (var i = 0; i < subs.length; i++) {
-         var sub = subs[i];
-         while ((match = re.exec(sub.sequence)) !== null) {
-         list.push({
-         subunitIndex: sub.subunitIndex,
-         residueIndex: match.index + 1
-         });
-         }
-         }
-         return list;
-         }
-         return $scope.getAllSites();
-         };*/
 
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {

@@ -18,7 +18,7 @@
             </a>
             <div class=" hidden-xs hidden-sm" id="version">
                 <code uib-tooltip="Built on @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)"
-                tooltip-placement="right"><small>version 1.1 beta</small></code>
+                tooltip-placement="right"><small>version 1.2.03 beta</small></code>
             </div>
         </div>
         <div class="collapse navbar-collapse navbar-default" id = "menubar">
@@ -36,8 +36,7 @@
                 <form class="form-inline main-search" role="search" method="GET"
                 action="@ix.ginas.controllers.routes.GinasApp.substances(null)" ng-submit = "submitq()">
                 <div class="input-group">
-                <input type="text" class="form-control typeahead" id="search" aria-label="Search G-SRS"
-                title="Search" placeholder="Search ..." ng-model = "q" name="q">
+                <input type="text" class="form-control typeahead" id="search" aria-label="Search G-SRS" title="Search" placeholder="Search ..." ng-model = "q" name="q">
                 <span class="input-group-btn">
                 <button class="btn btn-default"  alt="Search" id="search" uib-tooltip="Search G-SRS" tooltip-placement="bottom" type="search" aria-label="Search"
                 value="submit">
@@ -49,18 +48,20 @@
                 </form>
                 </li>
             </ul>
+
             <ul class="nav navbar-nav pull-right" id="right-menu">
-          @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+              @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
                         <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile" id ="profile-button" target="_self"><button class="btn btn-default"><i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</button></a>
                     </li>
+
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">Logout</button></a></li>
                 }
 
-                @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a></li>
-                }{
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">
-                        Logout</button></a></li>
+                @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                    <li>
+                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a>
+                    </li>
                 }
             </ul>
         </div>

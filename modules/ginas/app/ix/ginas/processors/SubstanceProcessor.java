@@ -28,7 +28,7 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.seqaln.SequenceIndexer;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
-import ix.ginas.utils.validation.Validation;
+import ix.ginas.utils.validation.ValidationUtils;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;

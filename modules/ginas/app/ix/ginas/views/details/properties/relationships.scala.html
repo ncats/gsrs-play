@@ -61,10 +61,11 @@
                             <referencesmanager indices substance ="'@id'" divid ="'@r.getUuid'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
                         </td>
                         </tr>
-                        <tr><td class = "'@r.getUuid'" colspan = "8"></td></tr>
+                        <tr><td class = "'@r.getUuid'" colspan = "8"></td>
                 }else{
                         <td>none</td>
                 }
+            </tr>
                 }
             <tr ng-if="audit==true"><td colspan = "8">Created by <code>@r.createdBy</code> on <code>@r.created</code> , Edited by <code>@r.lastEditedBy</code> on <code>@r.lastEdited</code></td></tr>
         }

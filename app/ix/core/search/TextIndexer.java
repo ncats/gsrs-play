@@ -690,6 +690,7 @@ public class TextIndexer implements Closeable{
 		 * @return
 		 */
 		public long getWeightFor(BytesRef text){
+			IndexSearcher searcher=null;
 			try{
 				Term t=new Term(EXACT_TEXT_FIELD_NAME, text.utf8ToString());
 				TermQuery tq=new TermQuery(t);
@@ -700,11 +701,11 @@ public class TextIndexer implements Closeable{
 			    // We sorted postings by weight during indexing, so we
 			    // only retrieve the first num hits now:
 			    Collector c2 = new EarlyTerminatingSortingCollector(c, SORT2, 2);
-				
-				IndexSearcher searcher = searcherMgr.acquire();
+			    
+				searcher = searcherMgr.acquire();
 				searcher.search(tq, c2);
-				TopFieldDocs hits = (TopFieldDocs) c.topDocs();
 				
+				TopFieldDocs hits = (TopFieldDocs) c.topDocs();
 				if(hits.totalHits>=1){
 					int i=0;
 					FieldDoc fd = (FieldDoc) hits.scoreDocs[i];
@@ -713,15 +714,25 @@ public class TextIndexer implements Closeable{
 				}
 			}catch(Exception e){
 				e.printStackTrace();
+			} finally{
+				if(searcher!=null){
+					try{
+						searcherMgr.release(searcher);
+					}catch(Exception e){
+						e.printStackTrace();
+					}
+				}
 			}
+			
 	    	return 0;
 		}
+
     }
 
     class SuggestLookup implements Closeable{
         String name;
         File dir;
-        AtomicInteger dirty = new AtomicInteger ();
+        AtomicBoolean dirty = new AtomicBoolean (false);
         InxightInfixSuggester lookup;
         long lastRefresh;
 
@@ -729,16 +740,17 @@ public class TextIndexer implements Closeable{
         ConcurrentHashMap<String,Addition> additions=new ConcurrentHashMap<String,Addition>();
         class Addition{
         	String text;
-        	long weight;
+        	AtomicLong weight;
         	public Addition(String text, long weight){
         		this.text=text;
-        		this.weight=weight;
+        		this.weight=new AtomicLong(weight);
         	}
-        	public synchronized void incrementWeight(){
-        		weight++;
+        	public void incrementWeight(){
+        		weight.incrementAndGet();
         	}
 			public void addToWeight(long value) {
-				weight+=value;
+				weight.getAndAdd(value);
+
 			}
         }
 
@@ -802,11 +814,11 @@ public class TextIndexer implements Closeable{
             incr ();
         }
         void incr ()  {
-            dirty.incrementAndGet();
+            dirty.compareAndSet(false, true);
         }
 
         public void refreshIfDirty () {
-            if (dirty.get() > 0) {
+            if (dirty.get()) {
                 try {
                     refresh ();
                 }
@@ -817,16 +829,19 @@ public class TextIndexer implements Closeable{
             }
         }
 
-        private void refresh () throws IOException {
-        	synchronized(dirty){
-        		synchronized(additions){
-	        		for(Addition add : additions.values()){
-	        			BytesRef ref = new BytesRef (add.text);
+        private synchronized void refresh () throws IOException {
+        			Iterator<Addition> additionIterator=additions.values().iterator();
+        			
+        			while(additionIterator.hasNext()){
+        				Addition add=additionIterator.next();
+        				BytesRef ref = new BytesRef (add.text);
 	        			add.addToWeight(lookup.getWeightFor(ref));
-	        			lookup.update(ref, null, add.weight, ref);
-	        		}
-	        		additions.clear();
-        		}
+	        			lookup.update(ref, null, add.weight.get(), ref);
+	        			additionIterator.remove();
+        			}
+	        		
+	        		
+        		
 	            long start = System.currentTimeMillis();
 	            lookup.refresh();
 	            lastRefresh = System.currentTimeMillis();
@@ -834,11 +849,13 @@ public class TextIndexer implements Closeable{
 	                         +" refreshs "+lookup.getCount()+" entries in "
 	                         +String.format("%1$.2fs", 
 	                                        1e-3*(lastRefresh - start)));
-	            dirty.set(0);
-        	}
+	            dirty.set(false);
+        	
         }
+        
         @Override
         public void close () throws IOException {
+        	refreshIfDirty ();
             lookup.close();
         }
 
@@ -1072,8 +1089,8 @@ public class TextIndexer implements Closeable{
          * Execute the flush, with debugging statistics, without looking at the shutdown state
          */
         public void execute(){
-        	int i= (int)(Math.random()*100);
-        	///System.out.println("STARTED DAEMON==================== " +i);
+        	//int i= (int)(Math.random()*100);
+        	//System.out.println("STARTED DAEMON==================== " +i);
         	long time = StopWatch.timeElapsed(this::flush);
         	
         	//System.out.println("DAEMON FINISHED=================== "  + i + " Elapsed:" + time);
@@ -1083,7 +1100,7 @@ public class TextIndexer implements Closeable{
 		private void flush() {
 			
         	
-        	//Util.debugSpin(20000);
+        	//Util.debugSpin(20);
             File file = getFacetsConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 Logger.debug(Thread.currentThread()
@@ -1357,9 +1374,9 @@ public class TextIndexer implements Closeable{
        // setFetchWorkers (FETCH_WORKERS);
 
         flushDaemon=new FlushDaemon ();
-        // run daemon every 20s
-        scheduler.scheduleAtFixedRate
-            (flushDaemon, 10, 20, TimeUnit.SECONDS);
+        // run daemon every 10s
+        scheduler.scheduleWithFixedDelay
+            (flushDaemon, 10, 35, TimeUnit.SECONDS);
     }
 
 //    public void setFetchWorkers (int n) {

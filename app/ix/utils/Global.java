@@ -66,8 +66,6 @@ public class Global extends GlobalSettings {
         }
 
     }
-
-  
     
     @Override
     public void onStart (Application app) {
@@ -114,26 +112,6 @@ public class Global extends GlobalSettings {
         }
 
         loadDefaultUsers();
-//        EbeanPlugin eb = new EbeanPlugin (app);
-//        EbeanServer server = Ebean.getServer(eb.defaultServer());
-//        
-        //Logger.debug("IDG routes: "+ix.idg.Routes.routes().getClass());
-        /*
-        EbeanPlugin eb = new EbeanPlugin (app);
-        EbeanServer server = Ebean.getServer(eb.defaultServer());
-        SqlQuery query = 
-            server.createSqlQuery("select distinct term from ix_core_value");
-        List<SqlRow> rows = query.findList();
-        for (SqlRow r : rows) {
-            Logger.info(r.getString("term"));
-        }
-        */
-
-        /*
-        Logger.info("## starting app: secret=\""
-                    +app.configuration().getString("application.secret")+"\"");
-        */
-
     }
     
     void loadDefaultUsers(){
@@ -152,11 +130,7 @@ public class Global extends GlobalSettings {
 	    			Principal p2=PrincipalFactory.byUserName(username);
 	    			if(p2==null){
 		    			try {
-		    				//System.out.println("TRYING TO REGISTER USER:" + username);
-		    				
 		    				UserProfile up=UserProfileFactory.addActiveUser(p, password, roles, groups);
-		    				//System.out.println("SUCCESS!!!!!");
-							
 						} catch (Exception e) {
 							Logger.error(username + "failed");
 							e.printStackTrace();

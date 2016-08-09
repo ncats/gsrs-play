@@ -33,7 +33,7 @@
                         <ul class= "list-inline pull-right list-unstyled">
                             <li class = "padded"> <modal-button type= "export" structureid ="'@sub.structure.id'" format="sdf" ></modal-button>
                             </li>
-                            <li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" uib-tooltip="search for structure" target="_self" ng-click="passStructure('@sub.structure.id')" aria-label="Structure Search">
+                            <li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" tooltip-placement="auto right" uib-tooltip="Structure Search" target="_self" ng-click="passStructure('@sub.structure.id')" aria-label="Structure Search">
                                 <span class="sr-only">Structure Search</span>
                                 <span class="fa fa-search fa-2x success"></span></a>
                             </li>
@@ -92,6 +92,7 @@
                                 <referencesmanager indices substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.structure.getReferences())"></referencesmanager>
                             </td>
                         </tr>
+                        <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
                     }
                 </table>
             </div>

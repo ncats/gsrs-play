@@ -2,13 +2,13 @@
     <label for={{type}} class="text-capitalize">Name Orgs</label>
     <a ng-show="referenceobj.nameOrgs.length > 0" ng-click="open()">
     <div ng-repeat="tag in referenceobj.nameOrgs">
-        <span class="badge" uib-tooltip ="{{tag.display}}">
+        <span class="badge" uib-tooltip ="{{tag.display}}"  ng-class="{'disabled': opened == true}">
                 {{tag.display || tag.nameOrg.display}}</span>
             <i class="fa fa-times danger" ng-show="tag.deprecated===true" uib-tooltip="deprecated"></i>
         </div>
     </a>
     <div class="text-center" uib-tooltip="Add a Name Org">
-        <a ng-hide="referenceobj.nameOrgs.length > 0" ng-click="open()" role="button" aria-label="Add a Name Org"  id="{{name}}-{{type}}"><i
+        <a ng-hide="referenceobj.nameOrgs.length > 0" ng-click="open()" role="button" aria-label="Add a Name Org"  id="{{name}}-{{type}}"  ng-class="{'disabled': opened == true}"><i
                 class="fa fa-plus fa-2x success"></i></a>
     </div>
 </div>

@@ -10,7 +10,7 @@
             class="form-control"
             ng-model= obj
             ng-change="change(); changeFunction({model: obj});"
-            ng-blur = toggleEdit();
+            ng-blur = "toggleEdit();"
             ng-options="r.display for r in values track by r.display"
             placeholder ="{{::field}}"
             title="{{::field}}"

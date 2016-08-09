@@ -191,6 +191,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         public final V theRecordToPersist;
         public final ProcessingRecord rec;
         final K theRecord;
+        final boolean actuallyPersist = Play.application().configuration().getBoolean("ix.ginas.batch.persist",true); 
 
         public TransformedRecord(V persistRecord, K record,
                                  ProcessingRecord rec) {
@@ -213,7 +214,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					TimeProfiler.addGlobalTime("persist");
 					
 					long start=TimeUtil.getCurrentTimeMillis();
-					if(Play.application().configuration().getBoolean("ix.ginas.batch.persist",true)){
+					if(actuallyPersist){
 						rec.job.getPersister().persist(this);
 					}
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
