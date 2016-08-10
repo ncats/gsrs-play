@@ -6,16 +6,7 @@
 @(sub: StructurallyDiverseSubstance)
 
 <div class="panel panel-default sub-list">
-    <div class="panel-heading sub-title">
-        <div class = "row">
-            <div class = "col-md-10">
-                       <span><h3 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">@sub.getName()</a></h3></span>
-            </div>
-            <div class = "col-md-2 prot-approvID">
-                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><code>@sub.approvalID</code></a></h4>
-            </div>
-        </div>
-    </div>
+    @commonlistheader(sub)
     <div class= "panel-body list-item">
         <div class = "row">
             <div class = "col-md-3 text-center">
@@ -47,33 +38,7 @@
                 }
             </div>
             <div class = "col-md-2">
-
-                <div class = "row">
-                    <div class = "col-md-12">
-                        @if(sub.approved==null){
-                            <h6>Not Approved</h6>
-                        }else{
-                           <strong>Date approved:</strong> <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate'}}</h6>
-                        }
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-12">
-                        <strong>Last modified:</strong><h6>{{moment(@sub.getLastEdited.getTime())}}</h6>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-12">
-                        <code>@sub.getDisplayStatus()  version: @sub.version</code>
-                    </div>
-                </div>
-                @if(sub.hasTagString("KEW")) {
-                	<div class = "row">
-	                    <div class = "col-md-12">
-	                        <span><img class="img-responsive kew" id="" alt ="Kew approved" uib-tooltip = "Substance has been validated by Kew Gardens" src="@routes.Assets.at("ginas/images/kew.png")" /></span>
-	                    </div>
-	                </div>
-                }
+            @commonliststatus(sub)
             </div>
         </div>
     </div>

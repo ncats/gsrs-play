@@ -1,0 +1,25 @@
+@import ix.ginas.models.v1.{Substance}
+@import ix.ginas.controllers.GinasApp
+@(sub: Substance)
+
+<div class="panel-heading prot-title">
+
+    <div class = "row">
+        <div class = "col-md-10">
+            <h3 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">@sub.getName()</a></h3>
+        </div>
+        <div class = "col-md-2 prot-approvID">
+            <h4 class= "text-right">
+                @if(sub.isNonSubstanceConcept()) {
+                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><span @if(sub.isSubstanceVariant()){
+                    class="subconcept"
+                    }>@sub.getApprovalIDDisplay()</span>
+                </a>
+                <info-button path= codes mark='exclaim' type ="@sub.getApprovalIDDisplay()" info="concept"></info-button>
+                } else {
+                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><code>@sub.getApprovalIDDisplay()</code></a>
+                }
+            </h4>
+        </div>
+    </div>
+</div>
