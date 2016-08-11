@@ -443,37 +443,6 @@ public class EntityFactory extends Controller {
                 Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
                 etag.total = e.total;
             }
-            else {
-                // TODO: Need to use Akka here!
-                // execute in the background to determine the actual number
-                // of rows that this query should return
-                /*
-                _threadPool.submit(new Runnable () {
-                        public void run () {
-                            FutureIds<T> future = 
-                                finder.where(options.filter).findFutureIds();
-                            try {
-                                List<Object> ids = future.get();
-                                etag.total = ids.size();
-                                etag.save();
-                                
-                                for (Object id : ids) {
-                                    ETagRef ref = new ETagRef (etag, (Long)id);
-                                    ref.save();
-                                }
-                                Logger.debug(Thread.currentThread().getName()
-                                             +": "+options.filter+" => "
-                                             +ids.size());
-                            }
-                            catch (Exception ex) {
-                                ex.printStackTrace();
-                                Logger.trace(Thread.currentThread().getName()
-                                             +": ETag "+etag.id, ex);
-                            }
-                        }
-                    });
-                */
-            }
         }
         
         try{

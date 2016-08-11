@@ -3,6 +3,8 @@ package ix.ginas.models.v1;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.regex.Pattern;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,7 +27,10 @@ import ix.ginas.models.*;
 @Table(name="ix_ginas_relationship")
 public class Relationship extends CommonDataElementOfCollection {
     
-    @JSONEntity(title="Amount")
+    private static final String RELATIONSHIP_INV_CONST = "->";
+    private static final Pattern RELATIONSHIP_SPLIT_REGEX = Pattern.compile(RELATIONSHIP_INV_CONST);
+
+	@JSONEntity(title="Amount")
     @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
     
@@ -60,8 +65,8 @@ public class Relationship extends CommonDataElementOfCollection {
     
     @JsonIgnore
     public String getDisplayType(){
-        if(type.contains("->")){
-                return type.split("->")[0] + " (" +type.split("->")[1] +")";
+        if(type.contains(RELATIONSHIP_INV_CONST)){
+                return type.split(RELATIONSHIP_INV_CONST)[0] + " (" +type.split(RELATIONSHIP_INV_CONST)[1] +")";
         }
         return type;
     }
@@ -107,7 +112,7 @@ public class Relationship extends CommonDataElementOfCollection {
     		return false;
     	}
 
-    	String[] types=this.type.split("->");
+    	String[] types=RELATIONSHIP_SPLIT_REGEX.split(this.type);
     	if(types.length>=2)return true;
     	return false;
     }
@@ -117,8 +122,8 @@ public class Relationship extends CommonDataElementOfCollection {
     		throw new IllegalStateException("Relationship :" + this.type + " is not invertable");
     	}
     	Relationship r=new Relationship();
-    	String[] types=this.type.split("->");
-    	r.type=types[1] + "->" + types[0];
+    	String[] types=RELATIONSHIP_SPLIT_REGEX.split(this.type);
+    	r.type=types[1] + RELATIONSHIP_INV_CONST + types[0];
     	r.setAccess(this.getAccess());
     	return r;
     }
