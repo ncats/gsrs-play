@@ -477,14 +477,17 @@ public class PolymerDecode {
 							r=ca.getAtomMap();
 						}
 						//System.out.println("RGROUP:" + r);
-						int rnew= locCanonicalInt.get(r)+1;
+						Integer rnew = locCanonicalInt.get(r);
+						if(rnew != null){
+							rnew = rnew + 1; 
+						}else{
+							rnew = 0;
+						}
 						
 						ca.setAtomMap(rnew);
 						ca.setRgroupIndex(rnew);
 						ca.setAtomNo(RGROUP_PLACEHOLDER); //helium by default
 						ca.setAtomMap(rnew);
-						//ca.setIsotope(rnew);
-						//
 						
 					}
 					
