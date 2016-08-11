@@ -9,3 +9,6 @@ Changes:
 2. Fix relationship type facet UI overflow
 3. refactored UI code
 4. improved audit and definition reference views
+5. allow server failures on validation to be 
+   displayed to user
+
