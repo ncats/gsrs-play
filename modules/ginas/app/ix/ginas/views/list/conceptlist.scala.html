@@ -4,24 +4,8 @@
 @(sub: Substance)
 
 <div class="panel panel-default sub-list">
-    <div class="panel-heading sub-title">
-        <div class = "row">
-            <div class = "col-md-9">
-                <h3 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">@sub.getName()</a></h3>
-            </div>
-            <div class = "col-md-3 prot-approvID">
-                <h4 class= "text-right">
-                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self"><span @if(sub.isSubstanceVariant()){
-					class="subconcept"
-                }
-                >@sub.getApprovalIDDisplay()</span>
-                </a>
-                <info-button path= codes mark='exclaim' type ="@sub.getApprovalIDDisplay()" info="concept"></info-button>
-                </h4>
-            </div>
-        </div>
-    </div>
     <div class="@sub.getApprovalIDDisplay()"></div>
+    @commonlistheader(sub)
     <div class= "panel-body list-item">
         <div class = "row">
             <div class = "col-md-3 text-center">

@@ -12505,7 +12505,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "BIOSIMILAR-\u003ePARENT",
-		"display": "BIOSIMILAR-\u003e PARENT",
+		"display": "BIOSIMILAR -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12513,7 +12513,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "CONSTITUENT ALWAYS PRESENT-\u003ePARENT",
-		"display": "CONSTITUENT ALWAYS PRESENT-\u003e PARENT",
+		"display": "CONSTITUENT ALWAYS PRESENT -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12521,7 +12521,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "CONSTITUENT MAY BE PRESENT-\u003ePARENT",
-		"display": "CONSTITUENT MAY BE PRESENT-\u003e PARENT",
+		"display": "CONSTITUENT MAY BE PRESENT -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12529,7 +12529,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "DEGRADENT-\u003ePARENT",
-		"display": "DEGRADENT-\u003e PARENT",
+		"display": "DEGRADENT -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12537,7 +12537,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "DERIVATIVE-\u003ePARENT",
-		"display": "DERIVATIVE-\u003e PARENT",
+		"display": "DERIVATIVE -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12545,7 +12545,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "DIASTEREOISOMER-\u003eDIASTEREOISOMER",
-		"display": "DIASTEREOISOMER-\u003e DIASTEREOISOMER",
+		"display": "DIASTEREOISOMER -\u003e DIASTEREOISOMER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12553,7 +12553,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "ENANTIOMER-\u003eENANTIOMER",
-		"display": "ENANTIOMER-\u003e ENANTIOMER",
+		"display": "ENANTIOMER -\u003e ENANTIOMER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12561,7 +12561,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "ENANTIOMER-\u003eRACEMATE",
-		"display": "ENANTIOMER-\u003e RACEMATE",
+		"display": "ENANTIOMER -\u003e RACEMATE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12569,7 +12569,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "IMPURITY-\u003ePARENT",
-		"display": "IMPURITY-\u003e PARENT",
+		"display": "IMPURITY -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12577,7 +12577,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "INACTIVE ISOMER-\u003ePARENT",
-		"display": "INACTIVE ISOMER-\u003e PARENT",
+		"display": "INACTIVE ISOMER -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12585,7 +12585,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "INHIBITOR-\u003eTARGET",
-		"display": "INHIBITOR-\u003e TARGET",
+		"display": "INHIBITOR -\u003e TARGET",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12593,7 +12593,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "LABELED-\u003eNON-LABELED",
-		"display": "LABELED-\u003e NON-LABELED",
+		"display": "LABELED -\u003e NON-LABELED",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12601,7 +12601,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "LESS ACTIVE ISOMER-\u003ePARENT",
-		"display": "LESS ACTIVE ISOMER-\u003e PARENT",
+		"display": "LESS ACTIVE ISOMER -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12609,7 +12609,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLIC ENZYME-\u003eINDUCER",
-		"display": "METABOLIC ENZYME-\u003e INDUCER",
+		"display": "METABOLIC ENZYME -\u003e INDUCER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12617,7 +12617,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLIC ENZYME-\u003eINHIBITOR",
-		"display": "METABOLIC ENZYME-\u003e INHIBITOR",
+		"display": "METABOLIC ENZYME -\u003e INHIBITOR",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12625,7 +12625,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLIC ENZYME-\u003eSUBSTRATE",
-		"display": "METABOLIC ENZYME-\u003e SUBSTRATE",
+		"display": "METABOLIC ENZYME -\u003e SUBSTRATE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12633,7 +12633,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLITE ACTIVE-\u003ePARENT",
-		"display": "METABOLITE ACTIVE-\u003e PARENT",
+		"display": "METABOLITE ACTIVE -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12641,7 +12641,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLITE ACTIVE-\u003ePRODRUG",
-		"display": "METABOLITE ACTIVE-\u003e PRODRUG",
+		"display": "METABOLITE ACTIVE -\u003e PRODRUG",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12649,7 +12649,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eMETABOLITE",
-		"display": "PARENT-\u003e METABOLITE",
+		"display": "PARENT -\u003e METABOLITE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12657,7 +12657,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eMETABOLITE ACTIVE",
-		"display": "PARENT-\u003e METABOLITE ACTIVE",
+		"display": "PARENT -\u003e METABOLITE ACTIVE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12665,7 +12665,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eMETABOLITE INACTIVE",
-		"display": "PARENT-\u003e METABOLITE INACTIVE",
+		"display": "PARENT -\u003e METABOLITE INACTIVE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12673,7 +12673,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eMETABOLITE LESS ACTIVE",
-		"display": "PARENT-\u003e METABOLITE LESS ACTIVE",
+		"display": "PARENT -\u003e METABOLITE LESS ACTIVE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12681,7 +12681,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eMETABOLITE TOXIC",
-		"display": "PARENT-\u003e METABOLITE TOXIC",
+		"display": "PARENT -\u003e METABOLITE TOXIC",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12689,7 +12689,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eSALT/SOLVATE",
-		"display": "PARENT-\u003e SALT/SOLVATE",
+		"display": "PARENT -\u003e SALT/SOLVATE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12697,7 +12697,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PART/FRACTION-\u003ePARENT ORGANISM",
-		"display": "PART/FRACTION-\u003e PARENT ORGANISM",
+		"display": "PART/FRACTION -\u003e PARENT ORGANISM",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12705,7 +12705,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PRODRUG-\u003eMETABOLITE ACTIVE",
-		"display": "PRODRUG-\u003e METABOLITE ACTIVE",
+		"display": "PRODRUG -\u003e METABOLITE ACTIVE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12713,7 +12713,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PRODUCT COMPONENT-\u003ePRODUCT",
-		"display": "PRODUCT COMPONENT-\u003e PRODUCT",
+		"display": "PRODUCT COMPONENT -\u003e PRODUCT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12721,7 +12721,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "RACEMATE-\u003eACTIVE ENANTIOMER",
-		"display": "RACEMATE-\u003e ACTIVE ENANTIOMER",
+		"display": "RACEMATE -\u003e ACTIVE ENANTIOMER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12729,7 +12729,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "RACEMATE-\u003eENANTIOMER",
-		"display": "RACEMATE-\u003e ENANTIOMER",
+		"display": "RACEMATE -\u003e ENANTIOMER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12737,7 +12737,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "RACEMATE-\u003eINACTIVE ENANTIOMER",
-		"display": "RACEMATE-\u003e INACTIVE ENANTIOMER",
+		"display": "RACEMATE -\u003e INACTIVE ENANTIOMER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12745,7 +12745,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "RADIOISOTOPE-\u003eRADIOISOTOPE",
-		"display": "RADIOISOTOPE-\u003e RADIOISOTOPE",
+		"display": "RADIOISOTOPE -\u003e RADIOISOTOPE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12753,7 +12753,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "REGIOISOMER-\u003eREGIOISOMER",
-		"display": "REGIOISOMER-\u003e REGIOISOMER",
+		"display": "REGIOISOMER -\u003e REGIOISOMER",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12761,7 +12761,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "SALT/SOLVATE-\u003ePARENT",
-		"display": "SALT/SOLVATE-\u003e PARENT",
+		"display": "SALT/SOLVATE -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12769,7 +12769,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLITE INACTIVE-\u003ePARENT",
-		"display": "METABOLITE INACTIVE-\u003e PARENT",
+		"display": "METABOLITE INACTIVE -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12777,7 +12777,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLITE LESS ACTIVE-\u003ePARENT",
-		"display": "METABOLITE LESS ACTIVE-\u003e PARENT",
+		"display": "METABOLITE LESS ACTIVE -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12785,7 +12785,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLITE TOXIC-\u003ePARENT",
-		"display": "METABOLITE TOXIC-\u003e PARENT",
+		"display": "METABOLITE TOXIC -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12793,7 +12793,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "METABOLITE-\u003ePARENT",
-		"display": "METABOLITE-\u003e PARENT",
+		"display": "METABOLITE -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12801,7 +12801,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "SALT/SOLVATE-\u003eSALT/SOLVATE",
-		"display": "SALT/SOLVATE-\u003e SALT/SOLVATE",
+		"display": "SALT/SOLVATE -\u003e SALT/SOLVATE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12825,7 +12825,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "SUBSTANCE-\u003eSUB_CONCEPT",
-		"display": "SUBSTANCE-\u003e SUB_CONCEPT",
+		"display": "SUBSTANCE -\u003e SUB_CONCEPT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12833,7 +12833,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "TARGET-\u003eAGONIST",
-		"display": "TARGET-\u003e AGONIST",
+		"display": "TARGET -\u003e AGONIST",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12841,7 +12841,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "TARGET-\u003eINHIBITOR",
-		"display": "TARGET-\u003e INHIBITOR",
+		"display": "TARGET -\u003e INHIBITOR",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12849,7 +12849,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "TRANSPORTER-\u003eINHIBITOR",
-		"display": "TRANSPORTER-\u003e INHIBITOR",
+		"display": "TRANSPORTER -\u003e INHIBITOR",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12857,7 +12857,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "TRANSPORTER-\u003eSUBSTRATE",
-		"display": "TRANSPORTER-\u003e SUBSTRATE",
+		"display": "TRANSPORTER -\u003e SUBSTRATE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12889,7 +12889,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "ACTIVE ISOMER-\u003ePARENT",
-		"display": "ACTIVE ISOMER-\u003e PARENT",
+		"display": "ACTIVE ISOMER -\u003e PARENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12897,14 +12897,14 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "AGONIST-\u003eTARGET",
-		"display": "AGONIST-\u003e TARGET",
+		"display": "AGONIST -\u003e TARGET",
 		"hidden": false,
 		"selected": false,
 		"filters": []
 	}, {
 		"version": 1.0,
 		"deprecated": false,
-		"value": "BASIS OF STRENGTH-\u003e",
+		"value": "BASIS OF STRENGTH",
 		"display": "BASIS OF STRENGTH",
 		"hidden": false,
 		"selected": false,
@@ -12913,7 +12913,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eBIOSIMILAR",
-		"display": "PARENT-\u003e BIOSIMILAR",
+		"display": "PARENT -\u003e BIOSIMILAR",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12921,7 +12921,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eCONSTITUENT ALWAYS PRESENT",
-		"display": "PARENT-\u003e CONSTITUENT ALWAYS PRESENT",
+		"display": "PARENT -\u003e CONSTITUENT ALWAYS PRESENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12929,7 +12929,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eCONSTITUENT MAY BE PRESENT",
-		"display": "PARENT-\u003e CONSTITUENT MAY BE PRESENT",
+		"display": "PARENT -\u003e CONSTITUENT MAY BE PRESENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12937,7 +12937,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "NON-LABELED-\u003eLABELED",
-		"display": "NON-LABELED-\u003e LABELED",
+		"display": "NON-LABELED -\u003e LABELED",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12945,7 +12945,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT ORGANISM-\u003ePART/FRACTION",
-		"display": "PARENT ORGANISM-\u003e PART/FRACTION",
+		"display": "PARENT ORGANISM -\u003e PART/FRACTION",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12953,7 +12953,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eDEGRADENT",
-		"display": "PARENT-\u003e DEGRADENT",
+		"display": "PARENT -\u003e DEGRADENT",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12961,7 +12961,7 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eDERIVATIVE",
-		"display": "PARENT-\u003e DERIVATIVE",
+		"display": "PARENT -\u003e DERIVATIVE",
 		"hidden": false,
 		"selected": false,
 		"filters": []
@@ -12969,82 +12969,82 @@
 		"version": 1.0,
 		"deprecated": false,
 		"value": "PARENT-\u003eIMPURITY",
-		"display": "PARENT-\u003e IMPURITY",
+		"display": "PARENT -\u003e IMPURITY",
 		"hidden": false,
 		"selected": false,
 		"filters": []
 	}, {
 		"version": 1.0,
 		"value": "CONJUGATE COMPONENT-\u003eCONJUGATED ANTIGEN",
-		"display": "CONJUGATE COMPONENT-\u003eCONJUGATED ANTIGEN"
+		"display": "CONJUGATE COMPONENT -\u003e CONJUGATED ANTIGEN"
 	}, {
 		"version": 1.0,
 		"value": "CONJUGATED ANTIGEN-\u003eCONJUGATE COMPONENT",
-		"display": "CONJUGATED ANTIGEN-\u003eCONJUGATE COMPONENT"
+		"display": "CONJUGATED ANTIGEN -\u003e CONJUGATE COMPONENT"
 	}, {
 		"version": 1.0,
 		"value": "METABOLIC ENZYME-\u003eNON-SUBSTRATE",
-		"display": "METABOLIC ENZYME-\u003eNON-SUBSTRATE"
+		"display": "METABOLIC ENZYME -\u003e NON-SUBSTRATE"
 	}, {
 		"version": 1.0,
 		"value": "METABOLIC ENZYME-\u003eNON-INHIBITOR",
-		"display": "METABOLIC ENZYME-\u003eNON-INHIBITOR"
+		"display": "METABOLIC ENZYME -\u003e NON-INHIBITOR"
 	}, {
 		"version": 1.0,
 		"value": "NON-INHIBITOR-\u003eMETABOLIC ENZYME",
-		"display": "NON-INHIBITOR-\u003eMETABOLIC ENZYME"
+		"display": "NON-INHIBITOR -\u003e METABOLIC ENZYME"
 	}, {
 		"version": 1.0,
 		"value": "METABOLIC ENZYME-\u003eNON-INDUCER",
-		"display": "METABOLIC ENZYME-\u003eNON-INDUCER"
+		"display": "METABOLIC ENZYME -\u003e NON-INDUCER"
 	}, {
 		"version": 1.0,
 		"value": "NON-INDUCER-\u003eMETABOLIC ENZYME",
-		"display": "NON-INDUCER-\u003eMETABOLIC ENZYME"
+		"display": "NON-INDUCER -\u003e METABOLIC ENZYME"
 	}, {
 		"version": 1.0,
 		"value": "TRANSPORTER-\u003eNON-INHIBITOR",
-		"display": "TRANSPORTER-\u003eNON-INHIBITOR"
+		"display": "TRANSPORTER -\u003e NON-INHIBITOR"
 	}, {
 		"version": 1.0,
 		"value": "CONJUGATE-\u003ePARENT",
-		"display": "CONJUGATE-\u003ePARENT"
+		"display": "CONJUGATE -\u003e PARENT"
 	}, {
 		"version": 1.0,
 		"value": "PARENT-\u003eCONJUGATE",
-		"display": "PARENT-\u003eCONJUGATE"
+		"display": "PARENT -\u003e CONJUGATE"
 	}, {
 		"version": 1.0,
 		"value": "LIPID-\u003eFATTY ACID",
-		"display": "LIPID-\u003eFATTY ACID"
+		"display": "LIPID -\u003e FATTY ACID"
 	}, {
 		"version": 1.0,
 		"value": "FATTY ACID-\u003eLIPID",
-		"display": "FATTY ACID-\u003eLIPID"
+		"display": "FATTY ACID -\u003e LIPID"
 	}, {
 		"version": 1.0,
 		"value": "PRODUCT-\u003ePRODUCT COMPONENT",
-		"display": "PRODUCT-\u003ePRODUCT COMPONENT"
+		"display": "PRODUCT -\u003e PRODUCT COMPONENT"
 	}, {
 		"version": 1.0,
 		"value": "INHIBITOR RESISTANT-\u003eTARGET",
-		"display": "INHIBITOR RESISTANT-\u003eTARGET"
+		"display": "INHIBITOR RESISTANT -\u003e TARGET"
 	}, {
 		"version": 1.0,
 		"value": "TARGET-\u003eINHIBITOR RESISTANT",
-		"display": "TARGET-\u003eINHIBITOR RESISTANT"
+		"display": "TARGET -\u003e INHIBITOR RESISTANT"
 	}, {
 		"version": 1.0,
 		"value": "TOXIN-\u003eCONJUGATE",
-		"display": "TOXIN-\u003eCONJUGATE"
+		"display": "TOXIN -\u003e CONJUGATE"
 	}, {
 		"version": 1.0,
 		"value": "TARGET-\u003eSUBSTRATE",
-		"display": "TARGET-\u003eSUBSTRATE"
+		"display": "TARGET -\u003e SUBSTRATE"
 	}, {
 		"version": 1.0,
 		"value": "SUBSTRATE-\u003eTARGET",
-		"display": "SUBSTRATE-\u003eTARGET"
+		"display": "SUBSTRATE -\u003e TARGET"
 	}, {
 		"version": 1.0,
 		"value": "IONIC MOIETY",
@@ -13052,27 +13052,27 @@
 	}, {
 		"version": 1.0,
 		"value": "ACTIVE CONSTITUENT ALWAYS PRESENT-\u003ePARENT",
-		"display": "ACTIVE CONSTITUENT ALWAYS PRESENT-\u003ePARENT"
+		"display": "ACTIVE CONSTITUENT ALWAYS PRESENT -\u003e PARENT"
 	}, {
 		"version": 1.0,
 		"value": "TISSUE EXPRESSION-\u003ePARENT",
-		"display": "TISSUE EXPRESSION-\u003ePARENT"
+		"display": "TISSUE EXPRESSION -\u003e PARENT"
 	}, {
 		"version": 1.0,
 		"value": "ACTIVATOR-\u003eTARGET",
-		"display": "ACTIVATOR-\u003eTARGET"
+		"display": "ACTIVATOR -\u003e TARGET"
 	}, {
 		"version": 1.0,
 		"value": "TARGET-\u003eACTIVATOR",
-		"display": "TARGET-\u003eACTIVATOR"
+		"display": "TARGET -\u003e ACTIVATOR"
 	}, {
 		"version": 1.0,
 		"value": "PARENT ORGANISM-\u003eINFRASPECIFIC",
-		"display": "PARENT ORGANISM-\u003eINFRASPECIFIC"
+		"display": "PARENT ORGANISM -\u003e INFRASPECIFIC"
 	}, {
 		"version": 1.0,
 		"value": "CONJUGATE-\u003eTOXIN",
-		"display": "CONJUGATE-\u003eTOXIN"
+		"display": "CONJUGATE -\u003e TOXIN"
 	}, {
 		"version": 1.0,
 		"value": "ACTIVE CONSTITUENT ALWAYS PRESENT",
@@ -13080,19 +13080,19 @@
 	}, {
 		"version": 1.0,
 		"value": "POSSIBLE ACTIVE CONSTITUENT ALWAYS PRESENT-\u003ePARENT",
-		"display": "POSSIBLE ACTIVE CONSTITUENT ALWAYS PRESENT-\u003ePARENT"
+		"display": "POSSIBLE ACTIVE CONSTITUENT ALWAYS PRESENT -\u003e PARENT"
 	}, {
 		"version": 1.0,
 		"value": "PARENT-\u003ePOSSIBLE ACTIVE CONSTITUENT ALWAYS PRESENT",
-		"display": "PARENT-\u003ePOSSIBLE ACTIVE CONSTITUENT ALWAYS PRESENT"
+		"display": "PARENT -\u003e POSSIBLE ACTIVE CONSTITUENT ALWAYS PRESENT"
 	}, {
 		"version": 1.0,
 		"value": "PARENT-\u003eACTIVE CONSTITUENT ALWAYS PRESENT",
-		"display": "PARENT-\u003eACTIVE CONSTITUENT ALWAYS PRESENT"
+		"display": "PARENT -\u003e ACTIVE CONSTITUENT ALWAYS PRESENT"
 	}, {
 		"version": 1.0,
 		"value": "FOOD-\u003eDRUG INTERACTION",
-		"display": "FOOD-\u003eDRUG INTERACTION"
+		"display": "FOOD -\u003e DRUG INTERACTION"
 	}, {
 		"version": 1.0,
 		"value": "HOST_ORGANISM",
@@ -13100,47 +13100,47 @@
 	}, {
 		"version": 1.0,
 		"value": "SUBSTRATE-\u003eMETABOLIC ENZYME",
-		"display": "SUBSTRATE-\u003eMETABOLIC ENZYME"
+		"display": "SUBSTRATE -\u003e METABOLIC ENZYME"
 	}, {
 		"version": 1.0,
 		"value": "TREATMENT REGIMEN-\u003eDRUG",
-		"display": "TREATMENT REGIMEN-\u003eDRUG"
+		"display": "TREATMENT REGIMEN -\u003e DRUG"
 	}, {
 		"version": 1.0,
 		"value": "STARTING MATERIAL-\u003eINGREDIENT",
-		"display": "STARTING MATERIAL-\u003eINGREDIENT"
+		"display": "STARTING MATERIAL -\u003e INGREDIENT"
 	}, {
 		"version": 1.0,
 		"value": "INGREDIENT-\u003eSTARTING MATERIAL",
-		"display": "INGREDIENT-\u003eSTARTING MATERIAL"
+		"display": "INGREDIENT -\u003e STARTING MATERIAL"
 	}, {
 		"version": 1.0,
 		"value": "INTERMEDIATE-\u003eINGREDIENT",
-		"display": "INTERMEDIATE-\u003eINGREDIENT"
+		"display": "INTERMEDIATE -\u003e INGREDIENT"
 	}, {
 		"version": 1.0,
 		"value": "INGREDIENT-\u003eINTERMEDIATE",
-		"display": "INGREDIENT-\u003eINTERMEDIATE"
+		"display": "INGREDIENT -\u003e INTERMEDIATE"
 	}, {
 		"version": 1.0,
 		"value": "TARGET-\u003eINDUCER",
-		"display": "TARGET-\u003eINDUCER"
+		"display": "TARGET -\u003e INDUCER"
 	}, {
 		"version": 1.0,
 		"value": "INDUCER-\u003eTARGET",
-		"display": "INDUCER-\u003eTARGET"
+		"display": "INDUCER -\u003e TARGET"
 	}, {
 		"version": 1.0,
 		"value": "INDUCER-\u003eMETABOLIC ENZYME",
-		"display": "INDUCER-\u003eMETABOLIC ENZYME"
+		"display": "INDUCER -\u003e METABOLIC ENZYME"
 	}, {
 		"version": 1.0,
 		"value": "NON-INHIBITOR-\u003eTRANSPORTER",
-		"display": "NON-INHIBITOR-\u003eTRANSPORTER"
+		"display": "NON-INHIBITOR -\u003e TRANSPORTER"
 	}, {
 		"version": 1.0,
 		"value": "INFRASPECIFIC-\u003ePARENT ORGANISM",
-		"display": "INFRASPECIFIC-\u003ePARENT ORGANISM"
+		"display": "INFRASPECIFIC -\u003e PARENT ORGANISM"
 	}, {
 		"version": 1.0,
 		"value": "MOLECULAR FRAGMENT",
@@ -13148,27 +13148,27 @@
 	}, {
 		"version": 1.0,
 		"value": "INHIBITOR-\u003eMETABOLIC ENZYME",
-		"display": "INHIBITOR-\u003eMETABOLIC ENZYME"
+		"display": "INHIBITOR -\u003e METABOLIC ENZYME"
 	}, {
 		"version": 1.0,
 		"value": "NON-SUBSTRATE-\u003eTRANSPORTER",
-		"display": "NON-SUBSTRATE-\u003eTRANSPORTER"
+		"display": "NON-SUBSTRATE -\u003e TRANSPORTER"
 	}, {
 		"version": 1.0,
 		"value": "TRANSPORTER-\u003eNON-SUBSTRATE",
-		"display": "TRANSPORTER-\u003eNON-SUBSTRATE"
+		"display": "TRANSPORTER -\u003e NON-SUBSTRATE"
 	}, {
 		"version": 1.0,
 		"value": "NON-SUBSTRATE-\u003eMETABOLIC ENZYME",
-		"display": "NON-SUBSTRATE-\u003eMETABOLIC ENZYME"
+		"display": "NON-SUBSTRATE -\u003e METABOLIC ENZYME"
 	}, {
 		"version": 1.0,
 		"value": "NON-INDUCER-\u003eTRANSPORTER",
-		"display": "NON-INDUCER-\u003eTRANSPORTER"
+		"display": "NON-INDUCER -\u003e TRANSPORTER"
 	}, {
 		"version": 1.0,
 		"value": "SPECIFIED SUBSTANCE-\u003e_",
-		"display": "SPECIFIED SUBSTANCE-\u003e_"
+		"display": "SPECIFIED SUBSTANCE -\u003e _"
 	}, {
 		"version": 1.0,
 		"value": "UNSPECIFIED INGREDIENT",
@@ -13180,7 +13180,7 @@
 	}, {
 		"version": 1.0,
 		"value": "MORE ACTIVE ISOMER-\u003ePARENT",
-		"display": "MORE ACTIVE ISOMER-\u003ePARENT"
+		"display": "MORE ACTIVE ISOMER -\u003e PARENT"
 	}, {
 		"version": 1.0,
 		"value": "EXCRETED UNCHANGED",
@@ -13188,27 +13188,27 @@
 	}, {
 		"version": 1.0,
 		"value": "DIASTEREOISOMER-\u003eEPIMER",
-		"display": "DIASTEREOISOMER-\u003eEPIMER"
+		"display": "DIASTEREOISOMER -\u003e EPIMER"
 	}, {
 		"version": 1.0,
 		"value": "EPIMER-\u003eDIASTEREOISOMER",
-		"display": "EPIMER-\u003eDIASTEREOISOMER"
+		"display": "EPIMER -\u003e DIASTEREOISOMER"
 	}, {
 		"version": 1.0,
 		"value": "TRANSPORTER-\u003eINDUCER",
-		"display": "TRANSPORTER-\u003eINDUCER"
+		"display": "TRANSPORTER -\u003e INDUCER"
 	}, {
 		"version": 1.0,
 		"value": "INDUCER-\u003eTRANSPORTER",
-		"display": "INDUCER-\u003eTRANSPORTER"
+		"display": "INDUCER -\u003e TRANSPORTER"
 	}, {
 		"version": 1.0,
 		"value": "INHIBITOR-\u003eTRANSPORTER",
-		"display": "INHIBITOR-\u003eTRANSPORTER"
+		"display": "INHIBITOR -\u003e TRANSPORTER"
 	}, {
 		"version": 1.0,
 		"value": "SUBSTRATE-\u003eTRANSPORTER",
-		"display": "SUBSTRATE-\u003eTRANSPORTER"
+		"display": "SUBSTRATE -\u003e TRANSPORTER"
 	}],
 	"fields": ["relationships.type"]
 }, {
