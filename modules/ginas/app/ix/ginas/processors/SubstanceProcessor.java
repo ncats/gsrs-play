@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 import javax.persistence.PrePersist;
 
@@ -114,20 +115,43 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 					Logger.debug("Enforcing bidirectional relationship");
 					//remove old references
 					for(final Substance oldPri: realPrimarysubs){
+						if(oldPri ==null){
+							continue;
+						}
 						Logger.debug("Removing stale bidirectional relationships");
-						EntityPersistAdapter.performChange(oldPri, new Callable(){
+//						EntityPersistAdapter.performChange(oldPri, new Callable(){
+//
+//							@Override
+//							public Object call() throws Exception {
+//								List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+//								for(Relationship r:related){
+//									r.delete();
+//								}
+//								oldPri.forceUpdate();
+//								return null;
+//							}
+//
+//						});
 
-							@Override
-							public Object call() throws Exception {
-								List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
-								for(Relationship r:related){
-									r.delete();
+						EntityPersistAdapter.performChange(oldPri.getOrGenerateUUID().toString(), new Supplier<Substance>() {
+
+
+									@Override
+									public Substance get() {
+										return oldPri;
+									}
+								},
+								new EntityPersistAdapter.ChangeOperation<Substance>() {
+									@Override
+									public void apply(Substance obj) throws Exception {
+										List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+										for(Relationship r:related){
+											r.delete();
+										}
+										oldPri.forceUpdate();
+									}
 								}
-								oldPri.forceUpdate();
-								return null;
-							}
-							
-						});
+						);
 						
 						
 					}
@@ -143,19 +167,37 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 						if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
 							final Substance subPrimaryFinal=subPrimary;
 							Logger.debug("Going to save");
-							
-							EntityPersistAdapter.performChange(subPrimary, new Callable(){
+//
+//							EntityPersistAdapter.performChange(subPrimary, new Callable(){
+//
+//								@Override
+//								public Object call() throws Exception {
+//									if(!subPrimaryFinal.addAlternativeSubstanceDefinitionRelationship(s)){
+//										Logger.info("Saving alt definition, now has:" + subPrimaryFinal.getAlternativeDefinitionReferences().size());
+//									}
+//									subPrimaryFinal.forceUpdate();
+//									return null;
+//								}
+//
+//							});
 
-								@Override
-								public Object call() throws Exception {
-									if(!subPrimaryFinal.addAlternativeSubstanceDefinitionRelationship(s)){
-										Logger.info("Saving alt definition, now has:" + subPrimaryFinal.getAlternativeDefinitionReferences().size());
+							EntityPersistAdapter.performChange(subPrimary.getOrGenerateUUID().toString(), new Supplier<Substance>() {
+										@Override
+										public Substance get() {
+											return subPrimaryFinal;
+										}
+									},
+
+									new EntityPersistAdapter.ChangeOperation<Substance>() {
+										@Override
+										public void apply(Substance obj) throws Exception {
+											if(!subPrimaryFinal.addAlternativeSubstanceDefinitionRelationship(s)){
+												Logger.info("Saving alt definition, now has:" + subPrimaryFinal.getAlternativeDefinitionReferences().size());
+											}
+											subPrimaryFinal.forceUpdate();
+										}
 									}
-									subPrimaryFinal.forceUpdate();
-									return null;
-								}
-								
-							});
+							);
 							
 						}
 					}

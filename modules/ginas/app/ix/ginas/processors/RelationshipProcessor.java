@@ -3,6 +3,8 @@ package ix.ginas.processors;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
@@ -41,20 +43,57 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			final SubstanceReference oldSub=obj.fetchOwner().asSubstanceReference();
 			final Substance newSub=SubstanceFactory.getFullSubstance(obj.relatedSubstance);
 			
-			EntityPersistAdapter.performChange(newSub,new Callable(){
-				@Override
-				public Object call() throws Exception {
-					//System.out.println("Performing change");
-					if(createAndAddInvertedRelationship(obj,oldSub,newSub)!=null){
-						//System.out.println("Forcing update");
-						newSub.forceUpdate();	
-						//System.out.println("Done");
-					}else{
-						//System.out.println("Failed to create");
+//			EntityPersistAdapter.performChange(newSub,new Callable(){
+//				@Override
+//				public Object call() throws Exception {
+//					//System.out.println("Performing change");
+//					if(createAndAddInvertedRelationship(obj,oldSub,newSub)!=null){
+//						//System.out.println("Forcing update");
+//						newSub.forceUpdate();
+//						//System.out.println("Done");
+//					}else{
+//						//System.out.println("Failed to create");
+//					}
+//					return null;
+//				}
+//			});
+			if(newSub ==null){
+				return;
+			}
+			EntityPersistAdapter.performChange(
+					newSub.getOrGenerateUUID().toString(),
+					new Supplier<Substance>() {
+                           @Override
+                           public Substance get() {
+                               return SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+                           }
+                       },
+
+					new EntityPersistAdapter.ChangeOperation<Substance>() {
+						@Override
+						public void apply(Substance s) throws Exception {
+							if (createAndAddInvertedRelationship(obj, oldSub, s) != null) {
+								//System.out.println("Forcing update");
+								s.forceUpdate();
+							}
+						}
 					}
-					return null;
-				}
-			});
+			);
+
+			//Java 8 version which uses lambdas
+			//can't use it now like this because the version
+			//of play and ebean we are using can't handle java 8 features
+//			EntityPersistAdapter.performChange(
+//					obj.relatedSubstance.refuuid,
+//					() ->  SubstanceFactory.getFullSubstance(obj.relatedSubstance),
+//
+//					(s) -> {
+//						if (createAndAddInvertedRelationship(obj, oldSub, s) != null) {
+//							//System.out.println("Forcing update");
+//							s.forceUpdate();
+//						}
+//					}
+//					);
 			
 			
 		}
@@ -124,15 +163,32 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 					r1.setOkToRemove();
 					//System.out.println("Removing:" + r1.uuid);
 					final Substance osub=r1.fetchOwner();
-					EntityPersistAdapter.performChange(osub,new Callable(){
-						@Override
-						public Object call() throws Exception {
-							EntityPersistAdapter.storeEditForPossibleUpdate(osub);
-							r1.delete();
-							osub.forceUpdate();
-							return null;
-						}
-					});
+//					EntityPersistAdapter.performChange(osub,new Callable(){
+//						@Override
+//						public Object call() throws Exception {
+//							EntityPersistAdapter.storeEditForPossibleUpdate(osub);
+//							r1.delete();
+//							osub.forceUpdate();
+//							return null;
+//						}
+//					});
+					if(osub !=null) {
+						EntityPersistAdapter.performChange(osub.getOrGenerateUUID().toString(), new Supplier<Substance>() {
+
+									@Override
+									public Substance get() {
+										return osub;
+									}
+								},
+								new EntityPersistAdapter.ChangeOperation<Substance>() {
+									@Override
+									public void apply(Substance obj) throws Exception {
+										r1.delete();
+										osub.forceUpdate();
+									}
+								}
+						);
+					}
 					
 				}
 			}
