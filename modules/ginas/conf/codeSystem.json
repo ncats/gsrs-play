@@ -1,38 +1,38 @@
 [
 	{
-	"codeSystem":"CAS",
-	"url":"http://chem.sis.nlm.nih.gov/chemidplus/direct.jsp?regno=$CODE$&result=advanced"
+		"codeSystem":"CAS",
+		"url":"http://chem.sis.nlm.nih.gov/chemidplus/direct.jsp?regno=$CODE$&result=advanced"
 	},
 	{
-	"codeSystem":"ITIS",
-	"url":"http://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=$CODE$"
+		"codeSystem":"ITIS",
+		"url":"http://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=$CODE$"
 	},
 	{
-	"codeSystem":"NCBI TAXONOMY",
-	"url":"http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=$CODE$"
+		"codeSystem":"NCBI TAXONOMY",
+		"url":"http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=$CODE$"
 	},
 	{
-	"codeSystem":"USDA PLANTS",
-	"url":"http://plants.usda.gov/java/profile?symbol=$CODE$"
+		"codeSystem":"USDA PLANTS",
+		"url":"http://plants.usda.gov/java/profile?symbol=$CODE$"
 	},
 	{
-	"codeSystem":"NCI_THESAURUS",
-	"url":"http://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI%20Thesaurus&code=$CODE$"
+		"codeSystem":"NCI_THESAURUS",
+		"url":"http://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI%20Thesaurus&code=$CODE$"
 	},
 	{
-	"codeSystem":"MESH",
-	"url":"http://www.ncbi.nlm.nih.gov/mesh/$CODE$"
+		"codeSystem":"MESH",
+		"url":"http://www.ncbi.nlm.nih.gov/mesh/$CODE$"
 	},
 	{
-	"codeSystem":"INN",
-	"url":"http://mednet.who.int/inn/db/ViewINN.aspx?i=$CODE$"
+		"codeSystem":"INN",
+		"url":"http://mednet.who.int/inn/db/ViewINN.aspx?i=$CODE$"
 	},
 	{
-	"codeSystem":"MERCK INDEX",
-	"url":"https://www.rsc.org/Merck-Index/monograph/$CODE$"
+		"codeSystem":"MERCK INDEX",
+		"url":"https://www.rsc.org/Merck-Index/monograph/$CODE$"
 	},
 	{
-	"codeSystem":"GRIN",
-	"url":"http://www.ars-grin.gov/cgi-bin/npgs/html/taxon.pl?$CODE$"
+		"codeSystem":"GRIN",
+		"url":"http://www.ars-grin.gov/cgi-bin/npgs/html/taxon.pl?$CODE$"
 	}
 ]
