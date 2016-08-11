@@ -3,13 +3,14 @@ package ix.core.adapters;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.persistence.Entity;
 import javax.persistence.PostLoad;
@@ -51,7 +52,58 @@ import play.db.ebean.Model;
 import tripod.chem.indexer.StructureIndexer;
 
 public class EntityPersistAdapter extends BeanPersistAdapter{
-   
+
+    private static class MyLock{
+        private Counter count = new Counter();
+        private ReentrantLock lock = new ReentrantLock();
+
+
+        private final String refId;
+
+        public MyLock(String refId) {
+            this.refId = refId;
+        }
+
+
+        public void acquire(){
+            synchronized (count){
+                count.increment();
+            }
+            lock.lock();
+        }
+
+        public void release(){
+            synchronized (count) {
+                count.decrementAndGet();
+            }
+            lock.unlock();
+            synchronized (count) {
+                int value = count.intValue();
+                if(value ==0){
+                    //no more blocking records?
+                    //remove ourselves from the map to free memory
+                    EntityPersistAdapter.lockMap.remove(refId);
+                }
+            }
+        }
+    }
+
+    private static class Counter{
+        private int count;
+
+        public void increment(){
+            count++;
+        }
+
+        public int decrementAndGet(){
+            return --count;
+        }
+
+        public int intValue(){
+            return count;
+        }
+    }
+
 	private static EntityPersistAdapter _instance =null;
 	
 	
@@ -66,7 +118,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     private Map<Class<?>, List<EntityProcessor>> extraProcessors=new HashMap<>();
     
-    
+    private static Map<String, MyLock> lockMap;
     
     private TextIndexerPlugin textIndexerPlugin =
             Play.application().plugin(TextIndexerPlugin.class);
@@ -94,7 +146,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 
         editMap = new ConcurrentHashMap<>();
 
-
+        lockMap = new ConcurrentHashMap<>();
     }
 
     public static Edit storeEditForPossibleUpdate(Object bean){
@@ -109,19 +161,50 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     	storeEditForUpdate(cls,id,e);
     	return e;
     }
-    
-    public static void performChange(Object bean, final Callable change){
-    	Edit e=storeEditForPossibleUpdate(bean);
-    	if(e==null)return;
-    	try{
-    		change.call();
-    	}catch(Exception t){
-    		t.printStackTrace();
-    		throw new IllegalStateException(t);
-    	}finally{
-    		popEditForUpdate(e.getClass(),e.refid);
-    	}
+
+    public interface ChangeOperation<T>{
+        void apply(T obj) throws Exception;
     }
+
+    public static <T> void performChange(String id, Supplier<T> objSupplier, ChangeOperation<T> changeOp){
+       // Objects.requireNonNull(id);
+        Objects.requireNonNull(objSupplier);
+        Objects.requireNonNull(changeOp);
+
+        MyLock lock = lockMap.computeIfAbsent(id, k -> new MyLock(k));
+
+        lock.acquire();
+        T bean = objSupplier.get();
+        Edit e=null;
+        try{
+            e=storeEditForPossibleUpdate(bean);
+            if(e ==null){
+                return;
+            }
+            changeOp.apply(bean);
+        }catch(Exception ex){
+            ex.printStackTrace();
+            throw new IllegalStateException(ex);
+        }finally{
+            if(e !=null) {
+                popEditForUpdate(e.getClass(), e.refid);
+            }
+            lock.release();
+        }
+    }
+
+//    public static void performChange(Object bean, final Callable change){
+//    	Edit e=storeEditForPossibleUpdate(bean);
+//    	if(e==null)return;
+//    	try{
+//    		change.call();
+//    	}catch(Exception t){
+//    		t.printStackTrace();
+//    		throw new IllegalStateException(t);
+//    	}finally{
+//    		popEditForUpdate(e.getClass(),e.refid);
+//    	}
+//    }
     
     
     private static void storeEditForUpdate(Class c, Object id, Edit e){
