@@ -1,39 +1,37 @@
-<div class="row info">
-    <div class="row">
-        <form-header type="physicalParameter" parent="substance"></form-header>
-        <close-button></close-button>
-    </div>
-    <div class="col-md-12">
+<div class="row">
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="physicalParameterForm" id="addPhysicalParameterForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-2">
-                    <gsrs-input type="text" ng-model="physicalParameter.parameterName" field="parameterName" label ="Parameter Name" />
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj="physicalParameter" divid="physicalParameterForm" type="amount"></form-selector>
-                </div>
+            <div ng-repeat="(index,obj) in parent.parameters">
+                <ng-form name="form">
+                    <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
+                        <div class="row">
+                            <h1>{{param}}</h1>
+                            <div class="col-md-1 text-center">
+                                <delete-button delete="obj" path="parameters"></delete-button>
+                            </div>
+                            <div class="col-md-4">
+                                <gsrs-input type="text"
+                                            ng-model=obj.parameterName
+                                            field="parameterName"
+                                            label="Parameter Name">
+                                </gsrs-input>
+                            </div>
+                            <div class="col-md-3">
+                                <modal-form-button type="amount"
+                                                   referenceobj="obj"
+                                                   field="amount"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </ng-form>
             </div>
-            <div class="row">
-                <div class="col-md-2 pull-right">
-                    <a ng-click="physicalParameter=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate();"><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </div>
-            <div class="physicalParameterForm"></div>
         </form>
-        <div class="row" ng-repeat="(index, param) in referenceobj.physicalParameters track by $index">
-            <hr>
-            <div class="col-md-1">
-                <a ng-click="deleteObj(param, referenceobj.physicalParameters)"><i class="fa fa-times fa-2x danger"></i></a>
-            </div>
-            <div class="col-md-2">
-                <text-view-edit obj="param" field="parameterName" label ="Parameter Name"></text-view-edit>
-            </div>
-            <div class="col-md-1">
-                <form-selector referenceobj="param" parent="substance" formname="physicalParameterForm" type="amount"
-                               divid=physical-param-{{index}}></form-selector>
-            </div>
-        </div>
-        <div class=physical-param-{{index}}></div>
+        <button class="btn btn-primary" ng-click="addNew(physicalParameterForm, 'parameters')"><i class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.parameters.length>0">nother</span> parameter
+        </button>
     </div>
 </div>

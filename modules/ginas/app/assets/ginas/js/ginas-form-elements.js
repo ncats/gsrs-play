@@ -1088,7 +1088,11 @@
                                     templateurl =  baseurl + "assets/templates/modals/name-org-modal.html";
                                     break;
                                 case "parameter":
-                                    templateurl =  baseurl + "assets/templates/modals/parameter-modal.html";
+                                    if($attrs.param){
+                                        templateurl =  baseurl + "assets/templates/modals/physical-parameter-modal.html";
+                                    }else {
+                                        templateurl = baseurl + "assets/templates/modals/parameter-modal.html";
+                                    }
                                     break;
                                 case "reference":
                                     templateurl =  baseurl + "assets/templates/modals/reference-modal.html";

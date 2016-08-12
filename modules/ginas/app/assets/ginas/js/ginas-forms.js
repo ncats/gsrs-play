@@ -1129,10 +1129,11 @@
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '=?'
+                referenceobj: '=?',
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
             link: function (scope) {
+                console.log(scope);
             }
         };
     });
@@ -1184,7 +1185,7 @@
                 parent: '=',
                 referenceobj: '=?'// this is the object from the form that is getting the parameter added to it
             },
-            templateUrl: baseurl + "assets/templates/forms/physical-parameter-form.html",
+            templateUrl: baseurl + "assets/templates/forms/physical-parameter-form.html"
         };
     });
 
