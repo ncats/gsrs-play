@@ -107,7 +107,6 @@ public class NCATSAuthentication extends Controller {
         }
         
         String context = Play.application().configuration().getString("application.context");
-        Logger.debug("context:" + context);
         return redirect(context);
     }
 }

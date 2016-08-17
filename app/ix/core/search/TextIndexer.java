@@ -604,7 +604,7 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
-            	//Util.debugSpin(100);
+            //	Util.debugSpin(10);
             
             //}
             //System.out.println("added:" + matches.size());
@@ -1099,8 +1099,6 @@ public class TextIndexer implements Closeable{
 
 		private void flush() {
 			
-        	
-        	//Util.debugSpin(20);
             File file = getFacetsConfigFile ();
             if (file.lastModified() < lastModified.get()) {
                 Logger.debug(Thread.currentThread()

@@ -946,6 +946,7 @@ public class EntityFactory extends Controller {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest("Only POST is accepted!");
         }
+        
         String returnType=request().getQueryString(RESPONSE_TYPE_PARAMETER);
         
         RESPONSE_TYPE rept= RESPONSE_TYPE.MESSAGES;
@@ -955,6 +956,7 @@ public class EntityFactory extends Controller {
         }catch(Exception e){
         	
         }
+        
         String content = request().getHeader("Content-Type");
         if (content == null
             || (content.indexOf("application/json") < 0 && content
@@ -963,8 +965,8 @@ public class EntityFactory extends Controller {
         }
 
         try {
+        	
             ObjectMapper mapper = new ObjectMapper();
-            
             mapper.addHandler(new DeserializationProblemHandler() {
                     public boolean handleUnknownProperty(
                                                          DeserializationContext ctx, JsonParser parser,
@@ -1502,12 +1504,8 @@ public class EntityFactory extends Controller {
 	            //Get the difference as a patch
 	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
 	            
-//	            for(Object c:patch.getChanges()){
-//	            	System.out.println("Change was:" + c.toString());
-//	            }
 	            
 	            final List<Object> removed = new ArrayList<Object>();
-	            //System.out.println("Test");
 	            //Apply the changes, grabbing every change along the way
 	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
 					@Override

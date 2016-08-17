@@ -1,8 +1,11 @@
 package ix.ginas.controllers;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -402,9 +405,6 @@ public class GinasApp extends App {
     public static Result sequenceSearch () {
 
         if (request().body().isMaxSizeExceeded()) {
-        	System.out.println("Too big a sequence, cuz it's:" +
-        			request().body().asFormUrlEncoded()
-        			);
             return badRequest ("Sequence is too large!");
         }
         
@@ -446,7 +446,7 @@ public class GinasApp extends App {
         return ok (ix.ginas.views.html.admin.profile.render(user));
     }
     
-   @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
         String type = request().getQueryString("type");
@@ -503,6 +503,51 @@ public class GinasApp extends App {
             ex.printStackTrace();
             return _internalServerError(ex);
         }
+    }
+   
+   
+   public static enum ExportFormat{
+	   SDF,
+	   JSON_DUMP,
+	   CSV,
+	   EXCEL;
+	   public static ExportFormat getValue(String val){
+		   try{
+			   return ExportFormat.valueOf(val);
+		   }catch(Exception e){
+			   return SDF;
+		   }
+	   }
+	   
+   }
+   
+    public static Result export (String collectionID, String format) {
+    	
+    	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    	ExportFormat ef = ExportFormat.getValue(format.toUpperCase());
+    	FileExporter<Substance> fe = null;
+    	switch(ef){
+    		case SDF:
+    			fe = new SDFExporter();
+    			break;
+    		default:
+    			throw new IllegalStateException("Format not yet supported");
+    	}
+    	SearchResultContext src = App.getForKey(collectionID);
+    	if(src==null){
+    		throw new IllegalStateException("Result set not found");
+    	}
+    	
+    	//currently stores it in memory, which it really shouldn't do
+    	//could dump to temp file
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	for(Object o:src.getResults()){
+    		fe.addToSteam((Substance)o, baos);	
+    	}
+    	String fname = "export-" +sdf.format(new Date()) + "." + fe.getExtension();
+    	response().setContentType("application/x-download");  
+    	response().setHeader("Content-disposition","attachment; filename=" + fname);
+    	return ok(baos.toByteArray());
     }
 
     public static Result sequences (final String q,
@@ -631,7 +676,7 @@ public class GinasApp extends App {
         
         
         
-        final String sha1 = signature (qcache, params);
+        final String sha1 = App.getKeyForCurrentRequest();
         String[] order = params.get("order");
         if(order==null || order.length<=0){
         	order=new String[]{"$lastEdited"};
@@ -903,7 +948,6 @@ public class GinasApp extends App {
     
         public static Result lychimatch(final String query, int rows, int page, boolean exact) {
         	
-        		//System.out.println("Page is:" + page);
                 try{
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
                         String hash=struc2.getLychiv3Hash();
@@ -1472,6 +1516,36 @@ public class GinasApp extends App {
         
     }
     
+    
+    public static interface FileExporter<K>{
+    	public void addToSteam(K k1, OutputStream os);
+    	public String getExtension();
+    }
+    
+    public static class SDFExporter implements FileExporter<Substance>{
+    	
+    	public void addToSteam(Substance k1, OutputStream os){
+    		//c = GinasUtils.substanceToChemical(s, messages);
+    		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+    		try{
+    			Chemical c = GinasUtils.substanceToChemical(k1, messages);
+    			String sdf=formatMolfile(c,Chemical.FORMAT_SDF);
+        		os.write(sdf.getBytes("UTF-8"));
+        		os.write("\n".getBytes());
+    		}catch(Exception e){
+    			e.printStackTrace();
+    		}
+    		//GinasUtils.structureToChemical(struc, messages);
+    		
+    	}
+    	public String getExtension(){
+    		return "sdf";
+    	}
+    }
+    
+    
+    
+    
     /**
      * Converts a structure of substance to a chemical structure
      * format. Warnings are put into the header at "EXPORT-WARNINGS"
@@ -1484,7 +1558,7 @@ public class GinasApp extends App {
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result structureExport (final String id,
                                     final String format, final String context) {
-        List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+    	List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
         
         
         
@@ -1498,11 +1572,7 @@ public class GinasApp extends App {
                 c = GinasUtils.structureToChemical(struc, messages);
                 
         }else{
-                if(s instanceof ProteinSubstance){
-                        p=((ProteinSubstance)s).protein;
-                }else{
-                        c = GinasUtils.substanceToChemical(s, messages);
-                }
+                c = GinasUtils.substanceToChemical(s, messages);
         }
         
         
@@ -1511,10 +1581,6 @@ public class GinasApp extends App {
         Logger.debug("SERIALIZED:" + om.valueToTree(messages).toString());
         response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
                 try {
-                    /*
-                     * really?
-                     * 
-                     */
                     if (format.equalsIgnoreCase("mol")){
                         return ok(formatMolfile(c,Chemical.FORMAT_MOL));
                     }else if (format.equalsIgnoreCase("sdf")){
@@ -1540,6 +1606,9 @@ public class GinasApp extends App {
                 } 
         
     }
+    
+    
+    
     public static String formatMolfile(Chemical c, int format) throws Exception{
         String mol=c.export(format);
         StringBuilder sb=new StringBuilder();

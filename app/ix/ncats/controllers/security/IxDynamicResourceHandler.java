@@ -54,7 +54,6 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                 });
         HANDLERS.put(CAN_APPROVE,
                 new SimpleRoleDynamicResourceHandler(
-                        Role.Updater,
                         Role.SuperUpdate
                 ));
         HANDLERS.put(CAN_REGISTER,
