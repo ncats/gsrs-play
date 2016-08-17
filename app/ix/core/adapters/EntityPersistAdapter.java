@@ -171,7 +171,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         Objects.requireNonNull(objSupplier);
         Objects.requireNonNull(changeOp);
 
-        MyLock lock = lockMap.computeIfAbsent(id, k -> new MyLock(k));
+        MyLock lock = lockMap.computeIfAbsent(id, new Function<String, MyLock>() {
+            @Override
+            public MyLock apply(String key) {
+                return new MyLock(key);
+            }});
 
         lock.acquire();
         T bean = objSupplier.get();
