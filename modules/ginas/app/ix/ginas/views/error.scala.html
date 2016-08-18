@@ -1,4 +1,9 @@
 @(code: Int, message: String)
-@ix.ncats.views.html.error(code, message) {
+
+
+@ginas("g-srs", "null") {
     @menu()
+}{
+<h1 class ="danger">@code error</h1>
+    <div class = "alert alert-danger"><h1>@message</h1></div>
 }
