@@ -1296,11 +1296,11 @@ public class App extends Authentication {
     @CacheStrategy(evictable=false)
     public static class SearchResultContext {
         public enum Status {
-            Pending,
-            Running,
-            Determined,
-            Done,
-            Failed
+            Pending,	//show  +
+            Running,	//show  +
+            Determined, //don't show +
+            Done,		//don't show +
+            Failed		//don't show +
         }
         
         
@@ -1372,7 +1372,7 @@ public class App extends Authentication {
                 stop = result.getStopTime();
             }
             else if (result.size() > 0){
-            	setStatus(Status.Running);
+            	setStatus(Status.Determined);
             }
             
             if (_status != Status.Done) {
@@ -1552,8 +1552,10 @@ public class App extends Authentication {
                      }
                      key = "sequence/"+getKey (getSequence(request().getQueryString("q")) +idenType + request().getQueryString("order"), Double.parseDouble(iden));
 
-                 }
-                 else {
+                 }else if(type.equalsIgnoreCase("flex")) {
+                	 key = "flex/"+Util.sha1(query);
+                 }else{
+                	 key = type + "/"+Util.sha1(query);
                  }
 
                  return key;
@@ -1600,6 +1602,7 @@ public class App extends Authentication {
             	}else if(value instanceof SearchResult){
             		SearchResult result = (SearchResult)value;
             		context = new SearchResultContext (result);
+            		
                     Logger.debug("status: key="+key+" finished="+context.finished());
             	}
             }

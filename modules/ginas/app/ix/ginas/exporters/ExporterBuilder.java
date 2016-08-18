@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import ix.ginas.controllers.GinasApp.ExportFormat;
-
 public class ExporterBuilder {
 
 	private OutputStream os=null;

@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -518,163 +519,40 @@ public class GinasApp extends App {
     }
    
    
-   public static enum ExportFormat{
-	   SDF,
-	   JSON_DUMP,
-	   CSV,
-	   EXCEL;
-	   public static ExportFormat getValue(String val){
-		   try{
-			   return ExportFormat.valueOf(val);
-		   }catch(Exception e){
-			   return SDF;
-		   }
-	   }
-	   
-   }
-   
-   public static class BufferedByteArrayOutputStream extends ByteArrayOutputStream{
-	   public boolean closed=false;
-	   public BufferedByteArrayOutputStream(int size){
-		   super(size);
-	   }
-	   public boolean isClosed(){
-		   return closed;
-	   }
-	   @Override
-	   public void close(){
-		   closed=true;
-	   }
-	   
-   }
-   
-   	public static abstract class PipableOutputStream extends OutputStream{
-   		public abstract InputStream getInputStream() throws IOException;
-   	}
-   	public static class LazyByteArrayOutputStream extends PipableOutputStream{
-   		ByteArrayOutputStream buffer;
-   		private boolean closed=false;
-   		
-   		public LazyByteArrayOutputStream(){
-   			buffer = new ByteArrayOutputStream();
-   		}
-		@Override
-		public void write(int b) throws IOException {
-			buffer.write(b);
-		}
-		
-		@Override
-		public void close(){
-			closed=true;
-		}
-		
-		public InputStream getInputStream() throws IOException{
-			while(!closed){	
-				try{
-					Thread.sleep(10);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-			return new ByteArrayInputStream(buffer.toByteArray());
-		}
-   	}
-   	public static class TempFilePipableOutputStream extends PipableOutputStream{
-   		private final FileOutputStream tempOut;
-   		private final File tmp;
-   		boolean closed=false;
-   		
-   		public int hashCode() {
-			return tempOut.hashCode();
-		}
-
-		public void flush() throws IOException {
-			tempOut.flush();
-		}
-
-		public String toString() {
-			return tempOut.toString();
-		}
-
-		public void write(byte[] b) throws IOException {
-			tempOut.write(b);
-			
-		}
-
-		public void write(byte[] b, int off, int len) throws IOException {
-			tempOut.write(b, off, len);
-		}
-
-		public void close() throws IOException {
-			tempOut.close();
-			closed=true;
-		}
-
-		public final FileDescriptor getFD() throws IOException {
-			return tempOut.getFD();
-		}
-
-		public FileChannel getChannel() {
-			return tempOut.getChannel();
-		}
-
-		public TempFilePipableOutputStream() throws IOException{
-			tmp=File.createTempFile("whatever", "ok");
-   			tempOut = new FileOutputStream(tmp);
-   		}
-   		
-		@Override
-		public InputStream getInputStream() throws IOException{
-			while(!closed){	
-				try{
-					Thread.sleep(10);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-			return new FileInputStream(tmp);
-		}
-
-		@Override
-		public void write(int b) throws IOException {
-			tempOut.write(b);
-		}
-   		
-   	}
-   
-   
     public static Result export (String collectionID, String format) {
     	
     	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     	SearchResultContext src = App.getForKey(collectionID);
     	if(src==null){
-    		throw new IllegalStateException("Result set not found");
+    		
     	}
     	
     	try{
-	    	final PipableOutputStream bos = new TempFilePipableOutputStream();  
-	    	
-	    	ExporterBuilder exportBuilder = new ExporterBuilder(bos).setOutputFormat(format);
+	    		 
+	    	final PipedInputStream pis =               new PipedInputStream ();
+	    	final PipedOutputStream pos = new PipedOutputStream (pis);
+	    	    	    	
+	    	ExporterBuilder exportBuilder = new ExporterBuilder(pos).setOutputFormat(format);
 	    	Exporter exp = exportBuilder.build();
 	    	String fname = "export-" +sdf.format(new Date()) + "." + exp.getExtension();
 	    	response().setContentType("application/x-download");  
 	    	response().setHeader("Content-disposition","attachment; filename=" + fname);
 	    	
-	    	new Thread(new Runnable() {
-	    	    public void run () {
-	    	        try {
-	    	        	exp.exportForEachAndClose(src.getResults().iterator());
-	    	        }catch(Exception e){
-	    	        	e.printStackTrace();
-	    	        }
-	    	    }
-	    	}).start();
-	    	
-	    	return ok(bos.getInputStream());
+	    	Executors.newSingleThreadExecutor().submit(new Runnable () {
+    	        public void run () {
+    	            try {
+    	            	exp.exportForEachAndClose(src.getResults().iterator());
+    	            }catch (IOException ex) {
+    	            	ex.printStackTrace();
+    	            }
+    	        }
+    	        });
+
+	    	return ok(pis);
     	}catch(Exception e){
     		e.printStackTrace();
+    		throw new IllegalStateException(e);
     	}
-    	return ok("ASDAD");
     }
 
     public static Result sequences (final String q,
@@ -809,7 +687,6 @@ public class GinasApp extends App {
         	order=new String[]{"$lastEdited"};
         	params.put("order", order);
         }
-        
         try {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse
@@ -835,6 +712,7 @@ public class GinasApp extends App {
             return result;
         }
         catch (Exception ex) {
+        	
             ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
@@ -883,7 +761,7 @@ public class GinasApp extends App {
         if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
                 getSubstanceSearchResult (q, total, oq);
-            
+            System.out.println(result);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
@@ -1445,7 +1323,6 @@ public class GinasApp extends App {
             // to simulate both slow fetches and slow lucene processing
             
             //Util.debugSpin(10);
-            
             
             return chem;
         }
