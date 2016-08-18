@@ -124,7 +124,7 @@ public class App extends Authentication {
     static final String RENDERER_FORMAT =
         play.Play.application()
         .configuration().getString("ix.structure.renderer.format");
-    
+
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
@@ -1372,7 +1372,7 @@ public class App extends Authentication {
                 stop = result.getStopTime();
             }
             else if (result.size() > 0){
-            	setStatus(Status.Running);
+            	setStatus(Status.Determined);
             }
             
             if (_status != Status.Done) {

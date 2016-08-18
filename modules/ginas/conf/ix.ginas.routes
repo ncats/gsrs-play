@@ -33,7 +33,14 @@ POST        /register/duplicateCheck     ix.ginas.controllers.GinasLoad.validate
 GET         /_updateIndex/:key          ix.ginas.controllers.GinasApp.updateIndex(key: String)
 
 GET         /admin                      ix.ginas.controllers.GinasApp.admin()
-GET         /profile                      ix.ginas.controllers.GinasApp.profile()
+GET         /profile                    ix.ginas.controllers.GinasApp.profile()
+GET         /users                      ix.ginas.controllers.GinasApp.listGinasUsers(page: Int ?= 1, rows: Int ?=16, sortBy: String ?= null, order: String ?= null, filter: String ?= null)
+POST        /principal/:id	            ix.ginas.controllers.GinasApp.updatePrincipal(id: Long)
+GET        /principal/:id	            ix.ginas.controllers.GinasApp.editPrincipal(id:Long)
+
+POST   /principal/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
+POST   /principal/add		            ix.ginas.controllers.GinasApp.addPrincipal()
+GET    /principal/add		            ix.ginas.controllers.GinasApp.createPrincipal()
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

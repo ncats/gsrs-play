@@ -1,0 +1,122 @@
+@import ix.core.models.{Acl, UserProfile, Role}
+@import ix.core.controllers.AdminFactory
+@import helper._
+@(id: Long, userForm: UserProfile, roleList: List[Role], permList: List[String], grpList: List[String], appContext: String)
+
+@implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
+
+@ix.ginas.views.html.ginas("Edit User", "null") {
+    @ix.ginas.views.html.menu()
+} {
+
+@ix.ncats.views.html.admin.main {
+
+
+    <form role="form" method="POST" action="@ix.ginas.controllers.routes.GinasApp.updatePrincipal(id)">
+
+        <div class="body">
+            <div class="form-group table" >
+                <table id="" align="center">
+                    <tr>
+                        <td colspan="2">
+                            <table>
+                                <tr><td colspan="2" align="center"><h4>Edit User</h4></td></tr>
+                                <tr align="left">
+                                    <td><lable>User Name</lable></td>
+                                    <td> <input class="form-input" type="text" name="username" value="@userForm.user.username"
+                                        @if(userForm.systemAuth == true){readonly="readonly"} /> </td>
+                                </tr>
+
+                                <tr align="left">
+                                    <td><lable>Password</lable></td>
+                                    <td><input class="form-input" type="password" name="password"
+                                        @if(userForm.systemAuth == true){readonly="readonly"} /> </td>
+                                </tr>
+
+                                <tr align="left">
+                                    <td><lable>Email</lable></td>
+                                    <td><input class="form-input" type="email" name="email" value="@userForm.user.email"
+                                        @if(userForm.systemAuth == true){readonly="readonly"} /></td>
+                                </tr>
+
+                                <tr align="left">
+                                    <td><lable>Active</lable></td>
+                                    <td><input class="form-input" type="checkbox" name="active" value="true"
+                                        @if(userForm.active == true){checked="checked"} /></td>
+                                </tr>
+
+                                <tr><td colspan="2"><br/></td></tr>
+                                <tr align="left">
+                                    <td><lable>Roles</lable></td>
+                                    <td id="roleGroup">
+                                    @for(rs <- Role.options()) {
+                                        <input class="form-input" type="checkbox" name="r-@rs.toString()" id="r-@rs.toString()" value="@rs.toString()"
+                                            @if(roleList.contains(rs)) {checked="checked"} />
+                                        <span>@rs.toString()</span><br/>
+                                    }
+                                    </td>
+                                </tr>
+                                @if(!appContext.contains("ginas")) {
+                                    <tr><td colspan="2"><br/></td></tr>
+
+                                    <tr align="left">
+                                        <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
+                                        <td id="permGroup">
+                                        @for(ps <- Acl.options()) {
+                                            <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps.toString()" value="@ps.toString()"
+                                                @if(permList.contains(ps.toString())) {
+                                                    checked="checked"
+                                        } />
+                                            <span>@ps.toString()</span> <br/>
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+
+
+                                <tr><td colspan="2"><br/></td></tr>
+
+                                <tr align="left">
+                                    <td align="center"><lable>Groups &nbsp;&nbsp;</lable></td>
+                                    <td id="permGroup">
+                                        @for(gs <- AdminFactory.allGroups()) {
+                                            <input class="form-input" type="checkbox" name="g-@gs.name" id="g-@gs.name" value="@gs.name"
+                                                @if(grpList.contains(gs.name)) {
+                                                    checked="checked"
+                                        }/>
+                                            <span>@gs.name</span> <br/>
+                                        }
+                                        <div id="grpLable">Enter a Group Name</div>
+                                        <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" id="grpName"></div>
+                                    </td>
+                                </tr>
+
+                                <tr><td colspan="2"><br/></td></tr>
+                                <tr class="actions">
+                                    <td><input type="submit" value="Save" class="btn primary"> </td>
+                                    <td><a href="@ix.ginas.controllers.routes.GinasApp.listGinasUsers()" class="btn">Cancel</a></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+        </div>
+    </form>
+    <script>
+            $("grpLable").click(function(){
+                $("grpTxtBox").show();
+            });
+
+            $("grpTxtBox").click(function(){
+                $("grpLable").hide();
+            });
+    </script>
+}
+}
+
+
+
+

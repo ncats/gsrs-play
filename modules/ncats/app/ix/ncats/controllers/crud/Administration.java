@@ -17,10 +17,10 @@ import java.util.List;
 //@Dynamic(value = "viewUserList", handlerKey = "idg")
 public class Administration extends App {
 
-    static Model.Finder<Long, UserProfile> _profiles =
+    public static Model.Finder<Long, UserProfile> _profiles =
             new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
 
-    static String appContext = Play.application().configuration().getString("application.context");
+    public static String appContext = Play.application().configuration().getString("application.context");
 
     public static Result index() {
         return redirect(ix.ncats.controllers.crud.routes.Administration.listPrincipals(1, "", "", ""));
@@ -31,6 +31,12 @@ public class Administration extends App {
     }
 
     public static Result _listPrincipals(int page, int rows, String sortBy, String order, String filter) {
+
+        List<UserProfile> profiles = principalsList();
+        return ok(ix.ncats.views.html.admin.users.render(profiles, sortBy, order, filter));
+    }
+
+    public static List<UserProfile> principalsList() {
         List<Principal> users = PrincipalFactory.all();
         List<UserProfile> profiles = _profiles.all();
         for (Principal p : users) {
@@ -42,7 +48,7 @@ public class Administration extends App {
                 profiles.add(prof);
             }
         }
-        return ok(ix.ncats.views.html.admin.users.render(profiles, sortBy, order, filter));
+        return profiles;
     }
 
 
@@ -54,6 +60,11 @@ public class Administration extends App {
             return ok();//badRequest(createForm.render(userForm));
         }
 
+        addUser(requestData);
+        return index();
+    }
+
+    public static void addUser(DynamicForm requestData) {
         Principal newUser = new Principal();
         newUser.admin = Boolean.parseBoolean(requestData.get("admin"));
         newUser.email = requestData.get("email");
@@ -116,11 +127,16 @@ public class Administration extends App {
             prof.save();
         }
         flash("success", " " + requestData.get("username") + " has been created");
+    }
+
+
+    public static Result updatePrincipal(long id) {
+        updateUser(id);
         return index();
     }
 
-    //@Dynamic(value = "adminUser", handlerKey = "idg")
-    public static Result updatePrincipal(long id) {
+    //Not returning view - to call from other modules (ex: ginas)
+    public static void updateUser(long id) {
         DynamicForm requestData = Form.form().bindFromRequest();
 
         Principal user = AdminFactory.palFinder.byId(id);
@@ -172,8 +188,8 @@ public class Administration extends App {
         profile.user = user;
 
         if(!password.isEmpty() && password != null) {
-        	profile.setPassword(password);
-            
+            profile.setPassword(password);
+
         }
         profile.active = Boolean.parseBoolean(active);
         profile.setRoles(selectedRoles);
@@ -183,21 +199,25 @@ public class Administration extends App {
         profile.save();
 
         flash("success", " " + userName + " has been updated");
-        return index();
     }
 
     public static Result editPrincipal(Long id) {
-        Principal user = AdminFactory.palFinder.byId(id);
-        UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
-        up.user = user;
+        UserProfile up = editUser(id);
         return ok(ix.ncats.views.html.admin.edituser.render(
         		id, 
         		up,
         		up.getRoles(),
-        		AdminFactory.aclNamesByPrincipal(user),
-                AdminFactory.groupNamesByPrincipal(user), 
+        		AdminFactory.aclNamesByPrincipal(up.user),
+                AdminFactory.groupNamesByPrincipal(up.user),
                 appContext
                 ));
+    }
+
+    public static UserProfile editUser(Long id) {
+        Principal user = AdminFactory.palFinder.byId(id);
+        UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
+        up.user = user;
+        return up;
     }
 
     public static Result deletePrincipal(Long id) {
