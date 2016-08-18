@@ -9,6 +9,8 @@ Changes:
 4. Change download to download SDF by default
 5. Improved API for exporting record sets
 6. Allow downloading CSV as export option via URL
+7. Removed expression producing ArrayOutOfBounds 
+   stacktrace exception
 
 
 GSRS v1.2.04
