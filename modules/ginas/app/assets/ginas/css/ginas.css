@@ -66,10 +66,11 @@ body, html {
     padding-top: 150px;
 }
 
-.col-md-3.sidebar {
+.sidebar {
     position: fixed;
-    padding-right: 15px;
-    padding-left: 15px;
+    height:100%;
+    top: 10%;
+    overflow-y: scroll;
 }
 
 @media (min-width: 992px) {
