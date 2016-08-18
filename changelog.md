@@ -13,6 +13,8 @@ Changes:
    stacktrace exception
 8. Refactored export mechanism to consume less memory
 9. Fixed flex match caching issue
+10. Fixed navlist on details view not scrollable
+11. fixed error page overlap
 
 GSRS v1.2.04
 ============
