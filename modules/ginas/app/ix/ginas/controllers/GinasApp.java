@@ -529,7 +529,7 @@ public class GinasApp extends App {
     	
     	try{
 	    		 
-	    	final PipedInputStream pis =               new PipedInputStream ();
+	    	final PipedInputStream pis = new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
 	    	    	    	
 	    	ExporterBuilder exportBuilder = new ExporterBuilder(pos).setOutputFormat(format);
@@ -541,9 +541,11 @@ public class GinasApp extends App {
 	    	Executors.newSingleThreadExecutor().submit(new Runnable () {
     	        public void run () {
     	            try {
-    	            	exp.exportForEachAndClose(src.getResults().iterator());
+    	            	exp.exportForEachAndClose(src.getResults());
     	            }catch (IOException ex) {
     	            	ex.printStackTrace();
+    	            }finally{
+    	            	exp.close();
     	            }
     	        }
     	        });
