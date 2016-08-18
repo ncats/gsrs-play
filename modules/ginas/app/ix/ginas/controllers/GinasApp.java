@@ -545,7 +545,11 @@ public class GinasApp extends App {
     	            }catch (IOException ex) {
     	            	ex.printStackTrace();
     	            }finally{
-    	            	exp.close();
+    	            	try{
+    	            		exp.close();
+    	            	}catch(Exception e){
+    	            		
+    	            	}
     	            }
     	        }
     	        });
