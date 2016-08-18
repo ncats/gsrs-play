@@ -11,7 +11,8 @@ Changes:
 6. Allow downloading CSV as export option via URL
 7. Removed expression producing ArrayOutOfBounds 
    stacktrace exception
-
+8. Refactored export mechanism to consume less memory
+9. Fixed flex match caching issue
 
 GSRS v1.2.04
 ============
