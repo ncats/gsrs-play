@@ -1,10 +1,18 @@
 package ix.ginas.controllers;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.lang.reflect.Field;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -58,6 +68,8 @@ import ix.core.search.TextIndexer.SearchResult;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.exporters.Exporter;
+import ix.ginas.exporters.ExporterBuilder;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -521,33 +533,148 @@ public class GinasApp extends App {
 	   
    }
    
+   public static class BufferedByteArrayOutputStream extends ByteArrayOutputStream{
+	   public boolean closed=false;
+	   public BufferedByteArrayOutputStream(int size){
+		   super(size);
+	   }
+	   public boolean isClosed(){
+		   return closed;
+	   }
+	   @Override
+	   public void close(){
+		   closed=true;
+	   }
+	   
+   }
+   
+   	public static abstract class PipableOutputStream extends OutputStream{
+   		public abstract InputStream getInputStream() throws IOException;
+   	}
+   	public static class LazyByteArrayOutputStream extends PipableOutputStream{
+   		ByteArrayOutputStream buffer;
+   		private boolean closed=false;
+   		
+   		public LazyByteArrayOutputStream(){
+   			buffer = new ByteArrayOutputStream();
+   		}
+		@Override
+		public void write(int b) throws IOException {
+			buffer.write(b);
+		}
+		
+		@Override
+		public void close(){
+			closed=true;
+		}
+		
+		public InputStream getInputStream() throws IOException{
+			while(!closed){	
+				try{
+					Thread.sleep(10);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+			return new ByteArrayInputStream(buffer.toByteArray());
+		}
+   	}
+   	public static class TempFilePipableOutputStream extends PipableOutputStream{
+   		private final FileOutputStream tempOut;
+   		private final File tmp;
+   		boolean closed=false;
+   		
+   		public int hashCode() {
+			return tempOut.hashCode();
+		}
+
+		public void flush() throws IOException {
+			tempOut.flush();
+		}
+
+		public String toString() {
+			return tempOut.toString();
+		}
+
+		public void write(byte[] b) throws IOException {
+			tempOut.write(b);
+			
+		}
+
+		public void write(byte[] b, int off, int len) throws IOException {
+			tempOut.write(b, off, len);
+		}
+
+		public void close() throws IOException {
+			tempOut.close();
+			closed=true;
+		}
+
+		public final FileDescriptor getFD() throws IOException {
+			return tempOut.getFD();
+		}
+
+		public FileChannel getChannel() {
+			return tempOut.getChannel();
+		}
+
+		public TempFilePipableOutputStream() throws IOException{
+			tmp=File.createTempFile("whatever", "ok");
+   			tempOut = new FileOutputStream(tmp);
+   		}
+   		
+		@Override
+		public InputStream getInputStream() throws IOException{
+			while(!closed){	
+				try{
+					Thread.sleep(10);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+			return new FileInputStream(tmp);
+		}
+
+		@Override
+		public void write(int b) throws IOException {
+			tempOut.write(b);
+		}
+   		
+   	}
+   
+   
     public static Result export (String collectionID, String format) {
     	
     	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    	ExportFormat ef = ExportFormat.getValue(format.toUpperCase());
-    	FileExporter<Substance> fe = null;
-    	switch(ef){
-    		case SDF:
-    			fe = new SDFExporter();
-    			break;
-    		default:
-    			throw new IllegalStateException("Format not yet supported");
-    	}
     	SearchResultContext src = App.getForKey(collectionID);
     	if(src==null){
     		throw new IllegalStateException("Result set not found");
     	}
     	
-    	//currently stores it in memory, which it really shouldn't do
-    	//could dump to temp file
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	for(Object o:src.getResults()){
-    		fe.addToSteam((Substance)o, baos);	
+    	try{
+	    	final PipableOutputStream bos = new TempFilePipableOutputStream();  
+	    	
+	    	ExporterBuilder exportBuilder = new ExporterBuilder(bos).setOutputFormat(format);
+	    	Exporter exp = exportBuilder.build();
+	    	String fname = "export-" +sdf.format(new Date()) + "." + exp.getExtension();
+	    	response().setContentType("application/x-download");  
+	    	response().setHeader("Content-disposition","attachment; filename=" + fname);
+	    	
+	    	new Thread(new Runnable() {
+	    	    public void run () {
+	    	        try {
+	    	        	exp.exportForEachAndClose(src.getResults().iterator());
+	    	        }catch(Exception e){
+	    	        	e.printStackTrace();
+	    	        }
+	    	    }
+	    	}).start();
+	    	
+	    	return ok(bos.getInputStream());
+    	}catch(Exception e){
+    		e.printStackTrace();
     	}
-    	String fname = "export-" +sdf.format(new Date()) + "." + fe.getExtension();
-    	response().setContentType("application/x-download");  
-    	response().setHeader("Content-disposition","attachment; filename=" + fname);
-    	return ok(baos.toByteArray());
+    	return ok("ASDAD");
     }
 
     public static Result sequences (final String q,
@@ -1504,9 +1631,7 @@ public class GinasApp extends App {
         	placeholderFile="noimage.svg";
         }
         
-        //Assets.at("public/images/",placeholderFile,true).apply();
-        try{
-                
+        try{    
                 InputStream is=Util.getFile(placeholderFile, "public/images/");
                 response().setContentType("image/svg+xml");
                 return ok(is);
@@ -1516,32 +1641,6 @@ public class GinasApp extends App {
         
     }
     
-    
-    public static interface FileExporter<K>{
-    	public void addToSteam(K k1, OutputStream os);
-    	public String getExtension();
-    }
-    
-    public static class SDFExporter implements FileExporter<Substance>{
-    	
-    	public void addToSteam(Substance k1, OutputStream os){
-    		//c = GinasUtils.substanceToChemical(s, messages);
-    		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
-    		try{
-    			Chemical c = GinasUtils.substanceToChemical(k1, messages);
-    			String sdf=formatMolfile(c,Chemical.FORMAT_SDF);
-        		os.write(sdf.getBytes("UTF-8"));
-        		os.write("\n".getBytes());
-    		}catch(Exception e){
-    			e.printStackTrace();
-    		}
-    		//GinasUtils.structureToChemical(struc, messages);
-    		
-    	}
-    	public String getExtension(){
-    		return "sdf";
-    	}
-    }
     
     
     

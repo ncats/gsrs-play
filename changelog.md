@@ -6,6 +6,10 @@ Changes:
 1. Fixed caching issue ajaxing for status of request
 2. Added download option to server-side for SDF
 3. Restrict Approval to SuperUpdater, not updater
+4. Change download to download SDF by default
+5. Improved API for exporting record sets
+6. Allow downloading CSV as export option via URL
+
 
 GSRS v1.2.04
 ============
