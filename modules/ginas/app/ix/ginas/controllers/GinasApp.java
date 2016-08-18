@@ -543,7 +543,7 @@ public class GinasApp extends App {
     	            try {
     	            	exp.exportForEachAndClose(src.getResults().iterator());
     	            }catch (IOException ex) {
-    	            	.printStackTrace();
+    	            	ex.printStackTrace();
     	            }
     	        }
     	        });
