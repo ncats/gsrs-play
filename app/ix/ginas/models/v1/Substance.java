@@ -844,14 +844,17 @@ public class Substance extends GinasCommonData {
 	 * @return List of Keywords matching criteria
 	 */
 	public List<Keyword> removeTagString(String tag) {
-		List<Keyword> toRemove = new ArrayList<Keyword>();
-		for(Keyword k:tags){
-			if(k.getValue().equals(tag)){
-				toRemove.add(k);
-			}
-		}
-		tags.removeAll(toRemove);
-		return toRemove;
+		List<Keyword> removed = new ArrayList<Keyword>();
+
+        Iterator<Keyword> iter = tags.iterator();
+        while(iter.hasNext()){
+            Keyword k = iter.next();
+            if(k.getValue().equals(tag)){
+                iter.remove();
+                removed.add(k);
+            }
+        }
+		return removed;
 	}
 	
 	/**
