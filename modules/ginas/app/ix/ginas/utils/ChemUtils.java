@@ -17,7 +17,7 @@ public class ChemUtils {
 	
 	
 	public static void CheckValanace(Structure newstr, List<GinasProcessingMessage> gpm) {
-		Chemical c = GinasUtils.structureToChemical(newstr, null);
+		Chemical c = newstr.toChemical();
 		Molecule m = Jchemical.makeJchemical(c).getMol();
 		m.valenceCheck();
 		MolAtom[] mas = m.getAtomArray();

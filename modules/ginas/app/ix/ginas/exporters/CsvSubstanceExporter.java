@@ -101,7 +101,7 @@ public class CsvSubstanceExporter implements Exporter<Substance> {
                 	if(s instanceof ChemicalSubstance){
                 		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
                 		try{
-	                		Chemical chem = GinasUtils.substanceToChemical(s, messages);
+	                		Chemical chem = s.toChemical(messages);
 	                		String ikey=chem.export(chemicalFormat);
 	                		return ikey;
                 		}catch(Exception e){
