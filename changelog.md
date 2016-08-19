@@ -15,6 +15,8 @@ Changes:
 9. Fixed flex match caching issue
 10. Fixed navlist on details view not scrollable
 11. fixed error page overlap
+12. Hide "+" icon on text search with known results
+
 
 GSRS v1.2.04
 ============
