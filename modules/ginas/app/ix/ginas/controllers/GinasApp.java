@@ -1579,19 +1579,11 @@ public class GinasApp extends App {
     
     public static String formatMolfile(Chemical c, int format) throws Exception{
         String mol=c.export(format);
-        StringBuilder sb=new StringBuilder();
-        int i=0;
-        for(String line: mol.split("\n")){
-                if(i!=0){
-                        sb.append("\n");
-                }
-                if(i==1){
-                        line=" G-SRS " + line;
-                }
-                i++;
-                sb.append(line);
-        }
-        return sb.toString();
+
+        String[] lines = mol.split("\n");
+        lines[1] = " G-SRS " + lines[1];
+
+        return String.join("\n", lines);
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
         StringBuilder sb= new StringBuilder();
