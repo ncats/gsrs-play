@@ -1,5 +1,6 @@
 package ix.ginas.utils;
 
+import ix.core.GinasProcessingMessage;
 import ix.core.models.Keyword;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.Note;
@@ -7,8 +8,6 @@ import ix.ginas.models.v1.Substance;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import play.Logger;
 
 public abstract class GinasProcessingStrategy {
 	private static final String FAILED = "FAILED";

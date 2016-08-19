@@ -12,11 +12,10 @@ import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 
 import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 
 public class CsvSubstanceExporter implements Exporter<Substance> {
     public static abstract class Columns{

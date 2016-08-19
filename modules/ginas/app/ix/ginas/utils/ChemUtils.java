@@ -6,6 +6,7 @@ import chemaxon.struc.MolAtom;
 import chemaxon.struc.Molecule;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.jchemical.Jchemical;
+import ix.core.GinasProcessingMessage;
 import ix.core.models.Structure;
 
 //All of the code below should be changed to use

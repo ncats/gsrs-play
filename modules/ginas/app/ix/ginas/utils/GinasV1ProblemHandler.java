@@ -4,7 +4,7 @@ import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;

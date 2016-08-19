@@ -29,6 +29,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.GinasProcessingMessage;
 import ix.core.models.Backup;
 import ix.core.models.BeanViews;
 import ix.core.models.DataVersion;
@@ -70,6 +74,8 @@ public class Substance extends GinasCommonData {
 	public static final String STATUS_ALTERNATIVE = "alternative";
 	public static final String DEFAULT_ALTERNATIVE_NAME = "ALTERNATIVE DEFINITION";
 
+	private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
+	private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 	
 	public enum SubstanceClass {
 		chemical, 
@@ -914,4 +920,80 @@ public class Substance extends GinasCommonData {
 //		}
 //		return false;
 //	}
+
+	@JsonIgnore
+	@Transient
+	public Chemical toChemical( List<GinasProcessingMessage> messages){
+		Chemical c = getChemicalImpl(messages);
+
+	if(c.getDim()<2){
+		c.clean2D();
+	}
+	if(approvalID!=null){
+		c.setProperty("APPROVAL_ID", approvalID);
+	}
+	c.setProperty("NAME", getName());
+	c.setName(getName());
+	StringBuilder sb = new StringBuilder();
+
+	for (Name n : getOfficialNames()) {
+		String name = n.name;
+		sb.append(name + "\n");
+
+		for (String loc : n.getLocators(s)) {
+			sb.append(name + " [" + loc + "]\n");
+		}
+
+	}
+	if (sb.length() > 0) {
+		c.setProperty("OFFICIAL_NAMES", sb.toString());
+	}
+	// clear builder
+	sb.setLength(0);
+	for (Name n : getNonOfficialNames()) {
+		String name = n.name;
+		sb.append(name + "\n");
+
+		for (String loc : n.getLocators(this)) {
+			sb.append(name + " [" + loc + "]\n");
+		}
+	}
+	if (sb.length() > 0) {
+		c.setProperty("NON_OFFICIAL_NAMES", sb.toString());
+	}
+	// clear builder
+	sb.setLength(0);
+
+	for (Code cd : codes) {
+		String codesset = c.getProperty(cd.codeSystem);
+		if (codesset == null || codesset.trim().equals("")) {
+			codesset = "";
+		} else {
+			codesset = codesset + "\n";
+		}
+		codesset += cd.code;
+		if (!"PRIMARY".equals(cd.type)) {
+			codesset += " [" + cd.type + "]";
+		}
+		c.setProperty(cd.codeSystem, codesset);
+	}
+	for (GinasProcessingMessage gpm : messages) {
+		String codesset = c.getProperty("EXPORT-WARNINGS");
+		if (codesset == null || codesset.trim().equals("")) {
+			codesset = "";
+		} else {
+			codesset = codesset + "\n";
+		}
+		codesset += gpm.message;
+		c.setProperty("EXPORT-WARNINGS", codesset);
+	}
+	return c;
+	}
+
+	protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
+		Chemical c = DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
+		messages.add(GinasProcessingMessage
+				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
+		return c;
+	}
 }

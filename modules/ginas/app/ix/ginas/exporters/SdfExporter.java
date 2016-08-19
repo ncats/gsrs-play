@@ -13,10 +13,9 @@ import java.util.Objects;
 
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 
 public class SdfExporter implements Exporter<Substance> {
 

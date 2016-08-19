@@ -6,12 +6,11 @@ import ix.core.AbstractValidator;
 import ix.core.UserFetcher;
 import ix.core.ValidationMessage;
 import ix.core.ValidationResponse;
-import ix.core.models.Keyword;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 

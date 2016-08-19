@@ -1,14 +1,10 @@
-package ix.ginas.utils;
-
-import ix.core.ValidationMessage;
-import ix.ginas.models.v1.Substance;
+package ix.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import play.Logger;
-import ix.core.ValidationMessage.MESSAGE_TYPE;
 
 public class GinasProcessingMessage implements ValidationMessage{
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
@@ -70,11 +66,12 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public boolean isError(){
 		return messageType == MESSAGE_TYPE.ERROR;
 	}
-	
-	public GinasProcessingMessage addSubstanceLink(Substance s){
+
+
+	public GinasProcessingMessage addSubstanceLink(String linkingId, String approvalIdDisplay, String name){
 		Link l = new Link();
-		l.href=ix.ginas.controllers.routes.GinasApp.substance(s.getLinkingID())+"";
-		l.text="[" + s.getApprovalIDDisplay() + "]" + s.getName();
+		l.href=ix.ginas.controllers.routes.GinasApp.substance(linkingId)+"";
+		l.text="[" + approvalIdDisplay + "]" + name;
 		this.links.add(l);
 		return this;
 	}
