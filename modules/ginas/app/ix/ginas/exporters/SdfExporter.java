@@ -32,8 +32,7 @@ public class SdfExporter implements Exporter<Substance> {
 
     @Override
     public void export(Substance s) throws IOException {
-    	List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
-        Chemical chem = s.toChemical(messages);
+        Chemical chem = s.toChemical();
         try {
             String content = GinasApp.formatMolfile(chem,Chemical.FORMAT_SDF);
             out.write(content);

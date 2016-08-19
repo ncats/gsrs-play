@@ -99,9 +99,8 @@ public class CsvSubstanceExporter implements Exporter<Substance> {
                 @Override
                 String getContent(Substance s) {
                 	if(s instanceof ChemicalSubstance){
-                		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
                 		try{
-	                		Chemical chem = s.toChemical(messages);
+	                		Chemical chem = s.toChemical();
 	                		String ikey=chem.export(chemicalFormat);
 	                		return ikey;
                 		}catch(Exception e){

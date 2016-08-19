@@ -1,9 +1,6 @@
 package ix.ginas.models.v1;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -915,11 +912,34 @@ public class Substance extends GinasCommonData {
 //		return false;
 //	}
 
+    /**
+     * Create a new {@link Chemical} object for this Substance and ignore
+     * any errors or warnings.
+     *
+     * @return a new {@link Chemical} object, should never be null.
+     *
+     */
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical() {
+        return toChemical(new ArrayList<>());
+    }
 
 
+    /**
+     * Create a new {@link Chemical} object for this Substance and report any
+     * errors or warnings to the passed in {@link GinasProcessingMessage} parameter.
+     *
+     * @param messages the list of {@link GinasProcessingMessage}s to add
+     *                 errors/warnings to if there are problems.
+     * @return a new {@link Chemical} object, should never be null.
+     *
+     * @throws NullPointerException if messages is null
+     */
     @JsonIgnore
     @Transient
     public Chemical toChemical(List<GinasProcessingMessage> messages) {
+        Objects.requireNonNull(messages);
         Chemical c = getChemicalImpl(messages);
 
         if (c.getDim() < 2) {
@@ -936,7 +956,7 @@ public class Substance extends GinasCommonData {
             String name = n.name;
             sb.append(name + "\n");
 
-            for (String loc : n.getLocators(s)) {
+            for (String loc : n.getLocators(this)) {
                 sb.append(name + " [" + loc + "]\n");
             }
 
@@ -962,26 +982,30 @@ public class Substance extends GinasCommonData {
 
         for (Code cd : codes) {
             String codesset = c.getProperty(cd.codeSystem);
+
+            StringBuilder codeBuilder;
             if (codesset == null || codesset.trim().equals("")) {
-                codesset = "";
+                codeBuilder = new StringBuilder();
             } else {
-                codesset = codesset + "\n";
+                codeBuilder = new StringBuilder(codesset).append('\n');
             }
-            codesset += cd.code;
+            codeBuilder.append(cd.code);
             if (!"PRIMARY".equals(cd.type)) {
-                codesset += " [" + cd.type + "]";
+                codeBuilder.append(" [").append(cd.type).append("]");
             }
-            c.setProperty(cd.codeSystem, codesset);
+            c.setProperty(cd.codeSystem, codeBuilder.toString());
         }
         for (GinasProcessingMessage gpm : messages) {
             String codesset = c.getProperty("EXPORT-WARNINGS");
+
+            StringBuilder codeBuilder;
             if (codesset == null || codesset.trim().equals("")) {
-                codesset = "";
+                codeBuilder = new StringBuilder();
             } else {
-                codesset = codesset + "\n";
+                codeBuilder = new StringBuilder(codesset).append('\n');
             }
-            codesset += gpm.message;
-            c.setProperty("EXPORT-WARNINGS", codesset);
+            codeBuilder.append(gpm.message);
+            c.setProperty("EXPORT-WARNINGS", codeBuilder.toString());
         }
         return c;
     }
