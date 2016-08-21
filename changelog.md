@@ -16,7 +16,9 @@ Changes:
 10. Fixed navlist on details view not scrollable
 11. fixed error page overlap
 12. Hide "+" icon on text search with known results
-
+13. Added canonicalization algorithm for mol formulas
+    to approximate modified Hill System Order, 
+    compatible with MDL cartridge.
 
 GSRS v1.2.04
 ============
