@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import TestFormula.FormulaInfo;
 
 public class FormulaInfo implements Comparable<FormulaInfo>{
 		private final static Pattern initCount = Pattern.compile("^([0-9]*)(.*)");
