@@ -68,13 +68,7 @@ public class GinasProcessingMessage implements ValidationMessage{
 	}
 
 
-	public GinasProcessingMessage addSubstanceLink(String linkingId, String approvalIdDisplay, String name){
-		Link l = new Link();
-		l.href=ix.ginas.controllers.routes.GinasApp.substance(linkingId)+"";
-		l.text="[" + approvalIdDisplay + "]" + name;
-		this.links.add(l);
-		return this;
-	}
+
 	public GinasProcessingMessage addLink(Link l){
 		this.links.add(l);
 		return this;

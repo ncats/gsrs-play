@@ -85,6 +85,14 @@ public class GinasUtils {
 		return makeSubstance(tree);
 	}
 
+	public static GinasProcessingMessage.Link createSubstanceLink(Substance s){
+		GinasProcessingMessage.Link l = new GinasProcessingMessage.Link();
+		l.href=ix.ginas.controllers.routes.GinasApp.substance(s.getLinkingID())+"";
+		l.text="[" + s.getApprovalIDDisplay() + "]" + s.getName();
+
+		return l;
+	}
+
 	public static Substance makeSubstance(JsonNode tree) {
 		return makeSubstance(tree, null);
 	}

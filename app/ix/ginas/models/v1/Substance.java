@@ -1026,6 +1026,6 @@ public class Substance extends GinasCommonData {
 	protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
 		messages.add(GinasProcessingMessage
 				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
-		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);;
+		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
 	}
 }

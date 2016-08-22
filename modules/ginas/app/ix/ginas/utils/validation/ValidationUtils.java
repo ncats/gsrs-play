@@ -45,12 +45,9 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.models.v1.Unit;
-import ix.ginas.utils.ChemUtils;
+import ix.ginas.utils.*;
 import ix.core.GinasProcessingMessage;
 import ix.core.GinasProcessingMessage.Link;
-import ix.ginas.utils.GinasProcessingStrategy;
-import ix.ginas.utils.NucleicAcidUtils;
-import ix.ginas.utils.ProteinUtils;
 import play.Configuration;
 import play.Logger;
 import play.Play;
@@ -451,7 +448,7 @@ public class ValidationUtils {
 										"Name '"
 												+ n.name
 												+ "' collides with existing name for substance:")
-								. addSubstanceLink(s2.getLinkingID(), s2.getApprovalIDDisplay(), s2.getName());
+								.addLink(GinasUtils.createSubstanceLink(s2));
 						gpm.add(mes);
 						strat.processMessage(mes);
 					}
@@ -511,7 +508,7 @@ public class ValidationUtils {
 										"Code '"
 												+ cd.code
 												+ "' collides with existing code & codeSystem for substance:")
-								. addSubstanceLink(s2.getLinkingID(), s2.getApprovalIDDisplay(), s2.getName());
+								. addLink(GinasUtils.createSubstanceLink(s2));
 						gpm.add(mes);
 						strat.processMessage(mes);
 					}
@@ -591,7 +588,7 @@ public class ValidationUtils {
 							mes = GinasProcessingMessage
 									.WARNING_MESSAGE("Structure has 1 possible duplicate:");
 						dupes++;
-						mes.addSubstanceLink(s.getLinkingID(), s.getApprovalIDDisplay(), s.getName());
+						mes.addLink(GinasUtils.createSubstanceLink(s));
 					}
 				}
 				if (dupes > 0) {
@@ -641,7 +638,7 @@ public class ValidationUtils {
 								mes.addLink(l);
 							}
 							dupes++;
-							mes.addSubstanceLink(s.getLinkingID(), s.getApprovalIDDisplay(), s.getName());
+							mes.addLink(GinasUtils.createSubstanceLink(s));
 						}
 					}
 					if (dupes > 0) {

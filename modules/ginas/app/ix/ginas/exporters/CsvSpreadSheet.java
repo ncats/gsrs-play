@@ -1,16 +1,11 @@
 package ix.ginas.exporters;
 
-import ix.core.util.IOUtil;
 import org.apache.commons.io.IOUtils;
 
-import javax.swing.text.DateFormatter;
 import java.io.*;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by katzelda on 8/19/16.
@@ -23,20 +18,26 @@ public class CsvSpreadSheet implements Spreadsheet {
 
     private final DateFormat dateFormat;
 
-    private CsvRow[] rows = new CsvRow[0];
+    protected CsvRow[] rows;
 
     private final BufferedWriter writer;
 
     private volatile boolean closed=false;
 
 
-    private CsvSpreadSheet(Builder builder){
-        this.writer = builder.writer;
-        this.delimiter = builder.delimiter;
-        this.quoteCells = builder.quoteCells;
+    CsvSpreadSheet(CsvSpreadsheetBuilder builder){
+        this.writer = builder.getWriter();
+        this.delimiter = builder.getDelimiter();
+        this.quoteCells = builder.shouldQuoteCells();
 
-        this.dateFormat = builder.dateFormat;
+        this.dateFormat = builder.getDateFormat();
 
+        this.rows = initializeRowsArray(builder);
+
+    }
+
+    protected CsvRow[] initializeRowsArray(CsvSpreadsheetBuilder builder){
+        return new CsvRow[0];
     }
     @Override
     public SpreadsheetCell getCell(int i, int j) {
@@ -50,14 +51,22 @@ public class CsvSpreadSheet implements Spreadsheet {
         if(i < 0){
             throw new IndexOutOfBoundsException("can not have negative indexes: " + i);
         }
-        ensureCapacity(i);
-        CsvRow r= rows[i];
+        return getRowImpl(i);
+    }
+
+    protected Row getRowImpl(int absoluteOffset) {
+        ensureCapacity(absoluteOffset);
+        CsvRow r= rows[absoluteOffset];
         if(r ==null){
-            r = new CsvRow(dateFormat);
-            rows[i] =r;
+            r = createNewRow();
+            rows[absoluteOffset] =r;
         }
 
         return r;
+    }
+
+    protected CsvRow createNewRow(){
+        return new CsvRow(dateFormat);
     }
 
     @Override
@@ -65,28 +74,37 @@ public class CsvSpreadSheet implements Spreadsheet {
         if(!closed){
             closed = true;
             try {
-                for (CsvRow r : rows) {
-                    if (r != null) {
-                        String[] rowStrings = new String[r.values.length];
-
-                        for(int j=0; j< r.values.length; j++){
-                            CsvCell cell = r.values[j];
-                            String value = cell ==null? "": cell.value;
-                            if(quoteCells){
-                                value = "\""+value + "\"";
-                            }
-                            rowStrings[j] = value;
-                        }
-                        writer.write(String.join(delimiter, rowStrings));
-                    }
-                    // if r is null treat it as a blank
-                    writer.newLine();
-                }
+                writeRemainingRows();
             }finally{
+                writer.flush();
                 IOUtils.closeQuietly(writer);
             }
         }
 
+    }
+
+    protected void writeRemainingRows() throws IOException {
+        for (CsvRow r : rows) {
+            writeRow(r);
+        }
+    }
+
+    protected void writeRow(CsvRow r) throws IOException {
+        if (r != null) {
+            String[] rowStrings = new String[r.values.length];
+
+            for(int j=0; j< r.values.length; j++){
+                CsvCell cell = r.values[j];
+                String value = cell ==null? "": cell.value;
+                if(quoteCells){
+                    value = "\""+value + "\"";
+                }
+                rowStrings[j] = value;
+            }
+            writer.write(String.join(delimiter, rowStrings));
+        }
+        // if r is null treat it as a blank
+        writer.newLine();
     }
 
     private void ensureNotClosed(){
@@ -94,64 +112,15 @@ public class CsvSpreadSheet implements Spreadsheet {
             throw new IllegalStateException("already closed");
         }
     }
-    private void ensureCapacity(int length){
-        if(rows.length < length) {
-            rows= Arrays.copyOf(rows, length);
+    private void ensureCapacity(int offset){
+        int requiredLength = offset+1;
+        if(rows.length < requiredLength) {
+            rows= Arrays.copyOf(rows, requiredLength);
         }
     }
 
 
-    public static class Builder{
-        private static final SimpleDateFormat DEFAULT_FORMAT = new SimpleDateFormat("yyyy-MMM-dd");
-
-        private DateFormat dateFormat=  new SimpleDateFormat(DEFAULT_FORMAT.toPattern());
-        private String delimiter = ",";
-        private boolean quoteCells;
-
-        private final BufferedWriter writer;
-
-        public Builder(File outputFile) throws IOException{
-            Objects.requireNonNull(outputFile);
-
-            File parent = outputFile.getParentFile();
-
-            //TODO use Paths to make dir so we get IOExceptions
-            if(parent !=null){
-                parent.mkdirs();
-            }
-            writer = new BufferedWriter(new FileWriter(outputFile));
-        }
-
-        public Builder(OutputStream out){
-            writer = new BufferedWriter( new OutputStreamWriter(out));
-        }
-
-        public Builder delimiter(String delimiter){
-            Objects.requireNonNull(delimiter);
-            this.delimiter = delimiter;
-
-            return this;
-        }
-
-        public Builder dateFormat(DateFormat dateFormat){
-            Objects.requireNonNull(dateFormat);
-            this.dateFormat = dateFormat;
-
-            return this;
-        }
-
-        public Builder quoteCells(boolean quoteCells){
-            this.quoteCells = quoteCells;
-
-            return this;
-        }
-
-        public Spreadsheet build(){
-            return new CsvSpreadSheet(this);
-        }
-    }
-
-    private static final class CsvRow implements Row{
+    protected static final class CsvRow implements Row{
         CsvCell[] values = new CsvCell[0];
         private final DateFormat dateFormat;
 
@@ -175,10 +144,19 @@ public class CsvSpreadSheet implements Spreadsheet {
             return c;
         }
 
-        private void ensureCapacity(int length){
-            if(values.length < length) {
-                 values= Arrays.copyOf(values, length);
+        private void ensureCapacity(int offset){
+            int requiredLength = offset+1;
+            if(values.length < requiredLength) {
+                 values= Arrays.copyOf(values, requiredLength);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "CsvRow{" +
+                    "values=" + Arrays.toString(values) +
+                    ", dateFormat=" + dateFormat +
+                    '}';
         }
     }
 
@@ -205,6 +183,14 @@ public class CsvSpreadSheet implements Spreadsheet {
         @Override
         public void writeString(String s) {
             value = s;
+        }
+
+        @Override
+        public String toString() {
+            return "CsvCell{" +
+                    "dateFormat=" + dateFormat +
+                    ", value='" + value + '\'' +
+                    '}';
         }
     }
 }
