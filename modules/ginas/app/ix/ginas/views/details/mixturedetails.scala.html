@@ -21,10 +21,11 @@
         <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
     }
     @if(sub.mixture.getParentSubstance!= null){
-    <div class="row info" id="parent">
-        <button class="btn btn-primary label-offset det">
+        <button class="btn btn-primary label-offset det" ng-click = "sourcecollapse = !sourcecollapse">
+            <i ng-show="sourcecollapse" class="fa fa-caret-right"></i>
+            <i ng-hide="sourcecollapse" class="fa fa-caret-down"></i>
             Source Material Parent</button>
-        <div class="col-md-12">
+        <div class="col-md-12 table-responsive" uib-collapse = "sourcecollapse">
             <br>
         <div class="row">
                 @properties.subref(sub.mixture.getParentSubstance)

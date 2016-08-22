@@ -14,9 +14,11 @@ Changes:
 8. Refactored export mechanism to consume less memory
 9. Fixed flex match caching issue
 10. Fixed navlist on details view not scrollable
-11. fixed error page overlap
+11. Fixed error page overlap
 12. Hide "+" icon on text search with known results
-
+13. Make browse page labels collapsible
+14. Fix tooltip locator overlap issue
+15. Fix missing button in subref search
 
 GSRS v1.2.04
 ============

@@ -76,9 +76,11 @@
         </div>
         <div class = "col-md-9 col-md-offset-3 col-xs-12">
             <div class="row info" id="details">
-                <button class="btn btn-primary label-offset det text-capitalize">
+                <button class="btn btn-primary label-offset det text-capitalize" ng-click = "detiscollapsed=!detiscollapsed">
+                    <i ng-cloak ="" ng-show="detiscollapsed" class="fa fa-caret-right"></i>
+                    <i ng-cloak ="" ng-hide="detiscollapsed" class="fa fa-caret-down"></i>
                     @sub.substanceClass Details</button>
-                <div class ="col-md-12">
+                <div class ="col-md-12" uib-collapse="detiscollapsed">
                     <div class = "row">
                         <div class="col-md-4">
                             <code class="text-uppercase">Record Status: @sub.getDisplayStatus()</code> <br>
@@ -129,9 +131,12 @@
             @if(sub.hasModifications()) {
 
                 <div class="row info" id="modification">
-                    <button class="btn btn-primary label-offset det ">
-                        Modifications&nbsp;<span class="badge head"> @sub.getModificationCount()</span></button>
-                    <div class="col-md-12" table-responsive>
+                    <button class="btn btn-primary label-offset det" ng-click = "modscollapse = !modscollapse">
+                        <i ng-show="modscollapse" class="fa fa-caret-right"></i>
+                        <i ng-hide="modscollapse" class="fa fa-caret-down"></i>
+                        Modifications&nbsp;<span class="badge head">
+                            @sub.getModificationCount()</span></button>
+                        <div class="col-md-12 table-responsive" uib-collapse = "modscollapse">
                         @if(sub.getModifications().agentModifications.size > 0) {
                             @properties.agentmodifications(sub.getModifications().agentModifications)
                         }
@@ -195,17 +200,22 @@
                 </div>
             }
 
-            <div class="row info " id="refs">
-                <button class="btn btn-primary label-offset det">
+            <div class="row info" id="refs">
+                <button class="btn btn-primary label-offset det" ng-click = "referencescollapse = !referencescollapse">
+                    <i ng-show="referencescollapse" class="fa fa-caret-right"></i>
+                    <i ng-hide="referencescollapse" class="fa fa-caret-down"></i>
                     References&nbsp;<span class="badge"> @sub.references.size()</span></button>
-                <div class="table-responsive">
-                <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
+                <div class="col-md-12 table-responsive" uib-collapse = "referencescollapse">
+                    <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
                     </div>
             </div>
 
-            <div class="row info table-responsive" id="audit">
-                <button class="btn btn-primary label-offset det">
-                Audit Information</button>
+            <div class="row info" id="audit">
+                <button class="btn btn-primary label-offset det" ng-click = "auditscollapse = !auditscollapse">
+                    <i ng-show="auditscollapse" class="fa fa-caret-right"></i>
+                    <i ng-hide="auditscollapse" class="fa fa-caret-down"></i>
+                   Audit Information</button>
+                <div class="col-md-12 table-responsive" uib-collapse = "auditscollapse">
                     <table class="table table-striped keyvalue">
                     <tbody>
                     	@if(sub.approved!=null){
@@ -220,6 +230,7 @@
                             <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
                         }
                 </tbody></table>
+                    </div>
                 </div>
         </div>
 </div>

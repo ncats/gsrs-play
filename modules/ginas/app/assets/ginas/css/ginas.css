@@ -69,7 +69,7 @@ body, html {
 .sidebar {
     position: fixed;
     height:100%;
-    bottom: 10%;
+    bottom: -13rem;
     overflow-y: scroll;
 }
 
@@ -81,8 +81,12 @@ body, html {
 
 @media (min-width: 1200px) {
     .col-md-3.sidebar {
-        width: 15%;
+        width: 20%;
     }
+}
+
+nav#breadcrumb {
+    padding-bottom: 10rem;
 }
 
 #pub-history {
