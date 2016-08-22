@@ -1,6 +1,7 @@
 package ix.core.chem;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -216,11 +217,24 @@ public class FormulaInfo implements Comparable<FormulaInfo>{
 			}
 			return fis;
 		}
-		
-		public static String toCanonicalString(List<FormulaInfo> fis){
-			Collections.sort(fis);
+		public static String toCanonicalString(Iterable<FormulaInfo> fis){
+			List<FormulaInfo> lfis = null;
+			if(fis instanceof List){
+				lfis = (List<FormulaInfo>)fis;
+			}else{
+				lfis = new ArrayList<FormulaInfo>();
+				if(lfis instanceof Collection){
+					lfis.addAll((Collection<FormulaInfo>)fis);
+				}else{
+					for(FormulaInfo fi : fis){
+						lfis.add(fi);
+					}
+				}
+			}
+					
+			Collections.sort(lfis);
 			List<String> sforms = new ArrayList<String>();
-			for(FormulaInfo fi:fis){
+			for(FormulaInfo fi:lfis){
 				if(fi.count>1){
 					sforms.add(fi.count + fi.simpleForm);
 				}else{
