@@ -845,6 +845,7 @@
             $scope.open(url);
         };
         $scope.approveSubstance = function () {
+            $scope.updateNav = false;
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             var keyid = $scope.substance.uuid.substr(0, 8);
             location.href = baseurl + "substance/" + keyid + "/approve";
