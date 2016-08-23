@@ -1,3 +1,6 @@
+
+@(mol: String)
+
 @ginas("Structure Search: ", null) {
     @menu()
 } {
@@ -7,10 +10,14 @@
         </div>
         <div class="col-md-12">
             <form class="form-inline"
-            method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()" novalidate>
+            method="POST" action="@ix.ginas.controllers.routes.GinasApp.structureSearchPost()" novalidate>
                 <div class="row form-row">
                     <div class="col-md-12">
-                        <sketcher parent = substance ng-model=parent.structure.molfile ajax="false"></sketcher>
+                        <sketcher parent = substance ng-model=parent.structure.molfile ajax="false" 
+                        	@if(mol != null) {
+                        		load="@mol"
+                        	}
+                        ></sketcher>
 
                     </div>
                 </div>
@@ -53,16 +60,14 @@
                         ng-model="cutoff"
                         >
                         </div>
-                        <input type="text" class="form-control"
+                        <textarea type="text" class="form-control"
                         data-toggle="tooltip"
                         title="Query structure"
                         name="q"
                         ng-hide="true"
                         ng-model= substance.q
-                        id="structure">
-                    <div class="col-md-5">
-                        <pre>{{substance.q}}</pre>
-                    </div>
+                        id="structure"></textarea>
+                         
                     <div class="col-md-2 pull-right">
                         <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
                         <modal-button class= "pull-right padded" type= "import"></modal-button>
@@ -101,5 +106,5 @@
             </div>
         </div>
     </div>
-
+    
 }

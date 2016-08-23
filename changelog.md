@@ -19,6 +19,14 @@ Changes:
 13. Added canonicalization algorithm for mol formulas
     to approximate modified Hill System Order, 
     compatible with MDL cartridge.
+14. Allow UI download of SDF and CSV for results
+15. Show structure of query on flex / exact search
+16. Preserve drawn structure coordinates on structure 
+    query
+17. Use molfile for search rather than smiles by default
+    to avoid structure processing errors from drawing
+    tool, which lead to improper results.
+
 
 GSRS v1.2.04
 ============

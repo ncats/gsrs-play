@@ -752,7 +752,6 @@
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
 	    function success(response) {
-		console.log("Response!");
                 $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
@@ -1626,9 +1625,9 @@
                 scope.sketcher.setMolfile(scope.mol);
                 scope.sketcher.options.ondatachange = function () {
                     scope.mol = scope.sketcher.getMolfile();
-                    if(attrs.ajax =='false') {
+                    if(attrs.ajax == 'false') {
                         $timeout(function() {
-                            _.set(scope.parent, 'q', scope.sketcher.getSmiles());
+                            _.set(scope.parent, 'q', scope.sketcher.getMolfile());
                         }, 0);
                     }else{
                         scope.updateMol();
@@ -1636,6 +1635,7 @@
                 };
                 molChanger.setSketcher(scope.sketcher);
                 var structureid = (localStorageService.get('structureid') || false);
+
                 if (localStorageService.get('editID')) {
                     structureid = false;
                 }
@@ -1652,7 +1652,12 @@
                             }
                     }
                 }
-
+		if(attrs.load){
+			var load=attrs.load;
+		 	$timeout(function() {
+				scope.sketcher.setMolfile(load);
+			},0);
+		}
                 if (structureid) {
                     var url = baseurl + 'api/v1/structures/' + structureid;
                     $http.get( url, {cache: true}).then(function (response) {

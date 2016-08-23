@@ -120,7 +120,54 @@ import tripod.chem.indexer.StructureIndexer;
 
 public class GinasApp extends App {
     static Model.Finder<UUID, Substance> SUBFINDER ;
-
+    
+    /**
+     * Search types used for UI searches. At this time 
+     * these types do not extend to API searches.
+     * 
+     * @author tyler
+     *
+     */
+    public static enum SearchType{
+    	SUBSTRUCTURE,
+    	SIMILARITY,
+    	EXACT,
+    	FLEX,
+    	SEQUENCE,
+    	TEXT;
+    	public boolean isStructureSearch(){
+    		switch(this){
+    			case SUBSTRUCTURE:
+    			case SIMILARITY:
+    			case EXACT:
+    			case FLEX:
+    				return true;
+    			default:
+    				return false;
+    		}
+    	}
+    	public boolean isSequenceSearch(){
+    		return this == SEQUENCE;
+    	}
+    	public static SearchType valueFor(String type){
+    		if(type==null)return TEXT;
+    		if(type.toLowerCase().startsWith("sub")){
+    			return SUBSTRUCTURE;
+    		}else if(type.toLowerCase().startsWith("sim")){
+    			return SIMILARITY;
+    		}else if(type.toLowerCase().startsWith("exa")){
+    			return EXACT;
+    		}else if(type.toLowerCase().startsWith("seq")){
+    			return SEQUENCE;
+    		}else if(type.toLowerCase().startsWith("fle")){
+    			return FLEX;
+    		}else if(type.toLowerCase().startsWith("text")){
+    			return TEXT;
+    		}
+    		return TEXT;
+    	}
+    }
+    
     // relationship finder
 //    static final Model.Finder<UUID, Relationship> RELFINDER =
 //        new Model.Finder<UUID, Relationship>(UUID.class, Relationship.class);
@@ -414,7 +461,7 @@ public class GinasApp extends App {
 	}
 	
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
-                   maxLength = 10_000)
+                   maxLength = 50_000)
     public static Result sequenceSearch () {
 
         if (request().body().isMaxSizeExceeded()) {
@@ -445,6 +492,43 @@ public class GinasApp extends App {
         
         return badRequest ("Invalid \"sequence\" parameter specified!");
     }
+    
+    
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
+            maxLength = 50_000)
+	public static Result structureSearchPost () {
+	
+	 if (request().body().isMaxSizeExceeded()) {
+	     return badRequest ("Structure is too large!");
+	 }
+	 
+	 Map<String, String[]> params = request().body().asFormUrlEncoded();
+	
+	 String[] values = params.get("q");
+	 String[] type = params.get("type");
+	 if(type==null || type.length==0){
+		 type= new String[]{"flex"};
+	 }
+	 String co=getFirstOrElse(params.get("cutoff"),"0.5");
+	 String wait=getFirstOrElse(params.get("wait"),null);
+	 
+	 if (values != null && values.length > 0) {
+	     Structure q = getStructureFrom(values[0]);
+	     
+	     
+	     try {
+	         Call call = routes.GinasApp.substances
+	         (q.id.toString(), 16, 1);
+	         return redirect (call.url()+"&type=" + type[0] + "&cutoff=" + co + ((wait!=null)?"&wait=" + wait:""));
+	     }
+	     catch (Exception ex) {
+	         ex.printStackTrace();
+	         return _internalServerError (ex);
+	     }
+	 }
+	 
+	 return badRequest ("Invalid \"q\" parameter specified!");
+	}
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result admin () {
@@ -458,66 +542,57 @@ public class GinasApp extends App {
 
         return ok (ix.ginas.views.html.admin.profile.render(user));
     }
-    
+        
+   
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
         String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
-
+        SearchType stype = SearchType.valueFor(type);
         try {
-            if (type == null) {
-            }
-            else if (type.equalsIgnoreCase("sequence")) {
-                // the query is the uuid of the payload
-                return sequences (q, rows, page);
-            }
-            else if (type.toLowerCase().startsWith("sub")
-                     || type.toLowerCase().startsWith("sim")) {
-                // structure search
-                String cutoff = request().getQueryString("cutoff");
-                Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
-                             + cutoff);
-                try {
-                    if (type.toLowerCase().startsWith("sub")) {
-                        return substructure(q, rows, page);
-                    } else {
-                        // cap the cutoff at .3.. there is no need to go lower,
-                        // otherwise, you're up to no good
-                        double thres = Math.max
-                            (.3, Math.min(1.,Double.parseDouble(cutoff)));
-                        return similarity(q, thres, rows, page);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                return notFound(ix.ginas.views.html.error.render
+        	if(stype.isStructureSearch()){
+        		String cutoff = request().getQueryString("cutoff");
+        		try {
+	        		String modStructure=getStructureStringFrom(q);
+	        		switch(stype){
+		        		case SUBSTRUCTURE:
+		        			return substructure(modStructure, rows, page);
+		        		case SIMILARITY:
+		        			
+		        			double thres = Math.max
+		                    (.3, Math.min(1.,Double.parseDouble(cutoff)));
+		        			return similarity(modStructure, thres, rows, page);
+		        		case FLEX:
+		        			return lychimatch(getStructureStringFrom(q), rows, page, false);
+		        		case EXACT:
+		        			return lychimatch(getStructureStringFrom(q), rows, page, true);
+		        		default:
+		        			return substructure(modStructure, rows, page);
+		        	}
+        		}catch(Exception e){
+        			e.printStackTrace();
+        		}
+        		return notFound(ix.ginas.views.html.error.render
                         (400, "Invalid search parameters: type=\""
                                 + type + "\"; q=\"" + q + "\" cutoff=\""
                                 + cutoff + "\"!"));
-            }else if (type.equalsIgnoreCase("flex") || type.equalsIgnoreCase("exact")) {
-               try {
-                   if(type.equalsIgnoreCase("flex")){
-                           return lychimatch(q, rows, page, false);
-                   }else{
-                           return lychimatch(q, rows, page, true);
-                   }
-               } catch (Exception ex) {
-                   ex.printStackTrace();
-               }
-               return notFound(ix.ginas.views.html.error.render
-                       (400, "Invalid search parameters: type=\""
-                               + type + "\"; q=\"" + q + "\"!"));
-            }
-            return _substances (q, rows, page);
-        }
-        catch (Exception ex) {
+        	}else if(stype.isSequenceSearch()){
+        		 return sequences (q, rows, page);
+        	}else{
+        		return _substances (q, rows, page);
+        	}
+        }catch (Exception ex) {
             ex.printStackTrace();
             return _internalServerError(ex);
         }
     }
    
+    public static String getStructureStringFrom(String q){
+    	Structure s= getStructureFrom(q);
+    	if(s!=null)return s.molfile;
+    	return q;
+    }
    
     public static Result export (String collectionID, String format) {
     	
@@ -529,7 +604,7 @@ public class GinasApp extends App {
     	
     	try{
 	    		 
-	    	final PipedInputStream pis = new PipedInputStream ();
+	    	final PipedInputStream pis =               new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
 	    	    	    	
 	    	ExporterBuilder exportBuilder = new ExporterBuilder(pos).setOutputFormat(format);
@@ -541,15 +616,9 @@ public class GinasApp extends App {
 	    	Executors.newSingleThreadExecutor().submit(new Runnable () {
     	        public void run () {
     	            try {
-    	            	exp.exportForEachAndClose(src.getResults());
+    	            	exp.exportForEachAndClose(src.getResults().iterator());
     	            }catch (IOException ex) {
     	            	ex.printStackTrace();
-    	            }finally{
-    	            	try{
-    	            		exp.close();
-    	            	}catch(Exception e){
-    	            		
-    	            	}
     	            }
     	        }
     	        });
@@ -767,7 +836,6 @@ public class GinasApp extends App {
         if ( q != null || request().queryString().containsKey("facet")) {
             final TextIndexer.SearchResult result =
                 getSubstanceSearchResult (q, total, oq);
-            System.out.println(result);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
@@ -963,7 +1031,7 @@ public class GinasApp extends App {
                         Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
                         String hash=struc2.getLychiv3Hash();
                         if(exact){
-                        	hash="root_structure_properties_term:" + struc2.getLychiv3Hash();
+                        	hash="root_structure_properties_term:" + struc2.getLychiv4Hash();
                         }
                         return _substances(hash,rows,page, CHEMICAL_FACETS);
                 }catch(Exception e){
@@ -1284,6 +1352,33 @@ public class GinasApp extends App {
         }
         return ok(node);
     }
+    
+	public static Structure getStructureFrom(String str) {
+		if(str==null) return null;
+		if(Util.isUUID(str)){
+    		Structure s = StructureFactory.getStructure(str);
+    		if(s!=null){
+    			return s;
+    		}
+    	}
+		
+    	
+		try {
+			List<Structure> moieties = new ArrayList<Structure>();
+			String payload = ChemCleaner.getCleanMolfile(str);
+			Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
+																						// standardize!
+			if (payload.contains("\n") && payload.contains("M  END")) {
+				struc.molfile = payload;
+			}
+
+			StructureFactory.saveTempStructure(struc);
+			return struc;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new IllegalStateException("Can not parse structure from:" +str);
+		}
+	}
     
     
     // sigh ... this is the best of a bunch of bad options now
