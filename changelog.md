@@ -26,7 +26,8 @@ Changes:
 17. Use molfile for search rather than smiles by default
     to avoid structure processing errors from drawing
     tool, which lead to improper results.
-
+18. Fixed paging buttons to be more standardized, allow
+    seeing next 2 pages on browse.
 
 GSRS v1.2.04
 ============
