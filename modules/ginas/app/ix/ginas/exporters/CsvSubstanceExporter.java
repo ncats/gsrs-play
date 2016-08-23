@@ -12,11 +12,10 @@ import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 
 import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 
 public class CsvSubstanceExporter implements Exporter<Substance> {
     public static abstract class Columns{
@@ -100,9 +99,8 @@ public class CsvSubstanceExporter implements Exporter<Substance> {
                 @Override
                 String getContent(Substance s) {
                 	if(s instanceof ChemicalSubstance){
-                		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
                 		try{
-	                		Chemical chem = GinasUtils.substanceToChemical(s, messages);
+	                		Chemical chem = s.toChemical();
 	                		String ikey=chem.export(chemicalFormat);
 	                		return ikey;
                 		}catch(Exception e){

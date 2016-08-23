@@ -1,10 +1,7 @@
 package ix.core.models;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import javax.persistence.*;
 
@@ -26,7 +23,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.AbstractValueDeserializer;
+import ix.core.GinasProcessingMessage;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
 
@@ -36,6 +37,8 @@ import ix.utils.Global;
 @DiscriminatorValue("DEF")
 @Table(name = "ix_core_structure")
 public class Structure extends BaseModel implements ForceUpdatableModel{
+
+    private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
 
     @Id
     public UUID id;
@@ -385,4 +388,37 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
 		super.update();
 		return ov!=version;
 	}
+
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical() {
+        return toChemical(new ArrayList<>());
+    }
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical(List<GinasProcessingMessage> messages) {
+        Objects.requireNonNull(messages);
+        Chemical c;
+        String mfile = molfile;
+        c = DEFAULT_READER_FACTORY.createChemical(mfile, Chemical.FORMAT_SDF);
+        if (stereoChemistry != null)
+            c.setProperty("STEREOCHEMISTRY", stereoChemistry.toString());
+        if (opticalActivity != null)
+            c.setProperty("OPTICAL_ACTIVITY", opticalActivity.toString());
+        if (stereoComments != null)
+            c.setProperty("STEREOCHEMISTRY_COMMENTS", stereoComments);
+        if (stereoChemistry != null) {
+            if(Structure.Stereo.EPIMERIC.equals(stereoChemistry) ||
+                    Structure.Stereo.MIXED.equals(stereoChemistry) ||
+                    Structure.Stereo.RACEMIC.equals(stereoChemistry) ||
+                    Structure.Stereo.UNKNOWN.equals(stereoChemistry)) {
+                messages.add(GinasProcessingMessage
+                        .WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
+            }
+        }
+        if (smiles != null)
+            c.setProperty("SMILES", smiles);
+        return c;
+
+    }
 }

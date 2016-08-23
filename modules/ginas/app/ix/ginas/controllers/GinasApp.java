@@ -1,18 +1,10 @@
 package ix.ginas.controllers;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.reflect.Field;
-import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -25,18 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
-import ix.ginas.utils.reindex.ReindexQuery;
-import ix.ginas.utils.reindex.ReindexQueryBuilder;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -99,9 +86,8 @@ import ix.ginas.models.v1.Subunit;
 import ix.ginas.models.v1.Sugar;
 import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
-import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
@@ -1646,10 +1632,10 @@ public class GinasApp extends App {
         
         if(s==null){
                 Structure struc = StructureFactory.getStructure(id);
-                c = GinasUtils.structureToChemical(struc, messages);
+                c = struc.toChemical(messages);
                 
         }else{
-                c = GinasUtils.substanceToChemical(s, messages);
+                c = s.toChemical(messages);
         }
         
         
@@ -1688,19 +1674,11 @@ public class GinasApp extends App {
     
     public static String formatMolfile(Chemical c, int format) throws Exception{
         String mol=c.export(format);
-        StringBuilder sb=new StringBuilder();
-        int i=0;
-        for(String line: mol.split("\n")){
-                if(i!=0){
-                        sb.append("\n");
-                }
-                if(i==1){
-                        line=" G-SRS " + line;
-                }
-                i++;
-                sb.append(line);
-        }
-        return sb.toString();
+
+        String[] lines = mol.split("\n");
+        lines[1] = " G-SRS " + lines[1];
+
+        return String.join("\n", lines);
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
         StringBuilder sb= new StringBuilder();

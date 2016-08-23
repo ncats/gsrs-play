@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nih.ncgc.chemical.Chemical;
+import ix.core.GinasProcessingMessage;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
@@ -105,6 +107,9 @@ public class ChemicalSubstance extends Substance  {
     		m.delete();
     	}
     }
-    
-    
+
+    @Override
+    protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
+        return structure.toChemical(messages);
+    }
 }

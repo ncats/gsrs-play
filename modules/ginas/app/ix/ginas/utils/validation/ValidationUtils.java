@@ -15,11 +15,6 @@ import java.util.regex.Pattern;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-import chemaxon.struc.MolAtom;
-import chemaxon.struc.Molecule;
-import com.typesafe.config.ConfigValue;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.jchemical.Jchemical;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -50,13 +45,9 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.models.v1.Unit;
-import ix.ginas.utils.ChemUtils;
-import ix.ginas.utils.GinasProcessingMessage;
-import ix.ginas.utils.GinasProcessingMessage.Link;
-import ix.ginas.utils.GinasProcessingStrategy;
-import ix.ginas.utils.GinasUtils;
-import ix.ginas.utils.NucleicAcidUtils;
-import ix.ginas.utils.ProteinUtils;
+import ix.ginas.utils.*;
+import ix.core.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage.Link;
 import play.Configuration;
 import play.Logger;
 import play.Play;
@@ -457,7 +448,7 @@ public class ValidationUtils {
 										"Name '"
 												+ n.name
 												+ "' collides with existing name for substance:")
-								.addSubstanceLink(s2);
+								.addLink(GinasUtils.createSubstanceLink(s2));
 						gpm.add(mes);
 						strat.processMessage(mes);
 					}
@@ -517,7 +508,7 @@ public class ValidationUtils {
 										"Code '"
 												+ cd.code
 												+ "' collides with existing code & codeSystem for substance:")
-								.addSubstanceLink(s2);
+								. addLink(GinasUtils.createSubstanceLink(s2));
 						gpm.add(mes);
 						strat.processMessage(mes);
 					}
@@ -597,7 +588,7 @@ public class ValidationUtils {
 							mes = GinasProcessingMessage
 									.WARNING_MESSAGE("Structure has 1 possible duplicate:");
 						dupes++;
-						mes.addSubstanceLink(s);
+						mes.addLink(GinasUtils.createSubstanceLink(s));
 					}
 				}
 				if (dupes > 0) {
@@ -647,7 +638,7 @@ public class ValidationUtils {
 								mes.addLink(l);
 							}
 							dupes++;
-							mes.addSubstanceLink(s);
+							mes.addLink(GinasUtils.createSubstanceLink(s));
 						}
 					}
 					if (dupes > 0) {

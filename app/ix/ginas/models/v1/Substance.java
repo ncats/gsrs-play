@@ -1,9 +1,6 @@
 package ix.ginas.models.v1;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -29,13 +26,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.models.Backup;
-import ix.core.models.BeanViews;
-import ix.core.models.DataVersion;
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
-import ix.core.models.ProcessingJob;
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.GinasProcessingMessage;
+import ix.core.models.*;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.EmbeddedKeywordList;
@@ -70,6 +65,8 @@ public class Substance extends GinasCommonData {
 	public static final String STATUS_ALTERNATIVE = "alternative";
 	public static final String DEFAULT_ALTERNATIVE_NAME = "ALTERNATIVE DEFINITION";
 
+	private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
+	private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 	
 	public enum SubstanceClass {
 		chemical, 
@@ -847,14 +844,17 @@ public class Substance extends GinasCommonData {
 	 * @return List of Keywords matching criteria
 	 */
 	public List<Keyword> removeTagString(String tag) {
-		List<Keyword> toRemove = new ArrayList<Keyword>();
-		for(Keyword k:tags){
-			if(k.getValue().equals(tag)){
-				toRemove.add(k);
-			}
-		}
-		tags.removeAll(toRemove);
-		return toRemove;
+		List<Keyword> removed = new ArrayList<Keyword>();
+
+        Iterator<Keyword> iter = tags.iterator();
+        while(iter.hasNext()){
+            Keyword k = iter.next();
+            if(k.getValue().equals(tag)){
+                iter.remove();
+                removed.add(k);
+            }
+        }
+		return removed;
 	}
 	
 	/**
@@ -914,4 +914,118 @@ public class Substance extends GinasCommonData {
 //		}
 //		return false;
 //	}
+
+    /**
+     * Create a new {@link Chemical} object for this Substance and ignore
+     * any errors or warnings.
+     *
+     * @return a new {@link Chemical} object, should never be null.
+     *
+     */
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical() {
+        return toChemical(new ArrayList<>());
+    }
+
+
+    /**
+     * Create a new {@link Chemical} object for this Substance and report any
+     * errors or warnings to the passed in {@link GinasProcessingMessage} parameter.
+     *
+     * @param messages the list of {@link GinasProcessingMessage}s to add
+     *                 errors/warnings to if there are problems.
+     * @return a new {@link Chemical} object, should never be null.
+     *
+     * @throws NullPointerException if messages is null
+     */
+    @JsonIgnore
+    @Transient
+    public Chemical toChemical(List<GinasProcessingMessage> messages) {
+        Objects.requireNonNull(messages);
+        Chemical c = getChemicalImpl(messages);
+
+        if (c.getDim() < 2) {
+            c.clean2D();
+        }
+        if (approvalID != null) {
+            c.setProperty("APPROVAL_ID", approvalID);
+        }
+        c.setProperty("NAME", getName());
+        c.setName(getName());
+        StringBuilder sb = new StringBuilder();
+
+        for (Name n : getOfficialNames()) {
+            String name = n.name;
+            sb.append(name + "\n");
+
+            for (String loc : n.getLocators(this)) {
+                sb.append(name + " [" + loc + "]\n");
+            }
+
+        }
+        if (sb.length() > 0) {
+            c.setProperty("OFFICIAL_NAMES", sb.toString());
+        }
+        // clear builder
+        sb.setLength(0);
+        for (Name n : getNonOfficialNames()) {
+            String name = n.name;
+            sb.append(name + "\n");
+
+            for (String loc : n.getLocators(this)) {
+                sb.append(name + " [" + loc + "]\n");
+            }
+        }
+        if (sb.length() > 0) {
+            c.setProperty("NON_OFFICIAL_NAMES", sb.toString());
+        }
+        // clear builder
+        sb.setLength(0);
+
+        for (Code cd : codes) {
+            String codesset = c.getProperty(cd.codeSystem);
+
+            StringBuilder codeBuilder;
+            if (codesset == null || codesset.trim().equals("")) {
+                codeBuilder = new StringBuilder();
+            } else {
+                codeBuilder = new StringBuilder(codesset).append('\n');
+            }
+            codeBuilder.append(cd.code);
+            if (!"PRIMARY".equals(cd.type)) {
+                codeBuilder.append(" [").append(cd.type).append("]");
+            }
+            c.setProperty(cd.codeSystem, codeBuilder.toString());
+        }
+        for (GinasProcessingMessage gpm : messages) {
+            String codesset = c.getProperty("EXPORT-WARNINGS");
+
+            StringBuilder codeBuilder;
+            if (codesset == null || codesset.trim().equals("")) {
+                codeBuilder = new StringBuilder();
+            } else {
+                codeBuilder = new StringBuilder(codesset).append('\n');
+            }
+            codeBuilder.append(gpm.message);
+            c.setProperty("EXPORT-WARNINGS", codeBuilder.toString());
+        }
+        return c;
+    }
+
+    /**
+     * Create a new {@link Chemical} object for this Substance.
+     * By default, this will create an empty Chemical, subclasses
+     * that are actually Chemicals should override this method
+     * to return something meaningful.
+     *
+     * @param messages the list of {@link GinasProcessingMessage}s to add
+     *                 errors/warnings to if there are problems.
+     * @return a new {@link Chemical} object, should never be null.
+     */
+	protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
+		messages.add(GinasProcessingMessage
+				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
+		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
+	}
 }
