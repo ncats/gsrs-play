@@ -7,10 +7,11 @@
 
 @(sub: Substance)
 
-
-<button class="btn btn-primary label-offset det">
+<button class="btn btn-primary label-offset det" ng-click = "variantscollapse = !variantscollapse">
+    <i ng-show="variantscollapse" class="fa fa-caret-right"></i>
+    <i ng-hide="variantscollapse" class="fa fa-caret-down"></i>
     Variant Concepts&nbsp;<span class="badge"> @sub.getChildConceptReferences().size</span></button>
-<div class="col-md-12 table-responsive">
+<div class="col-md-12" uib-collapse = "variantscollapse">
         @for(sref <- sub.getChildConceptReferences()) {
 						@if(SubstanceFactory.getFullSubstance(sref) != null) {
                             @subref(sref)

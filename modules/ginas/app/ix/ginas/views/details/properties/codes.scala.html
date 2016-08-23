@@ -3,8 +3,11 @@
 @import ix.ginas.models.v1.Code
 
 @(codes: List[Code], id: String)
-<button class="btn btn-primary label-offset det">Codes&nbsp;<span class="badge"> @codes.length</span></button>
-<div class="col-md-12 table-responsive">
+<button class="btn btn-primary label-offset det" ng-click = "codescollapse = !codescollapse">
+    <i ng-show="codescollapse" class="fa fa-caret-right"></i>
+    <i ng-hide="codescollapse" class="fa fa-caret-down"></i>
+    Codes&nbsp;<span class="badge"> @codes.length</span></button>
+<div class="col-md-12 table-responsive" uib-collapse = "codescollapse">
     <table class="table table-striped" id="codesTable">
         <thead>
             <tr>

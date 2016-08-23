@@ -1,12 +1,14 @@
 package ix.ginas.exporters;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 
-public class SubstanceCategoryGenerator {
+public class SubstanceCategoryGenerator implements ColumnValueRecipe<Substance>{
 	static Set<String> ingredientCategoryTypes =  new HashSet<String>();
 	
 	static{
@@ -22,8 +24,8 @@ public class SubstanceCategoryGenerator {
 	 * 
 	 * @return
 	 */
-	public static Set<String> getIngredientCategoryFlags(Substance s){
-		Set<String> types = new HashSet<String>();
+	private static Set<String> getIngredientCategoryFlags(Substance s){
+		Set<String> types = new TreeSet<String>();
 		for(Relationship rs : s.relationships){
 			String rtype = rs.type;
 			if(ingredientCategoryTypes.contains(rtype)){
@@ -33,7 +35,7 @@ public class SubstanceCategoryGenerator {
 		return types;
 	}
 	
-	public static String getIngredientCategory(Substance s){
+	private static String getIngredientCategory(Substance s){
 		Set<String> types = getIngredientCategoryFlags(s);
 		
 		if(types.size()==0){
@@ -41,5 +43,11 @@ public class SubstanceCategoryGenerator {
 		}
 		
 		return types.iterator().next();
+	}
+
+	@Override
+	public void writeValue(Substance object, SpreadsheetCell cell) {
+		String val = getIngredientCategory(object);
+		cell.writeString(val);
 	}
 }

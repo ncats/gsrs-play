@@ -511,6 +511,9 @@
             return r;
         };
 
+        $scope.printr = function(r){
+            console.log(r);
+        }
 	
         $scope.submitq= function(qinput) {
             if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {

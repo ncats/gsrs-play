@@ -18,17 +18,29 @@
       <div class="btn-group" role="group">
         <ul class="pagination">
           @if(current <= 1) {
-            <li class="disabled">
-              <a href='@HtmlFormat.raw(App.page(rows,current))' aria-label="Previous" target="_self">
-                <span class="sr-only">Previous page disabled</span>
+           	<li class="disabled">
+              <a href='@HtmlFormat.raw(App.page(rows,0))' uib-tooltip="First Page" aria-label="First Page" target="_self">
+                <span class="sr-only">First page disabled</span>
                 <span aria-hidden="true" class="fa fa-angle-double-left"></span>
               </a>
             </li>
+            <li class="disabled">
+              <a href='@HtmlFormat.raw(App.page(rows,current))' uib-tooltip="Previous Page" aria-label="Previous Page" target="_self">
+                <span class="sr-only">Previous page disabled</span>
+                <span aria-hidden="true" class="fa fa-angle-left"></span>
+              </a>
+            </li>
           } else {
-            <li>
-              <a href='@HtmlFormat.raw(App.page(rows, current-1))' aria-label="Previous" target="_self">
-                <span class="sr-only">Previous page</span>
+          	<li>
+              <a href='@HtmlFormat.raw(App.page(rows,0))' uib-tooltip="First Page" aria-label="First Page" target="_self">
+              	<span class="sr-only">First page</span>
                 <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+              </a>
+            </li>
+            <li>
+              <a href='@HtmlFormat.raw(App.page(rows, current-1))' uib-tooltip="Previous Page" aria-label="Previous Page" target="_self">
+                <span class="sr-only">Previous page</span>
+                <span aria-hidden="true" class="fa fa-angle-left"></span>
               </a>
             </li>
           }
@@ -50,14 +62,26 @@
           }
           @if(current >= pages(pages.length-1)) {
             <li class="disabled">
-              <a href='@HtmlFormat.raw(App.page(rows,current))' aria-label="Next" target="_self">
+              <a href='@HtmlFormat.raw(App.page(rows,current))' uib-tooltip="Next Page" aria-label="Next Page" target="_self">
+                <span class="sr-only">Next page disabled</span>
+                <span aria-hidden="true" class="fa fa-angle-right"></span>
+              </a>
+            </li>
+            <li class="disabled">
+              <a href='@HtmlFormat.raw(App.page(rows,pages(pages.length-1)))'  uib-tooltip="Last Page" aria-label="Last Page" target="_self">
                 <span class="sr-only">Next page disabled</span>
                 <span aria-hidden="true" class="fa fa-angle-double-right"></span>
               </a>
             </li>
           } else {
             <li>
-              <a href='@HtmlFormat.raw(App.page(rows,current+1))' aria-label="Next" target="_self">
+              <a href='@HtmlFormat.raw(App.page(rows,current+1))'  uib-tooltip="Next Page" aria-label="Next Page" target="_self">
+                <span class="sr-only">Next page</span>
+                <span aria-hidden="true" class="fa fa-angle-right"></span>
+              </a>
+            </li>
+            <li>
+              <a href='@HtmlFormat.raw(App.page(rows,pages(pages.length-1)))'  uib-tooltip="Last Page" aria-label="Last Page" target="_self">
                 <span class="sr-only">Next page</span>
                 <span aria-hidden="true" class="fa fa-angle-double-right"></span>
               </a>

@@ -671,8 +671,9 @@
                 } else if (scope.ref.uuid) {
                     var url = baseurl + 'substance/' + scope.ref.uuid.split('-')[0];
                     template = angular.element('<div>' +
-                        '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>Ginas Duplicate</code><br/>' +
-                        '<div class ="row"><div class="col-md-3 col-md-offset-3"><a class = "btn btn-primary" href = "' + url + '" target="_blank">View</a></div>' +
+                        '<rendered id = {{ref.uuid}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>G-SRS Duplicate</code><br/>' +
+                        '<div class ="row"><div class="col-md-12"><button class = "btn btn-primary" ng-click="$parent.select(ref)">Apply Structure</button></div></div><br/>' +
+                        '<div class="row"><div class="col-md-3 col-md-offset-3"><a class = "btn btn-primary" href = "' + url + '" target="_blank">View</a></div>' +
                         '<div class = "col-md-3"><a class = "btn btn-primary" href = "' + url + '/edit" target="_self">Edit</a></div>' +
                         '</div></div>');
                 } else if (scope.ref == "empty") {
@@ -680,7 +681,7 @@
                 } else {
                     template = angular.element('<div>' +
                         '<rendered id= {{ref.value.id}} size="200"></rendered><br/><code>{{ref._name}}</code><br/><code>{{ref.source}}</code><br>' +
-                        '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Use</button>' +
+                        '<button class = "btn btn-primary" ng-click="$parent.select(ref)">Apply Structure</button>' +
                         '</div>');
                 }
                 element.append(template);
