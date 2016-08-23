@@ -14,7 +14,7 @@ Changes:
 8. Refactored export mechanism to consume less memory
 9. Fixed flex match caching issue
 10. Fixed navlist on details view not scrollable
-11. fixed error page overlap
+11. Fixed error page overlap
 12. Hide "+" icon on text search with known results
 13. Added canonicalization algorithm for mol formulas
     to approximate modified Hill System Order, 
@@ -28,6 +28,9 @@ Changes:
     tool, which lead to improper results.
 18. Fixed paging buttons to be more standardized, allow
     seeing next 2 pages on browse.
+19. Make browse page labels collapsible
+20. Fix tooltip locator overlap issue
+21. Fix missing button in subref search
 
 GSRS v1.2.04
 ============

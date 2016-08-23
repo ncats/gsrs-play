@@ -21,9 +21,11 @@
     <div></div>
 } {
     <div class="row info" id="structureDetails">
-        <h3>
-            <span class="label label-primary label-offset" id = "struc-label">Structure</span>
-        </h3>
+        <button class="btn btn-primary label-offset det" ng-click = "structurescollapse = !structurescollapse">
+            <i ng-show="structurescollapse" class="fa fa-caret-right"></i>
+            <i ng-hide="structurescollapse" class="fa fa-caret-down"></i>
+            Structure&nbsp;</button>
+        <div class="col-md-12 table-responsive" uib-collapse = "structurescollapse">
             <div class="col-md-5">
                 <div class = "row">
                 @structureImage(sub.structure, 400)
@@ -97,6 +99,7 @@
                 </table>
             </div>
         </div>
+        </div>
         <div class = "row">
             <div class = "col-md-12">
                 <div class = "'@sub.getUuid()'"></div>
@@ -106,9 +109,11 @@
 
     @if(sub.moieties.size > 0) {
         <div class="row info" id="moieties">
-            <button class="btn btn-primary label-offset det">
+            <button class="btn btn-primary label-offset det" ng-click = "moietiescollapse = !moietiescollapse">
+                <i ng-show="moietiescollapse" class="fa fa-caret-right"></i>
+                <i ng-hide="moietiescollapse" class="fa fa-caret-down"></i>
                 Moieties&nbsp;<span class="badge"> @sub.moieties.size</span></button>
-            <div class="col-md-12">
+            <div class="col-md-12 table-responsive" uib-collapse = "moietiescollapse">
             @for(m <- sub.moieties) {
                 <div class ="row">
                     <hr>

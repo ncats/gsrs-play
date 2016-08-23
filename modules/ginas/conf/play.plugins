@@ -1,0 +1,4 @@
+#
+# Plugins
+# ~~~~~~~
+500:ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin

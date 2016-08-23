@@ -2,8 +2,11 @@
 
 
 @(references: List[Reference])
-<button class="btn btn-primary label-offset det">References&nbsp;<span class="badge"> @references.length</span></button>
-<div class="col-md-12">
+<button class="btn btn-primary label-offset det" ng-click = "referencescollapse = !referencescollapse">
+    <i ng-show="referencescollapse" class="fa fa-caret-right"></i>
+    <i ng-hide="referencescollapse" class="fa fa-caret-down"></i>
+    References&nbsp;<span class="badge"> @references.length</span></button>
+<div class="col-md-12 table-responsive" uib-collapse = "referencescollapse">
     <table class="table table-striped" id="allReferencesTable">
         <thead>
             <tr>

@@ -70,7 +70,9 @@
 <div class="row info" id="subunits">
         <div class = "row">
             <div class="col-md-4">
-                <button class="btn btn-primary label-offset det">
+                <button class="btn btn-primary label-offset det" ng-click = "subunitscollapse = !subunitscollapse">
+                    <i ng-show="subunitscollapse" class="fa fa-caret-right"></i>
+                    <i ng-hide="subunitscollapse" class="fa fa-caret-down"></i>
                     Subunits&nbsp;<span class="badge head"> @sub.nucleicAcid.getSubunits().size()</span></button>
             </div>
             <div class = "col-md-2 pull-right">
@@ -79,7 +81,7 @@
                 </form>
             </div>
         </div>
-        <div class = "col-md-12">
+        <div class = "col-md-12" uib-collapse = "subunitscollapse">
             @for(i <- 0 until sub.nucleicAcid.getSubunits.size()) {
                 <subunit uuid="'@sub.getUuid'" index ='@i' view='subunits' numbers="numbers" subclass="nucleicAcid"></subunit>
             }
@@ -88,9 +90,11 @@
 	@defining(sub.nucleicAcid.getSugars().length) { count =>
         @if(count > 0) {
             <div class="row info" id="sugars">
-                <button class="btn btn-primary label-offset det">
+                <button class="btn btn-primary label-offset det" ng-click = "sugarscollapse = !sugarscollapse">
+                    <i ng-show="sugarscollapse" class="fa fa-caret-right"></i>
+                    <i ng-hide="sugarscollapse" class="fa fa-caret-down"></i>
                     Sugars&nbsp;<span class="badge head"> @count</span></button>
-                <div class="col-md-12">
+                <div class="col-md-12" uib-collapse = "sugarscollapse">
                     <table class="table table-striped" id="otherLinks-Table">
                         <thead>
                             <tr><th>Sugar</th>
@@ -113,9 +117,11 @@
     @defining(sub.nucleicAcid.getLinkages().length) { count =>
         @if(count > 0) {
             <div class="row info" id="linkages">
-                <button class="btn btn-primary label-offset det">
+                <button class="btn btn-primary label-offset det" ng-click = "linkagescollapse = !linkagescollapse">
+                    <i ng-show="linkagescollapse" class="fa fa-caret-right"></i>
+                    <i ng-hide="linkagescollapse" class="fa fa-caret-down"></i>
                     Linkages&nbsp;<span class="badge head"> @count</span></button>
-                <div class="col-md-12">
+                <div class="col-md-12" uib-collapse = "linkagescollapse">
                     <table class="table table-striped" id="otherLinks-Table">
                         <thead>
                             <tr><th>Linkage</th>

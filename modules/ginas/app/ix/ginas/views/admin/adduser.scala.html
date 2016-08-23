@@ -18,23 +18,23 @@
                                 <tr><td colspan="2" align="center"><h4>Add User</h4></td></tr>
                                 <tr align="left">
                                     <td><lable>User Name</lable> </td>
-                                    <td> <input class="form-input" type="text" name="username" required/> </td>
+                                    <td> <input class="form-input" type="text" name="username" ng-model="username" required/> </td>
                                 </tr>
                                 <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td><lable>Password</lable></td>
-                                    <td><input class="form-input" type="password" name="password" required /> </td>
+                                    <td><input class="form-input" type="password" name="password" ng-model="password" required /> </td>
                                 </tr>
                                 <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td><lable>Email</lable></td>
-                                    <td><input class="form-input" type="email" name="email" /></td>
+                                    <td><input class="form-input" type="email" name="email" ng-model="email" /></td>
                                 </tr>
 
                                 <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td><lable>Active</lable></td>
-                                    <td><input class="form-input" type="checkbox" name="active" value="true"/></td>
+                                    <td><input class="form-input" type="checkbox" name="active" ng-model="active" value="true"/></td>
                                 </tr>
 
                                 <tr><td colspan="2"><br/></td></tr>
@@ -58,7 +58,7 @@
                                             <span>@gs.name</span> <br/>
                                         }
                                         <div id="grpLable">Enter a Group Name</div>
-                                        <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" id="grpName"></div>
+                                        <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" ng-model="grpName" id="grpName"></div>
                                     </td>
                                 </tr>
 

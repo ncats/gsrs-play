@@ -17,14 +17,14 @@
                                 <tr><td colspan="2" align="center"><h4>Edit User</h4></td></tr>
                                 <tr align="left">
                                     <td><lable>User Name</lable></td>
-                                    <td> <input class="form-input" type="text" name="username" value="@userForm.user.username"
+                                    <td> <input class="form-input" type="text" name="username" value="@userForm.user.username" required
                                         @if(userForm.systemAuth == true){readonly="readonly"} /> </td>
                                 </tr>
 
                                 <tr align="left">
                                     <td><lable>Password</lable></td>
-                                    <td><input class="form-input" type="password" name="password"
-                                        @if(userForm.systemAuth == true){readonly="readonly"} /> </td>
+                                    <td><input class="form-input" type="password" name="password" required
+                                        @if(userForm.systemAuth == true){readonly="readonly"}/> </td>
                                 </tr>
 
                                 <tr align="left">

@@ -232,7 +232,8 @@ public class GinasFactory extends EntityFactory {
                                 Substance s=substances.get(0);
                                 SubstanceFactory.approveSubstance(s);
                                 s.save();
-                                return ok("Substance approved with approvalID:" + s.approvalID);
+                                String resp = "Substance approved with approvalID:" + s.approvalID;
+                                return ok(ix.ginas.views.html.response.render(resp));
                         }
                         throw new IllegalStateException("More than one substance matches that term");
                 } catch (Exception ex) {
