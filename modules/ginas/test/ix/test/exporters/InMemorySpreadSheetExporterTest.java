@@ -221,6 +221,38 @@ public class InMemorySpreadSheetExporterTest {
         assertEquals("foo,bar"+NEW_LINE+NEW_LINE+"doe,ray,me"+NEW_LINE, actual);
     }
 
+    @Test
+    public void skipAlotOfLines() throws IOException{
+
+        Spreadsheet sheet = createSpreadsheet(new CsvSpreadsheetBuilder(outputFile));
+
+
+        Spreadsheet.Row row = sheet.getRow(0);
+
+        row.getCell(0).writeString("foo");
+        row.getCell(1).writeString("bar");
+
+        int rowsToSkip = 10000;
+        Spreadsheet.Row row2 = sheet.getRow(rowsToSkip+1);
+
+        row2.getCell(0).writeString("doe");
+        row2.getCell(1).writeString("ray");
+        row2.getCell(2).writeString("me");
+
+        sheet.close();
+
+        String actual = getOutputAsString();
+
+        StringBuilder expected = new StringBuilder(rowsToSkip+20);
+
+        expected.append("foo,bar").append(NEW_LINE);
+        for(int i=0; i< rowsToSkip; i++){
+            expected.append(NEW_LINE);
+        }
+        expected.append("doe,ray,me").append(NEW_LINE);
+        assertEquals(expected.toString(), actual);
+    }
+
 
     @Test
     public void writeLargeFile() throws IOException {

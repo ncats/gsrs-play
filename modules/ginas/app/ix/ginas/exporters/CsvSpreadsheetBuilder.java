@@ -132,7 +132,7 @@ public class CsvSpreadsheetBuilder {
     public Spreadsheet build() {
 
         if(maxRowsInMemory ==-1) {
-            return new CsvSpreadSheet(this);
+            return new InMemoryCsvSpreadSheet(this);
         }
         return new StreamingCsvSpreadsheet(this);
     }

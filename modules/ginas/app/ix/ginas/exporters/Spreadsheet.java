@@ -11,6 +11,8 @@ public interface Spreadsheet extends Closeable {
 
     Row getRow(int i);
 
+    String getExtension();
+
     interface Row{
         SpreadsheetCell getCell(int j);
     }

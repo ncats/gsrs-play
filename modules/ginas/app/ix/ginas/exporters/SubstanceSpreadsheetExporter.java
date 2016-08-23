@@ -8,29 +8,29 @@ import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Substance;
 
 import java.io.IOException;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by katzelda on 8/19/16.
  */
-public abstract class SpreadsheetExporter implements Exporter<Substance> {
+public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
     private final Spreadsheet spreadsheet;
 
     private int row=1;
 
-    private final Map<Column, ColumnValueRecipe<Substance>> recipeMap;
+    private final Map<String, ColumnValueRecipe<Substance>> recipeMap;
 
 
-    public SpreadsheetExporter(Spreadsheet spreadsheet, Map<Column, ColumnValueRecipe<Substance>> recipeMap){
-        this.spreadsheet = spreadsheet;
-        this.recipeMap = recipeMap;
+    private SubstanceSpreadsheetExporter(Builder builder){
+        this.spreadsheet = builder.spreadsheet;
+        this.recipeMap = builder.columns;
         int j=0;
         Spreadsheet.Row header = spreadsheet.getRow(0);
-        for(Column col : recipeMap.keySet()){
-            header.getCell(j++).writeString(col.name());
+        for(String col : recipeMap.keySet()){
+            header.getCell(j++).writeString(col);
         }
     }
     @Override
@@ -42,6 +42,11 @@ public abstract class SpreadsheetExporter implements Exporter<Substance> {
             SpreadsheetCell cell = header.getCell(j++);
             recipe.writeValue(s, cell);
         }
+    }
+
+    @Override
+    public String getExtension() {
+        return spreadsheet.getExtension();
     }
 
     @Override
@@ -103,82 +108,10 @@ public abstract class SpreadsheetExporter implements Exporter<Substance> {
         DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe("INN"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe("NCI_THESAURUS"));
 
-        /*
 
-
-
-        static Columns INCHIKEY = getChemicalExport("STD_INCHIKEY", Chemical.FORMAT_STDINCHIKEY);
-        static Columns INCHIKEY_RESTRICTED = new Columns("STD_INCHIKEY_FORMATTED"){
-            @Override
-            String getContent(Substance s) {
-            	if(s instanceof ChemicalSubstance){
-            		Stereo ster=((ChemicalSubstance)s).getStereochemistry();
-            		if(!ster.equals(Stereo.ABSOLUTE) && !ster.equals(Stereo.ACHIRAL)){
-            			return null;
-            		}
-            	}
-
-            	String ret=INCHIKEY.getContent(s);
-            	if(ret!=null && ret.length()>0){
-            		ret=ret.replace("InChIKey=","");
-            	}
-            	return ret;
-            }
-        };
-        static Columns INCHI = getChemicalExport("STD_INCHI", Chemical.FORMAT_STDINCHI);
-
-        static Columns EINECS = getCodeSystemColumn("EC (EINECS)");
-        static Columns ITIS = getCodeSystemColumn("ITIS");
-        static Columns NCBI = getCodeSystemColumn("NCBI TAXONOMY");
-        static Columns PLANTS = getCodeSystemColumn("USDA PLANTS");
-        static Columns INN_ID = getCodeSystemColumn("INN");
-        static Columns NCI_THESAURUS = getCodeSystemColumn("NCI_THESAURUS");
-         */
-
-
-        /*
-         public static Columns getCodeSystemColumn(final String codeSystem){
-        	return new Columns(codeSystem){
-                @Override
-                String getContent(Substance s) {
-                	String bestCode="";
-                	for(Code cd: s.codes){
-                		if(cd.codeSystem.equals(codeSystem)){
-                			if("PRIMARY".equals(cd.type)){
-                				bestCode = cd.code;
-                				break;
-                			}
-                			bestCode = cd.code;
-                		}
-                	}
-                	return bestCode;
-                }
-            };
-        }
-         */
 
 
     }
-
-    /*
-     public static Columns getChemicalExport(String format, int chemicalFormat){
-        	return new Columns(format){
-                @Override
-                String getContent(Substance s) {
-                	if(s instanceof ChemicalSubstance){
-                		try{
-	                		Chemical chem = s.toChemical();
-	                		String ikey=chem.export(chemicalFormat);
-	                		return ikey;
-                		}catch(Exception e){
-
-                		}
-                	}
-                    return null;
-                }
-            };
-        }
-     */
 
     private static class ChemicalExportRecipe implements ColumnValueRecipe<Substance>{
 
@@ -225,6 +158,45 @@ public abstract class SpreadsheetExporter implements Exporter<Substance> {
             if(bestCode !=null){
                 cell.writeString(bestCode);
             }
+        }
+    }
+
+
+    public static class Builder{
+        private final Map<String, ColumnValueRecipe<Substance>> columns = new LinkedHashMap<>();
+        private final Spreadsheet spreadsheet;
+
+        public Builder(Spreadsheet spreadSheet){
+            Objects.requireNonNull(spreadSheet);
+            this.spreadsheet = spreadSheet;
+
+            for(Map.Entry<Column, ColumnValueRecipe<Substance>> entry : DEFAULT_RECIPE_MAP.entrySet()){
+                columns.put(entry.getKey().name(), entry.getValue());
+            }
+        }
+
+        public Builder addColumn(Column column, ColumnValueRecipe<Substance> recipe){
+            return addColumn(column.name(), recipe);
+        }
+        public Builder addColumn(String columnName, ColumnValueRecipe<Substance> recipe){
+            Objects.requireNonNull(columnName);
+            Objects.requireNonNull(recipe);
+            columns.put(columnName, recipe);
+
+            return this;
+        }
+
+        public Builder removeColumn(Column column){
+            return removeColumn(column.name());
+        }
+
+        public Builder removeColumn(String columnName){
+            columns.remove(columnName);
+            return this;
+        }
+
+        public SubstanceSpreadsheetExporter build(){
+            return new SubstanceSpreadsheetExporter(this);
         }
     }
 }
