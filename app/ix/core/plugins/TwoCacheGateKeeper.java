@@ -154,7 +154,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
     @Override
     public <T> T getSinceOrElse(String key, long creationTime, Callable<T> generator, int seconds) throws Exception{
-      String adaptedKey = keyMaster.adaptKey(key);
+    	String adaptedKey = keyMaster.adaptKey(key);
         return getOrElseRaw(adaptedKey,
                 createKeyWrapper(generator, key, adaptedKey, seconds),
                 e->e.getCreationTime() < creationTime
@@ -265,6 +265,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
         if(value ==null ){
             return;
         }
+       
         Object setvalue=value;
         if(isEvictable(value)){
         	Element e=new Element(adaptedKey, setvalue, expiration <= 0, expiration, expiration);

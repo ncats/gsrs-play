@@ -151,7 +151,8 @@
 	                    <div class="row">
 	                        <div class = "col-md-9">
                                @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
-                                @*<download-button method = "downloadData()"></download-button>*@
+							   <a class="btn btn-primary" target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>
+                               
 	                        </div>
 	                        <div class= "col-md-3 text-right hidden-xs">
 	                            <form class="form" name="grid-select" id = "grid-select">

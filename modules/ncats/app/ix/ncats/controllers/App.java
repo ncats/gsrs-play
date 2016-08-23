@@ -1296,11 +1296,11 @@ public class App extends Authentication {
     @CacheStrategy(evictable=false)
     public static class SearchResultContext {
         public enum Status {
-            Pending,
-            Running,
-            Determined,
-            Done,
-            Failed
+            Pending,	//show  +
+            Running,	//show  +
+            Determined, //don't show +
+            Done,		//don't show +
+            Failed		//don't show +
         }
         
         
@@ -1552,8 +1552,10 @@ public class App extends Authentication {
                      }
                      key = "sequence/"+getKey (getSequence(request().getQueryString("q")) +idenType + request().getQueryString("order"), Double.parseDouble(iden));
 
-                 }
-                 else {
+                 }else if(type.equalsIgnoreCase("flex")) {
+                	 key = "flex/"+Util.sha1(query);
+                 }else{
+                	 key = type + "/"+Util.sha1(query);
                  }
 
                  return key;
@@ -1588,29 +1590,35 @@ public class App extends Authentication {
         return null;
     }
     
+    public static SearchResultContext getForKey(String key){
+    	SearchResultContext context=null;
+        try {
+            Object value = IxCache.get(key);
+            //System.out.println(Util.getExecutionPath());
+            //System.out.println("value:" + value);
+            if (value != null) {
+            	if(value instanceof SearchResultContext){
+                    context = (SearchResultContext)value;
+            	}else if(value instanceof SearchResult){
+            		SearchResult result = (SearchResult)value;
+            		context = new SearchResultContext (result);
+            		
+                    Logger.debug("status: key="+key+" finished="+context.finished());
+            	}
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+	    if(context!=null){
+	    	context.setKey(key);
+	    }
+	    return context;
+    }
     
     public static SearchResultContext checkStatusDirect () {
     	String key = getKeyForCurrentRequest();
-    	SearchResultContext context=null;
-            try {
-                Object value = IxCache.get(key);
-                if (value != null) {
-                	if(value instanceof SearchResultContext){
-	                    context = (SearchResultContext)value;
-                	}else if(value instanceof SearchResult){
-                		SearchResult result = (SearchResult)value;
-                		context = new SearchResultContext (result);
-                        Logger.debug("status: key="+key+" finished="+context.finished());
-                	}
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        if(context!=null){
-        	context.setKey(key);
-        }
-        return context;
+    	return getForKey(key);
     }
 
     public static Result status (String key) {

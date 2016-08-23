@@ -212,8 +212,7 @@ public class RouteFactory extends Controller {
             Method m = getMethod (context, "get", Long.class, String.class);
             if (m != null)
                 return (Result)m.invoke(null, id, expand);
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }

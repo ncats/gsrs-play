@@ -22,7 +22,7 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 	
 	
 	public UniqueCodeGenerator(Map m){
-		codeSystem = (String)  m.get("codesystem");
+		codeSystem = 				(String)  m.get("codesystem");
         String codeSystemSuffix = 	(String)  m.get("suffix");
         int length = 				(Integer) m.get("length");
         boolean padding = 			(Boolean) m.get("padding");
