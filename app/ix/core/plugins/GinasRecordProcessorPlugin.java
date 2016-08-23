@@ -202,45 +202,23 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
-        	//System.out.println("Trying to persist");
         	
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             
-            //Set the user for use in later persist information
-            UserFetcher.setLocalThreadUser(rec.job.owner);
-			try {
+            
 				try {
-					
-					TimeProfiler.addGlobalTime("persist");
-					
 					long start=TimeUtil.getCurrentTimeMillis();
 					if(actuallyPersist){
 						rec.job.getPersister().persist(this);
 					}
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
-				
-					
-					TimeProfiler.stopGlobalTime("persist");
-					TimeProfiler.stopGlobalTime("full submit");
-					
-					if(Math.random()>0.9){
-						TimeProfiler.getInstance().printResults();
-					}
-					
-					TimeProfiler.addGlobalTime("full submit");
 				} catch (Exception e) {
 					e.printStackTrace();
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_BAD);
-
 					Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t"
 							+ om.valueToTree(theRecord).toString().replace("\n", ""));
 				}
 				updateJobIfNecessary(rec.job);
-			} finally {
-				// unset local user, just in case
-				UserFetcher.setLocalThreadUser(null);
-				
-			}
         }
     }
 
@@ -324,7 +302,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
 
 
-    public String submit(final Payload payload, Class extractor, Class persister) {
+    public String submit(final Payload payload, Class<?> extractor, Class<?> persister) {
         // first see if this payload has already processed..
     	
     	

@@ -19,7 +19,7 @@
         <ul class="pagination">
           @if(current <= 1) {
            	<li class="disabled">
-              <a href='@HtmlFormat.raw(App.page(rows,0))' uib-tooltip="First Page" aria-label="First Page" target="_self">
+              <a href='@HtmlFormat.raw(App.page(rows,1))' uib-tooltip="First Page" aria-label="First Page" target="_self">
                 <span class="sr-only">First page disabled</span>
                 <span aria-hidden="true" class="fa fa-angle-double-left"></span>
               </a>
@@ -32,7 +32,7 @@
             </li>
           } else {
           	<li>
-              <a href='@HtmlFormat.raw(App.page(rows,0))' uib-tooltip="First Page" aria-label="First Page" target="_self">
+              <a href='@HtmlFormat.raw(App.page(rows,1))' uib-tooltip="First Page" aria-label="First Page" target="_self">
               	<span class="sr-only">First page</span>
                 <span aria-hidden="true" class="fa fa-angle-double-left"></span>
               </a>
