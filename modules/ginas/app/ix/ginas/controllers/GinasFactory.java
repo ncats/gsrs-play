@@ -136,8 +136,10 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.sequence.render(id));
         }
 
-        public static Result structuresearch() {
-                return ok(ix.ginas.views.html.structuresearch.render());
+        public static Result structuresearch(String q) {
+        	String smol = GinasApp.getStructureStringFrom(q);
+        	
+        	return ok(ix.ginas.views.html.structuresearch.render(smol));
         }
 
        @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)

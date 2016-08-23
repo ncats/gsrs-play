@@ -49,11 +49,11 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                         @request().getQueryString("type") match {
-			    case "sequence" => {
-			      <span><h4>Sequence Query:&nbsp;
-				  <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
-			      </span> <div id="searching"></div>
-			    }
+			    		    case "sequence" => {
+			    		  	  <span><h4>Sequence Query:&nbsp;
+							  <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
+			     		      </span> <div id="searching"></div>
+			                }
                             case "Substructure" => {
                                 <span><h4>Substructure Query:&nbsp; <a href="#"
                                 data-toggle="popover"
@@ -62,7 +62,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src='@ix.ncats.controllers.routes.App.renderParam(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case "Similarity" => {
@@ -73,7 +73,29 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src='@ix.ncats.controllers.routes.App.renderParam(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                </span> <div id="searching"></div>
+                            }
+                            case "Exact" => {
+                                <span><h4>Exact Structure Query:&nbsp; <a href="#"
+                                data-toggle="popover"
+                                data-animation="true"
+                                data-placement="bottom"
+                                data-trigger="click hover focus"
+                                data-title=""
+                                data-html="true"
+                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                </span> <div id="searching"></div>
+                            }
+                            case "Flex" => {
+                                <span><h4>Flex Structure Query:&nbsp; <a href="#"
+                                data-toggle="popover"
+                                data-animation="true"
+                                data-placement="bottom"
+                                data-trigger="click hover focus"
+                                data-title=""
+                                data-html="true"
+                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case _ => {
@@ -151,8 +173,16 @@
 	                    <div class="row">
 	                        <div class = "col-md-9">
                                @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
-							   <a class="btn btn-primary" target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>
-                               
+							   
+                               <div class="btn-group">
+  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu">
+    <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url">SD File</a></li>
+    <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"csv").url">Tab-delimited File</a></li>
+  </ul>
+</div>
 	                        </div>
 	                        <div class= "col-md-3 text-right hidden-xs">
 	                            <form class="form" name="grid-select" id = "grid-select">

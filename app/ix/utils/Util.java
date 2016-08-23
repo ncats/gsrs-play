@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
@@ -47,6 +48,11 @@ public class Util {
     static Random rand = new Random ();
     public static String randomUserAgent () {
         return UserAgents[rand.nextInt(UserAgents.length)];
+    }
+    private static final Pattern UUID_PATTERN  = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}");
+    
+    public static boolean isUUID(String pid){
+    	return UUID_PATTERN.matcher(pid).find();
     }
 
     /**

@@ -13,10 +13,9 @@ import java.util.Objects;
 
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 
 public class SdfExporter implements Exporter<Substance> {
 
@@ -33,8 +32,7 @@ public class SdfExporter implements Exporter<Substance> {
 
     @Override
     public void export(Substance s) throws IOException {
-    	List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
-        Chemical chem = GinasUtils.substanceToChemical(s, messages);
+        Chemical chem = s.toChemical();
         try {
             String content = GinasApp.formatMolfile(chem,Chemical.FORMAT_SDF);
             out.write(content);

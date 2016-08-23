@@ -124,7 +124,7 @@ public class App extends Authentication {
     static final String RENDERER_FORMAT =
         play.Play.application()
         .configuration().getString("ix.structure.renderer.format");
-    
+
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
@@ -241,7 +241,8 @@ public class App extends Authentication {
      * @return
      */
     public static int[] paging (int rowsPerPage, int page, int total) {
-        
+        int MAX_ARRAY=11;
+        int MAX_SHOW=8;
         //last page
         int max = Math.max(1,(total+ rowsPerPage-1)/rowsPerPage);
         //System.out.println("Max is:" + max);
@@ -250,38 +251,46 @@ public class App extends Authentication {
         }
         
         int[] pages;
-        if (max <= 10) {
+        if (max <= MAX_ARRAY) {
             pages = new int[max];
             for (int i = 0; i < pages.length; ++i)
                 pages[i] = i+1;
-        }
-        else if (page >= max-3) {
-            pages = new int[10];
+        }else if (page >= max-3) {
+            pages = new int[MAX_ARRAY];
             pages[0] = 1;
             pages[1] = 2;
-            pages[2] = 0;
+            pages[2] = 0; // inactive / spacer
             for (int i = pages.length; --i > 2; )
                 pages[i] = max--;
-        }
-        else {
-            pages = new int[10];
+        }else {
+            pages = new int[MAX_ARRAY];
             int i = 0;
             //0-7 set to +1
-            for (; i < 7; ++i)
+            for (; i < MAX_SHOW; ++i)
                 pages[i] = i+1;
+            
+            //1,2,3,4,5,6,7,0,0,0
+            
+            
             //if the page is larger than 7 (last 3 page)
             //
-            if (page >= pages[i-1]) {
+            if (page >= MAX_SHOW -1) {
                 // now shift
-                pages[--i] = page;
-                while (i-- > 0)
+            	
+                pages[--i] = page+2;
+                //1,2,3,4,5,6,9,0,0,0
+                while (i-- > 0){
                     pages[i] = pages[i+1]-1;
+                  //3,4,5,6,7,8,9,0,0,0
+                }
                 pages[0] = 1;
                 pages[1] = 2;
                 pages[2] = 0;
+              //1,2,0,6,7,8,9,0,0,0
             }
-            pages[8] = max-1;
-            pages[9] = max;
+            pages[MAX_ARRAY-2] = max-1;
+            pages[MAX_ARRAY-1] = max;
+            //1,2,0,5,6,7,8,0,99,100
         }
         return pages;
     }

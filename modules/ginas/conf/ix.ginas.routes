@@ -5,8 +5,9 @@
 GET         /                            ix.ginas.controllers.GinasFactory.index
 GET         /lock                        ix.ginas.controllers.GinasFactory.lock(uuid: String ?= null)
 GET         /register                    ix.ginas.controllers.GinasFactory.register
-GET         /structure                   ix.ginas.controllers.GinasFactory.structuresearch
+GET         /structure                   ix.ginas.controllers.GinasFactory.structuresearch(q: String ?= null)
 POST	 	/structure					 ix.ginas.controllers.GinasApp.interpretMolfile
+POST        /structureSearch			 ix.ginas.controllers.GinasApp.structureSearchPost
 GET         /substance/:name             ix.ginas.controllers.GinasApp.substance(name: String)
 GET         /substance/:name/v/:version  ix.ginas.controllers.GinasApp.substanceVersion(name: String, version: String)
 GET         /substance/:name/edit        ix.ginas.controllers.GinasFactory.edit(name: String)
@@ -35,6 +36,15 @@ GET         /_updateIndex/:key           ix.ginas.controllers.GinasApp.updateInd
 
 GET         /admin                       ix.ginas.controllers.GinasApp.admin()
 GET         /profile                     ix.ginas.controllers.GinasApp.profile()
+GET         /users                      ix.ginas.controllers.GinasApp.listGinasUsers(page: Int ?= 1, rows: Int ?=16, sortBy: String ?= null, order: String ?= null, filter: String ?= null)
+POST        /principal/:id	            ix.ginas.controllers.GinasApp.updatePrincipal(id: Long)
+GET         /principal/:id	            ix.ginas.controllers.GinasApp.editPrincipal(id:Long)
+
+POST        /principal/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
+POST        /admin/principal/add            ix.ginas.controllers.GinasApp.addPrincipal()
+GET         /admin/principal/add            ix.ginas.controllers.GinasApp.createPrincipal()
+
+
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
