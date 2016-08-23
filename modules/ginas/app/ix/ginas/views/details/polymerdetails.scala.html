@@ -216,9 +216,11 @@
     <div></div>
 } {
     <div class="row info" id="structureDetails">
-        <h3>
-            <span class="label label-primary label-offset" id = "struc-label">Display Structure</span>
-        </h3>
+        <button class="btn btn-primary label-offset det" ng-click = "polystrucscollapse = !polystrucscollapse">
+            <i ng-show="polystrucscollapse" class="fa fa-caret-right"></i>
+            <i ng-hide="polystrucscollapse" class="fa fa-caret-down"></i>
+            Display Structure&nbsp;</button>
+        <div uib-collapse = "polystrucscollapse">
         <div class="col-md-5">
             <div class = "row">
             @structureImage(sub.polymer.displayStructure, 400,true)
@@ -233,23 +235,26 @@
             </div>
         </div>
         <div class="col-md-6">@makeTable(sub.polymer.displayStructure, "structure")</div>
+            </div>
     </div>
     @if(sub.polymer.monomers!=null && sub.polymer.monomers.length > 0) {
         <div class="row info" id="monoxmers">
-            <button class="btn btn-primary label-offset det">
+            <button class="btn btn-primary label-offset det" ng-click = "monomerscollapse = !monomerscollapse">
+                <i ng-show="monomerscollapse" class="fa fa-caret-right"></i>
+                <i ng-hide="monomerscollapse" class="fa fa-caret-down"></i>
                 Monomers&nbsp;<span class="badge"> @sub.polymer.monomers.length</span></button>
-            <div class="col-md-12">
-                
+            <div class="col-md-12" uib-collapse = "monomerscollapse">
                 @showMonomers(sub.polymer.monomers)
-                
             </div>
         </div>
     }
     @if(sub.polymer.structuralUnits.length > 0) {
         <div class="row info" id="srus">
-            <button class="btn btn-primary label-offset det">
+            <button class="btn btn-primary label-offset det" ng-click = "sruscollapse = !sruscollapse">
+                <i ng-show="sruscollapse" class="fa fa-caret-right"></i>
+                <i ng-hide="sruscollapse" class="fa fa-caret-down"></i>
                 Structural Units&nbsp;<span class="badge"> @sub.polymer.structuralUnits.length</span></button>
-            <div class="col-md-12">
+            <div class="col-md-12" uib-collapse = "sruscollapse">
                 
                 @showSRUs(sub.polymer.structuralUnits)
                 

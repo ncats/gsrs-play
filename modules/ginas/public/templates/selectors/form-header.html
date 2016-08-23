@@ -3,7 +3,8 @@
         <i ng-show="iscollapsed" class="fa fa-caret-right"></i>
         <i ng-hide="iscollapsed" class="fa fa-caret-down"></i>
         {{heading}}&nbsp;<span class="badge" ng-show="length>0">
-                        {{getLength()}}</span> </button>
+        {{count}}
+                        {{count || getLength()}}</span> </button>
     <info-button path= {{path}} type = "{{type}}" heading= "{{heading}}" ></info-button>
     <div class={{type}}></div>
 </div>

@@ -7,11 +7,11 @@
 
 @(sref: SubstanceReference)
 
-
-<button class="btn btn-primary label-offset det">
-    Primary Definition&nbsp;</button>
-<div class="col-md-12 table-responsive">
-       
+<button class="btn btn-primary label-offset det" ng-click = "primarycollapse = !primarycollapse">
+	<i ng-show="primarycollapse" class="fa fa-caret-right"></i>
+	<i ng-hide="primarycollapse" class="fa fa-caret-down"></i>
+	Primary Definition&nbsp;</button>
+<div class="col-md-12 table-responsive" uib-collapse = "primarycollapse">
 						@if(SubstanceFactory.getFullSubstance(sref) != null) {
                             @subref(sref)
                         }else{

@@ -3,8 +3,11 @@
 
 @(properties: List[Property], id: String)
 
-<button class="btn btn-primary label-offset det">Properties&nbsp;<span class="badge"> @properties.length</span></button>
-<div class="col-md-12 table-responsive">
+<button class="btn btn-primary label-offset det" ng-click = "propertiescollapse = !propertiescollapse">
+    <i ng-show="propertiescollapse" class="fa fa-caret-right"></i>
+    <i ng-hide="propertiescollapse" class="fa fa-caret-down"></i>
+    Properties&nbsp;<span class="badge"> @properties.length</span></button>
+<div class="col-md-12 table-responsive" uib-collapse = "propertiescollapse">
     <table class="table table-striped" id="propertiesTable">
         <thead>
             <tr>

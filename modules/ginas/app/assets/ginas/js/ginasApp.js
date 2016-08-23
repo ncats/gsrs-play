@@ -511,6 +511,9 @@
             return r;
         };
 
+        $scope.printr = function(r){
+            console.log(r);
+        }
 	
         $scope.submitq= function(qinput) {
             if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {
@@ -845,6 +848,7 @@
             $scope.open(url);
         };
         $scope.approveSubstance = function () {
+            $scope.updateNav = false;
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             var keyid = $scope.substance.uuid.substr(0, 8);
             location.href = baseurl + "substance/" + keyid + "/approve";
