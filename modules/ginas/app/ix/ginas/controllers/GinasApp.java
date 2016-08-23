@@ -233,8 +233,7 @@ public class GinasApp extends App {
                 up,
                 up.getRoles(),
                 AdminFactory.aclNamesByPrincipal(up.user),
-                AdminFactory.groupNamesByPrincipal(up.user),
-                Administration.appContext
+                AdminFactory.groupNamesByPrincipal(up.user)
         ));
     }
 
@@ -245,7 +244,7 @@ public class GinasApp extends App {
 
     public static Result createPrincipal() {
         Form<UserProfile> userForm = Form.form(UserProfile.class);
-        return ok(ix.ginas.views.html.admin.adduser.render(userForm, Administration.appContext));
+        return ok(ix.ginas.views.html.admin.adduser.render(userForm));
     }
 
     public static Result addPrincipal() {

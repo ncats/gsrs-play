@@ -2,14 +2,11 @@
 @import ix.core.controllers.AdminFactory
 @import helper._
 
-@(userForm: Form[UserProfile], appContext: String)
-
-@implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
+@(userForm: Form[UserProfile])
 
 @ix.ginas.views.html.ginas("Add User", "null") {
     @ix.ginas.views.html.menu()
 } {
-@ix.ncats.views.html.admin.main {
     <form role="form" method="post" action="@ix.ginas.controllers.routes.GinasApp.addPrincipal()">
 
         <div class="body">
@@ -20,20 +17,21 @@
                             <table>
                                 <tr><td colspan="2" align="center"><h4>Add User</h4></td></tr>
                                 <tr align="left">
-                                    <td><lable>User Name</lable></td>
-                                    <td> <input class="form-input" type="text" name="username"/> </td>
+                                    <td><lable>User Name</lable> </td>
+                                    <td> <input class="form-input" type="text" name="username" required/> </td>
                                 </tr>
-
+                                <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td><lable>Password</lable></td>
-                                    <td><input class="form-input" type="password" name="password" /> </td>
+                                    <td><input class="form-input" type="password" name="password" required /> </td>
                                 </tr>
-
+                                <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td><lable>Email</lable></td>
                                     <td><input class="form-input" type="email" name="email" /></td>
                                 </tr>
 
+                                <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td><lable>Active</lable></td>
                                     <td><input class="form-input" type="checkbox" name="active" value="true"/></td>
@@ -49,20 +47,6 @@
                                     }
                                     </td>
                                 </tr>
-
-                               @if(!appContext.contains("ginas")) {
-                                    <tr><td colspan="2"><br/></td></tr>
-
-                                    <tr align="left">
-                                        <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
-                                        <td id="permGroup">
-                                        @for(ps <- Acl.options()) {
-                                            <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps.toString()" value="@ps.toString()"/>
-                                            <span>@ps.toString()</span> <br/>
-                                        }
-                                        </td>
-                                    </tr>
-                                }
 
                                 <tr><td colspan="2"><br/></td></tr>
 
@@ -81,7 +65,7 @@
                                 <tr><td colspan="2"><br/></td></tr>
                                 <tr class="actions">
                                     <td><input type="submit" value="Save" class="btn primary"> </td>
-                                    <td><a href="@ix.ginas.controllers.routes.GinasApp.listGinasUsers()" class="btn">Cancel</a></td>
+                                    <td><a href="@ix.ginas.controllers.routes.GinasApp.listGinasUsers()" class="btn" target="_self">Cancel</a></td>
                                 </tr>
                             </table>
                         </td>
@@ -93,7 +77,6 @@
 
         </div>
     </form>
-}
 }
 
 

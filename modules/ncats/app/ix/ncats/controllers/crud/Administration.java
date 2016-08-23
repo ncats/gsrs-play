@@ -72,7 +72,7 @@ public class Administration extends App {
         String groupName = requestData.get("grpName");
 
         ArrayList<Role> rolesChecked = new ArrayList<Role>();
-        ArrayList<Acl> aclsChecked = new ArrayList<Acl>();
+       // ArrayList<Acl> aclsChecked = new ArrayList<Acl>();
         List<Group> groupsChecked = new ArrayList<Group>();
 
 
@@ -87,10 +87,10 @@ public class Administration extends App {
                 rolesChecked.add(r);
             }
 
-            if (key.contains("p-")) {
+           /* if (key.contains("p-")) {
                 Acl p = new Acl(Acl.Permission.valueOf(requestData.data().get(key)));
                 aclsChecked.add(p);
-            }
+            }*/
 
             if (key.contains("g-")) {
                 String grpName = requestData.data().get(key);
@@ -110,10 +110,10 @@ public class Administration extends App {
             prof.setPassword(requestData.get("password"));
             prof.setRoles(rolesChecked);
 
-            for (Acl p : aclsChecked) {
+         /*   for (Acl p : aclsChecked) {
                 p.principals.add(newUser);
                 p.save();
-            }
+            }*/
 
             for (Group g : groupsChecked) {
                 if(g.id != null) {
@@ -163,14 +163,14 @@ public class Administration extends App {
                 selectedRoles.add(r);
             }
 
-            if (key.contains("p-")) {
+           /* if (key.contains("p-")) {
                 String permName = requestData.data().get(key);
                 Acl perm = AdminFactory.aclFinder.where().eq("Acl", Acl.Permission.valueOf(permName)).findUnique();
                 if(perm == null) {
                     perm = new Acl(Acl.Permission.valueOf(permName));
                 }
                 selectedPerms.add(perm);
-            }
+            }*/
 
             if (key.contains("g-")) {
                 String grpName = requestData.data().get(key);
@@ -194,7 +194,7 @@ public class Administration extends App {
         profile.active = Boolean.parseBoolean(active);
         profile.setRoles(selectedRoles);
         AdminFactory.updateGroups(user.id, selectedGroups);
-        AdminFactory.updatePermissions(user.id, selectedPerms);
+        //AdminFactory.updatePermissions(user.id, selectedPerms);
         //AdminFactory.updateRoles(user.id, selectedRoles);
         profile.save();
 

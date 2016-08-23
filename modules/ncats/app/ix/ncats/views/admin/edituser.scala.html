@@ -52,9 +52,8 @@
                                 }
                                 </td>
                             </tr>
-                            @if(!appContext.contains("ginas")) {
-                                <tr><td colspan="2"><br/></td></tr>
 
+                            @*<tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
                                     <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
                                     <td id="permGroup">
@@ -62,13 +61,11 @@
                                         <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps.toString()" value="@ps.toString()"
                                             @if(permList.contains(ps.toString())) {
                                                 checked="checked"
-                                            } />
+                                            }>
                                         <span>@ps.toString()</span> <br/>
                                     }
                                     </td>
-                                </tr>
-                            }
-
+                                </tr>*@
 
                                 <tr><td colspan="2"><br/></td></tr>
 
@@ -79,7 +76,7 @@
                                             <input class="form-input" type="checkbox" name="g-@gs.name" id="g-@gs.name" value="@gs.name"
                                                 @if(grpList.contains(gs.name)) {
                                                     checked="checked"
-                                                }/>
+                                                }>
                                             <span>@gs.name</span> <br/>
                                         }
                                             <div id="grpLable">Enter a Group Name</div>
