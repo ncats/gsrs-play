@@ -21,9 +21,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 
+import ix.core.controllers.AdminFactory;
+import ix.core.controllers.PrincipalFactory;
+import ix.core.models.*;
 import ix.core.util.Java8Util;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
+import ix.ncats.controllers.crud.Administration;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -100,6 +104,8 @@ import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
+import play.data.DynamicForm;
+import play.data.Form;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import tripod.chem.indexer.StructureIndexer;
@@ -265,6 +271,46 @@ public class GinasApp extends App {
         }
         return type;
     }
+
+
+    public static Result listGinasUsers(int page, int rows, String sortBy, String order, String filter) {
+        List<UserProfile> profiles = Administration.principalsList();
+
+        return ok(ix.ginas.views.html.admin.userlist.render(profiles, sortBy, order, filter));
+    }
+
+    public static Result editPrincipal(Long id) {
+        UserProfile up = Administration.editUser(id);
+        return ok(ix.ginas.views.html.admin.edituser.render(
+                id,
+                up,
+                up.getRoles(),
+                AdminFactory.aclNamesByPrincipal(up.user),
+                AdminFactory.groupNamesByPrincipal(up.user)
+        ));
+    }
+
+    public static Result updatePrincipal(Long id) {
+        Administration.updateUser(id);
+        return redirect(ix.ginas.controllers.routes.GinasApp.listGinasUsers(1, 16, "", "", ""));
+    }
+
+    public static Result createPrincipal() {
+        Form<UserProfile> userForm = Form.form(UserProfile.class);
+        return ok(ix.ginas.views.html.admin.adduser.render(userForm));
+    }
+
+    public static Result addPrincipal() {
+        DynamicForm requestData = Form.form().bindFromRequest();
+        if (requestData.hasErrors()) {
+            return ok();//badRequest(createForm.render(userForm));
+        }
+
+        Administration.addUser(requestData);
+        return redirect(ix.ginas.controllers.routes.GinasApp.listGinasUsers(1, 16, "", "", ""));
+    }
+
+
 
     public static Result error(int code, String mesg) {
         return ok(ix.ginas.views.html.error.render(code, mesg));

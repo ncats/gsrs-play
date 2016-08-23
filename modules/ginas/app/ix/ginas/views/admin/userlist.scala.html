@@ -1,0 +1,53 @@
+@import ix.core.models.UserProfile
+
+@(profs: List[UserProfile], currentSortBy: String, currentOrder: String, currentFilter: String)
+
+@tabrow(p: UserProfile) = {
+    <tr id=@p.user.id>
+        <td><a href="@ix.ginas.controllers.routes.GinasApp.editPrincipal(p.user.id)" target="_self"> @p.user.username</a></td>
+        <td>@p.active</td>
+        <td>@p.user.email</td>
+    </tr>
+}
+
+@ix.ginas.views.html.ginas("User List", "null") {
+    @ix.ginas.views.html.menu()
+} {
+      @if(flash.containsKey("success")) {
+            <div class="alert-message warning">
+                <strong>Done!</strong> @flash.get("success")
+            </div>
+        }
+
+        <div id="actions">
+            <a href="@ix.ginas.controllers.routes.GinasApp.createPrincipal()" id="add" target="_self">
+                Add a new User</a> <br/><br/>
+        </div>
+        <div class="row">
+            <div class = "col-md-9">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <td><b>User Name</b></td>
+                            <td><b>Active</b></td>
+                            <td><b>Email</b></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <form>
+                        @for(p <- profs) {
+                            @tabrow(p)
+                        }
+                        </form>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="pagination" class="pagination">
+            @** @if(profs.length > 1) {
+            @ix.ncats.views.html.pagination(1, 10, 30, null)(HtmlFormat.empty)
+            }**@
+        </div>
+}
