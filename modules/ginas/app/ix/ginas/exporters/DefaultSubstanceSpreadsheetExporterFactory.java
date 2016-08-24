@@ -2,6 +2,7 @@ package ix.ginas.exporters;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,6 +31,18 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
         }
     };
 
+    private static final OutputFormat XLSX = new SpreadsheetFormat("xlsx", "Excel xlsx File"){
+        Spreadsheet createSpeadsheet(OutputStream out) {
+            try {
+                return new ExcelSpreadsheet.Builder(out)
+                        .maxRowsInMemory(100)
+                        .build();
+            }catch(IOException e){
+                throw new UncheckedIOException(e);
+            }
+        }
+    };
+
 
     private static final Set<OutputFormat> FORMATS;
 
@@ -37,6 +50,7 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
         Set<OutputFormat> set = new LinkedHashSet<>();
         set.add(TSV);
         set.add(CSV);
+        set.add(XLSX);
 
         FORMATS = Collections.unmodifiableSet(set);
     }
