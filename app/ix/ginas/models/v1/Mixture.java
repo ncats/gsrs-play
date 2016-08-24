@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
@@ -24,6 +26,7 @@ public class Mixture extends GinasCommonSubData {
 		this.parentSubstance = parentSubstance;
 	}
 
+	@JsonIgnore
 	public List<Component> getMixture() {
 		return components;
 	}

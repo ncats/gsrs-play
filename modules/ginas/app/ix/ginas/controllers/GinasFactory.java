@@ -215,8 +215,12 @@ public class GinasFactory extends EntityFactory {
                                 return ok(ix.ginas.views.html.wizard.render(
                                         substances.get(0).substanceClass.toString(), json, elock));
                             }
+                        }else if(substances.size()==0){
+                        	throw new IllegalStateException("No substance found matching that term");	
+                        }else{
+                        	throw new IllegalStateException("More than one substance found matching that term");
                         }
-                        throw new IllegalStateException("More than one substance matches that term");
+                        
                 } catch (Exception ex) {
                         return GinasApp._internalServerError(ex);
                 }
