@@ -1836,7 +1836,9 @@ public class GinasApp extends App {
 
     
     
-    
+    public static Set<SubstanceExporterFactory.OutputFormat> getAllSubstanceExportFormats(){
+        return Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class).getAllSupportedFormats();
+    }
 
     public static String getAsJson(Object o){
         if(o == null){

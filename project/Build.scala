@@ -189,6 +189,9 @@ public class BuildInfo {
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
       libraryDependencies  += "junit" % "junit" % "4.12" % Test,
       libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
+    libraryDependencies += "org.apache.poi" % "poi" % "3.14",
+    libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.14",
+    libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.14",
 
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,
