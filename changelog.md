@@ -31,6 +31,7 @@ Changes:
 19. Make browse page labels collapsible
 20. Fix tooltip locator overlap issue
 21. Fix missing button in subref search
+22. Force creation date to be overwritten on API submission
 
 GSRS v1.2.04
 ============
