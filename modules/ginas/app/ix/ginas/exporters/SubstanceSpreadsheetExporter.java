@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
+ * Substance Exporter that writes out data to a Spreadsheet.
  * Created by katzelda on 8/19/16.
  */
 public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
@@ -42,11 +43,6 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
             SpreadsheetCell cell = header.getCell(j++);
             recipe.writeValue(s, cell);
         }
-    }
-
-    @Override
-    public String getExtension() {
-        return spreadsheet.getExtension();
     }
 
     @Override
@@ -161,11 +157,21 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
         }
     }
 
-
+    /**
+     * Builder class that makes a SpreadsheetExporter.  By default, the default columns are used
+     * but these may be modified using the add/remove column methods.
+     *
+     */
     public static class Builder{
         private final Map<String, ColumnValueRecipe<Substance>> columns = new LinkedHashMap<>();
         private final Spreadsheet spreadsheet;
 
+        /**
+         * Create a new Builder that uses the given Spreadsheet to write to.
+         * @param spreadSheet the {@link Spreadsheet} object that will be written to by this exporter. can not be null.
+         *
+         * @throws NullPointerException if spreadsheet is null.
+         */
         public Builder(Spreadsheet spreadSheet){
             Objects.requireNonNull(spreadSheet);
             this.spreadsheet = spreadSheet;

@@ -8,6 +8,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
+ * {@link SubstanceExporterFactory} that supports writing spreadsheet data
+ * in Excel, tab and comma separated formats.
+ *
  * Created by katzelda on 8/23/16.
  */
 public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExporterFactory {
@@ -18,6 +21,7 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
         Spreadsheet createSpeadsheet(OutputStream out) {
             return  new CsvSpreadsheetBuilder(out)
                     .quoteCells(true)
+                    .maxRowsInMemory(100)
                     .build();
         }
     };
@@ -27,6 +31,7 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
             return  new CsvSpreadsheetBuilder(out)
                     .delimiter('\t')
                     .quoteCells(true)
+                    .maxRowsInMemory(100)
                     .build();
         }
     };

@@ -645,7 +645,7 @@ public class GinasApp extends App {
 
             Exporter<Substance> exporter = factory.createNewExporter(pos, params);
 
-            String fname = "export-" +sdf.format(new Date()) + "." + exporter.getExtension();
+            String fname = "export-" +sdf.format(new Date()) + "." + extension;
             response().setContentType("application/x-download");
             response().setHeader("Content-disposition","attachment; filename=" + fname);
 
