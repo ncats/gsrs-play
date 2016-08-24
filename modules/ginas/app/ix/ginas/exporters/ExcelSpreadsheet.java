@@ -38,23 +38,14 @@ public class ExcelSpreadsheet implements Spreadsheet {
         sheet = workbook.createSheet();
     }
 
-    @Override
-    public SpreadsheetCell getCell(int i, int j) {
-        return null;
-    }
 
     @Override
     public Row getRow(int i) {
-        org.apache.poi.ss.usermodel.Row r =sheet.getRow(i);
-        if(r ==null){
+        org.apache.poi.ss.usermodel.Row r = sheet.getRow(i);
+        if (r == null) {
             r = sheet.createRow(i);
         }
         return new RowWrapper(r);
-    }
-
-    @Override
-    public String getExtension() {
-        return "xlsx";
     }
 
     @Override

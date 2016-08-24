@@ -38,13 +38,11 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
 
     private static final OutputFormat XLSX = new SpreadsheetFormat("xlsx", "Excel xlsx File"){
         Spreadsheet createSpeadsheet(OutputStream out) {
-            try {
+
                 return new ExcelSpreadsheet.Builder(out)
                         .maxRowsInMemory(100)
                         .build();
-            }catch(IOException e){
-                throw new UncheckedIOException(e);
-            }
+
         }
     };
 
