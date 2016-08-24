@@ -245,6 +245,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 			Principal p1=UserFetcher.getActingUser();
 	        if(p1!=null){
 	        	if(lastEditedBy== null || force){
+	        		
 	        		this.lastEditedBy=p1;
 	        		this.lastEdited = currentDate;
 	        	}
