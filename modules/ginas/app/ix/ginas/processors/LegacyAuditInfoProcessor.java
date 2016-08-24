@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import ix.core.EntityProcessor;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Principal;
+import ix.ginas.models.v1.Note;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
@@ -62,9 +63,9 @@ public class LegacyAuditInfoProcessor implements EntityProcessor<Substance>{
 	}
 	public void preFlightFormat(Substance obj){
 		String legacy_audit_ref=null;
-		for(Reference r:obj.references){
-			if(r.citation!=null && r.citation.startsWith(START_LEGACY_REF)){
-				legacy_audit_ref=r.citation;
+		for(Note r:obj.notes){
+			if(r.note!=null && r.note.startsWith(START_LEGACY_REF)){
+				legacy_audit_ref=r.note;
 				break;
 			}
 		}
@@ -93,8 +94,6 @@ public class LegacyAuditInfoProcessor implements EntityProcessor<Substance>{
 	public void postRemove(Substance obj) throws ix.core.EntityProcessor.FailProcessingException {
 		
 	}
-
-	
 
 	@Override
 	public void postUpdate(Substance obj) throws ix.core.EntityProcessor.FailProcessingException {
