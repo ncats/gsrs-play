@@ -179,8 +179,12 @@
     <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
   </button>
   <ul class="dropdown-menu">
-    <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url">SD File</a></li>
-    <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"csv").url">Tab-delimited File</a></li>
+
+      @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()){
+            <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest() ,fmt.getExtension()).url">@fmt.getDisplayName()</a></li>
+        }
+    @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url">SD File</a></li>*@
+    @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"csv").url">Tab-delimited File</a></li>*@
   </ul>
 </div>
 	                        </div>

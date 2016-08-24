@@ -16,12 +16,11 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
 
     private final Set<SubstanceExporterFactory> exporters = new LinkedHashSet<>();
 
-    private Map<String, SubstanceExporterFactory.OutputFormat> extensionMap = new HashMap<>();
+    private Map<String, SubstanceExporterFactory.OutputFormat> extensionMap = new LinkedHashMap<>();
 
     private final Application app;
 
     public GinasSubstanceExporterFactoryPlugin(Application app) {
-        System.out.println("STARTED!!!!");
         this.app = app;
     }
 
@@ -35,10 +34,7 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
         exporters.clear();
         extensionMap.clear();
 
-        System.out.println("started " + app.configuration().getStringList("ginas.exportFactories"));
-
         for(String clazz :app.configuration().getStringList("ginas.exportFactories")){
-            System.out.println("loading " + clazz);
             try{
                 Class<SubstanceExporterFactory> exporter = (Class<SubstanceExporterFactory>) Class.forName(clazz);
                 exporters.add(exporter.newInstance());
