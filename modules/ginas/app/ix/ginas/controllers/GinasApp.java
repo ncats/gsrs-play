@@ -272,13 +272,14 @@ public class GinasApp extends App {
         return type;
     }
 
-
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result listGinasUsers(int page, int rows, String sortBy, String order, String filter) {
         List<UserProfile> profiles = Administration.principalsList();
 
         return ok(ix.ginas.views.html.admin.userlist.render(profiles, sortBy, order, filter));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result editPrincipal(Long id) {
         UserProfile up = Administration.editUser(id);
         return ok(ix.ginas.views.html.admin.edituser.render(
@@ -290,6 +291,7 @@ public class GinasApp extends App {
         ));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updatePrincipal(Long id) {
         Administration.updateUser(id);
         return redirect(ix.ginas.controllers.routes.GinasApp.listGinasUsers(1, 16, "", "", ""));
@@ -300,6 +302,7 @@ public class GinasApp extends App {
         return ok(ix.ginas.views.html.admin.adduser.render(userForm));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result addPrincipal() {
         DynamicForm requestData = Form.form().bindFromRequest();
         if (requestData.hasErrors()) {

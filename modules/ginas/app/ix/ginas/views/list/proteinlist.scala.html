@@ -3,8 +3,9 @@
 @import ix.ginas.models.v1.ProteinSubstance
 @import ix.ginas.models.v1.Protein
 @import ix.ginas.models.v1.Glycosylation
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
-@import ix.ginas.models.v1.ProteinSubstance
 @(prot: ProteinSubstance, ctx: String = null)
 
 <div class="panel panel-default prot-list" >
@@ -27,11 +28,13 @@
                                     <i class="fa fa-search fa-2x success"></i>
                                 </span>
                             </li>
-                            <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance">
-                                    <span class="sr-only">Edit Protein</span>
-                                    <i class="fa fa-pencil fa-2x success"></i></a>
-                            </li>
+                            @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                                <li>
+                                    <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))" target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance">
+                                        <span class="sr-only">Edit Protein</span>
+                                        <i class="fa fa-pencil fa-2x success"></i></a>
+                                </li>
+                            }
                         </ul>
                         
                         <div ng-show="subunitsearch">

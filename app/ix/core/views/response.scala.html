@@ -1,0 +1,9 @@
+@(message: String)
+
+<div class = "alert"><h4>@message</h4></div>
+
+@if(message.equalsIgnoreCase("No User Present")) {
+    <div><a id="login" href="/ginas/app/login" target="_self"><button class="btn btn-default">Login Page</button></a></div>
+} else {
+    <div><a id="login" href="/ginas/app" target="_self"><button class="btn btn-default">Go Home</button></a></div>
+}

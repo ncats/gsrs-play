@@ -1,5 +1,7 @@
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(sub: StructurallyDiverseSubstance)
 
@@ -26,15 +28,17 @@
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
             @GinasApp.truncate(sub.getName())
             </a>
-            <div class = "row">
-                <div class = "col-md-12 text-center">
-                    <ul class= "list-inline list-unstyled tools">
-                        <li>
-                            <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Structurally Diverse Substance"> <span class="fa fa-pencil fa-2x success"></span></a>
-                        </li>
-                    </ul>
+            @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                <div class = "row">
+                    <div class = "col-md-12 text-center">
+                        <ul class= "list-inline list-unstyled tools">
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Structurally Diverse Substance"> <span class="fa fa-pencil fa-2x success"></span></a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>
