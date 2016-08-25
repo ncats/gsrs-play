@@ -5,14 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
+import ix.core.controllers.StructureFactory;
 import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
@@ -21,6 +22,7 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Unit;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.utils.Util;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -104,6 +106,33 @@ public class GinasFactory extends EntityFactory {
                 return ok(ix.ginas.views.html.register.render());
         }
 
+        public static String getSmiles(String id) {
+            return getSmiles(id, 0);
+        }
+
+        public static String getSmiles(String id, int max) {
+        	 if (id != null) {
+                 String seq=null;
+                 if(!Util.isUUID(id)){
+             		seq= id;
+             	 }else{
+	                 Structure structure=StructureFactory.getStructure(id);
+	            	 if(structure!=null){
+	            		 seq = structure.smiles;
+	            	 }
+             	 }
+            	 
+                 if (seq != null) {
+                     seq = seq.replaceAll("[\n\t\\s]", "");
+                     if (max > 0 && max + 3 < seq.length()) {
+                         return seq.substring(0, max) + "...";
+                     }
+                     return seq;
+                 }
+             }
+             return id;
+        }
+        
         public static String getSequence(String id) {
                 return getSequence(id, 0);
         }
@@ -137,8 +166,11 @@ public class GinasFactory extends EntityFactory {
         }
 
         public static Result structuresearch(String q) {
-        	String smol = GinasApp.getStructureStringFrom(q);
-        	
+        	Structure s = GinasApp.getStructureFrom(q);
+        	String smol=null;
+        	if(s!=null){
+        		smol=s.molfile;
+        	}
         	return ok(ix.ginas.views.html.structuresearch.render(smol));
         }
 

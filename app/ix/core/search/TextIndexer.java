@@ -114,7 +114,8 @@ import play.db.ebean.Model;
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer implements Closeable{
-    private static final String SORT_PREFIX = "SORT_";
+    private static final String FULL_TEXT_FIELD = "text";
+	private static final String SORT_PREFIX = "SORT_";
 	protected static final String STOP_WORD = " THE_STOP";
     protected static final String START_WORD = "THE_START ";
     protected static final String GIVEN_STOP_WORD = "$";
@@ -604,7 +605,7 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
-            //	Util.debugSpin(10);
+            	//Util.debugSpin(10);
             
             //}
             //System.out.println("added:" + matches.size());
@@ -1535,7 +1536,7 @@ public class TextIndexer implements Closeable{
         }else {
             try {
                 QueryParser parser = new IxQueryParser
-                    ("text", indexAnalyzer);
+                    (FULL_TEXT_FIELD, indexAnalyzer);
                 query = parser.parse(qtext);
             }
             catch (ParseException ex) {
@@ -2099,7 +2100,7 @@ public class TextIndexer implements Closeable{
                     Logger.debug(".."+f.name()+":"
                                  +text+" ["+f.getClass().getName()+"]");
                 
-                doc.add(new TextField ("text", text, NO));
+                doc.add(new TextField (FULL_TEXT_FIELD, text, NO));
             }
             doc.add(f);
         }
@@ -2191,7 +2192,7 @@ public class TextIndexer implements Closeable{
     public void remove (String text) throws Exception {
         try {
             QueryParser parser = new QueryParser 
-                (LUCENE_VERSION, "text", indexAnalyzer);
+                (LUCENE_VERSION, FULL_TEXT_FIELD, indexAnalyzer);
             Query query = parser.parse(text);
             Logger.debug("## removing documents: "+query);
             indexWriter.deleteDocuments(query);

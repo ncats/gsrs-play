@@ -1191,3 +1191,17 @@ overflow: hidden;
 white-space: nowrap;
 text-overflow: ellipsis;
 }
+
+.multi-progress{
+	position:relative;
+}
+
+.multi-progress .progress-bar{
+	position:absolute;
+	top:0px;
+	left:0px;
+}
+
+.multi-progress .progress-bar.background{
+	background-color:#f0ad4e;
+}
