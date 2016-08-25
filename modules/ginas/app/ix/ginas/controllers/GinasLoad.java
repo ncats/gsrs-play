@@ -140,32 +140,41 @@ public class GinasLoad extends App {
 
 		DynamicForm requestData = Form.form().bindFromRequest();
 		String type = requestData.get("file-type");
+		String preserveAudit = requestData.get("preserve-audit");
 		Logger.info("type =" + type);
 		try {
+			
+			Class<?> persister = ix.ginas.utils.GinasUtils.GinasSubstancePersister.class;
+			
+			if(preserveAudit!=null){
+				System.out.println("CHECKED");
+				persister = ix.ginas.utils.GinasUtils.GinasSubstanceForceAuditPersister.class;
+			}
+			
 			Payload payload = payloadPlugin.parseMultiPart("file-name",
 					request(), PayloadPersistType.TEMP);
 			switch (type) {
-			case "JSON":
-				Logger.info("JOS =" + type);
-				
-					String id = ginasRecordProcessorPlugin
-							.submit(payload,
-									ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
-									ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
-					return redirect(ix.ginas.controllers.routes.GinasLoad
-							.monitorProcess(id));
-				
-			case "SD":
-				Logger.info("SD =" + type);
-
-				payload.save();
-				Map<String, FieldStatistics> m = GinasSDFExtractor
-						.getFieldStatistics(payload, 100);
-				return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
-						payload, new ArrayList<FieldStatistics>(m.values())));
-			default:
-				return badRequest("Neither json-dump nor "
-						+ "sd-file is specified!");
+				case "JSON":
+					Logger.info("JOS =" + type);
+					
+						String id = ginasRecordProcessorPlugin
+								.submit(payload,
+										ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
+										persister);
+						return redirect(ix.ginas.controllers.routes.GinasLoad
+								.monitorProcess(id));
+					
+				case "SD":
+					Logger.info("SD =" + type);
+	
+					payload.save();
+					Map<String, FieldStatistics> m = GinasSDFExtractor
+							.getFieldStatistics(payload, 100);
+					return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
+							payload, new ArrayList<FieldStatistics>(m.values())));
+				default:
+					return badRequest("Neither json-dump nor "
+							+ "sd-file is specified!");
 			}
 
 		} catch (Exception ex) {

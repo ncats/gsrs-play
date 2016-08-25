@@ -1,5 +1,6 @@
 package ix.test.login;
 
+import ix.core.models.Role;
 import ix.test.ix.test.server.AbstractSession;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
@@ -204,9 +205,10 @@ public class UserSessionTest {
             ensureLoggedInAs(response, admin);
         }
     }
+    
     @Test
     public void normalUserCantSeeAdminPage(){
-
+    	
 
         try(BrowserSession session = ts.newBrowserSession(ts.getFakeUser1())){
             WSResponse response = session.get("ginas/app/admin");
@@ -215,9 +217,37 @@ public class UserSessionTest {
 
         }
     }
+    
+    @Test
+    public void updaterUserCanRouteToEditPage(){
+    	GinasTestServer.User updater = ts.createUser(Role.Updater);	
 
+        try(BrowserSession session = ts.newBrowserSession(updater)){
+            WSResponse response = session.get("ginas/app/substance/fakeid/edit");
+            assertEquals(500, response.getStatus());
 
+        }
+    }
 
+    @Test
+    public void queryUserCantRouteToEditPage(){
+    	GinasTestServer.User updater = ts.createUser(Role.Query);	
+
+        try(BrowserSession session = ts.newBrowserSession(updater)){
+            WSResponse response = session.get("ginas/app/substance/fakeid/edit");
+            assertEquals(401, response.getStatus());
+
+        }
+    }
+    
+    @Test
+    public void nullUserCantRouteToEditPage(){
+        try(BrowserSession session = ts.notLoggedInBrowserSession()){
+            WSResponse response = session.get("ginas/app/substance/fakeid/edit");
+            assertEquals(401, response.getStatus());
+        }
+    }
+    
 
 
 }

@@ -2,46 +2,29 @@ package ix.ginas.exporters;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
 /**
- * Created by katzelda on 8/19/16.
+ * Created by katzelda on 8/23/16.
  */
-public class CsvSpreadSheet implements Spreadsheet {
-
-
-    private final String delimiter;
-    private final boolean quoteCells;
-
-    private final DateFormat dateFormat;
-
-    protected CsvRow[] rows;
-
-    private final BufferedWriter writer;
+public abstract class CsvSpreadSheet implements Spreadsheet {
+    protected final String delimiter;
+    protected final boolean quoteCells;
+    protected final DateFormat dateFormat;
+    protected final BufferedWriter writer;
 
     private volatile boolean closed=false;
 
+    public CsvSpreadSheet(CsvSpreadsheetBuilder builder) {
 
-    CsvSpreadSheet(CsvSpreadsheetBuilder builder){
+        this.dateFormat = builder.getDateFormat();
         this.writer = builder.getWriter();
         this.delimiter = builder.getDelimiter();
         this.quoteCells = builder.shouldQuoteCells();
-
-        this.dateFormat = builder.getDateFormat();
-
-        this.rows = initializeRowsArray(builder);
-
-    }
-
-    protected CsvRow[] initializeRowsArray(CsvSpreadsheetBuilder builder){
-        return new CsvRow[0];
-    }
-    @Override
-    public SpreadsheetCell getCell(int i, int j) {
-        return getRow(i).getCell(j);
     }
 
     @Override
@@ -54,16 +37,7 @@ public class CsvSpreadSheet implements Spreadsheet {
         return getRowImpl(i);
     }
 
-    protected Row getRowImpl(int absoluteOffset) {
-        ensureCapacity(absoluteOffset);
-        CsvRow r= rows[absoluteOffset];
-        if(r ==null){
-            r = createNewRow();
-            rows[absoluteOffset] =r;
-        }
-
-        return r;
-    }
+    protected abstract Row getRowImpl(int absoluteOffset);
 
     protected CsvRow createNewRow(){
         return new CsvRow(dateFormat);
@@ -83,11 +57,7 @@ public class CsvSpreadSheet implements Spreadsheet {
 
     }
 
-    protected void writeRemainingRows() throws IOException {
-        for (CsvRow r : rows) {
-            writeRow(r);
-        }
-    }
+    protected abstract void writeRemainingRows() throws IOException;
 
     protected void writeRow(CsvRow r) throws IOException {
         if (r != null) {
@@ -112,12 +82,7 @@ public class CsvSpreadSheet implements Spreadsheet {
             throw new IllegalStateException("already closed");
         }
     }
-    private void ensureCapacity(int offset){
-        int requiredLength = offset+1;
-        if(rows.length < requiredLength) {
-            rows= Arrays.copyOf(rows, requiredLength);
-        }
-    }
+
 
 
     protected static final class CsvRow implements Row{

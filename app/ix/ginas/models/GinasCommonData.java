@@ -50,7 +50,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	public static final String NAME_JURISDICTION = "GInAS Name Jurisdiction";
 	public static final String SUB_CLASS = "GInAS Subclass";
     
-    
+	
     //used only for forcing updates
     @JsonIgnore
     private int currentVersion=0;
@@ -207,13 +207,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     
     
-    @PrePersist
-    public void beforeCreate () {
-        
-    }
-    
-    
-    
     
     /**
      * Called before saving. Updates with the current time and user
@@ -234,25 +227,45 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
      * ok.
      * 
      */
-    @PrePersist
+    
     @PreUpdate
     public void modified () {
-        Date currentDate = TimeUtil.getCurrentDate();
-    	this.lastEdited =currentDate;
-        Principal p1=UserFetcher.getActingUser();
-        if(p1!=null){
-    		lastEditedBy=p1;
-    		if(this.createdBy==null){
-    			createdBy=p1;
-    			created= currentDate;
-        	}
+    	updateAuditInfo(false, UserFetcher.isForceAuditUpdate());
+    }
+    
+    @PrePersist
+    public void created () {
+    	updateAuditInfo(true, UserFetcher.isForceAuditUpdate());
+    }
+    
+    
+    public void updateAuditInfo(boolean creation, boolean force){
+    	Date currentDate = TimeUtil.getCurrentDate();
+    	if(lastEditedBy == null || this.createdBy==null || force){
+			Principal p1=UserFetcher.getActingUser();
+	        if(p1!=null){
+	        	if(lastEditedBy== null || force){
+	        		
+	        		this.lastEditedBy=p1;
+	        		this.lastEdited = currentDate;
+	        	}
+	    		if(creation && (this.createdBy==null || force)){
+	    			this.createdBy=p1;
+	    			this.created= currentDate;
+	        	}
+	        }
+		}
+        if(this.lastEdited ==null){
+        	this.lastEdited=currentDate;
+        }
+        if(this.created ==null){
+        	this.created=currentDate;
         }
         if(this.uuid==null){
         	this.uuid=UUID.randomUUID();
         }
-        //if(this instanceof Subunit)
-        
     }
+    
     
     
     @JsonIgnore
@@ -353,6 +366,5 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	public String toString(){
 		return this.getClass().getSimpleName();
 	}
-	
 	
 }

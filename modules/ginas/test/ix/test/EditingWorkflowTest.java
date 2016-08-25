@@ -1015,6 +1015,7 @@ public class EditingWorkflowTest {
 								.replace("/version")
 								.replace("/lastEdited")
 								.replace("/names/1/lastEdited")
+								.replace("/names/1/created") // will overwrite whatever created element is put here
 								.replace("/names/1/_self")
 								.added("/names/1/uuid")
 								

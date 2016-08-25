@@ -22,6 +22,7 @@ import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.GinasProcessingMessage;
+import ix.core.UserFetcher;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
 import ix.core.models.XRef;
@@ -31,6 +32,8 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
+import ix.core.stats.Statistics;
+import ix.core.util.TimeUtil;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -43,6 +46,7 @@ import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.seqaln.SequenceIndexer;
+import ix.utils.Global;
 import play.Logger;
 import play.Play;
 
@@ -225,7 +229,6 @@ public class GinasUtils {
 		return worked;
 	}
 
-	public static List<Substance> toPersist = new ArrayList<Substance>();
 	
 
 	/*********************************************
@@ -240,37 +243,57 @@ public class GinasUtils {
 	public static class GinasSubstancePersister extends RecordPersister<Substance, Substance> {
 		
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception {
-			boolean worked = false;
-			List<String> errors = new ArrayList<String>();
-			if (prec.theRecordToPersist != null) {
-				worked = GinasUtils.persistSubstance(prec.theRecordToPersist, errors);
-				if (worked) {
-					prec.rec.status = ProcessingRecord.Status.OK;
-					prec.rec.xref = new XRef(prec.theRecordToPersist);
-					prec.rec.xref.save();
-				} else {
-					prec.rec.message = errors.get(0);
-					prec.rec.status = ProcessingRecord.Status.FAILED;
+			System.out.println("Persisting:" + prec.recordToPersist.uuid + "\t" + prec.recordToPersist.getName());
+			UserFetcher.setLocalThreadUser(prec.rec.job.owner);            
+			try{
+				boolean worked = false;
+				List<String> errors = new ArrayList<String>();
+				if (prec.recordToPersist != null) {
+					worked = GinasUtils.persistSubstance(prec.recordToPersist, errors);
+					if (worked) {
+						prec.rec.status = ProcessingRecord.Status.OK;
+						prec.rec.xref = new XRef(prec.recordToPersist);
+						prec.rec.xref.save();
+					} else {
+						prec.rec.message = errors.get(0);
+						prec.rec.status = ProcessingRecord.Status.FAILED;
+					}
+					prec.rec.stop = System.currentTimeMillis();
 				}
-				prec.rec.stop = System.currentTimeMillis();
-			}
-			prec.rec.save();
-
-			Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.getUuid() : null)
-					+ " record " + prec.rec.id);
-			if (!worked)
-				throw new IllegalStateException(prec.rec.message);
-		}
-		public void persistb(TransformedRecord<Substance, Substance> prec) throws Exception {
-			
-			if (prec.theRecordToPersist != null) {
-				toPersist.add(prec.theRecordToPersist);
-				if(toPersist.size()>=20){
-					persistSubstances(toPersist);
-					toPersist.clear();
-				}
+				prec.rec.save();
+	
 				
+				if (!worked){
+					throw new IllegalStateException(prec.rec.message);
+				}else{
+					Logger.debug("Saved substance " + (prec.recordToPersist != null ? prec.recordToPersist.getUuid() : null)
+							+ " record " + prec.rec.id);
+				}
+			}catch(Throwable t){
+				Logger.debug("Fail saved substance " + (prec.recordToPersist != null ? prec.recordToPersist.getUuid() : null)
+						+ " record " + prec.rec.id);
+				throw t;
+			}finally{
+				UserFetcher.setLocalThreadUser(null);
 			}
+		}
+	}
+	
+	
+	public static class GinasSubstanceForceAuditPersister extends GinasSubstancePersister {
+		
+		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception {
+			
+	        UserFetcher.disableForceAuditUpdate();
+			try{
+				super.persist(prec);
+			}catch(Throwable t){
+				throw t;
+			}finally{
+				UserFetcher.enableForceAuditUpdate();
+			}
+			
+			
 		}
 	}
 

@@ -2,7 +2,7 @@ package ix.ginas.exporters;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  * Created by katzelda on 8/22/16.
@@ -13,15 +13,14 @@ public class StreamingCsvSpreadsheet extends CsvSpreadSheet {
     private int rowsWrittenSoFar = 0;
 
     private int populatedOffset=-1;
+    private CsvSpreadSheet.CsvRow[] rows;
+
     StreamingCsvSpreadsheet(CsvSpreadsheetBuilder builder) {
         super(builder);
+        this.rows = new CsvRow[builder.getMaxRowsInMemory()];
     }
 
-    @Override
-    protected CsvSpreadSheet.CsvRow[] initializeRowsArray(CsvSpreadsheetBuilder builder) {
-        int size = builder.getMaxRowsInMemory();
-        return new CsvRow[size];
-    }
+
 
     @Override
     protected Row getRowImpl(int absoluteOffset) {
@@ -35,14 +34,22 @@ public class StreamingCsvSpreadsheet extends CsvSpreadSheet {
                 for(CsvRow r : rows) {
                     writeRow(r);
                 }
+                relativeOffset-= rows.length;
+
+                while (relativeOffset > 0) {
+                    relativeOffset--;
+                    writeRow(null);
+                }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            rowsWrittenSoFar += rows.length;
-            relativeOffset -= rows.length;
+
             for(int i=0; i< rows.length ; i++){
                 rows[i] = null;
             }
+
+            rowsWrittenSoFar = absoluteOffset;
+            relativeOffset =0;
             populatedOffset=-1;
         }
         if(rows[relativeOffset] !=null){

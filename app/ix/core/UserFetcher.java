@@ -11,6 +11,12 @@ public class UserFetcher {
 	
 	private static final String DEFAULT_USERNAME = "GUEST";
     private static ThreadLocal<Principal> localUser = new ThreadLocal<Principal>();
+    
+    private static ThreadLocal<Boolean> forceAuditUpdate = new ThreadLocal<Boolean>(){
+            @Override protected Boolean initialValue() {
+                return true;
+            }
+    };
 
 	public static String getDefaultUsername(){
 		return DEFAULT_USERNAME;
@@ -50,6 +56,17 @@ public class UserFetcher {
 			
 		}
 		return null;
+	}
+	
+	public static void enableForceAuditUpdate(){
+		forceAuditUpdate.set(true);
+	}
+	public static void disableForceAuditUpdate(){
+		forceAuditUpdate.set(false);
+	}
+	
+	public static boolean isForceAuditUpdate(){
+		return forceAuditUpdate.get();
 	}
 	
 	

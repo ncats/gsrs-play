@@ -677,9 +677,10 @@ public class ValidationUtils {
 					if (c.substance == null) {
 						gpm.add(GinasProcessingMessage
 								.ERROR_MESSAGE("Mixture components must reference a substance record, found:\"null\""));
-					} else {
-						Substance comp = SubstanceFactory
-								.getFullSubstance(c.substance);
+					}else if(c.type == null || c.type.length()<=0){
+						gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture components must specify a type"));
+					}else {
+						Substance comp = SubstanceFactory.getFullSubstance(c.substance);
 						if (comp == null) {
 							gpm.add(GinasProcessingMessage
 									.WARNING_MESSAGE("Mixture substance references \""

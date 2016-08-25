@@ -197,19 +197,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
     }
 
-//    public static void performChange(Object bean, final Callable change){
-//    	Edit e=storeEditForPossibleUpdate(bean);
-//    	if(e==null)return;
-//    	try{
-//    		change.call();
-//    	}catch(Exception t){
-//    		t.printStackTrace();
-//    		throw new IllegalStateException(t);
-//    	}finally{
-//    		popEditForUpdate(e.getClass(),e.refid);
-//    	}
-//    }
-    
     
     private static void storeEditForUpdate(Class c, Object id, Edit e){
     	String s1=c.getName() + ":" + id;
@@ -387,7 +374,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
     
-    public static long persistcount=0;
+    //public static long persistcount=0;
     @Override
     public boolean preInsert (BeanPersistRequest<?> request) {
     	

@@ -6,17 +6,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
@@ -25,6 +15,8 @@ import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
 import ix.core.util.Java8Util;
+import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
+import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
 import ix.ncats.controllers.crud.Administration;
@@ -61,7 +53,6 @@ import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.exporters.Exporter;
-import ix.ginas.exporters.ExporterBuilder;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -91,7 +82,6 @@ import ix.ginas.models.v1.Sugar;
 import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
 import ix.core.GinasProcessingMessage;
-import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
@@ -629,7 +619,7 @@ public class GinasApp extends App {
     	return q;
     }
    
-    public static Result export (String collectionID, String format) {
+    public static Result export (String collectionID, String extension) {
     	
     	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     	SearchResultContext src = App.getForKey(collectionID);
@@ -641,28 +631,74 @@ public class GinasApp extends App {
 	    		 
 	    	final PipedInputStream pis =               new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
-	    	    	    	
-	    	ExporterBuilder exportBuilder = new ExporterBuilder(pos).setOutputFormat(format);
-	    	Exporter exp = exportBuilder.build();
-	    	String fname = "export-" +sdf.format(new Date()) + "." + exp.getExtension();
-	    	response().setContentType("application/x-download");  
-	    	response().setHeader("Content-disposition","attachment; filename=" + fname);
-	    	
-	    	Executors.newSingleThreadExecutor().submit(new Runnable () {
-    	        public void run () {
-    	            try {
-    	            	exp.exportForEachAndClose(src.getResults().iterator());
-    	            }catch (IOException ex) {
-    	            	ex.printStackTrace();
-    	            }
-    	        }
-    	        });
+
+            GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
+
+            if(factoryPlugin ==null){
+                System.out.println("FACTORY PLUGIN NULL!!!!!!");
+            }
+
+            SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
+
+            SubstanceExporterFactory factory= factoryPlugin.getExporterFor(params);
+            if(factory ==null){
+                //TODO handle null couldn't find factory for params
+                throw new IllegalArgumentException("could not find suitable factory for " + params);
+            }
+
+            Exporter<Substance> exporter = factory.createNewExporter(pos, params);
+
+            String fname = "export-" +sdf.format(new Date()) + "." + extension;
+            response().setContentType("application/x-download");
+            response().setHeader("Content-disposition","attachment; filename=" + fname);
+
+            Executors.newSingleThreadExecutor().submit(new Runnable () {
+                @Override
+                public void run() {
+                    try {
+                        exporter.exportForEachAndClose(src.getResults());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+//	    	ExporterBuilder exportBuilder = new ExporterBuilder(pos).setOutputFormat(format);
+//	    	Exporter exp = exportBuilder.build();
+//	    	String fname = "export-" +sdf.format(new Date()) + "." + exp.getExtension();
+//	    	response().setContentType("application/x-download");
+//	    	response().setHeader("Content-disposition","attachment; filename=" + fname);
+//
+//	    	Executors.newSingleThreadExecutor().submit(new Runnable () {
+//    	        public void run () {
+//    	            try {
+//    	            	exp.exportForEachAndClose(src.getResults().iterator());
+//    	            }catch (IOException ex) {
+//    	            	ex.printStackTrace();
+//    	            }
+//    	        }
+//    	        });
 
 	    	return ok(pis);
     	}catch(Exception e){
     		e.printStackTrace();
     		throw new IllegalStateException(e);
     	}
+    }
+
+
+    private static class SubstanceParameters implements SubstanceExporterFactory.Parameters{
+
+        private final SubstanceExporterFactory.OutputFormat format;
+
+        SubstanceParameters(SubstanceExporterFactory.OutputFormat format){
+            Objects.requireNonNull(format);
+            this.format = format;
+        }
+        @Override
+        public SubstanceExporterFactory.OutputFormat getFormat() {
+            return format;
+        }
     }
 
     public static Result sequences (final String q,
@@ -1803,7 +1839,9 @@ public class GinasApp extends App {
 
     
     
-    
+    public static Set<SubstanceExporterFactory.OutputFormat> getAllSubstanceExportFormats(){
+        return Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class).getAllSupportedFormats();
+    }
 
     public static String getAsJson(Object o){
         if(o == null){
