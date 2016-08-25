@@ -1,8 +1,8 @@
 @import ix.core.models.Structure
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.PolymerSubstance
-
-
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(chem: PolymerSubstance, ctx: String = null)
 
@@ -37,9 +37,11 @@
                         <li>
                             <modal-button type= "export" structureid ="'@chem.polymer.displayStructure.id'" format="sdf" ></modal-button>
                         </li>
-                        <li>
-                            <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Polymer"> <span class="fa fa-pencil fa-2x success"></span></a>
-                        </li>
+                        @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Polymer"> <span class="fa fa-pencil fa-2x success"></span></a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

@@ -1,8 +1,8 @@
 @import ix.core.models.Structure
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.ChemicalSubstance
-
-
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(chem: ChemicalSubstance, ctx: String = null)
 
@@ -57,9 +57,11 @@
                         <li>
                             <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch(chem.structure.id.toString())" target="_self" uib-tooltip="Structure Search" aria-label="Structure Search"> <span class="fa fa-search fa-2x success"></span></a>
                         </li>
-                        <li>
-                            <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"> <span class="fa fa-pencil fa-2x success"></span></a>
-                        </li>
+                        @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"> <span class="fa fa-pencil fa-2x success"></span></a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

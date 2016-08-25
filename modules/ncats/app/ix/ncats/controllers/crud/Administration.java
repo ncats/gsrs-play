@@ -1,10 +1,12 @@
 package ix.ncats.controllers.crud;
 
+import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.routes;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import play.Play;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -26,10 +28,12 @@ public class Administration extends App {
         return redirect(ix.ncats.controllers.crud.routes.Administration.listPrincipals(1, "", "", ""));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result listPrincipals(int page, String sortBy, String order, String filter) {
         return _listPrincipals(1, 10, sortBy, order, filter);
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result _listPrincipals(int page, int rows, String sortBy, String order, String filter) {
 
         List<UserProfile> profiles = principalsList();
@@ -53,7 +57,7 @@ public class Administration extends App {
 
 
 
-    //@Dynamic(value = "adminUser", handlerKey = "idg")
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result addPrincipal() {
         DynamicForm requestData = Form.form().bindFromRequest();
         if (requestData.hasErrors()) {
@@ -129,7 +133,7 @@ public class Administration extends App {
         flash("success", " " + requestData.get("username") + " has been created");
     }
 
-
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updatePrincipal(long id) {
         updateUser(id);
         return index();
@@ -201,6 +205,7 @@ public class Administration extends App {
         flash("success", " " + userName + " has been updated");
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result editPrincipal(Long id) {
         UserProfile up = editUser(id);
         return ok(ix.ncats.views.html.admin.edituser.render(
@@ -213,6 +218,7 @@ public class Administration extends App {
                 ));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static UserProfile editUser(Long id) {
         Principal user = AdminFactory.palFinder.byId(id);
         UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
@@ -220,10 +226,13 @@ public class Administration extends App {
         return up;
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result deletePrincipal(Long id) {
         return AdminFactory.setUserToInactive(id);
     }
 
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result create() {
         Form<UserProfile> userForm = Form.form(UserProfile.class);
         return ok(ix.ncats.views.html.admin.createuser.render(userForm, appContext));

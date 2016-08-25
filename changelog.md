@@ -32,6 +32,9 @@ Changes:
 20. Fix tooltip locator overlap issue
 21. Fix missing button in subref search
 22. Force creation date to be overwritten on API submission
+23. Update on the user admin page to show the top menu
+24. Add navigation link for most of the response pages
+25. Hide 'Edit Substance' button if user doesnt have access to edit
 
 GSRS v1.2.04
 ============
