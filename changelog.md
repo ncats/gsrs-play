@@ -35,6 +35,8 @@ Changes:
 23. Update on the user admin page to show the top menu
 24. Add navigation link for most of the response pages
 25. Hide 'Edit Substance' button if user doesnt have access to edit
+26. Fixed text search paging status ajax issue
+
 
 GSRS v1.2.04
 ============
