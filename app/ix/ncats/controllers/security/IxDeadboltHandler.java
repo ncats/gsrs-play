@@ -54,7 +54,7 @@ public class IxDeadboltHandler extends AbstractDeadboltHandler {
                 String message = Authentication.getUserProfile() != null ? "Not Authorized" : "No User Present";
 
     	      // return play.mvc.Results.unauthorized(message);
-                return ok(ix.core.views.html.response.render(message));
+                return unauthorized(ix.core.views.html.response.render(message));
             }
         });
     }
