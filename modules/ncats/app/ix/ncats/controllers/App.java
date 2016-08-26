@@ -1204,14 +1204,14 @@ public class App extends Authentication {
             throws Exception {
             this.results = results;
             
+            context.start = System.currentTimeMillis();
             if(wait){
-            	context.start = System.currentTimeMillis();
+            	
             	process();
             	context.setStatus(SearchResultContext.Status.Determined);
             	context.stop = System.currentTimeMillis();
                 
             }else{
-
                 // the idea is to generate enough results for 1 page, and 1 extra record
             	// (enough to show pagination) and return immediately. as the user pages,
                 // the background job will fill in the rest of the results.
@@ -1237,14 +1237,13 @@ public class App extends Authentication {
             while (results.hasMoreElements()
                    && !isDone () && (max <= 0 || context.getCount() < max)) {
                 T r = results.nextElement();
+                
                 try {
-                    long start = System.currentTimeMillis();
                     R obj = instrument (r);
                     if (obj != null) {
                         context.add(obj);
                     }
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                     ex.printStackTrace();
                     Logger.error("Can't process structure search result", ex);
                 }

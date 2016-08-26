@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -351,7 +352,7 @@ public class TextIndexer implements Closeable{
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        BlockingQueue matches = new LinkedBlockingQueue ();
+        FuturesList matches = new FuturesList ();
         List result; // final result when there are no more updates
         int count;
         SearchOptions options;
@@ -369,22 +370,22 @@ public class TextIndexer implements Closeable{
         }
 
         void setRank (final Map<Object, Integer> rank) {
-            Objects.requireNonNull(rank);
-
-            matches = new PriorityBlockingQueue
-                (rank.size(), (o1, o2)-> {
-                            Object id1 = EntityUtils.getIdForBean(o1);
-                            Object id2 = EntityUtils.getIdForBean(o2);
-                            Integer r1 = rank.get(id1), r2 = rank.get(id2);
-                            if (r1 != null && r2 != null)
-                                return r1 - r2;
-                            if (r1 == null)
-                                Logger.error("Unknown rank for "+o1);
-                            if (r2 == null)
-                                Logger.error("Unknown rank for "+o2);
-                            return 0;
-                        }
-                );
+//            Objects.requireNonNull(rank);
+//
+//            matches = new PriorityBlockingQueue
+//                (rank.size(), (o1, o2)-> {
+//                            Object id1 = EntityUtils.getIdForBean(o1);
+//                            Object id2 = EntityUtils.getIdForBean(o2);
+//                            Integer r1 = rank.get(id1), r2 = rank.get(id2);
+//                            if (r1 != null && r2 != null)
+//                                return r1 - r2;
+//                            if (r1 == null)
+//                                Logger.error("Unknown rank for "+o1);
+//                            if (r2 == null)
+//                                Logger.error("Unknown rank for "+o2);
+//                            return 0;
+//                        }
+//                );
         }
 
         public void addListener(SearchResultDoneListener listener){
@@ -564,17 +565,222 @@ public class TextIndexer implements Closeable{
             executorService.submit(future);
             return future;
         }
-        
+        public static class FuturesList<K> implements List<K>{
+        	List<Callable<K>> clist = new ArrayList<Callable<K>>();
+        	
+        	
+			@Override
+			public int size() {
+				return clist.size();
+			}
+
+			@Override
+			public boolean isEmpty() {
+				return clist.isEmpty();
+			}
+
+			@Override
+			public boolean contains(Object o) {
+				throw new UnsupportedOperationException("Can't use contains method on FutureList");
+			}
+
+			@Override
+			public Iterator<K> iterator() {
+				return listIterator();
+			}
+
+			@Override
+			public Object[] toArray() {
+				throw new UnsupportedOperationException("toArray method not encoraged");
+			}
+
+			@Override
+			public <T> T[] toArray(T[] a) {
+				throw new UnsupportedOperationException("toArray method not encoraged");
+			}
+
+			@Override
+			public boolean add(K e) {
+				return clist.add(()->e);
+			}
+
+			@Override
+			public boolean remove(Object o) {
+				throw new UnsupportedOperationException("remove method not encoraged");
+			}
+
+			@Override
+			public boolean containsAll(Collection<?> c) {
+				throw new UnsupportedOperationException("contains method not supported");
+			}
+
+			@Override
+			public boolean addAll(Collection<? extends K> c) {
+				boolean changed = true;
+				for(K k : c){
+					changed &= this.add(k);
+				}
+				return changed;
+			}
+
+			@Override
+			public boolean addAll(int index, Collection<? extends K> c) {
+				throw new UnsupportedOperationException("add all index method not supported");
+			}
+
+			@Override
+			public boolean removeAll(Collection<?> c) {
+				throw new UnsupportedOperationException("remove all index method not supported");
+			}
+
+			@Override
+			public boolean retainAll(Collection<?> c) {
+				throw new UnsupportedOperationException("retain all index method not supported");
+			}
+
+			@Override
+			public void clear() {
+				this.clist.clear();
+			}
+
+			@Override
+			public K get(int index) {
+				try {
+					return clist.get(index).call();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return null;
+			}
+
+			@Override
+			public K set(int index, K element) {
+				K old = this.get(index);
+				clist.set(index, ()->element);
+				return null;
+			}
+
+			@Override
+			public void add(int index, K element) {
+				throw new UnsupportedOperationException("add at index method not supported");
+			}
+
+			@Override
+			public K remove(int index) {
+				K old = this.get(index);
+				clist.remove(index);
+				return old;
+			}
+
+			@Override
+			public int indexOf(Object o) {
+				throw new UnsupportedOperationException("index of method not supported");
+			}
+
+			@Override
+			public int lastIndexOf(Object o) {
+				throw new UnsupportedOperationException("last index of method not supported");
+			}
+
+			private static class LazyListIterator<K> implements ListIterator<K>{
+				List<K> ml;
+				int cindex=0;
+				public LazyListIterator(List<K> inner, int cursor){
+					cindex=cursor;
+					ml = inner;
+				}
+				
+				@Override
+				public boolean hasNext() {
+					return (cindex<ml.size());
+				}
+
+				@Override
+				public K next() {
+					K next=current();
+					cindex++;
+					return next;
+				}
+				
+				public K current(){
+					K cur=null;
+					if(cindex<ml.size()){
+						cur=ml.get(cindex);
+					}
+					return cur;
+				}
+
+				@Override
+				public boolean hasPrevious() {
+					return cindex>0;
+				}
+
+				@Override
+				public K previous() {
+					cindex--;
+					if(cindex<0)cindex=0;
+					return current();
+				}
+
+				@Override
+				public int nextIndex() {
+					return cindex;
+				}
+
+				@Override
+				public int previousIndex() {
+					return cindex-1;
+				}
+
+				@Override
+				public void remove() {
+					ml.remove(cindex);
+				}
+
+				@Override
+				public void set(K e) {
+					ml.set(cindex, e);
+				}
+
+				@Override
+				public void add(K e) {
+					ml.add(e);
+				}
+				
+				
+			}
+			
+			@Override
+			public ListIterator<K> listIterator() {
+				return new LazyListIterator<K>(this,0);
+				
+			}
+
+			@Override
+			public ListIterator<K> listIterator(int index) {
+				return new LazyListIterator<K>(this,index);
+			}
+
+			@Override
+			public List<K> subList(int fromIndex, int toIndex) {
+				throw new UnsupportedOperationException("sublist method not supported");
+			}
+        	
+			
+			public boolean addCallable(Callable<K> c){
+				return this.clist.add(c);
+			}
+        }
         
         public List getMatches () {
         	if (result != null) return result;
             boolean finished=finished();
             
-            List list = new ArrayList (matches);
-            if (matches instanceof PriorityBlockingQueue) {
-                PriorityBlockingQueue q = (PriorityBlockingQueue)matches;
-                Collections.sort(list, q.comparator());
-            }
+            List list = matches;
+//            if (matches instanceof PriorityBlockingQueue) {
+//                PriorityBlockingQueue q = (PriorityBlockingQueue)matches;
+//                Collections.sort(list, q.comparator());
+//            }
             
             if (finished) {
                 result = list;
@@ -592,13 +798,29 @@ public class TextIndexer implements Closeable{
         public SearchContextAnalyzer getSearchContextAnalyzer(){
             return searchAnalyzer;
         }
-
+        protected void addHowTo (Callable c) {
+        	matches.addCallable(c);
+        	notifyAdd(c);
+        	if(searchAnalyzer!=null && query!=null && query.length()>0){
+            	if(searchAnalyzer.isEnabled()){
+            		try {
+						searchAnalyzer.updateFieldQueryFacets(c.call(), query);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	}
+            }
+        }
+        
         protected void add (Object obj) {
             matches.add(obj);
             notifyAdd(obj);
 
             if(searchAnalyzer!=null && query!=null && query.length()>0){
-            	searchAnalyzer.updateFieldQueryFacets(obj, query);
+            	if(searchAnalyzer.isEnabled()){
+            		searchAnalyzer.updateFieldQueryFacets(obj, query);
+            	}
             }
             //If you see this in the code base, erase it
             //it's only here for debugging
@@ -1469,11 +1691,11 @@ public class TextIndexer implements Closeable{
                 
                 Map<Object, Integer> rank = new HashMap<Object, Integer>();
                 int r = 0;
-                for (Iterator it = subset.iterator(); it.hasNext(); ) {
-                    Object entity = it.next();
+                for (Object entity:subset) {
                     Object id = EntityUtils.getIdForBean(entity);
-                    if (id != null)
+                    if (id != null){
                         rank.put(id, ++r);
+                    }
                 }
                 
                 if (!rank.isEmpty() && options.order.isEmpty()){

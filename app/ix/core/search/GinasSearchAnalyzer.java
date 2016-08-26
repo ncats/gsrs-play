@@ -74,8 +74,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	 * context of text search results. 
 	 */
 	public void updateFieldQueryFacets(Substance o, String q) {
-		if(!enabled)return;
-		if(recordsAnalyzed>=recordsToAnalyze)return;
+		if(!isEnabled())return;
 		if(o==null || !(o instanceof Substance))return;
 		Set<Term> qterms=null;
 		try{
@@ -95,7 +94,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		try {
 			updateFieldQueryFacets(o, qterms, ffacet);
 		} catch (Exception e) {
-			Logger.error(e.getMessage());
 			e.printStackTrace();
 		}
 		recordsAnalyzed++;
@@ -316,6 +314,10 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	public static boolean ignoreField(String field){
 		if(field.contains("._"))return true;
 		return false;
+	}
+	@Override
+	public boolean isEnabled() {
+		return enabled && !(recordsAnalyzed>=recordsToAnalyze);
 	}
 	
 }
