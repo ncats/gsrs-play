@@ -36,6 +36,7 @@ Changes:
 24. Add navigation link for most of the response pages
 25. Hide 'Edit Substance' button if user doesnt have access to edit
 26. Fixed text search paging status ajax issue
+27. Show more information about page loading when waiting for page
 
 
 GSRS v1.2.04
