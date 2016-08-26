@@ -68,7 +68,7 @@ public class ProteinApiTest {
    	}
     
     @Test
-   	public void testSequenceSearchPagingProtein() throws Exception {
+   	public void globalSequenceSimilaritySearchShouldReturnAllSlightlyModifiedSequences() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
         	String seq="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -85,13 +85,17 @@ public class ProteinApiTest {
             }
             String oldCount=null;
             String total=null;
+            long timeoutTime = System.currentTimeMillis() + 20000;
             for(;;){
 	            String body = api.getSequenceSearchHTML(seq, CutoffType.GLOBAL, .9);
 	            System.out.println("####################Body:");
 	            total=body.split("<nav>")[1].split("<h3><span class=\"label label-default\">")[1].split("<")[0];
 	           // System.out.println(body);
 	            System.out.println("Found:" + total + " of " + totsize);
-	            if(!body.contains("var firststatus")){
+	            if(
+	            		System.currentTimeMillis()> timeoutTime ||
+	            		body.contains("\"status\":\"Done\"")
+	            		){
 	            	break;
 	            }
 	            oldCount=total;
