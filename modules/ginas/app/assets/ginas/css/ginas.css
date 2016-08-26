@@ -1205,3 +1205,6 @@ text-overflow: ellipsis;
 .multi-progress .progress-bar.background{
 	background-color:#f0ad4e;
 }
+.placeholder-content{
+	padding:10px;
+}
