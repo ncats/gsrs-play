@@ -36,15 +36,12 @@ GET         /_updateIndex/:key           ix.ginas.controllers.GinasApp.updateInd
 
 GET         /admin                       ix.ginas.controllers.GinasApp.admin()
 GET         /profile                     ix.ginas.controllers.GinasApp.profile()
-GET         /users                      ix.ginas.controllers.GinasApp.listGinasUsers(page: Int ?= 1, rows: Int ?=16, sortBy: String ?= null, order: String ?= null, filter: String ?= null)
-POST        /principal/:id	            ix.ginas.controllers.GinasApp.updatePrincipal(id: Long)
-GET         /principal/:id	            ix.ginas.controllers.GinasApp.editPrincipal(id:Long)
-
-POST        /principal/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
-POST        /admin/principal/add            ix.ginas.controllers.GinasApp.addPrincipal()
-GET         /admin/principal/add            ix.ginas.controllers.GinasApp.createPrincipal()
-
-
+GET         /admin/users                 ix.ginas.controllers.GinasApp.listGinasUsers(page: Int ?= 1, rows: Int ?=16, sortBy: String ?= null, order: String ?= null, filter: String ?= null)
+POST        /admin/users/add            ix.ginas.controllers.GinasApp.addPrincipal()
+GET         /admin/users/add            ix.ginas.controllers.GinasApp.createPrincipal()
+POST        /admin/user/:id	            ix.ginas.controllers.GinasApp.updatePrincipal(id: Long)
+GET         /admin/user/:id	            ix.ginas.controllers.GinasApp.editPrincipal(id:Long)
+POST        /admin/users/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

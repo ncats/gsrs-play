@@ -114,7 +114,8 @@ import play.db.ebean.Model;
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer implements Closeable{
-    private static final String SORT_PREFIX = "SORT_";
+    private static final String FULL_TEXT_FIELD = "text";
+	private static final String SORT_PREFIX = "SORT_";
 	protected static final String STOP_WORD = " THE_STOP";
     protected static final String START_WORD = "THE_START ";
     protected static final String GIVEN_STOP_WORD = "$";
@@ -604,6 +605,7 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
+            
             //	Util.debugSpin(10);
             
             //}
@@ -998,82 +1000,7 @@ public class TextIndexer implements Closeable{
             }
         }
     }
-        
-//    class FetchWorker implements Runnable {
-//        FetchWorker () {
-//        }
-//
-//        public void run () {
-//            Logger.debug(Thread.currentThread()
-//                         +": FetchWorker started at "+new Date ());
-//
-//
-//            try{
-//                SearchResultPayload payload;
-//                while( (payload = fetchQueue.take()) !=POISON_PAYLOAD){
-//                    try {
-//                        long start = System.currentTimeMillis();
-//                        Logger.debug(Thread.currentThread()
-//                                + ": fetching payload "
-//                                + payload.hits.totalHits
-//                                + " for " + payload.result);
-//
-//                        payload.fetch();
-//                        Logger.debug(Thread.currentThread() + ": ## fetched "
-//                                + payload.result.size()
-//                                + " for result " + payload.result
-//                                + " in " + String.format
-//                                ("%1$dms",
-//                                        System.currentTimeMillis() - start));
-//                    }catch(InterruptedException ex){
-//                        throw ex;
-//                    }catch(Exception ex){
-//                        ex.printStackTrace();
-//                        Logger.error("Error in processing payload", ex);
-//                    }
-//                }
-//            }catch (InterruptedException ex){
-//                System.out.println("FETCH_WORKER EXCEPTION");
-//                ex.printStackTrace();
-//                Logger.trace(Thread.currentThread()+" stopped", ex);
-//            }
-
-//            try {
-//                for (SearchResultPayload payload;
-//                     !Thread.currentThread().isInterrupted() &&
-//                             (payload = fetchQueue.take()) != POISON_PAYLOAD; ) {
-//                    try {
-//                        long start = System.currentTimeMillis();
-//                        Logger.debug(Thread.currentThread()
-//                                     +": fetching payload "
-//                                     +payload.hits.totalHits
-//                                     +" for "+payload.result);
-//
-//                        payload.fetch();
-//                        Logger.debug(Thread.currentThread()+": ## fetched "
-//                                     +payload.result.size()
-//                                     +" for result "+payload.result
-//                                     +" in "+String.format
-//                                     ("%1$dms",
-//                                      System.currentTimeMillis()-start));
-//                    }
-//                    catch (IOException ex) {
-//                        ex.printStackTrace();
-//                        Logger.error("Error in processing payload", ex);
-//                    }
-//                }
-//                Logger.debug(Thread.currentThread()
-//                             +": FetchWorker stopped at "+new Date());
-//            }
-//            catch (Exception ex) {
-//                System.out.println("FETCH_WORKER EXCEPTION");
-//                ex.printStackTrace();
-//                Logger.trace(Thread.currentThread()+" stopped", ex);
-//            }
-
-      //  }
-   // }
-
+    
     class FlushDaemon implements Runnable {
         FlushDaemon () {
         }
@@ -1287,7 +1214,6 @@ public class TextIndexer implements Closeable{
         isShutDown = false;
         isEmptyPool = true;
 
-      //  setFetchWorkers (FETCH_WORKERS);
     }
     
     public TextIndexer (File dir) throws IOException {
@@ -1376,18 +1302,6 @@ public class TextIndexer implements Closeable{
         scheduler.scheduleWithFixedDelay
             (flushDaemon, 10, 35, TimeUnit.SECONDS);
     }
-
-//    public void setFetchWorkers (int n) {
-//        if (fetchWorkers != null) {
-//            for (Future f : fetchWorkers)
-//                if (f != null)
-//                    f.cancel(true);
-//        }
-//
-//        fetchWorkers = new Future[n];
-//        for (int i = 0; i < fetchWorkers.length; ++i)
-//            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
-//    }
     @FunctionalInterface
     interface SearcherFunction<R> {
 
@@ -1535,7 +1449,7 @@ public class TextIndexer implements Closeable{
         }else {
             try {
                 QueryParser parser = new IxQueryParser
-                    ("text", indexAnalyzer);
+                    (FULL_TEXT_FIELD, indexAnalyzer);
                 query = parser.parse(qtext);
             }
             catch (ParseException ex) {
@@ -2099,7 +2013,7 @@ public class TextIndexer implements Closeable{
                     Logger.debug(".."+f.name()+":"
                                  +text+" ["+f.getClass().getName()+"]");
                 
-                doc.add(new TextField ("text", text, NO));
+                doc.add(new TextField (FULL_TEXT_FIELD, text, NO));
             }
             doc.add(f);
         }
@@ -2191,7 +2105,7 @@ public class TextIndexer implements Closeable{
     public void remove (String text) throws Exception {
         try {
             QueryParser parser = new QueryParser 
-                (LUCENE_VERSION, "text", indexAnalyzer);
+                (LUCENE_VERSION, FULL_TEXT_FIELD, indexAnalyzer);
             Query query = parser.parse(text);
             Logger.debug("## removing documents: "+query);
             indexWriter.deleteDocuments(query);

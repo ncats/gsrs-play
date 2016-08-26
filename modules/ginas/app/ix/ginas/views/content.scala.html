@@ -1,17 +1,22 @@
 @import ix.ncats.controllers.App
 @import ix.ncats.controllers.App.FacetDecorator
 @import ix.core.search.FieldFacet
+@import ix.core.models.Structure
+@import ix.ncats.controllers.App.SearchResultContext
 
 @(title: String, kind: String,
-        resetAction: String, current: Int, rows: Int, total: Int,
-        pages: Array[Int], facets: Array[FacetDecorator], searchFacets : List[FieldFacet] = null)(header: Html)(content: Html)
+        resetAction: String, 
+        current: Int, rows: Int, total: Int,
+        pages: Array[Int], 
+        facets: Array[FacetDecorator], 
+        ctx : SearchResultContext = null
+        )(header: Html)(content: Html)
 
     @ginas(title, kind) {
         @header
     }{
-
-        @defining(	App.checkStatusDirect()!= null && 
-        		  	"Running".equals(App.checkStatusDirect().getStatus().toString()) &&
+        @defining(	ctx!= null && 
+        		  	"Running".equals(ctx.getStatus().toString()) &&
                 	request().getQueryString("q") != null){searchFlag =>
     	<div class="row">
             @if(total > 0 && facets.length > 0) {
@@ -43,11 +48,12 @@
                         }
                     role="alert">
                              
-                        <button type="button" class="close" data-dismiss="alert"
+                        <button type="button" class="close" 
                         onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url')"
-                        aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                        aria-label="Clear Query">
+                            <span aria-hidden="true"><i class="fa fa-eraser"></i></span>
                         </button>
+                        @defining(flash().remove("qStructureID")) { qStructureID =>
                         @request().getQueryString("type") match {
 			    		    case "sequence" => {
 			    		  	  <span><h4>Sequence Query:&nbsp;
@@ -62,7 +68,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case "Similarity" => {
@@ -73,7 +79,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a> &ge; @request().getQueryString("cutoff")</h4>
                                 </span> <div id="searching"></div>
                             }
                             case "Exact" => {
@@ -84,7 +90,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case "Flex" => {
@@ -95,7 +101,7 @@
                                 data-trigger="click hover focus"
                                 data-title=""
                                 data-html="true"
-                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(request().getQueryString("q"), "svg", 150,null)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
                                 </span> <div id="searching"></div>
                             }
                             case _ => {
@@ -110,6 +116,7 @@
                                 }
                             }
                         }
+                        }
                     </div>
                 }
                 
@@ -123,6 +130,8 @@
 	                    	</div>
 	                 	}
 		          }
+		          @if(ctx !=null){
+		          	@defining(ctx.getFieldFacets()) { searchFacets =>
                   @if(searchFacets!=null && searchFacets.size()>0){
                            <div
                         @if(total > 0) {
@@ -165,6 +174,8 @@
                                             <div class="spacer">&nbsp;</div>
                     </div>
                           }
+                          }
+                  }
             }
 
 			@if(total>=1){
@@ -195,6 +206,8 @@
 	                        </div>
 	                    </div>
 	                </div>
+	                <div class="placeholder-content">
+	                </div>
 	                @content
 	
 	                <div class="panel-footer">
@@ -216,98 +229,94 @@ function dismissQuery () {
 }
 
 $(document).ready(function () {
-    $(function () {
-        $('[data-toggle="popover"]').popover();
-    })
+   $(function () {
+       $('[data-toggle="popover"]').popover();
+   })
+   @if(ctx!= null){
+   		var firststatus=@Html(ctx.toJson());
+   		firststatus.thisPage=@{current*rows};
+   		firststatus.rowsPerPage=@{rows};
+   		
+   		if(!firststatus.finished){
+   			//Only reload if this page isn't ready yet,
+   			//OR total isn't determined at this time
+   			if(firststatus.count < firststatus.thisPage || !firststatus.total){
+    		 	firststatus.needsReload=true;
+    		 	if(firststatus.count < firststatus.thisPage){
+    		 		$('.placeholder-content').html('<div>Loading ... </div>' +
+	                	'<div class="progress multi-progress">' +
+ 		           		   	'<div id="loading-bar1" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
+ 		           		   	'</div>'+
+ 		           		+'</div>');
+    		 	}
+    		$('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
+    		var delay = 0;
+         	var checkStatus;
+         	//aria-valuenow="'+pct+'"
+	 	 	var timer;
 
-   @defining(App.checkStatus()) { status =>
-   	
-   
-     @if(status != null) {
-    	 @defining(App.checkStatusDirect()) { startstatus =>
-    	 @if(startstatus != null){
-    	 var firststatus=@Html(startstatus.toJson());
-    	 console.log(firststatus);
-    	 }else{
-    		 var firststatus={};
-    		 
-    	 }
-    	 }
-    	 
-    	 if(firststatus.count<@{current*rows} || !firststatus.total){
-    	 	//alert("OK?");
-    		 window["needsreload"]=true;
-    	 }
-    	 
-         console.log('status=@status');
-         $('#searching')
-	     .html('<i class="fa fa-spinner fa-spin"></i> searching...');
-
-         var delay = 0;
-         var checkStatus;
-	 	 var timer;
-
-         $('#loading').on('hidden.bs.modal', function (e) {
-	     console.log('closing load dialog');
- 	     window.clearInterval(timer);
-	     //location.reload(true);
-         });
-
-	 checkStatus = function () {
-	     if (delay == 0) {
-	        console.log('Starting timer...');
-		window.clearInterval(timer);
-		delay = 2000;
-	        timer = window.setInterval(checkStatus, delay);
-	     }
-
-	     var url = '@status'+'@App.queryString("cutoff")';
-	     //console.log(url);
-             $.ajax(url, {
-	         dataType: 'json',
-	     }).done(function(data) {
-	     
-		    	 
-                 console.log(data.status + ' '+data.count+' '+data.total);
-                 if (data.status == 'Done' || data.status == 'Failed' 
-                 			|| data.status == 'Determined'
-                 		) {
-                       	   window.clearInterval(timer);
-                       	   $('#searching').html('');
-                           $('#loading').modal('hide');
-                           if(window["needsreload"]){
+         	$('#loading').on('hidden.bs.modal', function (e) {
+ 	     		window.clearInterval(timer);
+         	});
+         	
+         	var onDetermined = function () {
+         				   window.clearInterval(timer);
+                       	   $('#searching').html('');	   
+                           //$('#loading').modal('hide');
+                           if(firststatus.needsReload){
                             	$('#searching').html('Reloading search ...');
                            		location.reload(true);
                            }
-                  } else {
-		       		// loading vs searhing..
+         	};
+         	
+         	var onLoadedMore = function (data) {
+         	 			// loading vs searching..
                        if (data.total) {
- 	                   		if (data.count < @{current*rows}) {
-  	                      		$('#loading').modal('show');
-  	                      		//window["needsreload"]=true;
-  	                      		console.log("showing search");
-		           			}else{
-		           				if(window["needsreload"]){
-		           					location.reload(true);
-		           				}
-		           			}
-
+                           if (data.count > firststatus.thisPage || data.finished) {
+                           	 if(firststatus.needsReload){
+  	                         	location.reload(true); 
+  	                         }
+		           		   }
  		           		   var pct = Math.floor(100.0*data.count/ data.total+0.5);
+ 		           		   var pagepct = Math.floor(100.0*firststatus.thisPage/ data.total+0.5);
+ 		           		   pct= Math.floor((pct/pagepct)*100);
+ 		           		   var loadedPage=Math.floor(data.count/firststatus.rowsPerPage);
+ 		           		   var waitPage=Math.floor(firststatus.thisPage/firststatus.rowsPerPage);
  		           		   
-                           $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
+ 		           		   $("#loading-bar1").html(pct + "%");
+ 		           		   $("#loading-bar1").width(pct + "%");				
+ 		           		   $("#loading-bar1").attr("aria-valuenow",pct);								
                        }else {
-                    	   window["needsreload"]=true;
                            $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
                        }
-                  }
+             };
+         	
+         	
+         	
+         	
+         	checkStatus = function () {
+	     		if (delay == 0) {
+		        	window.clearInterval(timer);
+					delay = 500;
+	        		timer = window.setInterval(checkStatus, delay);
+	     		}
+         		$.ajax(firststatus.url, {
+	         		dataType: 'json',
+	     		}).done(function(status) {
+               	  if (!firststatus.determined && status.determined) {
+             	    	onDetermined(status); 
+             	  }else {
+              		   	onLoadedMore(status);
+             	  }
               }).error(function () {
                   window.clearInterval(timer);
               });
-         };
+         	};
 	   
-	     timer = window.setInterval(checkStatus, delay);
-      }
-   }
+	     	timer = window.setInterval(checkStatus, delay);
+         	}
+   		}
+   	}
 });
 </script>
 }

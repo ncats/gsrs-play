@@ -111,26 +111,17 @@ import ix.ncats.resolvers.*;
  * Basic plumbing for an App
  */
 public class App extends Authentication {
-    private static final String KEY_DISPLAY_CD = "DISPLAY_CD";
+	private static final String KEY_DISPLAY_CD = "DISPLAY_CD";
 
-        private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
+	private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
 
-        static final String APP_CACHE = App.class.getName();
-    
-    static final String RENDERER_URL =
-        play.Play.application()
-        .configuration().getString("ix.structure.renderer.url");
-    
-    static final String RENDERER_FORMAT =
-        play.Play.application()
-        .configuration().getString("ix.structure.renderer.format");
+	static final String APP_CACHE = App.class.getName();
+	public static final int FACET_DIM = 20;
+	public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static final int FACET_DIM = 20;
-    public static final int MAX_SEARCH_RESULTS = 1000;
-
-    public static PayloadPlugin _payloader;
-    public static IxContext _ix;
-    public static PersistenceQueue _pq;
+	public static PayloadPlugin _payloader;
+	public static IxContext _ix;
+	public static PersistenceQueue _pq;
 
     static {
         init();
@@ -145,12 +136,9 @@ public class App extends Authentication {
 
     
     public static class BogusPageException extends IllegalArgumentException{
-
 		public BogusPageException(String string) {
 			super(string);
-			
 		}
-    	
     }
 
     public static TextIndexer getTextIndexer(){
@@ -224,7 +212,7 @@ public class App extends Authentication {
         }
     }
     /**
-     * This returns links to up to 10 pages of interest.
+     * This returns links to up to 11 pages of interest.
      * 
      * The first few are always 1-3
      * 
@@ -303,12 +291,12 @@ public class App extends Authentication {
     /**
      * make sure if the argument doesn't have quote then add them
      */
-    static Pattern regex = Pattern.compile("\"([^\"]+)");
+    static Pattern REGEX_QUOTE = Pattern.compile("\"([^\"]+)");
     public static String quote (String s) {
         try {
-            Matcher m = regex.matcher(s);
+            Matcher m = REGEX_QUOTE.matcher(s);
             if (m.find())
-                return s; // nothing to do.. already have quote
+                return s; // nothing to do.. already has quote
             return "\""+URLEncoder.encode(s, "utf8")+"\"";
         }
         catch (Exception ex) {
@@ -800,7 +788,7 @@ public class App extends Authentication {
         return null;
     }
 
-    final static Pattern RangeRe = Pattern.compile
+    final static Pattern REGEX_RANGE = Pattern.compile
         ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
@@ -826,7 +814,7 @@ public class App extends Authentication {
 
                 if (q != null) {
                     // check to see if q is format like a range
-                    Matcher m = RangeRe.matcher(q);
+                    Matcher m = REGEX_RANGE.matcher(q);
                     if (m.find()) {
                         final String field = m.group(1);
                         final String min = m.group(2);
@@ -877,17 +865,13 @@ public class App extends Authentication {
         return null;
     }
     static protected String formatKey(String key){
-//    	if (key.length() > 10) {
-//            key = key.substring(0, 10);
-//        }
     	return key;
     }
-
+    
     static protected SearchResult cacheKey (SearchResult result, String key) {
     	key=formatKey(key);
 //      IxCache.set(key, result); // create alias       
         result.setKey(key);
-    	
         return result;
     }
 
@@ -911,37 +895,6 @@ public class App extends Authentication {
                                    String key, Callable<T> callable)
     throws Exception {
         return IxCache.getOrElse(modified, key, callable);
-    }
-
-    public static Result renderOld (final String value, final int size) {
-        String key = Util.sha1(value)+"::"+size;
-        Result result = null;
-        try {
-            result = getOrElse (key, new Callable<Result> () {
-                    public Result call () throws Exception {
-                        WSRequestHolder ws = WS.url(RENDERER_URL)
-                        .setFollowRedirects(true)
-                        .setQueryParameter("structure", value)
-                        .setQueryParameter("format", RENDERER_FORMAT)
-                        .setQueryParameter("size", String.valueOf(size));
-                        WSResponse res = ws.get().get(5000);
-                        byte[] data = res.asByteArray();
-                        if (data.length > 0) {
-                            return ok (data);
-                        }
-                        return null;
-                    }
-                });
-            
-            if (result == null)
-                IxCache.remove(key);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.trace("Can't render "+value, ex);
-        }
-        response().setContentType("image/svg+xml");
-        return result;
     }
 
     public static Result renderParam (final String value, final int size) {
@@ -1311,12 +1264,14 @@ public class App extends Authentication {
             Done,		//don't show +
             Failed		//don't show +
         }
+
         
         
 
         public static interface StatusChangeListener{
         	void onStatusChange(Status newStatus, Status oldStatus);
         }
+        
         private List<SoftReference<StatusChangeListener>> listeners = new ArrayList<>();
         
         private Status _status = Status.Pending;
@@ -1379,8 +1334,7 @@ public class App extends Authentication {
             if (result.finished()) {
                 setStatus(Status.Done);
                 stop = result.getStopTime();
-            }
-            else if (result.size() > 0){
+            }else if (result.size() > 0){
             	setStatus(Status.Determined);
             }
             
@@ -1392,6 +1346,7 @@ public class App extends Authentication {
             
             results = result.getMatches();
             total = result.count();
+            this.key=result.getKey();
         }
         
         public List<FieldFacet> getFieldFacets(){
@@ -1413,12 +1368,12 @@ public class App extends Authentication {
         public Long getStart () { return start; }
         public Long getStop () { return stop; }
         
-        public boolean finished () {
+        public boolean isFinished () {
             return _status == Status.Done || _status == Status.Failed;
         }
         
         public boolean isDetermined () {
-            return finished () || _status == Status.Determined;
+            return isFinished () || _status == Status.Determined;
         }
         
         @com.fasterxml.jackson.annotation.JsonIgnore
@@ -1487,6 +1442,10 @@ public class App extends Authentication {
         	ObjectMapper om = new ObjectMapper();
         	return om.valueToTree(this).toString();
         }
+        
+        public String getUrl(){
+        	return routes.App.status(this.getKey()).toString();
+        }
     }
     
     static class SearchResultHandler extends UntypedActor {
@@ -1536,7 +1495,8 @@ public class App extends Authentication {
     }
     
     public static String getKeyForCurrentRequest(){
-    	 String query = request().getQueryString("q") +request().getQueryString("order");
+    	
+    	 String query = request().getQueryString("q") + request().getQueryString("order");
          String type = request().getQueryString("type");
 
          Logger.debug("checkStatus: q=" + query + " type=" + type);
@@ -1544,11 +1504,13 @@ public class App extends Authentication {
              try {
                  String key = null;
                  if (type.equalsIgnoreCase("substructure")) {
-                     key = "substructure/"+Util.sha1(query);
+                	 String sq = getSmiles(request().getQueryString("q"));
+                	 key = "substructure/"+Util.sha1(sq + request().getQueryString("order"));
                  }
                  else if (type.equalsIgnoreCase("similarity")) {
                      String c = request().getQueryString("cutoff");
-                     key = "similarity/"+getKey (query, Double.parseDouble(c));
+                     String sq = getSmiles(request().getQueryString("q"));
+                     key = "similarity/"+getKey (sq + request().getQueryString("order"), Double.parseDouble(c));
                  }
                  else if (type.equalsIgnoreCase("sequence")) {
                  	String iden = request().getQueryString("identity");
@@ -1562,19 +1524,21 @@ public class App extends Authentication {
                      key = "sequence/"+getKey (getSequence(request().getQueryString("q")) +idenType + request().getQueryString("order"), Double.parseDouble(iden));
 
                  }else if(type.equalsIgnoreCase("flex")) {
-                	 key = "flex/"+Util.sha1(query);
+                	 String sq = getSmiles(request().getQueryString("q"));
+                	 key = "flex/"+Util.sha1(sq + request().getQueryString("order"));
+                 }else if(type.equalsIgnoreCase("exact")) {
+                	 String sq = getSmiles(request().getQueryString("q"));
+                	 key = "exact/"+Util.sha1(sq + request().getQueryString("order"));
                  }else{
                 	 key = type + "/"+Util.sha1(query);
                  }
 
                  return key;
                  
-             }
-             catch (Exception ex) {
+             }catch (Exception ex) {
                  ex.printStackTrace();
              }
-         }
-         else {
+         }else {
              String key = signature (query, getRequestQuery ());
              return key;
          }
@@ -1592,14 +1556,13 @@ public class App extends Authentication {
 	        case Done:
 	        case Failed:
 	            break;
-	            
 	        default:
 	        	return routes.App.status(ctx.getKey());
 	    }
         return null;
     }
     
-    public static SearchResultContext getForKey(String key){
+    public static SearchResultContext getSearchResultContextForKey(String key){
     	SearchResultContext context=null;
         try {
             Object value = IxCache.get(key);
@@ -1612,7 +1575,7 @@ public class App extends Authentication {
             		SearchResult result = (SearchResult)value;
             		context = new SearchResultContext (result);
             		
-                    Logger.debug("status: key="+key+" finished="+context.finished());
+                    Logger.debug("status: key="+key+" finished="+context.isFinished());
             	}
             }
         }
@@ -1627,7 +1590,7 @@ public class App extends Authentication {
     
     public static SearchResultContext checkStatusDirect () {
     	String key = getKeyForCurrentRequest();
-    	return getForKey(key);
+    	return getSearchResultContextForKey(key);
     }
 
     public static Result status (String key) {
@@ -1649,7 +1612,7 @@ public class App extends Authentication {
             SearchResultContext ctx = (SearchResultContext)value;
             Logger.debug
                 (" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
-            if(ctx.finished()){
+            if(ctx.isFinished()){
             	Object result2=IxCache.get(formatKey(ctx.id));
             	if(result2!=null){
             		SearchResultContext fakeContext = new SearchResultContext ((SearchResult)result2);
@@ -1712,7 +1675,7 @@ public class App extends Authentication {
         (final String query, final int rows,
          final int page, final SearchResultProcessor processor) {
         try {
-            final String key = "substructure/"+Util.sha1(query + request().getQueryString("order"));
+            final String key = App.getKeyForCurrentRequest();
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
             return getOrElse
@@ -1722,6 +1685,7 @@ public class App extends Authentication {
                              processor.setResults
                                  (rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
+                             ctx.setKey(key);
                              Logger.debug("## cache missed: "+key+" => "+ctx);
                              return ctx;
                          }
@@ -1743,7 +1707,8 @@ public class App extends Authentication {
          final int rows, final int page,
          final SearchResultProcessor processor) {
         try {
-            final String key = "similarity/"+getKey (query + request().getQueryString("order"), threshold);
+        	final String key = App.getKeyForCurrentRequest();
+            //final String key = "similarity/"+getKey (query + request().getQueryString("order"), threshold);
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
                  key, new Callable<SearchResultContext> () {
@@ -1751,7 +1716,9 @@ public class App extends Authentication {
                              processor.setResults
                                  (rows, EntityPersistAdapter.getStructureIndexer().similarity
                                   (query, threshold, 0));
-                             return processor.getContext();
+                             SearchResultContext ctx = processor.getContext();
+                             ctx.setKey(key);
+                             return ctx;
                          }
                      });
         }
@@ -1762,10 +1729,10 @@ public class App extends Authentication {
         return null;
     }
 
-    static String getKey (SearchResultContext context, String... params) {
-        return "fetchResult/"+context.getId()
-            +"/"+Util.sha1(request (), params);
-    }
+//    static String getKey (SearchResultContext context, String... params) {
+//        return "fetchResult/"+context.getId()
+//            +"/"+Util.sha1(request (), params);
+//    }
     /**
      * Check if the current request has a wait parameter included
      * @return
@@ -1799,6 +1766,10 @@ public class App extends Authentication {
     	 return renderer.render(src, page, rows, result.count(),
     			 pages, result.getFacets(), resultList);
     }
+    static String getKey (SearchResultContext context, String... params) {
+        return "fetchResult/"+context.getId()
+            +"/"+Util.sha1(request (), params);
+    }
     public static <T> Result fetchResult
         (final SearchResultContext context, int rows,
          int page, final ResultRenderer<T> renderer) throws Exception {
@@ -1809,7 +1780,7 @@ public class App extends Authentication {
          * If wait is set to be forced, we need to hold off going forward until
          * everything has been processed
          */
-        if(!context.finished() ) {
+        if(!context.isFinished() ) {
 
             if (isWaitSet()) {
                // System.out.println("Waiting for finished product for search:" + context.id);
@@ -1867,7 +1838,7 @@ public class App extends Authentication {
             count = result.count();
             
             Logger.debug(key+": "+count+"/"+result.count()
-                         +" finished? "+context.finished()
+                         +" finished? "+context.isFinished()
                          +" stop="+stop);
             
             rows = Math.min(count, Math.max(1, rows));
@@ -2208,6 +2179,33 @@ public class App extends Authentication {
         }
         return null;
     }
+    public static String getSmiles(String id) {
+        return getSmiles(id, 0);
+    }
+
+    public static String getSmiles(String id, int max) {
+    	 if (id != null) {
+             String seq=null;
+             if(!Util.isUUID(id)){
+         		seq= id;
+         	 }else{
+                 Structure structure=StructureFactory.getStructure(id);
+            	 if(structure!=null){
+            		 seq = structure.smiles;
+            	 }
+         	 }
+        	 
+             if (seq != null) {
+                 seq = seq.replaceAll("[\n\t\\s]", "");
+                 if (max > 0 && max + 3 < seq.length()) {
+                     return seq.substring(0, max) + "...";
+                 }
+                 return seq;
+             }
+         }
+         return id;
+    }
+    
 
     public static String getPayload (String id, int max) {
         String payload = PayloadFactory.getString(id);
@@ -2334,6 +2332,13 @@ public class App extends Authentication {
 
         return ok (results);
     }
+    
+    
+    
+    
+    //SHOULD MOVE
+    //
+    //===========================================================================================
 
     private static DisplayParams preProcessChemical(Chemical c, DisplayParams dp){
     	if(c!=null){

@@ -243,7 +243,7 @@ public class GinasUtils {
 	public static class GinasSubstancePersister extends RecordPersister<Substance, Substance> {
 		
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception {
-			System.out.println("Persisting:" + prec.recordToPersist.uuid + "\t" + prec.recordToPersist.getName());
+			//System.out.println("Persisting:" + prec.recordToPersist.uuid + "\t" + prec.recordToPersist.getName());
 			UserFetcher.setLocalThreadUser(prec.rec.job.owner);            
 			try{
 				boolean worked = false;

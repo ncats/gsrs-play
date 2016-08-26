@@ -49,7 +49,7 @@
 		       placeholder="Enter Username">
 		<p> <input type="password" class="form-control"
 			   name="password" id="password"
-			   placeholder="Enter Password">
+			   placeholder="Enter Password" autocomplete="off">
 	      </div>
 	      @defining(flash().remove("message")) { mesg =>
 	         @if(mesg != null) {

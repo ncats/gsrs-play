@@ -1,5 +1,7 @@
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.MixtureSubstance
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(sub: MixtureSubstance)
 
@@ -9,16 +11,18 @@
         <div class = "row">
             <div class = "col-md-3">
                 <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="mixture" src="@routes.Assets.at("ginas/images/mixture.svg")"  />
-                <div class = "row">
-                    <div class = "col-md-12 text-center">
-                        <ul class= "list-inline list-unstyled tools">
-                            <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Mixture"><span class="sr-only">
-                                    Edit Mixture</span><span class="fa fa-pencil fa-2x success"></span></a>
-                            </li>
-                        </ul>
+                @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                    <div class = "row">
+                        <div class = "col-md-12 text-center">
+                            <ul class= "list-inline list-unstyled tools">
+                                <li>
+                                    <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Mixture"><span class="sr-only">
+                                        Edit Mixture</span><span class="fa fa-pencil fa-2x success"></span></a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
+                }
             </div>
             <div class = "col-md-7">
            		@commonlistdetails(sub)

@@ -24,6 +24,7 @@ public class Code extends CommonDataElementOfCollection{
     
     @JSONEntity(title = "Code", isRequired = true)
     @Column(nullable=false)
+    @Indexable(name="Code", suggest=true)
     public String code;
     
     public String getCode() {
