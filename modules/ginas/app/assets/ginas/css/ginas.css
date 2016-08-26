@@ -530,7 +530,6 @@ span#enabled {
     box-shadow: rgb(223, 223, 223) 0px 0px 0px 0px inset;
     transition: 0.3s ease-out all;
     -webkit-transition: 0.3s ease-out all;
-    top: 25px;
 }
 
 .toggleSwitch small {
@@ -1207,4 +1206,9 @@ text-overflow: ellipsis;
 }
 .placeholder-content{
 	padding:10px;
+}
+span#record-count {
+    padding: .35em .6em .35em .6em;
+    margin-top: 2px;
+    display: inline-block;
 }

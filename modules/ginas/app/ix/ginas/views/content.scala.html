@@ -182,8 +182,13 @@
 	            <div class="panel panel-default">
 	                <div class="panel-heading">
 	                    <div class="row">
+	                    	<div class = "col-md-12">
+	                    		@ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
+	                    	</div>
+	                    </div>
+						<div class="row">	                    	
 	                        <div class = "col-md-9">
-                               @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
+                               
 							   
                                <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
