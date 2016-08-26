@@ -75,17 +75,14 @@ public class WebCrawlerTest {
 
 
     @Test
-    public void restrictedLinksAreForbiddenWhenUnAuthenticated() throws Exception {
+    public void restrictedForbiddenLinksNotDiscoverableWhenUnAuthenticated() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
             URL url = ts.getHomeUrl();
-
             crawler.crawl(url);
-
-            assertFalse(spy.get401Links().isEmpty());
+            assertTrue(spy.get401Links().isEmpty());
         }
-
     }
 
     @Test
