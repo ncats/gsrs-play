@@ -89,7 +89,7 @@ public class ProteinApiTest {
             for(;;){
 	            String body = api.getSequenceSearchHTML(seq, CutoffType.GLOBAL, .9);
 	            System.out.println("####################Body:");
-	            total=body.split("<nav>")[1].split("<h3><span class=\"label label-default\">")[1].split("<")[0];
+	            total=body.split("<nav>")[1].split("<h3><span id=\"record-count\" class=\"label label-default\">")[1].split("<")[0];
 	           // System.out.println(body);
 	            System.out.println("Found:" + total + " of " + totsize);
 	            if(

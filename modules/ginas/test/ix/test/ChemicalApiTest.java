@@ -125,7 +125,7 @@ public class ChemicalApiTest {
             SubstanceAPI api = new SubstanceAPI(session);
             ensurePass( api.submitSubstance(entered));
             String html=api.getFlexMatchHTML("ClCC1CO1");
-            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span class=\"label label-default\">1</span>"));
+            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
         }
    	}
     
@@ -139,7 +139,7 @@ public class ChemicalApiTest {
             JsonNode entered = em.valueToTree(cs);
             ensurePass( api.submitSubstance(entered));
             String html=api.getFlexMatchHTML("ClCC1CO1");
-            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span class=\"label label-default\">1</span>"));
+            assertTrue("Should have some result for flex match, but couldn't find any",html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
         }
    	}
     
@@ -155,7 +155,7 @@ public class ChemicalApiTest {
             ensurePass( api.submitSubstance(form2));
             
             String html=api.getFlexMatchHTML("OC1=CC=CC=C1");
-            assertTrue("Should have 2 results for flex match, but found something else",html.contains("<span class=\"label label-default\">2</span>"));
+            assertTrue("Should have 2 results for flex match, but found something else",html.contains("<span id=\"record-count\" class=\"label label-default\">2</span>"));
         }
    	}
     @Test 
@@ -190,7 +190,7 @@ public class ChemicalApiTest {
             
             String html=api.getExactMatchHTML("OC1=CC=CC=C1");
             try{
-            	assertTrue("Should have 1 match, but found something different",html.contains("<span class=\"label label-default\">1</span>"));
+            	assertTrue("Should have 1 match, but found something different",html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
             }catch(Throwable t){
             	//System.out.println(html);
             	t.printStackTrace();
@@ -201,7 +201,7 @@ public class ChemicalApiTest {
    	}
     
     @Test 
-   	public void testSubstructureSearchSimple() throws Exception {
+   	public void substructureSearchSimple() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -212,7 +212,7 @@ public class ChemicalApiTest {
             ensurePass( api.submitSubstance(form2));
             
             String html=api.getSubstructureMatchHTML("C1=CC=CC=C1");
-            assertTrue("Should have 2 matches, but found something else",html.contains("<span class=\"label label-default\">2</span>"));
+            assertTrue("Should have 2 matches, but found something else",html.contains("<span id=\"record-count\" class=\"label label-default\">2</span>"));
         }
    	}
     
@@ -228,7 +228,7 @@ public class ChemicalApiTest {
             ensurePass( api.submitSubstance(form2));
             
             String html=api.getSubstructureMatchHTML("C1=CC=CC=C1");
-            assertTrue("Should have 1 match, but found something else:" + html,html.contains("<span class=\"label label-default\">1</span>"));
+            assertTrue("Should have 1 match, but found something else:" + html,html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
         }
    	}
     
