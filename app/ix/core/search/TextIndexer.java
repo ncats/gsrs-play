@@ -606,7 +606,7 @@ public class TextIndexer implements Closeable{
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
             
-            //	Util.debugSpin(10);
+            	Util.debugSpin(10);
             
             //}
             //System.out.println("added:" + matches.size());
