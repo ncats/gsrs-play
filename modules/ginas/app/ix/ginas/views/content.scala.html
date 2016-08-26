@@ -206,6 +206,8 @@
 	                        </div>
 	                    </div>
 	                </div>
+	                <div class="placeholder-content">
+	                </div>
 	                @content
 	
 	                <div class="panel-footer">
@@ -240,15 +242,17 @@ $(document).ready(function () {
    			//OR total isn't determined at this time
    			if(firststatus.count < firststatus.thisPage || !firststatus.total){
     		 	firststatus.needsReload=true;
-    		 	
     		 	if(firststatus.count < firststatus.thisPage){
-    		 		$('#loading').modal('show');
+    		 		$('.placeholder-content').html('<div>Loading results (page auto-refreshes when ready) ... </div>' +
+	                	'<div class="progress multi-progress">' +
+ 		           		   	'<div id="loading-bar1" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
+ 		           		   	'</div>'+
+ 		           		+'</div>');
     		 	}
-    		}
     		$('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
     		var delay = 0;
          	var checkStatus;
-         	
+         	//aria-valuenow="'+pct+'"
 	 	 	var timer;
 
          	$('#loading').on('hidden.bs.modal', function (e) {
@@ -257,9 +261,8 @@ $(document).ready(function () {
          	
          	var onDetermined = function () {
          				   window.clearInterval(timer);
-                       	   $('#searching').html('');
-                       	   
-                           $('#loading').modal('hide');
+                       	   $('#searching').html('');	   
+                           //$('#loading').modal('hide');
                            if(firststatus.needsReload){
                             	$('#searching').html('Reloading search ...');
                            		location.reload(true);
@@ -276,16 +279,18 @@ $(document).ready(function () {
 		           		   }
  		           		   var pct = Math.floor(100.0*data.count/ data.total+0.5);
  		           		   var pagepct = Math.floor(100.0*firststatus.thisPage/ data.total+0.5);
+ 		           		   pct= Math.floor((pct/pagepct)*100);
  		           		   var loadedPage=Math.floor(data.count/firststatus.rowsPerPage);
  		           		   var waitPage=Math.floor(firststatus.thisPage/firststatus.rowsPerPage);
- 		           		   $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress multi-progress">'+
- 		           		   								'<div class="progress-bar background" role="progressbar" aria-valuenow="'+pagepct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pagepct+'%;"></div>'+
- 		           		   								'<div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div>' + 
- 		           		   								'</div><div>Waiting for page:' + waitPage + '</div><div>Processing page:' + loadedPage + '</div>');
+ 		           		   
+ 		           		   $("#loading-bar1").html(pct + "%");
+ 		           		   $("#loading-bar1").width(pct + "%");				
+ 		           		   $("#loading-bar1").attr("aria-valuenow",pct);								
                        }else {
                            $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
                        }
              };
+         	
          	
          	
          	
@@ -298,18 +303,18 @@ $(document).ready(function () {
          		$.ajax(firststatus.url, {
 	         		dataType: 'json',
 	     		}).done(function(status) {
-                 if (!firststatus.determined && status.determined) {
-                 	onDetermined(status); 
-                 } else {
-                 	onLoadedMore(status);
-                 }
+               	  if (!firststatus.determined && status.determined) {
+             	    	onDetermined(status); 
+             	  }else {
+              		   	onLoadedMore(status);
+             	  }
               }).error(function () {
                   window.clearInterval(timer);
               });
          	};
 	   
 	     	timer = window.setInterval(checkStatus, delay);
-         		
+         	}
    		}
    	}
 });
