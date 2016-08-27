@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
@@ -1231,7 +1232,7 @@ public class GinasApp extends App {
     }
 
     public static List<Integer> getSites(Modifications mod, int index) {
-        ArrayList<Integer> subunit = new ArrayList<Integer>();
+        List<Integer> subunit = new ArrayList<Integer>();
         for (StructuralModification sm : mod.structuralModifications) {
             subunit = siteIter(sm.getSites(), index);
         }
@@ -1248,21 +1249,19 @@ public class GinasApp extends App {
 
     public static List<Integer> getSites(List<DisulfideLink> disulfides,
                                          int index) {
-        ArrayList<Integer> subunit = new ArrayList<Integer>();
-        for (DisulfideLink sm : disulfides) {
-            subunit.addAll(siteIter(sm.getSites(), index));
-        }
+        List<Integer> subunit = new ArrayList<Integer>();
+        
+        disulfides.stream()
+        	.forEach(sm ->  subunit.addAll(siteIter(sm.getSites(), index)));
+        
         return subunit;
     }
 
-    public static ArrayList<Integer> siteIter(List<Site> sites, int index) {
-        ArrayList<Integer> subunit = new ArrayList<Integer>();
-        for (Site s : sites) {
-            if (s.subunitIndex == index) {
-                subunit.add(s.residueIndex);
-            }
-        }
-        return subunit;
+    public static List<Integer> siteIter(List<Site> sites, int index) {
+        return sites.stream()
+        		.filter(s->s.subunitIndex == index)
+        		.map(s->s.residueIndex)
+        		.collect(Collectors.toList());
     }
 
     public static String getAAName(char aa) {
@@ -1288,19 +1287,9 @@ public class GinasApp extends App {
 
     @SuppressWarnings("rawtypes")
     public static int getCount(Glycosylation obj) {
-        int count = 0;
         if (obj == null)
-            return count;
-        try {
-                count+=obj.getCGlycosylationSites().size();
-                count+=obj.getOGlycosylationSites().size();
-                count+=obj.getNGlycosylationSites().size();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        Logger.info("final count = " + count);
-        return count;
-
+            return 0;
+        return obj.getSiteCount();
     }
     
     
@@ -1322,7 +1311,6 @@ public class GinasApp extends App {
                     // so that it doesn't block
                     
                     // in fact, it probably shouldn't be saving this at all
-                    //
                     if(payload.contains("\n") && payload.contains("M  END")){
                     	struc.molfile=payload;
                     }
@@ -1704,10 +1692,8 @@ public class GinasApp extends App {
     
     public static String formatMolfile(Chemical c, int format) throws Exception{
         String mol=c.export(format);
-
         String[] lines = mol.split("\n");
         lines[1] = " G-SRS " + lines[1];
-
         return String.join("\n", lines);
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
@@ -1746,16 +1732,9 @@ public class GinasApp extends App {
         return resp;
     }
     public static int totalSites(NucleicAcidSubstance sub, boolean includeEnds){
-        int tot=0;
-        for(Subunit s: sub.nucleicAcid.getSubunits()){
-                tot+=s.sequence.length();
-                if(!includeEnds)tot--;
-        }
-        return tot;
+        return sub.getTotalSites(includeEnds);
     }
     public static int totalSites(NucleicAcidSubstance sub){
-        
-                        
         return totalSites(sub, true);
     }
     
@@ -1771,16 +1750,15 @@ public class GinasApp extends App {
         return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_LINKAGE",s.getLinkage());
     }
 
-        public static String[] splitBuffer(String input, int maxLength) {
-                int elements = (input.length() + maxLength - 1) / maxLength;
-                String[] ret = new String[elements];
-                for (int i = 0; i < elements; i++) {
-                        int start = i * maxLength;
-                        ret[i] = input.substring(start,
-                                        Math.min(input.length(), start + maxLength));
-                }
-                return ret;
-        }
+	public static String[] splitBuffer(String input, int maxLength) {
+		int elements = (input.length() + maxLength - 1) / maxLength;
+		String[] ret = new String[elements];
+		for (int i = 0; i < elements; i++) {
+			int start = i * maxLength;
+			ret[i] = input.substring(start, Math.min(input.length(), start + maxLength));
+		}
+		return ret;
+	}
 
     
     
@@ -1818,10 +1796,6 @@ public class GinasApp extends App {
 
                 return ok(new Html(new StringBuilder("<h1>Updated indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(call.url()).append("\">Rebuild Index (warning: will take some time)</a>").toString()));
             }
-
-//            ReindexQuery query = new ReindexQueryBuilder()
-//                                        .ofType(Substance.class)
-//                                        .build();
 
             Runnable r= ()->{
                     try {
