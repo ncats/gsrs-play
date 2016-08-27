@@ -234,7 +234,6 @@ public class App extends Authentication {
         int MAX_SHOW=8;
         //last page
         int max = Math.max(1,(total+ rowsPerPage-1)/rowsPerPage);
-        //System.out.println("Max is:" + max);
         if (page < 0 || page > max) {
             throw new BogusPageException ("Bogus page " + page);
         }
@@ -634,15 +633,10 @@ public class App extends Authentication {
         
         List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
-        	boolean found=false;
             for (Facet f : facets){
                 if (n.equals(f.getName())){
                     filtered.add(f);
-                    found=true;
                 }
-            }
-            if(!found){
-            	//System.out.println("Didn't find:" + n);
             }
         }
         return filtered.toArray(new Facet[filtered.size()]);
@@ -1697,12 +1691,10 @@ public class App extends Authentication {
             final String key = App.getKeyForCurrentRequest();
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
-            System.out.println("Substructure again");
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
-                        	 System.out.println("Cache miss");
                              processor.setResults
                                  (rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
@@ -1802,13 +1794,8 @@ public class App extends Authentication {
          * everything has been processed
          */
         if(!context.isFinished() ) {
-
             if (isWaitSet()) {
-               // System.out.println("Waiting for finished product for search:" + context.id);
                 context.getDeterminedFuture().get();
-
-            } else {
-               // System.out.println("Not waiting for finished product for search:" + context.id);
             }
         }
         SearchResultContext.Status stat=context.getStatus();
@@ -2401,8 +2388,6 @@ public class App extends Authentication {
 					ca.setRgroupIndex(Integer.parseInt(ca.getAlias().replace("_R", "")));
 					ca.setAlias(ca.getAlias().replace("_",""));
 					r= true;
-				}else{
-					//System.out.println(ca.getSymbol());
 				}
 			}
 		}
@@ -2417,7 +2402,6 @@ public class App extends Authentication {
 		Iterable<Chemical> components = c2.getComponents();
 		for (Chemical c1 : components) {
 			for (ChemicalAtom ca : c1.getAtomArray()) {
-				//System.out.println(ca.getAtomMap());
 				mapAssign[ca.getAtomMap()-1] = i+con;
 			}
 			i--;
@@ -2427,7 +2411,6 @@ public class App extends Authentication {
 		}
 		int aindex=0;
 		for(ChemicalAtom ca:c.getAtomArray()){
-			//System.out.println(aindex + "=" + mapAssign[aindex]);
 			ca.setAtomMap(mapAssign[aindex++]);
 		}
 		return true;
