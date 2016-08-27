@@ -1,36 +1,29 @@
 package ix.core.controllers.search;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
-
-import ix.core.util.Java8Util;
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import com.avaje.ebean.*;
-import com.avaje.ebean.event.BeanPersistListener;
-
 import ix.core.controllers.EntityFactory;
 import ix.core.models.ETag;
-import ix.core.models.ETagRef;
-import ix.core.models.Edit;
-import ix.core.models.Principal;
-import ix.utils.Global;
-import ix.utils.Util;
-import ix.core.plugins.*;
-import ix.core.search.TextIndexer;
-import static ix.core.search.TextIndexer.*;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
+import ix.core.search.SearchResultContext;
 import ix.core.search.SuggestResult;
+import ix.core.search.TextIndexer;
+import ix.core.util.Java8Util;
+import ix.utils.Global;
+import ix.utils.Util;
+import play.Logger;
+import play.Play;
+import play.db.ebean.Model;
+import play.mvc.Result;
 
 public class SearchFactory extends EntityFactory {
     static Model.Finder<Long, ETag> etagDb;
@@ -246,5 +239,15 @@ public class SearchFactory extends EntityFactory {
     public static Result suggestFields () {
         ObjectMapper mapper = new ObjectMapper ();
         return Java8Util.ok (mapper.valueToTree(getTextIndexer().getSuggestFields()));
+    }
+    
+    //TODO: Needs evaluation
+    public static Result getSearchResultContext (String key) {
+    	SearchResultContext ctx=SearchResultContext.getSearchResultContextForKey(key);
+    	if (ctx != null) {
+    		ObjectMapper mapper = new ObjectMapper ();
+            return Java8Util.ok (mapper.valueToTree(ctx));
+    	}
+        return notFound ("No key found: "+key+"!");
     }
 }

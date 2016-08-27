@@ -2,6 +2,7 @@ package ix.ncats.controllers;
 
 import java.util.List;
 
+import ix.core.search.SearchResultContext;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import play.mvc.Result;

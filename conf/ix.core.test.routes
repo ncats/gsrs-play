@@ -1,7 +1,7 @@
-GET     /predicates     ix.core.controllers.test.Predicates.index(size: Int ?= 50)
-GET     /xrefs  ix.core.controllers.test.Predicates.xrefs(top: Int ?= 10, skip: Int ?= 0, filter: String ?= null)
-GET	/eutils/:id/related	ix.core.controllers.test.Publications.relatedByPMID(id: Long)
-GET	/publications		ix.core.controllers.test.Publications.index
+GET     /predicates         ix.core.controllers.test.Predicates.index(size: Int ?= 50)
+GET     /xrefs              ix.core.controllers.test.Predicates.xrefs(top: Int ?= 10, skip: Int ?= 0, filter: String ?= null)
+GET	    /eutils/:id/related	ix.core.controllers.test.Publications.relatedByPMID(id: Long)
+GET	    /publications		ix.core.controllers.test.Publications.index
 POST	/publications		ix.core.controllers.test.Publications.fetch
-POST	/structures	ix.core.controllers.test.Structures.load
-GET	/structures	ix.core.controllers.test.Structures.index
+POST	/structures	        ix.core.controllers.test.Structures.load
+GET	    /structures	        ix.core.controllers.test.Structures.index

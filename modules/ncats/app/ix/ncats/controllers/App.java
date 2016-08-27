@@ -63,6 +63,8 @@ import ix.core.models.Structure;
 import ix.core.models.VInt;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
+import ix.core.search.SearchResultContext;
+import ix.core.search.SearchResultProcessor;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
@@ -1107,7 +1109,7 @@ public class App extends Authentication {
 
     
     //TODO: Needs evaluation
-    public static Result status (String key) {
+    public static Result getSearchResultContext (String key) {
     	SearchResultContext ctx=SearchResultContext.getSearchResultContextForKey(key);
     	if (ctx != null) {
     		ObjectMapper mapper = new ObjectMapper ();

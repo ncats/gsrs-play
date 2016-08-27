@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.core.search;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.CacheStrategy;
 import ix.core.plugins.IxCache;
-import ix.core.search.FieldFacet;
-import ix.core.search.SearchResult;
 import ix.utils.Util;
 import play.Logger;
 
@@ -232,7 +230,7 @@ public class SearchResultContext {
     
     @JsonIgnore
     public Call getCall(){
-    	return routes.App.status(this.getKey());
+    	return ix.core.controllers.search.routes.SearchFactory.getSearchResultContext(this.getKey());
     }
     
     public static SearchResultContext getSearchResultContextForKey(String key){

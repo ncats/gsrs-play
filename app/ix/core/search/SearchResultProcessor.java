@@ -1,12 +1,10 @@
-package ix.ncats.controllers;
+package ix.core.search;
 
 import java.util.Enumeration;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import ix.utils.Util;
 import play.Logger;
-import play.Play;
 import play.libs.Akka;
 
 /**

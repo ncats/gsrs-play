@@ -60,7 +60,6 @@ public class DBConfigInfo{
 	    			DatabaseMetaData meta = c.getMetaData();
 	    			productName=meta.getDatabaseProductName() + " " +meta.getDatabaseProductVersion();
 	    			long end=System.currentTimeMillis();
-	    			//c.
 	    			connectable=true;
 	    			latency=end-start;
 	    			c.close();

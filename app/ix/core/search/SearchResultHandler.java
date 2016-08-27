@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.core.search;
 
 import akka.actor.ActorRef;
 import akka.actor.Terminated;

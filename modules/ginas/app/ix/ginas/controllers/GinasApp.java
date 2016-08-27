@@ -23,8 +23,6 @@ import ix.ginas.utils.reindex.ReIndexService;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
-import ix.ncats.controllers.SearchResultContext;
-import ix.ncats.controllers.SearchResultProcessor;
 import ix.ncats.controllers.crud.Administration;
 import org.springframework.util.StringUtils;
 
@@ -52,6 +50,8 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
+import ix.core.search.SearchResultContext;
+import ix.core.search.SearchResultProcessor;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.FV;
 import ix.core.search.TextIndexer.Facet;
@@ -218,7 +218,8 @@ public class GinasApp extends App {
             return ok(ix.ginas.views.html.substances.render
                       (page, rows, total, pages,
                        decorate(filter(facets, this.facets)),
-                       substances, context));
+                       substances, 
+                       context));
             
         }
     }
