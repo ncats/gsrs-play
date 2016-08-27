@@ -1,14 +1,19 @@
 package ix.ginas.exporters;
 
 import gov.nih.ncgc.chemical.Chemical;
+import ix.core.models.Group;
 import ix.core.models.Structure;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.PolymerSubstance;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Subunit;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -93,7 +98,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
             }
         });
 
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHI, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHI));
+       // DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHI, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHI));
 
 
         DEFAULT_RECIPE_MAP.put(DefaultColumns.CAS, new CodeSystemRecipe("CAS"));
@@ -103,10 +108,51 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
         DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, new CodeSystemRecipe("USDA PLANTS"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe("INN"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe("NCI_THESAURUS"));
+        
+        
+        //Lazy place to put new default columns
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.PROTEIN_SEQUENCE, (s, cell) ->{
+            if(s instanceof ProteinSubstance){
+                List<Subunit> subunits=((ProteinSubstance)s).protein.getSubunits();
+                StringBuilder sb = new StringBuilder();
+                for(Subunit su:subunits){
+                	if(sb.length()!=0){
+                		sb.append("|");	
+                	}
+                	sb.append(su.sequence);
+                }
+                cell.writeString(sb.toString());
+            }
+        });
+        
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NUCLEIC_ACID_SEQUENCE, (s, cell) ->{
+            if(s instanceof NucleicAcidSubstance){
+                List<Subunit> subunits=((NucleicAcidSubstance)s).nucleicAcid.getSubunits();
+                
+                StringBuilder sb = new StringBuilder();
+                
+                for(Subunit su:subunits){
+                	if(sb.length()!=0){
+                		sb.append("|");	
+                	}
+                	sb.append(su.sequence);
+                }
+                cell.writeString(sb.toString());
+            }
+        });
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.RECORD_ACCESS_GROUPS, (s, cell) ->{
+        	StringBuilder sb = new StringBuilder();
+        	for(Group g:s.getAccess()){
+        		if(sb.length()!=0){
+            		sb.append("|");	
+            	}
+            	sb.append(g.name);
+        	}
+        	cell.writeString(sb.toString());
+        });
+        
 
-
-
-
+        
     }
 
     private static class ChemicalExportRecipe implements ColumnValueRecipe<Substance>{
