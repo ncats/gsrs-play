@@ -1095,7 +1095,7 @@ public class App extends Authentication {
 	        case Failed:
 	            break;
 	        default:
-	        	return routes.App.status(ctx.getKey());
+	        	return ctx.getCall();
 	    }
         return null;
     }
@@ -1126,8 +1126,7 @@ public class App extends Authentication {
                         processor.setResults(rows, tokenizer.tokenize(q));
                         return processor.getContext();
                 });
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform batch search", ex);
         }
@@ -1210,11 +1209,7 @@ public class App extends Authentication {
         }
         return null;
     }
-
-//    static String getKey (SearchResultContext context, String... params) {
-//        return "fetchResult/"+context.getId()
-//            +"/"+Util.sha1(request (), params);
-//    }
+    
     /**
      * Check if the current request has a wait parameter included
      * @return
@@ -1275,15 +1270,14 @@ public class App extends Authentication {
          * together with facets, sorting, etc.
          */
       
-        final SearchResult result = getOrElse
-            (key, new Callable<SearchResult> () {
-                    public SearchResult call () throws Exception {
+        final SearchResult result = 
+        		getOrElse(key,  () -> {
                         Collection results = context.getResults();
                         if (results.isEmpty()) {
                             return null;
                         }
                         SearchResult searchResult =
-                        SearchFactory.search (results, null, results.size(), 0,
+                        		SearchFactory.search (results, null, results.size(), 0,
                                               renderer.getFacetDim(),
                                               request().queryString());
                         Logger.debug("Cache misses: "
@@ -1292,7 +1286,6 @@ public class App extends Authentication {
                         // make an alias for the context.id to this search
                         // result
                         return cacheKey (searchResult, context.getId());
-                    }
                 });
         
         
@@ -1307,7 +1300,6 @@ public class App extends Authentication {
         		Logger.debug("** removing cache "+key);
         		IxCache.remove(key);
         	}
-            
             
             count = result.count();
             
@@ -1359,18 +1351,10 @@ public class App extends Authentication {
                 
 
                 // result is cached
-                
-                return getOrElse(result.getStopTime(),
-                                 k, new Callable<Result> () {
-                            public Result call () throws Exception {
-                                Logger.debug("Cache misses: "+k+" count="+_count
-                                         +" rows="+_rows+" page="+_page);
-                            return renderer.render
-                                (context, _page, _rows, _count, _pages,
-                                 facets, results);
-                            
-                        }
-                    });
+				return getOrElse(result.getStopTime(), k, () -> {
+					Logger.debug("Cache misses: " + k + " count=" + _count + " rows=" + _rows + " page=" + _page);
+					return renderer.render(context, _page, _rows, _count, _pages, facets, results);
+				});
             }
         }
         
@@ -1423,72 +1407,6 @@ public class App extends Authentication {
                    (IxCache.getStatistics()));
     }
     
-    public static class DBConfig{
-    	private String dbname;
-    	private String dbdriver;
-    	private String dbproduct;
-    	private boolean connected=false;
-    	private long latency=-1;
-    	public DBConfig(String name, String driver, String product, boolean connected, long lat){
-    		this.dbname=name;
-    		this.dbdriver=driver;
-    		this.dbproduct=product;
-    		this.connected=connected;
-    		this.latency=lat;
-    		
-    	}
-    	public String getName(){
-    		return this.dbname;
-    	}
-    	public String getDriver(){
-    		return this.dbdriver;
-    	}
-    	public String getProduct(){
-    		return this.dbproduct;
-    	}
-    	public boolean getConnected(){
-    		return this.connected;
-    	}
-    	public Long getLatency(){
-    		if(latency>=0) return latency;
-    		return null;
-    	}
-    }
-    /**
-     * Returns a list of known databases in the configuration
-     * file, along with basic information about the connection
-     * if one can be made
-     * @return
-     */
-    public static List<DBConfig> getDefinedDatabases(){
-    	Object dbs=play.Play.application().configuration().getObject("db");
-    	List<DBConfig> dblist = new ArrayList<DBConfig>();
-    	if(dbs instanceof Map){
-    		Map<String,Object> databases = (Map<String,Object>)dbs;
-    		databases.forEach((dbname,dbc)->{
-    			Map<String,Object> dbconf=(Map<String,Object>)dbc;
-    			String productName=null;
-    			boolean connectable=false;
-    			String driverName = (String)dbconf.get("driver");
-    			long latency=-1;
-    			try(Connection c = DB.getConnection(dbname)){
-    				long start=System.currentTimeMillis();
-	    			DatabaseMetaData meta = c.getMetaData();
-	    			productName=meta.getDatabaseProductName() + " " +meta.getDatabaseProductVersion();
-	    			long end=System.currentTimeMillis();
-	    			//c.
-	    			connectable=true;
-	    			latency=end-start;
-	    			c.close();
-	    		}catch(Exception e){
-	    			e.printStackTrace();
-	    		}
-    			dblist.add(new DBConfig(dbname,driverName,productName,connectable,latency));
-    		});
-    	}
-    	return dblist;
-    }
-
     
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheList (int top, int skip) {
@@ -1606,36 +1524,22 @@ public class App extends Authentication {
         return ok(node);
     }
 
-    public static Structure[] enantiomers (Structure struc) {
-        final List<Structure> isomers = new ArrayList<Structure>();
-        EnantiomerGenerator eg = new EnantiomerGenerator (struc);
-        eg.generate(new EnantiomerGenerator.Callback() {
-                public void generated (Structure isomer) {
-                    isomers.add(isomer);
-                }
-            });
-        return isomers.toArray(new Structure[0]);
-    }
-
     public static Result enantiomer (final String id) {
         final String key = "enantiomer/"+id;
         try {
-            Structure[] strucs = getOrElse (key, new Callable<Structure[]> () {
-                    public Structure[] call () throws Exception {
+            Structure[] strucs = getOrElse (key, () -> {
                         Structure struc = StructureFactory.getStructure(id);
                         if (struc != null) {
-                            return enantiomers (struc);
+                            return EnantiomerGenerator.enantiomersAsArray (struc);
                         }
                         return null;
-                    }
                 });
             if (strucs != null) {
                 ObjectMapper mapper = EntityFactory.getEntityMapper();
                 return Java8Util.ok (mapper.valueToTree(strucs));
             }
             return notFound ("Can't located structure "+id);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             return internalServerError ("Can't generate enantiomer for "+id);
         }

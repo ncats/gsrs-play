@@ -13,6 +13,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import play.mvc.Call;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -92,8 +94,7 @@ public class SearchResultContext {
 		}
     }
     
-    SearchResultContext () {
-    }
+    SearchResultContext () {}
     
     public SearchResultContext (SearchResult result) {
     	fieldFacets=result.getFieldFacets();
@@ -226,7 +227,12 @@ public class SearchResultContext {
     
     //TODO: rewrite this to allow moving to core
     public String getUrl(){
-    	return routes.App.status(this.getKey()).toString();
+    	return getCall().toString();
+    }
+    
+    @JsonIgnore
+    public Call getCall(){
+    	return routes.App.status(this.getKey());
     }
     
     public static SearchResultContext getSearchResultContextForKey(String key){
