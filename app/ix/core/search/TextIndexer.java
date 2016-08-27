@@ -3,7 +3,14 @@ package ix.core.search;
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,14 +28,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -75,7 +85,20 @@ import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.FieldCacheRangeFilter;
+import org.apache.lucene.search.FieldCacheTermsFilter;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.store.Directory;
@@ -94,21 +117,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
-import ix.core.plugins.IxCache;
-import ix.core.search.FutureList.NamedCallable;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
-import ix.utils.Util;
 import play.Logger;
 import play.Play;
-import play.db.ebean.Model;
 
 /**
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer implements Closeable{
+	private static final char SORT_DESCENDING_CHAR = '$';
+	private static final char SORT_ASCENDING_CHAR = '^';
+	private static final int EXTRA_PADDING = 2;
     private static final String FULL_TEXT_FIELD = "text";
 	private static final String SORT_PREFIX = "SORT_";
 	protected static final String STOP_WORD = " THE_STOP";
@@ -159,10 +181,8 @@ public class TextIndexer implements Closeable{
             return new SimpleDateFormat ("yyyy");
     }
     };
-    static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
 
     private static final Pattern SUGGESTION_WHITESPACE_PATTERN = Pattern.compile("[\\s/]");
-
 
     private static AtomicBoolean ALREADY_INITIALIZED = new AtomicBoolean(false);
 
@@ -263,7 +283,7 @@ public class TextIndexer implements Closeable{
         }
     }
 
-    public static SearchContextAnalyzer getDefaultSearchAnalyzerFor(Class<?> cls){
+    public static SearchAnalyzer getDefaultSearchAnalyzerFor(Class<?> cls){
     	SearchContextAnalyzerGenerator gen=defaultSearchAnalyzers.get(cls);
     	if(gen!=null){
     		return gen.create();
@@ -432,132 +452,6 @@ public class TextIndexer implements Closeable{
         }
     }
 
-    static class SearchResultPayload {
-        SearchResult result;
-        TopDocs hits;
-        IndexSearcher searcher;
-        Map<String, Model.Finder> finders =
-            new HashMap<String, Model.Finder>();
-        SearchOptions options;
-        int total, offset;
-        
-        SearchResultPayload () {}
-        SearchResultPayload (SearchResult result, TopDocs hits,
-                             IndexSearcher searcher) {
-            this.result = result;
-            this.hits = hits;
-            this.searcher = searcher;
-            this.options = result.options;
-            result.count = hits.totalHits; 
-            total = Math.max(0, Math.min(options.max(), result.count));
-            offset = Math.min(options.skip, total);
-        }
-
-        void fetch () throws IOException, InterruptedException {
-            try {
-                fetch (total);
-            }
-            finally {
-                result.done();
-            }
-        }
-
-        Object findObject (IndexableField kind, IndexableField id)
-            throws Exception {
-        	//If you see this in the code base, erase it
-            //it's only here for debugging
-            //Specifically, we are testing if delayed adding
-            //of objects causes a problem for accurate paging.
-            //if(Math.random()>.9){
-            //Util.debugSpin(100);
-            //}
-            //System.out.println("added:" + matches.size());
-            Number n = id.numericValue();
-            Object value = null;
-            
-            Model.Finder finder = finders.get(kind.stringValue());
-            if (finder == null) {
-                Class c = n != null ? Long.class : String.class;
-                finder = new Model.Finder
-                    (c, Class.forName(kind.stringValue()));
-                finders.put(kind.stringValue(), finder);
-            }
-            
-            if (options.expand.isEmpty()) {
-                value = finder.byId(n != null
-                                    ? n.longValue() : id.stringValue());
-            }
-            else {
-                com.avaje.ebean.Query ebean = finder.setId
-                    (n != null ? n.longValue() : id.stringValue());
-                for (String path : options.expand)
-                    ebean = ebean.fetch(path);
-                value = ebean.findUnique();
-            }
-                    
-            if (value == null) {
-                Logger.warn
-                    (kind.stringValue()+":"+id
-                     +" not available in persistence store!");
-            }
-            
-            return value;
-        }
-        public class ThingFetcher implements NamedCallable{
-        	//final String field;
-        	final IndexableField kind;
-        	final IndexableField id;
-        	
-        	public ThingFetcher(Document doc) throws Exception{
-        		kind = doc.getField(FIELD_KIND);
-                if (kind != null) {
-                    String field = kind.stringValue()+"._id";
-                    id = doc.getField(field);
-                    if (id == null) {
-                    	throw new IllegalStateException("Index corrupted; document "
-                                +"doesn't have field "+field);
-                    }
-                }else{
-                	throw new IllegalStateException("Can't find kind for document");
-                }
-        		
-        	}
-			@Override
-			public Object call() throws Exception {
-				String field = kind.stringValue()+"._id";
-				String thekey = field + ":" + id.stringValue();
-				Object value = IxCache.getOrElse(thekey, new Callable<Object>() {
-					public Object call() throws Exception {
-						return findObject(kind, id);
-					}
-				});
-				return value;
-			}
-			
-			public String getName(){
-				return id.stringValue();
-			}
-        	
-        }
-            
-        void fetch (int size)  throws IOException, InterruptedException {
-            size = Math.min(options.top, Math.min(total - offset, size));
-            for (int i = result.size(); i < size; ++i) {
-                if(Thread.interrupted()){
-                    throw new InterruptedException();
-                }
-                Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
-                try{
-                	ThingFetcher thingFetcher = new ThingFetcher(doc);
-                	result.addNamedCallable(thingFetcher);
-                }catch(Exception e){
-                	e.printStackTrace();
-                	Logger.error(e.getMessage());
-                }
-            }
-        }
-    }
-    
     class FlushDaemon implements Runnable {
         FlushDaemon () {
         }
@@ -1087,9 +981,9 @@ public class TextIndexer implements Closeable{
                 List<SortField> fields = new ArrayList<SortField>();
                 for (String f : options.order) {
                     boolean rev = false;
-                    if (f.charAt(0) == '^') {
+                    if (f.charAt(0) == SORT_ASCENDING_CHAR) {
                         f = f.substring(1);
-                    }else if (f.charAt(0) == '$') {
+                    }else if (f.charAt(0) == SORT_DESCENDING_CHAR) {
                         f = f.substring(1);
                         rev = true;
                     }
@@ -1332,22 +1226,21 @@ public class TextIndexer implements Closeable{
         }
 
         try {
-            SearchResultPayload payload = new SearchResultPayload
+            LuceneSearchResultPopulator payload = new LuceneSearchResultPopulator
                 (searchResult, hits, searcher);
             if (options.fetch <= 0) {
                 payload.fetch();
-            }
-            else {
-            	
+            }else {
                 // we first block until we have enough result to show
             	// should be fetch plus a little extra padding (2 here)
-                int fetch = 2 +options.fetch;
+            	// why 2?
+                int fetch = options.fetch + EXTRA_PADDING;
                 payload.fetch(fetch);
 
                 if (hits.totalHits > fetch) {
                     // now queue the payload so the remainder is fetched in
                     // the background
-                   // fetchQueue.put(payload);
+                    // fetchQueue.put(payload);
                     threadPool.submit(()->{
                         try {
                             long tstart = System.currentTimeMillis();
@@ -1356,8 +1249,8 @@ public class TextIndexer implements Closeable{
                                     + payload.hits.totalHits
                                     + " for " + payload.result);
                             
-
                             payload.fetch();
+                            
                             Logger.debug(Thread.currentThread() + ": ## fetched "
                                     + payload.result.size()
                                     + " for result " + payload.result
@@ -1369,9 +1262,7 @@ public class TextIndexer implements Closeable{
                             Logger.error("Error in processing payload", ex);
                         }
                     });
-                }
-                else {
-                   // payload.fetch();
+                }else {
                     searchResult.done();
                 }
             }
@@ -2353,7 +2244,7 @@ public class TextIndexer implements Closeable{
     /**
      * SearchContextAnalyzer implementation that does nothing (the Null Object Pattern).
      */
-    private enum NullSearchAnalyzer implements SearchContextAnalyzer{
+    private enum NullSearchAnalyzer implements SearchAnalyzer{
         /**
          * Get the singleton instance.
          */

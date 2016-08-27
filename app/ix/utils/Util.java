@@ -417,4 +417,12 @@ public class Util {
 	public static String randvar () {
 	    return randvar (5);
 	}
+	
+	public static Object getNativeID(String idv){
+    	if(idv.chars().allMatch( Character::isDigit )){
+    		return new Long(Long.parseLong(idv));
+    	}else{
+    		return idv;
+    	}
+	}
 }

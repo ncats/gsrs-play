@@ -16,19 +16,19 @@ public class DefaultSearchContextAnalyzerGenerator implements SearchContextAnaly
 		
 	}
 	@Override
-	public SearchContextAnalyzer create() {
-		SearchContextAnalyzer analyzer=null;
+	public SearchAnalyzer create() {
+		SearchAnalyzer analyzer=null;
 		if(params!=null){
 			try{
 				Constructor c=analyzerCls.getConstructor(Map.class);
-				analyzer= (SearchContextAnalyzer) c.newInstance(params);
+				analyzer= (SearchAnalyzer) c.newInstance(params);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 		}
 		if(analyzer==null){
 			try {
-				analyzer = (SearchContextAnalyzer) analyzerCls.newInstance();
+				analyzer = (SearchAnalyzer) analyzerCls.newInstance();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

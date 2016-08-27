@@ -27,7 +27,7 @@ import play.Logger;
 public class SearchResult {
 
 	
-    SearchContextAnalyzer searchAnalyzer;
+    SearchAnalyzer searchAnalyzer;
 
     /**
      * Returns a list of FieldFacets which help to explain why and how
@@ -67,6 +67,7 @@ public class SearchResult {
     }
 
     void setRank (final Map<String, Integer> idrank) {
+    	System.out.println("Setting rank");
         Objects.requireNonNull(idrank);
         idComparator = (id1,id2) ->{
             Integer r1 = idrank.get(id1), r2 = idrank.get(id2);
@@ -297,7 +298,7 @@ public class SearchResult {
     public long getStopTime () { return stop.get(); }
     public boolean finished () { return stop.get() >= timestamp; }
     
-    public SearchContextAnalyzer getSearchContextAnalyzer(){
+    public SearchAnalyzer getSearchContextAnalyzer(){
         return searchAnalyzer;
     }
     protected void addNamedCallable (NamedCallable c) {

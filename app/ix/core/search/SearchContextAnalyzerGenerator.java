@@ -1,5 +1,5 @@
 package ix.core.search;
 
 public interface SearchContextAnalyzerGenerator{
-	SearchContextAnalyzer create();
+	SearchAnalyzer create();
 }

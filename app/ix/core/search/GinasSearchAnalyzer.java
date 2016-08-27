@@ -36,7 +36,7 @@ import ix.ginas.models.v1.Substance;
 import play.Logger;
 import play.Play;
 
-public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
+public class GinasSearchAnalyzer implements SearchAnalyzer<Substance>{
 	private static final String NULL_FIELD = "{NULL}";
 	
 	
