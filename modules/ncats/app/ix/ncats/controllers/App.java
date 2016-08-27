@@ -1100,68 +1100,19 @@ public class App extends Authentication {
         return null;
     }
     
-    public static SearchResultContext getSearchResultContextForKey(String key){
-    	SearchResultContext context=null;
-        try {
-            Object value = IxCache.get(key);
-            if (value != null) {
-            	if(value instanceof SearchResultContext){
-                    context = (SearchResultContext)value;
-            	}else if(value instanceof SearchResult){
-            		SearchResult result = (SearchResult)value;
-            		context = new SearchResultContext (result);
-            		
-                    Logger.debug("status: key="+key+" finished="+context.isFinished());
-            	}
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-	    if(context!=null){
-	    	context.setKey(key);
-	    }
-	    return context;
-    }
-    
     public static SearchResultContext checkStatusDirect () {
     	String key = getKeyForCurrentRequest();
-    	return getSearchResultContextForKey(key);
+    	return SearchResultContext.getSearchResultContextForKey(key);
     }
 
+    
+    //TODO: Needs evaluation
     public static Result status (String key) {
-    	//if(true) return notFound ("No key found: "+key+"!");
-    	//System.out.println("Checking status for:" + key);
-        Object value = IxCache.get(key);
-        Logger.debug("status["+key+"] => "+value);
-        if (value != null) {
-            if (value instanceof SearchResult) {
-                // wrap SearchResult into SearchResultContext..
-                SearchResultContext ctx
-                    = new SearchResultContext ((SearchResult)value);
-                
-                ctx.id = key;
-                value = ctx;
-            }
-            
-
-            SearchResultContext ctx = (SearchResultContext)value;
-            Logger.debug
-                (" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
-            if(ctx.isFinished()){
-            	Object result2=IxCache.get(formatKey(ctx.id));
-            	if(result2!=null){
-            		SearchResultContext fakeContext = new SearchResultContext ((SearchResult)result2);
-                
-            		fakeContext.id = key;
-	                value = fakeContext;
-            	}
-            }
-            
-            ObjectMapper mapper = new ObjectMapper ();
-            return Java8Util.ok (mapper.valueToTree(value));
-        }
-
+    	SearchResultContext ctx=SearchResultContext.getSearchResultContextForKey(key);
+    	if (ctx != null) {
+    		ObjectMapper mapper = new ObjectMapper ();
+            return Java8Util.ok (mapper.valueToTree(ctx));
+    	}
         return notFound ("No key found: "+key+"!");
     }
 
@@ -1182,7 +1133,6 @@ public class App extends Authentication {
         }
         return null;
     }
-    
     public static SearchResultContext sequence
         (final String seq, final double identity, final int rows,
          final int page, CutoffType ct, final SearchResultProcessor processor) {

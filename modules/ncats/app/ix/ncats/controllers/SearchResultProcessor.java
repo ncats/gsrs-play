@@ -66,9 +66,9 @@ public abstract class SearchResultProcessor<T, R> {
             // This should be used in conjunction with another debugSpin in TextIndexer
             // to simulate both slow fetches and slow lucene processing
             //System.out.println("Processing:" + r);
-            if(!Play.isProd()){
-            	Util.debugSpin(10);
-            }
+            
+            //Util.debugSpin(10);
+            
             try {
                 R obj = instrument (r);
                 if (obj != null) {

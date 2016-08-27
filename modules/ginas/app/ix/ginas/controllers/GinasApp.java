@@ -622,7 +622,7 @@ public class GinasApp extends App {
     public static Result export (String collectionID, String extension) {
     	
     	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    	SearchResultContext src = App.getSearchResultContextForKey(collectionID);
+    	SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
     	
     	try{
 	    		 

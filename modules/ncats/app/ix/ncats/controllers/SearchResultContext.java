@@ -17,9 +17,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.CacheStrategy;
+import ix.core.plugins.IxCache;
 import ix.core.search.FieldFacet;
 import ix.core.search.SearchResult;
 import ix.utils.Util;
+import play.Logger;
 
 @CacheStrategy(evictable=false)
 public class SearchResultContext {
@@ -220,7 +222,32 @@ public class SearchResultContext {
     	return om.valueToTree(this).toString();
     }
     
+    
+    
+    //TODO: rewrite this to allow moving to core
     public String getUrl(){
     	return routes.App.status(this.getKey()).toString();
+    }
+    
+    public static SearchResultContext getSearchResultContextForKey(String key){
+    	SearchResultContext context=null;
+        try {
+            Object value = IxCache.get(key);
+            if (value != null) {
+            	if(value instanceof SearchResultContext){
+                    context = (SearchResultContext)value;
+            	}else if(value instanceof SearchResult){
+            		SearchResult result = (SearchResult)value;
+            		context = new SearchResultContext (result);
+                    Logger.debug("status: key="+key+" finished="+context.isFinished());
+            	}
+            }
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+	    if(context!=null){
+	    	context.setKey(key);
+	    }
+	    return context;
     }
 }
