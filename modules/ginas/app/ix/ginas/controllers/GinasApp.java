@@ -287,6 +287,7 @@ public class GinasApp extends App {
         return redirect(ix.ginas.controllers.routes.GinasApp.listGinasUsers(1, 16, "", "", ""));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result createPrincipal() {
         Form<UserProfile> userForm = Form.form(UserProfile.class);
         return ok(ix.ginas.views.html.admin.adduser.render(userForm));

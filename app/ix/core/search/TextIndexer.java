@@ -74,7 +74,6 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.IndexableFieldType;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.sorter.EarlyTerminatingSortingCollector;
 import org.apache.lucene.queries.ChainedFilter;
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
@@ -83,7 +82,6 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
-import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
@@ -102,8 +100,8 @@ import ix.core.CacheStrategy;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
-import ix.core.search.FuturesList.NamedCallable;
-import ix.core.search.FuturesList.ObjectNamer;
+import ix.core.search.FutureList.NamedCallable;
+import ix.core.search.FutureList.ObjectNamer;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
@@ -354,7 +352,7 @@ public class TextIndexer implements Closeable{
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        FuturesList matches = new FuturesList (new ObjectNamer(){
+        FutureList matches = new FutureList (new ObjectNamer(){
 			@Override
 			public String nameFor(Object obj) {
 				return EntityUtils.getIdForBeanAsString(obj);
@@ -365,7 +363,7 @@ public class TextIndexer implements Closeable{
         SearchOptions options;
         final long timestamp = TimeUtil.getCurrentTimeMillis();
         AtomicLong stop = new AtomicLong ();
-        Comparator comparator = null;
+        Comparator<String> idComparator = null;
         
         
         private List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
@@ -378,34 +376,19 @@ public class TextIndexer implements Closeable{
             searchAnalyzer=getDefaultSearchAnalyzerFor(this.options.kind);
         }
 
-        void setRank (final Map<String, Integer> rank) {
-            Objects.requireNonNull(rank);
-            Util.printExecutionStackTrace();
-            if(matches instanceof FuturesList){
-            	comparator = (id1,id2) ->{
-	                Integer r1 = rank.get(id1), r2 = rank.get(id2);
-	                if (r1 != null && r2 != null)
-	                    return r1 - r2;
-	                if (r1 == null)
-	                    Logger.error("Unknown rank for "+id1);
-	                if (r2 == null)
-	                    Logger.error("Unknown rank for "+id2);
-	                return 0;
-	            };
-            }else{
-	            comparator = (o1,o2) ->{
-	                String id1 = EntityUtils.getIdForBeanAsString(o1);
-	                String id2 = EntityUtils.getIdForBeanAsString(o2);
-	                Integer r1 = rank.get(id1), r2 = rank.get(id2);
-	                if (r1 != null && r2 != null)
-	                    return r1 - r2;
-	                if (r1 == null)
-	                    Logger.error("Unknown rank for "+id1);
-	                if (r2 == null)
-	                    Logger.error("Unknown rank for "+id2);
-	                return 0;
-	            };
-            }
+        void setRank (final Map<String, Integer> idrank) {
+            Objects.requireNonNull(idrank);
+            idComparator = (id1,id2) ->{
+                Integer r1 = idrank.get(id1), r2 = idrank.get(id2);
+                if (r1 != null && r2 != null)
+                    return r1 - r2;
+                if (r1 == null)
+                    Logger.error("Unknown rank for "+id1);
+                if (r2 == null)
+                    Logger.error("Unknown rank for "+id2);
+                return 0;
+            };
+            
         }
 
         public void addListener(SearchResultDoneListener listener){
@@ -549,7 +532,6 @@ public class TextIndexer implements Closeable{
          * @return a Future will never be null.
          */
         public Future<List> getMatchesFuture(){
-        	System.out.println("CALLED1:" + Util.getExecutionPath());
             SearchResultFuture future= new SearchResultFuture(this);
            // new Thread(future).start();
             ForkJoinPool.commonPool().submit(future);
@@ -586,8 +568,7 @@ public class TextIndexer implements Closeable{
          * @return a Future will never be null.
          */
         public Future<List> getMatchesFuture(int numberOfRecords, ExecutorService executorService){
-        	System.out.println("CALLED3:" + Util.getExecutionPath());
-            SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
+        	SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
             executorService.submit(future);
             return future;
         }
@@ -598,21 +579,19 @@ public class TextIndexer implements Closeable{
             
             List list = matches;
             
-// This shouldn't have any effect
-//            if (matches instanceof PriorityBlockingQueue) {
-//                PriorityBlockingQueue q = (PriorityBlockingQueue)matches;
-//                Collections.sort(list, q.comparator());
-//            }
             
             if (finished) {
-            	
-            	if(comparator!=null){
+            	if(idComparator!=null){
             		System.out.println("Sorting...");
-            		if(list instanceof FuturesList){
-            			((FuturesList) list).sortByNames(comparator);
+            		if(list instanceof FutureList){
+            			((FutureList) list).sortByNames(idComparator);
             		}else{
-	            		//This may take some time
-	            		Collections.sort(list,comparator);
+            			//This may take a long time in certain cases
+	            		Collections.sort(list,(o1,o2)->{
+	            			String id1 = EntityUtils.getIdForBeanAsString(o1);
+	    	                String id2 = EntityUtils.getIdForBeanAsString(o2);
+	    	                return idComparator.compare(id1, id2);
+	            		});
             		}
             		System.out.println("Done sorting...");
             	}
@@ -700,81 +679,6 @@ public class TextIndexer implements Closeable{
         void added(Object o);
     }
     
-    public static class SuggestResult {
-        CharSequence key, highlight;
-        long weight=0;
-        
-        
-        SuggestResult (CharSequence key, CharSequence highlight) {
-            this.key = key;
-            this.highlight = highlight;
-        }
-        
-        SuggestResult (CharSequence key, CharSequence highlight, long weight) {
-            this.key = key;
-            this.highlight = highlight;
-            this.weight=weight;
-        }
-
-        
-        public CharSequence getKey () { return key; }
-        public CharSequence getHighlight () { return highlight; }
-        public Long getWeight () { return weight; }
-    }
-   public static class InxightInfixSuggester extends AnalyzingInfixSuggester{
-    	private static final Sort SORT2 = new Sort(new SortField("weight", SortField.Type.LONG, true));
-		public InxightInfixSuggester(Version matchVersion, Directory dir,
-				Analyzer analyzer) throws IOException {
-			super(matchVersion, dir, analyzer);
-		}
-		
-		/**
-		 * 
-		 * This method will get the assigned weight for the exact match text provided
-		 * 
-		 * @param text
-		 * @return
-		 */
-		public long getWeightFor(BytesRef text){
-			IndexSearcher searcher=null;
-			try{
-				Term t=new Term(EXACT_TEXT_FIELD_NAME, text.utf8ToString());
-				TermQuery tq=new TermQuery(t);
-				
-				// Sort by weight, descending:
-			    TopFieldCollector c = TopFieldCollector.create(SORT2, 2, true, false, false, false);
-	
-			    // We sorted postings by weight during indexing, so we
-			    // only retrieve the first num hits now:
-			    Collector c2 = new EarlyTerminatingSortingCollector(c, SORT2, 2);
-			    
-				searcher = searcherMgr.acquire();
-				searcher.search(tq, c2);
-				
-				TopFieldDocs hits = (TopFieldDocs) c.topDocs();
-				if(hits.totalHits>=1){
-					int i=0;
-					FieldDoc fd = (FieldDoc) hits.scoreDocs[i];
-				    long score = (Long) fd.fields[0];
-				    return score;
-				}
-			}catch(Exception e){
-				e.printStackTrace();
-			} finally{
-				if(searcher!=null){
-					try{
-						searcherMgr.release(searcher);
-					}catch(Exception e){
-						e.printStackTrace();
-					}
-				}
-			}
-			
-	    	return 0;
-		}
-
-    }
-
     class SuggestLookup implements Closeable{
         String name;
         File dir;
@@ -972,7 +876,7 @@ public class TextIndexer implements Closeable{
             //Specifically, we are testing if delayed adding
             //of objects causes a problem for accurate paging.
             //if(Math.random()>.9){
-            Util.debugSpin(100);
+            //Util.debugSpin(100);
             //}
             //System.out.println("added:" + matches.size());
             Number n = id.numericValue();

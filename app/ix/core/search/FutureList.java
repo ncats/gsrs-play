@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
  *
  * @param <K>
  */
-public class FuturesList<K> implements List<K>{
+public class FutureList<K> implements List<K>{
 	private ObjectNamer objectNamer;
 	
 	
@@ -44,7 +44,7 @@ public class FuturesList<K> implements List<K>{
 	
 	
 	
-	public FuturesList(ObjectNamer objectNamer){
+	public FutureList(ObjectNamer objectNamer){
 		this.objectNamer=objectNamer;
 	}
 	
@@ -53,7 +53,7 @@ public class FuturesList<K> implements List<K>{
 		String name=null;
 		public DefaultNamedCallable(K k){
 			this.k=k;
-			name = FuturesList.this.objectNamer.nameFor(k);
+			name = FutureList.this.objectNamer.nameFor(k);
 		}
 		@Override
 		public K call() throws Exception {
@@ -262,13 +262,13 @@ public class FuturesList<K> implements List<K>{
 	
 	@Override
 	public ListIterator<K> listIterator() {
-		return new FuturesList.LazyListIterator<K>(this,0);
+		return new FutureList.LazyListIterator<K>(this,0);
 		
 	}
 
 	@Override
 	public ListIterator<K> listIterator(int index) {
-		return new FuturesList.LazyListIterator<K>(this,index);
+		return new FutureList.LazyListIterator<K>(this,index);
 	}
 
 	@Override

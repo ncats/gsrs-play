@@ -29,6 +29,7 @@ import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
+import ix.core.search.SuggestResult;
 
 public class SearchFactory extends EntityFactory {
     static Model.Finder<Long, ETag> etagDb;
@@ -221,14 +222,14 @@ public class SearchFactory extends EntityFactory {
         try {
             ObjectMapper mapper = new ObjectMapper ();
             if (field != null) {
-                List<TextIndexer.SuggestResult> results =
+                List<SuggestResult> results =
                         getTextIndexer().suggest(field, q, max);
                 return Java8Util.ok (mapper.valueToTree(results));
             }
 
             ObjectNode node = mapper.createObjectNode();
             for (String f : getTextIndexer().getSuggestFields()) {
-                List<TextIndexer.SuggestResult> results =
+                List<SuggestResult> results =
                         getTextIndexer().suggest(f, q, max);
                 if (!results.isEmpty())
                     node.put(f, mapper.valueToTree(results));

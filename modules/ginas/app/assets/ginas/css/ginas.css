@@ -1086,9 +1086,12 @@ del{
     border: 1px solid #DDD;
 }
 
+/* This may be there for a good reason,
+    but was causing issues on zoomed in structures
 img.tooltip-img.ng-scope {
     margin-left: -7%;
 }
+*/
 
 ul.tree-list {
     list-style-type: none;

@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExporterFactory {
 
-    private static final OutputFormat CSV = new SpreadsheetFormat("csv", "comma separated value File"){
+    private static final OutputFormat CSV = new SpreadsheetFormat("csv", "CSV (csv) File"){
 
         @Override
         Spreadsheet createSpeadsheet(OutputStream out) {
@@ -26,17 +26,17 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
         }
     };
 
-    private static final OutputFormat TSV = new SpreadsheetFormat("txt", "tab separated value File"){
+    private static final OutputFormat TSV = new SpreadsheetFormat("txt", "TSV (tab) File"){
         Spreadsheet createSpeadsheet(OutputStream out) {
             return  new CsvSpreadsheetBuilder(out)
                     .delimiter('\t')
-                    .quoteCells(true)
+                    .quoteCells(false)
                     .maxRowsInMemory(100)
                     .build();
         }
     };
 
-    private static final OutputFormat XLSX = new SpreadsheetFormat("xlsx", "Excel xlsx File"){
+    private static final OutputFormat XLSX = new SpreadsheetFormat("xlsx", "Excel (xlsx) File"){
         Spreadsheet createSpeadsheet(OutputStream out) {
 
                 return new ExcelSpreadsheet.Builder(out)

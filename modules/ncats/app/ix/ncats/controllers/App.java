@@ -1811,7 +1811,6 @@ public class App extends Authentication {
                // System.out.println("Not waiting for finished product for search:" + context.id);
             }
         }
-        System.out.println("Is this the problem?1");
         SearchResultContext.Status stat=context.getStatus();
         boolean isDetermined=context.isDetermined();
         /**
@@ -1820,7 +1819,6 @@ public class App extends Authentication {
          * together with facets, sorting, etc.
          */
       
-        System.out.println("Is this the problem?2");
         final SearchResult result = getOrElse
             (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
@@ -1841,7 +1839,6 @@ public class App extends Authentication {
                     }
                 });
         
-        System.out.println("Is this the problem?3");
         
        
         final List<T> results = new ArrayList<T>();
@@ -1885,9 +1882,7 @@ public class App extends Authentication {
             // and since this method is only called for those complex external
             // searches, which typically get some smaller number of records back,
             // this may be an acceptable lack of responsiveness
-            System.out.println("Is this the problem?4");
             result.copyTo(results, i, rows, true);
-            System.out.println("Is this the problem?5");
             facets.addAll(result.getFacets());
             
             
