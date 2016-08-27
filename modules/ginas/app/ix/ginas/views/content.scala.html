@@ -241,11 +241,13 @@ $(document).ready(function () {
    		var firststatus=@Html(ctx.toJson());
    		firststatus.thisPage=@{current*rows};
    		firststatus.rowsPerPage=@{rows};
+   		firststatus.pageTotal=@{total};
+   		
    		
    		if(!firststatus.finished){
    			//Only reload if this page isn't ready yet,
    			//OR total isn't determined at this time
-   			if(firststatus.count < firststatus.thisPage || !firststatus.total){
+   			if(firststatus.count < firststatus.thisPage || !firststatus.total || (firststatus.total!=firststatus.pageTotal)){
     		 	firststatus.needsReload=true;
     		 	if(firststatus.count < firststatus.thisPage){
     		 		$('.placeholder-content').html('<div>Loading ... </div>' +
@@ -257,7 +259,6 @@ $(document).ready(function () {
     		$('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
     		var delay = 0;
          	var checkStatus;
-         	//aria-valuenow="'+pct+'"
 	 	 	var timer;
 
          	$('#loading').on('hidden.bs.modal', function (e) {
@@ -265,6 +266,7 @@ $(document).ready(function () {
          	});
          	
          	var onDetermined = function () {
+         	
          				   window.clearInterval(timer);
                        	   $('#searching').html('');	   
                            //$('#loading').modal('hide');
@@ -296,9 +298,6 @@ $(document).ready(function () {
                        }
              };
          	
-         	
-         	
-         	
          	checkStatus = function () {
 	     		if (delay == 0) {
 		        	window.clearInterval(timer);
@@ -310,7 +309,7 @@ $(document).ready(function () {
 	     		}).done(function(status) {
                	  if (!firststatus.determined && status.determined) {
              	    	onDetermined(status); 
-             	  }else {
+             	  } else {
               		   	onLoadedMore(status);
              	  }
               }).error(function () {

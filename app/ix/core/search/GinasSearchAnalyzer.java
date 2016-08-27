@@ -75,6 +75,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	 */
 	public void updateFieldQueryFacets(Substance o, String q) {
 		if(!isEnabled())return;
+		recordsAnalyzed++;
 		if(o==null || !(o instanceof Substance))return;
 		Set<Term> qterms=null;
 		try{
@@ -96,7 +97,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		recordsAnalyzed++;
 	}
 	
 	@Override
@@ -317,7 +317,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	}
 	@Override
 	public boolean isEnabled() {
-		return enabled && !(recordsAnalyzed>=recordsToAnalyze);
+		return enabled && (recordsAnalyzed<recordsToAnalyze);
 	}
 	
 }

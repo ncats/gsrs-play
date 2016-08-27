@@ -102,6 +102,8 @@ import ix.core.CacheStrategy;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
+import ix.core.search.FuturesList.NamedCallable;
+import ix.core.search.FuturesList.ObjectNamer;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
@@ -352,13 +354,20 @@ public class TextIndexer implements Closeable{
         String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        FuturesList matches = new FuturesList ();
+        FuturesList matches = new FuturesList (new ObjectNamer(){
+			@Override
+			public String nameFor(Object obj) {
+				return EntityUtils.getIdForBeanAsString(obj);
+			}
+		});
         List result; // final result when there are no more updates
         int count;
         SearchOptions options;
         final long timestamp = TimeUtil.getCurrentTimeMillis();
         AtomicLong stop = new AtomicLong ();
-
+        Comparator comparator = null;
+        
+        
         private List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
         
 
@@ -369,40 +378,55 @@ public class TextIndexer implements Closeable{
             searchAnalyzer=getDefaultSearchAnalyzerFor(this.options.kind);
         }
 
-        void setRank (final Map<Object, Integer> rank) {
-//            Objects.requireNonNull(rank);
-//
-//            matches = new PriorityBlockingQueue
-//                (rank.size(), (o1, o2)-> {
-//                            Object id1 = EntityUtils.getIdForBean(o1);
-//                            Object id2 = EntityUtils.getIdForBean(o2);
-//                            Integer r1 = rank.get(id1), r2 = rank.get(id2);
-//                            if (r1 != null && r2 != null)
-//                                return r1 - r2;
-//                            if (r1 == null)
-//                                Logger.error("Unknown rank for "+o1);
-//                            if (r2 == null)
-//                                Logger.error("Unknown rank for "+o2);
-//                            return 0;
-//                        }
-//                );
+        void setRank (final Map<String, Integer> rank) {
+            Objects.requireNonNull(rank);
+            Util.printExecutionStackTrace();
+            if(matches instanceof FuturesList){
+            	comparator = (id1,id2) ->{
+	                Integer r1 = rank.get(id1), r2 = rank.get(id2);
+	                if (r1 != null && r2 != null)
+	                    return r1 - r2;
+	                if (r1 == null)
+	                    Logger.error("Unknown rank for "+id1);
+	                if (r2 == null)
+	                    Logger.error("Unknown rank for "+id2);
+	                return 0;
+	            };
+            }else{
+	            comparator = (o1,o2) ->{
+	                String id1 = EntityUtils.getIdForBeanAsString(o1);
+	                String id2 = EntityUtils.getIdForBeanAsString(o2);
+	                Integer r1 = rank.get(id1), r2 = rank.get(id2);
+	                if (r1 != null && r2 != null)
+	                    return r1 - r2;
+	                if (r1 == null)
+	                    Logger.error("Unknown rank for "+id1);
+	                if (r2 == null)
+	                    Logger.error("Unknown rank for "+id2);
+	                return 0;
+	            };
+            }
         }
 
         public void addListener(SearchResultDoneListener listener){
-        	listeners.add(new SoftReference<>(listener));
+        	synchronized(listeners){
+        		listeners.add(new SoftReference<>(listener));
+        	}
         }
         
         public void removeListener(SearchResultDoneListener listener){
-        	Iterator<SoftReference<SearchResultDoneListener>> iter =listeners.iterator();
-        	while(iter.hasNext()){
-        		SoftReference<SearchResultDoneListener> l = iter.next();
-        		SearchResultDoneListener actualListener = l.get();
-        		//if get() returns null then the object was garbage collected
-        		if(actualListener ==null || listener.equals(actualListener)){
-        			iter.remove();
-        			//keep checking in the unlikely event that
-        			//a listener was added twice?
-        		}
+        	synchronized(listeners){
+	        	Iterator<SoftReference<SearchResultDoneListener>> iter =listeners.iterator();
+	        	while(iter.hasNext()){
+	        		SoftReference<SearchResultDoneListener> l = iter.next();
+	        		SearchResultDoneListener actualListener = l.get();
+	        		//if get() returns null then the object was garbage collected
+	        		if(actualListener ==null || listener.equals(actualListener)){
+	        			iter.remove();
+	        			//keep checking in the unlikely event that
+	        			//a listener was added twice?
+	        		}
+	        	}
         	}
         }
         
@@ -525,6 +549,7 @@ public class TextIndexer implements Closeable{
          * @return a Future will never be null.
          */
         public Future<List> getMatchesFuture(){
+        	System.out.println("CALLED1:" + Util.getExecutionPath());
             SearchResultFuture future= new SearchResultFuture(this);
            // new Thread(future).start();
             ForkJoinPool.commonPool().submit(future);
@@ -542,7 +567,7 @@ public class TextIndexer implements Closeable{
          * @return a Future will never be null.
          */
         public Future<List> getMatchesFuture(int numberOfRecords){
-            SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
+        	SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
             ForkJoinPool.commonPool().submit(future);
            // new Thread(future).start();
             return future;
@@ -561,215 +586,10 @@ public class TextIndexer implements Closeable{
          * @return a Future will never be null.
          */
         public Future<List> getMatchesFuture(int numberOfRecords, ExecutorService executorService){
+        	System.out.println("CALLED3:" + Util.getExecutionPath());
             SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
             executorService.submit(future);
             return future;
-        }
-        public static class FuturesList<K> implements List<K>{
-        	List<Callable<K>> clist = new ArrayList<Callable<K>>();
-        	
-        	
-			@Override
-			public int size() {
-				return clist.size();
-			}
-
-			@Override
-			public boolean isEmpty() {
-				return clist.isEmpty();
-			}
-
-			@Override
-			public boolean contains(Object o) {
-				throw new UnsupportedOperationException("Can't use contains method on FutureList");
-			}
-
-			@Override
-			public Iterator<K> iterator() {
-				return listIterator();
-			}
-
-			@Override
-			public Object[] toArray() {
-				throw new UnsupportedOperationException("toArray method not encoraged");
-			}
-
-			@Override
-			public <T> T[] toArray(T[] a) {
-				throw new UnsupportedOperationException("toArray method not encoraged");
-			}
-
-			@Override
-			public boolean add(K e) {
-				return clist.add(()->e);
-			}
-
-			@Override
-			public boolean remove(Object o) {
-				throw new UnsupportedOperationException("remove method not encoraged");
-			}
-
-			@Override
-			public boolean containsAll(Collection<?> c) {
-				throw new UnsupportedOperationException("contains method not supported");
-			}
-
-			@Override
-			public boolean addAll(Collection<? extends K> c) {
-				boolean changed = true;
-				for(K k : c){
-					changed &= this.add(k);
-				}
-				return changed;
-			}
-
-			@Override
-			public boolean addAll(int index, Collection<? extends K> c) {
-				throw new UnsupportedOperationException("add all index method not supported");
-			}
-
-			@Override
-			public boolean removeAll(Collection<?> c) {
-				throw new UnsupportedOperationException("remove all index method not supported");
-			}
-
-			@Override
-			public boolean retainAll(Collection<?> c) {
-				throw new UnsupportedOperationException("retain all index method not supported");
-			}
-
-			@Override
-			public void clear() {
-				this.clist.clear();
-			}
-
-			@Override
-			public K get(int index) {
-				try {
-					return clist.get(index).call();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return null;
-			}
-
-			@Override
-			public K set(int index, K element) {
-				K old = this.get(index);
-				clist.set(index, ()->element);
-				return null;
-			}
-
-			@Override
-			public void add(int index, K element) {
-				throw new UnsupportedOperationException("add at index method not supported");
-			}
-
-			@Override
-			public K remove(int index) {
-				K old = this.get(index);
-				clist.remove(index);
-				return old;
-			}
-
-			@Override
-			public int indexOf(Object o) {
-				throw new UnsupportedOperationException("index of method not supported");
-			}
-
-			@Override
-			public int lastIndexOf(Object o) {
-				throw new UnsupportedOperationException("last index of method not supported");
-			}
-
-			private static class LazyListIterator<K> implements ListIterator<K>{
-				List<K> ml;
-				int cindex=0;
-				public LazyListIterator(List<K> inner, int cursor){
-					cindex=cursor;
-					ml = inner;
-				}
-				
-				@Override
-				public boolean hasNext() {
-					return (cindex<ml.size());
-				}
-
-				@Override
-				public K next() {
-					K next=current();
-					cindex++;
-					return next;
-				}
-				
-				public K current(){
-					K cur=null;
-					if(cindex<ml.size()){
-						cur=ml.get(cindex);
-					}
-					return cur;
-				}
-
-				@Override
-				public boolean hasPrevious() {
-					return cindex>0;
-				}
-
-				@Override
-				public K previous() {
-					cindex--;
-					if(cindex<0)cindex=0;
-					return current();
-				}
-
-				@Override
-				public int nextIndex() {
-					return cindex;
-				}
-
-				@Override
-				public int previousIndex() {
-					return cindex-1;
-				}
-
-				@Override
-				public void remove() {
-					ml.remove(cindex);
-				}
-
-				@Override
-				public void set(K e) {
-					ml.set(cindex, e);
-				}
-
-				@Override
-				public void add(K e) {
-					ml.add(e);
-				}
-				
-				
-			}
-			
-			@Override
-			public ListIterator<K> listIterator() {
-				return new LazyListIterator<K>(this,0);
-				
-			}
-
-			@Override
-			public ListIterator<K> listIterator(int index) {
-				return new LazyListIterator<K>(this,index);
-			}
-
-			@Override
-			public List<K> subList(int fromIndex, int toIndex) {
-				throw new UnsupportedOperationException("sublist method not supported");
-			}
-        	
-			
-			public boolean addCallable(Callable<K> c){
-				return this.clist.add(c);
-			}
         }
         
         public List getMatches () {
@@ -777,12 +597,25 @@ public class TextIndexer implements Closeable{
             boolean finished=finished();
             
             List list = matches;
+            
+// This shouldn't have any effect
 //            if (matches instanceof PriorityBlockingQueue) {
 //                PriorityBlockingQueue q = (PriorityBlockingQueue)matches;
 //                Collections.sort(list, q.comparator());
 //            }
             
             if (finished) {
+            	
+            	if(comparator!=null){
+            		System.out.println("Sorting...");
+            		if(list instanceof FuturesList){
+            			((FuturesList) list).sortByNames(comparator);
+            		}else{
+	            		//This may take some time
+	            		Collections.sort(list,comparator);
+            		}
+            		System.out.println("Done sorting...");
+            	}
                 result = list;
             }
             
@@ -798,7 +631,7 @@ public class TextIndexer implements Closeable{
         public SearchContextAnalyzer getSearchContextAnalyzer(){
             return searchAnalyzer;
         }
-        protected void addHowTo (Callable c) {
+        protected void addFetcher (NamedCallable c) {
         	matches.addCallable(c);
         	notifyAdd(c);
         	if(searchAnalyzer!=null && query!=null && query.length()>0){
@@ -806,7 +639,6 @@ public class TextIndexer implements Closeable{
             		try {
 						searchAnalyzer.updateFieldQueryFacets(c.call(), query);
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
             	}
@@ -814,24 +646,7 @@ public class TextIndexer implements Closeable{
         }
         
         protected void add (Object obj) {
-            matches.add(obj);
-            notifyAdd(obj);
-
-            if(searchAnalyzer!=null && query!=null && query.length()>0){
-            	if(searchAnalyzer.isEnabled()){
-            		searchAnalyzer.updateFieldQueryFacets(obj, query);
-            	}
-            }
-            //If you see this in the code base, erase it
-            //it's only here for debugging
-            //Specifically, we are testing if delayed adding
-            //of objects causes a problem for accurate paging.
-            //if(Math.random()>.9){
-            
-            //	Util.debugSpin(10);
-            
-            //}
-            //System.out.println("added:" + matches.size());
+            addFetcher(()->obj);
         }
 
         private void notifyAdd(Object o){
@@ -858,18 +673,20 @@ public class TextIndexer implements Closeable{
          * @throws NullPointerException if consumer is null.
          */
         private void notifyListeners(Consumer<SearchResultDoneListener> consumer){
-            Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
-            while(iter.hasNext()){
-                SearchResultDoneListener l = iter.next().get();
-                //if object pointed to by soft reference
-                //has been GC'ed then it is null
-                if(l ==null){
-                    iter.remove();
-                }else{
-                   consumer.accept(l);
-                }
-
-            }
+        	synchronized(listeners){
+	            Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
+	            while(iter.hasNext()){
+	                SearchResultDoneListener l = iter.next().get();
+	                //if object pointed to by soft reference
+	                //has been GC'ed then it is null
+	                if(l ==null){
+	                    iter.remove();
+	                }else{
+	                   consumer.accept(l);
+	                }
+	
+	            }
+        	}
         }
     }
 
@@ -1145,7 +962,14 @@ public class TextIndexer implements Closeable{
 
         Object findObject (IndexableField kind, IndexableField id)
             throws Exception {
-            
+        	//If you see this in the code base, erase it
+            //it's only here for debugging
+            //Specifically, we are testing if delayed adding
+            //of objects causes a problem for accurate paging.
+            //if(Math.random()>.9){
+            Util.debugSpin(100);
+            //}
+            //System.out.println("added:" + matches.size());
             Number n = id.numericValue();
             Object value = null;
             
@@ -1177,7 +1001,42 @@ public class TextIndexer implements Closeable{
             
             return value;
         }
-        
+        public class ThingFetcher implements NamedCallable{
+        	//final String field;
+        	final IndexableField kind;
+        	final IndexableField id;
+        	
+        	public ThingFetcher(Document doc) throws Exception{
+        		kind = doc.getField(FIELD_KIND);
+                if (kind != null) {
+                    String field = kind.stringValue()+"._id";
+                    id = doc.getField(field);
+                    if (id == null) {
+                    	throw new IllegalStateException("Index corrupted; document "
+                                +"doesn't have field "+field);
+                    }
+                }else{
+                	throw new IllegalStateException("Can't find kind for document");
+                }
+        		
+        	}
+			@Override
+			public Object call() throws Exception {
+				String field = kind.stringValue()+"._id";
+				String thekey = field + ":" + id.stringValue();
+				Object value = IxCache.getOrElse(thekey, new Callable<Object>() {
+					public Object call() throws Exception {
+						return findObject(kind, id);
+					}
+				});
+				return value;
+			}
+			
+			public String getName(){
+				return id.stringValue();
+			}
+        	
+        }
             
         void fetch (int size)  throws IOException, InterruptedException {
             size = Math.min(options.top, Math.min(total - offset, size));
@@ -1186,38 +1045,12 @@ public class TextIndexer implements Closeable{
                     throw new InterruptedException();
                 }
                 Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
-                final IndexableField kind = doc.getField(FIELD_KIND);
-                if (kind != null) {
-                    String field = kind.stringValue()+"._id";
-                    final IndexableField id = doc.getField(field);
-                    if (id != null) {
-                        if (DEBUG (2)) {
-                            Logger.debug("++ matched doc "
-                                         +field+"="+id.stringValue());
-                        }
-                        
-                        try {
-                        	//Cache needs to be invalidate
-                        	String thekey=field+":"+id.stringValue();
-                            Object value = IxCache.getOrElse
-                                (thekey, new Callable<Object> () {
-                                        public Object call () throws Exception {
-                                            return findObject (kind, id);
-                                        }
-                                    });
-                            
-                            if (value != null)
-                                result.add(value);
-                        }
-                        catch (Exception ex) {
-                            Logger.trace("Can't locate object "
-                                         +field+":"+id.stringValue(), ex);
-                        }
-                    }
-                    else {
-                        Logger.error("Index corrupted; document "
-                                     +"doesn't have field "+field);
-                    }
+                try{
+                	ThingFetcher thingFetcher = new ThingFetcher(doc);
+                	result.addFetcher(thingFetcher);
+                }catch(Exception e){
+                	e.printStackTrace();
+                	Logger.error(e.getMessage());
                 }
             }
         }
@@ -1689,10 +1522,10 @@ public class TextIndexer implements Closeable{
                 if (!terms.isEmpty())
                     f = new TermsFilter (terms);
                 
-                Map<Object, Integer> rank = new HashMap<Object, Integer>();
+                Map<String, Integer> rank = new HashMap<String, Integer>();
                 int r = 0;
                 for (Object entity:subset) {
-                    Object id = EntityUtils.getIdForBean(entity);
+                    String id = EntityUtils.getIdForBeanAsString(entity);
                     if (id != null){
                         rank.put(id, ++r);
                     }
@@ -1701,8 +1534,7 @@ public class TextIndexer implements Closeable{
                 if (!rank.isEmpty() && options.order.isEmpty()){
                     searchResult.setRank(rank);
                 }
-            }
-            else if (options.kind != null) {
+            } else if (options.kind != null) {
                 Set<String> kinds = new TreeSet<String>();
                 kinds.add(options.kind.getName());
                 Reflections reflections = new Reflections("ix");
@@ -3075,5 +2907,10 @@ public class TextIndexer implements Closeable{
         public List<FieldFacet> getFieldFacets() {
             return Collections.emptyList();
         }
+
+		@Override
+		public boolean isEnabled() {
+			return false;
+		}
     }
 }

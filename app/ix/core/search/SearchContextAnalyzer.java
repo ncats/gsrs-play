@@ -5,6 +5,8 @@ import java.util.List;
 public interface SearchContextAnalyzer<K> {
 	void updateFieldQueryFacets(K o, String q);
 	List<FieldFacet> getFieldFacets();
-	boolean isEnabled();
+	default boolean isEnabled(){
+		return true;	
+	}
 	
 }

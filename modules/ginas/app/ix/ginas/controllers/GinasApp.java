@@ -1074,7 +1074,7 @@ public class GinasApp extends App {
         	
             SearchResultContext context = App.substructure
                 (query, rows, page, new GinasSearchResultProcessor(isWaitSet()));
-            
+            System.out.println("Ok, got the context");
             return App.fetchResult
                 (context, rows, page, 
                  new SubstanceResultRenderer (CHEMICAL_FACETS));
@@ -1431,11 +1431,7 @@ public class GinasApp extends App {
                 IxCache.setTemp("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
            
-            // This will simulate a slow structure processing (e.g. slow database fetch)
-            // This should be used in conjunction with another debugSpin in TextIndexer
-            // to simulate both slow fetches and slow lucene processing
             
-            //Util.debugSpin(10);
             
             return chem;
         }

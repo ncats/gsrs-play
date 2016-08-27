@@ -95,6 +95,7 @@ import gov.nih.ncgc.chemical.DisplayParams;
 import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import gov.nih.ncgc.jchemical.Jchemical;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -1235,9 +1236,14 @@ public class App extends Authentication {
         
         public int process (int max) throws Exception {
             while (results.hasMoreElements()
-                   && !isDone () && (max <= 0 || context.getCount() < max)) {
+                   && !isDone () 
+                   && (max <= 0 || context.getCount() < max)) {
                 T r = results.nextElement();
-                
+                // This will simulate a slow structure processing (e.g. slow database fetch)
+                // This should be used in conjunction with another debugSpin in TextIndexer
+                // to simulate both slow fetches and slow lucene processing
+                //System.out.println("Processing:" + r);
+                //Util.debugSpin(10);
                 try {
                     R obj = instrument (r);
                     if (obj != null) {
@@ -1328,8 +1334,8 @@ public class App extends Authentication {
         
         public SearchResultContext (SearchResult result) {
         	fieldFacets=result.getFieldFacets();
-        	
-            start = result.getTimestamp();          
+            start = result.getTimestamp();      
+            
             if (result.finished()) {
                 setStatus(Status.Done);
                 stop = result.getStopTime();
@@ -1363,7 +1369,20 @@ public class App extends Authentication {
         public String getMessage () { return mesg; }
         public void setMessage (String mesg) { this.mesg = mesg; }
         public Integer getCount () { return results.size(); }
-        public Integer getTotal () { return total; }
+        public Integer getTotal () { 
+        	if(total !=null){
+        		return total;
+        	}else{
+        		if(isDetermined()){
+        			return results.size();
+        		}
+        	}
+        	return null;
+        }
+        public void setTotal (int i) { 
+        	total = i;
+        }
+        
         public Long getStart () { return start; }
         public Long getStop () { return stop; }
         
@@ -1411,7 +1430,6 @@ public class App extends Authentication {
                     iter.remove();
                 }else{
                 	tocall.add(l);
-                    
                 }
             }
             for(StatusChangeListener l : tocall){
@@ -1431,6 +1449,7 @@ public class App extends Authentication {
          *
          * @return a Future will never be null, but get() will return null when completed
          */
+        @JsonIgnore
         public Future<Void> getDeterminedFuture(){
         	SearchResultContextDeterminedFuture future= new SearchResultContextDeterminedFuture(this);
             ForkJoinPool.commonPool().submit(future);
@@ -1455,7 +1474,8 @@ public class App extends Authentication {
                 SearchResultContext ctx = processor.getContext();               
                 try {
                     ctx.setStatus(SearchResultContext.Status.Running);
-                    ctx.start = System.currentTimeMillis();            
+                    ctx.start = System.currentTimeMillis();
+                    
                     int count = processor.process();
                     if(count==0){
                     	ctx.setStatus(SearchResultContext.Status.Done);
@@ -1677,10 +1697,12 @@ public class App extends Authentication {
             final String key = App.getKeyForCurrentRequest();
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
+            System.out.println("Substructure again");
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
+                        	 System.out.println("Cache miss");
                              processor.setResults
                                  (rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
@@ -1789,7 +1811,7 @@ public class App extends Authentication {
                // System.out.println("Not waiting for finished product for search:" + context.id);
             }
         }
-        
+        System.out.println("Is this the problem?1");
         SearchResultContext.Status stat=context.getStatus();
         boolean isDetermined=context.isDetermined();
         /**
@@ -1798,7 +1820,7 @@ public class App extends Authentication {
          * together with facets, sorting, etc.
          */
       
-        
+        System.out.println("Is this the problem?2");
         final SearchResult result = getOrElse
             (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
@@ -1819,7 +1841,7 @@ public class App extends Authentication {
                     }
                 });
         
-        
+        System.out.println("Is this the problem?3");
         
        
         final List<T> results = new ArrayList<T>();
@@ -1863,7 +1885,9 @@ public class App extends Authentication {
             // and since this method is only called for those complex external
             // searches, which typically get some smaller number of records back,
             // this may be an acceptable lack of responsiveness
+            System.out.println("Is this the problem?4");
             result.copyTo(results, i, rows, true);
+            System.out.println("Is this the problem?5");
             facets.addAll(result.getFacets());
             
             
