@@ -631,22 +631,27 @@ public class TextIndexer implements Closeable{
         public SearchContextAnalyzer getSearchContextAnalyzer(){
             return searchAnalyzer;
         }
-        protected void addFetcher (NamedCallable c) {
+        protected void addNamedCallable (NamedCallable c) {
         	matches.addCallable(c);
-        	notifyAdd(c);
+        	processAddition(c);
+        }
+        
+        protected void add (Object obj) {
+        	matches.add(obj);
+        	processAddition(()->obj);
+        }
+        
+        private void processAddition(NamedCallable o){
+        	notifyAdd(o);
         	if(searchAnalyzer!=null && query!=null && query.length()>0){
             	if(searchAnalyzer.isEnabled()){
             		try {
-						searchAnalyzer.updateFieldQueryFacets(c.call(), query);
+						searchAnalyzer.updateFieldQueryFacets(o.call(), query);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
             	}
             }
-        }
-        
-        protected void add (Object obj) {
-            addFetcher(()->obj);
         }
 
         private void notifyAdd(Object o){
@@ -1047,7 +1052,7 @@ public class TextIndexer implements Closeable{
                 Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
                 try{
                 	ThingFetcher thingFetcher = new ThingFetcher(doc);
-                	result.addFetcher(thingFetcher);
+                	result.addNamedCallable(thingFetcher);
                 }catch(Exception e){
                 	e.printStackTrace();
                 	Logger.error(e.getMessage());

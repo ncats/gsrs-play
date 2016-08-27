@@ -4,7 +4,6 @@ package ix.core.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -27,23 +26,26 @@ import java.util.concurrent.Callable;
  * @param <K>
  */
 public class FuturesList<K> implements List<K>{
+	private ObjectNamer objectNamer;
+	
+	
+	private List<NamedCallable<K>> _internalList = new ArrayList<NamedCallable<K>>();
+	
 	public static interface ObjectNamer{
 		public String nameFor(Object k);
 	}
-	
-	private ObjectNamer objectNamer = null;
-	
-	public FuturesList(ObjectNamer objectNamer){
-		this.objectNamer=objectNamer;
-		
-		
-	}
-	
 
 	public static interface NamedCallable<K> extends Callable<K>{
 		default String getName(){
 			return null;
 		}
+	}
+	
+	
+	
+	
+	public FuturesList(ObjectNamer objectNamer){
+		this.objectNamer=objectNamer;
 	}
 	
 	public class DefaultNamedCallable<K> implements NamedCallable<K>{
@@ -62,18 +64,20 @@ public class FuturesList<K> implements List<K>{
 			return name;
 		}
 	}
+	 
 	
-	private List<NamedCallable<K>> clist = new ArrayList<NamedCallable<K>>();
+	
+	
 	
 	
 	@Override
 	public int size() {
-		return clist.size();
+		return _internalList.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return clist.isEmpty();
+		return _internalList.isEmpty();
 	}
 
 	@Override
@@ -104,7 +108,7 @@ public class FuturesList<K> implements List<K>{
 
 	@Override
 	public boolean add(K e) {
-		return clist.add(new DefaultNamedCallable<K>(e));
+		return _internalList.add(new DefaultNamedCallable<K>(e));
 	}
 
 	@Override
@@ -143,13 +147,13 @@ public class FuturesList<K> implements List<K>{
 
 	@Override
 	public void clear() {
-		this.clist.clear();
+		this._internalList.clear();
 	}
 
 	@Override
 	public K get(int index) {
 		try {
-			return clist.get(index).call();
+			return _internalList.get(index).call();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -159,7 +163,7 @@ public class FuturesList<K> implements List<K>{
 	@Override
 	public K set(int index, K element) {
 		K old = this.get(index);
-		clist.set(index, ()->element);
+		_internalList.set(index, ()->element);
 		return old;
 	}
 
@@ -171,7 +175,7 @@ public class FuturesList<K> implements List<K>{
 	@Override
 	public K remove(int index) {
 		K old = this.get(index);
-		clist.remove(index);
+		_internalList.remove(index);
 		return old;
 	}
 
@@ -280,12 +284,12 @@ public class FuturesList<K> implements List<K>{
 	 * @return
 	 */
 	public boolean addCallable(NamedCallable<K> c){
-		return this.clist.add(c);
+		return this._internalList.add(c);
 	}
 	
 	public void sortByNames(Comparator<String> c) {
 		
-		NamedCallable<K>[] a = this.clist.toArray(new NamedCallable[0]);
+		NamedCallable<K>[] a = this._internalList.toArray(new NamedCallable[0]);
         if(c==null){
         	Comparator<String> stringComparator = DefaultComparator.getInstance();
         	c=stringComparator;
@@ -299,7 +303,7 @@ public class FuturesList<K> implements List<K>{
 				return rawComparator.compare(n1, n2);
 			}
         });
-        ListIterator<NamedCallable<K>> i = clist.listIterator();
+        ListIterator<NamedCallable<K>> i = _internalList.listIterator();
         for (NamedCallable<K> e : a) {
             i.next();
             i.set(e);
@@ -308,7 +312,7 @@ public class FuturesList<K> implements List<K>{
 	
 	@Override
 	public void sort(Comparator<? super K> c) {
-		NamedCallable<K>[] a = this.clist.toArray(new NamedCallable[0]);
+		NamedCallable<K>[] a = this._internalList.toArray(new NamedCallable[0]);
         if(c==null){
         	c=(Comparator<? super K>)DefaultComparator.getInstance();
         }
@@ -327,7 +331,7 @@ public class FuturesList<K> implements List<K>{
 				return rawComparator.compare(o1, o2);
 			}
         });
-        ListIterator<NamedCallable<K>> i = clist.listIterator();
+        ListIterator<NamedCallable<K>> i = _internalList.listIterator();
         for (NamedCallable<K> e : a) {
             i.next();
             i.set(e);
