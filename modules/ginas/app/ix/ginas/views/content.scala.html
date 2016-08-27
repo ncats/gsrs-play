@@ -1,8 +1,8 @@
 @import ix.ncats.controllers.App
-@import ix.ncats.controllers.App.FacetDecorator
+@import ix.ncats.controllers.FacetDecorator
 @import ix.core.search.FieldFacet
 @import ix.core.models.Structure
-@import ix.ncats.controllers.App.SearchResultContext
+@import ix.ncats.controllers.SearchResultContext
 
 @(title: String, kind: String,
         resetAction: String, 
@@ -284,9 +284,8 @@ $(document).ready(function () {
   	                         	location.reload(true); 
   	                         }
 		           		   }
- 		           		   var pct = Math.floor(100.0*data.count/ data.total+0.5);
- 		           		   var pagepct = Math.floor(100.0*firststatus.thisPage/ data.total+0.5);
- 		           		   pct= Math.floor((pct/pagepct)*100);
+ 		           		   var pct = Math.floor(100.0*data.count/ firststatus.thisPage+0.0);
+						   pct=Math.min(pct,100);
  		           		   var loadedPage=Math.floor(data.count/firststatus.rowsPerPage);
  		           		   var waitPage=Math.floor(firststatus.thisPage/firststatus.rowsPerPage);
  		           		   

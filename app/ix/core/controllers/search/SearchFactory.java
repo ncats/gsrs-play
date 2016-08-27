@@ -29,6 +29,7 @@ import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
+import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
 
 public class SearchFactory extends EntityFactory {

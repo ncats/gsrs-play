@@ -19,6 +19,11 @@ import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
+import ix.ncats.controllers.App;
+import ix.ncats.controllers.DefaultResultRenderer;
+import ix.ncats.controllers.FacetDecorator;
+import ix.ncats.controllers.SearchResultContext;
+import ix.ncats.controllers.SearchResultProcessor;
 import ix.ncats.controllers.crud.Administration;
 import org.springframework.util.StringUtils;
 
@@ -45,10 +50,10 @@ import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
+import ix.core.search.SearchResult;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.FV;
 import ix.core.search.TextIndexer.Facet;
-import ix.core.search.TextIndexer.SearchResult;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -82,7 +87,6 @@ import ix.ginas.models.v1.Sugar;
 import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
 import ix.core.GinasProcessingMessage;
-import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -880,7 +884,7 @@ public class GinasApp extends App {
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if ( q != null || request().queryString().containsKey("facet")) {
-            final TextIndexer.SearchResult result =
+            final SearchResult result =
                 getSubstanceSearchResult (q, total, oq);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
@@ -919,12 +923,12 @@ public class GinasApp extends App {
                 });
         }
     }
-    static Result createSubstanceResult(TextIndexer.SearchResult result,
+    static Result createSubstanceResult(SearchResult result,
             int rows, int page) throws Exception{
         return createSubstanceResult(result,rows,page,ALL_FACETS);
     }
     
-    static Result createSubstanceResult(TextIndexer.SearchResult result,
+    static Result createSubstanceResult(SearchResult result,
                                         int rows, int page, String[] facets) throws Exception{
     	
         return fetchResultImmediate (result, rows, page, new SubstanceResultRenderer (facets));
@@ -1000,7 +1004,7 @@ public class GinasApp extends App {
             }
         }
         else {  //rarely used
-            TextIndexer.SearchResult result;
+            SearchResult result;
             try(TextIndexer indexer = getTextIndexer().createEmptyInstance()) {
                 for (Substance sub : substances) {
                     indexer.add(sub);

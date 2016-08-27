@@ -1,7 +1,6 @@
 package ix.ncats.controllers;
 
 import java.io.*;
-import java.lang.ref.SoftReference;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.sql.DatabaseMetaData;
@@ -20,18 +19,12 @@ import play.mvc.Call;
 import play.mvc.BodyParser;
 import play.libs.ws.*;
 import play.libs.F;
-import play.libs.Akka;
 import play.mvc.Http;
 import play.mvc.Http.Request;
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.actor.PoisonPill;
-import akka.actor.Props;
 import akka.actor.Inbox;
-import akka.actor.Terminated;
 import akka.routing.Broadcast;
 import akka.routing.RouterConfig;
 import akka.routing.FromConfig;
@@ -45,6 +38,8 @@ import java.sql.Connection;
 
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.Global;
+import ix.utils.Util;
 
 import static ix.core.search.TextIndexer.*;
 import tripod.chem.indexer.StructureIndexer;
@@ -57,25 +52,20 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
-import ix.core.CacheStrategy;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
+import ix.core.chem.EnantiomerGenerator;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
-import ix.core.chem.EnantiomerGenerator;
+import ix.core.chem.EnantiomerGenerator.Callback;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
-import ix.core.search.FieldFacet;
 import ix.core.search.SearchOptions;
-import ix.core.search.TextIndexer.SearchResult;
-import ix.core.search.TextIndexer.SearchResultDoneListener;
-import ix.core.search.TextIndexer.SearchResultFuture;
+import ix.core.search.SearchResult;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
-import ix.utils.Util;
-import ix.utils.Global;
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 import chemaxon.struc.MolAtom;
@@ -95,14 +85,12 @@ import gov.nih.ncgc.chemical.DisplayParams;
 import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import gov.nih.ncgc.jchemical.Jchemical;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.sf.ehcache.Element;
-import ix.ncats.controllers.App.SearchResultContext;
 import ix.ncats.controllers.auth.*;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.ncats.resolvers.*;
@@ -144,73 +132,6 @@ public class App extends Authentication {
 
     public static TextIndexer getTextIndexer(){
         return Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-    }
-    /**
-     * interface for rendering a result page
-     */
-    public interface ResultRenderer<T> {
-        Result render (SearchResultContext context,
-                       int page, int rows, int total, int[] pages,
-                       List<TextIndexer.Facet> facets, List<T> results);
-        int getFacetDim ();
-    }
-
-    public static abstract class DefaultResultRenderer<T>
-        implements ResultRenderer<T> {
-        public int getFacetDim () { return FACET_DIM; }
-    }
-
-    public interface Tokenizer {
-        public Enumeration<String> tokenize (String input);
-    }
-
-    public static class DefaultTokenizer implements Tokenizer {
-        final protected String pattern;
-        public DefaultTokenizer () {
-            this ("[\\s;,\n\t]");
-        }
-        public DefaultTokenizer (String pattern) {
-            this.pattern = pattern;
-        }
-
-        public Enumeration<String> tokenize (String input) {
-            String[] tokens = input.split(pattern);
-            return Collections.enumeration(Arrays.asList(tokens));
-        }
-    }
-    
-    public static class FacetDecorator {
-        final public Facet facet;
-        public int max;
-        public boolean raw;
-        public boolean hidden;
-        public Integer[] total;
-        public boolean[] selection;
-        
-        public FacetDecorator (Facet facet) {
-            this (facet, false, 6);
-        }
-        public FacetDecorator (Facet facet, boolean raw, int max) {
-            this.facet = facet;
-            this.raw = raw;
-            this.max = max;
-            total = new Integer[facet.size()];
-            selection = new boolean[facet.size()];
-        }
-
-        public String name () { return facet.getName(); }
-        public int size () { return facet.getValues().size(); }
-        public String label (int i) {
-            return facet.getLabel(i);
-        }
-        public String value (int i) {
-            Integer total = this.total[i];
-            Integer count = facet.getCount(i);
-            if (total != null) {
-                return count+" | "+total;
-            }
-            return count.toString();
-        }
     }
     /**
      * This returns links to up to 11 pages of interest.
@@ -326,13 +247,7 @@ public class App extends Authentication {
     }
 
     public static String encode (Facet facet) {
-        try {
-            return URLEncoder.encode(facet.getName(), "utf8");
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't encode string "+facet.getName(), ex);
-        }
-        return facet.getName();
+    	return encode(facet.getName());
     }
     
     public static String encode (Facet facet, int i) {
@@ -348,22 +263,17 @@ public class App extends Authentication {
     }
 
     public static String page (int rows, int page) {
-        //Logger.debug(">> page(rows="+rows+",page="+page+") uri: "+request().uri());
-
-        Map<String, Collection<String>> params = getQueryParameters ();
-        
-        // remove these
-        //params.remove("rows");
-        params.remove("page");
+       
         StringBuilder uri = new StringBuilder (request().path()+"?page="+page);
-        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-            for (String v : me.getValue()) {
-                //Logger.debug(v+" => "+decode(v));
-                uri.append("&"+me.getKey()+"="+v);
-            }
-        }
+        
+        getQueryParameters ().forEach((key, value)->{
+        	if(!"page".equals(key)){
+	       	 	for (String v : value) {
+	                uri.append("&"+key+"="+v);
+	            }
+        	}
+        });
 
-        //Logger.debug("<< "+uri);
         
         return uri.toString();
     }
@@ -484,44 +394,37 @@ public class App extends Authentication {
     public static String url (FacetDecorator[] facets, String... others) {
         Logger.debug(">> uri="+request().uri());
 
+        List<FacetDecorator> facetList = Arrays.asList(facets);
+        
         StringBuilder uri = new StringBuilder (request().path()+"?");
         Map<String, Collection<String>> params = getQueryParameters ();
-        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-            if (me.getKey().equals("facet")) {
-                for (String v : me.getValue())
-                    if (v != null) {
-                        String s = decode (v);
-                        boolean matched = false;
-                        for (FacetDecorator f : facets) {
-                            // use the real name.. f.name() is a decoration
-                            // that might not be the same as the actual
-                            // facet name
-                            if (!f.hidden && s.startsWith(f.facet.getName())) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!matched) {
-                            uri.append(me.getKey()+"="+v+"&");
-                        }
-                    }
-            }
-            else {
-                boolean matched = false;
-                for (String s : others) {
-                    if (s.equals(me.getKey())) {
-                        matched = true;
-                        break;
-                    }
-                }
-                
-                if (!matched)
-                    for (String v : me.getValue())
-                        if (v != null)
-                            uri.append(me.getKey()+"="+v+"&");
-            }
-        }
+        
+        params.forEach((key,value)->{
+        	 if (key.equals("facet")) {
+                 for (String v : value){
+                     if (v != null) {
+                         String s = decode (v);
+                         boolean matched = facetList
+             		 			.stream()
+             		 			.anyMatch(f -> !f.hidden && s.startsWith(f.facet.getName()));
+                         
+                         if (!matched) {
+                             uri.append(key+"="+v+"&");
+                         }
+                     }
+                 }
+             } else {
+                 boolean matched = Arrays.asList(others)
+                		 			.stream()
+                		 			.anyMatch(s -> s.equals(key));
+                 
+                 if (!matched){
+                	 value.stream()
+                	 	.filter(v->(v!=null))
+                	 	.forEach(v -> uri.append(key+"="+v+"&"));
+                 }
+             }
+        });
         
         Logger.debug("<< uri="+uri);
         return uri.substring(0, uri.length()-1);
@@ -541,14 +444,13 @@ public class App extends Authentication {
     public static String queryString (Map<String, String[]> queryString) {
         //Logger.debug("QueryString: "+queryString);
         StringBuilder q = new StringBuilder ();
-        for (Map.Entry<String, String[]> me : queryString.entrySet()) {
-            for (String s : me.getValue()) {
+        queryString.forEach((key,value)->{
+        	for (String s : value) {
                 if (q.length() > 0)
                     q.append('&');
-                q.append(me.getKey()+"="+encode (s));
-                //+ ("q".equals(me.getKey()) ? encode (s) : s));
+                q.append(key+"="+encode (s));
             }
-        }
+        });
         return q.toString();
     }
 
@@ -561,11 +463,6 @@ public class App extends Authentication {
                     try {
                         String name = toks[0];
                         String value = toks[1].replace("$$", "/");
-                        /*
-                        Logger.debug("Searching facet "+name+"/"+value+"..."
-                                     +facet.getName()+"/"
-                                     +facet.getValues().get(i).getLabel());
-                        */
                         boolean matched = name.equals(facet.getName())
                             && value.equals(facet.getValues()
                                             .get(i).getLabel());
@@ -649,10 +546,8 @@ public class App extends Authentication {
             key.append("."+f);
         try {
             TextIndexer.Facet[] facets = getOrElse
-                (key.toString(), new Callable<TextIndexer.Facet[]>() {
-                        public TextIndexer.Facet[] call () {
+                (key.toString(), ()  -> {
                             return filter (getFacets (cls, FACET_DIM), filters);
-                        }
                     });
             return facets;
         }
@@ -661,36 +556,6 @@ public class App extends Authentication {
             ex.printStackTrace();
         }
         return new TextIndexer.Facet[0];
-    }
-
-    public static String randvar (int size) {
-        Random rand = new Random ();
-        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
-                        'l','m','n','o','p','q','r','s','t','u','v',
-                        'x','y','z'};
-        StringBuilder sb = new StringBuilder ();
-        for (int i = 0; i < size; ++i)
-            sb.append(alpha[rand.nextInt(alpha.length)]);
-        return sb.toString();
-    }
-    
-    public static String hashvar (int size, Object o) {
-        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
-                        'l','m','n','o','p','q','r','s','t','u','v',
-                        'x','y','z'};
-        
-        StringBuilder sb = new StringBuilder ();
-        int ohash=o.hashCode();
-        for (int i = 0; i < size; ++i){
-                int p=Math.abs((ohash%alpha.length));
-            sb.append(alpha[p]);
-            ohash+=(ohash+"").toString().hashCode();
-        }
-        return sb.toString();
-    }
-    
-    public static String randvar () {
-        return randvar (5);
     }
 
     protected static Map<String, String[]> getRequestQuery () {
@@ -768,13 +633,11 @@ public class App extends Authentication {
                                                 final int fdim) {
         final String sha1 = Util.sha1(kind.getName()+"/"+fdim);
         try {
-            return getOrElse (sha1, new Callable<SearchResult>() {
-                    public SearchResult call () throws Exception {
+            return getOrElse (sha1,  ()  -> {
                         SearchResult result = SearchFactory.search
                             (kind, null, 0, 0, fdim, null);
                         return cacheKey (result, sha1);
-                    }
-                });
+                    });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -818,31 +681,27 @@ public class App extends Authentication {
                         Logger.debug
                             ("range: field="+field+" min="+min+" max="+max);
                         
-                        return getOrElse (sha1, new Callable<SearchResult> () {
-                                public SearchResult call () throws Exception {
+                        return getOrElse (sha1, ()  -> {
                                     SearchOptions options =
                                         new SearchOptions (query);
                                     options.top = total;
-                                    SearchResult result = getTextIndexer().range
+                                    SearchResult sresult = getTextIndexer().range
                                         (options, field, min.isEmpty()
                                          ? null : Integer.parseInt(min),
                                          max.isEmpty()
                                          ? null : Integer.parseInt(max));
-                                    return cacheKey (result, sha1);
-                                }
-                            });
+                                    return cacheKey (sresult, sha1);
+                                });
                     }
                 }
 
                 result = getOrElse
-                    (sha1, new Callable<SearchResult>() {
-                            public SearchResult call () throws Exception {
-                                SearchResult result = SearchFactory.search
+                    (sha1, () -> {
+                                SearchResult sresult = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
-                                return cacheKey (result, sha1);
-                            }
-                        });
+                                return cacheKey (sresult, sha1);
+                            });
                 Logger.debug(sha1+" => "+result);
             }
             double elapsed = (System.currentTimeMillis() - start)*1e-3;
@@ -901,18 +760,15 @@ public class App extends Authentication {
         try {
         	
             response().setContentType("image/svg+xml");
-            byte[] resp = getOrElse (0l, key, new Callable<byte[]>() {
-                    public byte[] call () throws Exception {
+            byte[] resp = getOrElse (0l, key, () ->{
                         MolHandler mh = new MolHandler (value);
                         Molecule mol = mh.getMolecule();
                         if (mol.getDim() < 2) {
                             mol.clean(2, null);
                         }
-                        
                         Logger.info("ok");
                         return render (mol, "svg", size, null);
-                    }
-                });
+                    });
             return ok(resp);
         }
         catch (Exception ex) {
@@ -1113,21 +969,18 @@ public class App extends Authentication {
                 + ":" + atomMap;
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
-                byte[] result = getOrElse (key, new Callable<byte[]> () {
-                        public byte[] call () throws Exception {
+                byte[] result = getOrElse (key, () -> {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
                                 return render (struc, format, size, amap);
                             }
                             return null;
-                        }
-                    });
+                        });
                 if (result != null) {
                     response().setContentType(mime);
                     return ok(result);
                 }
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 Logger.error("Can't generate image for structure "
                              +id+" format="+format+" size="+size, ex);
                 ex.printStackTrace();
@@ -1138,8 +991,7 @@ public class App extends Authentication {
         else {
             final String key = Structure.class.getName()+"/"+id+"."+format;
             try {
-                return getOrElse (key, new Callable<Result> () {
-                        public Result call () throws Exception {
+                return getOrElse (key,  () ->{
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
                                 response().setContentType("text/plain");
@@ -1166,8 +1018,7 @@ public class App extends Authentication {
                                 Logger.warn("Unknown structure: "+id);
                             }
                             return noContent ();
-                        }
-                    });
+                        });
             }
             catch (Exception ex) {
                 Logger.error("Can't convert format "+format+" for structure "
@@ -1180,333 +1031,6 @@ public class App extends Authentication {
         return notFound ("Not a valid structure "+id);
     }
 
-    /**
-     * Structure searching
-     */
-    public static abstract class SearchResultProcessor<T, R> {
-        protected Enumeration<T> results;
-        final SearchResultContext context = new SearchResultContext ();
-        boolean wait=false;
-        
-        public SearchResultProcessor () {
-        }
-        
-        public void setWait(boolean wait){
-        	this.wait=wait;
-        }
-
-        public void setResults (int rows, Enumeration<T> results)
-            throws Exception {
-            this.results = results;
-            
-            context.start = System.currentTimeMillis();
-            if(wait){
-            	
-            	process();
-            	context.setStatus(SearchResultContext.Status.Determined);
-            	context.stop = System.currentTimeMillis();
-                
-            }else{
-                // the idea is to generate enough results for 1 page, and 1 extra record
-            	// (enough to show pagination) and return immediately. as the user pages,
-                // the background job will fill in the rest of the results.
-            	int count = process (rows+1);
-                
-                // while we continue to fetch the rest of the results in the
-                // background
-                ActorRef handler = Akka.system().actorOf
-                    (Props.create(SearchResultHandler.class));
-                handler.tell(this, ActorRef.noSender());
-                Logger.debug("## search results submitted: "+handler);
-            }
-        }
-        
-        public SearchResultContext getContext () { return context; }
-        public boolean isDone () { return false; }
-
-        public int process () throws Exception {
-            return process (0);
-        }
-        
-        public int process (int max) throws Exception {
-            while (results.hasMoreElements()
-                   && !isDone () 
-                   && (max <= 0 || context.getCount() < max)) {
-                T r = results.nextElement();
-                // This will simulate a slow structure processing (e.g. slow database fetch)
-                // This should be used in conjunction with another debugSpin in TextIndexer
-                // to simulate both slow fetches and slow lucene processing
-                //System.out.println("Processing:" + r);
-                //Util.debugSpin(10);
-                try {
-                    R obj = instrument (r);
-                    if (obj != null) {
-                        context.add(obj);
-                    }
-                }catch (Exception ex) {
-                    ex.printStackTrace();
-                    Logger.error("Can't process structure search result", ex);
-                }
-            }
-            return context.getCount();
-        }
-        
-        protected abstract R instrument (T r) throws Exception;
-    }
-
-    @CacheStrategy(evictable=false)
-    public static class SearchResultContext {
-        public enum Status {
-            Pending,	//show  +
-            Running,	//show  +
-            Determined, //don't show +
-            Done,		//don't show +
-            Failed		//don't show +
-        }
-
-        
-        
-
-        public static interface StatusChangeListener{
-        	void onStatusChange(Status newStatus, Status oldStatus);
-        }
-        
-        private List<SoftReference<StatusChangeListener>> listeners = new ArrayList<>();
-        
-        private Status _status = Status.Pending;
-        String mesg;
-        Long start;
-        Long stop;
-        List<FieldFacet> fieldFacets=null;
-        Collection results = new LinkedBlockingDeque();
-        String id = randvar (10);
-        Integer total;
-        String key;
-        
-        
-        
-        public static class SearchResultContextDeterminedFuture extends FutureTask<Void>{
-        	public SearchResultContextDeterminedFuture(final SearchResultContext context){
-        		super(new WaitForDeterminedCallable(context));
-        	}
-        }
-        
-        private static class WaitForDeterminedCallable implements Callable<Void>, StatusChangeListener{
-        	private SearchResultContext context;
-        	private final CountDownLatch latch;
-
-        	public WaitForDeterminedCallable(final SearchResultContext context){
-        		Objects.requireNonNull(context);
-        		this.context = context;
-        		this.context.addListener(this);
-                latch = new CountDownLatch(1);
-        	}
-        	
-        	public void onStatusChange(Status newStatus, Status oldStatus){
-        		if(newStatus == Status.Determined || 
-        			newStatus==Status.Done || 
-        			newStatus == Status.Failed){
-        			
-        			while(latch.getCount()>0){
-                        latch.countDown();
-                    }
-        		}
-        		
-        	}
-    		@Override
-    		public Void call() throws Exception {
-    			if(latch.getCount()>0 && !context.isDetermined()){
-    				latch.await();
-    			}
-    			context.removeListener(this);
-    			return null;
-    		}
-        }
-        
-        SearchResultContext () {
-        }
-        
-        public SearchResultContext (SearchResult result) {
-        	fieldFacets=result.getFieldFacets();
-            start = result.getTimestamp();      
-            
-            if (result.finished()) {
-                setStatus(Status.Done);
-                stop = result.getStopTime();
-            }else if (result.size() > 0){
-            	setStatus(Status.Determined);
-            }
-            
-            if (_status != Status.Done) {
-                mesg = String.format
-                    ("Loading...%1$d%%",
-                     (int)(Math.ceil(100.*result.size()/((double)result.count()))));
-            }
-            
-            results = result.getMatches();
-            total = result.count();
-            this.key=result.getKey();
-        }
-        
-        public List<FieldFacet> getFieldFacets(){
-        	return fieldFacets;
-        }
-
-        public String getId () { return id; }
-        public Status getStatus () { return _status; }
-        public void setStatus (Status status) { 
-        	Status ostat=this._status;
-        	this._status = status;
-        	notifyChange(_status,ostat);
-        	
-        }
-        public String getMessage () { return mesg; }
-        public void setMessage (String mesg) { this.mesg = mesg; }
-        public Integer getCount () { return results.size(); }
-        public Integer getTotal () { 
-        	if(total !=null){
-        		return total;
-        	}else{
-        		if(isDetermined()){
-        			return results.size();
-        		}
-        	}
-        	return null;
-        }
-        public void setTotal (int i) { 
-        	total = i;
-        }
-        
-        public Long getStart () { return start; }
-        public Long getStop () { return stop; }
-        
-        public boolean isFinished () {
-            return _status == Status.Done || _status == Status.Failed;
-        }
-        
-        public boolean isDetermined () {
-            return isFinished () || _status == Status.Determined;
-        }
-        
-        @com.fasterxml.jackson.annotation.JsonIgnore
-        public Collection getResults () { return results; }
-        
-        @com.fasterxml.jackson.annotation.JsonIgnore
-        public Collection getResultsAsList () {return (results!=null)?new ArrayList<>(results):null; }
-        
-        protected void add (Object obj) { results.add(obj); }
-        
-        
-        public void addListener(StatusChangeListener listener){
-        	listeners.add(new SoftReference<>(listener));
-        }
-        
-        public void removeListener(StatusChangeListener listener){
-        	Iterator<SoftReference<StatusChangeListener>> iter =listeners.iterator();
-        	while(iter.hasNext()){
-        		SoftReference<StatusChangeListener> l = iter.next();
-        		StatusChangeListener actualListener = l.get();
-        		//if get() returns null then the object was garbage collected
-        		if(actualListener ==null || listener.equals(actualListener)){
-        			iter.remove();
-        			//keep checking in the unlikely event that
-        			//a listener was added twice?
-        		}
-        	}
-        }
-        
-        private void notifyChange(Status newStatus, Status oldStatus){
-            Iterator<SoftReference<StatusChangeListener>> iter = listeners.iterator();
-            List<StatusChangeListener> tocall = new ArrayList<StatusChangeListener>();
-            while(iter.hasNext()){
-            	StatusChangeListener l = iter.next().get();
-                if(l ==null){
-                    iter.remove();
-                }else{
-                	tocall.add(l);
-                }
-            }
-            for(StatusChangeListener l : tocall){
-            	l.onStatusChange(newStatus, oldStatus);
-            }
-        }
-        public void setKey(String key){
-        	this.key=key;
-        }
-        public String getKey(){
-        	return key;
-        }
-        
-        /**
-         * Get a future which will return only when
-         * {@link #isDetermined()}} is true.
-         *
-         * @return a Future will never be null, but get() will return null when completed
-         */
-        @JsonIgnore
-        public Future<Void> getDeterminedFuture(){
-        	SearchResultContextDeterminedFuture future= new SearchResultContextDeterminedFuture(this);
-            ForkJoinPool.commonPool().submit(future);
-            return future;
-        }
-        
-        public String toJson(){
-        	ObjectMapper om = new ObjectMapper();
-        	return om.valueToTree(this).toString();
-        }
-        
-        public String getUrl(){
-        	return routes.App.status(this.getKey()).toString();
-        }
-    }
-    
-    static class SearchResultHandler extends UntypedActor {
-        @Override
-        public void onReceive (Object obj) {
-            if (obj instanceof SearchResultProcessor) {
-                SearchResultProcessor processor = (SearchResultProcessor)obj;
-                SearchResultContext ctx = processor.getContext();               
-                try {
-                    ctx.setStatus(SearchResultContext.Status.Running);
-                    ctx.start = System.currentTimeMillis();
-                    
-                    int count = processor.process();
-                    if(count==0){
-                    	ctx.setStatus(SearchResultContext.Status.Done);
-                    }else{
-                    	ctx.setStatus(SearchResultContext.Status.Determined);
-                    }
-                    
-                    ctx.stop = System.currentTimeMillis();
-                    Logger.debug("Actor "+self()+" finished; "+count
-                                 +" search result(s) instrumented!");
-                    context().stop(self ());
-                }
-                catch (Exception ex) {
-                    ctx.setStatus(SearchResultContext.Status.Failed);
-                    ctx.setMessage(ex.getMessage());
-                    ex.printStackTrace();
-                    Logger.error("Unable to process search results", ex);
-                }
-            }
-            else if (obj instanceof Terminated) {
-                ActorRef actor = ((Terminated)obj).actor();
-                Logger.debug("Terminating actor "+actor);
-            }
-            else {
-                unhandled (obj);
-            }
-        }
-
-        public void preStart () {
-        }
-        
-        @Override
-        public void postStop () {
-            Logger.debug(getClass().getName()+" "+self ()+" stopped!");
-        }
-    }
-    
     public static String getKeyForCurrentRequest(){
     	
     	 String query = request().getQueryString("q") + request().getQueryString("order");
@@ -1565,6 +1089,7 @@ public class App extends Authentication {
     public static Call checkStatus () {
     	SearchResultContext ctx=checkStatusDirect();
     	if(ctx==null)return null;
+    	
         switch (ctx.getStatus()) {
 	        case Done:
 	        case Failed:
@@ -1579,8 +1104,6 @@ public class App extends Authentication {
     	SearchResultContext context=null;
         try {
             Object value = IxCache.get(key);
-            //System.out.println(Util.getExecutionPath());
-            //System.out.println("value:" + value);
             if (value != null) {
             	if(value instanceof SearchResultContext){
                     context = (SearchResultContext)value;
@@ -1648,11 +1171,9 @@ public class App extends Authentication {
         try {
             final String key = "batch/"+Util.sha1(q);
             Logger.debug("batch: q="+q+" rows="+rows);
-            return getOrElse (key, new Callable<SearchResultContext> () {
-                    public SearchResultContext call () throws Exception {
+            return getOrElse (key, () ->{
                         processor.setResults(rows, tokenizer.tokenize(q));
                         return processor.getContext();
-                    }
                 });
         }
         catch (Exception ex) {
@@ -1666,15 +1187,13 @@ public class App extends Authentication {
         (final String seq, final double identity, final int rows,
          final int page, CutoffType ct, final SearchResultProcessor processor) {
         try {
-            final String key = "sequence/"+getKey (seq + ct.toString() + request().getQueryString("order"), identity);
+            final String key = App.getKeyForCurrentRequest();
             return getOrElse
                 (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
-                 new Callable<SearchResultContext> () {
-                     public SearchResultContext call () throws Exception {
+                  () -> {
                          processor.setResults
                              (rows, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct));
                          return processor.getContext();
-                     }
                  });
         }
         catch (Exception ex) {
@@ -1760,7 +1279,7 @@ public class App extends Authentication {
 	
 	
     public static <T> Result fetchResultImmediate
-    (final TextIndexer.SearchResult result, int rows,
+    (final SearchResult result, int rows,
      int page, final ResultRenderer<T> renderer) throws Exception {
     	 SearchResultContext src= new SearchResultContext(result);
     	 List<T> resultList = new ArrayList<T>();
@@ -1933,7 +1452,7 @@ public class App extends Authentication {
         return node;
     }
 
-    
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cache (String key) {
         try {
             Element elm = IxCache.getElm(key);
@@ -1996,13 +1515,12 @@ public class App extends Authentication {
     	List<DBConfig> dblist = new ArrayList<DBConfig>();
     	if(dbs instanceof Map){
     		Map<String,Object> databases = (Map<String,Object>)dbs;
-    		for(String dbname:databases.keySet()){
+    		databases.forEach((dbname,dbc)->{
+    			Map<String,Object> dbconf=(Map<String,Object>)dbc;
     			String productName=null;
-    			Map<String,Object> dbconf=(Map<String,Object>)databases.get(dbname);
     			boolean connectable=false;
     			String driverName = (String)dbconf.get("driver");
     			long latency=-1;
-
     			try(Connection c = DB.getConnection(dbname)){
     				long start=System.currentTimeMillis();
 	    			DatabaseMetaData meta = c.getMetaData();
@@ -2016,7 +1534,7 @@ public class App extends Authentication {
 	    			e.printStackTrace();
 	    		}
     			dblist.add(new DBConfig(dbname,driverName,productName,connectable,latency));
-    		}
+    		});
     	}
     	return dblist;
     }
@@ -2038,6 +1556,7 @@ public class App extends Authentication {
         return ok(result);
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheDelete (String key) {
         try {
             Element elm = IxCache.getElm(key);
@@ -2056,6 +1575,7 @@ public class App extends Authentication {
         }
     }
     
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result statistics (String kind) {
         if (kind.equalsIgnoreCase("cache")) {
             return ok (ix.ncats.views.html.cachestats.render
@@ -2078,6 +1598,7 @@ public class App extends Authentication {
         return ups;
     }
 
+    //TODO: Make sure this isn't called when not needed
     @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
     public static Result molinstrument() {
         // String mime = request().getHeader("Content-Type");
@@ -2115,6 +1636,7 @@ public class App extends Authentication {
 
                     Collection<StructuralUnit> o = PolymerDecode
                         .DecomposePolymerSU(c, true);
+                    
                     for (StructuralUnit su : o) {
                         Structure struc = StructureProcessor.instrument
                             (su.structure, null, false);
@@ -2184,6 +1706,7 @@ public class App extends Authentication {
         }
         return null;
     }
+    
     public static String getSmiles(String id) {
         return getSmiles(id, 0);
     }
@@ -2272,29 +1795,16 @@ public class App extends Authentication {
         ObjectMapper mapper = new ObjectMapper ();
         ArrayNode nodes = mapper.createArrayNode();
         
-        int others = 0;
         for (TextIndexer.FV fv : facet.getValues()) {
             if (nodes.size() < max) {
                 ObjectNode n = mapper.createObjectNode();
                 n.put("label", fv.getLabel());
                 n.put("value", fv.getCount());
                 nodes.add(n);
-            }
-            else {
-                others += fv.getCount();
+            } else {
                 break;
             }
         }
-
-        /*
-        if (others > 0) {
-            ObjectNode n = mapper.createObjectNode();
-            n.put("label", "Others");
-            n.put("value", others);
-            nodes.add(n);
-        }
-        */
-        
         return nodes;
     }
 
@@ -2324,6 +1834,7 @@ public class App extends Authentication {
         ObjectMapper mapper = new ObjectMapper ();
         
         ArrayNode results = mapper.createArrayNode();
+        
         for (Resolver r : RESOLVERS) {
             Object value = r.resolve(name);
             if (value != null) {
@@ -2381,7 +1892,7 @@ public class App extends Authentication {
 		for(ChemicalAtom ca:c.getAtomArray()){
 			int rindex=	ca.getRgroupIndex();
 			if(rindex>0){
-				return true;
+				r= true;
 			}else{
 				//r=true;
 				if(ca.getAlias().startsWith("_")){
@@ -2427,8 +1938,6 @@ public class App extends Authentication {
 		return change;
 	}
 	public static boolean fuseChemical(Chemical c){
-
-
 		Map<Integer,ChemicalAtom> needLink = new HashMap<Integer,ChemicalAtom>();
 		Set<ChemicalAtom> toRemove=new HashSet<ChemicalAtom>();
 
@@ -2454,17 +1963,12 @@ public class App extends Authentication {
 				}
 			}
 		}
-		for(ChemicalAtom ca:toRemove){
-			c.removeAtom(ca);
-		}
+		toRemove.forEach(ca -> c.removeAtom(ca));
 		return toRemove.size()>0;
 	}
 	
-	public static int getNumberOfRunningThreads(){
-		int nbRunning = 0;
-		for (Thread t : Thread.getAllStackTraces().keySet()) {
-		    if (t.getState()==Thread.State.RUNNABLE) nbRunning++;
-		}
-		return nbRunning;
+	public static long getNumberOfRunningThreads(){
+		return Thread.getAllStackTraces().keySet().stream()
+		.filter(t-> (t.getState()==Thread.State.RUNNABLE)).count();
 	}
 }

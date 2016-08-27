@@ -4,9 +4,7 @@ import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
 
 import java.io.*;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -25,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
@@ -33,7 +30,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import javax.persistence.Entity;
@@ -96,12 +92,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.CacheStrategy;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
 import ix.core.search.FutureList.NamedCallable;
-import ix.core.search.FutureList.ObjectNamer;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
@@ -276,407 +270,6 @@ public class TextIndexer implements Closeable{
     	}
     	return NullSearchAnalyzer.INSTANCE;
     	
-    }
-    
-    public static class SearchResultFuture extends FutureTask<List>{
-    	public SearchResultFuture(final SearchResult result){
-    		super(new WaitForSearchCallable(result));
-    	}
-        public SearchResultFuture(final SearchResult result, int numberOfRecords){
-            super(new WaitForSearchCallable(result, numberOfRecords));
-        }
-    }
-    
-    private static class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
-
-    	private final SearchResult result;
-    	
-    	private final CountDownLatch latch;
-    	private boolean waitForAll;
-
-    	public WaitForSearchCallable(final SearchResult result){
-    		Objects.requireNonNull(result);
-    		this.result = result;
-    		this.result.addListener(this);
-            waitForAll = true;
-            latch = new CountDownLatch(1);
-    	}
-        public WaitForSearchCallable(final SearchResult result, int numberOfRecords){
-            Objects.requireNonNull(result);
-            this.result = result;
-            this.result.addListener(this);
-            //can't have negative counts
-            int count = Math.max(0, numberOfRecords - result.matches.size());
-            latch = new CountDownLatch(count);
-            waitForAll = false;
-        }
-		@Override
-		public List call() throws Exception {
-			if(latch.getCount()>0 && !result.finished()){
-				latch.await();
-			}
-            result.removeListener(this);
-			return result.getMatches();
-		}
-		@Override
-		public void searchIsDone() {
-			while(latch.getCount()>0){
-                latch.countDown();
-            }
-		}
-
-        @Override
-        public void added(Object o) {
-            if(!waitForAll){
-                latch.countDown();
-            }
-        }
-    }
-    
-    @CacheStrategy(evictable=false)
-    public static class SearchResult {
-    
-    	
-        SearchContextAnalyzer searchAnalyzer;
-
-        /**
-         * Returns a list of FieldFacets which help to explain why and how
-         * matches were done for this particular query.
-         * 
-         * @return
-         */
-        public List<FieldFacet> getFieldFacets(){
-            return searchAnalyzer.getFieldFacets();
-        }
-        
-        String key;
-        String query;
-        List<Facet> facets = new ArrayList<Facet>();
-        FutureList matches = new FutureList (new ObjectNamer(){
-			@Override
-			public String nameFor(Object obj) {
-				return EntityUtils.getIdForBeanAsString(obj);
-			}
-		});
-        List result; // final result when there are no more updates
-        int count;
-        SearchOptions options;
-        final long timestamp = TimeUtil.getCurrentTimeMillis();
-        AtomicLong stop = new AtomicLong ();
-        Comparator<String> idComparator = null;
-        
-        
-        private List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
-        
-
-        
-        SearchResult (SearchOptions options, String query) {
-            this.options = options;
-            this.query = query;
-            searchAnalyzer=getDefaultSearchAnalyzerFor(this.options.kind);
-        }
-
-        void setRank (final Map<String, Integer> idrank) {
-            Objects.requireNonNull(idrank);
-            idComparator = (id1,id2) ->{
-                Integer r1 = idrank.get(id1), r2 = idrank.get(id2);
-                if (r1 != null && r2 != null)
-                    return r1 - r2;
-                if (r1 == null)
-                    Logger.error("Unknown rank for "+id1);
-                if (r2 == null)
-                    Logger.error("Unknown rank for "+id2);
-                return 0;
-            };
-            
-        }
-
-        public void addListener(SearchResultDoneListener listener){
-        	synchronized(listeners){
-        		listeners.add(new SoftReference<>(listener));
-        	}
-        }
-        
-        public void removeListener(SearchResultDoneListener listener){
-        	synchronized(listeners){
-	        	Iterator<SoftReference<SearchResultDoneListener>> iter =listeners.iterator();
-	        	while(iter.hasNext()){
-	        		SoftReference<SearchResultDoneListener> l = iter.next();
-	        		SearchResultDoneListener actualListener = l.get();
-	        		//if get() returns null then the object was garbage collected
-	        		if(actualListener ==null || listener.equals(actualListener)){
-	        			iter.remove();
-	        			//keep checking in the unlikely event that
-	        			//a listener was added twice?
-	        		}
-	        	}
-        	}
-        }
-        
-        public String getKey() { return key; }
-        public void setKey(String key) { this.key = key; }
-        public String getQuery () { return query; }
-        public SearchOptions getOptions () { return options; }
-        public List<Facet> getFacets () { return facets; }
-        public Facet getFacet (String name) {
-            for (Facet f : facets) {
-                if (name.equalsIgnoreCase(f.getName()))
-                    return f;
-            }
-            return null;
-        }
-        public int size () { return matches.size(); }
-        public Object get (int index) {
-            throw new UnsupportedOperationException
-                ("get(index) is no longer supported; please use copyTo()");
-        }
-        
-        /**
-         * Copies from the search results to the specified list
-         * with specified offset (for the master results), and
-         * total count of records to be copied.
-         * 
-         * Note: This method will block and wait for the "correct" 
-         * answer only if the final <pre>wait</pre> parameter is 
-         * <pre>true</pre>. Otherwise it will return whatever
-         * is available.
-         * 
-          * @param list 
-         * 	Destination list to copy into
-         * @param start
-         * 	Offset starting location from master list
-         * @param count
-         * 	Total number of records to be copied
-         * @param wait
-         * 	set to true for blocking for correct answer,
-         *  false will return available records immediately
-         * @return
-         */
-        public int copyTo (List list, int start, int count, boolean wait) {
-
-        	
-        	// It may be that the page that is being fetched is not yet
-        	// complete. There are 2 options here then. The first is to
-        	// return whatever is ready now immediately, and report the
-        	// number of results (that is what had been done before).
-        	
-        	// The second way is to wait for the fetching to be completed
-        	// which is what is demonstrated below. 
-        	List matches;
-        	if(wait){
-        		try {
-                    matches =this.getMatchesFuture(start+count).get();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                    //interrupted...make empty list?
-                    matches = Collections.emptyList();
-                }
-            }else{
-        		matches = getMatches();
-        	}
-        	
-        	//Question:
-        	// Does this ever cause a problem if we're searching for
-        	// something that starts beyond where we've gotten to?
-        	// Like if we try to page before getting all results?
-        	
-        	//Answer: 
-        	// not anymore. Use "wait" if that's a problem.
-        	
-        	if (start >= matches.size()) {
-                return 0;
-            }
-
-            Iterator it = matches.listIterator(start);
-
-            int i = 0;
-            for (; i < count && it.hasNext(); ++i) {
-                list.add(it.next());
-            }
-            
-            return i;
-        	
-        }
-        /**
-         * Copies from the search results to the specified list
-         * with specified offset (for the master results), and
-         * total count of records to be copied.
-         * 
-         * Note: It may be that the search is still running, 
-         * and haven't fully returned yet. In that case, this 
-         * method will not wait for the results, but will return
-         * immediately with any records that are ready so far.
-         * 
-         * To have a blocking search which waits for the "correct"
-         * answer, use: <pre>copyTo(list,start,count, true)</pre>
-         *
-         * 
-         * @param list 
-         * 	Destination list to copy into
-         * @param start
-         * 	Offset starting location from master list
-         * @param count
-         * 	Total number of records to be copied
-         * @return
-         */
-        // fill the given list with value starting at start up to start+count
-        public int copyTo (List list, int start, int count) {
-            return copyTo (list,start,count,false);
-        }
-        /**
-         * Get the result of {@link #getMatches()}}
-         * as a Future which runs in a background thread
-         * and will block the call to Future#get() until
-         * at the list is fully populated.
-         *
-         * @return a Future will never be null.
-         */
-        public Future<List> getMatchesFuture(){
-            SearchResultFuture future= new SearchResultFuture(this);
-           // new Thread(future).start();
-            ForkJoinPool.commonPool().submit(future);
-            return future;
-        }
-
-        /**
-         * Get the result of {@link #getMatches()}}
-         * as a Future which runs in a background thread
-         * and will block the call to Future#get() until
-         * at least numberOfRecords is fetched.
-         * @param numberOfRecords the minimum number of records (or the list is done populating)
-         *                        in the List to wait to get populated
-         *                        before Future#get() unblocks.
-         * @return a Future will never be null.
-         */
-        public Future<List> getMatchesFuture(int numberOfRecords){
-        	SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
-            ForkJoinPool.commonPool().submit(future);
-           // new Thread(future).start();
-            return future;
-        }
-
-        /**
-         * Get the result of {@link #getMatches()}}
-         * as a Future which runs in a background thread
-         * and will block the call to Future#get() until
-         * at least numberOfRecords is fetched.
-         * @param numberOfRecords the minimum number of records (or the list is done populating)
-         *                        in the List to wait to get populated
-         *                        before Future#get() unblocks.
-         *
-         * @param executorService the ExecutorService to submit the Future to.
-         * @return a Future will never be null.
-         */
-        public Future<List> getMatchesFuture(int numberOfRecords, ExecutorService executorService){
-        	SearchResultFuture future= new SearchResultFuture(this, numberOfRecords);
-            executorService.submit(future);
-            return future;
-        }
-        
-        public List getMatches () {
-        	if (result != null) return result;
-            boolean finished=finished();
-            
-            List list = matches;
-            
-            
-            if (finished) {
-            	if(idComparator!=null){
-            		System.out.println("Sorting...");
-            		if(list instanceof FutureList){
-            			((FutureList) list).sortByNames(idComparator);
-            		}else{
-            			//This may take a long time in certain cases
-	            		Collections.sort(list,(o1,o2)->{
-	            			String id1 = EntityUtils.getIdForBeanAsString(o1);
-	    	                String id2 = EntityUtils.getIdForBeanAsString(o2);
-	    	                return idComparator.compare(id1, id2);
-	            		});
-            		}
-            		System.out.println("Done sorting...");
-            	}
-                result = list;
-            }
-            
-            return list;
-        }
-        public boolean isEmpty () { return matches.isEmpty(); }
-        public int count () { return count; }
-        public long getTimestamp () { return timestamp; }
-        public long elapsed () { return stop.get() - timestamp; }
-        public long getStopTime () { return stop.get(); }
-        public boolean finished () { return stop.get() >= timestamp; }
-        
-        public SearchContextAnalyzer getSearchContextAnalyzer(){
-            return searchAnalyzer;
-        }
-        protected void addNamedCallable (NamedCallable c) {
-        	matches.addCallable(c);
-        	processAddition(c);
-        }
-        
-        protected void add (Object obj) {
-        	matches.add(obj);
-        	processAddition(()->obj);
-        }
-        
-        private void processAddition(NamedCallable o){
-        	notifyAdd(o);
-        	if(searchAnalyzer!=null && query!=null && query.length()>0){
-            	if(searchAnalyzer.isEnabled()){
-            		try {
-						searchAnalyzer.updateFieldQueryFacets(o.call(), query);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-            	}
-            }
-        }
-
-        private void notifyAdd(Object o){
-
-            notifyListeners(l-> l.added(o));
-
-        }
-        
-        
-        protected void done () {
-            stop.set(TimeUtil.getCurrentTimeMillis());
-            notifyListeners(l -> l.searchIsDone());
-
-        }
-
-        /**
-         * Notify all listeners that haven't yet been
-         * GC'ed by performing the given consumer
-         * on each one.
-         *
-         * @param consumer the Consumer function to perform
-         *                 on each listener; can not be null.
-         *
-         * @throws NullPointerException if consumer is null.
-         */
-        private void notifyListeners(Consumer<SearchResultDoneListener> consumer){
-        	synchronized(listeners){
-	            Iterator<SoftReference<SearchResultDoneListener>> iter = listeners.iterator();
-	            while(iter.hasNext()){
-	                SearchResultDoneListener l = iter.next().get();
-	                //if object pointed to by soft reference
-	                //has been GC'ed then it is null
-	                if(l ==null){
-	                    iter.remove();
-	                }else{
-	                   consumer.accept(l);
-	                }
-	
-	            }
-        	}
-        }
-    }
-
-    public interface SearchResultDoneListener{
-    	void searchIsDone();
-        void added(Object o);
     }
     
     class SuggestLookup implements Closeable{
@@ -1088,44 +681,6 @@ public class TextIndexer implements Closeable{
         }
     }
     
-    public interface SearchContextAnalyzerGenerator{
-    	SearchContextAnalyzer create();
-    }
-    public static class DefaultSearchContextAnalyzerGenerator implements SearchContextAnalyzerGenerator{
-
-    	Class<?> entityCls;
-		Class<?> analyzerCls;
-		Map params;
-		
-    	public DefaultSearchContextAnalyzerGenerator(Class<?> entityCls, Class<?> analyzerCls, Map with){
-    		this.entityCls=entityCls;
-    		this.analyzerCls=analyzerCls;
-    		this.params=with;
-    		
-    	}
-		@Override
-		public SearchContextAnalyzer create() {
-			SearchContextAnalyzer analyzer=null;
-			if(params!=null){
-				try{
-					Constructor c=analyzerCls.getConstructor(Map.class);
-					analyzer= (SearchContextAnalyzer) c.newInstance(params);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-			if(analyzer==null){
-				try {
-					analyzer = (SearchContextAnalyzer) analyzerCls.newInstance();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			return analyzer;
-		}
-    	
-    }
-    
     public static void registerDefaultAnalyzers(){
     	List<Object> ls= Play.application().configuration().getList("ix.core.searchanalyzers",null);
     	if(ls!=null){
@@ -1156,11 +711,9 @@ public class TextIndexer implements Closeable{
 
     public static TextIndexer getInstance (File baseDir) throws IOException {
 
-    System.out.println("getInstance");
         return indexers.computeIfAbsent(baseDir, dir ->{
-            System.out.println("gettingInstance() new for " + dir.getName());
             try{
-               return new TextIndexer (dir);
+                return new TextIndexer (dir);
             }catch(IOException ex){
                 ex.printStackTrace();
                 return null;
@@ -1266,9 +819,10 @@ public class TextIndexer implements Closeable{
         scheduler.scheduleWithFixedDelay
             (flushDaemon, 10, 35, TimeUnit.SECONDS);
     }
+    
+    
     @FunctionalInterface
     interface SearcherFunction<R> {
-
         R apply(IndexSearcher indexSearcher) throws IOException;
     }
 
@@ -2041,7 +1595,6 @@ public class TextIndexer implements Closeable{
     public void remove (Object entity) throws Exception {
         Class cls = entity.getClass();
         if (cls.isAnnotationPresent(Entity.class)) {
-            Field[] fields = cls.getDeclaredFields();
             Object id = EntityUtils.getId(entity);
             if (id != null) {
                 String field = entity.getClass().getName()+".id";
@@ -2054,8 +1607,7 @@ public class TextIndexer implements Closeable{
                       (new Term (FIELD_KIND, entity.getClass().getName())),
                       BooleanClause.Occur.MUST);
                 indexWriter.deleteDocuments(q); 
-            }
-            else {
+            }else {
                 Logger.warn("Entity "+cls+"'s Id field is null!");
             }
         }

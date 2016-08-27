@@ -322,6 +322,7 @@ public class Util {
     
     //only here for testing purposes
     public static void debugSpin(int milliseconds) {
+    	if(Play.isProd())return;
         long sleepTime = milliseconds*1000000L; // convert to nanoseconds
         long startTime = System.nanoTime();
         while ((System.nanoTime() - startTime) < sleepTime) {}
@@ -386,4 +387,34 @@ public class Util {
 
         });
     }
+
+	public static String randvar (int size) {
+	    Random rand = new Random ();
+	    char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+	                    'l','m','n','o','p','q','r','s','t','u','v',
+	                    'x','y','z'};
+	    StringBuilder sb = new StringBuilder ();
+	    for (int i = 0; i < size; ++i)
+	        sb.append(alpha[rand.nextInt(alpha.length)]);
+	    return sb.toString();
+	}
+
+	public static String hashvar (int size, Object o) {
+	    char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+	                    'l','m','n','o','p','q','r','s','t','u','v',
+	                    'x','y','z'};
+	    
+	    StringBuilder sb = new StringBuilder ();
+	    int ohash=o.hashCode();
+	    for (int i = 0; i < size; ++i){
+	            int p=Math.abs((ohash%alpha.length));
+	        sb.append(alpha[p]);
+	        ohash+=(ohash+"").toString().hashCode();
+	    }
+	    return sb.toString();
+	}
+
+	public static String randvar () {
+	    return randvar (5);
+	}
 }
