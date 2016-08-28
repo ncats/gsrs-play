@@ -425,4 +425,13 @@ public class Util {
     		return idv;
     	}
 	}
+	
+	public static interface IndexAndItemProcessor<K>{
+		public void process(int i, K o);
+	}
+	
+	public static <K> void forEachIndex(Iterable<K> it, IndexAndItemProcessor<K> process){
+		int[] idx = { 0 };
+		it.forEach(k -> process.process(idx[0]++, k));
+	}
 }

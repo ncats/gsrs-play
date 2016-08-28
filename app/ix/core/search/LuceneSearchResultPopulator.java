@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
 import ix.utils.Util;
@@ -51,10 +52,12 @@ class LuceneSearchResultPopulator {
 			if (Thread.interrupted()) {
 				throw new InterruptedException();
 			}
+			
 			Document doc = searcher.doc(hits.scoreDocs[i + offset].doc);
 			try {
 				String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
 				Object id = Util.getNativeID(doc.getField(kind + "._id").stringValue());
+				
 				result.addNamedCallable(new EntityFetcher(kind, id, options.expand));
 			} catch (Exception e) {
 				e.printStackTrace();

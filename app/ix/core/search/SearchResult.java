@@ -316,7 +316,7 @@ public class SearchResult {
     	if(searchAnalyzer!=null && query!=null && query.length()>0){
         	if(searchAnalyzer.isEnabled()){
         		try {
-					searchAnalyzer.updateFieldQueryFacets(o.call(), query);
+					searchAnalyzer.addWithQuery(o.call(), query);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -1149,8 +1149,7 @@ public class TextIndexer implements Closeable{
                         (taxon, facetsConfig, fc);
                 }
                 
-                List<FacetResult> facetResults =
-                    facets.getAllDims(options.fdim);
+                List<FacetResult> facetResults = facets.getAllDims(options.fdim);
                 if (DEBUG (1)) {
                     Logger.info("## Drilled "
                                 +(options.sideway ? "sideway" : "down")
@@ -1226,8 +1225,8 @@ public class TextIndexer implements Closeable{
         }
 
         try {
-            LuceneSearchResultPopulator payload = new LuceneSearchResultPopulator
-                (searchResult, hits, searcher);
+            LuceneSearchResultPopulator payload = 
+            		new LuceneSearchResultPopulator(searchResult, hits, searcher);
             if (options.fetch <= 0) {
                 payload.fetch();
             }else {
@@ -1266,8 +1265,7 @@ public class TextIndexer implements Closeable{
                     searchResult.done();
                 }
             }
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
             ex.printStackTrace();
             Logger.trace("Can't queue fetch results!", ex);
         }
@@ -2250,10 +2248,6 @@ public class TextIndexer implements Closeable{
          */
         INSTANCE;
 
-        @Override
-        public void updateFieldQueryFacets(Object o, String q) {
-
-        }
 
         @Override
         public List<FieldFacet> getFieldFacets() {
@@ -2263,6 +2257,11 @@ public class TextIndexer implements Closeable{
 		@Override
 		public boolean isEnabled() {
 			return false;
+		}
+
+		@Override
+		public void addWithQuery(Object o, String q) {
+			
 		}
     }
 }
