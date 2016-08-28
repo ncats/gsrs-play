@@ -133,34 +133,34 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 		int i = term.indexOf(q);
 
 		if (i < 0){
-//			System.out.println("\"" + term + "\" doesn't match \"" + q + "\"");
 			return MATCH_TYPE.NO_MATCH;
 		}
 		
 		if (i == 0) {
-			if (term.charAt(i + q.length()) == ' ')
+			if (term.charAt(i + q.length()) == ' '){
 				return MATCH_TYPE.WORD;
+			}
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
 		
 		
 		//ends the value
 		if (term.length() == i + q.length()) {
-			//System.out.println(tterm + " -> " + q);
-			if (term.charAt(i-1) == ' ')
+			if (term.charAt(i-1) == ' '){
 				return MATCH_TYPE.WORD;
+			}
 		}
 		
 		
 		if (term.charAt(i - 1) == ' '){
-			if(term.charAt(i + q.length()) == ' ')
+			if(term.charAt(i + q.length()) == ' '){
 				return MATCH_TYPE.WORD;
+			}
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
 		return MATCH_TYPE.CONTAINS;
 	}
 
-	
 	
 	public static boolean ignoreField(String field){
 		if(field.contains("._"))return true;
