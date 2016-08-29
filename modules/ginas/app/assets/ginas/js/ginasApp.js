@@ -250,6 +250,7 @@
                     });
                 }
             }
+            console.log(sub);
             return sub;
         };
 
@@ -368,6 +369,28 @@
         };
         return editSubstance;
     }]);
+
+    ginasApp.service('typeaheadService', function ($http) {
+        var url = baseurl + "api/v1/suggest?q=";
+        var suggest = {
+            search: function (query) {
+                var promise = $http.get(url + query, {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+
+
+                    ///TODO sort by weight///
+                    //TODO search multiple field types//
+                }).then(function (response) {
+                    console.log(response);
+                    return response.data.Name;
+                });
+                return promise;
+            }
+        };
+        return suggest;
+    });
 
     ginasApp.service('substanceRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances/search?q=";
@@ -497,13 +520,17 @@
 
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
-                                                     spinnerService) {
+                                                     spinnerService, typeaheadService) {
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
         $scope.validating = false;
         $scope.submitting = false;
+        $scope.searchLimit = "global";
+        $scope.loadingSuggest = false;
+        $scope.noResults = false;
 
         $window.SDFFields = {};
+
 
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
@@ -511,15 +538,36 @@
             return r;
         };
 
-        $scope.printr = function(r){
-            console.log(r);
-        }
-	
-        $scope.submitq= function(qinput) {
-            if ($scope.q.indexOf("\"") < 0 && $scope.q.indexOf("*") < 0 && $scope.q.indexOf(":") < 0 && $scope.q.indexOf(" AND ") < 0 && $scope.q.indexOf(" OR ") < 0) {
-                $scope.q = "\"" + $scope.q + "\"";
+        $scope.getSuggestions = function(query){
+            var ret = typeaheadService.search(query);
+           return ret;
+        };
+
+        $scope.submitq= function(query, action) {
+            console.log($scope.searchLimit);
+            if (query.indexOf("\"") < 0 && query.indexOf("*") < 0 && query.indexOf(":") < 0 && query.indexOf(" AND ") < 0 && query.indexOf(" OR ") < 0) {
+                $scope.q = "\"" + query + "\"";
+            }else{
+                $scope.q = query;
             }
-            return true;
+            switch ($scope.searchLimit){
+                case "global":
+                break;
+                case "names":
+                    $scope.q ='root_names_name=' + $scope.q;
+                break;
+                case "codes":
+                    $scope.q ='root_codes_code=' + $scope.q;
+                break;
+            }
+
+            //Todo: this only works on the homepage//
+            console.log($location);
+            console.log($window.location);
+            console.log(baseurl);
+            var search = "q="+$scope.q;
+            $window.location = $window.location.origin + baseurl +"substances?"+ search;
+        //    $window.location.search = "q="+$scope.q;
         };
 
         if (typeof $window.loadjson !== "undefined" &&
@@ -752,9 +800,11 @@
 
 
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
+            console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
 	    function success(response) {
+            console.log(response);
                 $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                 $scope.canSubmit = $scope.noErrors();
@@ -811,11 +861,13 @@
                 });
             } else {
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
+                console.log(sub);
                 $http.post(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 }).then(function (response) {
+                    console.log(response);
                     $scope.updateNav = false;
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";

@@ -25,167 +25,89 @@
             <ul class="nav navbar-nav pull-left" id = "left-menu">
                 <li ng-class="getClass('substances')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
                 @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li ng-class="getClass('register')"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
+                    <li ng-class="getClass('register')"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>
+                        Register Substance</span></a></li>
                 }
                 <li ng-class="getClass('structure')"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
                 <li ng-class="getClass('sequence')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.sequenceSearch" ng-click="clearStructure()" target="_self"><span>Sequence Search</span></a></li>
                 @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li ng-class="getClass('sequence')"><a ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">Admin</a></li>
+                    <li ng-class="getClass('sequence')"><a ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">
+                        Admin</a></li>
                 }
-                <li id = "search-bar">
-                <form class="form-inline main-search" role="search" method="GET"
-                action="@ix.ginas.controllers.routes.GinasApp.substances(null)" ng-submit = "submitq()">
-                <div class="input-group">
-                <input type="text" class="form-control typeahead" id="search" aria-label="Search G-SRS" title="Search" placeholder="Search ..." ng-model = "q" name="q">
-                <span class="input-group-btn">
-                <button class="btn btn-default"  alt="Search" id="search" uib-tooltip="Search G-SRS" tooltip-placement="bottom" type="search" aria-label="Search"
-                value="submit">
-                <span class="sr-only">Search ginas</span>
-                <span class="fa fa-search"></span>
-                </button>
-                </span>
-                </div>
-                </form>
+                <li >
+                    <form class="form-inline main-search" role="search">
+                        <div class="input-group" id = "search-bar">
+                            <input type="text"
+                            class="form-control"
+                            id="search"
+                            aria-label="Search G-SRS"
+                            title="Search"
+                            placeholder="Search ..."
+                            ng-model = "query"
+                            typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
+                            uib-typeahead="r.key as r.key for r in getSuggestions($viewValue)"
+                            typeahead-loading="loadingSuggest"
+                            typeahead-no-results="noResults"
+                            autocomplete="off">
+                            <span class="input-group-btn">
+                                <div class="btn-group" uib-dropdown>
+                                    <button id="split-button" class="btn btn-default"
+                                    type="search"
+                                    aria-label="Search"
+                                    ng-click = "submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">
+                                        <span class="sr-only">Search G-SRS</span>
+                                        <span class="fa fa-search"></span></button>
+                                    <button type="button" class="btn btn-default" uib-dropdown-toggle>
+                                        <span class="caret"></span>
+                                        <span class="sr-only">Restrict Search</span>
+                                    </button>
+                                    <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
+                                        <li role ="menuitem">
+                                            <a type="search" aria-label="Search" ng-click = "submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Global Search</a>
+                                        </li>
+                                        <li role ="menuitem">
+                                            <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'names'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Names <span class="fa fa-search"></span></a>
+                                        </li>
+                                        <li role ="menuitem">
+                                            <a type="search" ng-class="{disabled: !query}" aria-label="Search" ng-click = "searchLimit = 'codes'; submitq(query, '@ix.ginas.controllers.routes.GinasApp.substances(null)')">Restrict to Codes <span class="fa fa-search"></span></a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                @*<button class="btn btn-default" alt="Search" id="search" uib-tooltip="Search G-SRS" tooltip-placement="bottom" type="search" aria-label="Search" value="submit">
+                                <span class="sr-only">Search ginas</span>
+                                <span class="fa fa-search"></span>
+                                </button>*@
+                            </span>
+                        </div>
+                        <div ng-cloak ="" ng-show="loadingSuggest">
+                        <i class="fa fa-refresh"></i>
+                        </div>
+                        <div ng-cloak ="" ng-show="noResults">
+                            <span class="danger" ng-click ="query =null; noResults= !noResults "><i class="fa fa-times"></i> No Results Found</span>
+                        </div>
+                    </form>
                 </li>
             </ul>
 
             <ul class="nav navbar-nav pull-right" id="right-menu">
-              @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
                         <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile" id ="profile-button" target="_self"><button class="btn btn-default"><i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</button></a>
                     </li>
 
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">Logout</button></a></li>
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">
+                        Logout</button></a></li>
                 }
 
                 @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
-                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a>
+                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">
+                            Login</button></a>
                     </li>
                 }
             </ul>
         </div>
             <!--/.nav-collapse -->
     </div>
-    @ix.ncats.views.html.typeahead(Array("Name", "Substance_Class"))
 </nav>
 
-
-
-@*<div class="container-fluid" id="logo-banner">
-    <div class="row-fluid" id="main-banner">
-        <div class="col-md-2">
-            <a href ="http://tripod.nih.gov/ginas/">
-                <img class="img-responsive" id="logo" alt = "ginas logo image" height="50" src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" />
-            </a>
-        </div>
-        <div class="col-md-2 hidden-xs hidden-sm" id="version">
-            <code uib-tooltip="Built on @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)"
-            data-placement="bottom"><small>version 1.1 beta</small></code>
-        </div>
-        <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
-            <ul class="nav navbar-nav pull-right"><li>
-                <form class="form-inline main-search" role="search" method="GET"
-                action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id = "search-bar"
-                onsubmit="return submitq(this.q)">
-                    <div class="input-group">
-                        <input type="text" class="form-control typeahead" id="search" uib-tooltip="Search ginas" aria-label="Search ginas"
-                        title="Search" placeholder="Search ..." name="q">
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" alt="Search" id="search" type="search" aria-label="Search"
-                            value="submit">
-                                <span class="sr-only">Search ginas</span>
-                                <span class="fa fa-search"></span>
-                            </button>
-                        </span>
-                    </div>
-                </form>
-            </li></ul>
-        </div>
-    </div>*@
-
-@*
-
-<nav class="navbar navbar-default" >
-    <div class="container-fluid" id = "gsrs-menu">
-        <div class="navbar-header">
-
-            <button type="button" class="navbar-toggle collapsed"
-            data-toggle="collapse" data-target="#menubar">
-                <span class="sr-only">Toggle Navigation</span> <i class="fa fa-bars"
-            id="menuicon"></i>
-            </button>
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#searchbarmobile" aria-expanded="false"> <span class="sr-only">Toggle Search</span><i class="fa fa-search"></i>
-            </button>
-            
-        </div>
-
-        <div class="collapse navbar-collapse navbar-default" id="menubar">
-            <ul class="nav navbar-nav pull-left">
-                <li><a  href="#">
-                    <img alt="Brand" src="@routes.Assets.at("ginas/images/gsrs-logo.svg")">
-                </a></li>
-              <li><a class="navbar-brand" href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home"><span class="sr-only">Return Home</span><span><img class="img-responsive" id="logo" alt = "ginas logo image" height="50" src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" /></span></a></li>
-              <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
-              @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                  <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
-              }
-              *@
-@*<li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>*@@*
-
-	      *@
-@**
-              <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button"><i class="fa fa-bug"></i> Report a Bug</a></li>
-	      **@@*
-
-                <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
-                <li><a ng-href="@ix.ginas.controllers.routes.GinasApp.sequenceSearch" ng-click="clearStructure()" target="_self"><span>Sequence Search</span></a></li>
-               
-            </ul>
-            <div class="nav navbar-nav pull-right" id ="menu-login">
-                <ul class="nav navbar-nav pull-right">
-                    @dynamic(name = IxDynamicResourceHandler.IS_USER_PRESENT, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                        <li>
-                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/profile" id ="profile-button" target="_self"><button class="btn btn-default"><i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</button></a>
-                        </li>
-                    }
-                    @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self"><button class="btn btn-default">Admin</button></a></li>
-                }
-                @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a></li>
-                }{
-                   <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="logout-button" target="_self"><button class="btn btn-default">
-                        Logout</button></a></li>
-                }
-                </ul>
-
-            </div>
-        </div>
-        <div class="hidden-sm hidden-md hidden-lg">
-            <div class="navbar-collapse collapse" id="searchbarmobile" aria-expanded="false">
-                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch"
-                onsubmit="return validateForm(this.fname.value)">
-                    <div class="input-group">
-                            <input type="text" class="form-control typeahead" id="searchboxmobile"
-                            title="Search" placeholder="Search ..." name="q" aria-label="Search ginas"
-                            onsubmit="return submitq(this.q)">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" id="search" type="search" aria-label="Search ginas"
-                                value="submit">
-                                    <span class="sr-only">Search ginas</span>
-                                    <span class="fa fa-search"></span>
-                                </button>
-                            </span>
-                        </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    @ix.ncats.views.html.typeahead(Array("Name", "Substance_Class"))
-*@
-@*    @screenshot()
-    @report()*@@*
-
-</nav>
-*@
