@@ -49,12 +49,13 @@ import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
+import ix.core.search.SearchOptions.TermFilter;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
-import ix.core.search.TextIndexer;
-import ix.core.search.TextIndexer.FV;
-import ix.core.search.TextIndexer.Facet;
+import ix.core.search.text.TextIndexer;
+import ix.core.search.text.TextIndexer.FV;
+import ix.core.search.text.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -732,8 +733,7 @@ public class GinasApp extends App {
              (500, "Unable to perform squence search!"));
     }
 
-    public static void instrumentSubstanceSearchOptions
-        (SearchOptions options) {
+    public static void instrumentSubstanceSearchOptions(SearchOptions options, Map<String, String[]> params) {
         SearchOptions.FacetLongRange editedRange =
             new SearchOptions.FacetLongRange ("modified");
         SearchOptions.FacetLongRange approvedRange =
@@ -793,53 +793,51 @@ public class GinasApp extends App {
 
         options.longRangeFacets.add(editedRange);
         options.longRangeFacets.add(approvedRange);
+        
+        if(params!=null){
+        	String[] dep =params.get("showDeprecated");
+        	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
+        		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
+        	}
+        }
     }
 
-    public static List<Facet> getSubstanceFacets (int fdim) throws IOException {
+    public static List<Facet> getSubstanceFacets (int fdim, Map<String, String[]> map) throws IOException {
         SearchOptions options = new SearchOptions (Substance.class);
         options.fdim = fdim;
-        instrumentSubstanceSearchOptions (options);
+        instrumentSubstanceSearchOptions (options, map);
         return getTextIndexer().search(options, null, null).getFacets();
     }
 
-    public static SearchResult getSubstanceSearchResult
-        (final String q, final int total, String qcache) {
-        final Map<String, String[]> params = App.getRequestQuery(); 
-        
-        
+    public static SearchResult getSubstanceSearchResult(final String q, final int total) {
+        final Map<String, String[]> params = App.getRequestQuery();
         
         final String sha1 = App.getKeyForCurrentRequest();
         String[] order = params.get("order");
+        
         if(order==null || order.length<=0){
         	order=new String[]{"$lastEdited"};
         	params.put("order", order);
         }
+        
         try {
             long start = System.currentTimeMillis();
-            SearchResult result = getOrElse
-                (sha1, new Callable<SearchResult>() {
-                        public SearchResult call () throws Exception {
-                        	
-                            SearchOptions options = new SearchOptions
-                            (Substance.class, total, 0, FACET_DIM);
-                            options.parse(params);
-                            instrumentSubstanceSearchOptions (options);
-                            SearchResult result = getTextIndexer().search
-                            (options, q, null);
-                            return cacheKey (result, sha1);
-                        }
+            SearchResult result = getOrElse(sha1, ()->{
+                            SearchOptions options = 
+                            		new SearchOptions(Substance.class, total, 0, FACET_DIM)
+                            			 .parse(params);
+                            instrumentSubstanceSearchOptions (options, params);
+                            return cacheKey(getTextIndexer().search(options, q), sha1);
                     });
-            Logger.debug(sha1+" => "+result);
+            Logger.debug(sha1 + " => " + result);
             
             double elapsed = (System.currentTimeMillis() - start)*1e-3;
             Logger.debug(String.format("Elapsed %1$.3fs to retrieve "
-                                       +"search %2$d/%3$d results...",
+                                     + "search %2$d/%3$d results...",
                                        elapsed, result.size(),
                                        result.count()));
             return result;
-        }
-        catch (Exception ex) {
-        	
+        }catch (Exception ex) {
             ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
@@ -869,59 +867,34 @@ public class GinasApp extends App {
         final String[] searchFacets = facets;
         
         //Special piece to show deprecated records
-        String showDeprecated = request().getQueryString("showDeprecated");
-        String oq=q;
-        if(showDeprecated==null){
-        	if(q!=null){
-        		q=q + " AND SubstanceDeprecated:false";
-        	}else{
-        		q="SubstanceDeprecated:false";
-        	}
-        }
-        
-       
-        
-        
+        boolean forceq = (request().getQueryString("showDeprecated")==null);
         
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if ( q != null || request().queryString().containsKey("facet")) {
-            final SearchResult result =
-                getSubstanceSearchResult (q, total, oq);
+        if (forceq || q != null || request().queryString().containsKey("facet")) {
+            final SearchResult result = getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
             if (result.finished()) {
                 final String k = key + "/result"; 
-                return getOrElse(k, new Callable<Result>() {
-                        public Result call() throws Exception {
-                                Logger.debug("Cache missed: " + k);
-                            return createSubstanceResult(result, rows, page, facets);
-                        }
-                    });
+                return getOrElse(k, ()->createSubstanceResult(result, rows, page, facets));
             }
             return createSubstanceResult(result, rows, page,facets);
-                        
             //otherwise, just show the first substances
         } else {
-            return getOrElse(key, new Callable<Result>() {
-                    public Result call() throws Exception {
+            return getOrElse(key, () -> {
                         Logger.debug("Cache missed: " + key);
-                        TextIndexer.Facet[] facets = filter
-                            (getSubstanceFacets (30), ALL_FACETS);
-                        int nrows = Math.max(Math.min
-                                             (total, Math.max(1, rows)), 1);
+                        TextIndexer.Facet[] ffacets = 
+                        		filter(getSubstanceFacets (30,request().queryString()), ALL_FACETS);
+                        int nrows   = Math.max(Math.min(total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
 
-                        List<Substance> substances = SubstanceFactory
-                            .getSubstances(nrows, (page - 1) * rows, null);
-                        
-                        
-                        Status s= ok(ix.ginas.views.html.substances.render
-                                  (page, nrows, total, pages, decorate(facets),
+                        List<Substance> substances = 
+                        		SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
+                        return ok(ix.ginas.views.html.substances.render(page, nrows, total, pages, 
+                                		  decorate(ffacets),
                                    substances, null));
-                        return s;
-                    }
                 });
         }
     }

@@ -1,12 +1,14 @@
-package ix.core.search;
+package ix.core.search.text;
 
 import java.io.IOException;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 
+import ix.core.search.EntityFetcher;
+import ix.core.search.SearchOptions;
+import ix.core.search.SearchResult;
 import ix.utils.Util;
 import play.Logger;
 
@@ -32,9 +34,9 @@ class LuceneSearchResultPopulator {
 		this.result = result;
 		this.hits = hits;
 		this.searcher = searcher;
-		this.options = result.options;
-		result.count = hits.totalHits;
-		total  = Math.max(0, Math.min(options.max(), result.count));
+		this.options = result.getOptions();
+		result.setCount(hits.totalHits);
+		total  = Math.max(0, Math.min(options.max(), result.getCount()));
 		offset = Math.min(options.skip, total);
 	}
 
@@ -48,6 +50,7 @@ class LuceneSearchResultPopulator {
 
 	void fetch(int size) throws IOException, InterruptedException {
 		size = Math.min(options.top, Math.min(total - offset, size));
+		
 		for (int i = result.size(); i < size; ++i) {
 			if (Thread.interrupted()) {
 				throw new InterruptedException();

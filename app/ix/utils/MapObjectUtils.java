@@ -1,4 +1,4 @@
-package ix.core.search;
+package ix.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;

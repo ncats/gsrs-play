@@ -33,16 +33,16 @@ import akka.routing.SmallestMailboxRouter;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import ix.core.search.TextIndexer;
+
 import java.sql.Connection;
 
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Global;
 import ix.utils.Util;
-
-import static ix.core.search.TextIndexer.*;
 import tripod.chem.indexer.StructureIndexer;
+
+import static ix.core.search.text.TextIndexer.*;
 import static tripod.chem.indexer.StructureIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
@@ -65,6 +65,7 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
+import ix.core.search.text.TextIndexer;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;

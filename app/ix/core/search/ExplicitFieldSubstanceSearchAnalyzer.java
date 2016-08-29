@@ -1,6 +1,10 @@
 package ix.core.search;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import ix.ginas.models.v1.Substance;
@@ -27,36 +31,38 @@ public class ExplicitFieldSubstanceSearchAnalyzer extends FieldBasedSearchAnalyz
 			}
 		}   
 	}
-	public Map<String,String> flattenObject(Substance o){
+	public Collection<KVPair> flattenObject(Substance o){
 		//if(true)return MapObjectUtils.flatten(MapObjectUtils.ObjectToMap(o));
 		
-		final Map<String,String> m2 = new TreeMap<String,String>();		
+		final List<KVPair> m2 = new ArrayList<KVPair>();		
+		
+		m2.add(KVPair.make("approvalID", o.approvalID));
 		
 		Util.forEachIndex(o.names,(i,n)->{
-			m2.put("names[" + i + "].name", n.name);
+			m2.add(KVPair.make("names.name", n.name));
 		});
 		
-		Util.forEachIndex(o.codes,(i,n)->{
-			m2.put( "codes[" + i + "].code", n.code);
-			m2.put( "codes[" + i + "].codeSystem", n.codeSystem);
-			m2.put( "codes[" + i + "].comments", n.comments);
+		Util.forEachIndex(o.codes,(i,c)->{
+			m2.add(KVPair.make("codes.code", c.code));
+			m2.add(KVPair.make("codes.codeSystem", c.codeSystem));
+			m2.add(KVPair.make("codes.comments", c.comments));
 		});
 		
-		Util.forEachIndex(o.references,(i,n)->{
-			m2.put( "references[" + i + "].citation", n.citation);
-			m2.put( "references[" + i + "].docType", n.docType);
+		Util.forEachIndex(o.references,(i,ref)->{
+			m2.add(KVPair.make( "references.citation", ref.citation));
+			m2.add(KVPair.make( "references.docType", ref.docType));
 		});
 		
-		Util.forEachIndex(o.relationships,(i,n)->{
-			m2.put( "relationships[" + i + "].qualification", n.qualification);
-			m2.put( "relationships[" + i + "].comments", n.comments);
-			m2.put( "relationships[" + i + "].interactionType", n.interactionType);
-			m2.put( "relationships[" + i + "].relatedSubstance.refPname", n.relatedSubstance.refPname);
-			m2.put( "relationships[" + i + "].relatedSubstance.approvalID", n.relatedSubstance.approvalID);
+		Util.forEachIndex(o.relationships,(i,r)->{
+			m2.add(KVPair.make("relationships.qualification", r.qualification));
+			m2.add(KVPair.make("relationships.comments", r.comments));
+			m2.add(KVPair.make("relationships.interactionType", r.interactionType));
+			m2.add(KVPair.make("relationships.relatedSubstance.refPname", r.relatedSubstance.refPname));
+			m2.add(KVPair.make("relationships.relatedSubstance.approvalID", r.relatedSubstance.approvalID));
 		});
 		
 		Util.forEachIndex(o.notes,(i,n)->{
-			m2.put( "notes[" + i + "].note", n.note);
+			m2.add(KVPair.make("notes.note", n.note));
 		});
 		
 		return m2;

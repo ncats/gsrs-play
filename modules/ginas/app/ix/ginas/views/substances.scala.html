@@ -23,14 +23,16 @@ current, rows, total, pages, facets, ctx) {
         
     <div class= "panel-body">
         <div class = "row in" ng-show="!gridView" id ="list">
+        @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
+
         @for(sub <- substancesList) {
         
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @list.chemlist(chem, ctx.getId)
+                    @list.chemlist(chem, ctxId)
                 }
                 case prot: ProteinSubstance => {
-                    @list.proteinlist(prot, ctx.getId)
+                    @list.proteinlist(prot, ctxId)
                 }
                 case nucl: NucleicAcidSubstance => {
                     @list.nucleicacidlist(nucl)
@@ -67,11 +69,10 @@ current, rows, total, pages, facets, ctx) {
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @thumbs.chemthumb(chem, ctx.getId)
+                    @thumbs.chemthumb(chem, ctxId)
                 }
                 case prot: ProteinSubstance => {
-                    @thumbs.proteinthumb(prot, ctx.getId)
-
+                    @thumbs.proteinthumb(prot, ctxId)
                 }
                 case nucl: NucleicAcidSubstance => {
                     @thumbs.nucleicacidthumb(nucl)
@@ -98,6 +99,7 @@ current, rows, total, pages, facets, ctx) {
             }
 
 
+        }
         }
         </div>
     </div>

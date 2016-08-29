@@ -71,7 +71,7 @@ import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.search.TextIndexer;
+import ix.core.search.text.TextIndexer;
 import ix.core.util.Java8Util;
 import ix.utils.EntityUtils;
 import ix.utils.Global;

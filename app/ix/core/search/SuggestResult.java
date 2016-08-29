@@ -5,12 +5,12 @@ public class SuggestResult {
     long weight=0;
     
     
-    SuggestResult (CharSequence key, CharSequence highlight) {
+    public SuggestResult (CharSequence key, CharSequence highlight) {
         this.key = key;
         this.highlight = highlight;
     }
     
-    SuggestResult (CharSequence key, CharSequence highlight, long weight) {
+    public SuggestResult (CharSequence key, CharSequence highlight, long weight) {
         this.key = key;
         this.highlight = highlight;
         this.weight=weight;

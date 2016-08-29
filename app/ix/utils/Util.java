@@ -14,18 +14,27 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.apache.lucene.index.IndexableField;
 
 import ix.core.util.TimeUtil;
 import play.Logger;
@@ -433,5 +442,15 @@ public class Util {
 	public static <K> void forEachIndex(Iterable<K> it, IndexAndItemProcessor<K> process){
 		int[] idx = { 0 };
 		it.forEach(k -> process.process(idx[0]++, k));
+	}
+	public static <K> Map<String,List<K>> groupToMap(Collection<K> s, Function<K,String> namer){
+		return groupToMap(s.stream(),namer);
+	}
+	public static <K> Map<String,List<K>> groupToMap(Stream<K> s, Function<K,String> namer){
+		Map<String, List<K>> groupedMap = new HashMap<String,List<K>>();
+		s.forEach(f->
+			groupedMap.computeIfAbsent(namer.apply(f), k->new ArrayList<K>()).add(f)
+			);
+		return groupedMap;
 	}
 }

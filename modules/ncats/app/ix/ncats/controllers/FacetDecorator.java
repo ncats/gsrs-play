@@ -1,6 +1,6 @@
 package ix.ncats.controllers;
 
-import ix.core.search.TextIndexer.Facet;
+import ix.core.search.text.TextIndexer.Facet;
 
 public class FacetDecorator {
     final public Facet facet;

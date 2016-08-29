@@ -18,7 +18,8 @@ import java.util.function.Consumer;
 import ix.core.CacheStrategy;
 import ix.core.search.FutureList.NamedCallable;
 import ix.core.search.FutureList.ObjectNamer;
-import ix.core.search.TextIndexer.Facet;
+import ix.core.search.text.TextIndexer;
+import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import play.Logger;
@@ -49,7 +50,7 @@ public class SearchResult {
 		}
 	});
     List result; // final result when there are no more updates
-    int count;
+    private int count;
     SearchOptions options;
     final long timestamp = TimeUtil.getCurrentTimeMillis();
     AtomicLong stop = new AtomicLong ();
@@ -60,15 +61,16 @@ public class SearchResult {
     
 
     
-    SearchResult (SearchOptions options, String query) {
+    public SearchResult (SearchOptions options, String query) {
         this.options = options;
         this.query = query;
         searchAnalyzer=TextIndexer.getDefaultSearchAnalyzerFor(this.options.kind);
     }
 
-    void setRank (final Map<String, Integer> idrank) {
+    public void setRank (final Map<String, Integer> idrank) {
     	System.out.println("Setting rank");
         Objects.requireNonNull(idrank);
+        
         idComparator = (id1,id2) ->{
             Integer r1 = idrank.get(id1), r2 = idrank.get(id2);
             if (r1 != null && r2 != null)
@@ -110,11 +112,11 @@ public class SearchResult {
     public SearchOptions getOptions () { return options; }
     public List<Facet> getFacets () { return facets; }
     public Facet getFacet (String name) {
-        for (Facet f : facets) {
-            if (name.equalsIgnoreCase(f.getName()))
-                return f;
-        }
-        return null;
+    	return facets.stream()
+    		.filter(n->n.getName().equalsIgnoreCase(name))
+    		.findAny()
+    		.orElse(null);
+    	
     }
     public int size () { return matches.size(); }
     public Object get (int index) {
@@ -292,7 +294,7 @@ public class SearchResult {
         return list;
     }
     public boolean isEmpty () { return matches.isEmpty(); }
-    public int count () { return count; }
+    public int count () { return getCount(); }
     public long getTimestamp () { return timestamp; }
     public long elapsed () { return stop.get() - timestamp; }
     public long getStopTime () { return stop.get(); }
@@ -301,7 +303,7 @@ public class SearchResult {
     public SearchAnalyzer getSearchContextAnalyzer(){
         return searchAnalyzer;
     }
-    protected void addNamedCallable (NamedCallable c) {
+    public void addNamedCallable (NamedCallable c) {
     	matches.addCallable(c);
     	processAddition(c);
     }
@@ -323,6 +325,7 @@ public class SearchResult {
         	}
         }
     }
+    
 
     private void notifyAdd(Object o){
 
@@ -331,9 +334,15 @@ public class SearchResult {
     }
     
     
-    protected void done () {
+    public void done () {
         stop.set(TimeUtil.getCurrentTimeMillis());
         notifyListeners(l -> l.searchIsDone());
+        
+        if(searchAnalyzer!=null && query!=null && query.length()>0){
+        	if(searchAnalyzer.isEnabled()){
+				searchAnalyzer.markDone();
+        	}
+        }
 
     }
 
@@ -363,4 +372,16 @@ public class SearchResult {
             }
     	}
     }
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public void addFacet(Facet f) {
+		this.facets.add(f);
+	}
 }

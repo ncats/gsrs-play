@@ -3,8 +3,8 @@ package ix.ncats.controllers;
 import java.util.List;
 
 import ix.core.search.SearchResultContext;
-import ix.core.search.TextIndexer;
-import ix.core.search.TextIndexer.Facet;
+import ix.core.search.text.TextIndexer;
+import ix.core.search.text.TextIndexer.Facet;
 import play.mvc.Result;
 
 /**

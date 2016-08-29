@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.lucene.store.AlreadyClosedException;
+
+import ix.core.search.text.TextIndexer;
 import play.Logger;
 import play.Play;
 import play.Plugin;
 import play.Application;
-
-import ix.core.search.TextIndexer;
 
 public class TextIndexerPlugin extends Plugin {
     private final Application app;

@@ -1,6 +1,7 @@
 package ix.core.search;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -17,6 +18,32 @@ import org.apache.lucene.search.Query;
 import ix.core.search.FieldFacet.MATCH_TYPE;
 
 public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
+	
+	public static interface KVPair{
+		public String getKey();
+		public String getValue();
+		public static KVPair make(String key, String val){
+			return new DefaultKVPair(key,val);
+		}
+	}
+	public static class DefaultKVPair implements KVPair{
+		String k;
+		String v;
+		public DefaultKVPair(String k, String v){
+			this.k=k;
+			this.v=v;
+		}
+		@Override
+		public String getKey() {
+			return k;
+		}
+
+		@Override
+		public String getValue() {
+			return v;
+		}
+		
+	}
 	private static final String NULL_FIELD = "{NULL}";
 	
 	Map<String, FieldFacet> ffacet = new HashMap<String, FieldFacet>();
@@ -27,6 +54,8 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 	protected int recordsToAnalyze=100;
 	protected boolean enabled=true;
 	protected int recordsAnalyzed=0;
+	
+	private boolean done=false;
 	
 	/**
 	 * Update statistics for FieldFacets, to be used for
@@ -41,14 +70,16 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 		if(qterms == null || qterms.size()<=0)return;
 		
 		try {
-			Map<String,String> m2 = flattenObject(o);
-			updateFieldQueryFacets(m2, qterms, ffacet);
+			updateFieldQueryFacets(
+					flattenObject(o), 
+					qterms, 
+					ffacet);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public abstract Map<String,String> flattenObject(K o);
+	public abstract Collection<KVPair> flattenObject(K o);
 	
 	private Set<Term> parseQuery(String q){
 		Set<Term> qterms=null;
@@ -84,7 +115,9 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 				.collect(Collectors.toSet());
 	}
 	
-	private static void updateFieldQueryFacets(Map<String,String> m2, 
+	
+	private static void updateFieldQueryFacets(
+			Collection<KVPair> m2, 
 			Set<Term> realterms,
 			Map<String, FieldFacet> ffacet) throws Exception {
 		
@@ -94,8 +127,11 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 		
 		Set<String> matchedFields = new HashSet<String>();
 		
-		m2.forEach((key,value)->{
-			String realkey = MapObjectUtils.simplifyKeyPath(key);
+		m2.forEach((ent)->{
+			String realkey = ent.getKey();
+			String value = ent.getValue();
+			
+			//String realkey = MapObjectUtils.simplifyKeyPath(key);
 			
 			if(ignoreField(realkey))return;
 			
@@ -106,17 +142,13 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 				if(match==MATCH_TYPE.NO_MATCH)continue;
 				if(match==MATCH_TYPE.CONTAINS)continue;
 				if(match==MATCH_TYPE.WORD_STARTS_WITH)continue;
+				String matchKey=realkey + match;
 				
-				
-				if (matchedFields.contains(realkey + match))continue;
-				
-				FieldFacet ff = ffacet.get(realkey + match);
-				if (ff == null) {
-					ff = new FieldFacet(realkey, q, match);
-					ffacet.put(realkey + match, ff);
-				}
-				ff.count++;
-				matchedFields.add(realkey + match);
+				//don't store duplicate analysis for same record
+				if (matchedFields.contains(matchKey))continue; 
+				FieldFacet ff = ffacet.computeIfAbsent(matchKey, k->new FieldFacet(realkey, q, match));
+				ff.increment();
+				matchedFields.add(matchKey);
 			}
 		});
 	}
@@ -142,16 +174,11 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 			}
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
-		
-		
-		//ends the value
 		if (term.length() == i + q.length()) {
 			if (term.charAt(i-1) == ' '){
 				return MATCH_TYPE.WORD;
 			}
 		}
-		
-		
 		if (term.charAt(i - 1) == ' '){
 			if(term.charAt(i + q.length()) == ' '){
 				return MATCH_TYPE.WORD;
@@ -173,4 +200,11 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 		return enabled && (recordsAnalyzed<recordsToAnalyze);
 	}
 
+	@Override
+	public void markDone() {
+		done=true;
+		ffacet.forEach((k,v)->{
+			v.markDone();
+		});
+	}
 }

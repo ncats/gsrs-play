@@ -16,7 +16,7 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SuggestResult;
-import ix.core.search.TextIndexer;
+import ix.core.search.text.TextIndexer;
 import ix.core.util.Java8Util;
 import ix.utils.Global;
 import ix.utils.Util;

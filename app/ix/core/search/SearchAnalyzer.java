@@ -10,4 +10,6 @@ public interface SearchAnalyzer<K> {
 		return true;	
 	}
 	
+	default void markDone(){};
+	
 }
