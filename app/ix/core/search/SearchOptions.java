@@ -1,14 +1,31 @@
 package ix.core.search;
 
-import play.Logger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.function.BiConsumer;
+
+import play.Logger;
 
 public class SearchOptions {
-    
+    public static class TermFilter{
+    	String field;
+    	String term;
+    	public TermFilter(String field, String term){
+    		this.field=field;
+    		this.term=term;
+    	}
+    	public String getField(){
+    		return this.field;
+    	}
+    	public String getTerm(){
+    		return this.term;
+    	}
+    }
     public static class FacetLongRange {
         public String field;
         public Map<String, long[]> range = new TreeMap<String, long[]>();
@@ -41,10 +58,10 @@ public class SearchOptions {
      * Facet is of the form: DIMENSION/VALUE...
      */
     public List<String> facets = new ArrayList<String>();
-    public List<FacetLongRange> longRangeFacets =
-        new ArrayList<FacetLongRange>();
+    public List<FacetLongRange> longRangeFacets =new ArrayList<FacetLongRange>();
     public List<String> order = new ArrayList<String>();
     public List<String> expand = new ArrayList<String>();
+    public List<TermFilter> termFilters = new ArrayList<TermFilter>();
 
     public SearchOptions () { }
     public SearchOptions (Class<?> kind) {
@@ -70,7 +87,7 @@ public class SearchOptions {
 
     public int max () { return skip+top; }
 
-    public void parse (Map<String, String[]> params) {
+    public SearchOptions parse (Map<String, String[]> params) {
         for (Map.Entry<String, String[]> me : params.entrySet()) {
             if ("facet".equalsIgnoreCase(me.getKey())) {
                 for (String s : me.getValue()){
@@ -145,8 +162,42 @@ public class SearchOptions {
                         Logger.error("Not a valid number: "+s);
                     }
                 }
+            }else if ("filter".equalsIgnoreCase(me.getKey())){
+            	for (String s : me.getValue()) {
+                    //TODO
+                }
             }
         }
+        return this;
+    }
+    
+    
+    public void removeAndConsumeRangeFilters(BiConsumer<String,long[]> cons){
+    	//Map<String, List<Filter>> filters = new HashMap<String, List<Filter>>();
+		List<String> remove = new ArrayList<String>();
+		for (String f : this.facets) {
+			int pos = f.indexOf('/');
+			if (pos > 0) {
+				String facet = f.substring(0, pos);
+				String value = f.substring(pos + 1);
+				// options.longRangeFacets.stream()
+				for (SearchOptions.FacetLongRange flr : this.longRangeFacets) {
+					if (facet.equals(flr.field)) {
+						long[] range = flr.range.get(value);
+						if (range != null) {
+							// add this as filter..
+							cons.accept(facet, range);
+						}
+						remove.add(f);
+					}
+				}
+			}
+		}
+		this.facets.removeAll(remove);
+    }
+    
+    public List<String> getFacets(){
+    	return this.facets;
     }
     
     public String toString () {
@@ -171,4 +222,51 @@ public class SearchOptions {
         sb.append("}}");
         return sb.toString();
     }
+    
+    private DrillAndPath parseDrillAndPath(String dd){
+		int pos = dd.indexOf('/');
+		if (pos > 0) {
+			String facet = dd.substring(0, pos);
+			String value = dd.substring(pos + 1);
+			String[] drill = value.split("/");
+			for (int i = 0; i < drill.length; i++) {
+				drill[i] = drill[i].replace("$$", "/");
+			}
+			return new DrillAndPath(facet,drill);
+		}
+		return null;
+    } 
+    public Map<String,List<DrillAndPath>> getDrillDownsMap(){
+    	Map<String,List<DrillAndPath>> providedDrills = new HashMap<String,List<DrillAndPath>>();
+    	// the first term is the drilldown dimension
+		this.facets.stream()
+			.map(dd->parseDrillAndPath(dd))
+			.filter(Objects::nonNull)
+			.forEach(dp->
+				providedDrills.computeIfAbsent(dp.getDrill(),t->new ArrayList<DrillAndPath>()).add(dp)
+			);
+		return providedDrills;
+    }
+    
+    public class DrillAndPath{
+		private String drill;
+		private String[] paths;
+		public DrillAndPath(String drill, String[] path){
+			this.drill=drill;
+			this.paths=path;
+		}
+		
+		public String asLabel(){
+			return String.join("/", getPaths());
+		}
+
+		public String getDrill() {
+			return drill;
+		}
+
+		public String[] getPaths() {
+			return paths;
+		}
+
+	}
 }

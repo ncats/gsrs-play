@@ -331,4 +331,11 @@ public class EnantiomerGenerator {
         }
         return flip;
     }
+    
+    public static Structure[] enantiomersAsArray (Structure struc) {
+        final List<Structure> isomers = new ArrayList<Structure>();
+        EnantiomerGenerator eg = new EnantiomerGenerator (struc);
+        eg.generate(isomer -> isomers.add(isomer));
+        return isomers.toArray(new Structure[0]);
+    }
 }

@@ -164,7 +164,7 @@
                   <th>Connected</th>
                   <th>Latency (ms)</th>
                 </thead>
-               @for(db <- ix.ncats.controllers.App.getDefinedDatabases()) {
+               @for(db <- ix.ncats.controllers.DBConfigInfo.getDefinedDatabases()) {
                 <tr>
                   <td>@db.getName()</td>
                   <td>@db.getDriver()</td>

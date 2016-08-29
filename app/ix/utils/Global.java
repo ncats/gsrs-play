@@ -116,6 +116,8 @@ public class Global extends GlobalSettings {
     
     void loadDefaultUsers(){
     	List<Object> ls= Play.application().configuration().getList("ix.core.users",null);
+    	
+    	
     	if(ls!=null){
     		for(Object o:ls){
     			if(o instanceof Map){
@@ -136,7 +138,8 @@ public class Global extends GlobalSettings {
 							e.printStackTrace();
 						}
 	    			}else{
-	    				//System.err.println(username + "already exists");
+	    				
+	    				
 	    			}
     			}
     		}

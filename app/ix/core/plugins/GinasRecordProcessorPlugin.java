@@ -188,14 +188,14 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
 
     public static class TransformedRecord<K,V> implements Serializable {
-        public final V theRecordToPersist;
+        public final V recordToPersist;
         public final ProcessingRecord rec;
         final K theRecord;
         final boolean actuallyPersist = Play.application().configuration().getBoolean("ix.ginas.batch.persist",true); 
 
         public TransformedRecord(V persistRecord, K record,
                                  ProcessingRecord rec) {
-            this.theRecordToPersist = persistRecord;
+            this.recordToPersist = persistRecord;
             this.rec = rec;
             this.theRecord = record;
         }

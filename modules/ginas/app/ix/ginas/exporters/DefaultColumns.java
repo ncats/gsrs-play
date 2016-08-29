@@ -13,12 +13,16 @@ public enum DefaultColumns implements Column {
     SUBSTANCE_TYPE,
     STD_INCHIKEY,
     STD_INCHIKEY_FORMATTED,
-    STD_INCHI,
+    //STD_INCHI,
     CAS,
     ITIS,
     NCBI_TAXOMONY,
     USDA_PLANTS,
     INN,
-    EINES, NCI_THESAURUS
+    EINES, 
+    NCI_THESAURUS, 
+    PROTEIN_SEQUENCE,
+    NUCLEIC_ACID_SEQUENCE,
+    RECORD_ACCESS_GROUPS
 
 }

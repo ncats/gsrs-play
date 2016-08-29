@@ -9,8 +9,9 @@ import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.PayloadPlugin.PayloadPersistType;
-import ix.core.search.TextIndexer;
-import ix.core.search.TextIndexer.Facet;
+import ix.core.search.SearchResult;
+import ix.core.search.text.TextIndexer;
+import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.Java8Util;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
@@ -21,6 +22,7 @@ import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
+import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Util;
 
@@ -282,7 +284,7 @@ public class GinasLoad extends App {
 		final int total = Math.max(ProcessingJobFactory.getCount(), 1);
 		final String key = "jobs/" + Util.sha1(request());
 		if (request().queryString().containsKey("facet") || q != null) {
-			final TextIndexer.SearchResult result = getSearchResult(
+			final SearchResult result = getSearchResult(
 					ProcessingJob.class, q, total);
 			if (result.finished()) {
 				final String k = key + "/result";
@@ -314,7 +316,7 @@ public class GinasLoad extends App {
 		}
 	}
 
-	static Result createJobResult(TextIndexer.SearchResult result, int rows,
+	static Result createJobResult(SearchResult result, int rows,
 			int page) {
 		TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
 

@@ -15,9 +15,6 @@ GET	 /enantiomer/:id	ix.ncats.controllers.App.enantiomer(id: String)
 ## resolve a given name to 
 GET	 /resolve/*name	ix.ncats.controllers.App.resolve(name: String)
 
-# return the status of a previous query
-GET	 /status/*key  ix.ncats.controllers.App.status(key: String)
-
 # cache methods
 GET	/cache/@summary	ix.ncats.controllers.App.cacheSummary
 GET	/cache/@list	ix.ncats.controllers.App.cacheList(top: Int ?= 100, skip: Int ?= 0)

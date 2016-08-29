@@ -243,15 +243,16 @@ public class GinasUtils {
 	public static class GinasSubstancePersister extends RecordPersister<Substance, Substance> {
 		
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception {
+			//System.out.println("Persisting:" + prec.recordToPersist.uuid + "\t" + prec.recordToPersist.getName());
 			UserFetcher.setLocalThreadUser(prec.rec.job.owner);            
 			try{
 				boolean worked = false;
 				List<String> errors = new ArrayList<String>();
-				if (prec.theRecordToPersist != null) {
-					worked = GinasUtils.persistSubstance(prec.theRecordToPersist, errors);
+				if (prec.recordToPersist != null) {
+					worked = GinasUtils.persistSubstance(prec.recordToPersist, errors);
 					if (worked) {
 						prec.rec.status = ProcessingRecord.Status.OK;
-						prec.rec.xref = new XRef(prec.theRecordToPersist);
+						prec.rec.xref = new XRef(prec.recordToPersist);
 						prec.rec.xref.save();
 					} else {
 						prec.rec.message = errors.get(0);
@@ -261,11 +262,16 @@ public class GinasUtils {
 				}
 				prec.rec.save();
 	
-				Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.getUuid() : null)
-						+ " record " + prec.rec.id);
-				if (!worked)
+				
+				if (!worked){
 					throw new IllegalStateException(prec.rec.message);
+				}else{
+					Logger.debug("Saved substance " + (prec.recordToPersist != null ? prec.recordToPersist.getUuid() : null)
+							+ " record " + prec.rec.id);
+				}
 			}catch(Throwable t){
+				Logger.debug("Fail saved substance " + (prec.recordToPersist != null ? prec.recordToPersist.getUuid() : null)
+						+ " record " + prec.rec.id);
 				throw t;
 			}finally{
 				UserFetcher.setLocalThreadUser(null);

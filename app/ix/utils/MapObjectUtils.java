@@ -1,4 +1,4 @@
-package ix.core.search;
+package ix.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,6 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MapObjectUtils {
 	private static final String TAB_CHAR = "\t";
@@ -15,6 +18,8 @@ public class MapObjectUtils {
 	private static final String PATH_SEPARATOR = ".";
 	private static final String ROOT = "root";
 
+	private static Pattern ARRAY_REPLACER = Pattern.compile("\\[[0-9]*\\]");
+	
 	public static enum MatchType {
 		EXACT_STRING, NUMERIC_EQUIV
 	}
@@ -92,7 +97,7 @@ public class MapObjectUtils {
 	/**
 	 * Converts the tree structure of a map-of-maps-and-lists typical to complex
 	 * JSON objects into a flat string-to-string map, more typical of struts
-	 * HTML form syntax
+	 * HTML form syntax.
 	 * 
 	 * 
 	 * That is, a map object like the following: {test={item=[2, 1]}} Will
@@ -121,6 +126,8 @@ public class MapObjectUtils {
 		}, root);
 		return mflat;
 	}
+	
+	
 
 	public static LinkedHashMap<String, String> flatten(Map m) {
 		return flatten(m, MapObjectUtils.ROOT);
@@ -227,10 +234,12 @@ public class MapObjectUtils {
 	public static void traverseMap(Map<String, ? extends Object> m,
 			TreeTraverse tt, String psofar) {
 
-		for (String s : m.keySet()) {
-			// if(s.startsWith("_"))continue;
-			String npath = psofar + MapObjectUtils.PATH_SEPARATOR + s;
-			Object o = m.get(s);
+		m.forEach((s, o) -> {
+			String npath = psofar;
+			if (npath.length() > 0) {
+				npath += MapObjectUtils.PATH_SEPARATOR;
+			}
+			npath += s;
 			if (o instanceof Map) {
 				traverseMap((Map<String, ? extends Object>) o, tt, npath);
 			} else if (o instanceof List) {
@@ -238,9 +247,10 @@ public class MapObjectUtils {
 			} else {
 				tt.process(npath, o);
 			}
-		}
+		});
 		tt.process(psofar, m);
 	}
+	
 
 	public static void traverseMap(List<? extends Object> m, TreeTraverse tt,
 			String psofar) {
@@ -259,9 +269,14 @@ public class MapObjectUtils {
 		}
 		tt.process(psofar, m);
 	}
-
-	public static String simplifyKeyPath(String pth) {
-		return pth.replaceAll("\\[[0-9]*\\]", "");
+	
+	public static Map ObjectToMap(Object o){
+		ObjectMapper mapper = new ObjectMapper();
+	    Map<String, Object> map = mapper.convertValue(o, Map.class);
+	    return map;
 	}
 
+	public static String simplifyKeyPath(String pth) {
+		return ARRAY_REPLACER.matcher(pth).replaceAll("");
+	}
 }

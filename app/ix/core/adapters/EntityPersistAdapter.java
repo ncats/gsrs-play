@@ -735,11 +735,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     	
     }
     
-//    public static long reindexCount=0;
-//    public Stack<Long> times= new Stack<Long>();
-public void reindex(Object bean){
-    reindex(bean, true);
-}
+	//    public static long reindexCount=0;
+	//    public Stack<Long> times= new Stack<Long>();
+	public void reindex(Object bean){
+	    reindex(bean, true);
+	}
+	
     public void reindex(Object bean, boolean deleteFirst){
     	
     	String _id=null;

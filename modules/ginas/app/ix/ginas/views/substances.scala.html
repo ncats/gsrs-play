@@ -1,7 +1,9 @@
 @import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, PolymerSubstance, Substance}
-@import ix.ncats.controllers.App.FacetDecorator
+@import ix.ncats.controllers.FacetDecorator
 @import ix.ncats.controllers.App
 @import ix.core.search.FieldFacet
+@import ix.core.models.Structure
+@import ix.core.search.SearchResultContext
 
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
 
@@ -9,25 +11,28 @@
 @import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], substancesList: List[Substance],
-ctx: String = null, searchFacets : List[FieldFacet] = null)
+ctx: SearchResultContext = null)
+
 
 @content("Substances", "ix.ginas.models.v1.Substance",
 ix.ginas.controllers.routes.GinasApp.substances().url,
-current, rows, total, pages, facets, searchFacets) {
+current, rows, total, pages, facets, ctx) {
     @menu()
 }{
     
         
     <div class= "panel-body">
         <div class = "row in" ng-show="!gridView" id ="list">
+        @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
+
         @for(sub <- substancesList) {
         
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @list.chemlist(chem, ctx)
+                    @list.chemlist(chem, ctxId)
                 }
                 case prot: ProteinSubstance => {
-                    @list.proteinlist(prot, ctx)
+                    @list.proteinlist(prot, ctxId)
                 }
                 case nucl: NucleicAcidSubstance => {
                     @list.nucleicacidlist(nucl)
@@ -64,11 +69,10 @@ current, rows, total, pages, facets, searchFacets) {
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @thumbs.chemthumb(chem, ctx)
+                    @thumbs.chemthumb(chem, ctxId)
                 }
                 case prot: ProteinSubstance => {
-                    @thumbs.proteinthumb(prot, ctx)
-
+                    @thumbs.proteinthumb(prot, ctxId)
                 }
                 case nucl: NucleicAcidSubstance => {
                     @thumbs.nucleicacidthumb(nucl)
@@ -95,6 +99,7 @@ current, rows, total, pages, facets, searchFacets) {
             }
 
 
+        }
         }
         </div>
     </div>

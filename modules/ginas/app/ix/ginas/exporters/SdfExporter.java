@@ -48,8 +48,4 @@ public class SdfExporter implements Exporter<Substance> {
         out.close();
     }
 
-	@Override
-	public String getExtension() {
-		return "sdf";
-	}
 }

@@ -18,7 +18,7 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.search.TextIndexer;
+import ix.core.search.text.TextIndexer;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;

@@ -7,6 +7,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import ix.core.SingleParent;
 import ix.ginas.models.GinasCommonSubData;
@@ -18,6 +19,7 @@ import ix.ginas.models.GinasCommonSubData;
 @SingleParent
 public class Component extends GinasCommonSubData {
 	
+	//@NotNull
     public String type;
     
     @OneToOne(cascade=CascadeType.ALL)

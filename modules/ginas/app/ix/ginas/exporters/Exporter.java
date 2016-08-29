@@ -19,6 +19,5 @@ public interface Exporter<T> extends Closeable{
 	default void exportForEachAndClose(Iterable<T> it) throws IOException{
 		exportForEachAndClose(it.iterator());
 	}
-	public String getExtension();
 	
 }

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
+import play.Logger;
 
 
 @SuppressWarnings("serial")
@@ -101,5 +102,18 @@ public class Glycosylation extends GinasCommonSubData {
     public String glycosylationType;
 
     public Glycosylation () {}
+    
+    @JsonIgnore
+    public int getSiteCount(){
+    	int count = 0;
+        try {
+                count+=this.getCGlycosylationSites().size();
+                count+=this.getOGlycosylationSites().size();
+                count+=this.getNGlycosylationSites().size();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return count;
+    }
 
 }

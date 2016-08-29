@@ -84,7 +84,7 @@ public class RelationshipInvertTest {
     
     
     @Test 
-    public void testRemoveSourceRelationshipShouldRemoveInvertedRelationship()   throws Exception {
+    public void removeSourceRelationshipShouldRemoveInvertedRelationship()   throws Exception {
     	
     	 //submit primary, with dangling relationship
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
@@ -127,7 +127,7 @@ public class RelationshipInvertTest {
     
     
     @Test 
-    public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationship()   throws Exception {
+    public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationship()   throws Exception {
     	
         //submit primary
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
@@ -171,7 +171,7 @@ public class RelationshipInvertTest {
     }
     
     @Test 
-    public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndIncrementVersion()   throws Exception {
+    public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndIncrementVersion()   throws Exception {
     	
         //submit primary
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
@@ -214,7 +214,7 @@ public class RelationshipInvertTest {
     	
     }
     @Test
-    public void testAddRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {
+    public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {
     	
         //submit primary
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));

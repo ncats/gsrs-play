@@ -28,11 +28,6 @@ public abstract class CsvSpreadSheet implements Spreadsheet {
     }
 
     @Override
-    public SpreadsheetCell getCell(int i, int j) {
-        return getRow(i).getCell(j);
-    }
-
-    @Override
     public Row getRow(int i) {
         ensureNotClosed();
 
@@ -60,14 +55,6 @@ public abstract class CsvSpreadSheet implements Spreadsheet {
             }
         }
 
-    }
-
-    @Override
-    public String getExtension() {
-        if("\t".equals(delimiter)){
-            return "txt";
-        }
-        return "csv";
     }
 
     protected abstract void writeRemainingRows() throws IOException;

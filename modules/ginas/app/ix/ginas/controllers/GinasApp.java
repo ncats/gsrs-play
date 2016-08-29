@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
@@ -19,6 +20,9 @@ import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
+import ix.ncats.controllers.App;
+import ix.ncats.controllers.DefaultResultRenderer;
+import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.crud.Administration;
 import org.springframework.util.StringUtils;
 
@@ -45,10 +49,13 @@ import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
-import ix.core.search.TextIndexer;
-import ix.core.search.TextIndexer.FV;
-import ix.core.search.TextIndexer.Facet;
-import ix.core.search.TextIndexer.SearchResult;
+import ix.core.search.SearchOptions.TermFilter;
+import ix.core.search.SearchResult;
+import ix.core.search.SearchResultContext;
+import ix.core.search.SearchResultProcessor;
+import ix.core.search.text.TextIndexer;
+import ix.core.search.text.TextIndexer.FV;
+import ix.core.search.text.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -82,7 +89,6 @@ import ix.ginas.models.v1.Sugar;
 import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
 import ix.core.GinasProcessingMessage;
-import ix.ncats.controllers.App;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -213,7 +219,8 @@ public class GinasApp extends App {
             return ok(ix.ginas.views.html.substances.render
                       (page, rows, total, pages,
                        decorate(filter(facets, this.facets)),
-                       substances, context.getId(), context.getFieldFacets()));
+                       substances, 
+                       context));
             
         }
     }
@@ -262,13 +269,14 @@ public class GinasApp extends App {
         return type;
     }
 
-
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result listGinasUsers(int page, int rows, String sortBy, String order, String filter) {
         List<UserProfile> profiles = Administration.principalsList();
 
         return ok(ix.ginas.views.html.admin.userlist.render(profiles, sortBy, order, filter));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result editPrincipal(Long id) {
         UserProfile up = Administration.editUser(id);
         return ok(ix.ginas.views.html.admin.edituser.render(
@@ -280,16 +288,19 @@ public class GinasApp extends App {
         ));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updatePrincipal(Long id) {
         Administration.updateUser(id);
         return redirect(ix.ginas.controllers.routes.GinasApp.listGinasUsers(1, 16, "", "", ""));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result createPrincipal() {
         Form<UserProfile> userForm = Form.form(UserProfile.class);
         return ok(ix.ginas.views.html.admin.adduser.render(userForm));
     }
 
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result addPrincipal() {
         DynamicForm requestData = Form.form().bindFromRequest();
         if (requestData.hasErrors()) {
@@ -518,38 +529,36 @@ public class GinasApp extends App {
     
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
             maxLength = 50_000)
-	public static Result structureSearchPost () {
-	
-	 if (request().body().isMaxSizeExceeded()) {
-	     return badRequest ("Structure is too large!");
-	 }
-	 
-	 Map<String, String[]> params = request().body().asFormUrlEncoded();
-	
-	 String[] values = params.get("q");
-	 String[] type = params.get("type");
-	 if(type==null || type.length==0){
-		 type= new String[]{"flex"};
-	 }
-	 String co=getFirstOrElse(params.get("cutoff"),"0.5");
-	 String wait=getFirstOrElse(params.get("wait"),null);
-	 
-	 if (values != null && values.length > 0) {
-	     Structure q = getStructureFrom(values[0]);
-	     
-	     
-	     try {
-	         Call call = routes.GinasApp.substances
-	         (q.id.toString(), 16, 1);
-	         return redirect (call.url()+"&type=" + type[0] + "&cutoff=" + co + ((wait!=null)?"&wait=" + wait:""));
-	     }
-	     catch (Exception ex) {
-	         ex.printStackTrace();
-	         return _internalServerError (ex);
-	     }
-	 }
-	 
-	 return badRequest ("Invalid \"q\" parameter specified!");
+	public static Result structureSearchPost() {
+
+		if (request().body().isMaxSizeExceeded()) {
+			return badRequest("Structure is too large!");
+		}
+
+		Map<String, String[]> params = request().body().asFormUrlEncoded();
+
+		String[] values = params.get("q");
+		String[] type = params.get("type");
+		if (type == null || type.length == 0) {
+			type = new String[] { "flex" };
+		}
+		String co = getFirstOrElse(params.get("cutoff"), "0.5");
+		String wait = getFirstOrElse(params.get("wait"), null);
+
+		if (values != null && values.length > 0) {
+			Structure q = getStructureFrom(values[0]);
+
+			try {
+				Call call = routes.GinasApp.substances(q.id.toString(), 16, 1);
+				return redirect(
+						call.url() + "&type=" + type[0] + "&cutoff=" + co + ((wait != null) ? "&wait=" + wait : ""));
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				return _internalServerError(ex);
+			}
+		}
+
+		return badRequest("Invalid \"q\" parameter specified!");
 	}
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -576,21 +585,22 @@ public class GinasApp extends App {
         	if(stype.isStructureSearch()){
         		String cutoff = request().getQueryString("cutoff");
         		try {
-	        		String modStructure=getStructureStringFrom(q);
+	        		Structure qStructure=getStructureFrom(q);
+	        		flash("qStructureID", qStructure.id.toString());
 	        		switch(stype){
 		        		case SUBSTRUCTURE:
-		        			return substructure(modStructure, rows, page);
+		        			return substructure(qStructure.smiles, rows, page);
 		        		case SIMILARITY:
 		        			
 		        			double thres = Math.max
 		                    (.3, Math.min(1.,Double.parseDouble(cutoff)));
-		        			return similarity(modStructure, thres, rows, page);
+		        			return similarity(qStructure.smiles, thres, rows, page);
 		        		case FLEX:
-		        			return lychimatch(getStructureStringFrom(q), rows, page, false);
+		        			return lychimatch(qStructure.smiles, rows, page, false);
 		        		case EXACT:
-		        			return lychimatch(getStructureStringFrom(q), rows, page, true);
+		        			return lychimatch(qStructure.smiles, rows, page, true);
 		        		default:
-		        			return substructure(modStructure, rows, page);
+		        			return substructure(qStructure.smiles,  rows, page);
 		        	}
         		}catch(Exception e){
         			e.printStackTrace();
@@ -610,19 +620,11 @@ public class GinasApp extends App {
         }
     }
    
-    public static String getStructureStringFrom(String q){
-    	Structure s= getStructureFrom(q);
-    	if(s!=null)return s.molfile;
-    	return q;
-    }
    
     public static Result export (String collectionID, String extension) {
     	
     	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    	SearchResultContext src = App.getForKey(collectionID);
-    	if(src==null){
-    		
-    	}
+    	SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
     	
     	try{
 	    		 
@@ -645,7 +647,7 @@ public class GinasApp extends App {
 
             Exporter<Substance> exporter = factory.createNewExporter(pos, params);
 
-            String fname = "export-" +sdf.format(new Date()) + "." + exporter.getExtension();
+            String fname = "export-" +sdf.format(new Date()) + "." + extension;
             response().setContentType("application/x-download");
             response().setHeader("Content-disposition","attachment; filename=" + fname);
 
@@ -659,22 +661,6 @@ public class GinasApp extends App {
                     }
                 }
             });
-
-//	    	ExporterBuilder exportBuilder = new ExporterBuilder(pos).setOutputFormat(format);
-//	    	Exporter exp = exportBuilder.build();
-//	    	String fname = "export-" +sdf.format(new Date()) + "." + exp.getExtension();
-//	    	response().setContentType("application/x-download");
-//	    	response().setHeader("Content-disposition","attachment; filename=" + fname);
-//
-//	    	Executors.newSingleThreadExecutor().submit(new Runnable () {
-//    	        public void run () {
-//    	            try {
-//    	            	exp.exportForEachAndClose(src.getResults().iterator());
-//    	            }catch (IOException ex) {
-//    	            	ex.printStackTrace();
-//    	            }
-//    	        }
-//    	        });
 
 	    	return ok(pis);
     	}catch(Exception e){
@@ -735,8 +721,7 @@ public class GinasApp extends App {
                 (seq, identity, rows,
                  page, ct, new GinasSequenceResultProcessor ());
             
-            return App.fetchResult
-                (context, rows, page, new SubstanceResultRenderer ());
+            return App.fetchResult (context, rows, page, new SubstanceResultRenderer ());
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -748,8 +733,7 @@ public class GinasApp extends App {
              (500, "Unable to perform squence search!"));
     }
 
-    public static void instrumentSubstanceSearchOptions
-        (SearchOptions options) {
+    public static void instrumentSubstanceSearchOptions(SearchOptions options, Map<String, String[]> params) {
         SearchOptions.FacetLongRange editedRange =
             new SearchOptions.FacetLongRange ("modified");
         SearchOptions.FacetLongRange approvedRange =
@@ -809,53 +793,51 @@ public class GinasApp extends App {
 
         options.longRangeFacets.add(editedRange);
         options.longRangeFacets.add(approvedRange);
+        
+        if(params!=null){
+        	String[] dep =params.get("showDeprecated");
+        	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
+        		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
+        	}
+        }
     }
 
-    public static List<Facet> getSubstanceFacets (int fdim) throws IOException {
+    public static List<Facet> getSubstanceFacets (int fdim, Map<String, String[]> map) throws IOException {
         SearchOptions options = new SearchOptions (Substance.class);
         options.fdim = fdim;
-        instrumentSubstanceSearchOptions (options);
+        instrumentSubstanceSearchOptions (options, map);
         return getTextIndexer().search(options, null, null).getFacets();
     }
 
-    public static SearchResult getSubstanceSearchResult
-        (final String q, final int total, String qcache) {
-        final Map<String, String[]> params = App.getRequestQuery(); 
-        
-        
+    public static SearchResult getSubstanceSearchResult(final String q, final int total) {
+        final Map<String, String[]> params = App.getRequestQuery();
         
         final String sha1 = App.getKeyForCurrentRequest();
         String[] order = params.get("order");
+        
         if(order==null || order.length<=0){
         	order=new String[]{"$lastEdited"};
         	params.put("order", order);
         }
+        
         try {
             long start = System.currentTimeMillis();
-            SearchResult result = getOrElse
-                (sha1, new Callable<SearchResult>() {
-                        public SearchResult call () throws Exception {
-                        	
-                            SearchOptions options = new SearchOptions
-                            (Substance.class, total, 0, FACET_DIM);
-                            options.parse(params);
-                            instrumentSubstanceSearchOptions (options);
-                            SearchResult result = getTextIndexer().search
-                            (options, q, null);
-                            return cacheKey (result, sha1);
-                        }
+            SearchResult result = getOrElse(sha1, ()->{
+                            SearchOptions options = 
+                            		new SearchOptions(Substance.class, total, 0, FACET_DIM)
+                            			 .parse(params);
+                            instrumentSubstanceSearchOptions (options, params);
+                            return cacheKey(getTextIndexer().search(options, q), sha1);
                     });
-            Logger.debug(sha1+" => "+result);
+            Logger.debug(sha1 + " => " + result);
             
             double elapsed = (System.currentTimeMillis() - start)*1e-3;
             Logger.debug(String.format("Elapsed %1$.3fs to retrieve "
-                                       +"search %2$d/%3$d results...",
+                                     + "search %2$d/%3$d results...",
                                        elapsed, result.size(),
                                        result.count()));
             return result;
-        }
-        catch (Exception ex) {
-        	
+        }catch (Exception ex) {
             ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
@@ -885,68 +867,43 @@ public class GinasApp extends App {
         final String[] searchFacets = facets;
         
         //Special piece to show deprecated records
-        String showDeprecated = request().getQueryString("showDeprecated");
-        String oq=q;
-        if(showDeprecated==null){
-        	if(q!=null){
-        		q=q + " AND SubstanceDeprecated:false";
-        	}else{
-        		q="SubstanceDeprecated:false";
-        	}
-        }
-        
-       
-        
-        
+        boolean forceq = (request().getQueryString("showDeprecated")==null);
         
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if ( q != null || request().queryString().containsKey("facet")) {
-            final TextIndexer.SearchResult result =
-                getSubstanceSearchResult (q, total, oq);
+        if (forceq || q != null || request().queryString().containsKey("facet")) {
+            final SearchResult result = getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
                          + result.finished());
             if (result.finished()) {
                 final String k = key + "/result"; 
-                return getOrElse(k, new Callable<Result>() {
-                        public Result call() throws Exception {
-                                Logger.debug("Cache missed: " + k);
-                            return createSubstanceResult(result, rows, page, facets);
-                        }
-                    });
+                return getOrElse(k, ()->createSubstanceResult(result, rows, page, facets));
             }
             return createSubstanceResult(result, rows, page,facets);
-                        
             //otherwise, just show the first substances
         } else {
-            return getOrElse(key, new Callable<Result>() {
-                    public Result call() throws Exception {
+            return getOrElse(key, () -> {
                         Logger.debug("Cache missed: " + key);
-                        TextIndexer.Facet[] facets = filter
-                            (getSubstanceFacets (30), ALL_FACETS);
-                        int nrows = Math.max(Math.min
-                                             (total, Math.max(1, rows)), 1);
+                        TextIndexer.Facet[] ffacets = 
+                        		filter(getSubstanceFacets (30,request().queryString()), ALL_FACETS);
+                        int nrows   = Math.max(Math.min(total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
 
-                        List<Substance> substances = SubstanceFactory
-                            .getSubstances(nrows, (page - 1) * rows, null);
-                        
-                        
-                        Status s= ok(ix.ginas.views.html.substances.render
-                                  (page, nrows, total, pages, decorate(facets),
-                                   substances, null, null));
-                        return s;
-                    }
+                        List<Substance> substances = 
+                        		SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
+                        return ok(ix.ginas.views.html.substances.render(page, nrows, total, pages, 
+                                		  decorate(ffacets),
+                                   substances, null));
                 });
         }
     }
-    static Result createSubstanceResult(TextIndexer.SearchResult result,
+    static Result createSubstanceResult(SearchResult result,
             int rows, int page) throws Exception{
         return createSubstanceResult(result,rows,page,ALL_FACETS);
     }
     
-    static Result createSubstanceResult(TextIndexer.SearchResult result,
+    static Result createSubstanceResult(SearchResult result,
                                         int rows, int page, String[] facets) throws Exception{
     	
         return fetchResultImmediate (result, rows, page, new SubstanceResultRenderer (facets));
@@ -982,6 +939,8 @@ public class GinasApp extends App {
                 }
             };
 
+            
+  
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static Result _getSubstanceResult(List<Substance> substances)
         throws Exception {
@@ -1019,8 +978,8 @@ public class GinasApp extends App {
                 return _badRequest("type not found");
             }
         }
-        else {
-            TextIndexer.SearchResult result;
+        else {  //rarely used
+            SearchResult result;
             try(TextIndexer indexer = getTextIndexer().createEmptyInstance()) {
                 for (Substance sub : substances) {
                     indexer.add(sub);
@@ -1039,7 +998,7 @@ public class GinasApp extends App {
 
             return ok(ix.ginas.views.html.substances.render
                     (1, result.count(), result.count(), new int[0],
-                            decorate(facets), substances, null, null));
+                            decorate(facets), substances, null));
 
         }
     }
@@ -1051,29 +1010,7 @@ public class GinasApp extends App {
      public static Result substanceVersion(String name, String version) {
         return new SubstanceVersionFetcher(version).get(name);
     }
-
-    static Result createChemicalResult(TextIndexer.SearchResult result,
-                                       int rows, int page) {
-        TextIndexer.Facet[] facets = filter(result.getFacets(), CHEMICAL_FACETS);
-
-        List<Substance> chemicals = new ArrayList<Substance>();
-        int[] pages = new int[0];
-        if (result.count() > 0) {
-            rows = Math.min(result.count(), Math.max(1, rows));
-            pages = paging(rows, page, result.count());
-            for (int i = (page - 1) * rows, j = 0; j < rows
-                     && i < result.size(); ++j, ++i) {
-                chemicals.add((Substance) result.get(i));
-            }
-        }
-
-        return ok(ix.ginas.views.html.substances.render
-                  (page, rows, result.count(), pages,
-                   decorate(facets), chemicals, null, null));
-
-    }
-
-
+     
     public static Result similarity(final String query, final double threshold,
                                     int rows, int page) {
         try {
@@ -1092,25 +1029,24 @@ public class GinasApp extends App {
             (ix.ginas.views.html.error.render
              (500, "Unable to perform similarity search: " + query));
     }
+
     
-        public static Result lychimatch(final String query, int rows, int page, boolean exact) {
-        	
-                try{
-                        Structure struc2 = StructureProcessor.instrument(query, null, true); // don't standardize
-                        String hash=struc2.getLychiv3Hash();
-                        if(exact){
-                        	hash="root_structure_properties_term:" + struc2.getLychiv4Hash();
-                        }
-                        return _substances(hash,rows,page, CHEMICAL_FACETS);
-                }catch(Exception e){
-                        e.printStackTrace();
-                }
-                return internalServerError
-                    (ix.ginas.views.html.error.render
-                     (500, "Unable to perform flex search: " + query));
-        }
-       
-   
+    
+	public static Result lychimatch(final String query, int rows, int page, boolean exact) {
+
+		try {
+			Structure struc2 = StructureProcessor.instrument(query, null, true); // don't
+																					// standardize
+			String hash = struc2.getLychiv3Hash();
+			if (exact) {
+				hash = "root_structure_properties_term:" + struc2.getLychiv4Hash();
+			}
+			return _substances(hash, rows, page, CHEMICAL_FACETS);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform flex search: " + query));
+	}
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
@@ -1118,7 +1054,7 @@ public class GinasApp extends App {
         	
             SearchResultContext context = App.substructure
                 (query, rows, page, new GinasSearchResultProcessor(isWaitSet()));
-            
+            System.out.println("Ok, got the context");
             return App.fetchResult
                 (context, rows, page, 
                  new SubstanceResultRenderer (CHEMICAL_FACETS));
@@ -1138,29 +1074,17 @@ public class GinasApp extends App {
 
 
     /**
-     * return the canonical/default substance id
+     * proper permission should be checked here
      * 
-     * This needs to be re-evaluated. It is possible for there to be duplicated
-     * names, and there is no check here for this.
+     * TP:
      * 
-     * While it's not as pretty, I'm defaulting to using the uuid
+     * This needs to be re-evaluated. It is possible for there to be
+     * duplicated names, and there is no check here for this.
      * 
-     * 
+     * While it's not as pretty, I'm defaulting to using the uuid or
+     * approvalID.
      */
     public static String getId(Substance substance) {
-
-        /**
-         * proper permission should be checked here
-         * 
-         * TP:
-         * 
-         * This needs to be re-evaluated. It is possible for there to be
-         * duplicated names, and there is no check here for this.
-         * 
-         * While it's not as pretty, I'm defaulting to using the uuid or
-         * approvalID.
-         */
-
         return substance.getUuid().toString().substring(0, 8);
     }
 
@@ -1282,7 +1206,7 @@ public class GinasApp extends App {
     }
 
     public static List<Integer> getSites(Modifications mod, int index) {
-        ArrayList<Integer> subunit = new ArrayList<Integer>();
+        List<Integer> subunit = new ArrayList<Integer>();
         for (StructuralModification sm : mod.structuralModifications) {
             subunit = siteIter(sm.getSites(), index);
         }
@@ -1299,21 +1223,19 @@ public class GinasApp extends App {
 
     public static List<Integer> getSites(List<DisulfideLink> disulfides,
                                          int index) {
-        ArrayList<Integer> subunit = new ArrayList<Integer>();
-        for (DisulfideLink sm : disulfides) {
-            subunit.addAll(siteIter(sm.getSites(), index));
-        }
+        List<Integer> subunit = new ArrayList<Integer>();
+        
+        disulfides.stream()
+        	.forEach(sm ->  subunit.addAll(siteIter(sm.getSites(), index)));
+        
         return subunit;
     }
 
-    public static ArrayList<Integer> siteIter(List<Site> sites, int index) {
-        ArrayList<Integer> subunit = new ArrayList<Integer>();
-        for (Site s : sites) {
-            if (s.subunitIndex == index) {
-                subunit.add(s.residueIndex);
-            }
-        }
-        return subunit;
+    public static List<Integer> siteIter(List<Site> sites, int index) {
+        return sites.stream()
+        		.filter(s->s.subunitIndex == index)
+        		.map(s->s.residueIndex)
+        		.collect(Collectors.toList());
     }
 
     public static String getAAName(char aa) {
@@ -1339,19 +1261,9 @@ public class GinasApp extends App {
 
     @SuppressWarnings("rawtypes")
     public static int getCount(Glycosylation obj) {
-        int count = 0;
         if (obj == null)
-            return count;
-        try {
-                count+=obj.getCGlycosylationSites().size();
-                count+=obj.getOGlycosylationSites().size();
-                count+=obj.getNGlycosylationSites().size();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        Logger.info("final count = " + count);
-        return count;
-
+            return 0;
+        return obj.getSiteCount();
     }
     
     
@@ -1373,7 +1285,6 @@ public class GinasApp extends App {
                     // so that it doesn't block
                     
                     // in fact, it probably shouldn't be saving this at all
-                    //
                     if(payload.contains("\n") && payload.contains("M  END")){
                     	struc.molfile=payload;
                     }
@@ -1487,11 +1398,7 @@ public class GinasApp extends App {
                 IxCache.setTemp("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
             }
            
-            // This will simulate a slow structure processing (e.g. slow database fetch)
-            // This should be used in conjunction with another debugSpin in TextIndexer
-            // to simulate both slow fetches and slow lucene processing
             
-            //Util.debugSpin(10);
             
             return chem;
         }
@@ -1601,6 +1508,9 @@ public class GinasApp extends App {
                                     final String format, 
                                     final int size,
                                     final String context) {
+    	if(!Util.isUUID(id)){
+    		return App.render(id,size);
+    	}
         //Logger.debug("Fetching structure");
         String atomMap = "";
         if (context != null) {
@@ -1756,10 +1666,8 @@ public class GinasApp extends App {
     
     public static String formatMolfile(Chemical c, int format) throws Exception{
         String mol=c.export(format);
-
         String[] lines = mol.split("\n");
         lines[1] = " G-SRS " + lines[1];
-
         return String.join("\n", lines);
     }
     public static String makeFastaFromProtein(ProteinSubstance p){
@@ -1798,16 +1706,9 @@ public class GinasApp extends App {
         return resp;
     }
     public static int totalSites(NucleicAcidSubstance sub, boolean includeEnds){
-        int tot=0;
-        for(Subunit s: sub.nucleicAcid.getSubunits()){
-                tot+=s.sequence.length();
-                if(!includeEnds)tot--;
-        }
-        return tot;
+        return sub.getTotalSites(includeEnds);
     }
     public static int totalSites(NucleicAcidSubstance sub){
-        
-                        
         return totalSites(sub, true);
     }
     
@@ -1823,20 +1724,21 @@ public class GinasApp extends App {
         return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_LINKAGE",s.getLinkage());
     }
 
-        public static String[] splitBuffer(String input, int maxLength) {
-                int elements = (input.length() + maxLength - 1) / maxLength;
-                String[] ret = new String[elements];
-                for (int i = 0; i < elements; i++) {
-                        int start = i * maxLength;
-                        ret[i] = input.substring(start,
-                                        Math.min(input.length(), start + maxLength));
-                }
-                return ret;
-        }
+	public static String[] splitBuffer(String input, int maxLength) {
+		int elements = (input.length() + maxLength - 1) / maxLength;
+		String[] ret = new String[elements];
+		for (int i = 0; i < elements; i++) {
+			int start = i * maxLength;
+			ret[i] = input.substring(start, Math.min(input.length(), start + maxLength));
+		}
+		return ret;
+	}
 
     
     
-    
+    public static Set<SubstanceExporterFactory.OutputFormat> getAllSubstanceExportFormats(){
+        return Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class).getAllSupportedFormats();
+    }
 
     public static String getAsJson(Object o){
         if(o == null){
@@ -1868,10 +1770,6 @@ public class GinasApp extends App {
 
                 return ok(new Html(new StringBuilder("<h1>Updated indexes:</h1><pre>").append(listener.getMessage()).append("</pre><br><a href=\"").append(call.url()).append("\">Rebuild Index (warning: will take some time)</a>").toString()));
             }
-
-//            ReindexQuery query = new ReindexQueryBuilder()
-//                                        .ofType(Substance.class)
-//                                        .build();
 
             Runnable r= ()->{
                     try {

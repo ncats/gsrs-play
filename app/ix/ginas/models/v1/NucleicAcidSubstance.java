@@ -53,6 +53,17 @@ public class NucleicAcidSubstance extends Substance {
     	}
     }
     
+    public int getTotalSites(boolean includeEnds){
+    	int tot=0;
+    	for(Subunit s:this.nucleicAcid.getSubunits()){
+    		tot+=s.getLength();
+    		if(!includeEnds){
+    			tot--;
+    		}
+    	}
+    	return tot;
+    }
+    
 //	public NucleicAcid getNucleicAcid() {
 //		return nucleicAcid;
 //	}

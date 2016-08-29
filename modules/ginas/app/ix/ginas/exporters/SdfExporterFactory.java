@@ -12,7 +12,7 @@ import java.util.Set;
  */
 public class SdfExporterFactory implements SubstanceExporterFactory {
 
-    private static final Set<OutputFormat> formats = Collections.singleton( new OutputFormat("sdf", "SDF file"));
+    private static final Set<OutputFormat> formats = Collections.singleton( new OutputFormat("sdf", "SD (sdf) File"));
     @Override
     public boolean supports(Parameters params) {
         return "sdf".equals(params.getFormat().getExtension());
