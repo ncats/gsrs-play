@@ -67,12 +67,12 @@ public class SearchResult {
         searchAnalyzer=TextIndexer.getDefaultSearchAnalyzerFor(this.options.kind);
     }
 
-    public void setRank (final Map<String, Integer> idrank) {
+    public void setRank (final Map<String, Integer> idRank) {
     	System.out.println("Setting rank");
-        Objects.requireNonNull(idrank);
+        Objects.requireNonNull(idRank);
         
         idComparator = (id1,id2) ->{
-            Integer r1 = idrank.get(id1), r2 = idrank.get(id2);
+            Integer r1 = idRank.get(id1), r2 = idRank.get(id2);
             if (r1 != null && r2 != null)
                 return r1 - r2;
             if (r1 == null)

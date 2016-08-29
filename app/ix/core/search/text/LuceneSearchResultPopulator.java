@@ -55,7 +55,6 @@ class LuceneSearchResultPopulator {
 			if (Thread.interrupted()) {
 				throw new InterruptedException();
 			}
-			
 			Document doc = searcher.doc(hits.scoreDocs[i + offset].doc);
 			try {
 				String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();

@@ -379,7 +379,7 @@ public class TextIndexer implements Closeable {
 	}
 
 	public static SearchAnalyzer<?> getDefaultSearchAnalyzerFor(Class<?> cls) {
-		SearchContextAnalyzerGenerator gen = defaultSearchAnalyzers.get(cls.getName());
+		SearchContextAnalyzerGenerator gen = defaultSearchAnalyzers.get((cls != null) ? cls.getName() : null);
 		if (gen != null) {
 			return gen.create();
 		}
@@ -1187,10 +1187,7 @@ public class TextIndexer implements Closeable {
 
 		long start = TimeUtil.getCurrentTimeMillis();
 
-		
-		
 		final TopDocs hits;
-
 		
 		try (TaxonomyReader taxon = new DirectoryTaxonomyReader(taxonWriter)) {
 			hits = firstPassLuceneSearch(searcher,taxon,searchResult,filter, query);

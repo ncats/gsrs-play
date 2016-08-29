@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -447,10 +448,6 @@ public class Util {
 		return groupToMap(s.stream(),namer);
 	}
 	public static <K> Map<String,List<K>> groupToMap(Stream<K> s, Function<K,String> namer){
-		Map<String, List<K>> groupedMap = new HashMap<String,List<K>>();
-		s.forEach(f->
-			groupedMap.computeIfAbsent(namer.apply(f), k->new ArrayList<K>()).add(f)
-			);
-		return groupedMap;
+		return s.collect(Collectors.groupingBy(namer));
 	}
 }
