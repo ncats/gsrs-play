@@ -55,7 +55,7 @@ object ApplicationBuild extends Build {
       ,"com.github.fge" % "json-patch" % "1.9"
       ,"org.quartz-scheduler" % "quartz" % "2.2.1"
       ,"org.webjars" %% "webjars-play" % "2.3.0"
-      ,"org.webjars" % "bootstrap" % "3.3.5"
+      ,"org.webjars" % "bootstrap" % "3.3.7"
       ,"org.webjars" % "typeaheadjs" % "0.10.5-1"
       ,"org.webjars" % "handlebars" % "2.0.0-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
@@ -181,7 +181,7 @@ public class BuildInfo {
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
-      libraryDependencies += "org.webjars" % "angularjs" % "1.5.0",
+      libraryDependencies += "org.webjars" % "angularjs" % "1.5.7",
       libraryDependencies += "org.webjars" % "angular-ui-bootstrap" % "1.3.3",
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",

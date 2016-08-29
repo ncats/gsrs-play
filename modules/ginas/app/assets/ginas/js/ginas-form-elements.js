@@ -812,8 +812,8 @@
                         }
                         scope.referenceobj.relationships.push(r);
                     }
+                        _.set(scope.referenceobj, scope.field, angular.copy(temp));
 
-                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
                     scope.q = null;
                     scope.stage = false;
                     toggler.toggle(scope, scope.formname);

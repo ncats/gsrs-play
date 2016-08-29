@@ -27,18 +27,6 @@
                                         required="true"
                                         formname=form>
                             </gsrs-input>
-                            <gsrs-input type="password"
-                                        ng-model="obj.password"
-                                        field="password"
-                                        required="true"
-                                        formname=form>
-                            </gsrs-input>
-                            <gsrs-input type="email"
-                                        ng-model="obj.email"
-                                        field="email"
-                                        required="true"
-                                        formname=form>
-                            </gsrs-input>
                             <br>
                             <button class="btn btn-default" ng-click="duplicateCheck(obj.name)" ng-if="parent.substanceClass=='chemical'">Resolve Name</button>
                         </div>

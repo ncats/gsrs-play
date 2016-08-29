@@ -94,7 +94,7 @@
                 <note-form parent = substance ng-cloak></note-form>
                 <property-form parent = substance ng-cloak></property-form>
                 <reference-form parent = "substance" ng-cloak></reference-form>
-                <div class = "row info">
+                <div class = "row info" ng-if="substance.$$update">
                         <div class="col-md-2">
                             <gsrs-input type="text" name ="updateReason" required="true" label="Update Reason" ng-model="substance.changeReason"/>
                         </div>
