@@ -23,6 +23,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import ix.core.java8Util.Java8ForOldEbeanHelper;
+import ix.core.util.CachedCallable;
 import ix.core.util.Java8Util;
 import org.apache.lucene.store.AlreadyClosedException;
 
@@ -45,7 +46,6 @@ import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
 import ix.core.search.text.EntityTextIndexer;
-import ix.core.search.text.EntityTextIndexer.CachedCallable;
 import ix.core.search.text.EntityTextIndexer.EntityInfo;
 import ix.core.search.text.EntityTextIndexer.FieldInfo;
 import ix.core.search.text.TextIndexer;

@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -20,6 +19,7 @@ import javax.persistence.Id;
 
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
+import ix.core.util.CachedCallable;
 import ix.utils.EntityUtils;
 
 public class EntityTextIndexer {
@@ -39,22 +39,6 @@ public class EntityTextIndexer {
 	public static EntityInfo getEntityInfoFor(Object entity){
 		return getEntityInfoFor(entity.getClass());
 	}
-	
-	public static class CachedCallable<K> implements Callable<K>{
-    	Callable<K> c;
-    	K cache;
-    	public CachedCallable(Callable<K> c){
-    		this.c=c;
-    	}
-    	public K call(){
-    		if(cache!=null)return cache;
-    		try{
-    			return (cache=c.call());
-    		}catch(Exception e){
-    			return null;
-    		}
-    	}
-    }
 	
 	public static class EntityInfo {
 		Class<?> cls;

@@ -12,8 +12,8 @@ import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.search.text.EntityTextIndexer;
-import ix.core.search.text.EntityTextIndexer.CachedCallable;
 import ix.core.search.text.EntityTextIndexer.EntityInfo;
+import ix.core.util.CachedCallable;
 import play.db.ebean.Model;
 
 /**

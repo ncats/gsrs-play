@@ -124,6 +124,7 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
+import ix.core.util.CachedCallable;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
@@ -151,7 +152,7 @@ public class TextIndexer implements Closeable {
 	private static final Pattern ROOT_CONTEXT_ADDER=
 			Pattern.compile("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])");
 	
-	private static final boolean USE_ANALYSIS = false; 
+	private static final boolean USE_ANALYSIS = true; 
 
 	public void deleteAll() {
 		try {
@@ -598,6 +599,8 @@ public class TextIndexer implements Closeable {
 
 	SearcherManager searchManager;
 
+	
+	private static Set<String> deepKinds;
 	static {
 		System.out.println("static initializer");
 		init();
@@ -612,9 +615,20 @@ public class TextIndexer implements Closeable {
 					v.shutdown();
 				});
 			}
-
 			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
-
+			deepKinds = Play.application().configuration().getStringList("ix.index.deepfields", new ArrayList<String>())
+					.stream().map(s -> {
+						try {
+							return Class.forName(s);
+						} catch (Exception e) {
+							e.printStackTrace();
+							return null;
+						}
+					}).filter(k -> k != null).map(k -> createKindSetFromClass(k)).reduce((s, c) -> {
+						s.addAll(c);
+						return s;
+					}).orElse(new HashSet<String>());
+			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
 			registerDefaultAnalyzers();
 
@@ -622,32 +636,26 @@ public class TextIndexer implements Closeable {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static void registerDefaultAnalyzers() {
-		List<Object> ls = Play.application().configuration().getList("ix.core.searchanalyzers", null);
-		if (ls != null) {
-			for (Object o : ls) {
-				if (o instanceof Map) {
-					Map m = (Map) o;
-					String entityClass = (String) m.get("class");
-					String analyzerClass = (String) m.get("analyzer");
-					Map params = (Map) m.get("with");
-					String debug = "Setting up analyzer for [" + entityClass + "] ... ";
-					try {
-
-						Class<?> entityCls = Class.forName(entityClass);
-						Class<?> analyzerCls = Class.forName(analyzerClass);
-
-						SearchContextAnalyzerGenerator generator = new DefaultSearchContextAnalyzerGenerator(entityCls,
-								analyzerCls, params);
-						defaultSearchAnalyzers.put(entityCls.getName(), generator);
-						Logger.info(debug + "done");
-					} catch (Exception e) {
-						Logger.info(debug + "failed");
-						e.printStackTrace();
-					}
-				}
-			}
-		}
+		Play.application().configuration().getList("ix.core.searchanalyzers",
+				new ArrayList<Object>()).stream()
+					.filter(o->o instanceof Map)
+					.map(o->(Map)o)
+					.forEach(m->{
+						String entityClass   = (String) m.get("class");
+						String analyzerClass = (String) m.get("analyzer");
+						Map params = (Map) m.get("with");
+						try {
+							Class<?> entityCls = Class.forName(entityClass);
+							Class<?> analyzerCls = Class.forName(analyzerClass);
+							SearchContextAnalyzerGenerator generator = 
+									new DefaultSearchContextAnalyzerGenerator(entityCls, analyzerCls, params);
+							defaultSearchAnalyzers.put(entityCls.getName(), generator);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					});
 	}
 
 	public static TextIndexer getInstance(File baseDir) throws IOException {
@@ -964,7 +972,7 @@ public class TextIndexer implements Closeable {
 	}
 	
 	
-	public Set<String> createKindSetFromClass(Class<?> kind){
+	public static Set<String> createKindSetFromClass(Class<?> kind){
 		Set<String> kinds = new TreeSet<String>();
 		kinds.add(kind.getName());
 		Reflections reflections = new Reflections(IX_BASE_PACKAGE);
@@ -1311,7 +1319,9 @@ public class TextIndexer implements Closeable {
 		//Beginning of an idea
 		if(USE_ANALYSIS){
 			Set<Term> myterms = new LinkedHashSet<Term>();
-			System.out.println(query.getClass());
+			
+			//System.out.println(query.getClass());
+			
 			if(query instanceof PrefixQuery){
 				myterms.add(((PrefixQuery)query).getPrefix());	
 			}else{
@@ -1322,7 +1332,7 @@ public class TextIndexer implements Closeable {
 					.filter(t -> t.field().equals(FULL_TEXT_FIELD))
 					.collect(Collectors.toSet());
 			
-			System.out.println("Analyzer");
+			//System.out.println("Analyzer");
 			
 			if(!myterms.isEmpty()){
 				
@@ -1333,14 +1343,13 @@ public class TextIndexer implements Closeable {
 							.collect(Collectors.toList());
 				
 				Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
-				
-				System.out.println(query.toString());
+				//System.out.println(query.toString());
 				LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, query, options.max(), facetCollector2);
 				
 				lsp2.search(searcher, taxon);
-				System.out.println("Hits:" +lsp2.getTopDocs().totalHits);
+				//System.out.println("Hits:" +lsp2.getTopDocs().totalHits);
 				lsp2.getFacets().getAllDims(options.fdim).forEach(fr->{
-					//System.out.println("Got facet:" + fr.dim + "\n===========");
+					System.out.println("Got facet:" + fr.dim + "\n===========");
 					Arrays.stream(fr.labelValues).forEach(lv->{
 						System.out.println(lv.label + "\t" + lv.value);
 					});
@@ -1481,6 +1490,8 @@ public class TextIndexer implements Closeable {
 		
 		Map<LiteralReference<IndexableField>, TextField> fullText = new HashMap<LiteralReference<IndexableField>, TextField>();
 		
+		CachedCallable<Boolean> isDeep  = CachedCallable.of(()->deepKinds.contains(kind));
+		
 		
 		for (IndexableField f : fields) {
 			String text = f.stringValue();
@@ -1490,14 +1501,14 @@ public class TextIndexer implements Closeable {
 				TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
 				//tf.set
 				doc.add(tf);
-				if(USE_ANALYSIS){
+				if(USE_ANALYSIS && isDeep.call()){
 					fullText.put(new LiteralReference<IndexableField>(f), tf);
 				}
 			}
 			doc.add(f);
 		}
 		
-		if(USE_ANALYSIS){
+		if(USE_ANALYSIS && isDeep.call()){
 			String mid=EntityUtils.getIdForBeanAsString(entity);
 			if(mid!=null){
 				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + kind,YES);
