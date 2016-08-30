@@ -1278,7 +1278,7 @@
                     //passes a new uuid for reference tracking
                     var obj = {
                         uuid: UUID.newID(),
-                        $$apply: ''
+                        $$apply: true
                     };
                     scope.addNew(mainform, list, obj);
                 };
