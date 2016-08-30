@@ -11,10 +11,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -44,10 +41,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -69,7 +64,6 @@ import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.range.LongRange;
 import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
@@ -89,7 +83,6 @@ import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.xml.builders.TermQueryBuilder;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FieldCacheRangeFilter;
@@ -98,6 +91,7 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.Sort;
@@ -120,7 +114,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.search.DefaultSearchContextAnalyzerGenerator;
 import ix.core.search.FieldFacet;
@@ -131,11 +124,11 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
+import ix.core.util.CachedCallable;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
-import ix.utils.Util;
 import play.Logger;
 import play.Play;
 
@@ -156,8 +149,10 @@ public class TextIndexer implements Closeable {
 	public static final String GIVEN_STOP_WORD = "$";
 	public static final String GIVEN_START_WORD = "^";
 	private static final String ROOT = "root";
+	private static final Pattern ROOT_CONTEXT_ADDER=
+			Pattern.compile("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])");
 	
-	private static final boolean USE_ANALYSIS = false; 
+	private static final boolean USE_ANALYSIS = true; 
 
 	public void deleteAll() {
 		try {
@@ -166,15 +161,9 @@ public class TextIndexer implements Closeable {
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
-
 	}
 
-	@Indexable
-	static final class DefaultIndexable {
-	}
-
-	static final Indexable defaultIndexable = (Indexable) DefaultIndexable.class.getAnnotation(Indexable.class);
-
+	
 	/**
 	 * well known fields
 	 */
@@ -375,7 +364,6 @@ public class TextIndexer implements Closeable {
 			}
 			this.values.add(fv);
 		}
-		
 	}
 
 	public static SearchAnalyzer<?> getDefaultSearchAnalyzerFor(Class<?> cls) {
@@ -384,7 +372,6 @@ public class TextIndexer implements Closeable {
 			return gen.create();
 		}
 		return NullSearchAnalyzer.INSTANCE;
-
 	}
 
 	class SuggestLookup implements Closeable {
@@ -452,11 +439,6 @@ public class TextIndexer implements Closeable {
 			this(new File(suggestDir, name));
 		}
 
-		// void add (BytesRef text, Set<BytesRef> contexts,
-		// long weight, BytesRef payload) throws IOException {
-		// lookup.update(text, contexts, weight, payload);
-		// incr ();
-		// }
 
 		void add(String text) throws IOException {
 
@@ -485,7 +467,7 @@ public class TextIndexer implements Closeable {
 
 		private synchronized void refresh() throws IOException {
 			Iterator<Addition> additionIterator = additions.values().iterator();
-
+			
 			while (additionIterator.hasNext()) {
 				Addition add = additionIterator.next();
 				BytesRef ref = new BytesRef(add.text);
@@ -522,15 +504,9 @@ public class TextIndexer implements Closeable {
 
 		List<SuggestResult> suggest(CharSequence key, int max) throws IOException {
 			refreshIfDirty();
-
-			List<Lookup.LookupResult> results = lookup.lookup(key, null, false, max);
-
-			List<SuggestResult> m = new ArrayList<SuggestResult>();
-			for (Lookup.LookupResult r : results) {
-				m.add(new SuggestResult(r.payload.utf8ToString(), r.key, r.value));
-			}
-
-			return m;
+			return lookup.lookup(key, null, false, max).stream()
+					.map(r -> new SuggestResult(r.payload.utf8ToString(), r.key, r.value))
+					.collect(Collectors.toList());
 		}
 	}
 
@@ -550,7 +526,7 @@ public class TextIndexer implements Closeable {
 		 * shutdown state
 		 */
 		public void execute() {
-			long time = StopWatch.timeElapsed(this::flush);
+			StopWatch.timeElapsed(this::flush);
 		}
 
 		private void flush() {
@@ -623,6 +599,8 @@ public class TextIndexer implements Closeable {
 
 	SearcherManager searchManager;
 
+	
+	private static Set<String> deepKinds;
 	static {
 		System.out.println("static initializer");
 		init();
@@ -637,9 +615,20 @@ public class TextIndexer implements Closeable {
 					v.shutdown();
 				});
 			}
-
 			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
-
+			deepKinds = Play.application().configuration().getStringList("ix.index.deepfields", new ArrayList<String>())
+					.stream().map(s -> {
+						try {
+							return Class.forName(s);
+						} catch (Exception e) {
+							e.printStackTrace();
+							return null;
+						}
+					}).filter(k -> k != null).map(k -> createKindSetFromClass(k)).reduce((s, c) -> {
+						s.addAll(c);
+						return s;
+					}).orElse(new HashSet<String>());
+			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
 			registerDefaultAnalyzers();
 
@@ -647,32 +636,26 @@ public class TextIndexer implements Closeable {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static void registerDefaultAnalyzers() {
-		List<Object> ls = Play.application().configuration().getList("ix.core.searchanalyzers", null);
-		if (ls != null) {
-			for (Object o : ls) {
-				if (o instanceof Map) {
-					Map m = (Map) o;
-					String entityClass = (String) m.get("class");
-					String analyzerClass = (String) m.get("analyzer");
-					Map params = (Map) m.get("with");
-					String debug = "Setting up analyzer for [" + entityClass + "] ... ";
-					try {
-
-						Class<?> entityCls = Class.forName(entityClass);
-						Class<?> analyzerCls = Class.forName(analyzerClass);
-
-						SearchContextAnalyzerGenerator generator = new DefaultSearchContextAnalyzerGenerator(entityCls,
-								analyzerCls, params);
-						defaultSearchAnalyzers.put(entityCls.getName(), generator);
-						Logger.info(debug + "done");
-					} catch (Exception e) {
-						Logger.info(debug + "failed");
-						e.printStackTrace();
-					}
-				}
-			}
-		}
+		Play.application().configuration().getList("ix.core.searchanalyzers",
+				new ArrayList<Object>()).stream()
+					.filter(o->o instanceof Map)
+					.map(o->(Map)o)
+					.forEach(m->{
+						String entityClass   = (String) m.get("class");
+						String analyzerClass = (String) m.get("analyzer");
+						Map params = (Map) m.get("with");
+						try {
+							Class<?> entityCls = Class.forName(entityClass);
+							Class<?> analyzerCls = Class.forName(analyzerClass);
+							SearchContextAnalyzerGenerator generator = 
+									new DefaultSearchContextAnalyzerGenerator(entityCls, analyzerCls, params);
+							defaultSearchAnalyzers.put(entityCls.getName(), generator);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					});
 	}
 
 	public static TextIndexer getInstance(File baseDir) throws IOException {
@@ -883,12 +866,14 @@ public class TextIndexer implements Closeable {
 		@Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
+				//System.out.println("B4:" + qtext);
 				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
 				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+				//System.out.println("AF:" + qtext);
 			}
 			// add ROOT prefix to all term queries (containing '_') where not
 			// otherwise specified
-			qtext = qtext.replaceAll("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])", ROOT + "_$1");
+			qtext = ROOT_CONTEXT_ADDER.matcher(qtext).replaceAll(ROOT + "_$1");
 			Query q = super.parse(qtext);
 			return q;
 		}
@@ -961,7 +946,6 @@ public class TextIndexer implements Closeable {
 
 	public SearchResult range(SearchOptions options, String field, Integer min, Integer max) throws IOException {
 		Query query = NumericRangeQuery.newIntRange(field, min, max, true /* minInclusive? */, true/* maxInclusive? */);
-
 		return search(new SearchResult(options, null), query, null);
 	}
 
@@ -977,22 +961,27 @@ public class TextIndexer implements Closeable {
 		Map<String, List<Filter>> filters = new HashMap<String,List<Filter>>();
 		options.removeAndConsumeRangeFilters((f,r)->{
 			filters
-			.computeIfAbsent(f, k -> new ArrayList<Filter>())
-			.add(FieldCacheRangeFilter.newLongRange(f, r[0], r[1], true, false));
+			    .computeIfAbsent(f, k -> new ArrayList<Filter>())
+				.add(FieldCacheRangeFilter.newLongRange(f, r[0], r[1], true, false));
 		});
 		return filters;
 	}
 	
 	public Set<String> createKindSetFromOptions(SearchOptions options){
+		return createKindSetFromClass(options.kind);
+	}
+	
+	
+	public static Set<String> createKindSetFromClass(Class<?> kind){
 		Set<String> kinds = new TreeSet<String>();
-		kinds.add(options.kind.getName());
+		kinds.add(kind.getName());
 		Reflections reflections = new Reflections(IX_BASE_PACKAGE);
-		for (Class<?> c : reflections.getSubTypesOf(options.kind)) {
+		for (Class<?> c : reflections.getSubTypesOf(kind)) {
 			kinds.add(c.getName());
 		}
 		return kinds;
 	}
-	
+		
 	public Sort createSorterFromOptions(SearchOptions options) {
 		Sort sorter = null;
 		if (!options.order.isEmpty()) {
@@ -1076,9 +1065,9 @@ public class TextIndexer implements Closeable {
 	}
 	
 	public static interface LuceneSearchProvider{
+		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
 		public TopDocs getTopDocs();
 		public Facets getFacets();
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
 	}
 	
 	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
@@ -1330,14 +1319,21 @@ public class TextIndexer implements Closeable {
 		//Beginning of an idea
 		if(USE_ANALYSIS){
 			Set<Term> myterms = new LinkedHashSet<Term>();
-			query.extractTerms(myterms);
+			
+			//System.out.println(query.getClass());
+			
+			if(query instanceof PrefixQuery){
+				myterms.add(((PrefixQuery)query).getPrefix());	
+			}else{
+				query.extractTerms(myterms);
+			}
 			myterms=myterms
 					.stream()
 					.filter(t -> t.field().equals(FULL_TEXT_FIELD))
 					.collect(Collectors.toSet());
 			
-			System.out.println("Analyzer");
-			System.out.println(query.getClass());
+			//System.out.println("Analyzer");
+			
 			if(!myterms.isEmpty()){
 				
 				FacetsCollector facetCollector2 = new FacetsCollector();
@@ -1347,14 +1343,13 @@ public class TextIndexer implements Closeable {
 							.collect(Collectors.toList());
 				
 				Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
-				
-				System.out.println(query.toString());
+				//System.out.println(query.toString());
 				LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, query, options.max(), facetCollector2);
 				
 				lsp2.search(searcher, taxon);
-				System.out.println("Hits:" +lsp2.getTopDocs().totalHits);
+				//System.out.println("Hits:" +lsp2.getTopDocs().totalHits);
 				lsp2.getFacets().getAllDims(options.fdim).forEach(fr->{
-					//System.out.println("Got facet:" + fr.dim + "\n===========");
+					System.out.println("Got facet:" + fr.dim + "\n===========");
 					Arrays.stream(fr.labelValues).forEach(lv->{
 						System.out.println(lv.label + "\t" + lv.value);
 					});
@@ -1372,28 +1367,23 @@ public class TextIndexer implements Closeable {
 				continue;
 
 			Logger.debug("[Range facet: \"" + flr.field + "\"");
-			LongRange[] range = new LongRange[flr.range.size()];
-			int i = 0;
-			for (Map.Entry<String, long[]> me : flr.range.entrySet()) {
-				// assume range [low,high)
-				long[] r = me.getValue();
-				range[i++] = new LongRange(me.getKey(), r[0], true, r[1], true);
-				Logger.debug("  " + me.getKey() + ": " + r[0] + " to " + r[1]);
-			}
+			
+			LongRange[] range = flr.range.entrySet().stream().map(me -> 
+				new LongRange(me.getKey(), me.getValue()[0], true, me.getValue()[1], true)
+			).collect(Collectors.toList()).toArray(new LongRange[0]);
 
 			Facets facets = new LongRangeFacetCounts(flr.field, fc, range);
 			FacetResult result = facets.getTopChildren(options.fdim, flr.field);
 			Facet f = new Facet(result.dim);
+			
 			if (DEBUG(1)) {
 				Logger.info(" + [" + result.dim + "]");
 			}
-			for (i = 0; i < result.labelValues.length; ++i) {
-				LabelAndValue lv = result.labelValues[i];
-				if (DEBUG(1)) {
-					Logger.info("     \"" + lv.label + "\": " + lv.value);
-				}
-				f.values.add(new FV(lv.label, lv.value.intValue()));
-			}
+			
+			Arrays.stream(result.labelValues)
+				.map(lv->new FV(lv.label, lv.value.intValue()))
+				.forEach(fv->f.add(fv));
+			
 			searchResult.addFacet(f);
 		}
 	}
@@ -1402,14 +1392,14 @@ public class TextIndexer implements Closeable {
 		if (entity == null)
 			return null;
 
-		Class cls = entity.getClass();
+		Class<?> cls = entity.getClass();
 		Object id = EntityUtils.getIdForBean(entity);
 
 		if (id == null) {
 			Logger.warn("Entity " + entity + "[" + entity.getClass() + "] has no Id field!");
 			return null;
 		}
-
+		
 		return new Term(cls.getName() + ".id", id.toString());
 	}
 
@@ -1498,38 +1488,53 @@ public class TextIndexer implements Closeable {
 
 		Document doc = new Document();
 		
+		Map<LiteralReference<IndexableField>, TextField> fullText = new HashMap<LiteralReference<IndexableField>, TextField>();
+		
+		CachedCallable<Boolean> isDeep  = CachedCallable.of(()->deepKinds.contains(kind));
+		
+		
 		for (IndexableField f : fields) {
 			String text = f.stringValue();
 			if (text != null) {
 				if (DEBUG(2))
 					Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
-
-				doc.add(new TextField(FULL_TEXT_FIELD, text, NO));
-				
+				TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
+				//tf.set
+				doc.add(tf);
+				if(USE_ANALYSIS && isDeep.call()){
+					fullText.put(new LiteralReference<IndexableField>(f), tf);
+				}
 			}
 			doc.add(f);
 		}
 		
-		if(USE_ANALYSIS){
-			StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + kind,YES);
-			StringField docParent=new StringField(FIELD_KIND + ".id",EntityUtils.getIdForBeanAsString(entity) ,YES);
-			//This is a test of a terrible idea, which just. might. work
-			Util.groupToMap(fields.stream()
-					.filter(f->f.name().startsWith(ROOT +"_") && f.stringValue()!=null), f -> f.name())
+		if(USE_ANALYSIS && isDeep.call()){
+			String mid=EntityUtils.getIdForBeanAsString(entity);
+			if(mid!=null){
+				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + kind,YES);
+				StringField docParent=new StringField(FIELD_KIND + ".id",mid,YES);
+				FacetField  docParentFacet =new FacetField(FIELD_KIND + ".id",mid);
+				//This is a test of a terrible idea, which just. might. work.
+				fields.stream()
+					.filter(f->f.name().startsWith(ROOT +"_") && f.stringValue()!=null)
+					.collect(Collectors.groupingBy(f -> f.name()))
 					.forEach((name,group)->{
-						Document fielddoc = new Document();
-						fielddoc.add(toAnalyze);
-						fielddoc.add(docParent);
-						fielddoc.add(new FacetField(ANALYZER_FIELD,name));
-						for(IndexableField f:group){
-								fielddoc.add(new TextField(FULL_TEXT_FIELD,f.stringValue(),NO));
-						}
 						try{
+							Document fielddoc = new Document();
+							fielddoc.add(toAnalyze);
+							fielddoc.add(docParent);
+							fielddoc.add(docParentFacet);
+							fielddoc.add(new FacetField(ANALYZER_FIELD,name));
+							for(IndexableField f:group){
+									fielddoc.add(fullText.computeIfAbsent(new LiteralReference<IndexableField>(f),
+											k -> new TextField(FULL_TEXT_FIELD, f.stringValue(), NO)));
+							}
 							addDoc(fielddoc);
 						}catch(Exception e){
-							e.printStackTrace();
+							System.out.println("FAILED!" + e.getMessage());
 						}
 					});
+			}
 		}
 				
 		// now index
@@ -1633,186 +1638,181 @@ public class TextIndexer implements Closeable {
 			throw new IllegalArgumentException("Can't parse query: " + text, ex);
 		}
 	}
-
+	
+	
+	
+	public static class LiteralReference<K>{
+		public K o;
+		LiteralReference(K o){
+			this.o=o;
+		}
+		@Override
+		public int hashCode(){
+			return this.o.hashCode();
+		}
+		@Override
+		public boolean equals(Object oref){
+			if(oref==null)return false;
+			if(oref instanceof LiteralReference){
+				LiteralReference<?> or=(LiteralReference<?>)oref;
+				return (this.o == or.o);
+			}
+			return false;
+		}
+		
+	}
+	
+	
+	public static class LinkedReferenceSet<K>{
+		LinkedList<LiteralReference<K>> list = new LinkedList<LiteralReference<K>>();
+		HashSet<LiteralReference<K>> set = new HashSet<LiteralReference<K>>();
+		
+		public boolean contains(K k){
+			return set.contains(k);
+		}
+		
+		public K pop(){
+			LiteralReference<K> lr = list.pop();
+			set.remove(lr);
+			return lr.o;
+		}
+		public void push(K k){
+			if(!contains(k)){
+				LiteralReference<K> lr = new LiteralReference<K>(k);
+				list.add(lr);
+			}
+		}
+	}
+	
 	protected void instrument(LinkedList<String> path, Object entity, List<IndexableField> ixFields,
-			LinkedList<Object> entities) {
+			LinkedReferenceSet prevEntities) {
+		
 		// This is a problem because of infinite recursion. It
 		// can actually happen really easily on ManyToOne
 		// JPA annotations.
-		if (entities == null) {
-			entities = new LinkedList<Object>();
-		}
-		
+
 		// This is to avoid infinite recurse. If this object has already been
 		// seen here, then things would explode.
+		LinkedReferenceSet entities = (prevEntities!=null)?prevEntities: new LinkedReferenceSet();
 		if (entities.contains(entity)) {
 			return;
 		}
 		
-		
 		try {
-
 			entities.push(entity);
-			Class cls = entity.getClass();
-			ixFields.add(new FacetField(DIM_CLASS, cls.getName()));
+			
+			EntityTextIndexer.EntityInfo entityInfo = EntityTextIndexer.getEntityInfoFor(entity.getClass());
 
-			DynamicFacet dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
-			String facetLabel = null;
-			String facetValue = null;
-
-			Field[] fields = cls.getFields();
-			for (Field f : fields) {
-				boolean defindex = false;
-				Indexable indexable = (Indexable) f.getAnnotation(Indexable.class);
-				if (indexable == null) {
-					indexable = defaultIndexable;
-				}
-
-				int mods = f.getModifiers();
-				if (!indexable.indexed() || Modifier.isStatic(mods) || Modifier.isTransient(mods)
-
-				) {
-					// Logger.debug("** skipping field
-					// "+f.getName()+"["+cls.getName()+"]");
-					continue;
-				}
-
-				path.push(f.getName());
-				try {
-					Class type = f.getType();
-					Object value = f.get(entity);
-
-					if (DEBUG(2)) {
-						Logger.debug("++ " + toPath(path) + ": type=" + type + " value=" + value);
-					}
-
-					if (f.getAnnotation(Id.class) != null) {
-						// Logger.debug("+ Id: "+value);
-						if (value != null) {
-							// the hidden _id field stores the field's value
-							// in its native type whereas the display field id
-							// is used for indexing purposes and as such is
-							// represented as a string
-							String kind = entity.getClass().getName();
+			String kind = entityInfo.getName();
+			ixFields.add(new FacetField(DIM_CLASS, kind));
+			
+			String[] facetLabel = {null};
+			String[] facetValue = {null};
+			
+			
+			// You may notice that the full path to this id field isn't here,
+			// while it is on the other fields ...
+			//
+			entityInfo.getIDFieldInfo().ifPresent(fi->
+					fi.getValue(entity).ifPresent(value -> {
 							if (value instanceof Long) {
-								ixFields.add(new LongField(kind + "._id", (Long) value, YES));
+								ixFields.add(new LongField(entityInfo.internalIdField(), (Long) value, YES));
 							} else {
-								ixFields.add(new StringField(kind + "._id", value.toString(), YES));
+								ixFields.add(new StringField(entityInfo.internalIdField(), value.toString(), YES));
 							}
-							ixFields.add(new StringField(kind + ".id", value.toString(), NO));
-						} else {
-							if (DEBUG(2))
-								Logger.warn("Id field " + f + " is null");
+							ixFields.add(new StringField(entityInfo.externalIdField(), value.toString(), NO));
 						}
-					} else if (value == null) {
-						// do nothing
-					} else if (dyna != null && f.getName().equals(dyna.label())) {
-						facetLabel = value.toString();
-						defindex = true;
-					} else if (dyna != null && f.getName().equals(dyna.value())) {
-						facetValue = value.toString();
-						defindex = true;
-					} else if (type.isPrimitive()) {
-						indexField(ixFields, indexable, path, value);
-					} else if (type.isArray()) {
-						int len = Array.getLength(value);
-						// recursively evaluate each element in the array
-						for (int i = 0; i < len; ++i) {
-							path.push(String.valueOf(i));
-							instrument(path, Array.get(value, i), ixFields, entities);
+					)
+			);
+			
+			entityInfo.getFieldInfo().stream().sequential().forEach(fi -> {
+					fi.getValue(entity).ifPresent(value->{
+						path.push(fi.getName());
+						try{
+							boolean defindex = false;
+							if (DEBUG(2)) {
+								Logger.debug("++ " + toPath(path) + ": type=" + fi.getType() + " value=" + value);
+							}
+							
+							if (fi.isDynamicFacetLabel()) {
+								facetLabel[0] = value.toString();
+								defindex = true;
+							}else if (fi.isDynamicFacetValue()) {
+								facetValue[0] = value.toString();
+								defindex = true;
+							}else if (fi.isPrimitive()) {
+								indexField(ixFields, fi.getIndexable(), path, value);
+							}else if (fi.isArrayOrCollection()) {
+								// MUST be done in order
+								fi.forEach(value, (i, o) -> {
+									path.push(String.valueOf(i));
+									instrument(path, o, ixFields, entities);
+									path.pop();
+								});
+							}else if (fi.isEntityType()) {
+								// the value might be an entity, but the declared
+								// type is something more generic, but it's been
+								// simplified
+								// here.
+		
+								// composite type; recurse
+								instrument(path, value, ixFields, entities);
+								if (fi.isExplicitlyIndexable()) {
+									indexField(ixFields, fi.getIndexable(), path, value);
+								}
+							}else {
+								defindex = true;
+							}
+							if (defindex) { // treat as string
+								indexField(ixFields, fi.getIndexable(), path, value);
+							}
+						} catch (Throwable ex) {
+							ex.printStackTrace();
+							if (DEBUG(3)) {
+								Logger.warn(entity.getClass() + ": Field " + fi.getName() + " is not indexable due to "
+										+ ex.getMessage());
+							}
+						}finally{
 							path.pop();
 						}
-					} else if (Collection.class.isAssignableFrom(type)) {
-						Iterator it = ((Collection) value).iterator();
-						for (int i = 0; it.hasNext(); ++i) {
-							path.push(String.valueOf(i));
-							instrument(path, it.next(), ixFields, entities);
-							path.pop();
-						}
-					}
-					// why isn't this the same as using type?
-					else if (value.getClass().isAnnotationPresent(Entity.class)) {
-						// composite type; recurse
-						instrument(path, value, ixFields, entities);
-						Indexable ind = f.getAnnotation(Indexable.class);
-						if (ind != null) {
-							indexField(ixFields, indexable, path, value);
-						}
-					} else {
-						defindex = true;
-					}
-					if (defindex) { // treat as string
-
-						indexField(ixFields, indexable, path, value);
-					}
-				} catch (Exception ex) {
-					if (DEBUG(3)) {
-						Logger.warn(entity.getClass() + ": Field " + f + " is not indexable due to " + ex.getMessage());
-					}
-				}
-				path.pop();
-			} // foreach field
+					}); // for each field with value
+			}); // foreach field
 
 			// dynamic facet if available
-			if (facetLabel != null && facetValue != null) {
-				facetsConfig.setMultiValued(facetLabel, true);
-				facetsConfig.setRequireDimCount(facetLabel, true);
-				ixFields.add(new FacetField(facetLabel, facetValue));
+			if (facetLabel[0] != null && facetValue[0] != null) {
+				facetsConfig.setMultiValued(facetLabel[0], true);
+				facetsConfig.setRequireDimCount(facetLabel[0], true);
+				ixFields.add(new FacetField(facetLabel[0], facetValue[0]));
 				// allow searching of this field
-				ixFields.add(new TextField(facetLabel, facetValue, NO));
+				ixFields.add(new TextField(facetLabel[0], facetValue[0], NO));
 				// all dynamic facets are suggestable???
-				suggestField(facetLabel, facetValue);
+				suggestField(facetLabel[0], facetValue[0]);
 			}
 
-			Method[] methods = entity.getClass().getMethods();
-			for (Method m : methods) {
-				Indexable indexable = (Indexable) m.getAnnotation(Indexable.class);
-				if (indexable != null && indexable.indexed()) {
-					// we only index no arguments methods
-					Class[] args = m.getParameterTypes();
-					if (args.length == 0) {
-						Object value = m.invoke(entity);
-						if (value != null) {
-							String name = m.getName();
-							if (name.startsWith("get")) {
-								name = name.substring(3);
-							}
-							if (!indexable.name().equals("")) {
-								name = indexable.name();
-							}
-							LinkedList<String> l = new LinkedList<>();
-							l.add(name);
-
-							Class type = value.getClass();
-							if (Collection.class.isAssignableFrom(type)) {
-
-								Iterator it = ((Collection) value).iterator();
-								for (int i = 0; it.hasNext(); ++i) {
-									l.push(String.valueOf(i));
-									indexField(ixFields, indexable, l, it.next());
-									l.pop();
-								}
-							} else if (type.isArray()) {
-								int len = Array.getLength(value);
-								// recursively evaluate each element in
-								// the array
-								for (int i = 0; i < len; ++i) {
-									l.push(String.valueOf(i));
-									indexField(ixFields, indexable, l, Array.get(value, i));
-									l.pop();
-								}
-							} else {
-								indexField(ixFields, indexable, l, value);
-							}
+			entityInfo.getMethodInfo().stream().sequential().forEach(mi -> {
+				mi.getValue(entity).ifPresent(value -> {
+					path.push(mi.getName());
+					try {
+						if (mi.isArrayOrCollection()) {
+							mi.forEach(value, (i, o) -> {
+								path.push(i + "");
+								indexField(ixFields, mi.getIndexable(), path, o);
+								path.pop();
+							});
+						} else {
+							indexField(ixFields, mi.getIndexable(), path, value);
 						}
-					} else {
-						Logger.warn(
-								"Indexable is annotated for non-zero " + "arguments method \"" + m.getName() + "\"");
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						Logger.trace("Fetching entity methods", ex);
+					} finally {
+						path.pop();
 					}
-				}
-			}
-		} catch (Exception ex) {
-			Logger.trace("Fetching entity fields", ex);
+				});
+			});
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+			Logger.trace("Fetching entity method / fields", ex);
 		} finally {
 			entities.pop();
 		}

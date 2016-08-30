@@ -15,17 +15,11 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.Query;
 
+import ix.core.search.FieldBasedSearchAnalyzer.DefaultKVPair;
 import ix.core.search.FieldFacet.MATCH_TYPE;
 
 public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 	
-	public static interface KVPair{
-		public String getKey();
-		public String getValue();
-		public static KVPair make(String key, String val){
-			return new DefaultKVPair(key,val);
-		}
-	}
 	public static class DefaultKVPair implements KVPair{
 		String k;
 		String v;
@@ -33,6 +27,7 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 			this.k=k;
 			this.v=v;
 		}
+		
 		@Override
 		public String getKey() {
 			return k;
@@ -41,6 +36,10 @@ public abstract class FieldBasedSearchAnalyzer<K> implements SearchAnalyzer<K> {
 		@Override
 		public String getValue() {
 			return v;
+		}
+
+		public static KVPair make(String key, String val){
+			return new DefaultKVPair(key,val);
 		}
 		
 	}

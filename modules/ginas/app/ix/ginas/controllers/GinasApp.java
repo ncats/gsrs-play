@@ -984,8 +984,7 @@ public class GinasApp extends App {
                 for (Substance sub : substances) {
                     indexer.add(sub);
                 }
-
-               result = SearchFactory.search
+                result = SearchFactory.search
                         (indexer, Substance.class, null, null, indexer.size(),
                                 0, FACET_DIM, request().queryString());
             }

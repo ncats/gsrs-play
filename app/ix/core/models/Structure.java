@@ -66,7 +66,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public static final String H_InChI_Key = "InChI_Key";
 
     // stereochemistry
-   /* public enum Stereo {
+    /* public enum Stereo {
         ABSOLUTE("ABSOLUTE"),
         ACHIRAL("ACHIRAL"),
         RACEMIC("RACEMIC"),
@@ -205,8 +205,8 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     @Lob
     @Basic(fetch = FetchType.EAGER)
-    @Indexable(indexed = false, structure=true)
-    public String molfile;
+    @Indexable(indexed = false, structure=true) //should totes allow for this
+    public String molfile;						//on a method
 
     @Lob
     @Basic(fetch = FetchType.EAGER)
@@ -267,8 +267,15 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
          * @JsonIgnore public transient Object mol; // a transient mol object
          */
     public Integer count = 1; // moiety count?
-    public Structure() {
-    }
+    public Structure() {}
+    
+    
+    
+//    @JsonIgnore
+//    @Indexable(indexed=false, structure=true)
+//    public String theThingtoIndex(){
+//    	return this.molfile;
+//    }
 
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_properties")

@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -22,6 +23,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import ix.core.java8Util.Java8ForOldEbeanHelper;
+import ix.core.util.CachedCallable;
 import ix.core.util.Java8Util;
 import org.apache.lucene.store.AlreadyClosedException;
 
@@ -43,6 +45,10 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
+import ix.core.search.text.EntityTextIndexer;
+import ix.core.search.text.EntityTextIndexer.EntityInfo;
+import ix.core.search.text.EntityTextIndexer.FieldInfo;
+import ix.core.search.text.TextIndexer;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.EntityUtils;
 import ix.utils.TimeProfiler;
@@ -125,7 +131,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     private static StructureIndexerPlugin strucProcessPlugin;
     private static SequenceIndexerPlugin seqProcessPlugin;
     
-    private static ConcurrentHashMap<String, String> alreadyLoaded;
+    private static ConcurrentHashMap<String, Integer> alreadyLoaded;
     
     public static EntityPersistAdapter getInstance(){
     	return _instance;
@@ -143,9 +149,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
 
         alreadyLoaded = new ConcurrentHashMap<>(10000);
-
         editMap = new ConcurrentHashMap<>();
-
         lockMap = new ConcurrentHashMap<>();
     }
 
@@ -315,14 +319,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         boolean registered = cls.isAnnotationPresent(Entity.class);
         if (registered) {
             for (Method m : cls.getMethods()) {
-//                register (PrePersist.class, cls, m, preInsertCallback);
-//                register (PostPersist.class, cls, m, postInsertCallback);
-//                register (PreUpdate.class, cls, m, preUpdateCallback);
-//                register (PostUpdate.class, cls, m, postUpdateCallback);
-//                register (PreRemove.class, cls, m, preDeleteCallback);
-//                register (PostRemove.class, cls, m, postDeleteCallback);
-//                register (PostLoad.class, cls, m, postLoadCallback);
-//
                 Java8ForOldEbeanHelper.register (PrePersist.class, cls, m, preInsertCallback);
                 Java8ForOldEbeanHelper.register (PostPersist.class, cls, m, postInsertCallback);
                 Java8ForOldEbeanHelper.register (PreUpdate.class, cls, m, preUpdateCallback);
@@ -461,68 +457,16 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {
-		if (textIndexerPlugin != null){
-			try{
-				textIndexerPlugin.getIndexer().add(bean);
-			}catch(Exception e){
-				System.err.println(e.getMessage());
-			}
-		}
-
-		List<Field> sequenceFields = getSequenceIndexableField(bean);
-		if (sequenceFields != null && sequenceFields.size()>0) {
-			String _id = EntityUtils.getIdForBeanAsString(bean);
-			for(Field seq:sequenceFields){
-				String indexSequence;
-				try {
-					indexSequence = (String) seq.get(bean);
-					if (indexSequence != null && indexSequence.length() > 0) {
-						getSequenceIndexer().add(_id, indexSequence);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		List<Field> structureFields = getStructureIndexableField(bean);
-		if (structureFields != null && structureFields.size()>0) {
-			String _id = EntityUtils.getIdForBeanAsString(bean);
-			for(Field seq:structureFields){
-				String structure;
-				try {
-					structure = (String) seq.get(bean);
-					getStructureIndexer().add(_id, structure);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		Java8ForOldEbeanHelper.makeIndexOnBean(this,bean);
 	}
 	
 	private void deleteIndexOnBean(Object bean) throws Exception {
-		if (textIndexerPlugin != null)
-            textIndexerPlugin.getIndexer().remove(bean);
-		String _id = EntityUtils.getIdForBeanAsString(bean);
-		List<Field> sequenceFields = getSequenceIndexableField(bean);
-		if (sequenceFields != null && sequenceFields.size()>0) {
-			try{
-				getSequenceIndexer().remove(_id);
-			}catch(AlreadyClosedException e){
-				System.err.println("Unable to remove index, due to concurrent modification, retrying once");
-				getSequenceIndexer().remove(_id);
-			}
-		}
-		List<Field> structureFields = getStructureIndexableField(bean);
-		if (structureFields != null && structureFields.size()>0) {
-			getStructureIndexer().remove(null, _id);
-		}
+		Java8ForOldEbeanHelper.deleteIndexOnBean(this,bean);
 	}
 	
     @Override
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-       
         return preUpdateBeanDirect(bean);
     }
     
@@ -650,8 +594,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     if (m != null) {
                         m.invoke(bean);
                     }
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                 	
                     Logger.trace("Can't invoke method "
                     		+m.getName()+"["+clazz+"]", ex);
@@ -670,8 +613,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             for (Hook m : methods) {
                 try {
                     m.invoke(bean);
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                     Logger.trace("Can't invoke method "
                                  +m.getName()+"["+clazz+"]", ex);
                 }
@@ -709,8 +651,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             for (Hook m : methods) {
                 try {
                     m.invoke(bean);
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                     Logger.trace("Can't invoke method "
                                  +m.getName()+"["+clazz+"]", ex);
                 }
@@ -720,109 +661,45 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     public void deepreindex(Object bean){
         deepreindex(bean, true);
     }
+    
+    
     public void deepreindex(Object bean, boolean deleteFirst){
-    	//reindex(bean);
-    	
-    	if(bean instanceof Model){
-	    	EntityFactory.recursivelyApply((Model)bean, new EntityCallable(){
-				@Override
-				public void call(Object m, String path) {
-						
-					reindex(m, deleteFirst);
-				}
-	    	});
-    	}
-    	
+    	Java8ForOldEbeanHelper.deepreindex(this,bean,deleteFirst);
     }
     
-	//    public static long reindexCount=0;
-	//    public Stack<Long> times= new Stack<Long>();
 	public void reindex(Object bean){
 	    reindex(bean, true);
 	}
 	
     public void reindex(Object bean, boolean deleteFirst){
-    	
-    	String _id=null;
-    	if(bean instanceof BaseModel){
-    		_id=((BaseModel)bean).fetchGlobalId();
-    	}else{
-    		_id=EntityUtils.getIdForBeanAsString(bean);
-    	}
-        if(alreadyLoaded.containsKey(bean.getClass()+_id)){
-            return;
-        }
-//        long ocount=reindexCount;
+    	CachedCallable<String> id=
+    			EntityTextIndexer
+		    		.getEntityInfoFor(bean)
+		    		.getGloballyUniqueIdString(bean);
         try {
-//        	long start=System.currentTimeMillis();
-        	//times.push();
-            if(_id!=null) {
-                alreadyLoaded.put(bean.getClass() + _id, _id);
+            if(id.call()!=null) {
+            	if(alreadyLoaded.containsKey(id.call())){
+                    return;
+                }
+                alreadyLoaded.put(id.call(), 0);
             }
             if(deleteFirst) {
                 deleteIndexOnBean(bean);
             }
             makeIndexOnBean(bean);
-            
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        if(ocount==reindexCount){
-//        	System.out.println(bean.getClass().getName());
-//        }
-//        reindexCount++;
-        
     }
-    public static List<Field> getSequenceIndexableField(Object entity){
-
-        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
-            return null;
-        }
-        List<Field> flist = new ArrayList<Field>();
-        try {
-
-            for (Field f : entity.getClass().getFields()) {
-                Indexable ind= f.getAnnotation(Indexable.class);
-                if (ind != null) {
-                    if(ind.sequence()){
-                    	flist.add(f);
-                    }
-                }
-               
-            }
-
-        }catch (Exception ex) {
-            Logger.trace("Unable to search for sequence indexes for "+entity, ex);
-        }
-        return flist;
-    }
-    public static List<Field> getStructureIndexableField(Object entity){
-
-        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
-            return null;
-        }
-        List<Field> flist = new ArrayList<Field>();
-        try {
-                
-            for (Field f : entity.getClass().getFields()) {
-                Indexable ind= f.getAnnotation(Indexable.class);
-                if (ind != null) {
-                    if(ind.structure()){
-                    	flist.add(f);
-                    }
-                }
-               
-            }
-        }catch (Exception ex) {
-            Logger.trace("Unable to search for structure indexes for "+entity, ex);
-        }
-        return flist;
-    }
-
 
     public static void doneReindexing(){
         alreadyLoaded.clear();
     }
+
+	public TextIndexerPlugin getTextIndexerPlugin() {
+		return textIndexerPlugin;
+	}
+
 
 
 
