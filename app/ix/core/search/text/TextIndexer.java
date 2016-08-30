@@ -1703,6 +1703,7 @@ public class TextIndexer implements Closeable {
 		boolean isPrimitive;
 		boolean isArray;
 		boolean isCollection;
+		boolean isEntityType;
 		Class<?> type;
 		String name;
 		boolean isDynaLabel=false;
@@ -1731,7 +1732,11 @@ public class TextIndexer implements Closeable {
 			if (dyna != null && name.equals(dyna.value())){
 				isDynaValue=true;
 			}
+			if(type.isAnnotationPresent(Entity.class)){
+				this.isEntityType=true;	
+			}
 		}
+		
 		public boolean isExplicitlyIndexable(){
 			return explicitIndexable;
 		}
@@ -1761,6 +1766,11 @@ public class TextIndexer implements Closeable {
 		public Class<?> getType() {
 			return type;
 		}
+		
+		public boolean isEntityType(){
+			return isEntityType;
+		}
+		
 		public boolean isArrayOrCollection() {
 			return this.isArray || this.isCollection;
 		}
@@ -1871,8 +1881,12 @@ public class TextIndexer implements Closeable {
 					}
 					// the value might be an entity, but the declared
 					// type is something more generic
-					else if (value.getClass().isAnnotationPresent(Entity.class)) {
+					else if (fi.isEntityType()) {
+						if(!value.getClass().isAnnotationPresent(Entity.class)){
+							System.out.println("Got an entity:" + value + "\t" + path.toString());	
+						}
 						// composite type; recurse
+						
 						instrument(path, value, ixFields, entities);
 						if (fi.isExplicitlyIndexable()) {
 							indexField(ixFields, fi.getIndexable(), path, value);
