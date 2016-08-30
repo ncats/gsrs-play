@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.Java8Util;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.exporters.SubstanceExporterFactory;
+import ix.ginas.utils.reindex.MultiReIndexListener;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
 import ix.ncats.controllers.App;
@@ -1773,7 +1775,8 @@ public class GinasApp extends App {
             Runnable r= ()->{
                     try {
                         new ReIndexService(5, 10)
-                                .reindexAll(listener);
+                                .reindexAll(new MultiReIndexListener(listener,
+                                                                    Play.application().plugin(TextIndexerPlugin.class).getIndexer()));
 
                     } catch (Exception e) {
                         e.printStackTrace();
