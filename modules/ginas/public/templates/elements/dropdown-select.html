@@ -2,7 +2,7 @@
     <label id="{{::field}}-label" class="text-capitalize">{{label || field}}<span ng-if="required==true" class = "danger"> *</span>
     </label>
     <br>
-    <a ng-show="!edit || !obj.display =='Other'" uib-tooltip="click to edit" ng-click="edit=!edit">{{obj.display}}</a>
+    <a ng-show="!edit || !obj.display =='Other'" uib-tooltip="click to edit" type="button" ng-click="edit=!edit">{{obj.display}}</a>
     <span class= "float-right" ng-if="changed==true">
         <a ng-click="undo()"><i class="fa fa-undo danger" aria-hidden="true" uib-tooltip="Undo"></i></a>
     </span>

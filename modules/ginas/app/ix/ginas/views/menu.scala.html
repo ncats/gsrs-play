@@ -47,7 +47,7 @@
                             typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
                             uib-typeahead="r.key as r.key for r in getSuggestions($viewValue)"
                             typeahead-loading="loadingSuggest"
-                            typeahead-no-results="noResults"
+                            typeahead-focus-first ="false"
                             autocomplete="off">
                             <span class="input-group-btn">
                                 <div class="btn-group" uib-dropdown>
@@ -81,9 +81,6 @@
                         </div>
                         <div ng-cloak ="" ng-show="loadingSuggest">
                         <i class="fa fa-refresh"></i>
-                        </div>
-                        <div ng-cloak ="" ng-show="noResults">
-                            <span class="danger" ng-click ="query =null; noResults= !noResults "><i class="fa fa-times"></i> No Results Found</span>
                         </div>
                     </form>
                 </li>
