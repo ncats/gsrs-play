@@ -11,10 +11,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -42,13 +39,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -70,7 +64,6 @@ import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.range.LongRange;
 import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
@@ -90,7 +83,6 @@ import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.xml.builders.TermQueryBuilder;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FieldCacheRangeFilter;
@@ -122,7 +114,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.search.DefaultSearchContextAnalyzerGenerator;
 import ix.core.search.FieldFacet;
@@ -135,10 +126,8 @@ import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
-import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
-import ix.utils.Util;
 import play.Logger;
 import play.Play;
 
@@ -159,6 +148,8 @@ public class TextIndexer implements Closeable {
 	public static final String GIVEN_STOP_WORD = "$";
 	public static final String GIVEN_START_WORD = "^";
 	private static final String ROOT = "root";
+	private static final Pattern ROOT_CONTEXT_ADDER=
+			Pattern.compile("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])");
 	
 	private static final boolean USE_ANALYSIS = false; 
 
@@ -169,15 +160,9 @@ public class TextIndexer implements Closeable {
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
-
 	}
 
-	@Indexable
-	static final class DefaultIndexable {
-	}
-
-	static final Indexable defaultIndexable = (Indexable) DefaultIndexable.class.getAnnotation(Indexable.class);
-
+	
 	/**
 	 * well known fields
 	 */
@@ -378,7 +363,6 @@ public class TextIndexer implements Closeable {
 			}
 			this.values.add(fv);
 		}
-		
 	}
 
 	public static SearchAnalyzer<?> getDefaultSearchAnalyzerFor(Class<?> cls) {
@@ -387,7 +371,6 @@ public class TextIndexer implements Closeable {
 			return gen.create();
 		}
 		return NullSearchAnalyzer.INSTANCE;
-
 	}
 
 	class SuggestLookup implements Closeable {
@@ -455,11 +438,6 @@ public class TextIndexer implements Closeable {
 			this(new File(suggestDir, name));
 		}
 
-		// void add (BytesRef text, Set<BytesRef> contexts,
-		// long weight, BytesRef payload) throws IOException {
-		// lookup.update(text, contexts, weight, payload);
-		// incr ();
-		// }
 
 		void add(String text) throws IOException {
 
@@ -488,7 +466,7 @@ public class TextIndexer implements Closeable {
 
 		private synchronized void refresh() throws IOException {
 			Iterator<Addition> additionIterator = additions.values().iterator();
-
+			
 			while (additionIterator.hasNext()) {
 				Addition add = additionIterator.next();
 				BytesRef ref = new BytesRef(add.text);
@@ -525,15 +503,9 @@ public class TextIndexer implements Closeable {
 
 		List<SuggestResult> suggest(CharSequence key, int max) throws IOException {
 			refreshIfDirty();
-
-			List<Lookup.LookupResult> results = lookup.lookup(key, null, false, max);
-
-			List<SuggestResult> m = new ArrayList<SuggestResult>();
-			for (Lookup.LookupResult r : results) {
-				m.add(new SuggestResult(r.payload.utf8ToString(), r.key, r.value));
-			}
-
-			return m;
+			return lookup.lookup(key, null, false, max).stream()
+					.map(r -> new SuggestResult(r.payload.utf8ToString(), r.key, r.value))
+					.collect(Collectors.toList());
 		}
 	}
 
@@ -553,7 +525,7 @@ public class TextIndexer implements Closeable {
 		 * shutdown state
 		 */
 		public void execute() {
-			long time = StopWatch.timeElapsed(this::flush);
+			StopWatch.timeElapsed(this::flush);
 		}
 
 		private void flush() {
@@ -886,14 +858,14 @@ public class TextIndexer implements Closeable {
 		@Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
-				System.out.println("B4:" + qtext);
+				//System.out.println("B4:" + qtext);
 				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
 				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
-				System.out.println("AF:" + qtext);
+				//System.out.println("AF:" + qtext);
 			}
 			// add ROOT prefix to all term queries (containing '_') where not
 			// otherwise specified
-			qtext = qtext.replaceAll("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])", ROOT + "_$1");
+			qtext = ROOT_CONTEXT_ADDER.matcher(qtext).replaceAll(ROOT + "_$1");
 			Query q = super.parse(qtext);
 			return q;
 		}
@@ -966,7 +938,6 @@ public class TextIndexer implements Closeable {
 
 	public SearchResult range(SearchOptions options, String field, Integer min, Integer max) throws IOException {
 		Query query = NumericRangeQuery.newIntRange(field, min, max, true /* minInclusive? */, true/* maxInclusive? */);
-
 		return search(new SearchResult(options, null), query, null);
 	}
 
@@ -982,22 +953,27 @@ public class TextIndexer implements Closeable {
 		Map<String, List<Filter>> filters = new HashMap<String,List<Filter>>();
 		options.removeAndConsumeRangeFilters((f,r)->{
 			filters
-			.computeIfAbsent(f, k -> new ArrayList<Filter>())
-			.add(FieldCacheRangeFilter.newLongRange(f, r[0], r[1], true, false));
+			    .computeIfAbsent(f, k -> new ArrayList<Filter>())
+				.add(FieldCacheRangeFilter.newLongRange(f, r[0], r[1], true, false));
 		});
 		return filters;
 	}
 	
 	public Set<String> createKindSetFromOptions(SearchOptions options){
+		return createKindSetFromClass(options.kind);
+	}
+	
+	
+	public Set<String> createKindSetFromClass(Class<?> kind){
 		Set<String> kinds = new TreeSet<String>();
-		kinds.add(options.kind.getName());
+		kinds.add(kind.getName());
 		Reflections reflections = new Reflections(IX_BASE_PACKAGE);
-		for (Class<?> c : reflections.getSubTypesOf(options.kind)) {
+		for (Class<?> c : reflections.getSubTypesOf(kind)) {
 			kinds.add(c.getName());
 		}
 		return kinds;
 	}
-	
+		
 	public Sort createSorterFromOptions(SearchOptions options) {
 		Sort sorter = null;
 		if (!options.order.isEmpty()) {
@@ -1081,9 +1057,9 @@ public class TextIndexer implements Closeable {
 	}
 	
 	public static interface LuceneSearchProvider{
+		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
 		public TopDocs getTopDocs();
 		public Facets getFacets();
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
 	}
 	
 	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
@@ -1382,28 +1358,23 @@ public class TextIndexer implements Closeable {
 				continue;
 
 			Logger.debug("[Range facet: \"" + flr.field + "\"");
-			LongRange[] range = new LongRange[flr.range.size()];
-			int i = 0;
-			for (Map.Entry<String, long[]> me : flr.range.entrySet()) {
-				// assume range [low,high)
-				long[] r = me.getValue();
-				range[i++] = new LongRange(me.getKey(), r[0], true, r[1], true);
-				Logger.debug("  " + me.getKey() + ": " + r[0] + " to " + r[1]);
-			}
+			
+			LongRange[] range = flr.range.entrySet().stream().map(me -> 
+				new LongRange(me.getKey(), me.getValue()[0], true, me.getValue()[1], true)
+			).collect(Collectors.toList()).toArray(new LongRange[0]);
 
 			Facets facets = new LongRangeFacetCounts(flr.field, fc, range);
 			FacetResult result = facets.getTopChildren(options.fdim, flr.field);
 			Facet f = new Facet(result.dim);
+			
 			if (DEBUG(1)) {
 				Logger.info(" + [" + result.dim + "]");
 			}
-			for (i = 0; i < result.labelValues.length; ++i) {
-				LabelAndValue lv = result.labelValues[i];
-				if (DEBUG(1)) {
-					Logger.info("     \"" + lv.label + "\": " + lv.value);
-				}
-				f.values.add(new FV(lv.label, lv.value.intValue()));
-			}
+			
+			Arrays.stream(result.labelValues)
+				.map(lv->new FV(lv.label, lv.value.intValue()))
+				.forEach(fv->f.add(fv));
+			
 			searchResult.addFacet(f);
 		}
 	}
@@ -1412,14 +1383,14 @@ public class TextIndexer implements Closeable {
 		if (entity == null)
 			return null;
 
-		Class cls = entity.getClass();
+		Class<?> cls = entity.getClass();
 		Object id = EntityUtils.getIdForBean(entity);
 
 		if (id == null) {
 			Logger.warn("Entity " + entity + "[" + entity.getClass() + "] has no Id field!");
 			return null;
 		}
-
+		
 		return new Term(cls.getName() + ".id", id.toString());
 	}
 
@@ -1508,14 +1479,20 @@ public class TextIndexer implements Closeable {
 
 		Document doc = new Document();
 		
+		Map<LiteralReference<IndexableField>, TextField> fullText = new HashMap<LiteralReference<IndexableField>, TextField>();
+		
+		
 		for (IndexableField f : fields) {
 			String text = f.stringValue();
 			if (text != null) {
 				if (DEBUG(2))
 					Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
-
-				doc.add(new TextField(FULL_TEXT_FIELD, text, NO));
-				
+				TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
+				//tf.set
+				doc.add(tf);
+				if(USE_ANALYSIS){
+					fullText.put(new LiteralReference<IndexableField>(f), tf);
+				}
 			}
 			doc.add(f);
 		}
@@ -1525,21 +1502,22 @@ public class TextIndexer implements Closeable {
 			if(mid!=null){
 				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + kind,YES);
 				StringField docParent=new StringField(FIELD_KIND + ".id",mid,YES);
-				//This is a test of a terrible idea, which just. might. work
+				FacetField  docParentFacet =new FacetField(FIELD_KIND + ".id",mid);
+				//This is a test of a terrible idea, which just. might. work.
 				fields.stream()
 					.filter(f->f.name().startsWith(ROOT +"_") && f.stringValue()!=null)
 					.collect(Collectors.groupingBy(f -> f.name()))
 					.forEach((name,group)->{
 						try{
-							//System.out.println("TEST!");
 							Document fielddoc = new Document();
 							fielddoc.add(toAnalyze);
 							fielddoc.add(docParent);
+							fielddoc.add(docParentFacet);
 							fielddoc.add(new FacetField(ANALYZER_FIELD,name));
 							for(IndexableField f:group){
-									fielddoc.add(new TextField(FULL_TEXT_FIELD,f.stringValue(),NO));
+									fielddoc.add(fullText.computeIfAbsent(new LiteralReference<IndexableField>(f),
+											k -> new TextField(FULL_TEXT_FIELD, f.stringValue(), NO)));
 							}
-						
 							addDoc(fielddoc);
 						}catch(Exception e){
 							System.out.println("FAILED!" + e.getMessage());
@@ -1650,9 +1628,11 @@ public class TextIndexer implements Closeable {
 		}
 	}
 	
-	public static class Ref{
-		public Object o;
-		Ref(Object o){
+	
+	
+	public static class LiteralReference<K>{
+		public K o;
+		LiteralReference(K o){
 			this.o=o;
 		}
 		@Override
@@ -1662,8 +1642,8 @@ public class TextIndexer implements Closeable {
 		@Override
 		public boolean equals(Object oref){
 			if(oref==null)return false;
-			if(oref instanceof Ref){
-				Ref or=(Ref)oref;
+			if(oref instanceof LiteralReference){
+				LiteralReference<?> or=(LiteralReference<?>)oref;
 				return (this.o == or.o);
 			}
 			return false;
@@ -1672,240 +1652,119 @@ public class TextIndexer implements Closeable {
 	}
 	
 	
-	public static class EntityInfo{
-		Class<?> cls;
-		String kind;
-		DynamicFacet dyna;
-		List<FieldInfo> fields;
-		public EntityInfo(Class cls){
-			this.cls = cls;
-			kind = cls.getName();
-			//ixFields.add(new FacetField(DIM_CLASS, kind));
-			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
-			fields = Arrays.stream(cls.getFields())
-					  .map(f2->new FieldInfo(f2,dyna))
-					  .filter(f->f.isEnabled())
-					  .collect(Collectors.toList());
+	public static class LinkedReferenceSet<K>{
+		LinkedList<LiteralReference<K>> list = new LinkedList<LiteralReference<K>>();
+		HashSet<LiteralReference<K>> set = new HashSet<LiteralReference<K>>();
+		
+		public boolean contains(K k){
+			return set.contains(k);
 		}
 		
-		public List<FieldInfo> getFieldInfo(){
-			return this.fields;
+		public K pop(){
+			LiteralReference<K> lr = list.pop();
+			set.remove(lr);
+			return lr.o;
 		}
-		
-	}
-	
-	public static class FieldInfo{
-		Field f;
-		Indexable indexable;
-		boolean enabled=true;
-		boolean isID=false;
-		boolean explicitIndexable = true;
-		boolean isPrimitive;
-		boolean isArray;
-		boolean isCollection;
-		boolean isEntityType;
-		Class<?> type;
-		String name;
-		boolean isDynaLabel=false;
-		boolean isDynaValue=false;
-		public FieldInfo(Field f,DynamicFacet dyna){
-			this.f=f;
-			this.indexable = (Indexable) f.getAnnotation(Indexable.class);
-			if (indexable == null) {
-				indexable = defaultIndexable;
-				explicitIndexable=false;
+		public void push(K k){
+			if(!contains(k)){
+				LiteralReference<K> lr = new LiteralReference<K>(k);
+				list.add(lr);
 			}
-
-			int mods = f.getModifiers();
-			if (!indexable.indexed() || Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
-				enabled=false;
-			}
-			type= f.getType();
-			isID=(f.getAnnotation(Id.class) != null);	
-			isPrimitive=type.isPrimitive();
-			isArray=type.isArray();
-			isCollection=Collection.class.isAssignableFrom(type);
-			name=f.getName();
-			if (dyna != null && name.equals(dyna.label())){
-				isDynaLabel=true;
-			}
-			if (dyna != null && name.equals(dyna.value())){
-				isDynaValue=true;
-			}
-			if(type.isAnnotationPresent(Entity.class)){
-				this.isEntityType=true;	
-			}
-		}
-		
-		public boolean isExplicitlyIndexable(){
-			return explicitIndexable;
-		}
-		
-		public boolean isId(){
-			return isID;
-		}
-		
-		public boolean isPrimitive(){
-			return isPrimitive;
-		}
-		
-		public Indexable getIndexable(){
-			return indexable;
-		}
-		
-		public Object getValue(Object entity) throws Exception{
-			return f.get(entity);
-		}
-		
-		public boolean isEnabled(){
-			return this.enabled;
-		}
-		public String getName(){
-			return name;
-		}
-		public Class<?> getType() {
-			return type;
-		}
-		
-		public boolean isEntityType(){
-			return isEntityType;
-		}
-		
-		public boolean isArrayOrCollection() {
-			return this.isArray || this.isCollection;
-		}
-		
-		//this is a little weird, in that this is meant to consume
-		//the very value it created
-		public void forEach(Object value, BiConsumer<Integer,Object> bic){
-//			Object value=this.getValue(entity);
-//			if(value==null)return;
-			Stream<?> s;
-			if(this.isArray){
-				s=Arrays.stream((Object[])value);
-			}else if(this.isCollection){
-				s=((Collection<?>) value).stream();
-			}else{
-				return;
-			}
-			int[] idx= {0};
-			s.forEach(o->bic.accept(idx[0]++, o));
-		}
-		public boolean isDynamicFacetLabel() {
-			return isDynaLabel;
-		}
-		
-		public boolean isDynamicFacetValue() {
-			return isDynaValue;
 		}
 	}
 	
-	Map<String, EntityInfo> infoCache = new ConcurrentHashMap<String, EntityInfo>();
-
 	protected void instrument(LinkedList<String> path, Object entity, List<IndexableField> ixFields,
-			LinkedList<Ref> prevEntities) {
+			LinkedReferenceSet prevEntities) {
+		
 		// This is a problem because of infinite recursion. It
 		// can actually happen really easily on ManyToOne
 		// JPA annotations.
-		if (prevEntities == null) {
-			prevEntities = new LinkedList<Ref>();
-		}
-		
+
 		// This is to avoid infinite recurse. If this object has already been
 		// seen here, then things would explode.
-		if (prevEntities.contains(new Ref(entity))) {
+		LinkedReferenceSet entities = (prevEntities!=null)?prevEntities: new LinkedReferenceSet();
+		if (entities.contains(entity)) {
 			return;
 		}
-		LinkedList<Ref> entities = prevEntities;
 		
 		try {
-			entities.push(new Ref(entity));
+			entities.push(entity);
 			
-			Class<?> cls = entity.getClass();
-			String kind = cls.getName();
-			ixFields.add(new FacetField(DIM_CLASS, kind));
+			EntityTextIndexer.EntityInfo entityInfo = EntityTextIndexer.getEntityInfoFor(entity.getClass());
 
+			String kind = entityInfo.getName();
+			ixFields.add(new FacetField(DIM_CLASS, kind));
+			
 			String[] facetLabel = {null};
 			String[] facetValue = {null};
 			
 			
-			EntityInfo entityInfo = infoCache.computeIfAbsent(kind, k-> new EntityInfo(cls));
-			
+			// You may notice that the full path to this id field isn't here,
+			// while it is on the other fields ...
+			//
+			entityInfo.getIDFieldInfo().ifPresent(fi->
+					fi.getValue(entity).ifPresent(value -> {
+							if (value instanceof Long) {
+								ixFields.add(new LongField(entityInfo.internalIdField(), (Long) value, YES));
+							} else {
+								ixFields.add(new StringField(entityInfo.internalIdField(), value.toString(), YES));
+							}
+							ixFields.add(new StringField(entityInfo.externalIdField(), value.toString(), NO));
+						}
+					)
+			);
 			
 			entityInfo.getFieldInfo().stream().sequential().forEach(fi -> {
-				boolean defindex = false;
-				
-				path.push(fi.getName());
-				
-				try {
-					Object value = fi.getValue(entity);
-					
-					if (DEBUG(2)) {
-						Logger.debug("++ " + toPath(path) + ": type=" + fi.getType() + " value=" + value);
-					}
-
-					if (fi.isId()) {
-						if (value != null) {
-							// the hidden _id field stores the field's value
-							// in its native type whereas the display field id
-							// is used for indexing purposes and as such is
-							// represented as a string
-							if (value instanceof Long) {
-								ixFields.add(new LongField(kind + "._id", (Long) value, YES));
-							} else {
-								ixFields.add(new StringField(kind + "._id", value.toString(), YES));
+					fi.getValue(entity).ifPresent(value->{
+						path.push(fi.getName());
+						try{
+							boolean defindex = false;
+							if (DEBUG(2)) {
+								Logger.debug("++ " + toPath(path) + ": type=" + fi.getType() + " value=" + value);
 							}
-							ixFields.add(new StringField(kind + ".id", value.toString(), NO));
-						} else {
-							if (DEBUG(2)){
-								Logger.warn("Id field " + fi.getName() + " is null");
+							
+							if (fi.isDynamicFacetLabel()) {
+								facetLabel[0] = value.toString();
+								defindex = true;
+							}else if (fi.isDynamicFacetValue()) {
+								facetValue[0] = value.toString();
+								defindex = true;
+							}else if (fi.isPrimitive()) {
+								indexField(ixFields, fi.getIndexable(), path, value);
+							}else if (fi.isArrayOrCollection()) {
+								// MUST be done in order
+								fi.forEach(value, (i, o) -> {
+									path.push(String.valueOf(i));
+									instrument(path, o, ixFields, entities);
+									path.pop();
+								});
+							}else if (fi.isEntityType()) {
+								// the value might be an entity, but the declared
+								// type is something more generic, but it's been
+								// simplified
+								// here.
+		
+								// composite type; recurse
+								instrument(path, value, ixFields, entities);
+								if (fi.isExplicitlyIndexable()) {
+									indexField(ixFields, fi.getIndexable(), path, value);
+								}
+							}else {
+								defindex = true;
 							}
-						}
-					} else if (value == null) {
-						// do nothing
-					} else if (fi.isDynamicFacetLabel()) {
-						facetLabel[0] = value.toString();
-						defindex = true;
-					} else if (fi.isDynamicFacetValue()) {
-						facetValue[0] = value.toString();
-						defindex = true;
-					} else if (fi.isPrimitive()) {
-						indexField(ixFields, fi.getIndexable(), path, value);
-					} else if (fi.isArrayOrCollection()) {
-						//MUST be done in order
-						fi.forEach(value, (i,o)->{
-							path.push(String.valueOf(i));
-							instrument(path, o, ixFields, entities);
+							if (defindex) { // treat as string
+								indexField(ixFields, fi.getIndexable(), path, value);
+							}
+						} catch (Throwable ex) {
+							ex.printStackTrace();
+							if (DEBUG(3)) {
+								Logger.warn(entity.getClass() + ": Field " + fi.getName() + " is not indexable due to "
+										+ ex.getMessage());
+							}
+						}finally{
 							path.pop();
-						});
-					}
-					// the value might be an entity, but the declared
-					// type is something more generic
-					else if (fi.isEntityType()) {
-						if(!value.getClass().isAnnotationPresent(Entity.class)){
-							System.out.println("Got an entity:" + value + "\t" + path.toString());	
 						}
-						// composite type; recurse
-						
-						instrument(path, value, ixFields, entities);
-						if (fi.isExplicitlyIndexable()) {
-							indexField(ixFields, fi.getIndexable(), path, value);
-						}
-					} else {
-						defindex = true;
-					}
-					if (defindex) { // treat as string
-						indexField(ixFields, fi.getIndexable(), path, value);
-					}
-				} catch (Throwable ex) {
-					ex.printStackTrace();
-					if (DEBUG(3)) {
-						Logger.warn(entity.getClass() + ": Field " + fi.getName() + " is not indexable due to " + ex.getMessage());
-					}
-				} finally{
-					path.pop();	
-				}
-				
+					}); // for each field with value
 			}); // foreach field
 
 			// dynamic facet if available
@@ -1919,57 +1778,30 @@ public class TextIndexer implements Closeable {
 				suggestField(facetLabel[0], facetValue[0]);
 			}
 
-			Method[] methods = cls.getMethods();
-			
-			for (Method m : methods) {
-				Indexable indexable = (Indexable) m.getAnnotation(Indexable.class);
-				if (indexable != null && indexable.indexed()) {
-					// we only index no arguments methods
-					Class<?>[] args = m.getParameterTypes();
-					if (args.length == 0) {
-						Object value = m.invoke(entity);
-						if (value != null) {
-							String name = m.getName();
-							if (name.startsWith("get")) {
-								name = name.substring(3);
-							}
-							if (!indexable.name().equals("")) {
-								name = indexable.name();
-							}
-							
-							LinkedList<String> l = new LinkedList<>();
-							l.add(name);
-
-							Class<?> type = value.getClass();
-							if (Collection.class.isAssignableFrom(type)) {
-								Iterator<?> it = ((Collection<?>) value).iterator();
-								for (int i = 0; it.hasNext(); ++i) {
-									l.push(i+"");
-									indexField(ixFields, indexable, l, it.next());
-									l.pop();
-								}
-							} else if (type.isArray()) {
-								int len = Array.getLength(value);
-								// recursively evaluate each element in
-								// the array
-								for (int i = 0; i < len; ++i) {
-									l.push(i+"");
-									indexField(ixFields, indexable, l, Array.get(value, i));
-									l.pop();
-								}
-							} else {
-								indexField(ixFields, indexable, l, value);
-							}
+			entityInfo.getMethodInfo().stream().sequential().forEach(mi -> {
+				mi.getValue(entity).ifPresent(value -> {
+					path.push(mi.getName());
+					try {
+						if (mi.isArrayOrCollection()) {
+							mi.forEach(value, (i, o) -> {
+								path.push(i + "");
+								indexField(ixFields, mi.getIndexable(), path, o);
+								path.pop();
+							});
+						} else {
+							indexField(ixFields, mi.getIndexable(), path, value);
 						}
-					} else {
-						Logger.warn(
-								"Indexable is annotated for non-zero " + "arguments method \"" + m.getName() + "\"");
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						Logger.trace("Fetching entity methods", ex);
+					} finally {
+						path.pop();
 					}
-				}
-			}
+				});
+			});
 		} catch (Throwable ex) {
 			ex.printStackTrace();
-			Logger.trace("Fetching entity fields", ex);
+			Logger.trace("Fetching entity method / fields", ex);
 		} finally {
 			entities.pop();
 		}

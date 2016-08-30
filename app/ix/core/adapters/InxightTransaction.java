@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
@@ -139,13 +140,17 @@ public class InxightTransaction {
 	}
 	
 	public void runCommits(){
-		for(Callable c:afterCommit){
-			try {
-				c.call();
-			} catch (Exception e) {
-				e.printStackTrace();
+		afterCommit.forEach(new Consumer<Callable>(){
+			@Override
+			public void accept(Callable t) {
+				try {
+					t.call();	
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 			}
-		}
+		});
+			
 		afterCommit.clear();
 	}
 	

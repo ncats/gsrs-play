@@ -1,13 +1,18 @@
 package ix.ginas.controllers.plugins;
 
-import ix.ginas.exporters.Exporter;
-import ix.ginas.exporters.SubstanceExporterFactory;
-import ix.ginas.models.v1.Substance;
-import play.Application;
-import play.Play;
-import play.api.Plugin;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
-import java.util.*;
+import ix.ginas.exporters.SubstanceExporterFactory;
+import play.Application;
+import play.api.Plugin;
 
 /**
  * This Plugin finds all the {@link SubstanceExporterFactory} implementations
