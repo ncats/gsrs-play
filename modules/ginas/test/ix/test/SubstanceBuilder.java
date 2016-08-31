@@ -41,7 +41,7 @@ public class SubstanceBuilder{
 					((ChemicalSubstance)s).structure=cs;
 					Reference rr=Reference.SYSTEM_ASSUMED();
 					cs.addReference(rr); //TODO: fix this better
-					s.addReference(rr);
+					s.references.add(rr);
 					return s;
 				});
 		return this;
