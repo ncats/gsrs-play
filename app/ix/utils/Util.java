@@ -450,4 +450,44 @@ public class Util {
 	public static <K> Map<String,List<K>> groupToMap(Stream<K> s, Function<K,String> namer){
 		return s.collect(Collectors.groupingBy(namer));
 	}
+	
+	
+	
+	
+	
+	public static class Tuple<K,V>{
+		K k;
+		V v;
+		public Tuple(K k,V v){
+			this.k=k;
+			this.v=v;
+		}
+		public K k(){
+			return k;
+		}
+		public V v(){
+			return v;
+		}
+		
+	}
+
+	// Used for simple case-insensitive literal string replacement
+	// From:http://stackoverflow.com/questions/5054995/how-to-replace-case-insensitive-literal-substrings-in-java
+	public static String replaceIgnoreCase(String source, String target, String replacement) {
+		StringBuilder sbSource = new StringBuilder(source);
+		StringBuilder sbSourceLower = new StringBuilder(source.toLowerCase());
+		String searchString = target.toLowerCase();
+
+		int idx = 0;
+		while ((idx = sbSourceLower.indexOf(searchString, idx)) != -1) {
+			sbSource.replace(idx, idx + searchString.length(), replacement);
+			sbSourceLower.replace(idx, idx + searchString.length(), replacement);
+			idx += replacement.length();
+		}
+		sbSourceLower.setLength(0);
+		sbSourceLower.trimToSize();
+		sbSourceLower = null;
+
+		return sbSource.toString();
+	}
 }

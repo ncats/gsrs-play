@@ -1,6 +1,8 @@
 package ix.test.ix.test.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -8,6 +10,7 @@ import ix.seqaln.SequenceIndexer.CutoffType;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static org.junit.Assert.assertTrue;
 
@@ -30,6 +33,7 @@ public class SubstanceAPI {
     private static final String API_URL_STRUCTURE_BROWSE = "ginas/app/api/v1/structures";
 
 
+    private static final String UI_URL_SUBSTANCE_SEARCH_TEXT="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE_SEARCH_FLEX="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE_SEARCH_SUB="ginas/app/substances";
     private static final String UI_URL_SUBSTANCE_SEARCH_SEQ="ginas/app/sequence";
@@ -124,13 +128,23 @@ public class SubstanceAPI {
                 .setQueryParameter("q", smiles).get().get(timeout);
     }
     
+    
+    public WSResponse getTextSearch(String q){
+        return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_TEXT)
+                .setQueryParameter("q", q).get().get(timeout);
+    }
+    
     public WSResponse getExactMatch(String smiles){
         return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_FLEX)
         		.setQueryParameter("type", "exact")
                 .setQueryParameter("q", smiles).get().get(timeout);
     }
 
-
+    public String getTextSearchHTML(String q){
+    	WSResponse wsr= getTextSearch(q);
+    	return wsr.getBody();
+    }
+    
     public String getFlexMatchHTML(String smiles){
     	WSResponse wsr= getFlexMatch(smiles);
     	return wsr.getBody();
@@ -208,24 +222,35 @@ public class SubstanceAPI {
     	}
     }
     
-    public WSResponse fetchSubstancesUISearch(String searchString,String facet) {
-        if(facet==null){
-        	return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE)
-        		.setQueryParameter("q", searchString)
+//    public static class BrowseRequest{
+//    	
+//    	
+//    	public BrowseRequest(){}
+//    	
+//    	public BrowseRequest withParam(String k, String v){
+//    		
+//    	}
+//    	
+//    	
+//    }
+    
+    public WSResponse fetchSubstancesUISearch(String searchString,String facet, String order) {
+        Function<WSRequestHolder,WSRequestHolder> map = (k->k);
+        
+        if(searchString!=null){map=map.andThen(w->w.setQueryParameter("q", searchString));}
+        if(facet!=null){map=map.andThen(w->w.setQueryParameter("facet", facet));}
+        if(order!=null){map=map.andThen(w->w.setQueryParameter("order", order));}
+        
+        return map.apply(session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE))
         		.get().get(timeout);
-        }else{
-        	return session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE)
-            		.setQueryParameter("q", searchString)
-            		.setQueryParameter("facet", facet)
-            		.get().get(timeout);
-        }
     }
-    public String fetchSubstancesUISearchHTML(String searchString, String facet) {
-    	return fetchSubstancesUISearch(searchString,facet).getBody();
+    public String fetchSubstancesUISearchHTML(String searchString, String facet, String order) {
+    	return fetchSubstancesUISearch(searchString,facet, order).getBody();
     }
     public String fetchSubstancesUIBrowseHTML() {
         return fetchSubstancesUIBrowse(false).getBody();
     }
+    
     public String fetchSubstancesWithDeprecatedUIBrowseHTML() {
         return fetchSubstancesUIBrowse(true).getBody();
     }

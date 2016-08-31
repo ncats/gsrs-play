@@ -10,6 +10,7 @@ import javax.persistence.OneToOne;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.IgnoredModel;
+import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSimplifiedSubData;
 
 
@@ -21,6 +22,7 @@ public class DisulfideLink extends GinasCommonSimplifiedSubData {
 	
 	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
+	@Indexable(indexed=false)
     SiteContainer siteContainer;
 	
     public List<Site> getSites(){

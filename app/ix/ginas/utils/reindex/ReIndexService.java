@@ -1,7 +1,6 @@
 package ix.ginas.utils.reindex;
 
 import com.avaje.ebean.QueryIterator;
-import com.typesafe.config.ConfigUtil;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.BackupEntity;
 import ix.core.plugins.SequenceIndexerPlugin;
@@ -10,12 +9,10 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.CloseableIterator;
 import ix.core.util.IOUtil;
-import ix.utils.Util;
 import play.Play;
 import play.db.ebean.Model;
 
 import java.io.File;
-import java.io.IOError;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -154,6 +151,7 @@ public class ReIndexService {
         public void run() {
             try {
                 Object instantiated = oreal.getInstantiated();
+
                 EntityPersistAdapter.getInstance().deepreindex(instantiated, deleteFirst);
                 listener.recordReIndexed(instantiated);
 

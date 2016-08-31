@@ -46,6 +46,7 @@ public class Protein extends GinasCommonSubData {
     
     @Lob
     @JsonIgnore
+    @Indexable(indexed=false)
     public String disulfJSON=null;
     
     

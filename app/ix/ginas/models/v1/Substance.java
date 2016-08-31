@@ -119,7 +119,7 @@ public class Substance extends GinasCommonData {
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	@JsonSerialize(using = PrincipalSerializer.class)
 	@JsonDeserialize(using = PrincipalDeserializer.class)
-	@Indexable(facet = true, name = "Approved By", sortable=true)
+	@Indexable(facet = true, name = "Approved By", sortable=true, recurse=false)
 	public Principal approvedBy;
 
 	@Indexable(facet = true, name = "Approved Date", sortable=true)

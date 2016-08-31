@@ -12,6 +12,7 @@ import java.util.Set;
 
 import ix.ginas.exporters.SubstanceExporterFactory;
 import play.Application;
+import play.Logger;
 import play.api.Plugin;
 
 /**
@@ -42,12 +43,13 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
         exporters.clear();
         extensionMap.clear();
 
-        for(String clazz :app.configuration().getStringList("ix.ginas.exportFactories")){
+        for(String clazz :app.configuration().getStringList("ix.ginas.exportFactories",new ArrayList<String>())){
             try{
                 Class<SubstanceExporterFactory> exporter = (Class<SubstanceExporterFactory>) Class.forName(clazz);
                 exporters.add(exporter.newInstance());
             }catch(Exception e){
-                e.printStackTrace();
+                Logger.error("Error initializing exporter:" + clazz);
+            	//e.printStackTrace();
                 //ignore
             }
         }

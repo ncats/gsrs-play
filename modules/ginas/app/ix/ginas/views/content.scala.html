@@ -145,10 +145,19 @@
                               <h4>Restrict query to field:</h4>
                               @searchFacets.groupBy(_.matchType).map {
                                     case (group, items) => {
-                                        @if(group.toString() == "FULL"){
-                                            <h5 style="font-style:italic">Exact Match:</h5>
-                                        }else{
-                                            <h5 style="font-style:italic">Contains Match:</h5>
+                                        @group.toString() match {
+			    		    				case "FULL" => {
+                                            <h5 style="font-style:italic">Exact Match @items.iterator().next().getValue():</h5>
+                                        	}
+                                        	case "CONTAINS" => {
+                                            <h5 style="font-style:italic">Contains Exact @items.iterator().next().getValue()</h5>
+                                        	}
+                                        	case "WORD" => {
+                                            <h5 style="font-style:italic">Contains All @items.iterator().next().getValue():</h5>
+                                        	}
+                                        	case "WORD_STARTS_WITH" => {
+                                            <h5 style="font-style:italic">Contains Partial @items.iterator().next().getValue():</h5>
+                                        	}
                                         }
                                         <div class = "row fieldfacet">
                                         @items.map { item =>

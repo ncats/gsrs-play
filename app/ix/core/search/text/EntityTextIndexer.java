@@ -19,7 +19,7 @@ import javax.persistence.Id;
 
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
-import ix.core.util.CachedCallable;
+import ix.core.util.CachedSupplier;
 import ix.utils.EntityUtils;
 
 public class EntityTextIndexer {
@@ -45,18 +45,25 @@ public class EntityTextIndexer {
 		String kind;
 		DynamicFacet dyna;
 		List<FieldInfo> fields;
+		Indexable indexable;
 		
 		List<ValueMakerInfo> seqFields = new ArrayList<ValueMakerInfo>();
 		List<ValueMakerInfo> strFields = new ArrayList<ValueMakerInfo>();;
 		
 		List<MethodInfo> methods;
 		
+		
 		FieldInfo idField=null;
 		
+		FieldInfo dynamicLabelField=null;
+		FieldInfo dynamicValueField=null;
+		
 		boolean isEntity=false;
-
+		boolean shouldIndex=true;
+		
 		public EntityInfo(Class cls) {
 			this.cls = cls;
+			this.indexable = (Indexable) cls.getAnnotation(Indexable.class);
 			kind = cls.getName();
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
@@ -65,6 +72,10 @@ public class EntityTextIndexer {
 						if(f.isId()){
 							idField=f;
 							return false;
+						}else if(f.isDynamicFacetLabel()){
+							dynamicLabelField=f;
+						}else if(f.isDynamicFacetValue()){
+							dynamicValueField=f;
 						}
 						return true;
 					}).collect(Collectors.toList());
@@ -78,15 +89,44 @@ public class EntityTextIndexer {
 			methods.removeIf(m -> !m.isTextEnabled());
 			if (cls.isAnnotationPresent(Entity.class)) {
 				isEntity=true;
+				if(indexable != null && !indexable.indexed()){
+					shouldIndex=false;
+				}
 		    }
+			
 		}
 		
-		public CachedCallable<String> getIdString(Object e){
-			return new CachedCallable<String>(()->EntityUtils.getIdForBeanAsString(e));
+		public boolean shouldIndex(){
+			return shouldIndex;
 		}
 		
-		public CachedCallable<String> getGloballyUniqueIdString(Object e){
-			return new CachedCallable<String>(()->this.kind +":" + EntityUtils.getIdForBeanAsString(e));
+		public CachedSupplier<String> getIdString(Object e){
+			return new CachedSupplier<String>(()->EntityUtils.getIdForBeanAsString(e));
+		}
+		
+		public Optional<String[]> getDynamicFacet(Object e){
+			if(this.dynamicLabelField!=null && this.dynamicValueField!=null){
+				//System.out.println("There is a dynamic facet");
+				String[] fv=new String[]{null,null};
+				this.dynamicLabelField.getValue(e).ifPresent(
+						f->{
+							fv[0]=f.toString();
+						});
+				this.dynamicValueField.getValue(e).ifPresent(
+						f->{
+							fv[1]=f.toString();
+						});
+				if(fv[0]!=null && fv[1] !=null){
+					return Optional.of(fv);
+				}else{
+					return Optional.empty();
+				}
+			}
+			return Optional.empty();
+		}
+		
+		public CachedSupplier<String> getGloballyUniqueIdString(Object e){
+			return new CachedSupplier<String>(()->this.kind +":" + EntityUtils.getIdForBeanAsString(e));
 		}
 		
 		public Optional<FieldInfo> getIDFieldInfo(){
@@ -121,7 +161,7 @@ public class EntityTextIndexer {
 			return kind + "._id";
 		}
 		
-		public String externalIdField(){
+		public String externalIdFieldName(){
 			return kind + ".id";
 		}
 
@@ -264,6 +304,10 @@ public class EntityTextIndexer {
 	public static class FieldInfo implements ValueMakerInfo {
 		Field f;
 		Indexable indexable;
+
+		Class<?> type;
+		String name;
+		
 		boolean textEnabled = true;
 		boolean isID = false;
 		boolean explicitIndexable = true;
@@ -271,8 +315,6 @@ public class EntityTextIndexer {
 		boolean isArray;
 		boolean isCollection;
 		boolean isEntityType;
-		Class<?> type;
-		String name;
 		boolean isDynaLabel = false;
 		boolean isDynaValue = false;
 		boolean isSequence = false;

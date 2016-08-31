@@ -20,5 +20,6 @@ public @interface Indexable {
     double[] dranges () default {};
     String format () default "%1$.2f"; // how to format the value?
 
+    boolean recurse ()  default true; //allow recursion below this
     
 }
