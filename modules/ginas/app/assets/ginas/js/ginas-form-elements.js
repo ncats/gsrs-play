@@ -991,6 +991,7 @@
 
     ginasFormElements.directive('modalFormButton', function ($uibModal) {
         return {
+            replace: true,
             scope: {
                 referenceobj: '=?',
                 parent: '=',
@@ -1140,7 +1141,7 @@
             restrict: 'E',
             replace: true,
             scope: {
-                apply: '=?ngModel', //obj.apply
+                apply: '=ngModel', //obj.apply
                 obj: '=?', //this is the reference object itself from the form,
                 referenceobj: '=',
                 parent: '='
@@ -1149,7 +1150,7 @@
                 var uuid;
                 var index;
                 var template;
-               // scope.apply = false;
+
                 if (_.isUndefined(scope.referenceobj)) {
                     scope.referenceobj = {};
                 }
@@ -1163,15 +1164,6 @@
                     return index >= 0;
                 };
 
-                        template = angular.element('<div class = "text-center"><label>Apply</label><br><input type="checkbox" ng-model="apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        uuid = scope.obj.uuid;
-                        index = _.indexOf(scope.referenceobj.references, uuid);
-                        _.set(scope.obj, '$$apply', index >= 0);
-                        scope.parent.references = _.orderBy(scope.parent.references, ['$$apply'], ['desc']);
-
-
                 scope.updateReference = function () {
                     index = _.indexOf(scope.referenceobj.references, uuid);
                     if (index >= 0) {
@@ -1182,6 +1174,27 @@
                         scope.obj.$$apply = true;
                     }
                 };
+
+                //This checks to see if the reference is used in the object, and sets apply to be true
+                //if apply is already set (from the add reference button) it leaves it.
+                uuid = scope.obj.uuid;
+                index = _.indexOf(scope.referenceobj.references, uuid);
+                if(!scope.obj.$$apply) {
+                    _.set(scope.obj, '$$apply', index >= 0);
+                    //this sorts the list of references so that the applied ones show up first
+                    scope.parent.references = _.orderBy(scope.parent.references, ['$$apply'], ['desc']);
+                }
+
+                //this pushes a new reference to the refobject. probably shouldn't be done in the apply directive...
+                if(scope.obj.$$apply && index < 0){
+                    scope.referenceobj.references.push(uuid);
+                }
+
+
+                //this applies the template to the form
+                template = angular.element('<div class = "text-center"><label>Apply</label><br><input type="checkbox" ng-model= apply ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
+                element.append(template);
+                $compile(template)(scope);
 
             }
         };

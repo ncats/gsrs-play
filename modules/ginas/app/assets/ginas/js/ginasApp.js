@@ -554,10 +554,10 @@
                 case "global":
                 break;
                 case "names":
-                    $scope.q ='root_names_name=' + $scope.q;
+                    $scope.q ='root_names_name:' + $scope.q;
                 break;
                 case "codes":
-                    $scope.q ='root_codes_code=' + $scope.q;
+                    $scope.q ='root_codes_code:' + $scope.q;
                 break;
             }
 

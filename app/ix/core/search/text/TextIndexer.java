@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 
 import javax.persistence.Entity;
 
+import ix.ginas.utils.reindex.ReIndexListener;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
@@ -149,7 +150,7 @@ import play.Play;
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer implements Closeable {
+public class TextIndexer implements Closeable, ReIndexListener {
 	private static final String ANALYZER_FIELD = "M_FIELD";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
 	private static final String IX_BASE_PACKAGE = "ix";
@@ -2388,6 +2389,38 @@ public class TextIndexer implements Closeable {
 	@Override
 	public void close() {
 		shutdown();
+	}
+
+	@Override
+	public void newReindex() {
+		//we have to clear our suggest fields since they are about to be completely replaced
+		lookups.clear();
+		sorters.clear();
+	}
+
+	@Override
+	public void doneReindex() {
+
+	}
+
+	@Override
+	public void recordReIndexed(Object o) {
+
+	}
+
+	@Override
+	public void error(Throwable t) {
+
+	}
+
+	@Override
+	public void totalRecordsToIndex(int total) {
+
+	}
+
+	@Override
+	public void countSkipped(int numSkipped) {
+
 	}
 
 	public void shutdown() {
