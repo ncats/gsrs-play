@@ -1,47 +1,70 @@
-
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.StructuralModification
 
 
 @(mods: List[StructuralModification])
 <div class = "row">
-  <div class="col-md-12">
-    Structural Modifications
-    <table class="table table-striped" id="structural-Table">
-      <thead>
-        <tr>
-          <th>Modification Type</th>
-          <th>Location Site</th>
-          <th>Location Type</th>
-          <th>Residue Modified</th>
-          <th>Extent</th>
-          <th>Fragment Name</th>
-          <th>Fragment Approval</th>
-        </tr>
-      </thead>
-      @for(m <- mods) {
-        <tr>
-          <td>@m.structuralModificationType</td>
-          <td>
-          @for(s <- m.getSites()) {
-                [@{
-                s.subunitIndex
-              }_@s.residueIndex]
-          }
-          </td>
-          <td>@m.locationType</td>
-          <td>@m.residueModified</td>
-          <td>@m.extent<br>
-          @if(m.extentAmount != null){
-          	<br>
-          	<b>Amount:</b>
-            <amount value="@GinasApp.getAsJson(m.extentAmount)"></amount>
-          }
-          </td>
-          <td>@m.molecularFragment.refPname</td>
-          <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())"  target="_self">@m.molecularFragment.getLinkingID()</a></td>
-        </tr>
-      }
-    </table>
-  </div>
+    <div class="col-md-12">
+        Structural Modifications
+        <table class="table table-striped" id="structural-Table">
+            <thead>
+                <tr>
+                    <th>Modification Type</th>
+                    <th>Location Site</th>
+                    <th>Location Type</th>
+                    <th>Residue Modified</th>
+                    <th>Extent</th>
+                    <th>Fragment Name</th>
+                    <th>Fragment Approval</th>
+                </tr>
+            </thead>
+            @for(m <- mods) {
+                <tr>
+                    <td>
+                    @if(m.structuralModificationType != null) {
+                        @m.structuralModificationType
+                    }
+                    </td> <td>
+                @if(m.getSites() != null) {
+                    @for(s <- m.getSites()) {
+                        [@{
+                        s.subunitIndex
+                    }_@s.residueIndex]
+                    }
+                }
+                </td>
+                    <td>
+                    @if(m.locationType != null) {
+                        @m.locationType
+                    }
+                    </td>
+                    <td>
+                    @if(m.residueModified != null) {
+                        @m.residueModified
+                    }
+                    </td>
+                    <td>
+                    @if(m.extent != null) {
+                        @if(m.extentAmount != null) {
+                            <br>
+                            <b>Amount:</b>
+                            <amount value="@GinasApp.getAsJson(m.extentAmount)"></amount>
+                        }
+                    }
+                    </td>
+                    <td>
+                    @if(m.molecularFragment != null) {
+                        @m.molecularFragment.refPname
+                    }
+                    </td>
+
+                    <td>
+                    @if(m.molecularFragment != null) {
+                        <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())" target="_self">@m.molecularFragment.getLinkingID()</a>
+                    }
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
 </div>
