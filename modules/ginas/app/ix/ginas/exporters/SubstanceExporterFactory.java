@@ -24,6 +24,10 @@ public interface SubstanceExporterFactory {
     interface Parameters{
 
         OutputFormat getFormat();
+
+        default boolean shouldCompress(){
+            return false;
+        }
     }
 
     /**
