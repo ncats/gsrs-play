@@ -23,7 +23,7 @@ import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import ix.core.java8Util.Java8ForOldEbeanHelper;
-import ix.core.util.CachedCallable;
+import ix.core.util.CachedSupplier;
 import ix.core.util.Java8Util;
 import org.apache.lucene.store.AlreadyClosedException;
 
@@ -672,7 +672,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 	}
 	
     public void reindex(Object bean, boolean deleteFirst){
-    	CachedCallable<String> id=
+    	CachedSupplier<String> id=
     			EntityTextIndexer
 		    		.getEntityInfoFor(bean)
 		    		.getGloballyUniqueIdString(bean);

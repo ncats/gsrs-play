@@ -13,7 +13,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.search.text.EntityTextIndexer;
 import ix.core.search.text.EntityTextIndexer.EntityInfo;
-import ix.core.util.CachedCallable;
+import ix.core.util.CachedSupplier;
 import play.db.ebean.Model;
 
 /**
@@ -251,7 +251,7 @@ public class Java8ForOldEbeanHelper {
 
 		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(bean);
 		if (ei.isEntity()) {
-			CachedCallable<String> idString = ei.getIdString(bean);
+			CachedSupplier<String> idString = ei.getIdString(bean);
 
 			ei.getSequenceFieldInfo().stream().forEach(sf -> {
 				sf.getValue(bean).map(s -> ((String)s)).filter(sq -> (sq.length() > 0)).ifPresent(s -> {
@@ -281,7 +281,7 @@ public class Java8ForOldEbeanHelper {
 			epa.getTextIndexerPlugin().getIndexer().remove(bean);
 		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(bean);
 		if (ei.isEntity()) {
-			CachedCallable<String> idString = ei.getIdString(bean);
+			CachedSupplier<String> idString = ei.getIdString(bean);
 
 			ei.getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
 				tryTaskAtMost(() -> epa.getSequenceIndexer().remove(idString.call()), t -> t.printStackTrace(), 2);

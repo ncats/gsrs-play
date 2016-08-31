@@ -28,6 +28,7 @@ import play.Logger;
 public class Glycosylation extends GinasCommonSubData {
 
     @JsonIgnore
+    @Indexable(indexed=false)
 	@OneToOne(cascade=CascadeType.ALL)
     @JoinTable(
             joinColumns=
@@ -51,6 +52,7 @@ public class Glycosylation extends GinasCommonSubData {
     }
     
     @JsonIgnore
+    @Indexable(indexed=false)
     @OneToOne(cascade=CascadeType.ALL)
     @JoinTable(
             joinColumns=
@@ -77,6 +79,7 @@ public class Glycosylation extends GinasCommonSubData {
     
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
+    @Indexable(indexed=false)
     @JoinTable(
             joinColumns=
                 @JoinColumn(name="o_glycosylation_sites_uuid")
@@ -90,6 +93,7 @@ public class Glycosylation extends GinasCommonSubData {
     	}
     	return new ArrayList<Site>();
     }
+    
     @JsonProperty("OGlycosylationSites")
     public void setOGlycosylationSites(List<Site> sites){
     	if(_OGlycosylationSiteContainer==null){
@@ -104,6 +108,7 @@ public class Glycosylation extends GinasCommonSubData {
     public Glycosylation () {}
     
     @JsonIgnore
+    @Indexable(facet=true,name="Glycosylation Site Count")
     public int getSiteCount(){
     	int count = 0;
         try {

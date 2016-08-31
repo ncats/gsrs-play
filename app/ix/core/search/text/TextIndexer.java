@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,9 +39,13 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Entity;
 
@@ -57,6 +62,7 @@ import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetField;
@@ -84,6 +90,7 @@ import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FieldCacheRangeFilter;
 import org.apache.lucene.search.FieldCacheTermsFilter;
@@ -91,6 +98,7 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
@@ -98,6 +106,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.store.Directory;
@@ -117,6 +126,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.Indexable;
 import ix.core.search.DefaultSearchContextAnalyzerGenerator;
 import ix.core.search.FieldFacet;
+import ix.core.search.FieldFacet.MATCH_TYPE;
 import ix.core.search.InxightInfixSuggester;
 import ix.core.search.SearchAnalyzer;
 import ix.core.search.SearchContextAnalyzerGenerator;
@@ -124,11 +134,15 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
-import ix.core.util.CachedCallable;
+import ix.core.search.text.EntityTextIndexer.EntityInfo;
+import ix.core.util.CachedSupplier;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
 import ix.utils.Global;
+import ix.utils.Util;
+import ix.utils.Util.Tuple;
+import oracle.net.aso.e;
 import play.Logger;
 import play.Play;
 
@@ -149,8 +163,6 @@ public class TextIndexer implements Closeable {
 	public static final String GIVEN_STOP_WORD = "$";
 	public static final String GIVEN_START_WORD = "^";
 	private static final String ROOT = "root";
-	private static final Pattern ROOT_CONTEXT_ADDER=
-			Pattern.compile("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])");
 	
 	private static final boolean USE_ANALYSIS = true; 
 
@@ -576,6 +588,8 @@ public class TextIndexer implements Closeable {
 	private FacetsConfig facetsConfig;
 	private ConcurrentMap<String, SuggestLookup> lookups;
 	private ConcurrentMap<String, SortField.Type> sorters;
+	
+	
 	private AtomicLong lastModified = new AtomicLong();
 
 	private ExecutorService threadPool;
@@ -855,6 +869,9 @@ public class TextIndexer implements Closeable {
 
 	public static class IxQueryParser extends QueryParser {
 
+		private static final Pattern ROOT_CONTEXT_ADDER=
+				Pattern.compile("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])");
+		
 		protected IxQueryParser(CharStream charStream) {
 			super(charStream);
 		}
@@ -1161,7 +1178,8 @@ public class TextIndexer implements Closeable {
 		
 	}
 	
-	
+	public static ConcurrentHashMap<LiteralReference, AtomicInteger> countingIndexes = 
+			new ConcurrentHashMap<LiteralReference, AtomicInteger>();
 
 	
 	// This is the most important method
@@ -1318,46 +1336,223 @@ public class TextIndexer implements Closeable {
 		
 		//Beginning of an idea
 		if(USE_ANALYSIS){
-			Set<Term> myterms = new LinkedHashSet<Term>();
-			
-			//System.out.println(query.getClass());
-			
-			if(query instanceof PrefixQuery){
-				myterms.add(((PrefixQuery)query).getPrefix());	
-			}else{
-				query.extractTerms(myterms);
-			}
-			myterms=myterms
-					.stream()
-					.filter(t -> t.field().equals(FULL_TEXT_FIELD))
-					.collect(Collectors.toSet());
-			
-			//System.out.println("Analyzer");
-			
-			if(!myterms.isEmpty()){
-				
-				FacetsCollector facetCollector2 = new FacetsCollector();
-				List<String> analyzers = createKindSetFromOptions(options)
-							.stream()
-							.map(s->ANALYZER_VAL_PREFIX + s)
-							.collect(Collectors.toList());
-				
-				Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
-				//System.out.println(query.toString());
-				LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, query, options.max(), facetCollector2);
-				
-				lsp2.search(searcher, taxon);
-				//System.out.println("Hits:" +lsp2.getTopDocs().totalHits);
-				lsp2.getFacets().getAllDims(options.fdim).forEach(fr->{
-					System.out.println("Got facet:" + fr.dim + "\n===========");
-					Arrays.stream(fr.labelValues).forEach(lv->{
-						System.out.println(lv.label + "\t" + lv.value);
+			getQueryBreakDownFor(query).stream().forEach(oq->{
+				try{
+					System.out.println(oq.k().toString());
+					FacetsCollector facetCollector2 = new FacetsCollector();
+					List<String> analyzers = createKindSetFromOptions(options)
+								.stream()
+								.map(s->ANALYZER_VAL_PREFIX + s)
+								.collect(Collectors.toList());
+					
+					Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
+					//System.out.println(query.toString());
+					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
+					
+					lsp2.search(searcher, taxon);
+					lsp2.getFacets().getAllDims(options.fdim).forEach(fr->{
+						Arrays.stream(fr.labelValues).forEach(lv->{
+							if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
+								searchResult.addFieldFacet(
+										new FieldFacet(lv.label, searchResult.getQuery(), lv.value.intValue(), oq.v())
+												.explicitQuery(serializeAndRestrictQueryToField(oq.k(),lv.label)));
+							}
+						});
 					});
-				});
-			}
+				}catch(Exception e){e.printStackTrace();}
+				//FieldFacet
+				//get count?
+			});
 		} //End of Idea
 		
 		return hits;
+	}
+	
+	
+	/**
+	 * Prepare a given query to be more specified by restricting it to the field
+	 * provided, and using 
+	 * @param q
+	 * @param field
+	 * @return
+	 */
+	public static String serializeAndRestrictQueryToField(Query q, String field){
+		String qAsIs=q.toString();
+		
+		//replace all mentions of text: with the actual field name provided
+		qAsIs=qAsIs.replace(FULL_TEXT_FIELD + ":", field.replace(" ", "\\ ") + ":");
+		
+		//START_WORD and STOP_WORD better be good regexes
+		qAsIs=Util.replaceIgnoreCase(qAsIs,TextIndexer.START_WORD, TextIndexer.GIVEN_START_WORD);
+		qAsIs=Util.replaceIgnoreCase(qAsIs,TextIndexer.STOP_WORD, TextIndexer.GIVEN_STOP_WORD);
+		return qAsIs;
+	}
+	
+	
+	
+	/**
+	 * This method attempts to generate suggested variant queries (usually more specific)
+	 * from an existing query. 
+	 * 
+	 * If you provide -> Maybe you're actually interested in is
+	 * 
+	 * Single Term Query      -> [Single Term Query, Exact Full Term Query]
+	 * "OR" List Boolean Term Query -> [Exact Full Term Query, "OR" Joined Term Query, Phrase Term Query]
+	 * Phrase Term Query      -> [Exact Full Term Query, Phrase Term Query]
+	 * Exact Term Query       -> [Exact Full Term Query]
+	 * Starts With Term Query -> [Exact Full Term Query, Starts With Term Query]
+	 * Ends With Term Query -> [Exact Full Term Query, Ends With Term Query]
+	 * Starts With * Query -> [Starts With * Query]
+	 * 
+	 * 
+	 * 
+	 * @param q
+	 * @return
+	 */
+	public static List<Tuple<Query,MATCH_TYPE>> getQueryBreakDownFor(Query q){
+		List<Tuple<Query,MATCH_TYPE>> suggestedQueries = new ArrayList<Tuple<Query,MATCH_TYPE>>();
+		
+		Function<Stream<Term>, PhraseQuery> exatctQueryMaker = lterms->{
+			PhraseQuery exactQuery = new PhraseQuery();
+			exactQuery.add(new Term(FULL_TEXT_FIELD,TextIndexer.START_WORD.trim().toLowerCase()));
+			lterms.forEach(tq->{
+				exactQuery.add(new Term(FULL_TEXT_FIELD,tq.text()));
+			});
+			exactQuery.add(new Term(FULL_TEXT_FIELD,TextIndexer.STOP_WORD.trim().toLowerCase()));
+			return exactQuery;
+		};
+		Function<Stream<Term>, PhraseQuery> phraseQueryMaker = lterms->{
+			PhraseQuery exactQuery = new PhraseQuery();
+			lterms.forEach(tq->{
+				exactQuery.add(new Term(FULL_TEXT_FIELD,tq.text()));
+			});
+			return exactQuery;
+		};
+		Predicate<Term> isGeneric = (t->t.field().equals(FULL_TEXT_FIELD));
+		
+		//First, we explicity allow TermQueries
+		if(q instanceof TermQuery){
+			Term tq=((TermQuery)q).getTerm();
+			if(tq.field().equals(FULL_TEXT_FIELD)){
+				PhraseQuery exactQuery = new PhraseQuery();
+				exactQuery.add(new Term(FULL_TEXT_FIELD,TextIndexer.START_WORD.trim().toLowerCase()));
+				exactQuery.add(new Term(FULL_TEXT_FIELD,tq.text()));
+				exactQuery.add(new Term(FULL_TEXT_FIELD,TextIndexer.STOP_WORD.trim().toLowerCase()));
+				suggestedQueries.add(new Tuple<Query,MATCH_TYPE>(exatctQueryMaker.apply(Stream.of(tq)),MATCH_TYPE.FULL));
+				suggestedQueries.add(new Tuple<Query,MATCH_TYPE>(q,MATCH_TYPE.WORD));
+			}
+		}else if(q instanceof PhraseQuery){
+			PhraseQuery pq =(PhraseQuery)q;
+			Term[] terms=pq.getTerms();
+			if(Arrays.stream(terms).allMatch(isGeneric)){
+				boolean starts=terms[0].text().equalsIgnoreCase(TextIndexer.START_WORD.trim());
+				boolean ends=terms[terms.length-1].text().equalsIgnoreCase(TextIndexer.STOP_WORD.trim());
+				
+				if(starts && ends){
+					System.out.println("Exact:" + q.toString());
+				}else if(starts){
+					System.out.println("Start Only:" + q.toString());
+				}else if(ends){
+					System.out.println("Ends Only:" + q.toString());
+				}else{
+					suggestedQueries.add(
+							new Tuple<Query, MATCH_TYPE>(
+									exatctQueryMaker.apply(Arrays.stream(terms)),
+									MATCH_TYPE.FULL)
+								);
+					
+					suggestedQueries.add(
+							new Tuple<Query, MATCH_TYPE>(
+									q,
+									MATCH_TYPE.WORD)
+								);
+				}
+			}else{
+				System.out.println("reject:" + q.toString());
+			}	
+		}else if(q instanceof BooleanQuery){
+			BooleanQuery bq = (BooleanQuery)q;
+			List<BooleanClause> bclauses = flattenToLinkedOr(bq);
+			if(bclauses!=null){
+				//ALL-OR Query
+				List<Query> qs=bclauses.stream().map(b->b.getQuery()).collect(Collectors.toList());
+				if(qs.stream().allMatch(qq->(qq instanceof TermQuery))){
+					System.out.println("General OR query?" + q.toString());
+					//All Terms
+					List<Term> terms = qs.stream().map(qq -> ((TermQuery) qq).getTerm()).collect(Collectors.toList());
+					if(terms.stream().allMatch(isGeneric)){
+						suggestedQueries.add(
+								new Tuple<Query, MATCH_TYPE>(
+										exatctQueryMaker.apply(terms.stream()),
+										MATCH_TYPE.FULL)
+									);
+						
+						suggestedQueries.add(
+								new Tuple<Query, MATCH_TYPE>(
+										phraseQueryMaker.apply(terms.stream()),
+										MATCH_TYPE.CONTAINS)
+									);
+						
+						suggestedQueries.add(
+								new Tuple<Query, MATCH_TYPE>(
+										q,
+										MATCH_TYPE.WORD)
+									);
+						
+						
+					}else{
+						//More complex?
+						System.out.println("Specified term?" + q.toString());
+					}
+				}else{
+					//More complex?
+					System.out.println("Non term?" + q.toString());
+				}
+			}else{
+				System.out.println("Something else QUERY" + q.toString());
+			}
+		}else if(q instanceof WildcardQuery){
+			WildcardQuery wq = (WildcardQuery)q;
+			if(isGeneric.test(wq.getTerm())){
+				suggestedQueries.add(
+						new Tuple<Query, MATCH_TYPE>(
+								q,
+								MATCH_TYPE.CONTAINS)
+							);
+			}else{
+				System.out.println("This is a non generic wildcard");
+			}
+		}else if(q instanceof PrefixQuery){
+			PrefixQuery pq = (PrefixQuery)q;
+			if(isGeneric.test(pq.getPrefix())){
+				suggestedQueries.add(
+						new Tuple<Query, MATCH_TYPE>(
+								q,
+								MATCH_TYPE.WORD_STARTS_WITH)
+							);
+			}else{
+				System.out.println("This is a non generic Prefix query");
+			}
+		}
+		return suggestedQueries;
+	}
+	
+	public static List<BooleanClause> flattenToLinkedOr(BooleanQuery bq){
+		List<BooleanClause> bqs= new ArrayList<BooleanClause>();
+		for(BooleanClause bcl: bq.getClauses()){
+			if(bcl.getOccur() != Occur.SHOULD) return null;
+			if(bcl.getQuery() instanceof BooleanQuery){
+				List<BooleanClause> sublist = flattenToLinkedOr((BooleanQuery) bcl.getQuery());
+				if(sublist==null){
+					return null;
+				}else{
+					bqs.addAll(sublist);
+				}
+			}else{
+				bqs.add(bcl);
+			}
+		}
+		return bqs;
 	}
 
 	protected void collectLongRangeFacets(FacetsCollector fc, SearchResult searchResult) throws IOException {
@@ -1463,26 +1658,21 @@ public class TextIndexer implements Closeable {
 	 * recursively index any object annotated with Entity
 	 */
 	public void add(Object entity) throws IOException {
-		if (entity == null || !entity.getClass().isAnnotationPresent(Entity.class)) {
-			return;
-		}
-
-		Indexable indexable = (Indexable) entity.getClass().getAnnotation(Indexable.class);
-
-		if (indexable != null && !indexable.indexed()) {
+		if (entity == null) {return;}
+		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(entity);
+		if(!ei.shouldIndex()){
 			if (DEBUG(2)) {
 				Logger.debug(">>> Not indexable " + entity);
 			}
 			return;
 		}
-
-		if (DEBUG(2))
+		if (DEBUG(2)){
 			Logger.debug(">>> Indexing " + entity + "...");
+		}
 
 		List<IndexableField> fields = new ArrayList<IndexableField>();
 		
-		String kind=entity.getClass().getName();
-		fields.add(new StringField(FIELD_KIND, kind, YES));
+		fields.add(new StringField(FIELD_KIND, ei.getName(), YES));
 		
 		instrument(new LinkedList<String>(), entity, fields, null);
 
@@ -1490,7 +1680,8 @@ public class TextIndexer implements Closeable {
 		
 		Map<LiteralReference<IndexableField>, TextField> fullText = new HashMap<LiteralReference<IndexableField>, TextField>();
 		
-		CachedCallable<Boolean> isDeep  = CachedCallable.of(()->deepKinds.contains(kind));
+		CachedSupplier<Boolean> isDeep  = 
+				CachedSupplier.of(()->deepKinds.contains(ei.getName()));
 		
 		
 		for (IndexableField f : fields) {
@@ -1511,7 +1702,7 @@ public class TextIndexer implements Closeable {
 		if(USE_ANALYSIS && isDeep.call()){
 			String mid=EntityUtils.getIdForBeanAsString(entity);
 			if(mid!=null){
-				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + kind,YES);
+				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ei.getName(),YES);
 				StringField docParent=new StringField(FIELD_KIND + ".id",mid,YES);
 				FacetField  docParentFacet =new FacetField(FIELD_KIND + ".id",mid);
 				//This is a test of a terrible idea, which just. might. work.
@@ -1600,27 +1791,27 @@ public class TextIndexer implements Closeable {
 	}
 
 	public void remove(Object entity) throws Exception {
-		if (entity.getClass().isAnnotationPresent(Entity.class)) {
-			Object id = EntityUtils.getId(entity);
+		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(entity);
+		
+		if (ei.isEntity()) {
+			String id = ei.getIdString(entity).get();
 			if (id != null) {
-				String field = entity.getClass().getName() + ".id";
+				String field = ei.externalIdFieldName();
 				if (DEBUG(2)){
 					Logger.debug("Deleting document " + field + "=" + id + "...");
 				}
 				BooleanQuery q = new BooleanQuery();
-				q.add(new TermQuery(new Term(field, id.toString())), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, entity.getClass().getName())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(field, id)), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(FIELD_KIND, ei.getName())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
-
 				if(USE_ANALYSIS){
 					BooleanQuery qa = new BooleanQuery();
-					qa.add(new TermQuery(new Term(field, id.toString())), BooleanClause.Occur.MUST);
-					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + entity.getClass().getName())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(field, id)), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ei.getName())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
-				
 			} else {
-				Logger.warn("Entity " + entity.getClass() + "'s Id field is null!");
+				Logger.warn("Entity " + ei.getName() + "'s Id field is null!");
 			}
 		} else {
 			throw new IllegalArgumentException("Object is not of type Entity");
@@ -1684,7 +1875,9 @@ public class TextIndexer implements Closeable {
 		}
 	}
 	
-	protected void instrument(LinkedList<String> path, Object entity, List<IndexableField> ixFields,
+	protected void instrument(LinkedList<String> path, 
+			Object entity, 
+			List<IndexableField> ixFields,
 			LinkedReferenceSet prevEntities) {
 		
 		// This is a problem because of infinite recursion. It
@@ -1700,16 +1893,21 @@ public class TextIndexer implements Closeable {
 		
 		try {
 			entities.push(entity);
+//			int tbefore=countingIndexes.computeIfAbsent(new LiteralReference(entity), e->new AtomicInteger(0)).incrementAndGet();
+//
+//			if(tbefore>2){
+//				System.out.println(entity + "\t" + tbefore);
+//				//return;
+//			}
+			//countingIndexes
 			
 			EntityTextIndexer.EntityInfo entityInfo = EntityTextIndexer.getEntityInfoFor(entity.getClass());
 
 			String kind = entityInfo.getName();
 			ixFields.add(new FacetField(DIM_CLASS, kind));
 			
-			String[] facetLabel = {null};
-			String[] facetValue = {null};
 			
-			
+			//
 			// You may notice that the full path to this id field isn't here,
 			// while it is on the other fields ...
 			//
@@ -1720,7 +1918,7 @@ public class TextIndexer implements Closeable {
 							} else {
 								ixFields.add(new StringField(entityInfo.internalIdField(), value.toString(), YES));
 							}
-							ixFields.add(new StringField(entityInfo.externalIdField(), value.toString(), NO));
+							ixFields.add(new StringField(entityInfo.externalIdFieldName(), value.toString(), NO));
 						}
 					)
 			);
@@ -1729,19 +1927,12 @@ public class TextIndexer implements Closeable {
 					fi.getValue(entity).ifPresent(value->{
 						path.push(fi.getName());
 						try{
-							boolean defindex = false;
 							if (DEBUG(2)) {
 								Logger.debug("++ " + toPath(path) + ": type=" + fi.getType() + " value=" + value);
 							}
 							
-							if (fi.isDynamicFacetLabel()) {
-								facetLabel[0] = value.toString();
-								defindex = true;
-							}else if (fi.isDynamicFacetValue()) {
-								facetValue[0] = value.toString();
-								defindex = true;
-							}else if (fi.isPrimitive()) {
-								indexField(ixFields, fi.getIndexable(), path, value);
+							if (fi.isPrimitive()) {
+								indexField(ixFields, fi.getIndexable(), path, value, Store.NO);
 							}else if (fi.isArrayOrCollection()) {
 								// MUST be done in order
 								fi.forEach(value, (i, o) -> {
@@ -1756,15 +1947,14 @@ public class TextIndexer implements Closeable {
 								// here.
 		
 								// composite type; recurse
-								instrument(path, value, ixFields, entities);
-								if (fi.isExplicitlyIndexable()) {
-									indexField(ixFields, fi.getIndexable(), path, value);
+								if(fi.getIndexable().recurse()){
+									instrument(path, value, ixFields, entities);
 								}
-							}else {
-								defindex = true;
-							}
-							if (defindex) { // treat as string
-								indexField(ixFields, fi.getIndexable(), path, value);
+								if (fi.isExplicitlyIndexable()) {
+									indexField(ixFields, fi.getIndexable(), path, value, Store.NO);
+								}
+							}else { // treat as string
+								indexField(ixFields, fi.getIndexable(), path, value, Store.NO);
 							}
 						} catch (Throwable ex) {
 							ex.printStackTrace();
@@ -1778,17 +1968,20 @@ public class TextIndexer implements Closeable {
 					}); // for each field with value
 			}); // foreach field
 
-			// dynamic facet if available
-			if (facetLabel[0] != null && facetValue[0] != null) {
-				facetsConfig.setMultiValued(facetLabel[0], true);
-				facetsConfig.setRequireDimCount(facetLabel[0], true);
-				ixFields.add(new FacetField(facetLabel[0], facetValue[0]));
-				// allow searching of this field
-				ixFields.add(new TextField(facetLabel[0], facetValue[0], NO));
-				// all dynamic facets are suggestable???
-				suggestField(facetLabel[0], facetValue[0]);
-			}
-
+			entityInfo.getDynamicFacet(entity).ifPresent(fv->{
+				facetsConfig.setMultiValued(fv[0], true);
+				facetsConfig.setRequireDimCount(fv[0], true);
+				ixFields.add(new FacetField(fv[0], fv[1]));
+				
+				// and full text
+				path.push(fv[0]);
+				ixFields.add(new TextField(toPath(path), TextIndexer.START_WORD + fv[1] + TextIndexer.STOP_WORD, NO));
+				path.pop();
+				
+				// all dynamic facets are suggestible???
+				suggestField(fv[0], fv[1]);
+			});
+			
 			entityInfo.getMethodInfo().stream().sequential().forEach(mi -> {
 				mi.getValue(entity).ifPresent(value -> {
 					path.push(mi.getName());
@@ -1796,11 +1989,11 @@ public class TextIndexer implements Closeable {
 						if (mi.isArrayOrCollection()) {
 							mi.forEach(value, (i, o) -> {
 								path.push(i + "");
-								indexField(ixFields, mi.getIndexable(), path, o);
+								indexField(ixFields, mi.getIndexable(), path, o, Store.NO);
 								path.pop();
 							});
 						} else {
-							indexField(ixFields, mi.getIndexable(), path, value);
+							indexField(ixFields, mi.getIndexable(), path, value, Store.NO);
 						}
 					} catch (Exception ex) {
 						ex.printStackTrace();
@@ -1810,6 +2003,8 @@ public class TextIndexer implements Closeable {
 					}
 				});
 			});
+			
+			
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 			Logger.trace("Fetching entity method / fields", ex);
@@ -1841,9 +2036,6 @@ public class TextIndexer implements Closeable {
 		}
 	}
 
-	void indexField(List<IndexableField> fields, Indexable indexable, LinkedList<String> path, Object value) {
-		indexField(fields, indexable, path, value, NO);
-	}
 
 	void indexField(List<IndexableField> fields, Indexable indexable, LinkedList<String> path, Object value,
 			org.apache.lucene.document.Field.Store store) {
@@ -1973,9 +2165,12 @@ public class TextIndexer implements Closeable {
 				suggestField(dim, text);
 			}
 
+
 			if (!(value instanceof Number)) {
-				if (!name.equals(full))
+				if (!name.equals(full)){
+					// Added exact match
 					fields.add(new TextField(full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
+				}
 			}
 
 			// Add specific sort column only if it's not added by some other
@@ -1984,8 +2179,8 @@ public class TextIndexer implements Closeable {
 				sorters.put(SORT_PREFIX + full, SortField.Type.STRING);
 				fields.add(new StringField(SORT_PREFIX + full, text, store));
 			}
+			// Added exact match
 			fields.add(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
-
 		}
 	}
 

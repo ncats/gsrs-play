@@ -7,6 +7,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.utils.JSONConstants;
@@ -15,8 +16,8 @@ import ix.ginas.models.utils.JSONEntity;
 @JSONEntity (title = "Code", isFinal = true)
 @Entity
 @Table(name="ix_ginas_code")
+@DynamicFacet(label="codeSystem", value="code")
 public class Code extends CommonDataElementOfCollection{
-	
 	
     @JSONEntity(title = "Code system", format = JSONConstants.CV_CODE_SYSTEM)
     @Indexable(facet=true, name="Code System")
@@ -54,6 +55,7 @@ public class Code extends CommonDataElementOfCollection{
     
     
     public Code () {}
+    
     public Code (String code) {
         this.code = code;
     }
