@@ -52,13 +52,13 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @OneToOne()
     @JsonSerialize(using = PrincipalSerializer.class)
     @JsonDeserialize(using = PrincipalDeserializer.class)
-    @Indexable(facet = true, name = "Created By")
+    @Indexable(facet = true, name = "Created By", recurse=false)
     public Principal createdBy;
     
     @OneToOne()
     @JsonSerialize(using = PrincipalSerializer.class)
     @JsonDeserialize(using = PrincipalDeserializer.class)
-    @Indexable(facet = true, name = "Last Edited By")
+    @Indexable(facet = true, name = "Last Edited By", recurse=false)
     public Principal lastEditedBy;
 	
 	public GinasChemicalStructure(){

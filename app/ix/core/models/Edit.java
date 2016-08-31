@@ -46,11 +46,13 @@ public class Edit extends BaseModel {
     @Basic(fetch=FetchType.EAGER)
     @Lob
     @JsonDeserialize(as=JsonNode.class)
+    @Indexable(indexed=false)
     public String oldValue; // value as Json
 
     @Basic(fetch=FetchType.EAGER)
     @Lob
     @JsonDeserialize(as=JsonNode.class)
+    @Indexable(indexed=false)
     public String newValue; // value as Json
 
     public Edit () {}

@@ -61,14 +61,17 @@ public class Principal extends IxModel {
     
     @JsonIgnore
     public UserProfile getUserProfile(){
+    	System.out.println("FETCHING");
     	return UserProfileFactory.getUserProfileForPrincipal(this);
     }
 
-    public boolean isAdmin () { return admin; }
+    public boolean isAdmin () {
+    	
+    	return admin; 
+    }
     
     @Override
     public void delete(){
-    	System.out.println("Deleting");
     	super.delete();
     }
 }

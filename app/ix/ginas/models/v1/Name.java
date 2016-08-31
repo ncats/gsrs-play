@@ -100,7 +100,9 @@ public class Name extends CommonDataElementOfCollection {
     public boolean displayName;
 
     public Name () {}
+    
     public Name (String name) {
+    	this.name=name;
     }
 
     public String getName () {

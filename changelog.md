@@ -1,3 +1,29 @@
+GSRS v1.2.06
+============
+
+Changes:
+
+Enhancements
+------------
+1. Improve indexing performance
+2. Lazy-load search results to improve search performance
+   and stability.
+3. Improved search analyzer to show more accurate suggestions
+   for restricting global searches.
+4. Allow searching by code systems (BDNUM, CAS, etc)
+
+
+Bug Fixes
+---------
+1. Fixed structure search reloading issue. A quickly 
+   returning substructure search might have the wrong
+   infomation before, and not refresh when the search
+   is complete. Now it refreshes when ready. 
+2. Reindexing previously wouldn't update autosuggest
+   or sorting operations, unless the application was
+   also restarted. Now the reindexing works in-place.
+
+
 GSRS v1.2.05
 ============
 

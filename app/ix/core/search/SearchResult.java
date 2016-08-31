@@ -28,6 +28,8 @@ import play.Logger;
 public class SearchResult {
 
 	
+	//Probably get rid of this,
+	//it shouldn't be needed anymore
     SearchAnalyzer searchAnalyzer;
 
     /**
@@ -37,18 +39,16 @@ public class SearchResult {
      * @return
      */
     public List<FieldFacet> getFieldFacets(){
-        return searchAnalyzer.getFieldFacets();
+        return suggestFacets;
     }
     
     String key;
     String query;
     List<Facet> facets = new ArrayList<Facet>();
-    FutureList matches = new FutureList (new ObjectNamer(){
-		@Override
-		public String nameFor(Object obj) {
-			return EntityUtils.getIdForBeanAsString(obj);
-		}
-	});
+    List<FieldFacet> suggestFacets = new ArrayList<FieldFacet>();
+    
+    FutureList matches = new FutureList (o->EntityUtils.getIdForBeanAsString(o));
+    
     List result; // final result when there are no more updates
     private int count;
     SearchOptions options;
@@ -64,7 +64,7 @@ public class SearchResult {
     public SearchResult (SearchOptions options, String query) {
         this.options = options;
         this.query = query;
-        searchAnalyzer=TextIndexer.getDefaultSearchAnalyzerFor(this.options.kind);
+        searchAnalyzer= TextIndexer.getDefaultSearchAnalyzerFor(this.options.kind);
     }
 
     public void setRank (final Map<String, Integer> idRank) {
@@ -300,9 +300,9 @@ public class SearchResult {
     public long getStopTime () { return stop.get(); }
     public boolean finished () { return stop.get() >= timestamp; }
     
-    public SearchAnalyzer getSearchContextAnalyzer(){
-        return searchAnalyzer;
-    }
+//    public SearchAnalyzer getSearchContextAnalyzer(){
+//        return searchAnalyzer;
+//    }
     public void addNamedCallable (NamedCallable c) {
     	matches.addCallable(c);
     	processAddition(c);
@@ -315,15 +315,16 @@ public class SearchResult {
     
     private void processAddition(NamedCallable o){
     	notifyAdd(o);
-    	if(searchAnalyzer!=null && query!=null && query.length()>0){
-        	if(searchAnalyzer.isEnabled()){
-        		try {
-					searchAnalyzer.addWithQuery(o.call(), query);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-        	}
-        }
+//    	
+//    	if(searchAnalyzer!=null && query!=null && query.length()>0){
+//        	if(searchAnalyzer.isEnabled()){
+//        		try {
+//					searchAnalyzer.addWithQuery(o.call(), query);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//        	}
+//        }
     }
     
 
@@ -337,12 +338,12 @@ public class SearchResult {
     public void done () {
         stop.set(TimeUtil.getCurrentTimeMillis());
         notifyListeners(l -> l.searchIsDone());
-        
-        if(searchAnalyzer!=null && query!=null && query.length()>0){
-        	if(searchAnalyzer.isEnabled()){
-				searchAnalyzer.markDone();
-        	}
-        }
+//        
+//        if(searchAnalyzer!=null && query!=null && query.length()>0){
+//        	if(searchAnalyzer.isEnabled()){
+//				searchAnalyzer.markDone();
+//        	}
+//        }
 
     }
 
@@ -383,5 +384,9 @@ public class SearchResult {
 
 	public void addFacet(Facet f) {
 		this.facets.add(f);
+	}
+
+	public void addFieldFacet(FieldFacet ff) {
+		this.suggestFacets.add(ff);
 	}
 }

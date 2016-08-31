@@ -11,6 +11,8 @@ public class FieldFacet implements Serializable{
 	public String field;
 	public String queryTerm;
 	
+	private String explicitLucenQuery=null;
+	
 	public String displayField = null;
 	public MATCH_TYPE matchType=MATCH_TYPE.NO_MATCH;
 	
@@ -20,21 +22,24 @@ public class FieldFacet implements Serializable{
 	
 	//TODO: Move to configuration area, not to be hard-coded here
 	static{
-		displayNameForField.put("references.citation", "Reference text or citation");
-		displayNameForField.put("references.docType", "Reference type");
-		displayNameForField.put("relationships.relatedSubstance.refPname", "Related substance name");
-		displayNameForField.put("relationships.relatedSubstance.approvalID", "Related Substance Approval ID");
-		displayNameForField.put("approvalID", "Approval ID");
-		displayNameForField.put("codes.code", "Code");
-		displayNameForField.put("codes.codeSystem", "Code system");
-		displayNameForField.put("codes.comments", "Code text or Code comments");
-		displayNameForField.put("notes.note", "Notes");
-		displayNameForField.put("names.name", "Any name");
-		displayNameForField.put("relationships.qualification", "Relationship qualification");
-		displayNameForField.put("relationships.comments", "Relationship comments");
-		displayNameForField.put("relationships.interactionType", "Relationship interaction type");
+		displayNameForField.put("root_root_references_citation", "Reference text or citation");
+		displayNameForField.put("root_references_docType", "Reference type");
+		displayNameForField.put("root_relationships_relatedSubstance_refPname", "Related substance name");
+		displayNameForField.put("root_relationships_relatedSubstance_approvalID", "Related Substance Approval ID");
+		displayNameForField.put("root_approvalID", "Approval ID");
+		displayNameForField.put("root_codes_code", "Code");
+		displayNameForField.put("root_codes_codeSystem", "Code system");
+		displayNameForField.put("root_codes_comments", "Code text or Code comments");
+		displayNameForField.put("root_notes_note", "Notes");
+		displayNameForField.put("root_names_name", "Any name");
+		displayNameForField.put("root_relationships_qualification", "Relationship qualification");
+		displayNameForField.put("root_relationships_comments", "Relationship comments");
+		displayNameForField.put("root_relationships_interactionType", "Relationship interaction type");
 	}
 
+	
+	
+	
 	public FieldFacet(String field, String q) {
 		queryTerm = q;
 		this.field = field;
@@ -44,6 +49,14 @@ public class FieldFacet implements Serializable{
 		this.field = field;
 		this.matchType=mt;
 	}
+	
+	public FieldFacet(String field, String q, int count, MATCH_TYPE mt) {
+		queryTerm = q;
+		this.field = field;
+		this.matchType=mt;
+		this.count=count;
+		this.couldBeMore=false;
+	}
 
 	public String getDisplayField() {
 		if(displayField!=null)return displayField;
@@ -51,16 +64,22 @@ public class FieldFacet implements Serializable{
 		return displayField;
 	}
 	
+	public String getValue(){
+		return queryTerm;
+	}
+	
 	
 	private static String getDisplayField(String field){
 		String disp=displayNameForField.get(field);
+		
 		if(disp!=null){
 			return disp;
 		}
-		String[] fs = field.split("\\.");
-		System.out.println(field);
+		String[] fs = field.replace(" ", "_").split("_");
 		if(fs.length>=2){
-			return fs[fs.length - 2] + "." + fs[fs.length - 1];
+			String ff=(fs[fs.length - 2] + " " + fs[fs.length - 1]).toLowerCase();
+			ff = ff.substring(0, 1).toUpperCase() + ff.substring(1);
+			return ff;
 		}
 		return field;
 	}
@@ -70,6 +89,7 @@ public class FieldFacet implements Serializable{
 	}
 	
 	public String toLuceneQuery(){
+		if(explicitLucenQuery!=null)return explicitLucenQuery;
 		if(matchType==MATCH_TYPE.WORD)
 			return getIndexedField() + ":\"" + queryTerm + "\"";
 		else if(matchType==MATCH_TYPE.WORD_STARTS_WITH)
@@ -106,6 +126,11 @@ public class FieldFacet implements Serializable{
 		this.couldBeMore=false;
 	}
 	
+	
+	public FieldFacet explicitQuery(String q){
+		this.explicitLucenQuery=q;
+		return this;
+	}
 	
 	
 }

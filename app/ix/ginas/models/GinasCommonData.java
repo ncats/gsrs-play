@@ -66,7 +66,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     public Date created=null;
     
     @OneToOne()
-    @Indexable(facet = true, name = "Created By", sortable=true)
+    @Indexable(facet = true, name = "Created By", sortable=true, recurse=false)
     public Principal createdBy;
     
     @Indexable(facet = true, name = "Last Edited Date", sortable=true)
@@ -74,7 +74,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     //TP: why is this one-to-one?
     @OneToOne()
-    @Indexable(facet = true, name = "Last Edited By", sortable=true)
+    @Indexable(facet = true, name = "Last Edited By", sortable=true, recurse=false)
     public Principal lastEditedBy;
     
     @JsonDeserialize(using = PrincipalDeserializer.class)

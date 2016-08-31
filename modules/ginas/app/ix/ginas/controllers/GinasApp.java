@@ -184,7 +184,7 @@ public class GinasApp extends App {
         "SubstanceStereochemistry", 
         "Molecular Weight",
         "GInAS Tag", 
-        "Molecular Weight",
+        //"CAS",
         "Relationships",
         "Sequence Type",
         "Modifications",
