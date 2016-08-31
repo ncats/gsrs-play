@@ -39,6 +39,9 @@ public class SubstanceBuilder{
 					GinasChemicalStructure cs= new GinasChemicalStructure();
 					cs.molfile=structure;
 					((ChemicalSubstance)s).structure=cs;
+					Reference rr=Reference.SYSTEM_ASSUMED();
+					cs.addReference(rr); //TODO: fix this better
+					s.addReference(rr);
 					return s;
 				});
 		return this;
