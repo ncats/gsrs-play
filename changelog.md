@@ -19,6 +19,9 @@ Bug Fixes
    returning substructure search might have the wrong
    infomation before, and not refresh when the search
    is complete. Now it refreshes when ready. 
+2. Reindexing previously wouldn't update autosuggest
+   or sorting operations, unless the application was
+   also restarted. Now the reindexing works in-place.
 
 
 GSRS v1.2.05
