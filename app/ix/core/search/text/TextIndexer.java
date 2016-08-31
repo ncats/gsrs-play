@@ -623,7 +623,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	public static void init() {
 		if (!ALREADY_INITIALIZED.get()) {
-			System.out.println("in init()");
 			if (indexers != null) {
 				indexers.forEach((k, v) -> {
 					System.out.println("init shutdown " + k.getAbsolutePath());
@@ -1339,7 +1338,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		if(USE_ANALYSIS){
 			getQueryBreakDownFor(query).stream().forEach(oq->{
 				try{
-					System.out.println(oq.k().toString());
+					//System.out.println(oq.k().toString());
 					FacetsCollector facetCollector2 = new FacetsCollector();
 					List<String> analyzers = createKindSetFromOptions(options)
 								.stream()
@@ -1392,20 +1391,30 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	
 	
 	/**
-	 * This method attempts to generate suggested variant queries (usually more specific)
-	 * from an existing query. 
+	 * This method attempts to generate suggested variant queries (more specific)
+	 * from an existing query. If this query deals with a non-generic field, or other
+	 * query unlikely to be interpretable in analysis, it returns an empty list.  
 	 * 
+	 * <pre>
 	 * If you provide -> Maybe you're actually interested in is
 	 * 
 	 * Single Term Query      -> [Single Term Query, Exact Full Term Query]
-	 * "OR" List Boolean Term Query -> [Exact Full Term Query, "OR" Joined Term Query, Phrase Term Query]
+	 * "OR" Term Query        -> [Exact Full Term Query, "OR" Term Query, Phrase Term Query]
 	 * Phrase Term Query      -> [Exact Full Term Query, Phrase Term Query]
 	 * Exact Term Query       -> [Exact Full Term Query]
 	 * Starts With Term Query -> [Exact Full Term Query, Starts With Term Query]
-	 * Ends With Term Query -> [Exact Full Term Query, Ends With Term Query]
-	 * Starts With * Query -> [Starts With * Query]
+	 * Ends With Term Query   -> [Exact Full Term Query, Ends With Term Query]
+	 * Starts With * Query    -> [Starts With * Query]
+	 * Field-specific Query   -> []
+	 * "NOT" Term Query       -> []
+	 * Other                  -> []
+	 * </pre>
 	 * 
 	 * 
+	 * This method also includes a MATCH_TYPE response for each new Query,
+	 * which is used in categorization of the Query types.
+	 * 
+	 * TODO: Align MATCH_TYPE options more with reality.
 	 * 
 	 * @param q
 	 * @return
@@ -1450,11 +1459,16 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				boolean ends=terms[terms.length-1].text().equalsIgnoreCase(TextIndexer.STOP_WORD.trim());
 				
 				if(starts && ends){
-					System.out.println("Exact:" + q.toString());
+					//was exact
+					suggestedQueries.add(
+							new Tuple<Query, MATCH_TYPE>(
+									q,
+									MATCH_TYPE.FULL)
+								);
 				}else if(starts){
-					System.out.println("Start Only:" + q.toString());
+					//System.out.println("Start Only:" + q.toString());
 				}else if(ends){
-					System.out.println("Ends Only:" + q.toString());
+					//System.out.println("Ends Only:" + q.toString());
 				}else{
 					suggestedQueries.add(
 							new Tuple<Query, MATCH_TYPE>(
@@ -1469,7 +1483,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 								);
 				}
 			}else{
-				System.out.println("reject:" + q.toString());
+				//Some field-specific Phrase query?
+				//System.out.println("reject:" + q.toString());
 			}	
 		}else if(q instanceof BooleanQuery){
 			BooleanQuery bq = (BooleanQuery)q;
@@ -1478,7 +1493,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				//ALL-OR Query
 				List<Query> qs=bclauses.stream().map(b->b.getQuery()).collect(Collectors.toList());
 				if(qs.stream().allMatch(qq->(qq instanceof TermQuery))){
-					System.out.println("General OR query?" + q.toString());
 					//All Terms
 					List<Term> terms = qs.stream().map(qq -> ((TermQuery) qq).getTerm()).collect(Collectors.toList());
 					if(terms.stream().allMatch(isGeneric)){
@@ -1503,14 +1517,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 						
 					}else{
 						//More complex?
-						System.out.println("Specified term?" + q.toString());
+						//System.out.println("Specified term?" + q.toString());
 					}
 				}else{
 					//More complex?
-					System.out.println("Non term?" + q.toString());
+					//System.out.println("Non term?" + q.toString());
 				}
 			}else{
-				System.out.println("Something else QUERY" + q.toString());
+				//Boolean query is complex, with things other than "OR"
+				//System.out.println("Something else QUERY" + q.toString());
 			}
 		}else if(q instanceof WildcardQuery){
 			WildcardQuery wq = (WildcardQuery)q;
@@ -1521,7 +1536,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 								MATCH_TYPE.CONTAINS)
 							);
 			}else{
-				System.out.println("This is a non generic wildcard");
+				//System.out.println("This is a non generic wildcard");
 			}
 		}else if(q instanceof PrefixQuery){
 			PrefixQuery pq = (PrefixQuery)q;
@@ -1532,7 +1547,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 								MATCH_TYPE.WORD_STARTS_WITH)
 							);
 			}else{
-				System.out.println("This is a non generic Prefix query");
+				//System.out.println("This is a non generic Prefix query");
 			}
 		}
 		return suggestedQueries;
@@ -2428,8 +2443,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			return;
 		}
 		try {
-
-			System.out.println("Shutting down scheduler");
 			if (scheduler != null) {
 				try {
 					isShutDown = true;
