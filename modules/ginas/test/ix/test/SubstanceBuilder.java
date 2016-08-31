@@ -35,7 +35,7 @@ public class SubstanceBuilder{
 	}
 	public SubstanceBuilder asChemical(String structure){
 		_sup = (f->new ChemicalSubstance());
-		_sup.andThen(s->{
+		_sup=_sup.andThen(s->{
 					GinasChemicalStructure cs= new GinasChemicalStructure();
 					cs.molfile=structure;
 					((ChemicalSubstance)s).structure=cs;
