@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Name;
@@ -55,6 +58,9 @@ public class SubstanceBuilder{
 			});
 		
 		return s;
+	}
+	public JsonNode buildJson(){
+		return EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(this.build());
 	}
 	
 	

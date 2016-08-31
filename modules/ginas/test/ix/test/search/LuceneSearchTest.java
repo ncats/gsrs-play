@@ -48,11 +48,11 @@ public class LuceneSearchTest {
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
         	String theName = "ASPIRIN CACLIUM";
             SubstanceAPI api = new SubstanceAPI(session);
-            Substance s= ((new SubstanceBuilder())
-            		.withName(theName)
-            		.withDefaultReference().build());
-            JsonNode sjson = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(s);
-            ensurePass( api.submitSubstance(sjson));
+            
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(theName)
+					.withDefaultReference().buildJson()
+					));
             
             String html=api.getTextSearchHTML(theName);
             assertRecordCount(html, 1);
@@ -66,16 +66,14 @@ public class LuceneSearchTest {
         	String aspirinCalcium = "ASPIRIN CACLIUM";
         	String aspirin = "ASPIRIN";
             SubstanceAPI api = new SubstanceAPI(session);
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirinCalcium)
-									.withDefaultReference().build()))));
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirin)
-									.withDefaultReference().build()))));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirinCalcium)
+					.withDefaultReference().buildJson()
+					));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirin)
+					.withDefaultReference().buildJson()
+					));
             
             String html=api.getTextSearchHTML(aspirin);
             assertRecordCount(html, 2);
@@ -91,16 +89,14 @@ public class LuceneSearchTest {
         	String q = "\"^" + aspirin + "$\"";
             SubstanceAPI api = new SubstanceAPI(session);
             
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirinCalcium)
-									.withDefaultReference().build()))));
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirin)
-									.withDefaultReference().build()))));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirinCalcium)
+					.withDefaultReference().buildJson()
+					));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirin)
+					.withDefaultReference().buildJson()
+					));
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
@@ -119,16 +115,14 @@ public class LuceneSearchTest {
         	String q = "\"" + aspirin + "\"";
             SubstanceAPI api = new SubstanceAPI(session);
             
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirinCalcium)
-									.withDefaultReference().build()))));
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirin)
-									.withDefaultReference().build()))));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirinCalcium)
+					.withDefaultReference().buildJson()
+					));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirin)
+					.withDefaultReference().buildJson()
+					));
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
@@ -166,16 +160,14 @@ public class LuceneSearchTest {
         	String q = "\"^" + aspirinCalcium + "$\"";
             SubstanceAPI api = new SubstanceAPI(session);
             
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirinCalcium)
-									.withDefaultReference().build()))));
-            ensurePass(api.submitSubstance(
-					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-							((new SubstanceBuilder())
-									.withName(aspirinCalciumHydrate)
-									.withDefaultReference().build()))));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirinCalcium)
+					.withDefaultReference().buildJson()
+					));
+            ensurePass(api.submitSubstance((new SubstanceBuilder())
+					.withName(aspirinCalciumHydrate)
+					.withDefaultReference().buildJson()
+					));
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
@@ -198,11 +190,10 @@ public class LuceneSearchTest {
         			 .mapToObj(i->((char)i)+prefix)
         			 .forEach(n->{
         				 addedName.add(n);
-        				 ensurePass(api.submitSubstance(
-        							EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-        									((new SubstanceBuilder())
-        											.withName(n)
-        											.withDefaultReference().build()))));
+        				 ensurePass(api.submitSubstance((new SubstanceBuilder())
+        							.withName(n)
+        							.withDefaultReference().buildJson()
+        							));
         			 });
             
             String html=api.fetchSubstancesUIBrowseHTML();
@@ -235,11 +226,10 @@ public class LuceneSearchTest {
         			 .mapToObj(i->((char)i)+prefix)
         			 .forEach(n->{
         				 addedName.add(n);
-        				 ensurePass(api.submitSubstance(
-        							EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
-        									((new SubstanceBuilder())
-        											.withName(n)
-        											.withDefaultReference().build()))));
+        				 ensurePass(api.submitSubstance((new SubstanceBuilder())
+     							.withName(n)
+     							.withDefaultReference().buildJson()
+     							));
         			 });
             
         	
