@@ -1,14 +1,14 @@
 package ix.test.search;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -42,7 +42,7 @@ public class LuceneSearchTest {
     
 
     
-    @Test  
+    @Test   
    	public void testTwoWordLuceneNameSearchShouldReturn() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -55,11 +55,11 @@ public class LuceneSearchTest {
             ensurePass( api.submitSubstance(sjson));
             
             String html=api.getTextSearchHTML(theName);
-            assertTrue("Should have 1 result for simple name '" + theName + "' search, but couldn't find any",html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
+            assertRecordCount(html, 1);
         }
    	}
     
-    @Test  
+    @Test   
    	public void testSearchForWordPresentIn2RecordsNamesShouldReturnBoth() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -78,11 +78,11 @@ public class LuceneSearchTest {
 									.withDefaultReference().build()))));
             
             String html=api.getTextSearchHTML(aspirin);
-            assertTrue("Should have 2 result for simple name '" + aspirin + "' search, but couldn't find any",html.contains("<span id=\"record-count\" class=\"label label-default\">2</span>"));
+            assertRecordCount(html, 2);
         }
    	}
     
-    @Test 
+    @Test  
    	public void testExactSearchForWordPresentIn2RecordsNamesShouldReturnOnlyExact() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -103,14 +103,14 @@ public class LuceneSearchTest {
 									.withDefaultReference().build()))));
             
             String html=api.getTextSearchHTML(q);
-            assertTrue("Should have 1 result for simple name '" + q + "' search, but couldn't find any",html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
+            assertRecordCount(html, 1);
         }catch(Throwable e){
         	e.printStackTrace();
         	throw e;
         }
    	}
     
-    @Test 
+    @Test  
    	public void testSearchForQuotedPhraseShouldReturnOnlyRecordWithThatOrder() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -131,14 +131,62 @@ public class LuceneSearchTest {
 									.withDefaultReference().build()))));
             
             String html=api.getTextSearchHTML(q);
-            assertTrue("Should have 1 result for simple name '" + q + "' search, but couldn't find any",html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
+            assertRecordCount(html, 1);
         }catch(Throwable e){
         	e.printStackTrace();
         	throw e;
         }
    	}
     
+    
+    public static void assertRecordCount(String html, int expected){
+    	int rc=getRecordCountFromHtml(html);
+        assertEquals("Should have " + expected + " results, but found:" + rc, rc,expected);
+    }
+    // should be moved to some holder object
+    public static int getRecordCountFromHtml(String html){
+    	String recStart = "<span id=\"record-count\" class=\"label label-default\">";
+    	int io=html.indexOf(recStart);
+    	int ei=html.indexOf("<", io + 3);
+    	if(ei>0 && io >0){
+    		String c=html.substring(io + recStart.length(),ei);
+    		try{
+    		return Integer.parseInt(c.trim());
+    		}catch(Exception e){}
+    	}
+    	return -1;
+    }
+
     @Test 
+   	public void testSearchForQuotedExactPhraseShouldReturnOnlyThatPhraseNotSuperString() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+        	String aspirinCalcium = "ASPIRIN CACLIUM";
+        	String aspirinCalciumHydrate = "ASPIRIN CACLIUM HYDRATE";
+        	String q = "\"^" + aspirinCalcium + "$\"";
+            SubstanceAPI api = new SubstanceAPI(session);
+            
+            ensurePass(api.submitSubstance(
+					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
+							((new SubstanceBuilder())
+									.withName(aspirinCalcium)
+									.withDefaultReference().build()))));
+            ensurePass(api.submitSubstance(
+					EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().valueToTree(
+							((new SubstanceBuilder())
+									.withName(aspirinCalciumHydrate)
+									.withDefaultReference().build()))));
+            
+            String html=api.getTextSearchHTML(q);
+            assertRecordCount(html, 1);
+        }catch(Throwable e){
+        	e.printStackTrace();
+        	throw e;
+        }
+   	}
+    
+    
+    @Test  
    	public void testDefaultBrowseOrderShouldShowMostRecentlyEdittedFirst() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -174,7 +222,8 @@ public class LuceneSearchTest {
         }
    	}
     
-    @Test 
+    
+    @Test  
    	public void testBrowsingWithDisplayNameOrderingShouldOrderAlphabetically() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -217,7 +266,4 @@ public class LuceneSearchTest {
         	throw e;
         }
    	}
-    
-    
-    
 }
