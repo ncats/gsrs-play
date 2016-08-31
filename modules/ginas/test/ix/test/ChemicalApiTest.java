@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import ix.test.util.TestNamePrinter;
@@ -29,9 +30,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.GinasChemicalStructure;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Substance;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
@@ -56,7 +55,8 @@ public class ChemicalApiTest {
             System.out.println("Starting test: " + description.getMethodName());
         }
     };
-    @Test 
+    
+    @Test  
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
@@ -118,7 +118,7 @@ public class ChemicalApiTest {
         }
     }
     
-    @Test 
+    @Test  
    	public void testFlexMatch() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -129,7 +129,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test 
+    @Test  
    	public void testFlexMatchWith2Moieties() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -143,7 +143,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test 
+    @Test  
    	public void testFlexMatchWithIonsReturnsParents() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -158,7 +158,7 @@ public class ChemicalApiTest {
             assertTrue("Should have 2 results for flex match, but found something else",html.contains("<span id=\"record-count\" class=\"label label-default\">2</span>"));
         }
    	}
-    @Test 
+    @Test  
    	public void testBadFlexMatchReturnsNothing() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -175,7 +175,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test 
+    @Test  
    	public void testExactMatchReturnsOnlyExactMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -200,7 +200,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test 
+    @Test  
    	public void substructureSearchSimple() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -216,7 +216,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test 
+    @Test  
    	public void testSubstructureSearchSpecificity() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -232,7 +232,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test 
+    @Test  
     public void ensureWarningOnPentavalentCarbon(){
     	try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -254,7 +254,7 @@ public class ChemicalApiTest {
         }
     }
     
-    @Test 
+    @Test  
 	public void testChemicalExportAsSDF() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -270,7 +270,7 @@ public class ChemicalApiTest {
 			
 		}
 	}
-    @Test 
+    @Test  
 	public void testChemicalExportAsSmiles() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -288,7 +288,7 @@ public class ChemicalApiTest {
 		}
 	}
     
-    @Test 
+    @Test  
     public void testMolfileMoietyDecomposeDoesNotIncreaseStructureTotal() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
@@ -357,7 +357,7 @@ public class ChemicalApiTest {
         assertEquals(oldCount, newCount);
     }
     
-    @Test 
+    @Test  
     public void testExportTemporaryAfterMoietyDecompose() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
@@ -414,7 +414,7 @@ public class ChemicalApiTest {
         //C1CCCCC1
     }
 
-	@Test 
+	@Test  
 	public void testSubmitChemicalSubstanceTwice() throws Exception {
 
 		String molfile1 = "\n   JSDraw206141615102D\n\n 14 14  0  0  0  0              0 V2000\n   26.8331   -7.2982    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -8.0599    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -8.0599    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331   -5.7326    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -9.6199    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   29.5328   -7.2672    0.0000 Se  0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -9.6199    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   28.1674   -4.9766    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   25.4875   -4.9766    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8331  -10.4154    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   30.8869   -8.0599    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   32.2325   -7.2672    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   30.8869   -9.5775    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   26.8442  -11.9754    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  2  0  0  0  0\n  1  3  1  0  0  0  0\n  1  4  1  0  0  0  0\n  2  5  1  0  0  0  0\n  2  6  1  0  0  0  0\n  3  7  2  0  0  0  0\n  4  8  1  0  0  0  0\n  4  9  2  0  0  0  0\n  5 10  2  0  0  0  0\n  6 11  1  0  0  0  0\n 11 12  1  0  0  0  0\n 11 13  2  0  0  0  0\n  7 10  1  0  0  0  0\n 10 14  1  0  0  0  0\nM  END";
@@ -474,7 +474,7 @@ public class ChemicalApiTest {
 	 * components 
 	 * @throws Exception
 	 */
-	@Test
+	@Test 
 	public void testCanonicalMolForms() throws Exception {
 		
 		
@@ -520,18 +520,10 @@ public class ChemicalApiTest {
     }
     
     public static ChemicalSubstance makeChemicalSubstance(String smiles){
-    	ChemicalSubstance cs = new ChemicalSubstance();
-    	cs.structure= new GinasChemicalStructure();
-    	cs.structure.molfile=smiles;
-    	Name n = new Name();
-    	n.name=smiles + " name";
-    	Reference r=Reference.SYSTEM_GENERATED();
-    	r.addTag(Reference.PUBLIC_DOMAIN_REF);
-    	r.publicDomain=true;
-    	n.addReference(r, cs);
-    	cs.structure.addReference(r);
-    	cs.names.add(n);
-    	return cs;
+    	return (ChemicalSubstance)((new SubstanceBuilder())
+    		.asChemical(smiles)
+    		.withName(smiles + " name")
+    		.withDefaultReference().build());
     }
     
     
