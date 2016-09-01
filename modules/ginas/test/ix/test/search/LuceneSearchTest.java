@@ -98,11 +98,10 @@ public class LuceneSearchTest {
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
-        }catch(Throwable e){
-        	e.printStackTrace();
-        	throw e;
         }
-   	}
+    }
+    
+    
     
     @Test  
    	public void testSearchForQuotedPhraseShouldReturnOnlyRecordWithThatOrder() throws Exception {
@@ -123,6 +122,112 @@ public class LuceneSearchTest {
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
+        }catch(Throwable e){
+        	e.printStackTrace();
+        	throw e;
+        }
+   	}
+    
+    
+    @Test  
+   	public void testSearchForNameFieldWorks() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+        	String aspirin = "ASPIRIN";
+        	String q = "root_names_name:\"" + aspirin + "\"";
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            new SubstanceBuilder()
+			.addName(aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            String html=api.getTextSearchHTML(q);
+            assertRecordCount(html, 1);
+        }catch(Throwable e){
+        	e.printStackTrace();
+        	throw e;
+        }
+   	}
+    
+    @Test  
+   	public void testSearchForNameInCodeFieldDoesntWork() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+        	String aspirin = "ASPIRIN";
+        	String q = "root_codes_code:\"" + aspirin + "\"";
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            new SubstanceBuilder()
+			.addName(aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            String html=api.getTextSearchHTML(q);
+            assertRecordCount(html, -1);
+        }catch(Throwable e){
+        	e.printStackTrace();
+        	throw e;
+        }
+   	}
+    
+    @Test  
+   	public void testSearchForNameInNameFieldDoesntReturnCodeMatches() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+        	String aspirin = "ASPIRIN";
+        	String otherName = "GLEEVEC";
+        	String q = "root_names_name:\"" + aspirin + "\"";
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            new SubstanceBuilder()
+			.addName(aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            new SubstanceBuilder()
+			.addName(otherName)
+			.addCode("CAS",aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            assertRecordCount(api.getTextSearchHTML(q), 1);
+            assertRecordCount(api.getTextSearchHTML(aspirin), 2);
+        }catch(Throwable e){
+        	e.printStackTrace();
+        	throw e;
+        }
+   	}
+    
+    @Test  
+   	public void testCodeSystemDynamicFieldMatches() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+        	String cas = "50-00-0";
+        	String defName = "AAA";
+        	
+        	
+        	String qCas = "root_codes_CAS:\"" + cas + "\"";
+        	String qCasFake = "root_codes_CASFAKE:\"" + cas + "\"";
+        	String qAll = "\"" + cas + "\"";
+        	String qCode= "root_codes_code:\"" + cas + "\"";
+        	
+            SubstanceAPI api = new SubstanceAPI(session);
+
+            new SubstanceBuilder()
+			.addName(defName + "A")
+			.addCode("CASFAKE",cas)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            new SubstanceBuilder()
+			.addName(defName + "B")
+			.addCode("CAS",cas)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            new SubstanceBuilder()
+			.addName(cas)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            assertRecordCount(api.getTextSearchHTML(qCas), 1);
+            assertRecordCount(api.getTextSearchHTML(qCasFake), 1);
+            assertRecordCount(api.getTextSearchHTML(qAll), 3);
+            assertRecordCount(api.getTextSearchHTML(qCode), 2);
         }catch(Throwable e){
         	e.printStackTrace();
         	throw e;

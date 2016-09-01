@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.controllers.EntityFactory;
+import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
@@ -36,6 +37,15 @@ public abstract class AbstractSubstanceBuilder<K extends Substance>{
 			Name n=new Name(name);
 			n.addReference(getOrAddFirstReference(s));
 			s.names.add(n);
+			return s;
+		});
+	}
+	
+	public AbstractSubstanceBuilder<K> addCode(String codeSystem, String code){
+		return andThen(s->{
+			Code c=new Code(codeSystem,code);
+			c.addReference(getOrAddFirstReference(s));
+			s.codes.add(c);
 			return s;
 		});
 	}

@@ -27,6 +27,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -34,8 +35,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import org.apache.lucene.index.IndexableField;
 
 import ix.core.util.TimeUtil;
 import play.Logger;
@@ -440,9 +439,16 @@ public class Util {
 		public void process(int i, K o);
 	}
 	
-	public static <K> void forEachIndex(Iterable<K> it, IndexAndItemProcessor<K> process){
-		int[] idx = { 0 };
-		it.forEach(k -> process.process(idx[0]++, k));
+	public static <K> void forEachIndex(Collection<K> it, IndexAndItemProcessor<K> process){
+		if(it instanceof List){
+			IntStream.range(0,it.size()-1)
+					.mapToObj(i->((List<K>)it)
+					.get(i));
+		}else{
+			int[] idx = {0};
+			it.forEach(k -> process.process(idx[0]++, k));	
+		}
+		
 	}
 	public static <K> Map<String,List<K>> groupToMap(Collection<K> s, Function<K,String> namer){
 		return groupToMap(s.stream(),namer);
@@ -455,22 +461,6 @@ public class Util {
 	
 	
 	
-	public static class Tuple<K,V>{
-		K k;
-		V v;
-		public Tuple(K k,V v){
-			this.k=k;
-			this.v=v;
-		}
-		public K k(){
-			return k;
-		}
-		public V v(){
-			return v;
-		}
-		
-	}
-
 	// Used for simple case-insensitive literal string replacement
 	// From:http://stackoverflow.com/questions/5054995/how-to-replace-case-insensitive-literal-substrings-in-java
 	public static String replaceIgnoreCase(String source, String target, String replacement) {

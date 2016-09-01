@@ -60,7 +60,11 @@ public class Code extends CommonDataElementOfCollection{
         this.code = code;
     }
     
-    public String toString(){
+    public Code(String codeSystem, String code) {
+		this.codeSystem=codeSystem;
+		this.code=code;
+	}
+	public String toString(){
 		return "Code[" + this.codeSystem + "]:\"" +this.getCode()  +"\"";
 	}
     

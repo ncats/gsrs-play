@@ -88,31 +88,23 @@ public class SearchFactory extends EntityFactory {
     }
     
     public static SearchResult
-        search (TextIndexer indexer, Class kind,
+        search (TextIndexer indexer, Class<?> kind,
                 String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
         return search (indexer, kind, null, q, top, skip, fdim, queryParams);
     }
     
     public static SearchResult
-        search (TextIndexer indexer, Class kind, Collection subset,
+        search (TextIndexer indexer, Class<?> kind, Collection<?> subset,
                 String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
         SearchOptions options = new SearchOptions (kind, top, skip, fdim);
         
-        StringBuilder filter = new StringBuilder ();
         if (queryParams != null) {
             parseSearchOptions (options, queryParams);
-            for (String f : options.facets) {
-                if (filter.length() > 0)
-                    filter.append("&");
-                filter.append("facet="+f);
-            }
         }
         
-        if (q == null) {
-        }
-        else if (q.startsWith("etag:") || q.startsWith("ETag:")) {
+        if (q != null && (q.startsWith("etag:") || q.startsWith("ETag:"))) {
             String id = q.substring(5, 21);
             try {
                 ETag etag = etagDb.where().eq("etag", id).findUnique();
@@ -121,19 +113,16 @@ public class SearchFactory extends EntityFactory {
                         String[] facets = etag.filter.split("&");
                         for (int i = facets.length; --i >= 0; ) {
                             if (facets[i].length() > 0) {
-                                filter.insert(0, facets[i]+"&");
                                 options.facets.add
                                     (0, facets[i].replaceAll("facet=", ""));
                             }
                         }
                     }
                     q = etag.query; // rewrite the query
-                }
-                else {
+                }else {
                     Logger.warn("ETag "+id+" is not a search!");
                 }
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 Logger.trace("Can't find ETag "+id, ex);
             }
         }

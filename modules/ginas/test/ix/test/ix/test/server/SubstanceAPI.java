@@ -145,6 +145,8 @@ public class SubstanceAPI {
     	return wsr.getBody();
     }
     
+    
+    
     public String getFlexMatchHTML(String smiles){
     	WSResponse wsr= getFlexMatch(smiles);
     	return wsr.getBody();
