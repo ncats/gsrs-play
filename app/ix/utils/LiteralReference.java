@@ -1,6 +1,5 @@
 package ix.utils;
 
-import ix.utils.Util.LiteralReference;
 
 public class LiteralReference<K>{
 	public K o;
