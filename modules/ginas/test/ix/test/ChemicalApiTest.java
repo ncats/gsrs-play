@@ -31,6 +31,8 @@ import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.test.builder.AbstractSubstanceBuilder;
+import ix.test.builder.SubstanceBuilder;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
@@ -520,10 +522,11 @@ public class ChemicalApiTest {
     }
     
     public static ChemicalSubstance makeChemicalSubstance(String smiles){
-    	return (ChemicalSubstance)((new SubstanceBuilder())
-    		.asChemical(smiles)
-    		.withName(smiles + " name")
-    		.withDefaultReference().build());
+    	return new SubstanceBuilder()
+    		.asChemical()
+    		.setStructure(smiles)
+    		.addName(smiles + " name")
+    		.build();
     }
     
     

@@ -66,7 +66,6 @@ public class Principal extends IxModel {
     }
 
     public boolean isAdmin () {
-    	
     	return admin; 
     }
     

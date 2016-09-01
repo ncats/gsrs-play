@@ -1,25 +1,21 @@
 package ix.test.search;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.IntStream;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import ix.core.controllers.EntityFactory;
-import ix.ginas.models.v1.Substance;
-import ix.test.SubstanceBuilder;
+import ix.test.builder.SubstanceBuilder;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
@@ -49,10 +45,9 @@ public class LuceneSearchTest {
         	String theName = "ASPIRIN CACLIUM";
             SubstanceAPI api = new SubstanceAPI(session);
             
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(theName)
-					.withDefaultReference().buildJson()
-					));
+			new SubstanceBuilder()
+				.addName(theName)
+				.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
             
             String html=api.getTextSearchHTML(theName);
             assertRecordCount(html, 1);
@@ -66,14 +61,15 @@ public class LuceneSearchTest {
         	String aspirinCalcium = "ASPIRIN CACLIUM";
         	String aspirin = "ASPIRIN";
             SubstanceAPI api = new SubstanceAPI(session);
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirinCalcium)
-					.withDefaultReference().buildJson()
-					));
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirin)
-					.withDefaultReference().buildJson()
-					));
+            
+            
+            new SubstanceBuilder()
+			.addName(aspirinCalcium)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            new SubstanceBuilder()
+			.addName(aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
             
             String html=api.getTextSearchHTML(aspirin);
             assertRecordCount(html, 2);
@@ -89,14 +85,16 @@ public class LuceneSearchTest {
         	String q = "\"^" + aspirin + "$\"";
             SubstanceAPI api = new SubstanceAPI(session);
             
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirinCalcium)
-					.withDefaultReference().buildJson()
-					));
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirin)
-					.withDefaultReference().buildJson()
-					));
+            
+
+            new SubstanceBuilder()
+			.addName(aspirinCalcium)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            new SubstanceBuilder()
+			.addName(aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
@@ -114,15 +112,14 @@ public class LuceneSearchTest {
         	String aspirin = "CALCIUM ASPIRIN";
         	String q = "\"" + aspirin + "\"";
             SubstanceAPI api = new SubstanceAPI(session);
+
+            new SubstanceBuilder()
+			.addName(aspirinCalcium)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
             
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirinCalcium)
-					.withDefaultReference().buildJson()
-					));
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirin)
-					.withDefaultReference().buildJson()
-					));
+            new SubstanceBuilder()
+			.addName(aspirin)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
@@ -160,14 +157,17 @@ public class LuceneSearchTest {
         	String q = "\"^" + aspirinCalcium + "$\"";
             SubstanceAPI api = new SubstanceAPI(session);
             
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirinCalcium)
-					.withDefaultReference().buildJson()
-					));
-            ensurePass(api.submitSubstance((new SubstanceBuilder())
-					.withName(aspirinCalciumHydrate)
-					.withDefaultReference().buildJson()
-					));
+
+            
+
+            new SubstanceBuilder()
+			.addName(aspirinCalcium)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
+            new SubstanceBuilder()
+			.addName(aspirinCalciumHydrate)
+			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+            
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
@@ -186,15 +186,14 @@ public class LuceneSearchTest {
         	final String prefix="MYSPECIALSUFFIX";
         	List<String> addedName = new ArrayList<String>();
         	
-        	"ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars()
-        			 .mapToObj(i->((char)i)+prefix)
-        			 .forEach(n->{
-        				 addedName.add(n);
-        				 ensurePass(api.submitSubstance((new SubstanceBuilder())
-        							.withName(n)
-        							.withDefaultReference().buildJson()
-        							));
-        			 });
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().mapToObj(i -> ((char) i) + prefix).forEach(n -> {
+				addedName.add(n);
+				new SubstanceBuilder()
+					.addName(n)
+					.buildJsonAnd(j->{
+						ensurePass(api.submitSubstance(j));
+					});
+			});
             
             String html=api.fetchSubstancesUIBrowseHTML();
             assertFalse("First page shouldn't show oldest record by default. But found:" + addedName.get(0),html.contains(addedName.get(0)));
@@ -226,10 +225,11 @@ public class LuceneSearchTest {
         			 .mapToObj(i->((char)i)+prefix)
         			 .forEach(n->{
         				 addedName.add(n);
-        				 ensurePass(api.submitSubstance((new SubstanceBuilder())
-     							.withName(n)
-     							.withDefaultReference().buildJson()
-     							));
+        				 new SubstanceBuilder()
+	     					.addName(n)
+	     					.buildJsonAnd(j->{
+	     						ensurePass(api.submitSubstance(j));
+	     					});
         			 });
             
         	
@@ -252,7 +252,6 @@ public class LuceneSearchTest {
 					.forEachOrdered(n -> assertFalse("Sorting rev alphabetical shouldn't show:" + n, rhtml.contains(n)));
             
         }catch(Throwable e){
-        	//e.printStackTrace();
         	throw e;
         }
    	}
