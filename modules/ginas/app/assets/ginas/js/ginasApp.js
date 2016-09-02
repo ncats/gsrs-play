@@ -3,6 +3,7 @@
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
         'angularSpinners', 'filterListener', 'validatorListener'
+
     ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
      })
@@ -531,7 +532,6 @@
 
         $window.SDFFields = {};
 
-
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
             var r = (_.indexOf(t, path) >= 0) ? 'active' : '';
@@ -561,10 +561,6 @@
                 break;
             }
 
-            //Todo: this only works on the homepage//
-            console.log($location);
-            console.log($window.location);
-            console.log(baseurl);
             var search = "q="+$scope.q;
             $window.location = $window.location.origin + baseurl +"substances?"+ search;
         //    $window.location.search = "q="+$scope.q;

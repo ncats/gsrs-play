@@ -1,7 +1,7 @@
 <div ng-class="{'has-error' : formname[field].$invalid && formname.$flagged}">
 <label id="{{::field}}" class="text-capitalize">{{label || field}}<span ng-if="required==true"
                                                                             class="danger"> *</span></label><br>
-            <span ng-show="!edit && obj.length!=0" ng-click="edit = true;">
+            <span ng-show="!edit && obj.length!=0" ng-click="toggleEdit();">
                             <span ng-repeat="tag in obj"  class="badge" uib-tooltip="{{tag.display}}">{{tag.display}} </span></span>
 <!--
     <a ng-show="!edit && obj.length!=0" ng-click = "empty();"><i class="fa fa-trash danger" uib-tooltip="Clear List"></i></a>
