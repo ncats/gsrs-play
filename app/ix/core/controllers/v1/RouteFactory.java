@@ -1,6 +1,5 @@
 package ix.core.controllers.v1;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,8 +11,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.persistence.Id;
-
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,19 +21,16 @@ import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.NamedResource;
 import ix.core.NamedResourceFilter;
 import ix.core.UserFetcher;
-import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
-import ix.core.controllers.UserProfileFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
-import ix.core.models.Group;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
-import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.core.search.text.EntityUtils;
+import ix.core.search.text.EntityUtils.EntityInfo;
 import ix.core.util.Java8Util;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
-import ix.utils.EntityUtils;
 import ix.utils.Global;
 import play.Logger;
 import play.Play;
@@ -98,18 +92,16 @@ public class RouteFactory extends Controller {
         NamedResource named  = factory.getAnnotation(NamedResource.class);
         if (named != null) {
             try {
-                Class cls = named.type();
-                Field id = EntityUtils.getIdFieldForClass(cls);
+            	EntityInfo ei = EntityUtils.getEntityInfoFor(named.type());
 
-                if (id == null) { // possible?
-                    Logger.error("Fatal error: Entity "+cls.getName()
+                if (!ei.getIDFieldInfo().isPresent()) { // possible?
+                    Logger.error("Fatal error: Entity "+ei.getName()
                                  +" for factory "+factory.getClass()
                                  +" doesn't have any Id annotation!");
-                }
-                else {
-                    Class c = id.getType();
+                }else {
+                    Class<?> c = ei.getIDFieldInfo().get().getType();
                     if (UUID.class.isAssignableFrom(c)) {
-                        Logger.debug("## "+cls.getName()
+                        Logger.debug("## "+ei.getName()
                                      +" is globally unique!");
                         _uuid.add(context);
                     }

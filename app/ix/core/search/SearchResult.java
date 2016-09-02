@@ -17,9 +17,9 @@ import java.util.function.Consumer;
 
 import ix.core.CacheStrategy;
 import ix.core.search.FutureList.NamedCallable;
+import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.TimeUtil;
-import ix.utils.EntityUtils;
 import play.Logger;
 
 @CacheStrategy(evictable=false)
@@ -41,7 +41,7 @@ public class SearchResult {
     List<Facet> facets = new ArrayList<Facet>();
     List<FieldFacet> suggestFacets = new ArrayList<FieldFacet>();
     
-    FutureList<Object> matches = new FutureList<> (o->EntityUtils.getIdForBeanAsString(o));
+    FutureList<Object> matches = new FutureList<> (o->(new EntityWrapper(o)).getIdAsString());
     
     List<?> result; // final result when there are no more updates
     
@@ -275,8 +275,8 @@ public class SearchResult {
         		}else{
         			//This may take a long time in certain cases
             		Collections.sort(list,(o1,o2)->{
-            			String id1 = EntityUtils.getIdForBeanAsString(o1);
-    	                String id2 = EntityUtils.getIdForBeanAsString(o2);
+            			String id1 = new EntityWrapper(o1).getIdAsString();
+    	                String id2 = new EntityWrapper(o2).getIdAsString();
     	                return idComparator.compare(id1, id2);
             		});
         		}

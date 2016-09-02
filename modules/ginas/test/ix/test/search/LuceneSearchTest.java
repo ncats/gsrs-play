@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -36,9 +37,7 @@ public class LuceneSearchTest {
         }
     };
     
-
-    
-    @Test   
+    @Test    
    	public void testTwoWordLuceneNameSearchShouldReturn() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -54,7 +53,7 @@ public class LuceneSearchTest {
         }
    	}
     
-    @Test   
+    @Test    
    	public void testSearchForWordPresentIn2RecordsNamesShouldReturnBoth() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -76,7 +75,7 @@ public class LuceneSearchTest {
         }
    	}
     
-    @Test  
+    @Test   
    	public void testExactSearchForWordPresentIn2RecordsNamesShouldReturnOnlyExact() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -103,7 +102,7 @@ public class LuceneSearchTest {
     
     
     
-    @Test  
+    @Test   
    	public void testSearchForQuotedPhraseShouldReturnOnlyRecordWithThatOrder() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -129,7 +128,7 @@ public class LuceneSearchTest {
    	}
     
     
-    @Test  
+    @Test   
    	public void testSearchForNameFieldWorks() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -149,7 +148,7 @@ public class LuceneSearchTest {
         }
    	}
     
-    @Test  
+    @Test   
    	public void testSearchForNameInCodeFieldDoesntWork() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -169,7 +168,7 @@ public class LuceneSearchTest {
         }
    	}
     
-    @Test  
+    @Test   
    	public void testSearchForNameInNameFieldDoesntReturnCodeMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -195,7 +194,7 @@ public class LuceneSearchTest {
         }
    	}
     
-    @Test  
+    @Test
    	public void testCodeSystemDynamicFieldMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -253,7 +252,7 @@ public class LuceneSearchTest {
     	return -1;
     }
 
-    @Test 
+    @Test  
    	public void testSearchForQuotedExactPhraseShouldReturnOnlyThatPhraseNotSuperString() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -283,7 +282,7 @@ public class LuceneSearchTest {
    	}
     
     
-    @Test  
+    @Test   
    	public void testDefaultBrowseOrderShouldShowMostRecentlyEdittedFirst() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -318,13 +317,14 @@ public class LuceneSearchTest {
    	}
     
     
-    @Test  
+    @Test   
    	public void testBrowsingWithDisplayNameOrderingShouldOrderAlphabetically() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
         	SubstanceAPI api = new SubstanceAPI(session);
         	final String prefix="MYSPECIALSUFFIX";
         	List<String> addedName = new ArrayList<String>();
+        	
         	
         	"ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars()
         			 .mapToObj(i->((char)i)+prefix)

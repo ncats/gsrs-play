@@ -3,13 +3,9 @@ package ix.core.controllers;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,6 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -27,21 +24,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OptimisticLockException;
-
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.FutureRowCount;
 import com.avaje.ebean.Query;
 import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.bean.EntityBean;
-import com.avaje.ebean.bean.EntityBeanIntercept;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -50,7 +39,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.DefaultValidator;
@@ -61,18 +49,17 @@ import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
-import ix.core.models.BaseModel;
 import ix.core.models.BeanViews;
-import ix.core.models.DataVersion;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
 import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Principal;
-import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.text.EntityUtils;
+import ix.core.search.text.EntityUtils.EntityInfo;
+import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.Java8Util;
-import ix.utils.EntityUtils;
 import ix.utils.Global;
 import ix.utils.Util;
 import ix.utils.pojopatch.ChangeEventListener;
@@ -297,6 +284,7 @@ public class EntityFactory extends Controller {
                     : writeValueAsString (obj);
             }
             catch (Exception ex) {
+            	ex.printStackTrace();
                 Logger.trace("Can't write Json", ex);
             }
             return null;
@@ -362,9 +350,10 @@ public class EntityFactory extends Controller {
                          +" new="+e.getNewValue());
             try {
                 Edit edit = new Edit ();
-                Object id = EntityUtils.getId (e.getSource());
+                
+                String id = new EntityWrapper(e.getSource()).getIdAsString();
                 if (id != null)
-                    edit.refid = id.toString();
+                    edit.refid = id;
                 else
                     Logger.warn("No id set of edit for "+e.getSource());
                 edit.kind = e.getSource().getClass().getName();
@@ -670,6 +659,8 @@ public class EntityFactory extends Controller {
         }
     }
     
+    
+    //Prime canididate for rewrite with EntityWrapper
     protected static <T> Result field (Object inst, String field) {
         /*
         Query<T> query = finder.query();
@@ -989,12 +980,9 @@ public class EntityFactory extends Controller {
             
             T inst = mapper.treeToValue(node, type);
             
-            FetchedValue oldValueContainer=getCurrentValue(inst);
-            
-            
-            
-            ValidationResponse<T> vr=validator.validate(inst,(T)oldValueContainer.value);
-            
+			ValidationResponse<T> vr = validator.validate(inst,
+					(T) getCurrentValue(inst).map(o -> o.getValue()).orElse(null));
+
             if(rept==RESPONSE_TYPE.FULL){
             	return ok(validationResponse(vr,true));
             }else{
@@ -1066,6 +1054,7 @@ public class EntityFactory extends Controller {
      * @param finder
      * @return
      */
+    @Deprecated
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
                 return update (id,field,type,finder, null, null);
@@ -1073,372 +1062,331 @@ public class EntityFactory extends Controller {
     
     // This expects an update of the full record to be done using "/path/*"
     // or "/path/_"
-    //TODO: allow high-level changes to be captured
+    //
+    //
+    // TODO: allow high-level changes to be captured
+    // =======================
+    // Update: This is no longer being used, due to the logic
+    // never being determined via ebean. Need to disable it.
+    //
+    @Deprecated
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder,
          DeserializationProblemHandler deserializationHandler, Validator<T> validator) {
-
-        if (!request().method().equalsIgnoreCase("PUT")) {
-            return badRequest ("Only PUT is accepted!");
-        }
-
-        String content = request().getHeader("Content-Type");
-        if (content == null || (content.indexOf("application/json") < 0
-                                && content.indexOf("text/json") < 0)) {
-            return badRequest ("Mime type \""+content+"\" not supported!");
-        }
-
-        Object tempid=id;
-        Object temptype=type;
-
-        List<Object[]> changes = new ArrayList<Object[]>();
-        
-        T obj = finder.ref(id);
-        if (obj == null)
-            return notFound ("Not a valid entity id="+id);
-
-        
-        Object[] rootChange = new Object[]{
-                null, 
-                (new ObjectMapper()).valueToTree(obj).toString(),
-                null,
-                type,
-                id};
-        final Map<Object,Model> oldObjects = new HashMap<Object,Model>();
-        recursivelyApply(obj, "", new EntityCallable() {
-                @Override
-                public void call(Object m, String path) {
-                    if (m instanceof Model) {
-                        try {
-                            
-                            Method f = EntityUtils.getIdSettingMethodForBean(m);
-                            Object _id = EntityUtils.getIdForBean(m);
-                            oldObjects.put(_id, (Model) m);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-        Principal principal = null;
-        if (request().username() != null) {
-            principal = _principalFinder
-                .where().eq("name", request().username())
-                .findUnique();
-            // create new user if doesn't exist
-            /*
-            if (principal == null) {
-                principal = new Principal (request().username());
-                principal.save();
-            }
-            */
-        }
-
-        /**
-         * TODO: have a mechanism whereby the principal is verified
-         * to her permission to update this field
-         */
-
-        Logger.debug("Updating "+obj.getClass()+": id="+id+" field="+field);
-        try {
-            ObjectMapper mapper = getEntityMapper ();
-            if(deserializationHandler!=null)
-                mapper.addHandler(deserializationHandler);
-            JsonNode value = request().body().asJson();
-
-            String[] paths = field.split("/");
-            if (paths.length == 1 
-                && (paths[0].equals("_") || paths[0].equals("*"))) {
-                final T inst = mapper.treeToValue(value, type);
-                ValidationResponse vr=validator.validate(inst);
-                if(!vr.isValid()){
-	            	return badRequest(validationResponse(vr,false));
-	            }
-                try {
-                    Method m=EntityUtils.getIdSettingMethodForBean(inst);
-                    m.invoke(inst, id);
-                }catch (Exception ex) {
-                    ex.printStackTrace();
-                    return internalServerError (ex.getMessage());
-                }
-                obj=inst;
-                recursivelyApply(inst, "", new EntityCallable(){
-                        @Override
-                        public void call(Object m, String path) {
-                            if(inst == m)return;
-                            Model old=null;
-                            if(m instanceof Model){
-                                try{
-                                    
-                                    Method f=EntityUtils.getIdSettingMethodForBean(m);
-                                    Object _id=EntityUtils.getIdForBean(m);
-
-                                    //Get old model, do something with it?
-                                    old=oldObjects.get(_id);
-                                    if(_id==null){
-                                        //((Model) m).save();
-                                    }else{
-                                        if(f!=null){
-                                            f.invoke(m,_id);
-                                        }
-                                                                        
-                                        ((Model)m).update(_id);
-                                        Logger.debug("Success updating:" + path);
-                                    }
-                                                                
-                                }catch(OptimisticLockException e){
-                                                                
-                                    Logger.error("Lock error:" + path + "\t" + m.getClass().getName());
-                                    if(m instanceof Structure && old!=null){
-                                        Logger.error("Lock change:" + ((Structure)m).lastEdited + "\t" + ((Structure)old).lastEdited);  
-                                    }
-                                    if(m.getClass().getName().contains("tructure"))
-                                        e.printStackTrace();
-                                                                
-                                    //Logger.debug((new ObjectMapper()).valueToTree(m).toString());
-                                }catch(Exception e){
-                                    Logger.error("Error updating:" + path + "\t" + m.getClass().getName());
-                                    e.printStackTrace();
-                                                                
-                                }
-                            }
-                        }});
-                
-            } else {
-                Object inst = obj;
-                StringBuilder uri = new StringBuilder ();
-
-                Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
-
-                for (int i = 0; i < paths.length; ++i) {
-                    Logger.debug("paths["+i+"/"+paths.length+"]:"+paths[i]);
-
-                    String pname = paths[i]; // field name
-                    Integer pindex = null; // field index if field is a list
-
-                    Matcher matcher = regex.matcher(pname);
-                    if (matcher.find()) {
-                        pname = matcher.group(1);
-                        pindex = Integer.parseInt(matcher.group(2));
-                    }
-                    Logger.debug("pname="+pname+" pindex="+pindex);
-                    
-                    try {
-                        uri.append("/"+paths[i]);
-
-                        Field f = inst.getClass().getField(pname);
-                        String fname = f.getName();
-                        String bname = getBeanName (fname);
-                        Class<?> ftype = f.getType();
-
-                        Object val = f.get(inst);
-                        Object valp = val;
-                        if (pindex != null) {
-                            if (val == null) {
-                                return internalServerError 
-                                    ("Property \""+fname+"\" is null!");
-                            }
-
-                            if (ftype.isArray()) {
-                                if (pindex >= Array.getLength(val) 
-                                    || pindex < 0) {
-                                    return badRequest
-                                        (uri+": array index out of bound "
-                                         +pindex);
-                                }
-
-                                val = Array.get(val, pindex);
-                            }
-                            else if (Collection
-                                     .class.isAssignableFrom(ftype)) {
-                                if (pindex >= ((Collection)val).size()
-                                    || pindex < 0)
-                                    return badRequest
-                                        (uri+": list index out bound "
-                                         +pindex);
-                                Iterator it = ((Collection)val).iterator();
-
-                                for (int k = 0; it.hasNext()
-                                         && k < pindex; ++k)
-                                    val = it.next();
-                            }
-                            else {
-                                return badRequest 
-                                    ("Property \""
-                                     +fname+"\" is not an array or list");
-                            }
-                            Logger.debug(fname+"["+pindex+"] = "+val);
-                        }
-                        
-                        {
-                            /*
-                              try {
-                              Method m = inst.getClass()
-                              .getMethod("get"+bname);
-                              val = m.invoke(inst);
-                              }
-                              catch (NoSuchMethodException ex) {
-                              Logger.warn("Can't find bean getter for "
-                              +"field \""+fname+"\" in class "
-                              +inst.getClass());
-                              val = f.get(inst);
-                              }
-                            */
-                            String oldVal = mapper.writeValueAsString(val);
-                            
-                            //if this is not the final piece
-                            if (i+1 < paths.length) {
-                                if (val == null) {
-                                    // create new instance
-                                    Logger.debug
-                                        (uri+": new instance "+f.getType());
-                                    val = f.getType().newInstance();
-                                }
-                            }
-                            else {
-                                
-                                // check to see if it references an existing 
-                                // entity
-                                if (value != null && !value.isNull()) {
-                                    try {
-                                        Logger.debug("Saving ...." );
-                                        val = getJsonValue 
-                                            (valp, value, f, pindex);
-                                        Logger.debug("Saved" );
-                                    }
-                                    catch (Exception ex) {
-                                        Logger.trace
-                                            ("Can't retrieve value", ex);
-                                        
-                                        return internalServerError
-                                            (ex.getMessage());
-                                    }
-                                }
-                                else {
-                                    val = null;
-                                }
-                                
-                                Logger.debug("Updating "+f.getDeclaringClass()
-                                             +"."+f.getName()+" = new:"
-                                             + (val != null ? 
-                                                (val.getClass()+" "+val)
-                                                : "null")
-                                             +" old:"+oldVal);
-                            }
-                            
-                            /*
-                             * We can't use f.set(inst, val) here since it
-                             * doesn't generate proper notifications to ebean
-                             * for update
-                             */
-                            if(pindex == null){
-                            try {
-                                Method set = inst.getClass().getMethod
-                                    ("set"+bname, ftype);
-                                set.invoke(inst, val);
-                                changes.add(new Object[]{
-                                                uri.toString(), 
-                                                oldVal,
-	                                                val,
-	                                                temptype,
-	                                                tempid});
-                            }
-                            catch (Exception ex) {
-                                Logger.error
-                                    ("Can't find bean setter for field \""
-                                     +fname+"\" in class "
-                                     +inst.getClass(),
-                                     ex);
-                                
-                                return internalServerError
-                                    ("Unable to map path "+uri+"!");
-                            }
-                        }
-                        }
-
-                        if (val != null) {
-                            ftype = val.getClass();
-                            if (null != ftype.getAnnotation(Entity.class)) {
-                                Object tid=EntityUtils.getIdForBean(val);
-                                if(tid!=null){
-                                    tempid=tid;
-                                    temptype=ftype;
-                                }
-                            }
-                        }
-                        inst = val;
-                    }
-                    catch (NoSuchFieldException ex) {
-                        Logger.error(uri.toString(), ex);
-                        return notFound ("Invalid field path: "+uri);
-                    }
-                }
-               
-            }
-            
-            //System.out.println((new ObjectMapper()).valueToTree(obj));
-            
-                obj.update();
-            rootChange[0]="/";
-            rootChange[2]=obj;
-            changes.add(rootChange);
-
-            return Java8Util.ok (mapper.valueToTree(obj));
-                    }
-                    catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error("Instance "+id, ex);
-            return internalServerError (ex.getMessage());
-                    }
+    	return forbidden ("Update field methods not available at this time");
+//
+//        if (!request().method().equalsIgnoreCase("PUT")) {
+//            return badRequest ("Only PUT is accepted!");
+//        }
+//
+//        String content = request().getHeader("Content-Type");
+//        if (content == null || (content.indexOf("application/json") < 0
+//                                && content.indexOf("text/json") < 0)) {
+//            return badRequest ("Mime type \""+content+"\" not supported!");
+//        }
+//
+//        Object tempid=id;
+//        Object temptype=type;
+//
+//        List<Object[]> changes = new ArrayList<Object[]>();
+//        
+//        T obj = finder.ref(id);
+//        if (obj == null)
+//            return notFound ("Not a valid entity id="+id);
+//
+//        
+//        Object[] rootChange = new Object[]{
+//                null, 
+//                (new ObjectMapper()).valueToTree(obj).toString(),
+//                null,
+//                type,
+//                id};
+//        final Map<Object,Model> oldObjects = new HashMap<Object,Model>();
+//        recursivelyApply(obj, "", new EntityCallable() {
+//                @Override
+//                public void call(Object m, String path) {
+//                    if (m instanceof Model) {
+//                        try {
+//                            Object _id = EntityUtils.getIdForBean(m);
+//                            oldObjects.put(_id, (Model) m);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//            });
+//        Principal principal = null;
+//        if (request().username() != null) {
+//            principal = _principalFinder
+//                .where().eq("name", request().username())
+//                .findUnique();
+//            // create new user if doesn't exist
+//            /*
+//            if (principal == null) {
+//                principal = new Principal (request().username());
+//                principal.save();
+//            }
+//            */
+//        }
+//
+//        /**
+//         * TODO: have a mechanism whereby the principal is verified
+//         * to her permission to update this field
+//         */
+//
+//        Logger.debug("Updating "+obj.getClass()+": id="+id+" field="+field);
+//        try {
+//            ObjectMapper mapper = getEntityMapper ();
+//            if(deserializationHandler!=null)
+//                mapper.addHandler(deserializationHandler);
+//            JsonNode value = request().body().asJson();
+//
+//            String[] paths = field.split("/");
+//            if (paths.length == 1 && (paths[0].equals("_") || paths[0].equals("*"))) {
+//                final T inst = mapper.treeToValue(value, type);
+//                ValidationResponse vr=validator.validate(inst);
+//                if(!vr.isValid()){
+//	            	return badRequest(validationResponse(vr,false));
+//	            }
+//                try {
+//                    Method m=EntityUtils.getIdSettingMethodForBean(inst);
+//                    m.invoke(inst, id);
+//                }catch (Exception ex) {
+//                    ex.printStackTrace();
+//                    return internalServerError (ex.getMessage());
+//                }
+//                obj=inst;
+//                recursivelyApply(inst, "", new EntityCallable(){
+//                        @Override
+//                        public void call(Object m, String path) {
+//                            if(inst == m)return;
+//                            Model old=null;
+//                            if(m instanceof Model){
+//                                try{
+//                                    EntityInfo ei =EntityTextIndexer
+//                                    	.getEntityInfoFor(m);
+//                                    ei.getAndSetEbeanId(m);
+//                                    
+//                                    Object _id=ei.getIdPossiblyFromEbeanMethod(m);
+//
+//                                    //Get old model, do something with it?
+//                                    old=oldObjects.get(_id);
+//                                    if(_id!=null){                               
+//                                        ((Model)m).update(_id);
+//                                        Logger.debug("Success updating:" + path);
+//                                    }
+//                                                                
+//                                }catch(OptimisticLockException e){
+//                                                                
+//                                    Logger.error("Lock error:" + path + "\t" + m.getClass().getName());
+//                                    if(m instanceof Structure && old!=null){
+//                                        Logger.error("Lock change:" + ((Structure)m).lastEdited + "\t" + ((Structure)old).lastEdited);  
+//                                    }
+//                                    if(m.getClass().getName().contains("tructure"))
+//                                        e.printStackTrace();
+//                                                                
+//                                    //Logger.debug((new ObjectMapper()).valueToTree(m).toString());
+//                                }catch(Exception e){
+//                                    Logger.error("Error updating:" + path + "\t" + m.getClass().getName());
+//                                    e.printStackTrace();
+//                                                                
+//                                }
+//                            }
+//                        }});
+//                
+//            } else {
+//                Object inst = obj;
+//                StringBuilder uri = new StringBuilder ();
+//
+//                Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
+//
+//                for (int i = 0; i < paths.length; ++i) {
+//                    Logger.debug("paths["+i+"/"+paths.length+"]:"+paths[i]);
+//
+//                    String pname = paths[i]; // field name
+//                    Integer pindex = null; // field index if field is a list
+//
+//                    Matcher matcher = regex.matcher(pname);
+//                    if (matcher.find()) {
+//                        pname = matcher.group(1);
+//                        pindex = Integer.parseInt(matcher.group(2));
+//                    }
+//                    Logger.debug("pname="+pname+" pindex="+pindex);
+//                    
+//                    try {
+//                        uri.append("/"+paths[i]);
+//
+//                        Field f = inst.getClass().getField(pname);
+//                        String fname = f.getName();
+//                        String bname = getBeanName (fname);
+//                        Class<?> ftype = f.getType();
+//
+//                        Object val = f.get(inst);
+//                        Object valp = val;
+//                        if (pindex != null) {
+//                            if (val == null) {
+//                                return internalServerError 
+//                                    ("Property \""+fname+"\" is null!");
+//                            }
+//
+//                            if (ftype.isArray()) {
+//                                if (pindex >= Array.getLength(val) 
+//                                    || pindex < 0) {
+//                                    return badRequest
+//                                        (uri+": array index out of bound "
+//                                         +pindex);
+//                                }
+//
+//                                val = Array.get(val, pindex);
+//                            }
+//                            else if (Collection
+//                                     .class.isAssignableFrom(ftype)) {
+//                                if (pindex >= ((Collection)val).size()
+//                                    || pindex < 0)
+//                                    return badRequest
+//                                        (uri+": list index out bound "
+//                                         +pindex);
+//                                Iterator it = ((Collection)val).iterator();
+//
+//                                for (int k = 0; it.hasNext()
+//                                         && k < pindex; ++k)
+//                                    val = it.next();
+//                            }
+//                            else {
+//                                return badRequest 
+//                                    ("Property \""
+//                                     +fname+"\" is not an array or list");
+//                            }
+//                            Logger.debug(fname+"["+pindex+"] = "+val);
+//                        }
+//                        
+//                        {
+//                            /*
+//                              try {
+//                              Method m = inst.getClass()
+//                              .getMethod("get"+bname);
+//                              val = m.invoke(inst);
+//                              }
+//                              catch (NoSuchMethodException ex) {
+//                              Logger.warn("Can't find bean getter for "
+//                              +"field \""+fname+"\" in class "
+//                              +inst.getClass());
+//                              val = f.get(inst);
+//                              }
+//                            */
+//                            String oldVal = mapper.writeValueAsString(val);
+//                            
+//                            //if this is not the final piece
+//                            if (i+1 < paths.length) {
+//                                if (val == null) {
+//                                    // create new instance
+//                                    Logger.debug
+//                                        (uri+": new instance "+f.getType());
+//                                    val = f.getType().newInstance();
+//                                }
+//                            }
+//                            else {
+//                                
+//                                // check to see if it references an existing 
+//                                // entity
+//                                if (value != null && !value.isNull()) {
+//                                    try {
+//                                        Logger.debug("Saving ...." );
+//                                        val = getJsonValue 
+//                                            (valp, value, f, pindex);
+//                                        Logger.debug("Saved" );
+//                                    }
+//                                    catch (Exception ex) {
+//                                        Logger.trace
+//                                            ("Can't retrieve value", ex);
+//                                        
+//                                        return internalServerError
+//                                            (ex.getMessage());
+//                                    }
+//                                }
+//                                else {
+//                                    val = null;
+//                                }
+//                                
+//                                Logger.debug("Updating "+f.getDeclaringClass()
+//                                             +"."+f.getName()+" = new:"
+//                                             + (val != null ? 
+//                                                (val.getClass()+" "+val)
+//                                                : "null")
+//                                             +" old:"+oldVal);
+//                            }
+//                            
+//                            /*
+//                             * We can't use f.set(inst, val) here since it
+//                             * doesn't generate proper notifications to ebean
+//                             * for update
+//                             */
+//                            if(pindex == null){
+//                            try {
+//                                Method set = inst.getClass().getMethod
+//                                    ("set"+bname, ftype);
+//                                set.invoke(inst, val);
+//                                changes.add(new Object[]{
+//                                                uri.toString(), 
+//                                                oldVal,
+//	                                                val,
+//	                                                temptype,
+//	                                                tempid});
+//                            }
+//                            catch (Exception ex) {
+//                                Logger.error
+//                                    ("Can't find bean setter for field \""
+//                                     +fname+"\" in class "
+//                                     +inst.getClass(),
+//                                     ex);
+//                                
+//                                return internalServerError
+//                                    ("Unable to map path "+uri+"!");
+//                            }
+//                        }
+//                        }
+//
+//                        if (val != null) {
+//                            ftype = val.getClass();
+//                            if (null != ftype.getAnnotation(Entity.class)) {
+//                                Object tid=EntityUtils.getIdForBean(val);
+//                                if(tid!=null){
+//                                    tempid=tid;
+//                                    temptype=ftype;
+//                                }
+//                            }
+//                        }
+//                        inst = val;
+//                    }
+//                    catch (NoSuchFieldException ex) {
+//                        Logger.error(uri.toString(), ex);
+//                        return notFound ("Invalid field path: "+uri);
+//                    }
+//                }
+//               
+//            }
+//            
+//            //System.out.println((new ObjectMapper()).valueToTree(obj));
+//            
+//                obj.update();
+//            rootChange[0]="/";
+//            rootChange[2]=obj;
+//            changes.add(rootChange);
+//
+//            return Java8Util.ok (mapper.valueToTree(obj));
+//                    }
+//                    catch (Exception ex) {
+//            ex.printStackTrace();
+//            Logger.error("Instance "+id, ex);
+//            return internalServerError (ex.getMessage());
+//                    }
     } // update ()
     
     public interface EntityCallable{
         void call(Object m, String path);
     }
-    public static void recursivelyApply(Model entity,EntityCallable c){
-    	recursivelyApply(entity,"",c);
-    }
-    private static void recursivelyApply(Model entity, String path,
-                                           EntityCallable c){
-    	
-        try{
-        	
-        	c.call(entity, path);
-            for(Field f: entity.getClass().getFields()){
-                Class type= f.getType();
-                Annotation e=type.getAnnotation(Entity.class);
-               
-                if(e!=null){
-                    try {
-                        Object nextEntity=f.get(entity);
-                        if(nextEntity instanceof Model){
-                            recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
-                        }
-                    } catch (IllegalArgumentException e1) {
-                        e1.printStackTrace();
-                    } catch (IllegalAccessException e1) {
-                        e1.printStackTrace();
-                    }
-                } else if (Collection.class.isAssignableFrom(type)) {
-                    Collection col = (Collection) f.get(entity);
-                    if(col!=null){
-                    	
-                        int i=0;
-                        for(Object nextEntity:col){
-                            if(nextEntity instanceof Model){
-                                recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
-                            }
-                            i++;
-                        }
-                    }
-                }
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        
-    }
-
+    
+    
     protected static Result updateEntity (Class<?> type) {
 
         if (!request().method().equalsIgnoreCase("PUT")) {
@@ -1467,24 +1415,21 @@ public class EntityFactory extends Controller {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
     	InxightTransaction tx = InxightTransaction.beginTransaction();
-    	FetchedValue oldValueContainer = null;
+    	//EntityWrapper oldValuaeContainer = null;
+    	EntityWrapper<?> og=null;
         try {       
             Object newValue = mapper.treeToValue(json, type);
 
+            
             //Fetch old value
-            oldValueContainer=getCurrentValue(newValue);
-            String oldVersion=EntityUtils.getVersionForBeanAsString(oldValueContainer.value);
-
+            og =  getCurrentValue(newValue).orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
             
-            if(oldValueContainer.value==null){
-            	throw new IllegalStateException("Cannot update a non-existing record");
-            }
-            
-            String oldJSON=mapper.toJson(oldValueContainer.value);
+            String oldVersion = og.getVersion().orElse(null);
+            String oldJSON = og.toJson(mapper).toString();
             
             
             //validate new value
-            ValidationResponse vr=validator.validate(newValue,oldValueContainer.value);
+            ValidationResponse vr=validator.validate(newValue,og.getValue());
 	        if(!vr.isValid()){
 	            return badRequest(validationResponse(vr,false));
 	        }
@@ -1492,21 +1437,21 @@ public class EntityFactory extends Controller {
             EditHistory eh = new EditHistory (json.toString());
             
             //this saves and everything
-            eh.edit=EntityPersistAdapter.storeEditForPossibleUpdate(oldValueContainer.value);
+            eh.edit=EntityPersistAdapter.storeEditForPossibleUpdate(og.getValue());
             
             boolean usePojoPatch=true;
-            if(!oldValueContainer.cls.equals(type)){
+            if(!og.getClazz().equals(type)){
             	usePojoPatch=false;
             }
             
             if(usePojoPatch){
 	            //Get the difference as a patch
-	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
+	            PojoPatch patch =PojoDiff.getDiff(og.getValue(), newValue);
 	            
 	            
 	            final List<Object> removed = new ArrayList<Object>();
 	            //Apply the changes, grabbing every change along the way
-	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
+	            Stack changeStack=patch.apply(og.getValue(),new ChangeEventListener(){
 					@Override
 					public void handleChange(ix.utils.pojopatch.Change c) {
 						//System.out.println("Change IS:" + c);
@@ -1551,24 +1496,21 @@ public class EntityFactory extends Controller {
 	        	
 	        	
 	        	//The old value is now the new value
-	        	newValue = oldValueContainer.value;
+	        	newValue = og.getValue();
 	        	
             }else{
-            	Model m=(Model)oldValueContainer.value;
+            	Model m=(Model)og.getValue();
             	m.delete();
             	// Now need to take care of bad update pieces:
             	//	1. Version not incremented correctly (post update hooks not called) 
-            	//  2. Some metadata may be problematic
+            	//  2. Some metadata / audit data may be problematic
 
             	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
             	((Model)newValue).save();
             	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
             	
             }
-        	
-        	
-        	
-        	
+        	EntityWrapper newEnt = new EntityWrapper(newValue);
             String newJSON=mapper.toJson(newValue);
             
             
@@ -1576,11 +1518,11 @@ public class EntityFactory extends Controller {
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
+            
             //granular parts not working yet
             if (newValue != null) {
-            	    Object id = EntityUtils.getId (newValue);
-	                eh.edit.refid = id != null ? id.toString() : null;
-	                eh.edit.kind = newValue.getClass().getName();
+	                eh.edit.refid = newEnt.getIdAsString();
+	                eh.edit.kind = newEnt.getKind();
 	                eh.edit.oldValue=oldJSON;
 	                eh.edit.newValue=newJSON;
 	                eh.edit.version=oldVersion;
@@ -1591,9 +1533,11 @@ public class EntityFactory extends Controller {
 	                }
 	                Logger.debug("** New edit history "+eh.edit.id);
             }
+            
             // This was added because there are times
             // when the parent entity isn't actually
             // updated at all, at least from the ebean perspective
+            // so this forces the issue
             
             EntityPersistAdapter.getInstance().deepreindex(newValue);
             
@@ -1605,638 +1549,259 @@ public class EntityFactory extends Controller {
             
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
-        }
-        finally {
-        	if(oldValueContainer!=null){
-        		EntityPersistAdapter.popEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id);
+        }finally {
+        	if(og!=null){
+        		EntityInfo ei =EntityUtils.getEntityInfoFor(og.getValue());
+        		EntityPersistAdapter.popEditForUpdate(ei.getFieldAndId(og.getValue()));
         	}
             tx.end();
         }
     }
 
     
-    static boolean isValid (Field f) {
-        int mods = f.getModifiers();
-        JsonProperty jp;
+    // This could become a nice method. It isn't now ... 
+    // It's unclear if you really need to attempt to
+    // grab every extending class or not.
+    //
+    //
+    private static Optional<EntityWrapper> getCurrentValue(Object value) throws Exception{
+    	EntityInfo ei = EntityUtils.getEntityInfoFor(value);
+    	
+        if (!ei.isEntity())
+            throw new IllegalArgumentException("Class "+ei.getName()+" is not an entity");
+        if (!ei.hasIdField())
+            throw new IllegalArgumentException("Class "+ei.getName()+" is not an entity");
         
-        return (!Modifier.isStatic(mods)
-                && !Modifier.isFinal(mods)
-                && !Modifier.isTransient(mods)
-                //&& f.getAnnotation(JsonIgnore.class) == null
-                && f.getAnnotation(DataVersion.class) == null
-                && f.getAnnotation(Id.class) == null);
-    }
-
-    /**
-     * set value of field using property bean instead of field-based
-     * as it's not recognized by ebean
-     */
-    static Object setValue (Object instance, Field field, Object value)
-        throws Exception {
-    	//System.out.println("Setting field:" + field.getName());
-        Logger.debug("** setValue: field "+field.getName()+"["
-                     +instance.getClass().getName()+"] value="+value);
+        LinkedHashSet<EntityInfo> possibleClasses = new LinkedHashSet<EntityInfo>();
+        possibleClasses.add(ei);
+        possibleClasses.addAll(ei.getAllEquivalentEntityInfos());
         
-        String method = "set" + getBeanName (field.getName());
-        Object old = field.get(instance);
-        try {
-            Method set = instance.getClass().getMethod
-                (method, field.getType());
-            set.invoke(instance, value);
-        }
-        catch (NoSuchMethodException ex) {
-            Logger.warn("No method \""+method
-                        +"\" found in class "+instance.getClass().getName());
-            if (instance instanceof EntityBean) {
-                // find the closest match?
-                Method set = null;
-                for (Method m : instance.getClass().getMethods()) {
-                    if (m.getName().startsWith("set")) {
-                        Class[] types = m.getParameterTypes();
-                        if (types.length == 1
-                            && types[0].isAssignableFrom(field.getType())) {
-                            // let's assume this is what we're looking for
-                            set = m;
-                            break;
-                        }
-                    }
-                }
-                
-                if (set == null) {
-                    throw ex;
-                }
-            }
-            else { // revert to field-based
-                field.set(instance, value);
-            }
-        }
-        return old;
-    }
-
-    static void debugBean (Object value) throws Exception {
-        if (value == null) {
-            return;
-        }
-        else if (!(value instanceof EntityBean)) {
-            Logger.warn("Not an EntityBean: "+value
-                        +"["+value.getClass().getName()+"]");
-            return;
-        }
-
-        EntityBean bean = (EntityBean)value;
-        EntityBeanIntercept ebi = bean._ebean_intercept();
-
-        Class cls = value.getClass();
-        int c = ebi.getPersistenceContext().size(cls);
-        Logger.debug("## There are "+c+" instance of "+cls.getName()+
-                     " in the Ebean persitence context!");
-        Logger.debug("## intercepting="+ebi.isIntercepting()
-                     +" dirty=" + ebi.isDirty()+" new="+ebi.isNew()
-                     +" ref="+ebi.isReference()
-                     +" context="+ebi.getPersistenceContext());
-    }
-
-    
-    public static class Instrumented{
-    	Object newObject;
-    	boolean changed=false;
-    }
-    /**
-     * Ok, this method seems overly complicated. What it's doing is recursively
-     * going through and saving each property. That sounds fine, but it causes a 
-     * lot of problems elsewhere.
-     * 
-     * For example, because this is a depth-first traversal, the individual elements
-     * will be changed before the parent is. Elsewhere, in a postUpdate hook, each model
-     * tries to save its full serialized version before and after update. So consider
-     * the following:
-     * 
-     * OLD value:
-     * {
-     *  version:1,
-     * 	names:[
-     * 		{
-     * 			"name":"oldname"
-     * 		}
-     *  ]
-     * }
-     * 
-     * NEW value:
-     * {
-     *  version:2,
-     * 	names:[
-     * 		{
-     * 			"name":"newname"
-     * 		}
-     *  ]
-     * }
-     * 
-     * This code will save the "newname" change at '/names/0/' before saving '/'.
-     * Then, when the postUpdate hook is called on the parent ('/'), it will fetch
-     * the value before update and store it. In this case, that value will still 
-     * point to the "newname" updated object. 
-     * 
- * 
-     * Another problem is that this method uses reflection, and trusts that the POJO
-     * are roughly what they need to be for updating. With advanced getters/setters,
-     * this may cause problems.
-     * 
-     * @param eh
-     * @param value
-     * @param json
-     * @return
-     * @throws Exception
-     */
-    protected static Instrumented instrument
-    (EditHistory eh, Object value, JsonNode json, String path) throws Exception {
-    	FetchedValue fv=getCurrentValue(value);
-    	
-    	Class cls;
-    	Object xval;
-    	Object id;
-    	
-	    cls=fv.getValueClass();
-	    id=fv.id;
-	    xval=fv.value;
-	    final Instrumented retInst= new Instrumented();
-	    
-	    
-	    /*
-	    if(xval!=null){
-		    EntityMapper om = EntityMapper.FULL_ENTITY_MAPPER();
-		    JsonNode o=om.valueToTree(xval);
-		    JsonNode n=om.valueToTree(fv.value);
-		    JsonNode jp = JsonDiff.asJson(o,n);
-			for(JsonNode jschange: jp){
-		    	System.out.println("#READ CHANGE:" + jschange + " old:" + o.at(jschange.get("path").asText()));
-		
-		    }
-	    }*/
-	    //xval=fv.value;
-    
-    
-    
-    
-    if (xval == null) {
-    	if(!(value instanceof Model)){
-    		retInst.newObject=value;
-    		return retInst;
-    	}
-    	System.out.println("Saving new:" + path);
-    	((Model)value).save();
-    	
-        id = EntityUtils.getId (value);
-        Logger.debug("<<< " + id);
-        
-        Edit e = new Edit (value.getClass(), id);
-        ObjectMapper mapper = new ObjectMapper ();
-        e.newValue = mapper.writeValueAsString(value);
-        eh.add(e);
-        retInst.newObject=value;
-        
-        //retInst.changed=true;
-        return retInst;
-    }else{
-    	
-    }
-
-    
-    
-    eh.attach(xval, new Callable(){
-
-		@Override
-		public Object call() throws Exception {
-			
-			//retInst.changed=true;
-			return null;
-		}
-    	
-    });
-
-    // now sync up val and value
-    Map<Field, Object> values = new HashMap<Field, Object>();
-    for (Field f : cls.getFields()) {
-        JsonProperty prop = f.getAnnotation(JsonProperty.class);
-        JsonNode node = null;
-        if(json!=null){
-        	node=json.get(prop != null ? prop.value() : f.getName());
-        }
-
-        Class type = f.getType();       
-        Logger.debug("field \""+f.getName()+"\"["+type
-                     +"] valid="+isValid(f)
-                     +" node="+node);            
-        if (!isValid (f) 
-        		//|| node == null
-        		)
-            continue;
-        
-        Object v = f.get(value);
-        if (v != null) {
-            if (type.getAnnotation(Entity.class) != null) {
-            	Instrumented sinst=instrument (eh, v, node,path+ "/" + f.getName());
-                retInst.changed|=sinst.changed;
-                setValue (xval, f, sinst.newObject);
-            }
-            else if (type.isArray()) {
-                Class<?> t = type.getComponentType();
-                if (t.getAnnotation(Entity.class) != null) {
-                    int len = Array.getLength(v);
-                    Object vv = f.get(xval);
-                    if (vv != null && Array.getLength(vv) > 0) {
-                        Logger.debug("$$ TODO: handle array properly!");
-                    }
-                    else {
-                        Object vals = Array.newInstance(t, len);
-                        for (int i = 0; i < len; ++i) {
-                            Object xv = Array.get(v, i);
-                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
-                            retInst.changed|=sinst.changed;
-                            Array.set(vals, i,
-                                      sinst.newObject);
-                        }
-                        setValue (xval, f, vals);
-                    }
-                }
-                else {
-                    // just copy over
-                    setValue (xval, f, v);
-                }
-            }
-            else if (Collection.class.isAssignableFrom(type)) {
-                Collection col = (Collection)v;
-                //Logger.debug("Enter Collection.."+col.size());
-                if (!col.isEmpty()) {
-                    Class t = getComponentType (f.getGenericType());
-                    //Logger.debug("..component type "+t);
-                    if (t.getAnnotation(Entity.class) != null) {
-                        Collection xcol = (Collection)f.get(xval);
-                        if (xcol == null) {
-                            setValue (xval, f, xcol = new ArrayList ());
-                        }
-                        // update the list wholesale..
-                        xcol.clear();
-                        
-                        int i = 0;
-                        for (Iterator it = col.iterator();
-                             it.hasNext(); ++i) {
-                            Object xv = it.next();
-                            Logger.debug(i+": "+xv+" <=> "+node.get(i));
-                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
-                            retInst.changed|=sinst.changed;
-                            xv = sinst.newObject;
-                            xcol.add(xv);
-                        }
-                    }
-                    else {
-                        setValue (xval, f, v);
-                    }
-                }
-            }
-            else {
-                setValue (xval, f, v);
-            }
-        }
-    }
-    
-    if(false || xval instanceof ForceUpdatableModel){
-    	
-    	
-    	boolean applied=((ForceUpdatableModel)xval).tryUpdate();
-    	if(!applied && retInst.changed){
-    		((ForceUpdatableModel)xval).forceUpdate();
-    		applied=true;
-    	}else{
-    		
-    	}
-    	retInst.changed|=applied;
-    	
-    }else{
-    	if(xval instanceof Model){
-    		((Model)xval).update();
-    	}
-    }
-    
-    
-    
-    
-    Logger.debug("<<< "+id);
-    eh.detach(xval);
-    retInst.newObject=xval;
-    return retInst;
-}
-    public static class FetchedValue{
-    	public Object value;
-    	public Object id;
-    	public Class cls;
-    	
-    	public FetchedValue(Object val, Object id, Class cls){
-    		this.value=val;
-    		this.id=id;
-    		this.cls=cls;
-    	}
-    	
-    	public Class getValueClass(){
-    		return cls;
-    	}
-    	
-    }
-    
-    private static FetchedValue getCurrentValue(Object value) throws Exception{
-    	Class<?> cls = value.getClass();
-        if (cls.getAnnotation(Entity.class) == null)
-            throw new IllegalArgumentException
-                ("Class "+cls.getName()+" is not an entity");
-
-        //Need to get out all super classes as well
-        Field idf = EntityUtils.getIdField (value);
-        if (idf == null)
-            throw new IllegalArgumentException
-                ("Entity "+cls.getName()+" has no Id field!");
+        Object id = ei.getIdPossiblyFromEbeanMethod(value);
         Object xval = null;
-        Object id=null;
-        
-        LinkedHashSet<Class<?>> possibleClasses = new LinkedHashSet<Class<?>>();
-        possibleClasses.add(cls);
-        if(value instanceof BaseModel){
-    		Class<?>[] classes=((BaseModel)value).fetchEquivalentClasses();
-    		for(Class<?> c:classes){
-    			possibleClasses.add(c);
-    		}
-    	}
-        Class<?> lastClass=null;
         //This may not be necessary after all?
-        for(Class<?> c:possibleClasses){
-        	
-        	lastClass=c;
-        	
-	        Model.Finder finder = new Model.Finder
-	            (idf.getType(), c);
-	
-	        
-	        
-	        id = idf.get(value);
-	        if (id == null) {
+        for(EntityInfo ee:possibleClasses){
+	        if (id != null) {
+	        	xval = ee.getFinder().byId(id);
+	        }else{
 	            // if this entity has no id set, then we see if there is a
 	            // unique column defined.. if so, we retrieve it
-	            List<Field> columns = EntityUtils.getFields (value, Column.class);
-	            // now check which field has unique annotation
-	            for (Field f : columns) {
-	                Column column = (Column)f.getAnnotation(Column.class);
-	                if (column.unique()) {
-	                    Logger.debug("Field \""+f.getName()
-	                                 +"\" contains unique value for class "
-	                                 +value.getClass().getName());
-	                    xval = finder.where()
-	                        .eq(column.name().equals("")
-	                            ? f.getName() : column.name(),
-	                            f.get(value))
-	                        .findUnique();
-	                    
-	                    if (xval != null){
-	                        id = EntityUtils.getId (xval);
-	                        
-	                    }
-	                    
-	                    break;
-	                }
-	            }
+	        	xval=ee.getUniqueColumns().stream().map(c->{
+	        		return c.getValue(value).flatMap(v->{
+	        			Object dbv=ee.getFinder().where().eq(c.getColumnName(),v)
+                    			.findUnique();
+	        			return Optional.ofNullable(dbv);
+	        		});
+	        	}).filter(Optional::isPresent).findAny();
+	        	if(xval!=null)break;
 	        }
-	        else {
-	            xval = finder.byId(id);
-	        }
-	        if(xval!=null){
-	        	cls=xval.getClass();
-	        	break;
-	    	}
         }
-        return new FetchedValue(xval,id,cls);
+        return Optional.ofNullable(new EntityWrapper(xval));
     }
     
-    protected static Object getJsonValue 
-        (Object val, JsonNode value, Field field, Integer index) 
-        throws Exception {
+    
+//    
+//    protected static Object getJsonValue (Object val, JsonNode value, Field field, Integer index) 
+//        throws Exception {
+//
+//        JsonNode node = value.get("id");
+//        Class<?> ftype = field.getType();
+//
+//        Logger.debug("node: "+node+" "+ftype.getName()+"; val="+val);
+//        ObjectMapper mapper = getEntityMapper ();
+//        if (node != null && !node.isNull()) {
+//            long id = node.asLong();
+//
+//            Model.Finder finder = new Model.Finder(Long.class, ftype);
+//            val = finder.byId(id);
+//        }else if (value.isArray()) {
+//            // if index is null, we replace the list
+//            // if index >= 0, then we append as the index position
+//            if (ftype.isArray()) {
+//                Class<?> c = ftype.getComponentType();
+//                if (val == null || index == null) {
+//                    val = Array.newInstance(c, value.size());
+//                    for (int k = 0; k < value.size(); ++k) {
+//                        Array.set(val, k, mapper.treeToValue(value.get(k), c));
+//                    }
+//                }
+//                else {
+//                    int len = Math.max(0, index);
+//                    if (len > Array.getLength(val)) {
+//                        throw new IllegalArgumentException
+//                            ("Invalid array index: "+len);
+//                    }
+//                    Object newval = Array.newInstance(c, value.size()+len);
+//                    int k = 0;
+//                    for (; k < len; ++k)
+//                        Array.set(newval, k, Array.get(val, k));
+//                    for (int i = 0; i < value.size(); ++i, ++k)
+//                        Array.set(newval, k, 
+//                                  mapper.treeToValue(value.get(i), c));
+//                    val = newval;
+//                }
+//                Logger.debug("Converted Json to Array (size="
+//                             +Array.getLength(val)+") of "+c);
+//            }
+//            else if (Collection.class.isAssignableFrom(ftype)) {
+//                if (val == null || index == null) {
+//                    val = new ArrayList ();
+//                    index = -1;
+//                }
+//                else if (index > ((Collection)val).size())
+//                    throw new IllegalArgumentException
+//                        ("Invalid list index: "+index);
+//
+//                Collection vals = (Collection)val;
+//                Class cls = getComponentType (field.getGenericType());
+//
+//                /* for now we only handle append or replace... no
+//                 * insert in a specific position 
+//                 */
+//                if (index < 0) {
+//                    for (Object obj : vals) {
+//                        if (obj instanceof Model) {
+//                            ((Model)obj).delete();
+//                        }
+//                    }
+//                }
+//                
+//                for (int k = 0; k < value.size(); ++k) {
+//                    vals.add(mapper.treeToValue(value.get(k), cls));
+//                }
+//
+//                Logger.debug("Converted Json to List (size="
+//                             +((Collection)val).size()+") of "+cls);
+//            }
+//            else {
+//                Logger.error("Json is of type array "
+//                             +"but "+field.getDeclaringClass()+"."
+//                             +field.getName()+" is of type "+ftype);
+//            }
+//        }else if (ftype.isArray()) {
+//            Class<?> c = ftype.getComponentType();
+//
+//            if (index == null 
+//                || index < 0 
+//                || index >= Array.getLength(val)) {
+//                if (val == null) {
+//                    val = Array.newInstance(c, 1);
+//                    index = 0;
+//                }
+//                else {
+//                    index = Array.getLength(val);
+//                    Object newval = Array.newInstance(c, index+1);
+//                    // copy array
+//                    for (int i = 0; i < index; ++i)
+//                        Array.set(newval, i, Array.get(val, i));
+//                    val = newval;
+//                }
+//            }
+//            else {
+//                int len = Array.getLength(val);
+//                Object newval = Array.newInstance(c, len);
+//                // copy array
+//                for (int i = 0; i < len; ++i)
+//                    Array.set(newval, i, Array.get(val, i));
+//                val = newval;
+//            }
+//            Array.set(val, index, mapper.treeToValue(value, c));
+//        }else if (Collection.class.isAssignableFrom(ftype)) {
+//            Class<?> c = getComponentType (field.getGenericType());
+//            
+//            if (index == null || index < 0 
+//                || index >= ((Collection)val).size()) {
+//                
+//                if (val == null) {
+//                    val = new ArrayList ();
+//                }
+//                else {
+//                    ArrayList newval = new ArrayList ();
+//                    newval.addAll((Collection)val);
+//                    val = newval;
+//                }
+//                ((Collection)val).add(mapper.treeToValue(value, c));
+//            }
+//            else {
+//                Logger.debug("Yeah, there's an index");
+//                ArrayList newval = new ArrayList ();
+//                newval.addAll((Collection)val);
+//                Object el = newval.get(index);
+//                // now update this object
+//                if (el != null) {
+//                    updateBean (el, value);
+//                    Logger.debug("Updating "+el+" with "+value);
+//                }
+//                val = newval;
+//            }
+//        }else {
+//            val = mapper.treeToValue(value, ftype);
+//        }
+//
+//        return val;
+//    } // getJsonValue ()
+//
+//    static Class<?> getComponentType (Type type) {
+//        Class cls;
+//        if (type instanceof ParameterizedType) {
+//            Type[] types = ((ParameterizedType)type)
+//                .getActualTypeArguments();
+//            
+//            if (types.length != 1) {
+//                throw new IllegalStateException
+//                    ("Nested generic types not supported!");
+//            }
+//            cls = (Class)types[0];
+//        }
+//        else {
+//            cls = (Class)type;
+//        }
+//        return cls;
+//    }
 
-        JsonNode node = value.get("id");
-        Class<?> ftype = field.getType();
-
-        Logger.debug("node: "+node+" "+ftype.getName()+"; val="+val);
-        ObjectMapper mapper = getEntityMapper ();
-        if (node != null && !node.isNull()) {
-            long id = node.asLong();
-
-            Model.Finder finder = new Model.Finder(Long.class, ftype);
-            val = finder.byId(id);
-        }
-        else if (value.isArray()) {
-            // if index is null, we replace the list
-            // if index >= 0, then we append as the index position
-            if (ftype.isArray()) {
-                Class<?> c = ftype.getComponentType();
-                if (val == null || index == null) {
-                    val = Array.newInstance(c, value.size());
-                    for (int k = 0; k < value.size(); ++k) {
-                        Array.set(val, k, mapper.treeToValue(value.get(k), c));
-                    }
-                }
-                else {
-                    int len = Math.max(0, index);
-                    if (len > Array.getLength(val)) {
-                        throw new IllegalArgumentException
-                            ("Invalid array index: "+len);
-                    }
-                    Object newval = Array.newInstance(c, value.size()+len);
-                    int k = 0;
-                    for (; k < len; ++k)
-                        Array.set(newval, k, Array.get(val, k));
-                    for (int i = 0; i < value.size(); ++i, ++k)
-                        Array.set(newval, k, 
-                                  mapper.treeToValue(value.get(i), c));
-                    val = newval;
-                }
-                Logger.debug("Converted Json to Array (size="
-                             +Array.getLength(val)+") of "+c);
-            }
-            else if (Collection.class.isAssignableFrom(ftype)) {
-                if (val == null || index == null) {
-                    val = new ArrayList ();
-                    index = -1;
-                }
-                else if (index > ((Collection)val).size())
-                    throw new IllegalArgumentException
-                        ("Invalid list index: "+index);
-
-                Collection vals = (Collection)val;
-                Class cls = getComponentType (field.getGenericType());
-
-                /* for now we only handle append or replace... no
-                 * insert in a specific position 
-                 */
-                if (index < 0) {
-                    for (Object obj : vals) {
-                        if (obj instanceof Model) {
-                            ((Model)obj).delete();
-                        }
-                    }
-                }
-                
-                for (int k = 0; k < value.size(); ++k) {
-                    vals.add(mapper.treeToValue(value.get(k), cls));
-                }
-
-                /*
-                else {
-                    ArrayList copy = new ArrayList ();
-                    Iterator it = vals.iterator();
-                    for (int k = 0; k < index && it.hasNext(); ++k)
-                        copy.add(it.next());
-
-                    for (int i = 0; i < value.size(); ++i)
-                        copy.add(mapper.treeToValue(value.get(i), cls));
-
-                    while (it.hasNext())
-                        copy.add(it.next());
-
-                    vals.addAll(copy);
-                }
-                */
-                Logger.debug("Converted Json to List (size="
-                             +((Collection)val).size()+") of "+cls);
-            }
-            else {
-                Logger.error("Json is of type array "
-                             +"but "+field.getDeclaringClass()+"."
-                             +field.getName()+" is of type "+ftype);
-            }
-        }
-        else if (ftype.isArray()) {
-            Class<?> c = ftype.getComponentType();
-
-            if (index == null 
-                || index < 0 
-                || index >= Array.getLength(val)) {
-                if (val == null) {
-                    val = Array.newInstance(c, 1);
-                    index = 0;
-                }
-                else {
-                    index = Array.getLength(val);
-                    Object newval = Array.newInstance(c, index+1);
-                    // copy array
-                    for (int i = 0; i < index; ++i)
-                        Array.set(newval, i, Array.get(val, i));
-                    val = newval;
-                }
-            }
-            else {
-                int len = Array.getLength(val);
-                Object newval = Array.newInstance(c, len);
-                // copy array
-                for (int i = 0; i < len; ++i)
-                    Array.set(newval, i, Array.get(val, i));
-                val = newval;
-            }
-            Array.set(val, index, mapper.treeToValue(value, c));
-        }
-        else if (Collection.class.isAssignableFrom(ftype)) {
-            Logger.debug("Should be a collection dude");
-            Class<?> c = getComponentType (field.getGenericType());
-            
-            if (index == null || index < 0 
-                || index >= ((Collection)val).size()) {
-                
-                if (val == null) {
-                    val = new ArrayList ();
-                }
-                else {
-                    ArrayList newval = new ArrayList ();
-                    newval.addAll((Collection)val);
-                    val = newval;
-                }
-                ((Collection)val).add(mapper.treeToValue(value, c));
-            }
-            else {
-                Logger.debug("Yeah, there's an index");
-                ArrayList newval = new ArrayList ();
-                newval.addAll((Collection)val);
-                Object el = newval.get(index);
-                // now update this object
-                if (el != null) {
-                    updateBean (el, value);
-                    Logger.debug("Updating "+el+" with "+value);
-                }
-                val = newval;
-            }
-        }
-        else {
-            val = mapper.treeToValue(value, ftype);
-        }
-
-        return val;
-    } // getJsonValue ()
-
-    static Class<?> getComponentType (Type type) {
-        Class cls;
-        if (type instanceof ParameterizedType) {
-            Type[] types = ((ParameterizedType)type)
-                .getActualTypeArguments();
-            
-            if (types.length != 1) {
-                throw new IllegalStateException
-                    ("Nested generic types not supported!");
-            }
-            cls = (Class)types[0];
-        }
-        else {
-            cls = (Class)type;
-        }
-        return cls;
-    }
-
-    static String getBeanName (String field) {
-        return Character.toUpperCase(field.charAt(0))+field.substring(1);
-    }
-
-    static void updateBean (Object bean, JsonNode value) {
-        ObjectMapper mapper;
-        Iterator<Map.Entry<String, JsonNode>> it = value.fields();
-        while (it.hasNext()) {
-                mapper = new ObjectMapper ();
-            Map.Entry<String, JsonNode> jf = it.next();
-            String set = "set"+getBeanName (jf.getKey());
-            Class<?> type = null;
-            try {
-                Field bf = bean.getClass().getField(jf.getKey());
-                type = bf.getType();
-                Method m = bean.getClass().getMethod(set, type);
-                //@JsonDeserialize(using=KeywordListDeserializer.class)
-                JsonDeserialize jdes=bf.getAnnotation(JsonDeserialize.class);
-                if(jdes!=null){
-                        JsonDeserializer jder=jdes.using().newInstance();
-                        SimpleModule module =
-                                          new SimpleModule("CustomDeserializer",
-                                              new Version(1, 0, 0, null));
-                        module.addDeserializer(type, jder);
-                        mapper.registerModule(module);
-                }
-                m.invoke(bean, mapper.treeToValue(jf.getValue(), type));
-            }
-            catch (NoSuchFieldException ex) {
-                Logger.debug("Ignore field '"+jf.getKey()+"'");
-            }
-            catch (NoSuchMethodException ex) {
-            	System.out.println("No such method '"
-                        +set+"("+type+")' for class "
-                        +bean.getClass());
-                Logger.error("No such method '"
-                             +set+"("+type+")' for class "
-                             +bean.getClass());
-            }
-            catch (Exception ex) {
-                Logger.trace("Can't update bean '"+set+"'", ex);
-            }
-        }
-    }
+//    static String getBeanName (String field) {
+//        return Character.toUpperCase(field.charAt(0))+field.substring(1);
+//    }
+//
+//    static void updateBean (Object bean, JsonNode value) {
+//        ObjectMapper mapper;
+//        Iterator<Map.Entry<String, JsonNode>> it = value.fields();
+//        while (it.hasNext()) {
+//                mapper = new ObjectMapper ();
+//            Map.Entry<String, JsonNode> jf = it.next();
+//            String set = "set"+getBeanName (jf.getKey());
+//            Class<?> type = null;
+//            try {
+//                Field bf = bean.getClass().getField(jf.getKey());
+//                type = bf.getType();
+//                Method m = bean.getClass().getMethod(set, type);
+//                //@JsonDeserialize(using=KeywordListDeserializer.class)
+//                JsonDeserialize jdes=bf.getAnnotation(JsonDeserialize.class);
+//                if(jdes!=null){
+//                        JsonDeserializer jder=jdes.using().newInstance();
+//                        SimpleModule module =
+//                                          new SimpleModule("CustomDeserializer",
+//                                              new Version(1, 0, 0, null));
+//                        module.addDeserializer(type, jder);
+//                        mapper.registerModule(module);
+//                }
+//                m.invoke(bean, mapper.treeToValue(jf.getValue(), type));
+//            }
+//            catch (NoSuchFieldException ex) {
+//                Logger.debug("Ignore field '"+jf.getKey()+"'");
+//            }
+//            catch (NoSuchMethodException ex) {
+//            	System.out.println("No such method '"
+//                        +set+"("+type+")' for class "
+//                        +bean.getClass());
+//                Logger.error("No such method '"
+//                             +set+"("+type+")' for class "
+//                             +bean.getClass());
+//            }
+//            catch (Exception ex) {
+//                Logger.trace("Can't update bean '"+set+"'", ex);
+//            }
+//        }
+//    }
 
     public static UUID toUUID (String id) {
         if (id.length() == 32) { // without -'s
@@ -2247,16 +1812,357 @@ public class EntityFactory extends Controller {
         return UUID.fromString(id);
     }
 
-    public static abstract class EntityFilter<K> {
-        public abstract boolean accept (K sub);
-        public List filter(List<K> results) {
-			List<K> filteredSubstances = new ArrayList<K>();
-			for (K sub : results) {
-				if (accept(sub)) {
-					filteredSubstances.add(sub);
-				}
-			}
-			return filteredSubstances;
-		}
-    }
+    
+    //Kind of meaningless now that we have predicates
+//    public static abstract class EntityFilter<K> {
+//        public abstract boolean accept (K sub);
+//        
+//        public List filter(List<K> results) {
+//			List<K> filteredRecords = new ArrayList<K>();
+//			for (K sub : results) {
+//				if (accept(sub)) {
+//					filteredRecords.add(sub);
+//				}
+//			}
+//			return filteredRecords;
+//		}
+//    }
+    
+
+ // Deprecated code
+//     @Deprecated
+//     static boolean isValid (Field f) {
+//         int mods = f.getModifiers();
+//         JsonProperty jp;
+//         
+//         return (!Modifier.isStatic(mods)
+//                 && !Modifier.isFinal(mods)
+//                 && !Modifier.isTransient(mods)
+//                 //&& f.getAnnotation(JsonIgnore.class) == null
+//                 && f.getAnnotation(DataVersion.class) == null
+//                 && f.getAnnotation(Id.class) == null);
+//     }
+ //
+//     /**
+//      * set value of field using property bean instead of field-based
+//      * as it's not recognized by ebean
+//      */
+//     @Deprecated
+//     static Object setValue (Object instance, Field field, Object value)
+//         throws Exception {
+//     	//System.out.println("Setting field:" + field.getName());
+//         Logger.debug("** setValue: field "+field.getName()+"["
+//                      +instance.getClass().getName()+"] value="+value);
+//         
+//         String method = "set" + getBeanName (field.getName());
+//         Object old = field.get(instance);
+//         try {
+//             Method set = instance.getClass().getMethod
+//                 (method, field.getType());
+//             set.invoke(instance, value);
+//         }
+//         catch (NoSuchMethodException ex) {
+//             Logger.warn("No method \""+method
+//                         +"\" found in class "+instance.getClass().getName());
+//             if (instance instanceof EntityBean) {
+//                 // find the closest match?
+//                 Method set = null;
+//                 for (Method m : instance.getClass().getMethods()) {
+//                     if (m.getName().startsWith("set")) {
+//                         Class[] types = m.getParameterTypes();
+//                         if (types.length == 1
+//                             && types[0].isAssignableFrom(field.getType())) {
+//                             // let's assume this is what we're looking for
+//                             set = m;
+//                             break;
+//                         }
+//                     }
+//                 }
+//                 
+//                 if (set == null) {
+//                     throw ex;
+//                 }
+//             }
+//             else { // revert to field-based
+//                 field.set(instance, value);
+//             }
+//         }
+//         return old;
+//     }
+ //
+//     @Deprecated
+//     static void debugBean (Object value) throws Exception {
+//         if (value == null) {
+//             return;
+//         }
+//         else if (!(value instanceof EntityBean)) {
+//             Logger.warn("Not an EntityBean: "+value
+//                         +"["+value.getClass().getName()+"]");
+//             return;
+//         }
+ //
+//         EntityBean bean = (EntityBean)value;
+//         EntityBeanIntercept ebi = bean._ebean_intercept();
+ //
+//         Class cls = value.getClass();
+//         int c = ebi.getPersistenceContext().size(cls);
+//         Logger.debug("## There are "+c+" instance of "+cls.getName()+
+//                      " in the Ebean persitence context!");
+//         Logger.debug("## intercepting="+ebi.isIntercepting()
+//                      +" dirty=" + ebi.isDirty()+" new="+ebi.isNew()
+//                      +" ref="+ebi.isReference()
+//                      +" context="+ebi.getPersistenceContext());
+//     }
+ //
+ //    
+//     public static class Instrumented{
+//     	Object newObject;
+//     	boolean changed=false;
+//     }
+//     /**
+//      * Ok, this method seems overly complicated. What it's doing is recursively
+//      * going through and saving each property. That sounds fine, but it causes a 
+//      * lot of problems elsewhere.
+//      * 
+//      * For example, because this is a depth-first traversal, the individual elements
+//      * will be changed before the parent is. Elsewhere, in a postUpdate hook, each model
+//      * tries to save its full serialized version before and after update. So consider
+//      * the following:
+//      * 
+//      * OLD value:
+//      * {
+//      *  version:1,
+//      * 	names:[
+//      * 		{
+//      * 			"name":"oldname"
+//      * 		}
+//      *  ]
+//      * }
+//      * 
+//      * NEW value:
+//      * {
+//      *  version:2,
+//      * 	names:[
+//      * 		{
+//      * 			"name":"newname"
+//      * 		}
+//      *  ]
+//      * }
+//      * 
+//      * This code will save the "newname" change at '/names/0/' before saving '/'.
+//      * Then, when the postUpdate hook is called on the parent ('/'), it will fetch
+//      * the value before update and store it. In this case, that value will still 
+//      * point to the "newname" updated object. 
+//      * 
+//      * 
+//      * Another problem is that this method uses reflection, and trusts that the POJO
+//      * are roughly what they need to be for updating. With advanced getters/setters,
+//      * this may cause problems.
+//      * 
+//      * Update: This is not used anymore, but remains here as a reminder to
+//      * future people not to over use reflection.
+//      * 
+//      * @param eh
+//      * @param value
+//      * @param json
+//      * @return
+//      * @throws Exception
+//      */
+//     @Deprecated
+//     protected static Instrumented instrument
+//     (EditHistory eh, Object value, JsonNode json, String path) throws Exception {
+//     	FetchedValue fv=getCurrentValue(value);
+//     	
+//     	Class cls;
+//     	Object xval;
+//     	Object id;
+//     	
+// 	    cls=fv.getValueClass();
+// 	    id=fv.id;
+// 	    xval=fv.value;
+// 	    final Instrumented retInst= new Instrumented();
+// 	    
+// 	    
+// 	    /*
+// 	    if(xval!=null){
+// 		    EntityMapper om = EntityMapper.FULL_ENTITY_MAPPER();
+// 		    JsonNode o=om.valueToTree(xval);
+// 		    JsonNode n=om.valueToTree(fv.value);
+// 		    JsonNode jp = JsonDiff.asJson(o,n);
+// 			for(JsonNode jschange: jp){
+// 		    	System.out.println("#READ CHANGE:" + jschange + " old:" + o.at(jschange.get("path").asText()));
+// 		
+// 		    }
+// 	    }*/
+// 	    //xval=fv.value;
+ //    
+ //    
+ //    
+ //    
+//     if (xval == null) {
+//     	if(!(value instanceof Model)){
+//     		retInst.newObject=value;
+//     		return retInst;
+//     	}
+//     	System.out.println("Saving new:" + path);
+//     	((Model)value).save();
+//     	
+//         id = EntityUtils.getId (value);
+//         Logger.debug("<<< " + id);
+//         
+//         Edit e = new Edit (value.getClass(), id);
+//         ObjectMapper mapper = new ObjectMapper ();
+//         e.newValue = mapper.writeValueAsString(value);
+//         eh.add(e);
+//         retInst.newObject=value;
+//         
+//         //retInst.changed=true;
+//         return retInst;
+//     }else{
+//     	
+//     }
+ //
+ //    
+ //    
+//     eh.attach(xval, new Callable(){
+ //
+// 		@Override
+// 		public Object call() throws Exception {
+// 			
+// 			//retInst.changed=true;
+// 			return null;
+// 		}
+//     	
+//     });
+ //
+//     // now sync up val and value
+//     Map<Field, Object> values = new HashMap<Field, Object>();
+//     for (Field f : cls.getFields()) {
+//         JsonProperty prop = f.getAnnotation(JsonProperty.class);
+//         JsonNode node = null;
+//         if(json!=null){
+//         	node=json.get(prop != null ? prop.value() : f.getName());
+//         }
+ //
+//         Class type = f.getType();       
+//         Logger.debug("field \""+f.getName()+"\"["+type
+//                      +"] valid="+isValid(f)
+//                      +" node="+node);            
+//         if (!isValid (f) 
+//         		//|| node == null
+//         		)
+//             continue;
+//         
+//         Object v = f.get(value);
+//         if (v != null) {
+//             if (type.getAnnotation(Entity.class) != null) {
+//             	Instrumented sinst=instrument (eh, v, node,path+ "/" + f.getName());
+//                 retInst.changed|=sinst.changed;
+//                 setValue (xval, f, sinst.newObject);
+//             }
+//             else if (type.isArray()) {
+//                 Class<?> t = type.getComponentType();
+//                 if (t.getAnnotation(Entity.class) != null) {
+//                     int len = Array.getLength(v);
+//                     Object vv = f.get(xval);
+//                     if (vv != null && Array.getLength(vv) > 0) {
+//                         Logger.debug("$$ TODO: handle array properly!");
+//                     }
+//                     else {
+//                         Object vals = Array.newInstance(t, len);
+//                         for (int i = 0; i < len; ++i) {
+//                             Object xv = Array.get(v, i);
+//                             Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
+//                             retInst.changed|=sinst.changed;
+//                             Array.set(vals, i,
+//                                       sinst.newObject);
+//                         }
+//                         setValue (xval, f, vals);
+//                     }
+//                 }
+//                 else {
+//                     // just copy over
+//                     setValue (xval, f, v);
+//                 }
+//             }
+//             else if (Collection.class.isAssignableFrom(type)) {
+//                 Collection col = (Collection)v;
+//                 //Logger.debug("Enter Collection.."+col.size());
+//                 if (!col.isEmpty()) {
+//                     Class t = getComponentType (f.getGenericType());
+//                     //Logger.debug("..component type "+t);
+//                     if (t.getAnnotation(Entity.class) != null) {
+//                         Collection xcol = (Collection)f.get(xval);
+//                         if (xcol == null) {
+//                             setValue (xval, f, xcol = new ArrayList ());
+//                         }
+//                         // update the list wholesale..
+//                         xcol.clear();
+//                         
+//                         int i = 0;
+//                         for (Iterator it = col.iterator();
+//                              it.hasNext(); ++i) {
+//                             Object xv = it.next();
+//                             Logger.debug(i+": "+xv+" <=> "+node.get(i));
+//                             Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
+//                             retInst.changed|=sinst.changed;
+//                             xv = sinst.newObject;
+//                             xcol.add(xv);
+//                         }
+//                     }
+//                     else {
+//                         setValue (xval, f, v);
+//                     }
+//                 }
+//             }
+//             else {
+//                 setValue (xval, f, v);
+//             }
+//         }
+//     }
+ //    
+//     if(false || xval instanceof ForceUpdatableModel){
+//     	
+//     	
+//     	boolean applied=((ForceUpdatableModel)xval).tryUpdate();
+//     	if(!applied && retInst.changed){
+//     		((ForceUpdatableModel)xval).forceUpdate();
+//     		applied=true;
+//     	}else{
+//     		
+//     	}
+//     	retInst.changed|=applied;
+//     	
+//     }else{
+//     	if(xval instanceof Model){
+//     		((Model)xval).update();
+//     	}
+//     }
+ //    
+ //    
+ //    
+ //    
+//     Logger.debug("<<< "+id);
+//     eh.detach(xval);
+//     retInst.newObject=xval;
+//     return retInst;
+ //}
+//     public static class FetchedValue{
+//     	private Object _value;
+//     	private Object _id;
+//     	private Class cls;
+//     	
+//     	public FetchedValue(Object val, Object id, Class cls){
+//     		this.valude=val;
+//     		this.id=id;
+//     		this.cls=cls;
+//     	}
+//     	
+//     	public boolean present(){
+//     		return this.valude!=null;
+//     	}
+//     	public Object getValue(){
+//     		return valude;
+//     	}
+//     }
 }

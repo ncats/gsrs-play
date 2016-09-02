@@ -23,6 +23,7 @@ import ix.core.controllers.StructureFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Group;
+import ix.core.models.Predicate;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
@@ -231,10 +232,8 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static List<Substance> getSubstances(int top, int skip, String filter) {
-		EntityFilter<Substance> subFilter = new UserGroupAccessSubstanceFilter();
-		
 		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder);
-		return subFilter.filter(substances);
+		return substances;
 	}
 
 	// TODO: Doesn't support top/skip
@@ -398,53 +397,54 @@ public class SubstanceFactory extends EntityFactory {
 	 * 
 	 * 
 	 */
-	public static class UserGroupAccessSubstanceFilter extends EntityFilter<Substance> {
-
-		UserProfile profile = UserFetcher.getActingUserProfile(true);
-		Principal user = profile != null ? profile.user : null;
-		boolean hasAdmin = false;
-		Set<Group> groups=null;
-		
-		public UserGroupAccessSubstanceFilter(){
-			if(profile!=null){
-				groups=new HashSet<Group>(profile.getGroups());
-			}
-			if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
-				hasAdmin=true;
-			}
-			if(groups==null){
-				groups=new HashSet<Group>();
-			}
-		}
-
-		public boolean accept(Substance sub) {
-			if(hasAdmin)return true;
-			//System.out.println("looking for access");
-			//Group group = (Group) grp;
-			Substance substance = (Substance) sub;
-			Set<Group> accessG = substance.getAccess();
-			
-			if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
-				return true;
-			}
-			//System.out.println("Group 1:" + accessG);
-			//System.out.println("Group 2:" + groups);
-			if(Collections.disjoint(accessG, groups)){
-				//System.out.println("Won't show:" + sub.getName());
-				return false;
-			}
-			return true;
-		}
-
-	}
-	public static class AcceptAllFilter extends EntityFilter<Substance> {
-
-		@Override
-		public boolean accept(Substance sub) {
-			return true;
-		}
-		
-	}
+//	public static class UserGroupAccessSubstanceFilter<Substance> extends Predicate {
+//		
+//
+//		UserProfile profile = UserFetcher.getActingUserProfile(true);
+//		Principal user = profile != null ? profile.user : null;
+//		boolean hasAdmin = false;
+//		Set<Group> groups=null;
+//		
+//		public UserGroupAccessSubstanceFilter(){
+//			if(profile!=null){
+//				groups=new HashSet<Group>(profile.getGroups());
+//			}
+//			if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
+//				hasAdmin=true;
+//			}
+//			if(groups==null){
+//				groups=new HashSet<Group>();
+//			}
+//		}
+//
+//		public boolean accept(Substance sub) {
+//			if(hasAdmin)return true;
+//			//System.out.println("looking for access");
+//			//Group group = (Group) grp;
+//			Substance substance = (Substance) sub;
+//			Set<Group> accessG = substance.getAccess();
+//			
+//			if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
+//				return true;
+//			}
+//			//System.out.println("Group 1:" + accessG);
+//			//System.out.println("Group 2:" + groups);
+//			if(Collections.disjoint(accessG, groups)){
+//				//System.out.println("Won't show:" + sub.getName());
+//				return false;
+//			}
+//			return true;
+//		}
+//
+//	}
+//	public static class AcceptAllFilter extends EntityFilter<Substance> {
+//
+//		@Override
+//		public boolean accept(Substance sub) {
+//			return true;
+//		}
+//		
+//	}
 
 	public static SequenceIndexer getSeqIndexer() {
 		return EntityPersistAdapter.getSequenceIndexer();

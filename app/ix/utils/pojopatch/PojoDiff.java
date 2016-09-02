@@ -8,13 +8,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,12 +28,8 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import ix.core.IgnoredModel;
 import ix.core.controllers.EntityFactory;
-import ix.core.models.BaseModel;
-import ix.core.models.ForceUpdatableModel;
-import ix.utils.EntityUtils;
-import play.db.ebean.Model;
+import ix.core.search.text.EntityUtils.EntityWrapper;
 
 
 /**
@@ -1080,9 +1074,10 @@ public class PojoDiff {
 		}
 		private static int getObjectWithID(Collection c, String id){
 			int i=0;
+			
 			for(Object o:c){
 				try {
-					Object oid=EntityUtils.getId(o);
+					String oid = new EntityWrapper(o).getIdAsString();
 					if(id.equals(oid.toString())){
 						return i;
 					}

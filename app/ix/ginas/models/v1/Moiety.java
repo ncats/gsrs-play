@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -77,6 +78,8 @@ public class Moiety extends CommonDataElementOfCollection {
 		return count;
 	}
 	
+	
+	@Id
 	public UUID getUUID(){
 		if(this.innerUuid!=null){
 			return UUID.fromString(this.innerUuid);
@@ -84,6 +87,7 @@ public class Moiety extends CommonDataElementOfCollection {
 			return null;
 		}
 	}
+	
 	@Override
 	public void forceUpdate() {
 		structure.forceUpdate();

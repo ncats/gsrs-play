@@ -3,6 +3,7 @@ package ix.core.plugins;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -130,6 +131,8 @@ public class IxCache extends Plugin {
         throws Exception {
     	return getOrElse(key,generator,0);
     }
+    
+    
 
     
     
@@ -218,6 +221,17 @@ public class IxCache extends Plugin {
 	}
 
 
+	@SuppressWarnings("unchecked")
+	public static <T> T getOrElseTemp(String key, Callable<T> generator) throws Exception{
+		Object o=getTemp(key);
+		if(o==null){
+			o=generator.call();
+			if(o!=null){
+				setTemp(key,o);
+			}
+		}
+		return (T)o;
+	}
 
 	/**
 	 * Used for temporary cache storage which may be needed across
@@ -230,7 +244,7 @@ public class IxCache extends Plugin {
 	 * @return
 	 */
 	public static Object getTemp(String key) {
-		return getRaw("tmp123" + key);
+		return getRaw(key);
 	}
 	
 	/**
@@ -245,8 +259,10 @@ public class IxCache extends Plugin {
 	 * @return
 	 */
 	public static void setTemp(String key, Object value) {
-		setRaw("tmp123" +key, value);
+		setRaw(key, value);
 	}
+	
+	
 	/* Here are the interfaces
     public Object createEntry (Object key) throws Exception {
         if (!(key instanceof Serializable)) {

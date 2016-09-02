@@ -56,6 +56,7 @@ import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
+import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
@@ -984,7 +985,7 @@ public class GinasApp extends App {
             SearchResult result;
             try(TextIndexer indexer = getTextIndexer().createEmptyInstance()) {
                 for (Substance sub : substances) {
-                    indexer.add(sub);
+                    indexer.add(EntityWrapper.of(sub));
                 }
                 result = SearchFactory.search
                         (indexer, Substance.class, null, null, indexer.size(),
@@ -1373,14 +1374,19 @@ public class GinasApp extends App {
         int index;
         protected ChemicalSubstance instrument(StructureIndexer.Result r)
             throws Exception {
-            List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
-                .where().eq("structure.id", r.getId()).findList();
+        	//Shouldn't this be cached somewhere?
+            List<ChemicalSubstance> chemicals = SubstanceFactory
+            		.chemfinder
+            		.where().eq("structure.id", r.getId())
+            		.findList();
+            
             double similarity=r.getSimilarity();
             Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
                                        r.getId(), r.getSimilarity()));
                          
             ChemicalSubstance chem = null;
             if (!chemicals.isEmpty()) {
+            	
                 int[] amap = new int[r.getMol().getAtomCount()];
                 int i = 0, nmaps = 0;
                 for (MolAtom ma : r.getMol().getAtomArray()) {
@@ -1853,7 +1859,6 @@ public class GinasApp extends App {
                 doneMessage.append("\n\nError : did not finish indexing all records, only re-indexed ").append(currentRecordsIndexed);
             }
             doneMessage.append("\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
-
             message.append(doneMessage);
             LOG.info(doneMessage.toString());
         }
@@ -1861,7 +1866,6 @@ public class GinasApp extends App {
         @Override
         public void recordReIndexed(Object o) {
             currentRecordsIndexed++;
-
             if(currentRecordsIndexed %50 ==0){
                 updateMessage();
             }
@@ -1875,8 +1879,6 @@ public class GinasApp extends App {
 
 
         private void updateMessage() {
-
-
             int numProcessedThisTime = currentRecordsIndexed - recordsIndexedLastUpdate;
             if(numProcessedThisTime < 1){
                 return;

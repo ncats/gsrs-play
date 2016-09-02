@@ -3,12 +3,14 @@ package ix.core.search.text;
 import java.io.IOException;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TopDocs;
 
 import ix.core.search.EntityFetcher;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
+import ix.core.search.text.EntityUtils.EntityInfo;
 import ix.utils.Util;
 import play.Logger;
 
@@ -58,9 +60,10 @@ class LuceneSearchResultPopulator {
 			Document doc = searcher.doc(hits.scoreDocs[i + offset].doc);
 			try {
 				String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
-				Object id = Util.getNativeID(doc.getField(kind + "._id").stringValue());
+				EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
+				Object id = Util.getAsNativeID(doc.getField(ei.getInternalIdField()).stringValue());
 				
-				result.addNamedCallable(new EntityFetcher(kind, id, options.expand));
+				result.addNamedCallable(new EntityFetcher<>(kind, id, options.expand));
 			} catch (Exception e) {
 				e.printStackTrace();
 				Logger.error(e.getMessage());

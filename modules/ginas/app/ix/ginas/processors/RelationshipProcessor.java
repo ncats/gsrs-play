@@ -65,7 +65,7 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 					new Supplier<Substance>() {
                            @Override
                            public Substance get() {
-                               return SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+                        	   return SubstanceFactory.getFullSubstance(obj.relatedSubstance);
                            }
                        },
 

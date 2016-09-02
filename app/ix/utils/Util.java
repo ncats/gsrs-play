@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -427,7 +429,7 @@ public class Util {
 	    return randvar (5);
 	}
 	
-	public static Object getNativeID(String idv){
+	public static Object getAsNativeID(String idv){
     	if(idv.chars().allMatch( Character::isDigit )){
     		return new Long(Long.parseLong(idv));
     	}else{
@@ -435,21 +437,40 @@ public class Util {
     	}
 	}
 	
-	public static interface IndexAndItemProcessor<K>{
-		public void process(int i, K o);
+	
+	public static <K> void forEachIndex(Collection<K> it, BiConsumer<Integer,K> process){
+		asIndexItemStream(it).forEach(t->process.accept(t.k(), t.v()));
+	}
+	public static <K> Stream<Tuple<Integer,K>> asIndexItemStream(Collection<K> l){
+		List<K> src;
+		if(l instanceof List){
+			src=(List<K>) l;
+		}else{
+			src=l.stream().collect(Collectors.toList());
+		}
+		return IntStream
+				.range(0,l.size())
+				.mapToObj(i -> new Tuple<Integer,K>(i,src.get(i)));
+	}
+
+	
+	private static class CounterFunction<K> implements Function<K,Tuple<Integer,K>>{
+		AtomicInteger count= new AtomicInteger();
+		
+		@Override
+		public Tuple<Integer, K> apply(K k) {
+			
+			return new Tuple<Integer,K>(count.getAndIncrement(),k);
+		}
 	}
 	
-	public static <K> void forEachIndex(Collection<K> it, IndexAndItemProcessor<K> process){
-		if(it instanceof List){
-			IntStream.range(0,it.size()-1)
-					.mapToObj(i->((List<K>)it)
-					.get(i));
-		}else{
-			int[] idx = {0};
-			it.forEach(k -> process.process(idx[0]++, k));	
-		}
-		
+	public static <K> Function<K,Tuple<Integer,K>> addIndex(){
+		return new CounterFunction<K>();
 	}
+	
+	
+	
+	
 	public static <K> Map<String,List<K>> groupToMap(Collection<K> s, Function<K,String> namer){
 		return groupToMap(s.stream(),namer);
 	}

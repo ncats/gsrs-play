@@ -11,8 +11,10 @@ import java.util.function.Consumer;
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
-import ix.core.search.text.EntityTextIndexer;
-import ix.core.search.text.EntityTextIndexer.EntityInfo;
+import ix.core.search.text.EntityUtils;
+import ix.core.search.text.EntityUtils.EntityAnalyzer;
+import ix.core.search.text.EntityUtils.EntityInfo;
+import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.util.CachedSupplier;
 import play.db.ebean.Model;
 
@@ -242,52 +244,51 @@ public class Java8ForOldEbeanHelper {
 	 * @param bean
 	 * @throws java.io.IOException
 	 */
-	public static void makeIndexOnBean(EntityPersistAdapter epa, Object bean) throws java.io.IOException {
+	public static void makeIndexOnBean(EntityPersistAdapter epa, EntityWrapper<?> ew) throws java.io.IOException {
+	
 		try {
-			epa.getTextIndexerPlugin().getIndexer().add(bean);
+			epa.getTextIndexerPlugin().getIndexer().add(ew);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
 
-		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(bean);
-		if (ei.isEntity()) {
-			CachedSupplier<String> idString = ei.getIdString(bean);
+		if (ew.isEntity()) {
+			String ids = ew.getIdAsString();
 
-			ei.getSequenceFieldInfo().stream().forEach(sf -> {
-				sf.getValue(bean).map(s -> ((String)s)).filter(sq -> (sq.length() > 0)).ifPresent(s -> {
-					try {
-						epa.getSequenceIndexer().add(idString.call(), s);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				});
+			ew.streamStructureFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
+				try {
+					epa.getStructureIndexer().add(ids, str.toString());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			});
-
 			
-			ei.getStructureFieldInfo().stream().forEach(sf -> {
-				sf.getValue(bean).map(s -> (String) s).filter(s -> (s.length() > 0)).ifPresent(s -> {
-					try {
-						epa.getStructureIndexer().add(idString.call(), s);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				});
+			ew.streamSequenceFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
+				try {
+					epa.getSequenceIndexer().add(ids, str.toString());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			});
 		}
 	}
 
-	public static void deleteIndexOnBean(EntityPersistAdapter epa, Object bean) throws Exception {
-		if (epa.getTextIndexerPlugin() != null)
-			epa.getTextIndexerPlugin().getIndexer().remove(bean);
-		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(bean);
-		if (ei.isEntity()) {
-			CachedSupplier<String> idString = ei.getIdString(bean);
-
-			ei.getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
-				tryTaskAtMost(() -> epa.getSequenceIndexer().remove(idString.call()), t -> t.printStackTrace(), 2);
+	public static void deleteIndexOnBean(EntityPersistAdapter epa, EntityWrapper bean) throws Exception {
+		if (epa.getTextIndexerPlugin() != null){
+			epa.getTextIndexerPlugin()
+					.getIndexer()
+					.remove(bean.getValue()); //should be fine
+		}
+		
+		if (bean.isEntity()) {
+			String id =bean.getIdAsString();
+			bean.getEntityInfo().getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
+				tryTaskAtMost(() -> epa.getSequenceIndexer().remove(id), t -> t.printStackTrace(), 2);
+				
 			});
-			ei.getStructureFieldInfo().stream().findAny().ifPresent(s -> {
-				tryTaskAtMost(() -> epa.getStructureIndexer().remove(idString.call()), t -> t.printStackTrace(), 2);
+			
+			bean.getEntityInfo().getStructureFieldInfo().stream().findAny().ifPresent(s -> {
+				tryTaskAtMost(() -> epa.getStructureIndexer().remove(id), t -> t.printStackTrace(), 2);
 			});
 		}
 	}
@@ -300,12 +301,12 @@ public class Java8ForOldEbeanHelper {
 	 * @param bean
 	 * @param deleteFirst
 	 */
-	public static void deepreindex(EntityPersistAdapter epa, Object bean, boolean deleteFirst) {
-		if (bean instanceof Model) {
-			EntityFactory.recursivelyApply((Model) bean, (m, path) -> {
-				epa.reindex(m, deleteFirst);
+	public static void deepreindex(EntityPersistAdapter epa, EntityWrapper<?> bean, boolean deleteFirst) {
+		bean.analyze()
+			.execute(t->{
+				EntityWrapper child = t.v();
+				epa.reindex(child, deleteFirst);
 			});
-		}
 	}
 
 	private interface ThrowingRunnable {
