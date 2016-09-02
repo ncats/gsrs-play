@@ -21,6 +21,7 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.util.CachedSupplier;
 import ix.utils.EntityUtils;
+import ix.utils.Tuple;
 
 public class EntityTextIndexer {
 	
@@ -152,16 +153,20 @@ public class EntityTextIndexer {
 		public String getName() {
 			return this.kind;
 		}
+		
+		public Tuple<String,String> getFieldAndId(Object e){
+			return new Tuple<String,String>(getExternalIdFieldName(),this.getIdString(e).call());
+		}
 
 		// the hidden _id field stores the field's value
 		// in its native type whereas the display field id
 		// is used for indexing purposes and as such is
 		// represented as a string
-		public String internalIdField(){
+		public String getInternalIdField(){
 			return kind + "._id";
 		}
 		
-		public String externalIdFieldName(){
+		public String getExternalIdFieldName(){
 			return kind + ".id";
 		}
 

@@ -17,8 +17,6 @@ import java.util.function.Consumer;
 
 import ix.core.CacheStrategy;
 import ix.core.search.FutureList.NamedCallable;
-import ix.core.search.FutureList.ObjectNamer;
-import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.TimeUtil;
 import ix.utils.EntityUtils;
@@ -27,10 +25,6 @@ import play.Logger;
 @CacheStrategy(evictable=false)
 public class SearchResult {
 
-	
-	//Probably get rid of this,
-	//it shouldn't be needed anymore
-    SearchAnalyzer searchAnalyzer;
 
     /**
      * Returns a list of FieldFacets which help to explain why and how
@@ -47,9 +41,11 @@ public class SearchResult {
     List<Facet> facets = new ArrayList<Facet>();
     List<FieldFacet> suggestFacets = new ArrayList<FieldFacet>();
     
-    FutureList matches = new FutureList (o->EntityUtils.getIdForBeanAsString(o));
+    FutureList<Object> matches = new FutureList<> (o->EntityUtils.getIdForBeanAsString(o));
     
-    List result; // final result when there are no more updates
+    List<?> result; // final result when there are no more updates
+    
+    
     private int count;
     SearchOptions options;
     final long timestamp = TimeUtil.getCurrentTimeMillis();
@@ -64,7 +60,6 @@ public class SearchResult {
     public SearchResult (SearchOptions options, String query) {
         this.options = options;
         this.query = query;
-        searchAnalyzer= TextIndexer.getDefaultSearchAnalyzerFor(this.options.kind);
     }
 
     public void setRank (final Map<String, Integer> idRank) {
@@ -267,7 +262,7 @@ public class SearchResult {
     }
     
     public List getMatches () {
-    	if (result != null) return result;
+    	if (result != null) return result; // return if ready
         boolean finished=finished();
         
         List list = matches;
@@ -275,9 +270,8 @@ public class SearchResult {
         
         if (finished) {
         	if(idComparator!=null){
-        		System.out.println("Sorting...");
         		if(list instanceof FutureList){
-        			((FutureList) list).sortByNames(idComparator);
+        			((FutureList<Object>) list).sortByNames(idComparator);
         		}else{
         			//This may take a long time in certain cases
             		Collections.sort(list,(o1,o2)->{
@@ -286,7 +280,6 @@ public class SearchResult {
     	                return idComparator.compare(id1, id2);
             		});
         		}
-        		System.out.println("Done sorting...");
         	}
             result = list;
         }
@@ -300,9 +293,6 @@ public class SearchResult {
     public long getStopTime () { return stop.get(); }
     public boolean finished () { return stop.get() >= timestamp; }
     
-//    public SearchAnalyzer getSearchContextAnalyzer(){
-//        return searchAnalyzer;
-//    }
     public void addNamedCallable (NamedCallable c) {
     	matches.addCallable(c);
     	processAddition(c);
@@ -315,16 +305,6 @@ public class SearchResult {
     
     private void processAddition(NamedCallable o){
     	notifyAdd(o);
-//    	
-//    	if(searchAnalyzer!=null && query!=null && query.length()>0){
-//        	if(searchAnalyzer.isEnabled()){
-//        		try {
-//					searchAnalyzer.addWithQuery(o.call(), query);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//        	}
-//        }
     }
     
 
@@ -338,13 +318,6 @@ public class SearchResult {
     public void done () {
         stop.set(TimeUtil.getCurrentTimeMillis());
         notifyListeners(l -> l.searchIsDone());
-//        
-//        if(searchAnalyzer!=null && query!=null && query.length()>0){
-//        	if(searchAnalyzer.isEnabled()){
-//				searchAnalyzer.markDone();
-//        	}
-//        }
-
     }
 
     /**
