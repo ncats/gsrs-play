@@ -11,6 +11,8 @@ Enhancements
 3. Improved search analyzer to show more accurate suggestions
    for restricting global searches.
 4. Allow searching by code systems (BDNUM, CAS, etc)
+5. Improved keyboard navigation for 508 compliance
+6. Restrict to names or code search options
 
 
 Bug Fixes
@@ -22,7 +24,8 @@ Bug Fixes
 2. Reindexing previously wouldn't update autosuggest
    or sorting operations, unless the application was
    also restarted. Now the reindexing works in-place.
-
+3. Empty modifications were being saved which would break display,
+   wrapped each display with a null check.
 
 GSRS v1.2.05
 ============
