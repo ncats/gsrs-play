@@ -1336,8 +1336,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 						});
 					});
 				}catch(Exception e){e.printStackTrace();}
-				//FieldFacet
-				//get count?
 			});
 		} //End of Idea
 		

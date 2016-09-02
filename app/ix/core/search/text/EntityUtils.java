@@ -112,6 +112,7 @@ public class EntityUtils {
 		EntityInfo ei;
 		
 		public static EntityWrapper of(Object bean){
+			if(bean==null)return null;
 			if(bean instanceof EntityWrapper){
 				return (EntityWrapper)bean;
 			}
@@ -141,6 +142,13 @@ public class EntityUtils {
 		public String getGlobalKey(){
 			return ei.uniqueKeyWithId(this.getId().get());
 		}
+		
+		
+		public boolean hasGlobalKey(){
+			return this.getId().isPresent();
+		}
+		
+		
 		public List<FieldInfo> getUniqueColumns() {
 			return ei.getUniqueColumns();
 		}
@@ -234,6 +242,8 @@ public class EntityUtils {
 		public Optional<?> getId(){
 			return this.ei.getIdPossiblyFromEbeanMethod((Object)this.getValue());
 		}
+		
+		//Returns id as strong, or null
 		public String getIdAsString(){
 			return this.ei.getIdString(this.getValue()).get();
 		}
@@ -264,7 +274,7 @@ public class EntityUtils {
 		final String kind;
 		final DynamicFacet dyna;
 		final Indexable indexable;
-		List<FieldInfo> fields;
+		private List<FieldInfo> fields;
 		Table table;
 		List<ValueMakerInfo> seqFields = new ArrayList<ValueMakerInfo>();
 		List<ValueMakerInfo> strFields = new ArrayList<ValueMakerInfo>();;
@@ -288,7 +298,7 @@ public class EntityUtils {
 		volatile boolean shouldIndex=true;
 		volatile boolean shouldPostUpdateHooks = true;
 		volatile boolean hasUniqueColumns = false;
-		volatile String ebeanIdMethodName=null;
+		String ebeanIdMethodName=null;
 		
 		String tableName = null;
 		
@@ -458,8 +468,12 @@ public class EntityUtils {
 		public List<FieldInfo> getUniqueColumns(){
 			return this.uniqueColumnFields;
 		}
-		
+		public Object getObjectById(Object id){			
+			return this.getFinder().byId(id);
+		}
+
 		public Model.Finder getFinder(){
+			
 			return this.finder;
 		}
 		
@@ -495,13 +509,14 @@ public class EntityUtils {
 			return shouldIndex;
 		}
 		
+		
+		//This may be unnecessary now. ID fetching isn't slow
 		public CachedSupplier<String> getIdString(Object e){
-			return CachedSupplier.of(()->"");
-//			return new CachedSupplier<String>(()->{
-//				Optional<?> id=this.getIdPossiblyFromEbeanMethod(e);
-//				if(id.isPresent())return id.get().toString();
-//				return null;
-//			});
+			return new CachedSupplier<String>(()->{
+				Optional<?> id=this.getIdPossiblyFromEbeanMethod(e);
+				if(id.isPresent())return id.get().toString();
+				return null;
+			});
 		}
 		
 		public Optional<Tuple<String,String>> getDynamicFacet(Object e){
@@ -622,7 +637,7 @@ public class EntityUtils {
 		public Optional<Object> getIdPossiblyFromEbeanMethod(Object o){
 			Optional<Object> id = this.getNativeIdFor(o);
 			if(!id.isPresent()){
-				if(ebeanIdMethod==null)return null;
+				if(ebeanIdMethod==null)return Optional.empty();
 				return ebeanIdMethod.getValue(o);
 			}
 			return id;

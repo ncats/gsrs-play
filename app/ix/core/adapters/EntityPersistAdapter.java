@@ -575,13 +575,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
             
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
             Logger.warn("Can't update bean index "+bean, ex);
         }
         
-        String cachedIDkey=EntityFetcher.uniqueKeyFor(fieldAndId);
-        IxCache.removeAllChildKeys(cachedIDkey);
+        IxCache.removeAllChildKeys(ew.getGlobalKey());
     } 
 
     @Override
@@ -676,19 +674,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     public void reindex(EntityWrapper ew, boolean deleteFirst){
     	
         try {
-        	String key=ew.getGlobalKey();
-            if(key!=null) {
-            	if(alreadyLoaded.containsKey(key)){
-                    return;
-                }
-                alreadyLoaded.put(key, 0);
-            }
-            if(deleteFirst) {
-                deleteIndexOnBean(ew.getValue());
-            }
-            makeIndexOnBean(ew.getValue());
+        	if(ew.hasGlobalKey()){
+	        	String key=ew.getGlobalKey(); // Is this one the best to use?
+	            if(key!=null) {
+	            	if(alreadyLoaded.containsKey(key)){
+	                    return;
+	                }
+	                alreadyLoaded.put(key, 0);
+	            }
+	            if(deleteFirst) {
+	                deleteIndexOnBean(ew.getValue());
+	            }
+	            makeIndexOnBean(ew.getValue());
+        	}
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("Problem reindexing entity:" ,e);
         }
     }
 

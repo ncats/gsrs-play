@@ -12,7 +12,6 @@ Enhancements
    for restricting global searches.
 4. Allow searching by code systems (BDNUM, CAS, etc)
 
-
 Bug Fixes
 ---------
 1. Fixed structure search reloading issue. A quickly 
@@ -21,7 +20,27 @@ Bug Fixes
    is complete. Now it refreshes when ready. 
 2. Reindexing previously wouldn't update autosuggest
    or sorting operations, unless the application was
-   also restarted. Now the reindexing works in-place.
+   also restarted. Now the reindexing works in-place
+
+
+A Deeper look
+-------------
+
+1. EntityWraper now used to avoid repeated and unstandardized
+   reflection. There were issues before where the mechanism
+   to get an ID was slightly different based on where it was
+   written or rewritten. Similar issues happen with other
+   properties computed via reflection. Now there is one
+   common mechanism, complete with caching for faster 
+   access.
+
+2. EntityFetcher now uses common cache for entities instead
+   of user-specific cache.
+
+3. More to come
+   
+
+
 
 
 GSRS v1.2.05

@@ -1,7 +1,6 @@
 package ix.core.models;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -26,7 +25,7 @@ public class BackupEntity extends IxModel{
 	public static final EntityMapper em = EntityMapper.INTERNAL_ENTITY_MAPPER();
 	
 	@Id
-	private Long id;
+	public Long id;
 	
 	@Column(unique = true)
 	private String refid;

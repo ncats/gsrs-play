@@ -7,15 +7,21 @@ import ix.core.plugins.IxCache;
 import ix.core.search.FutureList.NamedCallable;
 import ix.core.search.text.EntityUtils;
 import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.util.CachedSupplier;
-import ix.utils.Tuple;
 import play.Logger;
 
 public class EntityFetcher<K> implements NamedCallable<K>{
+	public static enum CacheType{
+		NO_CACHE,
+		GLOBAL_CACHE,
+		GLOBAL_CACHE_WHEN_NOT_CHANGED,
+		LOCAL_CACHE
+	}
+	public static final CacheType cacheType =CacheType.NO_CACHE;
 	//final String field;
 	final String kind;
 	final Object id;
 	List<String> expand;
+	EntityInfo ei;
 	
 	public EntityFetcher(String kind, Object id, List<String> expand) throws Exception{
 		Objects.requireNonNull(kind);
@@ -23,6 +29,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		this.expand=expand;
 		this.kind=kind;
 		this.id=id;
+		ei=EntityUtils.getEntityInfoFor(kind);
 	}
 	
 	
@@ -31,26 +38,29 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	@SuppressWarnings("unchecked")
 	@Override
 	public K call() throws Exception {
-		return (K) IxCache.getOrElseTemp(
-				EntityUtils.getEntityInfoFor(kind).uniqueKeyWithId(id),
-							() -> findObject(kind, id, expand)
-						);
+		switch(cacheType){
+			case GLOBAL_CACHE:
+				return (K) IxCache.getOrElseTemp(getKey(),() -> findObject(kind, id, expand));
+			case GLOBAL_CACHE_WHEN_NOT_CHANGED:
+				throw new UnsupportedOperationException("Global timeout cache not supported yet for this operation");
+			case NO_CACHE:
+				return (K) findObject(kind, id, expand);
+			case LOCAL_CACHE:
+			default:
+				return (K) IxCache.getOrElse(getKey(),() -> findObject(kind, id, expand));
+		}
+
 	}
 	
-	public String uniqueKey(){
-		return uniqueKeyFor(new Tuple<String,String>(kind,id.toString()));
-	}
-	
-	//The key formation for things being stored
-	public static String uniqueKeyFor(Tuple<String,String> fieldAndId){
-		return fieldAndId.k() + "._id:" + fieldAndId.v();
+	public String getKey(){
+		return ei.uniqueKeyWithId(id);
 	}
 	
 	public String getName(){
 		return id.toString();
 	}
 	
-	public static Object findObject (String kind, Object id, List<String> expand) throws Exception {
+	public Object findObject (String kind, Object id, List<String> expand) throws Exception {
         	//If you see this in the code base, erase it
             //it's only here for debugging
             //Specifically, we are testing if delayed adding
@@ -60,8 +70,8 @@ public class EntityFetcher<K> implements NamedCallable<K>{
             //}
             //System.out.println("added:" + matches.size());
 		    
-			EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
-            Object value = null;
+		
+			Object value = null;
             
             
             

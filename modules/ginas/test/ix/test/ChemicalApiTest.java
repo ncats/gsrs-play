@@ -526,10 +526,10 @@ public class ChemicalApiTest {
     
     public static ChemicalSubstance makeChemicalSubstance(String smiles){
     	return new SubstanceBuilder()
-    		.asChemical()
-    		.setStructure(smiles)
-    		.addName(smiles + " name")
-    		.build();
+    			.asChemical()
+    			.setStructure(smiles)
+    			.addName(smiles + " name")
+    			.build();
     }
     
     
