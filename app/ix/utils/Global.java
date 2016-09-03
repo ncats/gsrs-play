@@ -228,10 +228,11 @@ public class Global extends GlobalSettings {
 		if (instance == null)
 			return null;
 		Global g = getInstance();
-		EntityWrapper ew = new EntityWrapper(instance);
+		
+		EntityWrapper ew = EntityWrapper.of(instance);
 
-		if (!ew.isEntity()) {
-			Logger.error(instance + " isn't an Entity!");
+		if (!ew.isEntity() || !ew.hasKey()) {
+			Logger.error(instance + " isn't an Entity with an ID!");
 			throw new IllegalArgumentException("Instance is not an Entity");
 		}
 
@@ -241,7 +242,7 @@ public class Global extends GlobalSettings {
 			return null;
 		}
 		
-		return getNamespace() + "/" + name + "(" + ew.getIdAsString() + ")";
+		return getNamespace() + "/" + name + "(" + ew.getKey().getIdString() + ")";
 	}
 
 	public static String getHost() {

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
@@ -38,6 +40,8 @@ import org.reflections.Reflections;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.IgnoredModel;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
@@ -96,8 +100,8 @@ public class EntityUtils {
 	 * for finding smaller sets of known indexable values from 
 	 * all fields. 
 	 * 
-	 * The method {{EntityWrapper{@link #analyze()} is particularly
-	 * useful for building {{@link EntityAnalyzer}}s, which 
+	 * The method {{ObjectWrapper{@link #traverse()} is particularly
+	 * useful for building {{@link EntityTraverser}}s, which 
 	 * can allow for quick traverse of all of the entity descendants
 	 * 
 	 * TODO there is some inconsistent design and type-safe
@@ -108,46 +112,59 @@ public class EntityUtils {
 	 * @param <K>
 	 */
 	public static class EntityWrapper<K>{
-		K _k;
-		EntityInfo ei;
+		private K _k;
+		private EntityInfo ei;
+		
 		
 		public static EntityWrapper of(Object bean){
-			if(bean==null)return null;
+			Objects.requireNonNull(bean);
 			if(bean instanceof EntityWrapper){
 				return (EntityWrapper)bean;
 			}
 			return new EntityWrapper(bean);
 		}
 		
-		public EntityWrapper(K o){
+		private EntityWrapper(K o){
 			Objects.requireNonNull(o);
 			this._k=o;
 			ei = getEntityInfoFor(o);
 		}
 		
+		public String toCompactJson(){
+			return EntityMapper.COMPACT_ENTITY_MAPPER().toJson(getValue());
+		}
+		
+		public String toInternalJson(){
+			return EntityMapper.INTERNAL_ENTITY_MAPPER().toJson(getValue());
+		}
+		
+		public String toFullJson(){
+			return EntityMapper.FULL_ENTITY_MAPPER().toJson(getValue());
+		}
+		
+		public Key getKey() throws NoSuchElementException{
+			return Key.of(this);
+		}
+		
+		public Optional<Key> getOptionalKey(){
+			//TODO: Try catch is not really right here, should be 
+			//handled slightly differently
+			try{
+				return Optional.of(this.getKey());
+			}catch(Exception e){
+				return Optional.empty();
+			}
+		}
+		
+		
 		//Useful for doing recursive searches, etc
-		public EntityAnalyzer analyze(){
-			return new EntityAnalyzer()
-						.using(this);
+		public EntityTraverser traverse(){
+			return new EntityTraverser().using(this);
 		}
 		
 		public String toString(){
 			return this.getKind() +":" +  this.getValue().toString();
 		}
-		
-		/**
-		 * Throws exception if the id is null.
-		 * @return
-		 */
-		public String getGlobalKey(){
-			return ei.uniqueKeyWithId(this.getId().get());
-		}
-		
-		
-		public boolean hasGlobalKey(){
-			return this.getId().isPresent();
-		}
-		
 		
 		public List<FieldInfo> getUniqueColumns() {
 			return ei.getUniqueColumns();
@@ -182,8 +199,8 @@ public class EntityUtils {
 		}
 
 		public Stream<Tuple<FieldInfo, Object>> streamFieldsAndValues(Predicate<FieldInfo> p) {
-			return ei.getFieldInfo().stream().filter(p)
-					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+			return ei.getFieldInfo().stream().filter(p)							
+					.map(f -> new Tuple<>(f, f.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent())
 					.map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
@@ -221,36 +238,17 @@ public class EntityUtils {
 		public EntityInfo getEntityInfo(){
 			return this.ei;
 		}
-
-		public Tuple<String, String> getIdAndFieldName() {
-			return ei.getFieldAndId(this.getValue());
-		}
 		
-		public boolean hasLongId(){
-			if(this.ei.hasLongId()){
-				return true;
-			}else{
-				return false;
-			}
-		}
-		public Optional<Long> getLongId(){
-			if(this.hasLongId()){
-				return Optional.of((Long)this.getId().get());
-			}
-			return Optional.empty();
-		}
 		public Optional<?> getId(){
 			return this.ei.getIdPossiblyFromEbeanMethod((Object)this.getValue());
-		}
-		
-		//Returns id as strong, or null
-		public String getIdAsString(){
-			return this.ei.getIdString(this.getValue()).get();
 		}
 		
 		public String getKind() {
 			return this.ei.getName();
 		}
+		
+		
+		
 		public Optional<String> getVersion() {
 			return Optional.ofNullable(ei.getVersionAsStringFor(this.getValue()));
 		}
@@ -267,8 +265,20 @@ public class EntityUtils {
 		public Optional<Tuple<String,String>> getDynamicFacet() {
 			return this.ei.getDynamicFacet(this.getValue());
 		}
+
+		//Convenience Method
+		public boolean hasKey() {
+			return this.getOptionalKey().isPresent();
+		}
+
+		
+		public boolean isIgnoredModel() {
+			return this.ei.isIgnoredModel();
+		}
 	}
-	
+
+	private static final String ID_FIELD_NATIVE_SUFFIX = "._id";
+	private static final String ID_FIELD_STRING_SUFFIX = ".id";
 	public static class EntityInfo {
 		final Class<?> cls;
 		final String kind;
@@ -296,7 +306,7 @@ public class EntityUtils {
 		
 		volatile boolean isEntity=false;
 		volatile boolean shouldIndex=true;
-		volatile boolean shouldPostUpdateHooks = true;
+		volatile boolean shouldDoPostUpdateHooks = true;
 		volatile boolean hasUniqueColumns = false;
 		String ebeanIdMethodName=null;
 		
@@ -307,10 +317,13 @@ public class EntityUtils {
 		Model.Finder finder;
 		boolean isIdNumeric=false;
 		
+		boolean isIgnoredModel = false;
+		
 		public EntityInfo(Class<?> cls) {
 			Objects.requireNonNull(cls);
 			
 			this.cls = cls;
+			this.isIgnoredModel =(cls.getAnnotation(IgnoredModel.class)!=null);
 			this.indexable = (Indexable) cls.getAnnotation(Indexable.class);
 			this.table = (Table) cls.getAnnotation(Table.class);
 			if(this.table!=null){
@@ -364,7 +377,7 @@ public class EntityUtils {
 				}
 		    }
 			if(Edit.class.isAssignableFrom(cls)){
-				shouldPostUpdateHooks=false;
+				shouldDoPostUpdateHooks=false;
 			}
 			
 			
@@ -405,19 +418,9 @@ public class EntityUtils {
 			}
 		}
 		
-		/**
-		 * Keys sufficient for search / caching, etc.
-		 * @param id
-		 * @return
-		 */
-		public String uniqueKeyWithId(Object id){
-			return uniqueKeyFor(this.kind,id.toString());
+		public boolean isIgnoredModel(){
+			return this.isIgnoredModel;
 		}
-		
-		public static String uniqueKeyFor(String k, String v){
-			return k + "._id:" + v;
-		}
-		
 		
 		public boolean hasLongId() {
 			return this.isIdNumeric;
@@ -427,11 +430,12 @@ public class EntityUtils {
 			return idType;
 		}
 
-		public boolean twoStringsEqual(String s1, String s2){
+		private static boolean twoStringsEqual(String s1, String s2){
 			if(s1==null && s2==null)return true;
 			if(s1==null || s2==null)return false;
 			return s1.equals(s2);
 		}
+		
 		public boolean isEquivalentInfo(EntityInfo ei){
 			if(this.isParentOrChildOf(ei)){
 				if(this.table != null && ei.table!=null){
@@ -468,12 +472,7 @@ public class EntityUtils {
 		public List<FieldInfo> getUniqueColumns(){
 			return this.uniqueColumnFields;
 		}
-		public Object getObjectById(Object id){			
-			return this.getFinder().byId(id);
-		}
-
 		public Model.Finder getFinder(){
-			
 			return this.finder;
 		}
 		
@@ -563,23 +562,17 @@ public class EntityUtils {
 			return this.kind;
 		}
 		
-		public Tuple<String,String> getFieldAndId(Object e){
-			return new Tuple<String,String>(
-					this.getExternalIdFieldName(),
-					this.getIdString(e).call()
-					);
-		}
 
 		// the hidden _id field stores the field's value
 		// in its native type whereas the display field id
 		// is used for indexing purposes and as such is
 		// represented as a string
 		public String getInternalIdField(){
-			return kind + "._id";
+			return kind + ID_FIELD_NATIVE_SUFFIX;
 		}
 		
 		public String getExternalIdFieldName(){
-			return kind + ".id";
+			return kind + ID_FIELD_STRING_SUFFIX;
 		}
 
 		public boolean isEntity() {
@@ -587,7 +580,7 @@ public class EntityUtils {
 		}
 		
 		public boolean ignorePostUpdateHooks(){
-			return shouldPostUpdateHooks;
+			return !shouldDoPostUpdateHooks;
 		}
 
 		public Class<?> getClazz() {
@@ -1042,11 +1035,93 @@ public class EntityUtils {
 			return Number.class.isAssignableFrom(this.type);
 		}
 	}
+	
+	public static class Key{
+		EntityInfo kind;
+		Object _id;			//should change to be an Object
+		                    //Oh, I guess I did
+		
+		private Key(EntityInfo k, Object id){
+			this.kind=k;
+			this._id=id;
+		}
+		
+		public String getKind(){
+			return this.kind.getName();
+		}
+		
+		public Object getIdNative(){
+			return this._id;
+		}
+		
+		public String getIdString(){
+			return this._id.toString();
+		}
+		
+		
+		public EntityInfo getEntityInfo(){
+			return kind;
+		}
+		
+		@Override
+		public String toString(){
+			return  kind.getName() + ID_FIELD_NATIVE_SUFFIX + ":" + getIdString();
+		}
+		
+		//fetches from finder
+		public Optional<EntityWrapper> fetch(){
+			return Optional.of(EntityWrapper.of(kind.getFinder().byId(this.getIdNative())));
+		}
+		
+		
+		
+		public Tuple<String,String> asLuceneIdTuple(){
+			return new Tuple<String,String>(kind.getInternalIdField(),this.getIdString());
+		}
+		
+		//For lucene document
+		public static Key of(Document doc) throws Exception{
+			String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue(); //Should move this constant somewhere or abstract
+			EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
+			if(ei.hasLongId()){
+				Long id=doc.getField(ei.getInternalIdField()).numericValue().longValue();
+				return new Key(ei, id);
+			}else{
+				String id=doc.getField(ei.getInternalIdField()).stringValue();
+				return new Key(ei, id);
+			}
+		}
 
-	public static class EntityAnalyzer{
+		// For EntityWrapper (weird place for this, I know)
+		public static Key of(EntityWrapper ew) throws NoSuchElementException {
+			Objects.requireNonNull(ew);
+			return new Key(ew.getEntityInfo(), ew.getId().get().toString());
+		}
+		
+		
+		@Override
+		public int hashCode(){
+			return this.toString().hashCode(); // Probably something that can be better
+		}
+		
+		@Override
+		public boolean equals(Object k){
+			if(k==null || !(k instanceof Key)){
+				return false;
+			}else{
+				return this.toString().equals(k.toString()); // Probably something better that could be done
+			}
+		}
+
+	}
+
+	
+	public static class EntityTraverser{
 		private PathStack path;
-		private Consumer<IndexableField> ixFields=null;
 		private Consumer<Tuple<PathStack,EntityWrapper>> listens=null;
+		
+		
+		private Consumer<IndexableField> ixFields=null;
 		DynamicFieldIndexerPassiveProvider dynamicFacets=null; 
 		PrimitiveFieldIndexerPassiveProvider indexPerformer;
 		
@@ -1058,26 +1133,26 @@ public class EntityUtils {
 		
 		EntityWrapper estart;
 		
-		public EntityAnalyzer(){
+		public EntityTraverser(){
 			path= new PathStack();
 			prevEntities = new LinkedReferenceSet<Object>();
 			this.ixFields=ixFields;
 		}
 		
-		public EntityAnalyzer using(EntityWrapper e1){
+		public EntityTraverser using(EntityWrapper e1){
 			this.estart=e1;
 			return this;
 		}
 		
-		public EntityAnalyzer acceptFieldsWith(Consumer<IndexableField> ixFields){
+		public EntityTraverser acceptFieldsWith(Consumer<IndexableField> ixFields){
 			this.ixFields=ixFields;
 			return this;
 		}
-		public EntityAnalyzer produceDynamicFacetsWith(DynamicFieldIndexerPassiveProvider dpp){
+		public EntityTraverser produceDynamicFacetsWith(DynamicFieldIndexerPassiveProvider dpp){
 			this.dynamicFacets=dpp;
 			return this;
 		}
-		public EntityAnalyzer produceDefaultIndexingWith(PrimitiveFieldIndexerPassiveProvider indexPerformer){
+		public EntityTraverser produceDefaultIndexingWith(PrimitiveFieldIndexerPassiveProvider indexPerformer){
 			this.indexPerformer=indexPerformer;
 			return this;
 		}

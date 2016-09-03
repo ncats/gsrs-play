@@ -11,6 +11,7 @@ import ix.core.search.EntityFetcher;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
 import ix.core.search.text.EntityUtils.EntityInfo;
+import ix.core.search.text.EntityUtils.Key;
 import ix.utils.Util;
 import play.Logger;
 
@@ -59,11 +60,7 @@ class LuceneSearchResultPopulator {
 			}
 			Document doc = searcher.doc(hits.scoreDocs[i + offset].doc);
 			try {
-				String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
-				EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
-				Object id = Util.getAsNativeID(doc.getField(ei.getInternalIdField()).stringValue());
-				
-				result.addNamedCallable(new EntityFetcher<>(kind, id, options.expand));
+				result.addNamedCallable(new EntityFetcher<>(Key.of(doc)));
 			} catch (Exception e) {
 				e.printStackTrace();
 				Logger.error(e.getMessage());

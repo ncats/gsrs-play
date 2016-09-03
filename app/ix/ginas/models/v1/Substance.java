@@ -833,8 +833,7 @@ public class Substance extends GinasCommonData {
 	@JsonIgnore
 	@Indexable(facet=true)
 	public String getSubstanceDeprecated(){
-		//System.out.println("Found deprecated record");
-		return ""+this.deprecated;
+		return String.valueOf(this.deprecated);
 	}
 
 	/**

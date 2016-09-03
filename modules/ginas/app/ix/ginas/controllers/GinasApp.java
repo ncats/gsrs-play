@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import ix.core.controllers.AdminFactory;
@@ -825,7 +826,10 @@ public class GinasApp extends App {
         
         try {
             long start = System.currentTimeMillis();
+            
+            
             SearchResult result = getOrElse(sha1, ()->{
+            				
                             SearchOptions options = 
                             		new SearchOptions(Substance.class, total, 0, FACET_DIM)
                             			 .parse(params);

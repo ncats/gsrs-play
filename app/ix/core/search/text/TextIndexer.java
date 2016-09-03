@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,6 +128,7 @@ import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
 import ix.core.search.text.EntityUtils.EntityInfo;
 import ix.core.search.text.EntityUtils.EntityWrapper;
+import ix.core.search.text.EntityUtils.Key;
 import ix.core.util.CachedSupplier;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
@@ -900,17 +902,12 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 					f = new TermsFilter(terms);
 				}
 				if(options.order.isEmpty()){
-					Map<String, Integer> rank = new HashMap<String, Integer>();
+					Map<String, Integer> rank = 
 					subset.stream()
-						.map(o->new EntityWrapper<Object>(o).getIdAsString())
-						.map(Util.addIndex())
-						.forEach(t->{
-							rank.put(t.v(),t.k());
-						});
-
-					if (!rank.isEmpty()) {
-						searchResult.setRank(rank);
-					}
+						.map(o->EntityWrapper.of(o).getKey().getIdString())
+						.map(Util.toIndexedTuple())		//Yes, I mean for this to be a function call, not a function
+						.collect(Collectors.toMap(Tuple::v, Tuple::k));
+					searchResult.setRank(rank);
 				}
 			} else if (options.kind != null) {
 				f = new FieldCacheTermsFilter(FIELD_KIND, createKindSetFromOptions(options).toArray(new String[0]));
@@ -1018,6 +1015,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			if (!fields.isEmpty()) {
 				sorter = new Sort(fields.toArray(new SortField[0]));
 			}
+			
+			
 		}
 		return sorter;
 	}
@@ -1062,15 +1061,39 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			.forEach(f -> sr.addFacet(f));
 	}
 	
+	
+	// Abstracted interface to help with cleaning up workflow
+	// Call search, then call getTopDocs and/or getFacets
+	// It's
+	
 	public static interface LuceneSearchProvider{
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
+	}
+	public static interface LuceneSearchProviderResult{
 		public TopDocs getTopDocs();
 		public Facets getFacets();
 	}
-	
-	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
+	public static class DefaultLuceneSearchProviderResult implements LuceneSearchProviderResult{
 		private TopDocs hits=null;
 		private Facets facets=null;
+		public DefaultLuceneSearchProviderResult(TopDocs hits,Facets facets){
+			this.hits=hits;
+			this.facets=facets;
+		}
+		@Override
+		public TopDocs getTopDocs() {
+			return hits;
+		}
+		@Override
+		public Facets getFacets() {
+			return facets;
+		}
+		
+	}
+	
+	
+	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
+		
 		Sort sorter;
 		Filter filter;
 		Query query;
@@ -1087,17 +1110,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		}
 
 		@Override
-		public TopDocs getTopDocs() {
-			return hits;
-		}
-
-		@Override
-		public Facets getFacets() {
-			return facets;
-		}
-
-		@Override
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+			TopDocs hits=null;
+			Facets facets=null;
 			//FacetsCollector.
 			//with sorter
 			if (sorter != null) { 
@@ -1107,7 +1122,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				hits = (FacetsCollector.search(searcher, query, filter, max, facetCollector));
 			}
 			facets = new FastTaxonomyFacetCounts(taxon, facetsConfig, facetCollector);
-			
+			return new DefaultLuceneSearchProviderResult(hits,facets);
 		}
 		
 	}
@@ -1129,18 +1144,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			
 		}
 
-		@Override
-		public TopDocs getTopDocs() {
-			return hits;
-		}
 
 		@Override
-		public Facets getFacets() {
-			return facets;
-		}
-
-		@Override
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
 			DrillSideways sideway = new DrillSideways(searcher, facetsConfig, taxon);
 			DrillSideways.DrillSidewaysResult swResult = sideway.search(ddq, filter, null, options.max(),
 					sorter, false, false);
@@ -1155,6 +1161,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 
 			facets = swResult.facets;
 			hits = swResult.hits;
+			return new DefaultLuceneSearchProviderResult(hits,facets);
 		}
 		
 	}
@@ -1261,6 +1268,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		// code in the SearchOptions class. If it's Lucene-specific,
 		// then the parser is here. If it's a more general function,
 		// then it's put into SearchOptions directly.
+		//
+		// This may change in the future
 		
 		Sort sorter = createSorterFromOptions(options);
 		List<Filter> filtersFromOptions = createAndRemoveRangeFiltersFromOptions(options)
@@ -1270,6 +1279,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				.collect(Collectors.toList());
 		
 		options.termFilters.stream()
+			.peek(t->System.out.println("Filter on:" + t.getField()))
 			.map(k-> new TermsFilter(new Term(k.getField(), k.getTerm())))
 			.forEach(f->filtersFromOptions.add(f));
 		
@@ -1306,10 +1316,10 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			}
 		} // facets is empty
 
-		lsp.search(searcher, taxon);
-		hits=lsp.getTopDocs();
+		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon);
+		hits=lspResult.getTopDocs();
 		
-		collectBasicFacets(lsp.getFacets(), searchResult);
+		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
 		
 		//Beginning of an idea
@@ -1326,7 +1336,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
 					
 					lsp2.search(searcher, taxon);
-					lsp2.getFacets().getAllDims(options.fdim).forEach(fr->{
+					lspResult.getFacets().getAllDims(options.fdim).forEach(fr->{
 						Arrays.stream(fr.labelValues).forEach(lv->{
 							if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
 								searchResult.addFieldFacet(
@@ -1577,15 +1587,21 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	protected Term getTerm(Object entity) {
 		if (entity == null)
 			return null;
-
-		Tuple<String,String> fieldAndID=EntityUtils.getEntityInfoFor(entity).getFieldAndId(entity);
 		
-		if (fieldAndID.v() == null) {
+		EntityWrapper ew= EntityWrapper.of(entity);
+		
+		
+		Optional<Term> oTerm=ew.getOptionalKey().map(k->{
+			Tuple<String,String> kv=((Key)k).asLuceneIdTuple(); //Why do I need to cast this?
+			return new Term(kv.k(), kv.v());
+		});
+		
+		if(!oTerm.isPresent()){
 			Logger.warn("Entity " + entity + "[" + entity.getClass() + "] has no Id field!");
 			return null;
 		}
 		
-		return new Term(fieldAndID.k(), fieldAndID.v());
+		return oTerm.get();
 	}
 
 	public Document getDoc(Object entity) throws Exception {
@@ -1672,8 +1688,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		Consumer<IndexableField> fieldCollector = f->{
 				String text = f.stringValue();
 				if (text != null) {
-					if (DEBUG(2))
+					if (DEBUG(2)){
 						Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+					}
 					TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
 					//tf.set
 					doc.add(tf);
@@ -1685,25 +1702,28 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				doc.add(f);
 		};
 		
+		
+		//flag the kind of document
 		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 		
 		
-		ew.analyze()
+		ew.traverse()
 			.acceptFieldsWith(fieldCollector)	//these methods are weirdly specific
 			.produceDynamicFacetsWith(this)		//for such a general use
 			.produceDefaultIndexingWith(this)
 			.execute();
 		
-		if(USE_ANALYSIS && isDeep.call()){
-			//String mid=EntityUtils.getIdForBeanAsString(entity);
-			if(ew.getIdAsString()!=null && !ew.getIdAsString().equals("")){
+		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
+			Key key =ew.getKey();
+			if(key.getIdString().equals("")){  //probably not needed
 				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
-				StringField docParent=new StringField(FIELD_KIND + ".id",ew.getIdAsString(),YES);
-				FacetField  docParentFacet =new FacetField(FIELD_KIND + ".id",ew.getIdAsString());
+				
+				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
+				StringField docParent=new StringField(luceneKey.k(),luceneKey.v(),YES);
+				FacetField  docParentFacet =new FacetField(luceneKey.k(),luceneKey.v());
 				//This is a test of a terrible idea, which just. might. work.
 				fullText.forEach((name,group)->{
 						try{
-							
 							Document fielddoc = new Document();
 							fielddoc.add(toAnalyze);
 							fielddoc.add(docParent);
@@ -1762,16 +1782,18 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			Logger.debug(">>> Updating " + ew + "...");
 
 		try {
-			Tuple<String,String> fieldAndId=ew.getIdAndFieldName();
-			
-			if (fieldAndId.v() != null) {
+			if (ew.hasKey()) {
+				
+				Key key= ew.getKey();
+				Tuple<String,String> docKey=key.asLuceneIdTuple();
+				
 				BooleanQuery q = new BooleanQuery();
-				q.add(new TermQuery(new Term(fieldAndId.k(), fieldAndId.v())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
 
 				if (DEBUG(2))
-					Logger.debug("++ Updating " + fieldAndId.k() + "=" + fieldAndId.v());
+					Logger.debug("++ Updating " + docKey.k() + "=" + docKey.v());
 
 				// now reindex .. there isn't an IndexWriter.update
 				// that takes a Query
@@ -1785,30 +1807,30 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			Logger.debug("<<< " + ew);
 	}
 
-	public void remove(Object entity) throws Exception {
-		EntityInfo ei = EntityUtils.getEntityInfoFor(entity);
+	public void remove(EntityWrapper ew) throws Exception {
 		
-		if (ei.isEntity()) {
-			String id = ei.getIdString(entity).get();
-			if (id != null) {
-				String field = ei.getExternalIdFieldName();
+		if (ew.isEntity()) {
+			if (ew.hasKey()) {
+				Key key= ew.getKey();
+				Tuple<String,String> docKey=key.asLuceneIdTuple();
 				if (DEBUG(2)){
-					Logger.debug("Deleting document " + field + "=" + id + "...");
+					Logger.debug("Deleting document " + docKey.k() + "=" + docKey.v() + "...");
 				}
+				
 				BooleanQuery q = new BooleanQuery();
-				q.add(new TermQuery(new Term(field, id)), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, ei.getName())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
 				
-				if(USE_ANALYSIS){
+				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
-					qa.add(new TermQuery(new Term(field, id)), BooleanClause.Occur.MUST);
-					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ei.getName())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
 				
 			} else {
-				Logger.warn("Entity " + ei.getName() + "'s Id field is null!");
+				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
 			}
 		} else {
 			throw new IllegalArgumentException("Object is not of type Entity");
@@ -2273,7 +2295,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			Logger.trace("Closing index", ex);
 		} finally {
 			if (indexers != null) {
-
 				if (baseDir != null) {
 					TextIndexer indexer = indexers.remove(baseDir);
 				}

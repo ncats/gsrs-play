@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -261,9 +260,6 @@ public class LuceneSearchTest {
         	String q = "\"^" + aspirinCalcium + "$\"";
             SubstanceAPI api = new SubstanceAPI(session);
             
-
-            
-
             new SubstanceBuilder()
 			.addName(aspirinCalcium)
 			.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));

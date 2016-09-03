@@ -1047,11 +1047,11 @@ public class PojoDiff {
 			public Object set(Object instance, Object value) {
 				try{
 					Object delegateInstance=m.get(instance);
-					System.out.println("Setting:" + m + " to " + value.getClass() + value + " on " +delegateInstance);
+					//System.out.println("Setting:" + m + " to " + value.getClass() + value + " on " +delegateInstance);
 					Object ret=g.set(delegateInstance,value);;
 					if(g instanceof FieldSetter){
 						Object onow=((FieldSetter)g).m.get(delegateInstance);
-						System.out.println("And now it's:" + onow);
+						//System.out.println("And now it's:" + onow);
 					}
 					return  ret;
 				}catch(Exception e){
@@ -1074,11 +1074,10 @@ public class PojoDiff {
 		}
 		private static int getObjectWithID(Collection c, String id){
 			int i=0;
-			
 			for(Object o:c){
 				try {
-					String oid = new EntityWrapper(o).getIdAsString();
-					if(id.equals(oid.toString())){
+					EntityWrapper ew = EntityWrapper.of(o);
+					if(ew.hasKey() && id.equals(ew.getKey().getIdString())){
 						return i;
 					}
 				} catch (Exception e) {

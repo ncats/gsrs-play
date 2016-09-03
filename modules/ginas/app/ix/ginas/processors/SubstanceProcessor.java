@@ -3,6 +3,7 @@ package ix.ginas.processors;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -50,6 +51,8 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 		}
 		finder = new Model.Finder(UUID.class, Relationship.class);
 		//System.out.println("Made processor");
+		
+		
 	}
 	
 	
@@ -133,23 +136,13 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 //
 //						});
 
-						EntityPersistAdapter.performChange(oldPri.getOrGenerateUUID().toString(), new Supplier<Substance>() {
-
-
-									@Override
-									public Substance get() {
-										return oldPri;
-									}
-								},
-								new EntityPersistAdapter.ChangeOperation<Substance>() {
-									@Override
-									public void apply(Substance obj) throws Exception {
+						EntityPersistAdapter.performChangeOn(oldPri, obj->{
 										List<Relationship> related=oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
 										for(Relationship r:related){
 											r.delete();
 										}
 										oldPri.forceUpdate();
-									}
+										return Optional.of(obj);
 								}
 						);
 						
@@ -167,37 +160,15 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 						if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
 							final Substance subPrimaryFinal=subPrimary;
 							Logger.debug("Going to save");
-//
-//							EntityPersistAdapter.performChange(subPrimary, new Callable(){
-//
-//								@Override
-//								public Object call() throws Exception {
-//									if(!subPrimaryFinal.addAlternativeSubstanceDefinitionRelationship(s)){
-//										Logger.info("Saving alt definition, now has:" + subPrimaryFinal.getAlternativeDefinitionReferences().size());
-//									}
-//									subPrimaryFinal.forceUpdate();
-//									return null;
-//								}
-//
-//							});
 
-							EntityPersistAdapter.performChange(subPrimary.getOrGenerateUUID().toString(), new Supplier<Substance>() {
-										@Override
-										public Substance get() {
-											return subPrimaryFinal;
-										}
-									},
-
-									new EntityPersistAdapter.ChangeOperation<Substance>() {
-										@Override
-										public void apply(Substance obj) throws Exception {
-											if(!subPrimaryFinal.addAlternativeSubstanceDefinitionRelationship(s)){
-												Logger.info("Saving alt definition, now has:" + subPrimaryFinal.getAlternativeDefinitionReferences().size());
-											}
-											subPrimaryFinal.forceUpdate();
-										}
-									}
-							);
+						EntityPersistAdapter.performChangeOn(subPrimary, obj -> {
+							if (!obj.addAlternativeSubstanceDefinitionRelationship(s)) {
+								Logger.info("Saving alt definition, now has:"
+										+ obj.getAlternativeDefinitionReferences().size());
+							}
+							obj.forceUpdate();
+							return Optional.of(obj);
+						});
 							
 						}
 					}

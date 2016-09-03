@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import ix.core.CacheStrategy;
-import ix.core.search.FutureList.NamedCallable;
+import ix.core.search.LazyList.NamedCallable;
 import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.TimeUtil;
@@ -24,6 +24,7 @@ import play.Logger;
 
 @CacheStrategy(evictable=false)
 public class SearchResult {
+	
 
 
     /**
@@ -41,7 +42,7 @@ public class SearchResult {
     List<Facet> facets = new ArrayList<Facet>();
     List<FieldFacet> suggestFacets = new ArrayList<FieldFacet>();
     
-    FutureList<Object> matches = new FutureList<> (o->(new EntityWrapper(o)).getIdAsString());
+    LazyList<Object> matches = new LazyList<> (o->(EntityWrapper.of(o)).getKey().getIdString());
     
     List<?> result; // final result when there are no more updates
     
@@ -267,23 +268,21 @@ public class SearchResult {
         
         List list = matches;
         
-        
         if (finished) {
         	if(idComparator!=null){
-        		if(list instanceof FutureList){
-        			((FutureList<Object>) list).sortByNames(idComparator);
+        		if(list instanceof LazyList){
+        			((LazyList<Object>) list).sortByNames(idComparator);
         		}else{
         			//This may take a long time in certain cases
             		Collections.sort(list,(o1,o2)->{
-            			String id1 = new EntityWrapper(o1).getIdAsString();
-    	                String id2 = new EntityWrapper(o2).getIdAsString();
+            			String id1 = EntityWrapper.of(o1).getKey().getIdString();
+    	                String id2 = EntityWrapper.of(o2).getKey().getIdString();
     	                return idComparator.compare(id1, id2);
             		});
         		}
         	}
             result = list;
         }
-        
         return list;
     }
     public boolean isEmpty () { return matches.isEmpty(); }

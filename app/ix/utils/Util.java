@@ -464,7 +464,7 @@ public class Util {
 		}
 	}
 	
-	public static <K> Function<K,Tuple<Integer,K>> addIndex(){
+	public static <K> Function<K,Tuple<Integer,K>> toIndexedTuple(){
 		return new CounterFunction<K>();
 	}
 	

@@ -26,6 +26,8 @@ public class SearchOptions {
     		return this.term;
     	}
     }
+    
+    
     public static class FacetLongRange {
         public String field;
         public Map<String, long[]> range = new TreeMap<String, long[]>();
@@ -41,6 +43,8 @@ public class SearchOptions {
     
     public static final int DEFAULT_TOP = 10;
     public static final int DEFAULT_FDIM = 10;
+    
+    
     // default number of elements to fetch while blocking
     public static final int DEFAULT_FETCH_SIZE = 100; // 0 means all
     

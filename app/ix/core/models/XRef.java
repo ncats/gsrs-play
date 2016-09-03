@@ -1,24 +1,24 @@
 package ix.core.models;
 
-import java.util.UUID;
-import java.util.List;
 import java.util.ArrayList;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
+import java.util.List;
+import java.util.UUID;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
-import play.Logger;
-import play.db.ebean.Model;
-import ix.core.controllers.EntityFactory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.search.text.EntityUtils;
 import ix.core.search.text.EntityUtils.EntityInfo;
 import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.utils.Global;
-
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import play.Logger;
 
 @Entity
 @Table(name="ix_core_xref")
@@ -62,22 +62,19 @@ public class XRef extends IxModel {
     }
 
     public XRef (Object instance) {
-    	EntityWrapper ew = new EntityWrapper(instance);
+    	EntityWrapper ew = EntityWrapper.of(instance);
         if (!ew.isEntity())
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
-        	
-        	
-            if (ew.getId().isPresent()) {
-                    this.refid = ew.getIdAsString();
+            if (ew.hasKey()) {
+                    this.refid = ew.getKey().getIdString();
             } else {
                     throw new IllegalArgumentException
                        (ew.getKind()+": Can't create XRef with null id!");
             }
             kind = ew.getKind();
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
             throw new IllegalArgumentException (ex);
         }
 
@@ -128,10 +125,10 @@ public class XRef extends IxModel {
     public boolean referenceOf (Object instance) {
         try {
             EntityInfo refEntityInfo = EntityUtils.getEntityInfoFor(kind);
-            EntityWrapper ew = new EntityWrapper(instance);
+            EntityWrapper ew = EntityWrapper.of(instance);
             if (ew.getEntityInfo().isParentOrChildOf(refEntityInfo)) {
                 if (ew.getId().isPresent()) {
-                    return refid.equals(ew.getIdAsString());
+                    return refid.equals(ew.getKey().getIdString());
                 }
                 else {
                     Logger.error

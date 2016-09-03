@@ -291,6 +291,8 @@ public class EntityFactory extends Controller {
         }
     }
 
+    
+    @Deprecated
     protected static class EditHistory implements PropertyChangeListener {
         List<Edit> edits = new ArrayList<Edit>();
         ObjectMapper mapper = getEntityMapper ();
@@ -350,10 +352,10 @@ public class EntityFactory extends Controller {
                          +" new="+e.getNewValue());
             try {
                 Edit edit = new Edit ();
+                EntityWrapper ew=EntityWrapper.of(e.getSource());
                 
-                String id = new EntityWrapper(e.getSource()).getIdAsString();
-                if (id != null)
-                    edit.refid = id;
+                if (ew.hasKey())
+                    edit.refid = ew.getKey().getIdString();
                 else
                     Logger.warn("No id set of edit for "+e.getSource());
                 edit.kind = e.getSource().getClass().getName();
@@ -957,6 +959,7 @@ public class EntityFactory extends Controller {
         try {
         	
             ObjectMapper mapper = new ObjectMapper();
+            //Why don't we use this in the other place?
             mapper.addHandler(new DeserializationProblemHandler() {
                     public boolean handleUnknownProperty(
                                                          DeserializationContext ctx, JsonParser parser,
@@ -974,26 +977,28 @@ public class EntityFactory extends Controller {
                         return true;
                     }
                 });
-
             
             JsonNode node = request().body().asJson();
             
             T inst = mapper.treeToValue(node, type);
             
-			ValidationResponse<T> vr = validator.validate(inst,
-					(T) getCurrentValue(inst).map(o -> o.getValue()).orElse(null));
+            Optional<EntityWrapper> oldValue = getCurrentValue(inst);
+            
+			ValidationResponse<T> vr = 
+					validator.validate(inst,(T) oldValue.map(o -> o.getValue()).orElse(null));
 
             if(rept==RESPONSE_TYPE.FULL){
-            	return ok(validationResponse(vr,true));
+            	return ok(prepareValidationResponse(vr,true));
             }else{
-            	return ok(validationResponse(vr,false));
+            	return ok(prepareValidationResponse(vr,false));
             }
         } catch (Throwable ex) {
+        	ex.printStackTrace();
         	ValidationResponse vr = new ValidationResponse(null);
         	vr.setInvalid();
         	vr.addValidationMessage(new ExceptionValidationMessage(ex));
         	//should this be ok? Or internalServerError?
-            return ok(validationResponse(vr,false));
+            return ok(prepareValidationResponse(vr,false));
         }
     }
     
@@ -1007,9 +1012,9 @@ public class EntityFactory extends Controller {
     }
     
     protected static JsonNode validationResponse(ValidationResponse vr){
-    	return validationResponse(vr,false);
+    	return prepareValidationResponse(vr,false);
     }
-    protected static JsonNode validationResponse(ValidationResponse vr, boolean full){
+    protected static JsonNode prepareValidationResponse(ValidationResponse vr, boolean full){
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
     	if(full){
     		mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
@@ -1037,16 +1042,17 @@ public class EntityFactory extends Controller {
     	//if(true)return EditFactory.page(fe.top, fe.skip, fe.filter);
     	//EditFactory.page(top, skip, filter)
         for (Class<?> c : cls) {
+        	System.out.print("Find is:" + c.getName());
         	Query q=EditFactory.finder.where
                     (Expr.and(Expr.eq("refid", id.toString()),
                             Expr.eq("kind", c.getName())));
         	q=fe.applyToQuery(q);
-            List<Edit> tmpedits = q
-                .findList();
+            List<Edit> tmpedits = q.findList();
             if(tmpedits!=null){
             	edits.addAll(tmpedits);
             }
         }
+        System.out.println(edits.size());
         if (!edits.isEmpty()) {
             ObjectMapper mapper = getEntityMapper ();
             return Java8Util.ok (mapper.valueToTree(edits));
@@ -1109,6 +1115,94 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, new DefaultValidator());
     }
     
+    
+    //Typically mutates, but doesn't sometimes -- I know, but we delete/create sometimes instead
+    
+    public static EntityWrapper itsMorphinTime(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
+    	 boolean usePojoPatch=false;
+         if(oWrap.getClazz().equals(nWrap.getClazz())){ //only use POJO patch if the entities are the same type
+         	usePojoPatch=true;
+         }
+         
+         if(usePojoPatch){
+         	doPojoPatch(oWrap,nWrap); //saves too!
+         	return oWrap; //Mutated
+         }else{
+         	
+         	Model oldValue=(Model)oWrap.getValue();
+         	oldValue.delete();
+         	
+         	// Now need to take care of bad update pieces:
+         	//	1. Version not incremented correctly (post update hooks not called) 
+         	//  2. Some metadata / audit data may be problematic
+         	//  3. The update hooks are called explicitly now
+         	//     ... and that's a weird thing to do, because the persist hooks
+         	//     will get called too. Does someone really expect things to
+         	//     get called twice?
+         	
+         	Model newValue = (Model)nWrap.getValue();
+         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
+         	newValue.save(); 
+         	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, oldValue);
+         	
+         	//This doesn't morph the object, so we're in trouble
+         	return nWrap; //Delete & Create
+         }
+    }
+    
+    public static void doPojoPatch(EntityWrapper oldValue, EntityWrapper newValue) throws Exception{
+    	
+    	Object rawOld = oldValue.getValue();
+    	Object rawNew = newValue.getValue();
+    	
+    	//Get the difference as a patch
+        PojoPatch patch =PojoDiff.getDiff(rawOld, rawNew);
+        
+        
+        final List<Object> removed = new ArrayList<Object>();
+        //Apply the changes, grabbing every change along the way
+        Stack changeStack=patch.apply(rawOld,c->{
+				//System.out.println("Change IS:" + c);
+				if("remove".equals(c.op)){
+					removed.add(c.oldValue);
+				}
+        });
+        
+        
+    	while(!changeStack.isEmpty()){
+    		Object v=changeStack.pop();
+    		if(!EntityWrapper.of(v).isIgnoredModel()){
+        		if(v instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
+        			//System.out.println("Force update for:" + v);
+            		((ForceUpdatableModel)v).forceUpdate();
+            	}else if(v instanceof Model){
+            		//System.out.println("Regular update for:" + v);
+            		((Model)v).update();
+            	}else{
+            		//System.out.println("Nothing to do for:" + v);
+            	}
+    		}
+    	}
+
+    	//explicitly delete deleted things
+    	
+    	//This should ONLY delete objects which "belong"
+    	//to something. That is, have a @SingleParent annotation
+    	//inside
+    	
+    	// TODO: Move to EntityInfo
+    	for(Object toDelete : removed){
+    		if(toDelete !=null){
+        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
+        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
+        			if(toDelete instanceof Model){
+        				System.out.println("deleting:" + ((Model)toDelete));
+        				((Model)toDelete).delete();
+        			}
+            	}
+    		}
+    	}
+    }
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
@@ -1118,134 +1212,61 @@ public class EntityFactory extends Controller {
     protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
-    	InxightTransaction tx = InxightTransaction.beginTransaction();
+    	
     	//EntityWrapper oldValuaeContainer = null;
-    	EntityWrapper<?> og=null;
+//    	EntityWrapper<?> eg=null;
         try {       
+        	
+        	//Get NEW object from JSON
             Object newValue = mapper.treeToValue(json, type);
-
             
             //Fetch old value
-            og =  getCurrentValue(newValue).orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
+            EntityWrapper<?> eg =  getCurrentValue(newValue).orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
             
-            String oldVersion = og.getVersion().orElse(null);
-            String oldJSON = og.toJson(mapper).toString();
+            //validation response holder
+            ValidationResponse[] vr = new ValidationResponse[]{null};
             
             
-            //validate new value
-            ValidationResponse vr=validator.validate(newValue,og.getValue());
-	        if(!vr.isValid()){
-	            return badRequest(validationResponse(vr,false));
-	        }
-
-            EditHistory eh = new EditHistory (json.toString());
+            //Do we still need this???
+            //EditHistory eh = new EditHistory (json.toString());
             
-            //this saves and everything
-            eh.edit=EntityPersistAdapter.storeEditForPossibleUpdate(og.getValue());
-            
-            boolean usePojoPatch=true;
-            if(!og.getClazz().equals(type)){
-            	usePojoPatch=false;
-            }
-            
-            if(usePojoPatch){
-	            //Get the difference as a patch
-	            PojoPatch patch =PojoDiff.getDiff(og.getValue(), newValue);
-	            
-	            
-	            final List<Object> removed = new ArrayList<Object>();
-	            //Apply the changes, grabbing every change along the way
-	            Stack changeStack=patch.apply(og.getValue(),new ChangeEventListener(){
-					@Override
-					public void handleChange(ix.utils.pojopatch.Change c) {
-						//System.out.println("Change IS:" + c);
-						if("remove".equals(c.op)){
-							removed.add(c.oldValue);
-						}
-					}
-	            });
-	            
-	            
-	        	while(!changeStack.isEmpty()){
-	        		Object v=changeStack.pop();
-	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
-		        		if(v instanceof ForceUpdatableModel){
-		        			//System.out.println("Force update for:" + v);
-		            		((ForceUpdatableModel)v).forceUpdate();
-		            	}else if(v instanceof Model){
-		            		//System.out.println("Regular update for:" + v);
-		            		((Model)v).update();
-		            	}else{
-		            		//System.out.println("Nothing to do for:" + v);
-		            	}
-	        		}
-	        	}
-
-	        	//explicitly delete deleted things
-	        	
-	        	//This should ONLY delete objects which "belong"
-	        	//to something. That is, have a @SingleParent annotation
-	        	//inside
-	        	for(Object toDelete : removed){
-	        		if(toDelete !=null){
-		        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
-		        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
-		        			if(toDelete instanceof Model){
-		        				System.out.println("deleting:" + ((Model)toDelete));
-		        				((Model)toDelete).delete();
-		        			}
-		            	}
-	        		}
-	        	}
-	        	
-	        	
-	        	//The old value is now the new value
-	        	newValue = og.getValue();
-	        	
-            }else{
-            	Model m=(Model)og.getValue();
-            	m.delete();
-            	// Now need to take care of bad update pieces:
-            	//	1. Version not incremented correctly (post update hooks not called) 
-            	//  2. Some metadata / audit data may be problematic
-
-            	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
-            	((Model)newValue).save();
-            	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
+            EntityWrapper savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
             	
+            	EntityWrapper og= EntityWrapper.of(ov);
+                
+                vr[0]=validator.validate(newValue,og.getValue());
+                if(!vr[0].isValid()){
+                	return Optional.empty();
+                }
+                EntityWrapper entityThatWasSaved=null;
+                
+                InxightTransaction tx = InxightTransaction.beginTransaction();
+                try{
+                	entityThatWasSaved=itsMorphinTime(og,EntityWrapper.of(newValue)); //saving happens here
+	                tx.commit();
+
+	                // This was added because there are times
+	                // when the parent entity isn't actually
+	                // updated at all, at least from the ebean perspective
+	                // so this forces the issue
+	                EntityPersistAdapter.getInstance().deepreindex(newValue);
+                }catch(Exception e){
+                	e.printStackTrace();
+                }finally{
+                	tx.end();
+                }
+                return Optional.ofNullable(entityThatWasSaved);
+            });
+            
+            if(vr[0]==null){
+            	return badRequest("Validation Response could not be generated");
             }
-        	EntityWrapper newEnt = new EntityWrapper(newValue);
-            String newJSON=mapper.toJson(newValue);
             
+            if(!vr[0].isValid()){
+	            return badRequest(prepareValidationResponse(vr[0],false));
+	        }
             
-            //Should this be here?
-            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
-            
-            tx.commit();
-            
-            //granular parts not working yet
-            if (newValue != null) {
-	                eh.edit.refid = newEnt.getIdAsString();
-	                eh.edit.kind = newEnt.getKind();
-	                eh.edit.oldValue=oldJSON;
-	                eh.edit.newValue=newJSON;
-	                eh.edit.version=oldVersion;
-	                eh.edit.save();
-	                for (Edit e : eh.edits()) {
-	                    e.batch = eh.edit.id.toString();
-	                    e.save();
-	                }
-	                Logger.debug("** New edit history "+eh.edit.id);
-            }
-            
-            // This was added because there are times
-            // when the parent entity isn't actually
-            // updated at all, at least from the ebean perspective
-            // so this forces the issue
-            
-            EntityPersistAdapter.getInstance().deepreindex(newValue);
-            
-            return Java8Util.ok (mapper.valueToTree(newValue));
+            return Java8Util.ok (savedVersion.toJson(mapper));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
@@ -1253,12 +1274,6 @@ public class EntityFactory extends Controller {
             
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
-        }finally {
-        	if(og!=null){
-        		EntityInfo ei =EntityUtils.getEntityInfoFor(og.getValue());
-        		EntityPersistAdapter.popEditForUpdate(ei.getFieldAndId(og.getValue()));
-        	}
-            tx.end();
         }
     }
 
@@ -1296,10 +1311,10 @@ public class EntityFactory extends Controller {
 	        			return Optional.ofNullable(dbv);
 	        		});
 	        	}).filter(Optional::isPresent).findAny();
-	        	if(xval!=null)break;
 	        }
+	        if(xval!=null)return Optional.of(EntityWrapper.of(xval));
         }
-        return Optional.ofNullable(EntityWrapper.of(xval));
+        return Optional.empty();
     }
     
 }

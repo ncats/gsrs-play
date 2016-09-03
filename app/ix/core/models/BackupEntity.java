@@ -57,10 +57,7 @@ public class BackupEntity extends IxModel{
 			return null;
 		}
 	}
-	private InputStream asStream() throws Exception{
-		InputStream stream = new ByteArrayInputStream(getBytes());
-		return stream;
-	}
+	
 	
 	@JsonIgnore
 	private byte[] getBytes() throws Exception{
