@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -453,6 +454,17 @@ public class Util {
 				.mapToObj(i -> new Tuple<Integer,K>(i,src.get(i)));
 	}
 
+	
+	public static <T> Collection<T> combine(Collection<T> c1, Collection<T> c2){
+		c1.addAll(c2);
+		return c1;
+	}
+	
+	public static <T> Set<T> combine(Set<T> c1, Set<T> c2){
+		c1.addAll(c2);
+		return c1;
+	}
+	
 	
 	private static class CounterFunction<K> implements Function<K,Tuple<Integer,K>>{
 		AtomicInteger count= new AtomicInteger();

@@ -99,7 +99,7 @@ public class RouteFactory extends Controller {
                                  +" for factory "+factory.getClass()
                                  +" doesn't have any Id annotation!");
                 }else {
-                    Class<?> c = ei.getIDFieldInfo().get().getType();
+                    Class<?> c = ei.getIdType();
                     if (UUID.class.isAssignableFrom(c)) {
                         Logger.debug("## "+ei.getName()
                                      +" is globally unique!");

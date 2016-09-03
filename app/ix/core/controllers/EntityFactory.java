@@ -1279,11 +1279,7 @@ public class EntityFactory extends Controller {
     }
 
     
-    // This could become a nice method. It isn't now ... 
-    // It's unclear if you really need to attempt to
-    // grab every extending class or not.
-    //
-    //
+    // This could become a nice method.
     private static Optional<EntityWrapper> getCurrentValue(Object value){
     	return EntityWrapper.of(value).getKey().fetch().map(EntityWrapper::of);
     }

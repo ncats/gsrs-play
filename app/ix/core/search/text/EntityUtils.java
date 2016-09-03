@@ -3,6 +3,7 @@ package ix.core.search.text;
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -38,6 +39,8 @@ import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.index.IndexableField;
 import org.reflections.Reflections;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -55,8 +58,12 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.db.ebean.Model.Finder;
 
+/**
+ * A utility class, mostly intended to do the grunt work of reflection.
+ * @author peryeata
+ */
 public class EntityUtils {
-	private final static Map<String, EntityInfo> infoCache = new ConcurrentHashMap<String, EntityInfo>();
+	private final static Map<String, EntityInfo<?>> infoCache = new ConcurrentHashMap<String, EntityInfo<?>>();
 	
 	@Indexable //put default indexable things here
 	static final class DefaultIndexable {
@@ -66,18 +73,19 @@ public class EntityUtils {
 	private static final Indexable defaultIndexable = (Indexable) DefaultIndexable.class.getAnnotation(Indexable.class);
 	
 	
-	public static EntityInfo getEntityInfoFor(Class<?> cls){
-		return infoCache.computeIfAbsent(cls.getName(), k-> new EntityInfo(cls));
+	
+	public static <T> EntityInfo<T> getEntityInfoFor(Class<T> cls){
+		return (EntityInfo<T>) infoCache.computeIfAbsent(cls.getName(), k-> new EntityInfo<>(cls));
 	}
 	
-	public static EntityInfo getEntityInfoFor(Object entity){
-		return getEntityInfoFor(entity.getClass());
+	public static <T> EntityInfo<T> getEntityInfoFor(T entity){
+		return getEntityInfoFor((Class<T>)entity.getClass());
 	}
 	
-	public static EntityInfo getEntityInfoFor(String className) throws ClassNotFoundException{
-		EntityInfo e1= infoCache.computeIfAbsent(className, k->{ 
+	public static EntityInfo<?> getEntityInfoFor(String className) throws ClassNotFoundException{
+		EntityInfo<?> e1= infoCache.computeIfAbsent(className, k->{ 
 			try{
-				return new EntityInfo(Class.forName(k));
+				return EntityInfo.of(Class.forName(k));
 			}catch(Exception e){
 				Logger.error("No class found with name:" + className);
 			}
@@ -113,20 +121,20 @@ public class EntityUtils {
 	 *
 	 * @param <K>
 	 */
-	public static class EntityWrapper<K>{
-		private K _k;
-		private EntityInfo ei;
+	public static class EntityWrapper<T>{
+		private T _k;
+		private EntityInfo<T> ei;
 		
 		
-		public static EntityWrapper of(Object bean){
+		public static <T> EntityWrapper<T> of(T bean){
 			Objects.requireNonNull(bean);
 			if(bean instanceof EntityWrapper){
-				return (EntityWrapper)bean;
+				return (EntityWrapper<T>)bean;
 			}
-			return new EntityWrapper(bean);
+			return new EntityWrapper<T>(bean);
 		}
 		
-		private EntityWrapper(K o){
+		private EntityWrapper(T o){
 			Objects.requireNonNull(o);
 			this._k=o;
 			ei = getEntityInfoFor(o);
@@ -149,6 +157,7 @@ public class EntityUtils {
 		}
 		
 		public Optional<Key> getOptionalKey(){
+			
 			//TODO: Try catch is not really right here, should be 
 			//handled slightly differently
 			try{
@@ -181,7 +190,7 @@ public class EntityUtils {
 			return ei.getIDFieldInfo();
 		}
 		public Stream<Tuple<ValueMakerInfo, Object>> streamSequenceFieldAndValues(Predicate<ValueMakerInfo> p) {
-			return ei.getSequenceFieldInfo().stream().filter(p)
+			return (ei).getSequenceFieldInfo().stream().filter(p)
 					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent())
 					.map(t -> new Tuple<>(t.k(), t.v().get()));
@@ -237,7 +246,7 @@ public class EntityUtils {
 			return ei.hasIdField();
 		}
 		
-		public EntityInfo getEntityInfo(){
+		public EntityInfo<T> getEntityInfo(){
 			return this.ei;
 		}
 		
@@ -255,7 +264,7 @@ public class EntityUtils {
 			return Optional.ofNullable(ei.getVersionAsStringFor(this.getValue()));
 		}
 		
-		public K getValue() {
+		public T getValue() {
 			return this._k;
 		}
 		
@@ -281,8 +290,8 @@ public class EntityUtils {
 
 	private static final String ID_FIELD_NATIVE_SUFFIX = "._id";
 	private static final String ID_FIELD_STRING_SUFFIX = ".id";
-	public static class EntityInfo {
-		final Class<?> cls;
+	public static class EntityInfo<T> {
+		final Class<T> cls;
 		final String kind;
 		final DynamicFacet dyna;
 		final Indexable indexable;
@@ -316,14 +325,15 @@ public class EntityUtils {
 		
 		Class<?> idType=null;
 		
-		Model.Finder nativeVerySpecificfinder;
+		Model.Finder<?,T> nativeVerySpecificfinder;
+		
 		boolean isIdNumeric=false;
 		Inheritance inherits;
 		boolean isIgnoredModel = false;
 		
-		EntityInfo ancestorInherit;
+		EntityInfo<?> ancestorInherit;
 		
-		public EntityInfo(Class<?> cls) {
+		public EntityInfo(Class<T> cls) {
 			Objects.requireNonNull(cls);
 			
 			this.cls = cls;
@@ -335,7 +345,7 @@ public class EntityUtils {
 			if(this.table!=null){
 				tableName = table.name();
 			}else if(this.inherits != null){
-				EntityInfo ei = EntityUtils.getEntityInfoFor(cls.getSuperclass());
+				EntityInfo<?> ei = EntityUtils.getEntityInfoFor(cls.getSuperclass());
 				tableName = ei.getTableName();
 				table = ei.table;
 				ancestorInherit= ei.ancestorInherit;
@@ -420,38 +430,25 @@ public class EntityUtils {
 				}
 			}
 			methods.removeIf(m -> !m.isTextEnabled());
+			
 			Reflections reflections = new Reflections(TextIndexer.IX_BASE_PACKAGE);
+			releventClasses=reflections.getSubTypesOf((Class<T>)cls)
+									.stream()
+									.map(c->EntityUtils.getEntityInfoFor(c))
+									.collect(Collectors.toSet());
+			releventClasses.add(this);
 
 			
-			
-			releventClasses=reflections.getSubTypesOf(cls).stream().collect(Collectors.toList());
-			for (Class<?> c : reflections.getAllSuperTypes(cls, c->c.getPackage().getName().startsWith(TextIndexer.IX_BASE_PACKAGE))) {
-				//EntityUtils.getEntityInfoFor(c).g
-				releventClasses.add(c);
-				
-			}
 			if(idType!=null){
 				isIdNumeric=idType.isAssignableFrom(Long.class);
 			}
 			
-			//This kind of breaks the spell of the super-generic, but it's pretty easy, 
-			//and probably something a little better than this
-			//can be done in general
-			if(BaseModel.class.isAssignableFrom(cls)){
-				try{
-					BaseModel bm = (BaseModel)cls.newInstance();
-					Arrays.stream(bm.fetchEquivalentClasses()).forEach(rc->{
-						releventClasses.add(rc);
-					});
-					//releventClasses.addAll();
-				}catch(Exception e){
-					
-				}
-			}
 		
 			
 			
 		}
+		
+		
 		
 		public EntityInfo getInherittedRootEntityInfo(){
 			return ancestorInherit;
@@ -495,17 +492,10 @@ public class EntityUtils {
 			return false;
 		}
 		
-		private List<Class<?>> releventClasses;
+		private Set<EntityInfo<? extends T>> releventClasses;
 		
-		private CachedSupplier<Set<EntityInfo>> allEquivalentInfo = 
-				CachedSupplier.of((()->releventClasses.stream()
-					.map(c->EntityUtils.getEntityInfoFor(c))
-					.peek(t->System.out.println(t.cls))
-					.filter(this::isEquivalentInfo)
-					.collect(Collectors.toSet())));
-		
-		public Set<EntityInfo> getAllEquivalentEntityInfos(){
-			return allEquivalentInfo.call();
+		public Set<EntityInfo<? extends T>> getTypeAndSubTypes(){
+			return releventClasses;
 		}
 		
 		public boolean equals(Object o){
@@ -513,7 +503,6 @@ public class EntityUtils {
 			if(!(o instanceof EntityInfo))return false;
 			return ((EntityInfo)o).cls==this.cls;
 		}
-		
 		public int hashCode(){
 			return this.cls.hashCode();
 		}
@@ -635,7 +624,7 @@ public class EntityUtils {
 			return !shouldDoPostUpdateHooks;
 		}
 
-		public Class<?> getClazz() {
+		public Class<T> getClazz() {
 			return this.cls;
 		}
 		
@@ -696,6 +685,12 @@ public class EntityUtils {
 			return this.getFinder().byId(id);
 		}
 
+		public T fromJson(String oldValue) throws JsonParseException, JsonMappingException, IOException {
+			return EntityMapper.FULL_ENTITY_MAPPER().readValue(oldValue, this.getClazz());
+		}
+		private static final <T> EntityInfo<T> of(Class<T> cls){
+			return new EntityInfo<T>(cls);
+		}
 
 //		 @Deprecated
 //		    public static Object getId (Object entity) throws Exception {

@@ -21,14 +21,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -108,7 +106,6 @@ import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
-import org.reflections.Reflections;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -126,7 +123,6 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
-import ix.core.search.text.EntityUtils.EntityInfo;
 import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.EntityUtils.Key;
 import ix.core.util.CachedSupplier;
@@ -611,18 +607,19 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				});
 			}
 			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
-			deepKinds = Play.application().configuration().getStringList("ix.index.deepfields", new ArrayList<String>())
-					.stream().map(s -> {
-						try {
-							return Class.forName(s);
-						} catch (Exception e) {
-							e.printStackTrace();
-							return null;
-						}
-					}).filter(k -> k != null).map(k -> createKindSetFromClass(k)).reduce((s, c) -> {
-						s.addAll(c);
-						return s;
-					}).orElse(new HashSet<String>());
+			deepKinds = Play.application().configuration()
+									.getStringList("ix.index.deepfields", new ArrayList<String>())
+									.stream()
+									.map(s->{
+										try{
+											return EntityUtils.getEntityInfoFor(s).getTypeAndSubTypes();
+										}catch(Exception e){
+											return null;
+										}
+									})
+									.filter(Objects::nonNull)
+									.reduce(Util::combine)				// must exist in another package too
+									.map(l->l.stream()).get().map(ei->ei.getName()).collect(Collectors.toSet());
 			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
 			registerDefaultAnalyzers();
@@ -910,12 +907,22 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 					searchResult.setRank(rank);
 				}
 			} else if (options.kind != null) {
-				f = new FieldCacheTermsFilter(FIELD_KIND, createKindSetFromOptions(options).toArray(new String[0]));
+				
+				f = new FieldCacheTermsFilter(FIELD_KIND, createKindArrayFromOptions(options));
 			}
 			search(searchResult, query, f);
 		}
 
 		return searchResult;
+	}
+
+	private String[] createKindArrayFromOptions(SearchOptions options) {
+		return options.getKindInfo()
+				.getTypeAndSubTypes()
+				.stream()
+				.map(s->s.getName())
+				.collect(Collectors.toList()).toArray(new String[0]);
+				//.toArray();
 	}
 
 	public SearchResult filter(Collection<?> subset) throws IOException {
@@ -925,10 +932,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 
 	protected List<Term> getTerms(Collection<?> subset) {
 		return subset.stream()
-				.map(o -> getTerm(o))
+				.map(this::getTerm)
 				.filter(t -> t != null)
 				.collect(Collectors.toList());
-
 	}
 
 	protected TermsFilter getTermsFilter(Collection<?> subset) {
@@ -962,20 +968,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		return filters;
 	}
 	
-	public Set<String> createKindSetFromOptions(SearchOptions options){
-		return createKindSetFromClass(options.kind);
-	}
 	
-	
-	public static Set<String> createKindSetFromClass(Class<?> kind){
-		Set<String> kinds = new TreeSet<String>();
-		kinds.add(kind.getName());
-		Reflections reflections = new Reflections(IX_BASE_PACKAGE);
-		for (Class<?> c : reflections.getSubTypesOf(kind)) {
-			kinds.add(c.getName());
-		}
-		return kinds;
-	}
 		
 	public Sort createSorterFromOptions(SearchOptions options) {
 		Sort sorter = null;
@@ -1326,9 +1319,11 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			getQueryBreakDownFor(query).stream().forEach(oq->{
 				try{
 					FacetsCollector facetCollector2 = new FacetsCollector();
-					List<String> analyzers = createKindSetFromOptions(options)
+					List<String> analyzers = EntityUtils.getEntityInfoFor(options.kind)
+												.getTypeAndSubTypes()
 								.stream()
-								.map(s->ANALYZER_VAL_PREFIX + s)
+								.map(e->e.getName())
+								.map(n->ANALYZER_VAL_PREFIX + n)
 								.collect(Collectors.toList());
 					
 					Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
@@ -1583,15 +1578,14 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		}
 	}
 
-	protected Term getTerm(Object entity) {
+	protected <T> Term getTerm(T entity) {
 		if (entity == null)
 			return null;
 		
-		EntityWrapper ew= EntityWrapper.of(entity);
+		EntityWrapper<T> ew= EntityWrapper.of(entity);
 		
-		
-		Optional<Term> oTerm=ew.getOptionalKey().map(k->{
-			Tuple<String,String> kv=((Key)k).asLuceneIdTuple(); //Why do I need to cast this?
+		Optional<Term> oTerm=ew.getOptionalKey().map(key->{
+			Tuple<String,String> kv= key.asLuceneIdTuple(); 
 			return new Term(kv.k(), kv.v());
 		});
 		
