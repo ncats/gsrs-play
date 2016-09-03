@@ -7,6 +7,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import ix.utils.ExecutionStack;
 
+
+/**
+ * Obviously not thread-safe. Don't try to use the same PathStack in two
+ * different threads!
+ * @author peryeata
+ *
+ */
 public class PathStack implements ExecutionStack<String>{
 	LinkedList<String> realStack = new LinkedList<String>();
 	
@@ -31,10 +38,11 @@ public class PathStack implements ExecutionStack<String>{
 		return realStack.getFirst();
 	}
 	
+	//Pretty lazy, really ... but don't optimize it
 	public String toPath() {
 		StringBuilder sb = new StringBuilder(256);
 		// TP: Maybe do this?
-		sb.append(TextIndexer.ROOT + "_");
+		sb.append(TextIndexer.ROOT + "_"); //TODO: abstract this away somehow?
 
 		for (Iterator<String> it = realStack.descendingIterator(); it.hasNext();) {
 			String p =  it.next();

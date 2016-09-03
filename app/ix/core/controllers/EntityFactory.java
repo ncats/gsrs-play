@@ -1221,7 +1221,8 @@ public class EntityFactory extends Controller {
             Object newValue = mapper.treeToValue(json, type);
             
             //Fetch old value
-            EntityWrapper<?> eg =  getCurrentValue(newValue).orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
+            EntityWrapper<?> eg =  getCurrentValue(newValue)
+            		.orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
             
             //validation response holder
             ValidationResponse[] vr = new ValidationResponse[]{null};
@@ -1284,37 +1285,7 @@ public class EntityFactory extends Controller {
     //
     //
     private static Optional<EntityWrapper> getCurrentValue(Object value){
-    	EntityWrapper thisvalue = EntityWrapper.of(value);
-    	
-        if (!thisvalue.isEntity())
-            throw new IllegalArgumentException("Class "+thisvalue.getKind()+" is not an entity");
-        if (!thisvalue.hasIdField())
-            throw new IllegalArgumentException("Class "+thisvalue.getKind()+" is not an entity");
-        
-        LinkedHashSet<EntityInfo> possibleClasses = new LinkedHashSet<EntityInfo>();
-        possibleClasses.add(thisvalue.getEntityInfo());
-        possibleClasses.addAll(thisvalue.getEntityInfo().getAllEquivalentEntityInfos());
-        
-        Object id = thisvalue.getId().get();
-        Object xval = null;
-        //This may not be necessary after all?
-        for(EntityInfo ee:possibleClasses){
-	        if (id != null) {
-	        	xval = ee.getFinder().byId(id);
-	        }else{
-	            // if this entity has no id set, then we see if there is a
-	            // unique column defined.. if so, we retrieve it
-	        	xval=ee.getUniqueColumns().stream().map(c->{
-	        		return c.getValue(value).flatMap(v->{
-	        			Object dbv=ee.getFinder().where().eq(c.getColumnName(),v)
-                    			.findUnique();
-	        			return Optional.ofNullable(dbv);
-	        		});
-	        	}).filter(Optional::isPresent).findAny();
-	        }
-	        if(xval!=null)return Optional.of(EntityWrapper.of(xval));
-        }
-        return Optional.empty();
+    	return EntityWrapper.of(value).getKey().fetch().map(EntityWrapper::of);
     }
     
 }

@@ -1279,7 +1279,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				.collect(Collectors.toList());
 		
 		options.termFilters.stream()
-			.peek(t->System.out.println("Filter on:" + t.getField()))
 			.map(k-> new TermsFilter(new Term(k.getField(), k.getTerm())))
 			.forEach(f->filtersFromOptions.add(f));
 		

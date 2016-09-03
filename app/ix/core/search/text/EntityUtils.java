@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
 import javax.persistence.Table;
 
 import org.apache.lucene.document.Document;
@@ -42,6 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.BaseModel;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
@@ -314,10 +316,12 @@ public class EntityUtils {
 		
 		Class<?> idType=null;
 		
-		Model.Finder finder;
+		Model.Finder nativeVerySpecificfinder;
 		boolean isIdNumeric=false;
-		
+		Inheritance inherits;
 		boolean isIgnoredModel = false;
+		
+		EntityInfo ancestorInherit;
 		
 		public EntityInfo(Class<?> cls) {
 			Objects.requireNonNull(cls);
@@ -326,9 +330,17 @@ public class EntityUtils {
 			this.isIgnoredModel =(cls.getAnnotation(IgnoredModel.class)!=null);
 			this.indexable = (Indexable) cls.getAnnotation(Indexable.class);
 			this.table = (Table) cls.getAnnotation(Table.class);
+			this.inherits=			(Inheritance) cls.getAnnotation(Inheritance.class);
+			ancestorInherit=this;
 			if(this.table!=null){
 				tableName = table.name();
+			}else if(this.inherits != null){
+				EntityInfo ei = EntityUtils.getEntityInfoFor(cls.getSuperclass());
+				tableName = ei.getTableName();
+				table = ei.table;
+				ancestorInherit= ei.ancestorInherit;
 			}
+			
 			kind = cls.getName();
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
@@ -402,22 +414,53 @@ public class EntityUtils {
 						});
 				
 				idType = idField.getType();
+				
 				if(idField!=null){
-					finder = new Model.Finder(idType, this.cls);
+					nativeVerySpecificfinder = new Model.Finder(idType, this.cls);
 				}
 			}
 			methods.removeIf(m -> !m.isTextEnabled());
 			Reflections reflections = new Reflections(TextIndexer.IX_BASE_PACKAGE);
 
+			
+			
 			releventClasses=reflections.getSubTypesOf(cls).stream().collect(Collectors.toList());
 			for (Class<?> c : reflections.getAllSuperTypes(cls, c->c.getPackage().getName().startsWith(TextIndexer.IX_BASE_PACKAGE))) {
+				//EntityUtils.getEntityInfoFor(c).g
 				releventClasses.add(c);
+				
 			}
 			if(idType!=null){
 				isIdNumeric=idType.isAssignableFrom(Long.class);
 			}
+			
+			//This kind of breaks the spell of the super-generic, but it's pretty easy, 
+			//and probably something a little better than this
+			//can be done in general
+			if(BaseModel.class.isAssignableFrom(cls)){
+				try{
+					BaseModel bm = (BaseModel)cls.newInstance();
+					Arrays.stream(bm.fetchEquivalentClasses()).forEach(rc->{
+						releventClasses.add(rc);
+					});
+					//releventClasses.addAll();
+				}catch(Exception e){
+					
+				}
+			}
+		
+			
+			
 		}
 		
+		public EntityInfo getInherittedRootEntityInfo(){
+			return ancestorInherit;
+		}
+		
+		public String getTableName() {
+			return this.tableName;
+		}
+
 		public boolean isIgnoredModel(){
 			return this.isIgnoredModel;
 		}
@@ -436,14 +479,19 @@ public class EntityUtils {
 			return s1.equals(s2);
 		}
 		
-		public boolean isEquivalentInfo(EntityInfo ei){
-			if(this.isParentOrChildOf(ei)){
+		
+		//actually, need to get common parent, believe it or not ...
+		//I hate it too. For now, I'm marking this as unfinished,
+		//by abusing "Deprecated"
+		//@Deprecated
+		private boolean isEquivalentInfo(EntityInfo ei){
+			//if(this.isParentOrChildOf(ei)){
 				if(this.table != null && ei.table!=null){
 					if(twoStringsEqual(ei.tableName,this.tableName)){
 						return true;
 					}
 				}
-			}
+			//}
 			return false;
 		}
 		
@@ -452,6 +500,7 @@ public class EntityUtils {
 		private CachedSupplier<Set<EntityInfo>> allEquivalentInfo = 
 				CachedSupplier.of((()->releventClasses.stream()
 					.map(c->EntityUtils.getEntityInfoFor(c))
+					.peek(t->System.out.println(t.cls))
 					.filter(this::isEquivalentInfo)
 					.collect(Collectors.toSet())));
 		
@@ -473,7 +522,10 @@ public class EntityUtils {
 			return this.uniqueColumnFields;
 		}
 		public Model.Finder getFinder(){
-			return this.finder;
+			return this.getInherittedRootEntityInfo().getNativeSpecificFinder();
+		}
+		public Model.Finder getNativeSpecificFinder(){
+			return this.nativeVerySpecificfinder;
 		}
 		
 		public Object formatIdToNative(String id){
@@ -641,7 +693,7 @@ public class EntityUtils {
 		}
 
 		public Object findById(String id) {
-			return this.getFinder().byId(this.getNativeIdFor(id));
+			return this.getFinder().byId(id);
 		}
 
 

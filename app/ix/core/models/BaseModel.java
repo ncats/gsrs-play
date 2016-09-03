@@ -13,7 +13,9 @@ public abstract class BaseModel extends Model{
 		
 	}
 	
-
+	//Man I wish this could be a forced static method
+	//for everything
+	
 	public Class<?>[] fetchEquivalentClasses() {
 		return new Class<?>[]{this.getClass()};
 	}

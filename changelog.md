@@ -52,7 +52,15 @@ A Deeper look
    code had been present. Most of it is gone now. In addition,
    many duplicative function calls have been abstracted out.
 
-4. Before, all browse and search requests from the 
+4. We used to fetch out all the possible Classes that we'd need
+   to consider when fetching for a generic object. It turns out
+   that was only necessary for fetching from the lucene index.
+   Not only have we reduced the number of reflection calls made
+   (by other means as well), but we have eliminated the need for
+   6 or 7 database calls that were previously used in fetching
+   edit history
+
+5. Before, all browse and search requests from the 
    UI were loaded, in their entirety, one at a time, from the database. 
    Then each was put into the cache, as well as into
    a list found in a SearchResult (which is also in the cache)
