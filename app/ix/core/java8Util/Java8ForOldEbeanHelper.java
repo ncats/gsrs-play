@@ -303,11 +303,7 @@ public class Java8ForOldEbeanHelper {
 	 * @param deleteFirst
 	 */
 	public static void deepreindex(EntityPersistAdapter epa, EntityWrapper<?> bean, boolean deleteFirst) {
-		bean.traverse()
-			.execute(t->{
-				EntityWrapper child = t.v();
-				epa.reindex(child, deleteFirst);
-			});
+		bean.traverse().execute((p, child)->epa.reindex(child, deleteFirst));
 	}
 
 	private interface ThrowingRunnable {

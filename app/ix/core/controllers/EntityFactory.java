@@ -175,7 +175,7 @@ public class EntityFactory extends Controller {
         	}
         	return f;
         }
-        public Query applyToQuery(Query q){
+        public <T> Query<T> applyToQuery(Query<T> q){
         	for (String path : this.expand) {
                 Logger.debug("  -> fetch "+path);
                 q = q.fetch(path);
@@ -292,84 +292,6 @@ public class EntityFactory extends Controller {
     }
 
     
-    @Deprecated
-    protected static class EditHistory implements PropertyChangeListener {
-        List<Edit> edits = new ArrayList<Edit>();
-        ObjectMapper mapper = getEntityMapper ();
-        public Edit edit;
-        
-        
-        
-        public EditHistory (String payload) throws Exception {
-            edit = new Edit ();
-            edit.path = null; 
-            edit.newValue = payload;
-           
-        }
-        
-
-        public void add (Edit e) { edits.add(e); }
-        public List<Edit> edits () { return edits; }
-        public void attach (Object ebean, final Callable callback) {
-            if (ebean instanceof EntityBean) {
-                ((EntityBean)ebean)._ebean_intercept()
-                    .addPropertyChangeListener(new PropertyChangeListener(){
-
-						@Override
-						public void propertyChange(PropertyChangeEvent evt) {
-							//System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
-							EditHistory.this.propertyChange(evt);
-							try {
-								callback.call();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-                    	
-                    	
-                    });
-                
-            }
-            else {
-                throw new IllegalArgumentException
-                    (ebean+" is not of an EntityBean!");
-            }
-        }
-        public void detach (Object ebean) {
-            if (ebean instanceof EntityBean) {
-                ((EntityBean)ebean)._ebean_intercept()
-                    .removePropertyChangeListener(this);
-            }
-            else {
-                throw new IllegalArgumentException
-                    (ebean+" is not of an EntityBean!");
-            }
-        }
-
-        public void propertyChange (PropertyChangeEvent e) {
-            Logger.debug("### "+e.getSource()+": propertyChange: name="
-                         +e.getPropertyName()+" old="+e.getOldValue()
-                         +" new="+e.getNewValue());
-            try {
-                Edit edit = new Edit ();
-                EntityWrapper ew=EntityWrapper.of(e.getSource());
-                
-                if (ew.hasKey())
-                    edit.refid = ew.getKey().getIdString();
-                else
-                    Logger.warn("No id set of edit for "+e.getSource());
-                edit.kind = e.getSource().getClass().getName();
-                edit.path = e.getPropertyName();
-                edit.oldValue = mapper.writeValueAsString(e.getOldValue());
-                edit.newValue = mapper.writeValueAsString(e.getNewValue());
-                edits.add(edit);
-                
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
 
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {

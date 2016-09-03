@@ -254,6 +254,11 @@ public class RelationshipInvertTest {
         assertTrue(refUuidA.equals(uuid));
         assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
     	assertEquals("2",fetchedA.at("/version").asText());
+    	
+    	
+    	//This part is broken?
+    	//Doesn't even return? 
+    	//Probably not actually being considered an edit!
     	JsonNode historyFetched=api.fetchSubstanceJsonByUuid(uuidA, 1).getOldValue();
     	Changes changes= JsonUtil.computeChanges(beforeA, historyFetched, new ChangeFilter[0]);
     	for(Change c:changes.getAllChanges()){

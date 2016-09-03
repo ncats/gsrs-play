@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -114,6 +115,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.Indexable;
+import ix.core.plugins.IxCache;
 import ix.core.search.DefaultSearchContextAnalyzerGenerator;
 import ix.core.search.FieldFacet;
 import ix.core.search.FieldFacet.MATCH_TYPE;
@@ -123,6 +125,7 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
+import ix.core.search.text.EntityUtils.EntityInfo;
 import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.EntityUtils.Key;
 import ix.core.util.CachedSupplier;
@@ -521,16 +524,16 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 
 		private void flush() {
 
-			File file = getFacetsConfigFile();
-			if (file.lastModified() < lastModified.get()) {
+			File configFile = getFacetsConfigFile();
+			if (TextIndexer.this.hasBeenModifiedSince(configFile.lastModified())) {
 				Logger.debug(
 						Thread.currentThread() + ": " + getClass().getName() + " writing FacetsConfig " + new Date());
-				saveFacetsConfig(file, facetsConfig);
+				saveFacetsConfig(configFile, facetsConfig);
 			}
 
-			file = getSorterConfigFile();
-			if (file.lastModified() < lastModified.get()) {
-				saveSorters(file, sorters);
+			File sortFile = getSorterConfigFile();
+			if (TextIndexer.this.hasBeenModifiedSince(sortFile.lastModified())) {
+				saveSorters(sortFile, sorters);
 			}
 
 			if (indexWriter.hasUncommittedChanges()) {
@@ -594,7 +597,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	
 	private static Set<String> deepKinds;
 	static {
-		System.out.println("static initializer");
 		init();
 	}
 
@@ -614,12 +616,17 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 										try{
 											return EntityUtils.getEntityInfoFor(s).getTypeAndSubTypes();
 										}catch(Exception e){
+											e.printStackTrace();
 											return null;
 										}
-									})
+									 })
 									.filter(Objects::nonNull)
-									.reduce(Util::combine)				// must exist in another package too
-									.map(l->l.stream()).get().map(ei->ei.getName()).collect(Collectors.toSet());
+									.reduce(Util::combine)	// must exist in another package too
+									.map(l->l.stream())
+									.get()
+									.map(ei->ei.getName())
+									.collect(Collectors.toSet());
+			
 			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
 			registerDefaultAnalyzers();
@@ -1659,8 +1666,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	public void add(EntityWrapper ew) throws IOException {
 		Objects.requireNonNull(ew);
 		try{
-		
-		
+			
 		if(!ew.shouldIndex()){
 			if (DEBUG(2)) {
 				Logger.debug(">>> Not indexable " + ew.getValue());
@@ -1700,11 +1706,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 		
 		
+		
 		ew.traverse()
-			.acceptFieldsWith(fieldCollector)	//these methods are weirdly specific
-			.produceDynamicFacetsWith(this)		//for such a general use
-			.produceDefaultIndexingWith(this)
-			.execute();
+			.execute(EntityUtils.TextIndexFieldConsumer.with(fieldCollector, this, this));
 		
 		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
 			Key key =ew.getKey();
@@ -1752,53 +1756,68 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		if (DEBUG(2))
 			Logger.debug("++ adding document " + doc);
 		indexWriter.addDocument(doc);
-		lastModified.set(TimeUtil.getCurrentTimeMillis());
+		markChange();
 	}
 
+	//TODO: Should be an interface, which can throw a DataHasChange event ... or something 
+	// like that
+	public void markChange(){
+		lastModified.set(TimeUtil.getCurrentTimeMillis());
+		IxCache.markChange();
+		
+	}
+	
+	
+	
+	public boolean hasBeenModifiedSince(long thistime){
+		if(lastModified()>thistime)return true;
+		return false;
+	}
+	
 	public long lastModified() {
 		return lastModified.get();
 	}
 
-	/**
-	 * I don't think we use this right now,
-	 * instead, we use remove and an explicit
-	 * add later. 
-	 * @param entity
-	 * @throws IOException
-	 */
-	@Deprecated
-	public void update(EntityWrapper ew) throws IOException {
-		// String idString=null;
-		if(!ew.isEntity())return;
-
-		if (DEBUG(2))
-			Logger.debug(">>> Updating " + ew + "...");
-
-		try {
-			if (ew.hasKey()) {
-				
-				Key key= ew.getKey();
-				Tuple<String,String> docKey=key.asLuceneIdTuple();
-				
-				BooleanQuery q = new BooleanQuery();
-				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
-				indexWriter.deleteDocuments(q);
-
-				if (DEBUG(2))
-					Logger.debug("++ Updating " + docKey.k() + "=" + docKey.v());
-
-				// now reindex .. there isn't an IndexWriter.update
-				// that takes a Query
-				add(ew);
-			}
-		} catch (Exception ex) {
-			Logger.trace("Unable to update index for " + ew, ex);
-		}
-
-		if (DEBUG(2))
-			Logger.debug("<<< " + ew);
-	}
+//	/**
+//	 * I don't think we use this right now,
+//	 * instead, we use remove and an explicit
+//	 * add later. 
+//	 * @param entity
+//	 * @throws IOException
+//	 */
+//	@Deprecated
+//	public void update(EntityWrapper ew) throws IOException {
+//		// String idString=null;
+//		if(!ew.isEntity())return;
+//
+//		if (DEBUG(2))
+//			Logger.debug(">>> Updating " + ew + "...");
+//
+//		try {
+//			if (ew.hasKey()) {
+//				
+//				Key key= ew.getKey();
+//				Tuple<String,String> docKey=key.asLuceneIdTuple();
+//				
+//				BooleanQuery q = new BooleanQuery();
+//				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+//				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
+//				indexWriter.deleteDocuments(q);
+//
+//				if (DEBUG(2))
+//					Logger.debug("++ Updating " + docKey.k() + "=" + docKey.v());
+//
+//				// now reindex .. there isn't an IndexWriter.update
+//				// that takes a Query
+//				add(ew);
+//			}
+//		} catch (Exception ex) {
+//			Logger.trace("Unable to update index for " + ew, ex);
+//		}
+//
+//		if (DEBUG(2))
+//			Logger.debug("<<< " + ew);
+//	}
 
 	public void remove(EntityWrapper ew) throws Exception {
 		
@@ -1814,6 +1833,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
+				markChange();
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
@@ -1821,6 +1841,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
+				markChange();
 				
 			} else {
 				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
