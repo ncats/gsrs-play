@@ -173,6 +173,23 @@ A Deeper look
    equivalent to the previous mechanism used. There are other
    options as well, but those are the most useful for debugging.
 
+8. Previously, updates from the API were handled differently than
+   updates from anywhere else. Specifically: edit and locking
+   mechanisms were only loosely in place for the API calls,
+   while they were more rigorously enforced from other areas.
+   Now all edits are preferentially handled by calling a 
+   `performChange` method in `EntityPersistAdapter`. A call
+   to this does 4 things. First, it gets a `Key` for the
+   object to be changed, and sets a lock based on that `Key`.
+   Second, it retrieves the current version of that record
+   from the database based on that `Key`. Third, it creates
+   an `Edit` with the version and serialized form of the object,
+   storing it to be saved after the change is performed. Third,
+   it performs the change using the provided change operation,
+   which should also do any saving needed. Last, it stores the
+   new form of the object in the Edit, saves, and unlocks the
+   Key.
+   
 
 
 
