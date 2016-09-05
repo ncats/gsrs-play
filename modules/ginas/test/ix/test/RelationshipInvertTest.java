@@ -56,7 +56,7 @@ public class RelationshipInvertTest {
     }
 
     
-    @Test 
+    @Test  
     public void addSubstanceWithRelationshipThenAddRelatedSubstanceShouldResultInBirectionalRelationship()   throws Exception {
         //submit primary, with dangling relationship
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
@@ -83,7 +83,7 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test 
+    @Test  
     public void removeSourceRelationshipShouldRemoveInvertedRelationship()   throws Exception {
     	
     	 //submit primary, with dangling relationship
@@ -126,7 +126,7 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test 
+    @Test  
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationship()   throws Exception {
     	
         //submit primary
@@ -170,7 +170,7 @@ public class RelationshipInvertTest {
     	
     }
     
-    @Test 
+    @Test  
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndIncrementVersion()   throws Exception {
     	
         //submit primary
@@ -213,17 +213,21 @@ public class RelationshipInvertTest {
     	assertEquals("2",fetchedA.at("/version").asText());
     	
     }
+    
+    
     @Test
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {
-    	
+    	try{
+    		//This is very hard to read right now. A substanceBuilder would make this easy.
+    		
         //submit primary
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
         js=new JsonUtil.JsonNodeBuilder(js)
-			.remove("/relationships/1")
-			.remove("/relationships/0")
-			.ignoreMissing()
-			.build();
+							.remove("/relationships/1")
+							.remove("/relationships/0")
+							.ignoreMissing()
+							.build();
         
         String uuid = js.get("uuid").asText();
         JsonNode validationResult = api.validateSubstanceJson(js);
@@ -240,33 +244,50 @@ public class RelationshipInvertTest {
         ensurePass(api.submitSubstance(jsA));
         JsonNode beforeA = api.fetchSubstanceJsonByUuid(uuidA);
         
-        //add relationship
+        
+       
+        System.out.println("Substance 1:" + uuid);
+        System.out.println("Substance 2:" + uuidA);
+        System.out.println("Actually updating!"); 
+       
+        //add relationship To
         JsonNode updated=new JsonUtil.JsonNodeBuilder(js)
-		.add("/relationships/-", newRelate)
-		.ignoreMissing().build();
+								.add("/relationships/-", newRelate)
+								.ignoreMissing()
+								.build();
+        
+        //update the substance for real
         ensurePass(api.updateSubstance(updated));
+        
+        
         String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(updated);
         String[] parts=type1.split("->");
         
         //check inverse relationship with primary
         JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
         String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+        
         assertTrue(refUuidA.equals(uuid));
         assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
     	assertEquals("2",fetchedA.at("/version").asText());
     	
+    	System.out.println("This part breaks?");
     	
     	//This part is broken?
     	//Doesn't even return? 
     	//Probably not actually being considered an edit!
-    	JsonNode historyFetched=api.fetchSubstanceJsonByUuid(uuidA, 1).getOldValue();
-    	Changes changes= JsonUtil.computeChanges(beforeA, historyFetched, new ChangeFilter[0]);
+    	JsonNode historyFetchedForFirst=api.fetchSubstanceJsonByUuid(uuid, 1).getOldValue();
+    	
+    	JsonNode historyFetchedForSecond=api.fetchSubstanceJsonByUuid(uuidA, 1).getOldValue();
+    	Changes changes= JsonUtil.computeChanges(beforeA, historyFetchedForSecond, new ChangeFilter[0]);
     	for(Change c:changes.getAllChanges()){
     		System.out.println("Change is:" + c);
-    		
     	}
-    	assertEquals(beforeA,historyFetched);
-    	
+    	assertEquals(beforeA,historyFetchedForSecond);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw e;
+    	}
     }
     
     
@@ -318,7 +339,7 @@ public class RelationshipInvertTest {
     	
     }
     
-    @Test 
+    @Test  
     public void testDontAddRelationshipIfOneLikeItAlreadyExists()   throws Exception {
     	
         //submit primary

@@ -7,11 +7,11 @@ import org.apache.lucene.index.IndexableField;
 
 import ix.core.models.Indexable;
 
-public interface PrimitiveFieldIndexerPassiveProvider{
-	public void defaultIndex(Consumer<IndexableField> fields, 
-			Indexable indexable, 
+public interface PrimitiveFieldMaker{
+	public void create(
+			Consumer<IndexableField> fields, 
 			String name, 
-			String full,
 			Object value, 
-			Store store);
+			String full,
+			Indexable indexable);
 }

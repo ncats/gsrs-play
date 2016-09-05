@@ -1,7 +1,4 @@
-package ix.core.search.text;
-
-import static org.apache.lucene.document.Field.Store.NO;
-import static org.apache.lucene.document.Field.Store.YES;
+package ix.core.util;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -21,7 +18,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -34,11 +30,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.Table;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field.Store;
-import org.apache.lucene.document.LongField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.facet.FacetField;
-import org.apache.lucene.index.IndexableField;
 import org.reflections.Reflections;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -48,11 +39,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
-import ix.core.util.CachedSupplier;
+import ix.core.search.text.PathStack;
+import ix.core.search.text.TextIndexer;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import play.Logger;
@@ -65,6 +58,10 @@ import play.db.ebean.Model.Finder;
  * @author peryeata
  */
 public class EntityUtils {
+
+	private static final String ID_FIELD_NATIVE_SUFFIX = "._id";
+	private static final String ID_FIELD_STRING_SUFFIX = ".id";
+
 	private final static Map<String, EntityInfo<?>> infoCache = new ConcurrentHashMap<String, EntityInfo<?>>();
 
 	@Indexable // put default indexable things here
@@ -109,9 +106,9 @@ public class EntityUtils {
 	 * convenience methods that can be especially useful for finding smaller
 	 * sets of known indexable values from all fields.
 	 * 
-	 * The method {{ObjectWrapper{@link #traverse()} is particularly useful for
-	 * building {{@link EntityTraverser}}s, which can allow for quick traverse
-	 * of all of the entity descendants
+	 * The method {{EntityWrapper{@link #traverse()} is particularly useful for
+	 * building {{@link EntityTraverser}}s, which can allow for quick probing
+	 * of all of the entity descendants.
 	 * 
 	 * TODO there is some inconsistent design and type-safe issues in this
 	 * current instantiation
@@ -122,7 +119,7 @@ public class EntityUtils {
 	 */
 	public static class EntityWrapper<T> {
 		private T _k;
-		private EntityInfo<T> ei;
+		EntityInfo<T> ei;
 
 		public static <T> EntityWrapper<T> of(T bean) {
 			Objects.requireNonNull(bean);
@@ -149,6 +146,10 @@ public class EntityUtils {
 		public String toFullJson() {
 			return EntityMapper.FULL_ENTITY_MAPPER().toJson(getValue());
 		}
+		
+		public JsonNode toFullJsonNode() {
+			return EntityMapper.FULL_ENTITY_MAPPER().valueToTree(getValue());
+		}
 
 		public Key getKey() throws NoSuchElementException {
 			return Key.of(this);
@@ -174,7 +175,7 @@ public class EntityUtils {
 			return this.getKind() + ":" + this.getValue().toString();
 		}
 
-		public List<FieldInfo> getUniqueColumns() {
+		public List<FieldMeta> getUniqueColumns() {
 			return ei.getUniqueColumns();
 		}
 
@@ -182,53 +183,67 @@ public class EntityUtils {
 			return ei.getFinder();
 		}
 
+		public boolean isValidated(){
+			if(!ei.hasValidationField()){
+				return false;
+			}
+			// If the validation field is anything other than boolean,
+			// this will be a problem. 
+			try{
+				return (boolean) ei.getValidationField().getValue(this).orElse(false);
+			}catch(Exception e){
+				Logger.error("DataValidated annotation set on non-boolean!");
+				return false;
+			}
+		}
+		
 		public boolean shouldIndex() {
 			return ei.shouldIndex();
 		}
 
-		public Optional<ValueMakerInfo> getIdFieldInfo() {
+		public Optional<MethodOrFieldMeta> getIdFieldInfo() {
 			return ei.getIDFieldInfo();
 		}
 
-		public Stream<Tuple<ValueMakerInfo, Object>> streamSequenceFieldAndValues(Predicate<ValueMakerInfo> p) {
+		public Stream<Tuple<MethodOrFieldMeta, Object>> streamSequenceFieldAndValues(Predicate<MethodOrFieldMeta> p) {
 			return (ei).getSequenceFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
-		public Stream<Tuple<ValueMakerInfo, Object>> streamStructureFieldAndValues(Predicate<ValueMakerInfo> p) {
+		public Stream<Tuple<MethodOrFieldMeta, Object>> streamStructureFieldAndValues(Predicate<MethodOrFieldMeta> p) {
 			return ei.getStructureFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
-		public List<ValueMakerInfo> getStructureFieldAndValues() {
+		public List<MethodOrFieldMeta> getStructureFieldAndValues() {
 			return ei.getStructureFieldInfo();
 		}
 
-		public List<FieldInfo> getFieldInfo() {
+		public List<FieldMeta> getFieldInfo() {
 			return ei.getFieldInfo();
 		}
 
 		//TODO: move
-		public static Predicate<FieldInfo> isCollection = (f -> f.isArrayOrCollection());
+		public static Predicate<FieldMeta> isCollection = (f -> f.isArrayOrCollection());
 		
-		public Stream<Tuple<FieldInfo, List<Tuple<Integer,Object>>>> streamCollectedFieldsAndValues(Predicate<FieldInfo> p) {
+		public Stream<Tuple<FieldMeta, List<Tuple<Integer,Object>>>> streamCollectedFieldsAndValues(Predicate<FieldMeta> p) {
 			
 			return streamFieldsAndValues(isCollection.and(p))
-					.map(fi->new Tuple<FieldInfo,List<Tuple<Integer,Object>>>(fi.k(), //It's so easy that a child could do it!
+					.map(fi->new Tuple<FieldMeta,List<Tuple<Integer,Object>>>(fi.k(), //It's so easy that a child could do it!
 							fi.k().valuesList(fi.v()) // list
 							));
 		}
 		
-		public Stream<Tuple<FieldInfo, Object>> streamFieldsAndValues(Predicate<FieldInfo> p) {
+		public Stream<Tuple<FieldMeta, Object>> streamFieldsAndValues(Predicate<FieldMeta> p) {
 			return ei.getFieldInfo().stream().filter(p).map(f -> new Tuple<>(f, f.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
-		public List<MethodInfo> getMethodInfo() {
+		public List<MethodMeta> getMethodInfo() {
 			return ei.getMethodInfo();
 		}
 
-		public Stream<Tuple<MethodInfo, Object>> streamMethodsAndValues(Predicate<MethodInfo> p) {
+		public Stream<Tuple<MethodMeta, Object>> streamMethodsAndValues(Predicate<MethodMeta> p) {
 			return ei.getMethodInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
@@ -297,34 +312,36 @@ public class EntityUtils {
 		public boolean isIgnoredModel() {
 			return this.ei.isIgnoredModel();
 		}
-	}
 
-	private static final String ID_FIELD_NATIVE_SUFFIX = "._id";
-	private static final String ID_FIELD_STRING_SUFFIX = ".id";
+		public String getInternalIdField() {
+			return this.ei.getInternalIdField();
+		}
+	}
 
 	public static class EntityInfo<T> {
 		final Class<T> cls;
 		final String kind;
 		final DynamicFacet dyna;
 		final Indexable indexable;
-		private List<FieldInfo> fields;
+		private List<FieldMeta> fields;
 		Table table;
-		List<ValueMakerInfo> seqFields = new ArrayList<ValueMakerInfo>();
-		List<ValueMakerInfo> strFields = new ArrayList<ValueMakerInfo>();;
+		List<MethodOrFieldMeta> seqFields = new ArrayList<MethodOrFieldMeta>();
+		List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
 
-		List<MethodInfo> methods;
+		List<MethodMeta> methods;
 
-		List<FieldInfo> uniqueColumnFields;
+		List<FieldMeta> uniqueColumnFields;
 
-		ValueMakerInfo versionField = null;
-		ValueMakerInfo idField = null;
+		MethodOrFieldMeta versionField = null;
+		MethodOrFieldMeta validatedField = null;
+		MethodOrFieldMeta idField = null;
 
-		ValueMakerInfo ebeanIdMethod = null;
+		MethodOrFieldMeta ebeanIdMethod = null;
 
-		MethodInfo ebeanIdMethodSetter = null;
+		MethodMeta ebeanIdMethodSetter = null;
 
-		FieldInfo dynamicLabelField = null;
-		FieldInfo dynamicValueField = null;
+		FieldMeta dynamicLabelField = null;
+		FieldMeta dynamicValueField = null;
 
 		volatile boolean isEntity = false;
 		volatile boolean shouldIndex = true;
@@ -344,7 +361,7 @@ public class EntityUtils {
 
 		EntityInfo<?> ancestorInherit;
 
-		public static boolean isPlainOldEntityField(FieldInfo f) {
+		public static boolean isPlainOldEntityField(FieldMeta f) {
 			return (!f.isPrimitive() && !f.isArrayOrCollection() && f.isEntityType() && f.getIndexable().recurse());
 		}
 
@@ -372,7 +389,7 @@ public class EntityUtils {
 			kind = cls.getName();
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
-			fields = Arrays.stream(cls.getFields()).map(f2 -> new FieldInfo(f2, dyna)).filter(f -> {
+			fields = Arrays.stream(cls.getFields()).map(f2 -> new FieldMeta(f2, dyna)).filter(f -> {
 				if (f.isId()) {
 					idField = f;
 					return false;
@@ -381,21 +398,26 @@ public class EntityUtils {
 				} else if (f.isDynamicFacetValue()) {
 					dynamicValueField = f;
 				}
-
 				if (f.isDataVersion()) {
 					versionField = f;
+				}
+				if (f.isDataValidationFlag()){
+					validatedField = f;
 				}
 				return true;
 			}).collect(Collectors.toList());
 			uniqueColumnFields = fields.stream().filter(f -> f.isUniqueColumn()).collect(Collectors.toList());
 
-			methods = Arrays.stream(cls.getMethods()).map(m2 -> new MethodInfo(m2)).peek(m -> {
+			methods = Arrays.stream(cls.getMethods()).map(m2 -> new MethodMeta(m2)).peek(m -> {
 				if (m.isDataVersion()) {
 					versionField = m;
 				} else if (m.isId()) {
 					// always choose method IDs over
 					// field IDs
 					idField = m;
+				}
+				if (m.isDataValidationFlag()){
+					validatedField = m;
 				}
 			}).collect(Collectors.toList());
 
@@ -456,7 +478,7 @@ public class EntityUtils {
 
 		}
 
-		public EntityInfo getInherittedRootEntityInfo() {
+		public EntityInfo<?> getInherittedRootEntityInfo() {
 			return ancestorInherit;
 		}
 
@@ -471,35 +493,16 @@ public class EntityUtils {
 		public boolean hasLongId() {
 			return this.isIdNumeric;
 		}
+		public boolean hasValidationField(){
+			return this.validatedField!=null;
+		}
+		public MethodOrFieldMeta getValidationField(){
+			return this.validatedField;
+		}
 
 		public Class<?> getIdType() {
 			return idType;
 		}
-
-		private static boolean twoStringsEqual(String s1, String s2) {
-			if (s1 == null && s2 == null)
-				return true;
-			if (s1 == null || s2 == null)
-				return false;
-			return s1.equals(s2);
-		}
-
-		// actually, need to get common parent, believe it or not ...
-		// I hate it too. For now, I'm marking this as unfinished,
-		// by abusing "Deprecated"
-		// @Deprecated
-		private boolean isEquivalentInfo(EntityInfo ei) {
-			// if(this.isParentOrChildOf(ei)){
-			if (this.table != null && ei.table != null) {
-				if (twoStringsEqual(ei.tableName, this.tableName)) {
-					return true;
-				}
-			}
-			// }
-			return false;
-		}
-
-		
 
 		public Set<EntityInfo<? extends T>> getTypeAndSubTypes() {
 			return forLater.get();
@@ -517,7 +520,7 @@ public class EntityUtils {
 			return this.cls.hashCode();
 		}
 
-		public List<FieldInfo> getUniqueColumns() {
+		public List<FieldMeta> getUniqueColumns() {
 			return this.uniqueColumnFields;
 		}
 
@@ -553,7 +556,7 @@ public class EntityUtils {
 			}
 		}
 
-		public boolean isParentOrChildOf(EntityInfo ei) {
+		public boolean isParentOrChildOf(EntityInfo<?> ei) {
 			return (this.getClazz().isAssignableFrom(ei.getClazz()) || ei.getClazz().isAssignableFrom(this.getClazz()));
 		}
 
@@ -589,23 +592,23 @@ public class EntityUtils {
 			return Optional.empty();
 		}
 
-		public Optional<ValueMakerInfo> getIDFieldInfo() {
+		public Optional<MethodOrFieldMeta> getIDFieldInfo() {
 			return Optional.ofNullable(this.idField);
 		}
 
-		public List<ValueMakerInfo> getSequenceFieldInfo() {
+		public List<MethodOrFieldMeta> getSequenceFieldInfo() {
 			return this.seqFields;
 		}
 
-		public List<ValueMakerInfo> getStructureFieldInfo() {
+		public List<MethodOrFieldMeta> getStructureFieldInfo() {
 			return this.strFields;
 		}
 
-		public List<FieldInfo> getFieldInfo() {
+		public List<FieldMeta> getFieldInfo() {
 			return this.fields;
 		}
 
-		public List<MethodInfo> getMethodInfo() {
+		public List<MethodMeta> getMethodInfo() {
 			return this.methods;
 		}
 
@@ -692,6 +695,7 @@ public class EntityUtils {
 		}
 
 		public Object findById(String id) {
+			//Object nativeId=formatIdToNative(id);
 			return this.getFinder().byId(id);
 		}
 
@@ -703,13 +707,14 @@ public class EntityUtils {
 			return new EntityInfo<T>(cls);
 		}
 
-		//HERE BE DRAGONS!!!!
+		// HERE BE DRAGONS!!!!
 		// This was one of the (many) ID-generating methods before "The Great Refactoring".
 		// I am still unsure whether the explicit call to a Moiety is at all necessary ...
 		// 
 		// I suspect it was an attempt at making something work, back when we were throwing
 		// the kitchen sink at it. I think it's safe with it out, but I'm keeping this here
-		// for now.
+		// for now, as a warning / reminder to future developers on the dangers of 
+		// customizing an especially generic framework.
 		//
 		// @Deprecated
 		// public static Object getId (Object entity) throws Exception {
@@ -736,35 +741,32 @@ public class EntityUtils {
 		//
 	}
 
-	public static interface ValueMakerInfo {
+	public static interface MethodOrFieldMeta{
 		public Optional<Object> getValue(Object entity);
-
 		public boolean isNumeric();
-
 		public Class<?> getType();
-
 		public String getName();
-
 		default boolean isArrayOrCollection() {
 			return isArray() || isCollection();
 		}
-
 		public boolean isArray();
-
 		public boolean isCollection();
-
 		public boolean isTextEnabled();
-
 		public boolean isSequence();
-
 		public boolean isStructure();
 
+		
+		// Below are convenience functions that aren't so 
+		// convenient.
+		
 		// this is a little weird, in that this is meant to consume
 		// the very value the ValueMaker already created
 		default void forEach(Object value, BiConsumer<Integer, Object> bic) {
 			valuesStream(value).forEach(t->bic.accept(t.k(), t.v()));
 		}
-		
+		default List<Tuple<Integer,Object>> valuesList(Object value) {
+			return valuesStream(value).collect(Collectors.toList());
+		}
 		default Stream<Tuple<Integer,Object>> valuesStream(Object value) {
 			Stream<?> s;
 			if (isArray()) {
@@ -778,14 +780,12 @@ public class EntityUtils {
 			return s.map(o -> new Tuple<Integer,Object>(idx[0]++, o));
 		}
 		
-		default List<Tuple<Integer,Object>> valuesList(Object value) {
-			return valuesStream(value).collect(Collectors.toList());
-		}
+		
 		
 		
 	}
 
-	public static class MethodInfo implements ValueMakerInfo {
+	public static class MethodMeta implements MethodOrFieldMeta {
 
 		Method m;
 		Indexable indexable;
@@ -802,10 +802,10 @@ public class EntityUtils {
 
 		boolean isSetter = false;
 		boolean isGetter = false;
-
+		boolean isDataValidatedFlag = false;
 		Class<?> setterType;
 
-		public MethodInfo(Method m) {
+		public MethodMeta(Method m) {
 			Class<?>[] args = m.getParameterTypes();
 			this.m = m;
 			indexable = (Indexable) m.getAnnotation(Indexable.class);
@@ -822,7 +822,9 @@ public class EntityUtils {
 					setterType = args[0];
 				}
 			}
-
+			if (m.getAnnotation(DataValidated.class) != null) {
+				this.isDataValidatedFlag = true;
+			}
 			if (indexable != null) {
 				// we only index no arguments methods
 				if (args.length == 0) {
@@ -861,7 +863,23 @@ public class EntityUtils {
 		public Class<?> getSetterParameterType() {
 			return setterType;
 		}
+		public boolean isDataValidationFlag() {
+			return isDataValidatedFlag;
+		}
 
+		/**
+		 * This method is called "set", but it really 
+		 * just involves the underlying method, passing
+		 * the value in as the parameter.
+		 * 
+		 * Most exceptions will be swallowed here,
+		 * and it's not really used right now,
+		 * after some deeper refactoring.
+		 * 
+		 * @param entity
+		 * @param val
+		 */
+		@Deprecated
 		public void set(Object entity, Object val) {
 			try {
 				m.invoke(entity, val);
@@ -882,9 +900,13 @@ public class EntityUtils {
 		}
 
 		// Not currently supported
+		// Deprecated is a misnomer here, of course
+		@Deprecated
 		public boolean isDataVersion() {
 			return false;
 		}
+		
+		
 
 		@Override
 		public Optional<Object> getValue(Object entity) {
@@ -949,7 +971,7 @@ public class EntityUtils {
 
 	}
 
-	public static class FieldInfo implements ValueMakerInfo {
+	public static class FieldMeta implements MethodOrFieldMeta {
 		Field f;
 		Indexable indexable;
 
@@ -968,11 +990,16 @@ public class EntityUtils {
 		boolean isSequence = false;
 		boolean isStructure = false;
 		boolean isDataVersion = false;
+		boolean isDataValidatedFlag = false;
 
 		Column column;
 
 		public boolean isSequence() {
 			return this.isSequence;
+		}
+
+		public boolean isDataValidationFlag() {
+			return isDataValidatedFlag;
 		}
 
 		public boolean isUniqueColumn() {
@@ -1005,7 +1032,7 @@ public class EntityUtils {
 			return this.column;
 		}
 
-		public FieldInfo(Field f, DynamicFacet dyna) {
+		public FieldMeta(Field f, DynamicFacet dyna) {
 			this.f = f;
 			this.indexable = f.getAnnotation(Indexable.class);
 			this.column = f.getAnnotation(Column.class);
@@ -1041,6 +1068,9 @@ public class EntityUtils {
 			}
 			if (f.getAnnotation(DataVersion.class) != null) {
 				this.isDataVersion = true;
+			}
+			if (f.getAnnotation(DataValidated.class) != null) {
+				this.isDataValidatedFlag = true;
 			}
 
 		}
@@ -1114,9 +1144,8 @@ public class EntityUtils {
 	}
 
 	public static class Key {
-		EntityInfo kind;
-		Object _id; // should change to be an Object
-					// Oh, I guess I did
+		private EntityInfo kind;
+		private Object _id; 
 
 		private Key(EntityInfo k, Object id) {
 			this.kind = k;
@@ -1144,10 +1173,20 @@ public class EntityUtils {
 			return kind.getName() + ID_FIELD_NATIVE_SUFFIX + ":" + getIdString();
 		}
 
+		/**
+		 * Returns null if not present
+		 * @return
+		 */
+		private Object nativeFetch(){
+			return kind.getFinder().byId(this.getIdNative());
+		}
 		// fetches from finder
 		public Optional<EntityWrapper> fetch() {
-			return Optional.of(EntityWrapper.of(kind.getFinder().byId(this.getIdNative())));
+			Object o=nativeFetch();
+			if(o==null)return Optional.empty();
+			return Optional.of(EntityWrapper.of(o));
 		}
+		
 
 		public Tuple<String, String> asLuceneIdTuple() {
 			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
@@ -1155,13 +1194,9 @@ public class EntityUtils {
 
 		// For lucene document
 		public static Key of(Document doc) throws Exception {
-			String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue(); // Should
-																				// move
-																				// this
-																				// constant
-																				// somewhere
-																				// or
-																				// abstract
+			 // TODO: This should be moved to somewhere more Abstract, probably
+			String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
+																				
 			EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
 			if (ei.hasLongId()) {
 				Long id = doc.getField(ei.getInternalIdField()).numericValue().longValue();
@@ -1183,7 +1218,7 @@ public class EntityUtils {
 			return this.toString().hashCode(); // Probably something that can be
 												// better
 		}
-
+		
 		@Override
 		public boolean equals(Object k) {
 			if (k == null || !(k instanceof Key)) {
@@ -1198,102 +1233,14 @@ public class EntityUtils {
 
 	}
 
-	public static class TextIndexFieldConsumer implements BiConsumer<PathStack, EntityWrapper> {
-		private Consumer<IndexableField> ixFields = null;
-		DynamicFieldIndexerPassiveProvider dynamicFacets = null;
-		PrimitiveFieldIndexerPassiveProvider indexPerformer;
-
-		public TextIndexFieldConsumer(Consumer<IndexableField> ixFields,
-				DynamicFieldIndexerPassiveProvider dynamicFacets, PrimitiveFieldIndexerPassiveProvider indexPerformer) {
-			this.ixFields = ixFields;
-			this.dynamicFacets = dynamicFacets;
-			this.indexPerformer = indexPerformer;
-		}
-
-		public static TextIndexFieldConsumer with(Consumer<IndexableField> ixFields,
-				DynamicFieldIndexerPassiveProvider dynamicFacets, PrimitiveFieldIndexerPassiveProvider indexPerformer) {
-			return new TextIndexFieldConsumer(ixFields, dynamicFacets, indexPerformer);
-		}
-
-		public void acceptWithGeneric(PathStack path, EntityWrapper<Object> ew) {
-			if (ixFields != null) {
-				ixFields.accept(new FacetField(TextIndexer.DIM_CLASS, ew.getKind()));
-				ew.getId().ifPresent(o -> {
-					if (o instanceof Long) {
-						ixFields.accept(new LongField(ew.ei.getInternalIdField(), (Long) o, YES));
-					} else {
-						ixFields.accept(new StringField(ew.ei.getInternalIdField(), o.toString(), YES));
-					}
-					ixFields.accept(new StringField(ew.getIdField(), o.toString(), NO));
-				});
-
-				// primitive fields only, they should all get indexed
-				ew.streamFieldsAndValues(f -> f.isPrimitive()).forEach(fi -> {
-					path.pushAndPopWith(fi.k().getName(), () -> {
-						indexPerformer.defaultIndex(ixFields, fi.k().getIndexable(), path.getFirst(), path.toPath(),
-								fi.v(), Store.NO);
-					});
-				});
-
-				ew.getDynamicFacet().ifPresent(fv -> {
-					path.pushAndPopWith(fv.k(), () -> {
-						dynamicFacets.produceDynamicFacets(fv.k(), fv.v(), path.toPath(), ixFields);
-					});
-				});
-
-				ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
-					path.pushAndPopWith(t.k().getName(), () -> {
-						t.k().forEach(t.v(), (i, o) -> {
-							path.pushAndPopWith(i + "", () -> {
-								indexPerformer.defaultIndex(ixFields, t.k().getIndexable(), path.getFirst(),
-										path.toPath(), o, Store.NO);
-							});
-						});
-					});
-				});// each array / collection
-
-				ew.streamMethodsAndValues(m -> !m.isArrayOrCollection()).forEach(t -> {
-					path.pushAndPopWith(t.k().getName(), () -> {
-						indexPerformer.defaultIndex(ixFields, t.k().getIndexable(), path.getFirst(), path.toPath(),
-								t.v(), Store.NO);
-					});
-				});// each non-array
-
-				ew.streamFieldsAndValues(f -> (!f.isPrimitive() && !f.isArrayOrCollection())).forEach(fi -> {
-					path.pushAndPopWith(fi.k().getName(), () -> {
-						if (fi.k().isEntityType()) {
-							if (ixFields != null) {
-								if (fi.k().isExplicitlyIndexable()) {
-									indexPerformer.defaultIndex(ixFields, fi.k().getIndexable(), path.getFirst(),
-											path.toPath(), fi.v(), Store.NO);
-								}
-							}
-						} else { // treat as string
-							if (ixFields != null) {
-								indexPerformer.defaultIndex(ixFields, fi.k().getIndexable(), path.getFirst(),
-										path.toPath(), fi.v(), Store.NO);
-							}
-						}
-					}); // for each field with value
-				}); // foreach non-primitive field
-			}
-		}
-
-		@Override
-		public void accept(PathStack t, EntityWrapper u) {
-			acceptWithGeneric(t, u);
-		}
-	}
-
 	//Not sure how this should be paramaterized
 	public static class EntityTraverser {
 		private PathStack path;
 		private BiConsumer<PathStack, EntityWrapper> listens = null;
 		LinkedReferenceSet<Object> prevEntities; // protect against infinite
-													// recursion
-
+											     // recursion
 		EntityWrapper estart; // seed
-
+		
 		public EntityTraverser() {
 			path = new PathStack();
 			prevEntities = new LinkedReferenceSet<Object>();
@@ -1306,16 +1253,12 @@ public class EntityUtils {
 
 		public void execute(BiConsumer<PathStack, EntityWrapper> listens) {
 			this.listens = listens;
-			instrument(estart);
+			next(estart);
 		}
-
-		public void execute() {
-			instrument(estart);
-		}
-
+		
 		private void next(EntityWrapper<?> ew) {
 			if (this.listens != null)
-				listens.accept(path, ew);
+				listens.accept(path, ew); // actual call happens here!
 			instrument(ew);
 		}
 
@@ -1324,8 +1267,7 @@ public class EntityUtils {
 			prevEntities.pushAndPopWith(ew.getValue(), () -> {
 				
 				//ALL collections and arrays are recursed
-				//it doesn't matter if they're Entities or not
-				
+				//it doesn't matter if they are entities or not
 				ew.streamFieldsAndValues(f -> f.isArrayOrCollection()).forEach(fi -> {
 					path.pushAndPopWith(fi.k().getName(), () -> {
 						fi.k().forEach(fi.v(), (i, o) -> {

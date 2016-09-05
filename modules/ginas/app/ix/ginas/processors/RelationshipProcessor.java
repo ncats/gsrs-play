@@ -39,12 +39,12 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			if(otherSubstance ==null){ //probably warn
 				return;
 			}
-			
 			EntityPersistAdapter.performChangeOn(
 					otherSubstance,
 					s -> {
-						if (createAndAddInvertedRelationship(thisRelationship, thisSubstance.asSubstanceReference(), s) != null) {
-							//System.out.println("Forcing update");
+						Relationship r=createAndAddInvertedRelationship(thisRelationship, thisSubstance.asSubstanceReference(), s);
+						if (r != null) {
+							//r.save();
 							s.forceUpdate();
 						}
 						return Optional.of(s);
@@ -87,7 +87,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 						return null;
 					}
 				}
-				
 				//System.out.println("Making citation");
 				Reference ref1 = Reference.SYSTEM_GENERATED();
 				ref1.citation="Generated from relationship on:'" + oldSub.refPname + "'"; 

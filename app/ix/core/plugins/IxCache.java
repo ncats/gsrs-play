@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.util.EntityUtils.Key;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Application;
@@ -30,15 +31,11 @@ public class IxCache extends Plugin {
 
     private GateKeeper gateKeeper;
 
-
     static private IxCache _instance;
 
-    
-    
     public IxCache (Application app) {
         this.app = app;
     }
-
 
     public IxCache( GateKeeper gateKeeper) {
         app = null;
@@ -63,9 +60,6 @@ public class IxCache extends Plugin {
 
         int timeToIdle = app.configuration()
                 .getInt(CACHE_TIME_TO_IDLE, DEFAULT_TIME_TO_IDLE);
-
-    System.out.println("####################");
-        System.out.println("max elements = " + maxElements);
 
         GateKeeper gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
                 .debugLevel(debugLevel)
@@ -130,20 +124,13 @@ public class IxCache extends Plugin {
     	return getOrElse(key,generator,0);
     }
     
-    
-
-    
-    
     // mimic play.Cache 
     public static <T> T getOrElse (String key, Callable<T> generator,
                                    int seconds) throws Exception {
-
         checkInitialized();
         return _instance.gateKeeper.getOrElse(key,  generator,seconds);
 
     }
-    
-    
     
     public static void clearCache(){
         _instance.gateKeeper.clear();
@@ -166,8 +153,6 @@ public class IxCache extends Plugin {
     public static Stream<Element> toJsonStream(int top, int skip){
         checkInitialized();
         return _instance.gateKeeper.elements(top,skip);
-
-
     }
 
 
@@ -230,6 +215,11 @@ public class IxCache extends Plugin {
 		}
 		return (T)o;
 	}
+	
+
+	public static Object getOrFetchTempRecord(Key k) throws Exception {
+		return getOrElseTemp(k.toString(), ()->k.fetch().get().getValue());
+	}
 
 	/**
 	 * Used for temporary cache storage which may be needed across
@@ -244,6 +234,9 @@ public class IxCache extends Plugin {
 	public static Object getTemp(String key) {
 		return getRaw(key);
 	}
+	
+	
+	
 	
 	/**
 	 * Used for temporary cache storage which may be needed across

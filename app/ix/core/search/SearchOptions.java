@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityInfo;
+import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityInfo;
 import play.Logger;
 
 public class SearchOptions {

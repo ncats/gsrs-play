@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +36,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -50,6 +50,7 @@ import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoubleField;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.FloatField;
 import org.apache.lucene.document.IntField;
@@ -116,19 +117,17 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
-import ix.core.search.DefaultSearchContextAnalyzerGenerator;
-import ix.core.search.FieldFacet;
-import ix.core.search.FieldFacet.MATCH_TYPE;
+import ix.core.search.FieldedQueryFacet;
+import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
 import ix.core.search.InxightInfixSuggester;
-import ix.core.search.SearchContextAnalyzerGenerator;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
-import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.search.text.EntityUtils.EntityWrapper;
-import ix.core.search.text.EntityUtils.Key;
 import ix.core.util.CachedSupplier;
+import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -141,11 +140,16 @@ import play.Play;
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldIndexerPassiveProvider, PrimitiveFieldIndexerPassiveProvider {
+public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMaker, PrimitiveFieldMaker {
 	public static final String IX_BASE_PACKAGE = "ix";
 	
+	public static final boolean INDEXING_ENABLED = Play.application().configuration().getBoolean("ix.textindex.enabled",true);
+	
+	private static final boolean USE_ANALYSIS = true; 
 	private static final String ANALYZER_FIELD = "M_FIELD";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
+	
+	
 	private static final char SORT_DESCENDING_CHAR = '$';
 	private static final char SORT_ASCENDING_CHAR = '^';
 	private static final int EXTRA_PADDING = 2;
@@ -157,7 +161,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	public static final String GIVEN_START_WORD = "^";
 	static final String ROOT = "root";
 	
-	private static final boolean USE_ANALYSIS = true; 
+	
 
 	public void deleteAll() {
 		try {
@@ -588,8 +592,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 
 	private boolean isShutDown = false;
 
-	private static Map<String, SearchContextAnalyzerGenerator> defaultSearchAnalyzers = new HashMap<String, SearchContextAnalyzerGenerator>();
-
 	private FlushDaemon flushDaemon;
 
 	SearcherManager searchManager;
@@ -629,33 +631,11 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			
 			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
-			registerDefaultAnalyzers();
 
 			ALREADY_INITIALIZED.set(true);
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public static void registerDefaultAnalyzers() {
-		Play.application().configuration().getList("ix.core.searchanalyzers",
-				new ArrayList<Object>()).stream()
-					.filter(o->o instanceof Map)
-					.map(o->(Map)o)
-					.forEach(m->{
-						String entityClass   = (String) m.get("class");
-						String analyzerClass = (String) m.get("analyzer");
-						Map params = (Map) m.get("with");
-						try {
-							Class<?> entityCls = Class.forName(entityClass);
-							Class<?> analyzerCls = Class.forName(analyzerClass);
-							SearchContextAnalyzerGenerator generator = 
-									new DefaultSearchContextAnalyzerGenerator(entityCls, analyzerCls, params);
-							defaultSearchAnalyzers.put(entityCls.getName(), generator);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
-	}
 
 	public static TextIndexer getInstance(File baseDir) throws IOException {
 
@@ -1093,7 +1073,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	
 	
 	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
-		
 		Sort sorter;
 		Filter filter;
 		Query query;
@@ -1106,7 +1085,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			this.query=query;
 			this.max=max;
 			this.facetCollector=facetCollector;
-			
 		}
 
 		@Override
@@ -1140,17 +1118,15 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			this.filter=filter;
 			this.ddq=query;
 			this.options=options;
-			this.facetCollector=facetCollector;
-			
+			this.facetCollector=facetCollector;	
 		}
-
 
 		@Override
 		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
 			DrillSideways sideway = new DrillSideways(searcher, facetsConfig, taxon);
 			DrillSideways.DrillSidewaysResult swResult = sideway.search(ddq, filter, null, options.max(),
 					sorter, false, false);
-
+			
 			/*
 			 * TODO: is this the only way to collect the counts for
 			 * range/dynamic facets?
@@ -1166,7 +1142,113 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		
 	}
 	
+	// This is not yet fully realized. It works as intended,
+	// but the right design is ideally to have this be a 
+	// BiConsumer that simply does all Field 
+	public class IndexingFieldCreator implements BiConsumer<PathStack, EntityUtils.EntityWrapper>{
+		
+		private Consumer<IndexableField> toAdd= null;
+		private DynamicFieldMaker dynamicFacets = null;
+		private PrimitiveFieldMaker indexPerformer=null;
+		
 	
+		
+		public IndexingFieldCreator(Consumer<IndexableField> toAdd){
+			this.toAdd=toAdd;
+		}
+		public IndexingFieldCreator withDynamicFieldMaker(DynamicFieldMaker dynamicFacets){
+			this.dynamicFacets=dynamicFacets;
+			return this;
+		}
+		public IndexingFieldCreator withPrimitiveFieldMaker(PrimitiveFieldMaker indexPerformer){
+			this.indexPerformer=indexPerformer;
+			return this;
+		}
+		
+		public IndexingFieldCreator(Consumer<IndexableField> toAdd, 
+					DynamicFieldMaker dynamicFacets, 
+					PrimitiveFieldMaker indexPerformer) {
+			this.toAdd = toAdd; 					//where to put the fields
+			this.dynamicFacets = dynamicFacets;			//how to make the Dynamic Facets
+			this.indexPerformer = indexPerformer;		//how to make the 
+		}
+	
+	
+		public void acceptWithGeneric(PathStack path, EntityUtils.EntityWrapper<Object> ew) {
+			if (toAdd != null) {
+				toAdd.accept(new FacetField(DIM_CLASS, ew.getKind()));
+				ew.getId().ifPresent(o -> {
+					if (o instanceof Long) {
+						toAdd.accept(new LongField(ew.getInternalIdField(), (Long) o, YES));  
+					} else {
+						toAdd.accept(new StringField(ew.getInternalIdField(), o.toString(), YES));  //Only Special case
+					}
+					toAdd.accept(new StringField(ew.getIdField(), o.toString(), NO));
+				});
+	
+				// primitive fields only, they should all get indexed
+				ew.streamFieldsAndValues(f -> f.isPrimitive()).forEach(fi -> {
+					path.pushAndPopWith(fi.k().getName(), () -> {
+						indexPerformer.create(toAdd, path.getFirst(), fi.v(), path.toPath(),
+								fi.k().getIndexable());
+					});
+				});
+	
+				ew.getDynamicFacet().ifPresent(fv -> {
+					path.pushAndPopWith(fv.k(), () -> {
+						dynamicFacets.create(toAdd, fv.k(), fv.v(), path.toPath());
+					});
+				});
+	
+				ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
+					path.pushAndPopWith(t.k().getName(), () -> {
+						t.k().forEach(t.v(), (i, o) -> {
+							path.pushAndPopWith(i + "", () -> {
+								indexPerformer.create(toAdd, path.getFirst(), o,
+										path.toPath(), t.k().getIndexable());
+							});
+						});
+					});
+				});// each array / collection
+	
+				ew.streamMethodsAndValues(m -> !m.isArrayOrCollection()).forEach(t -> {
+					path.pushAndPopWith(t.k().getName(), () -> {
+						indexPerformer.create(toAdd, path.getFirst(), t.v(), path.toPath(),
+								t.k().getIndexable());
+					});
+				});// each non-array
+	
+				ew.streamFieldsAndValues(f -> (!f.isPrimitive() && !f.isArrayOrCollection())).forEach(fi -> {
+					path.pushAndPopWith(fi.k().getName(), () -> {
+						if (fi.k().isEntityType()) {
+							if (toAdd != null) {
+								if (fi.k().isExplicitlyIndexable()) {
+									indexPerformer.create(toAdd, path.getFirst(), fi.v(),
+											path.toPath(), fi.k().getIndexable());
+								}
+							}
+						} else { // treat as string
+							if (toAdd != null) {
+								indexPerformer.create(toAdd, path.getFirst(), fi.v(),
+										path.toPath(), fi.k().getIndexable());
+							}
+						}
+					}); // for each field with value
+				}); // foreach non-primitive field
+			}
+		}
+	
+		
+		//Just had some generic problems, so this delegates
+		// TODO: clean up
+		@Override
+		public void accept(PathStack t, EntityUtils.EntityWrapper u) {
+			acceptWithGeneric(t, u);
+		}
+		
+
+	}
+
 	// This is the most important method, everything goes here
 	protected SearchResult search(IndexSearcher searcher, SearchResult searchResult, Query query, Filter filter)
 			throws IOException {
@@ -1212,21 +1294,30 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 					// fetchQueue.put(payload);
 					threadPool.submit(() -> {
 						try {
-							long tstart = System.currentTimeMillis();
-							Logger.debug(Thread.currentThread() + ": fetching payload " + payload.hits.totalHits
-									+ " for " + payload.result);
-
-							payload.fetch();
-
-							Logger.debug(Thread.currentThread() + ": ## fetched " + payload.result.size()
-									+ " for result " + payload.result + " in "
-									+ String.format("%1$dms", System.currentTimeMillis() - tstart));
-						} catch (Exception ex) {
-							ex.printStackTrace();
-							Logger.error("Error in processing payload", ex);
+							withSearcher(s->{
+									long tstart = System.currentTimeMillis();
+									Logger.debug(Thread.currentThread() + ": fetching payload " + payload.hits.totalHits
+											+ " for " + payload.result);
+									payload.setSearcher(s);
+									try{
+										payload.fetch();
+									}catch(InterruptedException e){
+										throw new IOException(e); //just to make it throw through withSearcher
+									}
+									Logger.debug(Thread.currentThread() + ": ## fetched " + payload.result.size()
+											+ " for result " + payload.result + " in "
+											+ String.format("%1$dms", System.currentTimeMillis() - tstart));
+								return payload;
+							});
+						} catch (Exception e) {
+							e.printStackTrace();
+							System.out.println("Search failed at:" + searchResult.getMatches().size());
+							Logger.error("Error in processing payload", e);
 						}
+						
 					});
 				} else {
+					
 					searchResult.done();
 				}
 			}
@@ -1340,9 +1431,13 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 					lspResult.getFacets().getAllDims(options.fdim).forEach(fr->{
 						Arrays.stream(fr.labelValues).forEach(lv->{
 							if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
-								searchResult.addFieldFacet(
-										new FieldFacet(lv.label, searchResult.getQuery(), lv.value.intValue(), oq.v())
-												.explicitQuery(serializeAndRestrictQueryToField(oq.k(),lv.label)));
+								String newQuery = serializeAndRestrictQueryToField(oq.k(),lv.label);
+								searchResult.addFieldQueryFacet(
+										new FieldedQueryFacet(lv.label)
+												.withExplicitCount(lv.value.intValue())
+												.withExplicitQuery(newQuery)
+												.withExplicitMatchType(oq.v())
+												);
 							}
 						});
 					});
@@ -1664,9 +1759,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	 * recursively index any object annotated with Entity
 	 */
 	public void add(EntityWrapper ew) throws IOException {
+		if(!INDEXING_ENABLED)return;
 		Objects.requireNonNull(ew);
 		try{
-			
 		if(!ew.shouldIndex()){
 			if (DEBUG(2)) {
 				Logger.debug(">>> Not indexable " + ew.getValue());
@@ -1701,14 +1796,13 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 				doc.add(f);
 		};
 		
-		
 		//flag the kind of document
 		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 		
-		
-		
-		ew.traverse()
-			.execute(EntityUtils.TextIndexFieldConsumer.with(fieldCollector, this, this));
+		ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
+										.withDynamicFieldMaker(this)	
+										.withPrimitiveFieldMaker(this)
+					);
 		
 		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
 			Key key =ew.getKey();
@@ -1746,12 +1840,13 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			e.printStackTrace();
 			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems");
 		}finally{
-			//System.out.println("||| " + entity);
+			//System.out.println("||| " + ew.getKey());
 		}
 		
 	}
 
 	public void addDoc(Document doc) throws IOException {
+		
 		doc = facetsConfig.build(taxonWriter, doc);
 		if (DEBUG(2))
 			Logger.debug("++ adding document " + doc);
@@ -1778,46 +1873,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 		return lastModified.get();
 	}
 
-//	/**
-//	 * I don't think we use this right now,
-//	 * instead, we use remove and an explicit
-//	 * add later. 
-//	 * @param entity
-//	 * @throws IOException
-//	 */
-//	@Deprecated
-//	public void update(EntityWrapper ew) throws IOException {
-//		// String idString=null;
-//		if(!ew.isEntity())return;
-//
-//		if (DEBUG(2))
-//			Logger.debug(">>> Updating " + ew + "...");
-//
-//		try {
-//			if (ew.hasKey()) {
-//				
-//				Key key= ew.getKey();
-//				Tuple<String,String> docKey=key.asLuceneIdTuple();
-//				
-//				BooleanQuery q = new BooleanQuery();
-//				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
-//				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
-//				indexWriter.deleteDocuments(q);
-//
-//				if (DEBUG(2))
-//					Logger.debug("++ Updating " + docKey.k() + "=" + docKey.v());
-//
-//				// now reindex .. there isn't an IndexWriter.update
-//				// that takes a Query
-//				add(ew);
-//			}
-//		} catch (Exception ex) {
-//			Logger.trace("Unable to update index for " + ew, ex);
-//		}
-//
-//		if (DEBUG(2))
-//			Logger.debug("<<< " + ew);
-//	}
 
 	public void remove(EntityWrapper ew) throws Exception {
 		
@@ -1865,38 +1920,316 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 	
 	
 	
+
+
 	
 	/**
-	 * Add the specified field and value pair to the suggests
-	 * which are used for type-ahead queries.
+	 * Gets the Facet field for a range query. Find the interval that the
+	 * given value falls within. Uses that to make a Facet.
 	 * @param name
+	 * @param ranges
 	 * @param value
+	 * @return
 	 */
-	void addSuggestedField(String name, String value) {
-		name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
-		try {
-			SuggestLookup lookup = lookups.computeIfAbsent(name, n -> {
-				try {
-					return new SuggestLookup(n);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					Logger.trace("Can't create Lookup!", ex);
-					return null;
-				}
-			});
-			if (lookup != null) {
-				lookup.add(value);
-			}
-
-		} catch (Exception ex) {
-			Logger.trace("Can't create Lookup!", ex);
+	static FacetField getRangeFacet(String name, long[] ranges, long value) {		
+		if (ranges.length == 0)return null;
+		if (value < ranges[0])return new FacetField(name, "<" + ranges[0]);
+		
+		int i=0;
+		for (; i < ranges.length; ++i) {
+			if (value < ranges[i])
+				break;
 		}
+		if (i == ranges.length) {
+			return new FacetField(name, ">" + ranges[i - 1]);
+		}
+		return new FacetField(name, ranges[i - 1] + ":" + ranges[i]);
+	}
+
+	static FacetField getRangeFacet(String name, double[] ranges, double value, String format) {
+		if (ranges.length == 0)
+			return null;
+
+		if (value < ranges[0]) {
+			return new FacetField(name, "<" + String.format(format, ranges[0]));
+		}
+
+		int i = 1;
+		for (; i < ranges.length; ++i) {
+			if (value < ranges[i])
+				break;
+		}
+
+		if (i == ranges.length) {
+			return new FacetField(name, ">" + String.format(format, ranges[i - 1]));
+		}
+
+		return new FacetField(name, String.format(format, ranges[i - 1]) + ":" + String.format(format, ranges[i]));
+	}
+
+	static void setFieldType(FieldType ftype) {
+		ftype.setIndexed(true);
+		ftype.setTokenized(true);
+		ftype.setStoreTermVectors(true);
+		ftype.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
 	}
 
 
+	static FacetsConfig getFacetsConfig(JsonNode node) {
+		if (!node.isContainerNode())
+			throw new IllegalArgumentException("Not a valid json node for FacetsConfig!");
+
+		String text = node.get("version").asText();
+		Version ver = Version.parseLeniently(text);
+		if (!ver.equals(LUCENE_VERSION)) {
+			Logger.warn("Facets configuration version (" + ver + ") doesn't " + "match index version (" + LUCENE_VERSION
+					+ ")");
+		}
+
+		FacetsConfig config = null;
+		ArrayNode array = (ArrayNode) node.get("dims");
+		if (array != null) {
+			config = new FacetsConfig();
+			for (int i = 0; i < array.size(); ++i) {
+				ObjectNode n = (ObjectNode) array.get(i);
+				String dim = n.get("dim").asText();
+				config.setHierarchical(dim, n.get("hierarchical").asBoolean());
+				config.setIndexFieldName(dim, n.get("indexFieldName").asText());
+				config.setMultiValued(dim, n.get("multiValued").asBoolean());
+				config.setRequireDimCount(dim, n.get("requireDimCount").asBoolean());
+			}
+		}
+
+		return config;
+	}
+
+	static JsonNode setFacetsConfig(FacetsConfig config) {
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		node.put("created", TimeUtil.getCurrentTimeMillis());
+		node.put("version", LUCENE_VERSION.toString());
+		node.put("warning", "AUTOMATICALLY GENERATED FILE; DO NOT EDIT");
+		Map<String, FacetsConfig.DimConfig> dims = config.getDimConfigs();
+		node.put("size", dims.size());
+		ArrayNode array = node.putArray("dims");
+		for (Map.Entry<String, FacetsConfig.DimConfig> me : dims.entrySet()) {
+			FacetsConfig.DimConfig c = me.getValue();
+			ObjectNode n = mapper.createObjectNode();
+			n.put("dim", me.getKey());
+			n.put("hierarchical", c.hierarchical);
+			n.put("indexFieldName", c.indexFieldName);
+			n.put("multiValued", c.multiValued);
+			n.put("requireDimCount", c.requireDimCount);
+			array.add(n);
+		}
+		return node;
+	}
+
+	File getFacetsConfigFile() {
+		return new File(baseDir, FACETS_CONFIG_FILE);
+	}
+
+	File getSorterConfigFile() {
+		return new File(baseDir, SORTER_CONFIG_FILE);
+	}
+
+	static void saveFacetsConfig(File file, FacetsConfig facetsConfig) {
+		JsonNode node = setFacetsConfig(facetsConfig);
+		ObjectMapper mapper = new ObjectMapper();
+		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
+
+			mapper.writerWithDefaultPrettyPrinter().writeValue(out, node);
+
+		} catch (IOException ex) {
+			Logger.trace("Can't persist facets config!", ex);
+			ex.printStackTrace();
+		}
+	}
+
+	static FacetsConfig loadFacetsConfig(File file) {
+		FacetsConfig config = null;
+		if (file.exists()) {
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream(file)));
+				config = getFacetsConfig(conf);
+				Logger.info("## FacetsConfig loaded with " + config.getDimConfigs().size() + " dimensions!");
+			} catch (Exception ex) {
+				Logger.trace("Can't read file " + file, ex);
+			}
+		}
+		return config;
+	}
+
+
+	static ConcurrentMap<String, SortField.Type> loadSorters(File file) {
+		ConcurrentMap<String, SortField.Type> sorters = new ConcurrentHashMap<String, SortField.Type>();
+		if (file.exists()) {
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream(file)));
+				ArrayNode array = (ArrayNode) conf.get("sorters");
+				if (array != null) {
+					for (int i = 0; i < array.size(); ++i) {
+						ObjectNode node = (ObjectNode) array.get(i);
+						String field = node.get("field").asText();
+						String type = node.get("type").asText();
+						sorters.put(field, SortField.Type.valueOf(SortField.Type.class, type));
+					}
+				}
+			} catch (Exception ex) {
+				Logger.trace("Can't read file " + file, ex);
+			}
+		}
+		return sorters;
+	}
+
+	static void saveSorters(File file, Map<String, SortField.Type> sorters) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		ObjectNode conf = mapper.createObjectNode();
+		conf.put("created", TimeUtil.getCurrentTimeMillis());
+		ArrayNode node = mapper.createArrayNode();
+		for (Map.Entry<String, SortField.Type> me : sorters.entrySet()) {
+			ObjectNode obj = mapper.createObjectNode();
+			obj.put("field", me.getKey());
+			obj.put("type", me.getValue().toString());
+			node.add(obj);
+		}
+		conf.put("sorters", node);
+
+		try (OutputStream fos = new BufferedOutputStream(new FileOutputStream(file))) {
+
+			mapper.writerWithDefaultPrettyPrinter().writeValue(fos, conf);
+		} catch (Exception ex) {
+			Logger.trace("Can't persist sorter config!", ex);
+			ex.printStackTrace();
+		}
+	}
+
+	/**
+	 * Closing this indexer will shut it down. This is the same as calling
+	 * {@link #shutdown()}.
+	 */
+	@Override
+	public void close() {
+		shutdown();
+	}
+
+	@Override
+	public void newReindex() {
+		//we have to clear our suggest fields since they are about to be completely replaced
+		lookups.clear();
+		sorters.clear();
+	}
+
+	@Override
+	public void doneReindex() {}
+
+	@Override
+	public void recordReIndexed(Object o) {	}
+
+	@Override
+	public void error(Throwable t) {	}
+
+	@Override
+	public void totalRecordsToIndex(int total) {	}
+
+	@Override
+	public void countSkipped(int numSkipped) {	}
+
+	public void shutdown() {
+		if (isShutDown) {
+			return;
+		}
+		try {
+			if (scheduler != null) {
+				try {
+					isShutDown = true;
+					scheduler.shutdown();
+					scheduler.awaitTermination(1, TimeUnit.MINUTES);
+					flushDaemon.execute();
+				} catch (Throwable e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+			}
+
+			saveFacetsConfig(getFacetsConfigFile(), facetsConfig);
+			saveSorters(getSorterConfigFile(), sorters);
+
+			for (SuggestLookup look : lookups.values()) {
+				closeAndIgnore(look);
+			}
+			// clear the lookup value map
+			// if we restart without clearing we might
+			// think we have lookups we don't have if we delete the ginas.ix
+			// area
+			lookups.clear();
+
+			closeAndIgnore(searchManager);
+			closeAndIgnore(indexWriter);
+			closeAndIgnore(taxonWriter);
+
+			closeAndIgnore(indexDir);
+			closeAndIgnore(taxonDir);
+
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+			System.out.println("#########$##$#$ ERROR");
+			ex.printStackTrace();
+			Logger.trace("Closing index", ex);
+		} finally {
+			if (indexers != null) {
+				if (baseDir != null) {
+					TextIndexer indexer = indexers.remove(baseDir);
+				}
+			}
+			if (!isEmptyPool) {
+				threadPool.shutdown();
+				try {
+					threadPool.awaitTermination(1, TimeUnit.MINUTES);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			isShutDown = true;
+		}
+	}
+
+	private static void closeAndIgnore(Closeable closeable) {
+		if (closeable == null) {
+			return;
+		}
+		try {
+			closeable.close();
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	// ************************************
+	// Things that modify state are below:
 	
-	public void defaultIndex(Consumer<IndexableField> fields, Indexable indexable, String name, String full, Object value,
-			org.apache.lucene.document.Field.Store store) {
+	
+	//make the fields for the dynamic facets
+	@Override
+	public void create(Consumer<IndexableField> fieldTaker, String name, String value, String path) {
+		facetsConfig.setMultiValued(name, true);
+		facetsConfig.setRequireDimCount(name, true);
+		fieldTaker.accept(new FacetField(name, value));
+		fieldTaker.accept(new TextField(path, TextIndexer.START_WORD + value + TextIndexer.STOP_WORD, NO));
+		addSuggestedField(name,value);
+		
+	}
+
+	//make the fields for the primitive fields
+	@Override
+	public void create(Consumer<IndexableField> fields, String name, Object value, String full, Indexable indexable) {
+		// Used to be configurable, now just always NO
+		// for all cases we use.
+		org.apache.lucene.document.Field.Store store = Store.NO;
+		
 		String fname = indexable.name().isEmpty() ? name : indexable.name();
 		boolean sorterAdded = false;
 		boolean asText = true;
@@ -2040,312 +2373,33 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldInde
 			fields.accept(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
 		}
 	}
+	
 
-	static FacetField getRangeFacet(String name, long[] ranges, long value) {
-		if (ranges.length == 0)
-			return null;
-
-		if (value < ranges[0]) {
-			return new FacetField(name, "<" + ranges[0]);
-		}
-
-		int i = 1;
-		for (; i < ranges.length; ++i) {
-			if (value < ranges[i])
-				break;
-		}
-
-		if (i == ranges.length) {
-			return new FacetField(name, ">" + ranges[i - 1]);
-		}
-
-		return new FacetField(name, ranges[i - 1] + ":" + ranges[i]);
-	}
-
-	static FacetField getRangeFacet(String name, double[] ranges, double value, String format) {
-		if (ranges.length == 0)
-			return null;
-
-		if (value < ranges[0]) {
-			return new FacetField(name, "<" + String.format(format, ranges[0]));
-		}
-
-		int i = 1;
-		for (; i < ranges.length; ++i) {
-			if (value < ranges[i])
-				break;
-		}
-
-		if (i == ranges.length) {
-			return new FacetField(name, ">" + String.format(format, ranges[i - 1]));
-		}
-
-		return new FacetField(name, String.format(format, ranges[i - 1]) + ":" + String.format(format, ranges[i]));
-	}
-
-	static void setFieldType(FieldType ftype) {
-		ftype.setIndexed(true);
-		ftype.setTokenized(true);
-		ftype.setStoreTermVectors(true);
-		ftype.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-	}
-
-
-	static FacetsConfig getFacetsConfig(JsonNode node) {
-		if (!node.isContainerNode())
-			throw new IllegalArgumentException("Not a valid json node for FacetsConfig!");
-
-		String text = node.get("version").asText();
-		Version ver = Version.parseLeniently(text);
-		if (!ver.equals(LUCENE_VERSION)) {
-			Logger.warn("Facets configuration version (" + ver + ") doesn't " + "match index version (" + LUCENE_VERSION
-					+ ")");
-		}
-
-		FacetsConfig config = null;
-		ArrayNode array = (ArrayNode) node.get("dims");
-		if (array != null) {
-			config = new FacetsConfig();
-			for (int i = 0; i < array.size(); ++i) {
-				ObjectNode n = (ObjectNode) array.get(i);
-				String dim = n.get("dim").asText();
-				config.setHierarchical(dim, n.get("hierarchical").asBoolean());
-				config.setIndexFieldName(dim, n.get("indexFieldName").asText());
-				config.setMultiValued(dim, n.get("multiValued").asBoolean());
-				config.setRequireDimCount(dim, n.get("requireDimCount").asBoolean());
-			}
-		}
-
-		return config;
-	}
-
-	static JsonNode setFacetsConfig(FacetsConfig config) {
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode node = mapper.createObjectNode();
-		node.put("created", TimeUtil.getCurrentTimeMillis());
-		node.put("version", LUCENE_VERSION.toString());
-		node.put("warning", "AUTOMATICALLY GENERATED FILE; DO NOT EDIT");
-		Map<String, FacetsConfig.DimConfig> dims = config.getDimConfigs();
-		node.put("size", dims.size());
-		ArrayNode array = node.putArray("dims");
-		for (Map.Entry<String, FacetsConfig.DimConfig> me : dims.entrySet()) {
-			FacetsConfig.DimConfig c = me.getValue();
-			ObjectNode n = mapper.createObjectNode();
-			n.put("dim", me.getKey());
-			n.put("hierarchical", c.hierarchical);
-			n.put("indexFieldName", c.indexFieldName);
-			n.put("multiValued", c.multiValued);
-			n.put("requireDimCount", c.requireDimCount);
-			array.add(n);
-		}
-		return node;
-	}
-
-	File getFacetsConfigFile() {
-		return new File(baseDir, FACETS_CONFIG_FILE);
-	}
-
-	File getSorterConfigFile() {
-		return new File(baseDir, SORTER_CONFIG_FILE);
-	}
-
-	static void saveFacetsConfig(File file, FacetsConfig facetsConfig) {
-		JsonNode node = setFacetsConfig(facetsConfig);
-		ObjectMapper mapper = new ObjectMapper();
-		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
-
-			mapper.writerWithDefaultPrettyPrinter().writeValue(out, node);
-
-		} catch (IOException ex) {
-			Logger.trace("Can't persist facets config!", ex);
-			ex.printStackTrace();
-		}
-	}
-
-	static FacetsConfig loadFacetsConfig(File file) {
-		FacetsConfig config = null;
-		if (file.exists()) {
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream(file)));
-				config = getFacetsConfig(conf);
-				Logger.info("## FacetsConfig loaded with " + config.getDimConfigs().size() + " dimensions!");
-			} catch (Exception ex) {
-				Logger.trace("Can't read file " + file, ex);
-			}
-		}
-		return config;
-	}
-
-	static ConcurrentMap<String, SortField.Type> loadSorters(File file) {
-		ConcurrentMap<String, SortField.Type> sorters = new ConcurrentHashMap<String, SortField.Type>();
-		if (file.exists()) {
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				JsonNode conf = mapper.readTree(new BufferedInputStream(new FileInputStream(file)));
-				ArrayNode array = (ArrayNode) conf.get("sorters");
-				if (array != null) {
-					for (int i = 0; i < array.size(); ++i) {
-						ObjectNode node = (ObjectNode) array.get(i);
-						String field = node.get("field").asText();
-						String type = node.get("type").asText();
-						sorters.put(field, SortField.Type.valueOf(SortField.Type.class, type));
-					}
-				}
-			} catch (Exception ex) {
-				Logger.trace("Can't read file " + file, ex);
-			}
-		}
-		return sorters;
-	}
-
-	static void saveSorters(File file, Map<String, SortField.Type> sorters) {
-		ObjectMapper mapper = new ObjectMapper();
-
-		ObjectNode conf = mapper.createObjectNode();
-		conf.put("created", TimeUtil.getCurrentTimeMillis());
-		ArrayNode node = mapper.createArrayNode();
-		for (Map.Entry<String, SortField.Type> me : sorters.entrySet()) {
-			ObjectNode obj = mapper.createObjectNode();
-			obj.put("field", me.getKey());
-			obj.put("type", me.getValue().toString());
-			node.add(obj);
-		}
-		conf.put("sorters", node);
-
-		try (OutputStream fos = new BufferedOutputStream(new FileOutputStream(file))) {
-
-			mapper.writerWithDefaultPrettyPrinter().writeValue(fos, conf);
-		} catch (Exception ex) {
-			Logger.trace("Can't persist sorter config!", ex);
-			ex.printStackTrace();
-		}
-	}
-
+	
 	/**
-	 * Closing this indexer will shut it down. This is the same as calling
-	 * {@link #shutdown()}.
+	 * Add the specified field and value pair to the suggests
+	 * which are used for type-ahead queries.
+	 * @param name
+	 * @param value
 	 */
-	@Override
-	public void close() {
-		shutdown();
-	}
-
-	@Override
-	public void newReindex() {
-		//we have to clear our suggest fields since they are about to be completely replaced
-		lookups.clear();
-		sorters.clear();
-	}
-
-	@Override
-	public void doneReindex() {
-
-	}
-
-	@Override
-	public void recordReIndexed(Object o) {
-
-	}
-
-	@Override
-	public void error(Throwable t) {
-
-	}
-
-	@Override
-	public void totalRecordsToIndex(int total) {
-
-	}
-
-	@Override
-	public void countSkipped(int numSkipped) {
-
-	}
-
-	public void shutdown() {
-		if (isShutDown) {
-			return;
-		}
+	void addSuggestedField(String name, String value) {
+		name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
 		try {
-			if (scheduler != null) {
+			SuggestLookup lookup = lookups.computeIfAbsent(name, n -> {
 				try {
-					isShutDown = true;
-					scheduler.shutdown();
-					System.out.println("Awaiting shutdown");
-					scheduler.awaitTermination(1, TimeUnit.MINUTES);
-					System.out.println("finished shutdown");
-					System.out.println("final daemon run");
-					flushDaemon.execute();
-				} catch (Throwable e) {
-					e.printStackTrace();
-					throw new RuntimeException(e);
+					return new SuggestLookup(n);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					Logger.trace("Can't create Lookup!", ex);
+					return null;
 				}
+			});
+			if (lookup != null) {
+				lookup.add(value);
 			}
-
-			saveFacetsConfig(getFacetsConfigFile(), facetsConfig);
-			saveSorters(getSorterConfigFile(), sorters);
-
-			for (SuggestLookup look : lookups.values()) {
-				closeAndIgnore(look);
-			}
-			// clear the lookup value map
-			// if we restart without clearing we might
-			// think we have lookups we don't have if we delete the ginas.ix
-			// area
-			lookups.clear();
-
-			closeAndIgnore(searchManager);
-			closeAndIgnore(indexWriter);
-			closeAndIgnore(taxonWriter);
-
-			closeAndIgnore(indexDir);
-			closeAndIgnore(taxonDir);
 
 		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-			System.out.println("#########$##$#$ ERROR");
-			ex.printStackTrace();
-			Logger.trace("Closing index", ex);
-		} finally {
-			if (indexers != null) {
-				if (baseDir != null) {
-					TextIndexer indexer = indexers.remove(baseDir);
-				}
-			}
-			System.out.println("removed baseDir " + baseDir);
-			// System.out.println("indexers left after shutdown =" +
-			// indexers.keySet());
-
-			if (!isEmptyPool) {
-				threadPool.shutdown();
-				try {
-					threadPool.awaitTermination(1, TimeUnit.MINUTES);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			isShutDown = true;
+			Logger.trace("Can't create Lookup!", ex);
 		}
-	}
-
-	private static void closeAndIgnore(Closeable closeable) {
-		if (closeable == null) {
-			return;
-		}
-		try {
-			closeable.close();
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-	}
-
-	@Override
-	public void produceDynamicFacets(String name, String value, String path, Consumer<IndexableField> fieldTaker) {
-		facetsConfig.setMultiValued(name, true);
-		facetsConfig.setRequireDimCount(name, true);
-		fieldTaker.accept(new FacetField(name, value));
-		fieldTaker.accept(new TextField(path, TextIndexer.START_WORD + value + TextIndexer.STOP_WORD, NO));
-		addSuggestedField(name,value);
 	}
 }

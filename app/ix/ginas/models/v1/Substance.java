@@ -207,10 +207,13 @@ public class Substance extends GinasCommonData {
 
 	public Substance() {
 		this(SubstanceClass.concept);
+		
 	}
 
 	public Substance(SubstanceClass subcls) {
 		substanceClass = subcls;
+		
+		StringBuilder sb = new StringBuilder();
 	}
 
 	@JsonView(BeanViews.Compact.class)
@@ -493,6 +496,7 @@ public class Substance extends GinasCommonData {
 	
 	
 	@JsonIgnore
+	@DataValidated
 	public boolean isValidated(){
 		return this.status.equalsIgnoreCase(STATUS_APPROVED);
 	}
@@ -900,19 +904,9 @@ public class Substance extends GinasCommonData {
 		return !this.relationships.isEmpty();
 	}
 	
-//	
-//	public boolean hasEquivalentRelationship(Relationship rel){
-//		String relType=rel.type;
-//		String refid=rel.relatedSubstance.refuuid;
-//		for(Relationship relationship:this.relationships){
-//			if(relationship.relatedSubstance.refuuid.equals(refid)){
-//				if(relationship.type.equals(relType)){
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
-//	}
+	
+	
+	
 
     /**
      * Create a new {@link Chemical} object for this Substance and ignore

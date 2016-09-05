@@ -1,18 +1,19 @@
 package ix.test.ix.test.server;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import play.libs.ws.WSRequestHolder;
-import play.libs.ws.WSResponse;
-
-import ix.seqaln.SequenceIndexer.CutoffType;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.net.URLEncoder;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static org.junit.Assert.assertTrue;
+import javax.transaction.NotSupportedException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import ix.seqaln.SequenceIndexer.CutoffType;
+import play.libs.ws.WSRequestHolder;
+import play.libs.ws.WSResponse;
 
 /**
  * Created by katzelda on 3/17/16.
@@ -273,13 +274,16 @@ public class SubstanceAPI {
     public JsonHistoryResult fetchSubstanceJsonByUuid(String uuid, int version){
         JsonNode edits = fetchSubstanceHistoryJson(uuid,version);
         //should only have 1 edit...so this should be safe
-        JsonNode edit = edits.iterator().next();
-        JsonNode oldv= session.urlJSON(edit.get("oldValue").asText());
-        JsonNode newv= session.urlJSON(edit.get("newValue").asText());
+        assertEquals(1, edits.size());
 
-
-
-        return new JsonHistoryResult(edit, oldv, newv);
+		JsonNode edit = edits.iterator().next();
+		if (	  (edit.at("/path").isMissingNode() || edit.at("/path").isNull())
+				&& edit.at("/version").asText().equals(version + "")) {
+			JsonNode oldv = session.urlJSON(edit.get("oldValue").asText());
+			JsonNode newv = session.urlJSON(edit.get("newValue").asText());
+			return new JsonHistoryResult(edit, oldv, newv);
+		}
+		throw new NoSuchElementException("No edit found with version:" + version);
     }
 
 	public WSResponse submitCVDomain(JsonNode newCV) {
@@ -309,6 +313,98 @@ public class SubstanceAPI {
 	public WSResponse fetchStructureBrowse() {
 		return session.createRequestHolder(API_URL_STRUCTURE_BROWSE).get().get(timeout);
 	}
+	
+	
+	public SubstanceBrowseResult fetchSubstanceBrowseResult(){
+		return new DefaultSubstanceBrowseResult(session.createRequestHolder(UI_URL_SUBSTANCE_BROWSE).setQueryParameter("wait", "true"));
+	}
+	
+	public interface SubstanceBrowsePage{
+		public int getRecordsOnPage();
+		public String getHtml();
+	}
+	
+	public interface SubstanceBrowseResult{
+		public int getPageCount();
+		public int getRecordCount();
+		public SubstanceBrowsePage getPage(int p);
+		default SubstanceBrowsePage getLastPage(){
+			return getPage(getPageCount());
+		}
+	}
+	
+	public static class DefaultSubstanceBrowsePage implements SubstanceBrowsePage{
+		String html;
+		
+		public DefaultSubstanceBrowsePage(String html){
+			this.html=html;
+		}
+		@Override
+		public int getRecordsOnPage() {
+			throw new RuntimeException ("Not yet able to do this");
+		}
+
+		@Override
+		public String getHtml() {
+			return html;
+		}
+		
+	}
+	
+	public class DefaultSubstanceBrowseResult implements SubstanceBrowseResult{
+		int pageCount;
+		int recordCount;
+		WSRequestHolder ws;
+		boolean loaded=false;
+		
+		
+		public DefaultSubstanceBrowseResult(WSRequestHolder ws){
+			this.ws=ws;
+			
+		}
+		
+		private void refresh(){
+			String html = ws.get().get(timeout).getBody();
+			recordCount=getRecordCountFromHtml(html);
+			pageCount=((recordCount-1)/16)+1; //TODO: not a safe assumption
+			loaded=true;
+		}
+		
+		@Override
+		public int getPageCount() {
+			if(!loaded)refresh();
+			return pageCount;
+		}
+
+		@Override
+		public int getRecordCount() {
+			if(!loaded)refresh();
+			return recordCount;
+		}
+
+		@Override
+		public SubstanceBrowsePage getPage(int p) {
+			if(!loaded)refresh();
+			String html = ws
+	    			.setQueryParameter("page", p + "")
+	        		.get().get(timeout).getBody();
+			return new DefaultSubstanceBrowsePage(html);
+		}
+		
+	}
+	
+	private static int getRecordCountFromHtml(String html){
+    	String recStart = "<span id=\"record-count\" class=\"label label-default\">";
+    	int io=html.indexOf(recStart);
+    	int ei=html.indexOf("<", io + 3);
+    	if(ei>0 && io >0){
+    		String c=html.substring(io + recStart.length(),ei);
+    		try{
+    		return Integer.parseInt(c.trim());
+    		}catch(Exception e){}
+    	}
+    	return -1;
+    }
 
 
 }

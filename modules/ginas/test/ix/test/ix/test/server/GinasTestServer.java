@@ -28,6 +28,7 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
+import ix.test.ix.test.server.GinasTestServer.User;
 import ix.test.util.TestUtil;
 import net.sf.ehcache.CacheManager;
 import org.apache.commons.io.FileUtils;
@@ -126,9 +127,10 @@ public class GinasTestServer extends ExternalResource{
 
     private static final List<Role> superUserRoles = Role.roles(Role.SuperUpdate,Role.SuperDataEntry );
     private static final List<Role> normalUserRoles = Role.roles(Role.DataEntry,Role.Updater );
-
     private static final List<Role> adminUserRoles = Role.roles(Role.values() );
+    private static final List<Role> approverUserRoles = Role.roles(Role.DataEntry,Role.Updater, Role.Approver);
 
+    
     private int userCount=0;
 
     private boolean running=false;
@@ -354,6 +356,10 @@ public class GinasTestServer extends ExternalResource{
         RestSession session= new RestSession(user, port, type);
         sessions.add(session);
         return session;
+    }
+
+    public User createApprover(String username, String password){
+        return createUser(username, password, approverUserRoles);
     }
 
 
@@ -680,5 +686,6 @@ public class GinasTestServer extends ExternalResource{
     public File getStorageRootDir(){
         return TextIndexerPlugin.getStorageRootDir();
     }
+
 
 }

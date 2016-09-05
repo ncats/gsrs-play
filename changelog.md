@@ -12,7 +12,15 @@ Enhancements
    for restricting global searches.
 4. Allow searching by code systems (BDNUM, CAS, etc)
 5. Improved inital browse and paging now far more robust
-   and less likely to cause problems.
+   and less likely to cause problems
+6. Added debugging utilities for developers to add specific
+   delays to database fetches and structure processing,
+   to find problematic areas under stress testing.
+7. A new Role "Approver" has been added. Users with this role
+   can approve substances. SuperUpdater role no longer has
+   approval access. Instead, SuperUpdater can now also
+   update record information for previously approved
+   substances.
 
 Bug Fixes
 ---------
@@ -31,6 +39,10 @@ Bug Fixes
    locking mechanism has been reorganized, and is now
    very unlikely for this to be an issue.
 4. Fixed edit history bug related to #3.
+5. Fixed IndexAlreadyClosedException problem, where
+   the Lucene index was closed before all the
+   results were fetched from the database.
+
  
 
 A Deeper look
@@ -47,10 +59,10 @@ A Deeper look
 2. EntityFetcher now uses common cache for entities instead
    of user-specific cache.
 
-3. Massive refactoring has greatly simplified the codebase.
-   There are many places where dead, deprecated, or incomplete
-   code had been present. Most of it is gone now. In addition,
-   many duplicative function calls have been abstracted out.
+3. Massive refactoring has greatly improves readability of the 
+   codebase. There are many places where dead, deprecated, or 
+   incomplete code had been present. Most of it is gone now. In 
+   addition, many duplicative function calls have been abstracted out.
 
 4. We used to fetch out all the possible Classes that we'd need
    to consider when fetching for a generic object. It turns out
@@ -58,9 +70,19 @@ A Deeper look
    Not only have we reduced the number of reflection calls made
    (by other means as well), but we have eliminated the need for
    6 or 7 database calls that were previously used in fetching
-   edit history
+   edit history.
 
-5. Before, all browse and search requests from the 
+5. It used to be that the search results were populated by a
+   thread which used an open IndexSearcher from lucene. It turns
+   out this caused a problem, as the parent spawning thread would
+   release the IndexSearcher as soon as the method call was complete.
+   For rapid responding database fetches, this wasn't a problem. But
+   it is a problem if database fetches are slow, as it's more likely
+   that the IndexSearcher will be invalid by the time it's used. Now,
+   when we spawn the new thread, we give it a new IndexSearcher,
+   which will also be released upon completion.
+
+6. Before, all browse and search requests from the 
    UI were loaded, in their entirety, one at a time, from the database. 
    Then each was put into the cache, as well as into
    a list found in a SearchResult (which is also in the cache)
@@ -139,6 +161,17 @@ A Deeper look
    to fetch each from the database, without having the
    pump "primed".
 
+7. We now use an `EntityFetcher` for acquiring objects
+   from the database from a given `Key` (kind + id). This
+   `EntityFetcher` has some configurability on how to use
+   the cache. By default, now, all calls are fetched by their
+   key from a globally accessible cache. However, it can
+   be set instead to have the Fetcher itself store the object
+   after an initial call (useful for a small, user-specific
+   fetch that should not touch the global cache). It can also
+   be set to eagerly fetch the objects, which is essentially
+   equivalent to the previous mechanism used. There are other
+   options as well, but those are the most useful for debugging.
 
 
 

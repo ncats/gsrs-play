@@ -29,7 +29,7 @@ import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.controllers.EntityFactory;
-import ix.core.search.text.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.EntityWrapper;
 
 
 /**

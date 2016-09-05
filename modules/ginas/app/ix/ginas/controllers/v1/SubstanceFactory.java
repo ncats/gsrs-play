@@ -3,11 +3,11 @@ package ix.ginas.controllers.v1;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
@@ -19,19 +19,12 @@ import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
-import ix.core.controllers.KeywordFactory;
-import ix.core.controllers.StructureFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
-import ix.core.models.Group;
-import ix.core.models.Predicate;
 import ix.core.models.Principal;
-import ix.core.models.Structure;
 import ix.core.models.UserProfile;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils;
 import ix.core.util.TimeUtil;
-import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -47,7 +40,6 @@ import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
-import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
@@ -81,24 +73,6 @@ public class SubstanceFactory extends EntityFactory {
 		return getSubstance(UUID.fromString(id));
 	}
 
-	public static Expression andAll(Expression... e) {
-		Expression retExpr = e[0];
-
-		for (Expression expr : e) {
-			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
-		}
-		return retExpr;
-	}
-
-	public static Expression orAll(Expression... e) {
-		Expression retExpr = e[0];
-
-		for (Expression expr : e) {
-			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
-		}
-		return retExpr;
-	}
-
 	public static Substance getSubstanceVersion(String id, String version) {
 		if (id == null)
 			return null;
@@ -110,14 +84,31 @@ public class SubstanceFactory extends EntityFactory {
 			}
 		}
 		
-		//make generic somewhere
+		//TODO: make generic somewhere
+		// for instance, couldn't edit fetching happen even on 
+		// the EnityWrapper?
+		// It would be awesome if we could say something 
+		// on any given record like:
+		//	.getEdits()
+		//	.getVersion(int i)
+		// etc ...
+		//
+		// Instead, it's quite hodge-podge now
+		
+		List<Expression> kindExpressions=
+			Arrays.stream(Substance.getAllClasses())
+					.map(c -> Expr.eq("kind",c.getName()))
+					.collect(Collectors.toList());
+				
+		
+		
 		Query<Edit> q = EditFactory.finder.where(andAll(Expr.eq("refid", id.toString()),
-												  orAll(Expr.eq("kind", Arrays.stream(Substance.getAllClasses()).map(c -> c.getName()))),
+												  orAll(kindExpressions.toArray(new Expression[0])),
 												  		Expr.eq("version", version), 
 												  		Expr.isNull("path")));
 		Edit e=q.findUnique();
-		
 		try{
+			//Good idea? Maybe, Maybe not.
 			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
 		}catch(Exception e1){
 			e1.printStackTrace();

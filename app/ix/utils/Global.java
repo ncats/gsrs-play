@@ -24,7 +24,7 @@ import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxContext;
-import ix.core.search.text.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.EntityWrapper;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;

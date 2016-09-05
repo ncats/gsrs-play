@@ -2,8 +2,11 @@ package ix.core.search.text;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.InputStreamSource;
 
 import ix.utils.ExecutionStack;
 
@@ -29,6 +32,21 @@ public class PathStack implements ExecutionStack<String>{
 			realStack.pop();
 		}
 	}
+	
+	
+	
+	public void pushAndPopWith(List<String> obj, Runnable r){
+		realStack.addAll(obj);
+		try{
+			r.run();
+		}finally{
+			IntStream.range(0, obj.size()).forEach(i->{
+				realStack.pop();
+			});
+		}
+	}
+	
+	
 	
 	/* (non-Javadoc)
 	 * @see ix.core.search.text.ExecutionStack#getFirst()

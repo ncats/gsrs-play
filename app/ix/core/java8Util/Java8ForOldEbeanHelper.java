@@ -10,8 +10,8 @@ import java.util.function.Consumer;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.search.text.EntityUtils.EntityWrapper;
-import ix.core.search.text.EntityUtils.Key;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 
 /**
  * This class was created so Ebean enchanced classes using Play 2.3 can use Java

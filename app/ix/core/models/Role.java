@@ -9,6 +9,7 @@ public enum Role implements be.objectify.deadbolt.core.models.Role {
         SuperDataEntry,
         Updater,
         SuperUpdate,
+        Approver,
         Admin;
         //Guest, Owner, Admin, User; //authenticated user
 

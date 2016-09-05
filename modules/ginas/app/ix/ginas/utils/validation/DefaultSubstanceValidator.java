@@ -202,9 +202,9 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 			//only for non-batch loads
 			if(this.method!=METHOD_TYPE.BATCH){
 				if(objold!=null){
-					changeSubstanceValation(objnew,objold,vlad);
+					changeSubstanceValidation(objnew,objold,vlad);
 				}else{
-					addNewSubstanceValation(objnew,vlad);
+					addNewSubstanceValidation(objnew,vlad);
 				}
 				
 			}
@@ -247,8 +247,10 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		}
 	}
 
+	//TODO: All of this is ad-hoc, and needs to be moved to a more generic framework.
+	
 	// only for old
-	private void changeSubstanceValation(Substance objnew,Substance objold, List<GinasProcessingMessage> vlad) {
+	private void changeSubstanceValidation(Substance objnew,Substance objold, List<GinasProcessingMessage> vlad) {
 		UserProfile up = getCurrentUser();
 		if(!objnew.getClass().equals(objold.getClass())){
 			vlad.add(GinasProcessingMessage.WARNING_MESSAGE("Substance class should not typically be changed"));
@@ -259,19 +261,26 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		}
 		
 		
+		
+		
 		if (objnew.isPublic() && !objold.isPublic()) {
 			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperUpdate))) {
 				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can make a substance public"));
 			}
 		}
 		
-		
 
+		//Making a change to a validated record
+		if (objnew.isValidated()) {
+			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperUpdate))) {
+				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can update approved substances"));
+			}
+		}
+		
+		
+		//Changed approvalID
 		if (objold.approvalID != null) {
 			if (!objold.approvalID.equals(objnew.approvalID)) {
-				
-				
-				
 				// Can't change approvalID!!! (unless admin)
 				if (up.hasRole(Role.Admin)) {
 					if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
@@ -288,14 +297,13 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 							"The approvalID for the record has changed. Was ('" + objold.approvalID + "') but now is ('"
 									+ objnew.approvalID + "'). This is not allowed, except by an admin."));
 				}
-
 			}
 		}
 	}
 	
 	
 	//only for new
-	private void addNewSubstanceValation(Substance objnew,List<GinasProcessingMessage> vlad){
+	private void addNewSubstanceValidation(Substance objnew,List<GinasProcessingMessage> vlad){
 		
 		UserProfile up=getCurrentUser();
 		if (objnew.isPublic()) {

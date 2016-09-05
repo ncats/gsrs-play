@@ -39,11 +39,11 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.search.text.EntityUtils.EntityWrapper;
-import ix.core.search.text.EntityUtils.Key;
+import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
+import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.TimeProfiler;
 import ix.utils.Tuple;
@@ -172,8 +172,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     	Edit e = new Edit(ew.getClazz(),ew.getKey().getIdString());
     	e.oldValue=oldJSON;
     	e.path=null;
+    	
     	if(ew.getVersion().isPresent()){
     		e.version=ew.getVersion().get().toString();
+    		//TODO: consider this
+    		//e.comments = e.version + " comment";
     	}
     	storeEditForUpdate(ew.getKey(),e);
     	return e;
@@ -182,7 +185,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     /**
      * Used to apply the change operation during a locked edit.
-     * Empty optional is used to cancel an operation. (could be another parameter I guess)
+     * Empty optional is used to cancel an operation, and a non-empty optional
+     * will be used just to pass through.
      *  
      * @author peryeata
      *
@@ -192,6 +196,17 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         Optional apply(T obj) throws Exception; //Can't be of T type, unfortunately ... may return different thing
     }
 
+    /**
+     * This is the same as performChange, except that it takes in the object
+     * to be changed rather than the key to retrieve that object.
+     * 
+     * Note that the actual object will still be fetched using the key
+     * from the database. This is because it may be stale at this point.
+     * 
+     * @param t
+     * @param changeOp
+     * @return
+     */
     public static <T> EntityWrapper performChangeOn(T t,ChangeOperation<T> changeOp){
     	EntityWrapper<T> wrapped = EntityWrapper.of(t);
     	return performChange(wrapped.getKey(),changeOp);
@@ -199,9 +214,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     //This should do 2 things
     // #1, It should lock the object from being updated, blocking if necessary
-    // #2, It should create the Edit to be used by the postUpdate hook
-    //     	as a default.
+    // #2, It should create and save the versioned Edit
+    //
+    //  This accepts a change operation, which should do the actual saving and changing
     
+    
+    // Returns the thing
     public static <T> EntityWrapper performChange(Key key, ChangeOperation<T> changeOp){
        // Objects.requireNonNull(id);
         Objects.requireNonNull(key);
@@ -227,35 +245,32 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         Edit e=null;
         try{
         	
-            e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for existence of an active edit
+            e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
+                                                     //existence of an active edit
             								   		 //let's hope it works anyway!
             
             Optional op = changeOp.apply((T)ew.getValue()); //saving happens here
             												//So should anything with the edit
             												//inside of a post Update hook
-            
-            if(op.isPresent()){
-            	EntityWrapper saved = EntityWrapper.of(op.get());
-            	
-//            	e.newValue = saved.toFullJson(); //Shouldn't need to do this
-//            	e.save(); //or this
-            	return saved;
-            }
-            
-            
-            return null;
+            EntityWrapper saved=null;
+            //didn't work, according to change operation
+            if(!op.isPresent()){
+            	System.out.println("Couldn't perform change.");
+            	return null; 
+            }else{
+            	saved = EntityWrapper.of(op.get());
+			}
+			e.kind = saved.getKind();
+			e.newValue = saved.toFullJson();
+			e.save();
+
+            return saved;
         }catch(Exception ex){
             ex.printStackTrace();
             throw new IllegalStateException(ex);
         }finally{
             if(e !=null) {
-                Edit enow = popEditForUpdate(key); //Done with that edit, release it!
-                
-                if(enow==null){
-                	//It worked!
-                }else{
-                	//It didn't work.
-                }
+                popEditForUpdate(key); //When we're all done, release it
             }
             lock.release(); //release the lock
         }
@@ -269,9 +284,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     
     public static Edit popEditForUpdate(Key key){
-    	return editMap.remove(key);
-    	
+    	return editMap.remove(key);	
     }
+    public static boolean isEditPresentUpdate(Key key){
+    	return editMap.containsKey(key);
+    }
+    
     public static int getEditUpdateCount(){
     	return editMap.size();
     }
@@ -571,27 +589,19 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 try {
                     if (ew.isEntity() && ew.hasKey()) {
                     	Key key = ew.getKey();
-                    	Edit edit=EntityPersistAdapter.popEditForUpdate(key); //not working apparently
-                    	
-                    	
-                    	//TP: Are these done 2 places now?
-                    	//won't edits be stored twice?
-                    	//Also, this isn't sufficient to capture everything.
-                    	//It seems that it only grabs the previous values
-                    	//that are top-level. If an object inside a collection,
-                    	//or with some other identifier changes internally,
-                    	//that info is lost.
-                    	
-                    	// Update: the process has been reworked.
-                    	// Should be fine now, but won't yet store granularity
-                    	if(edit==null){
-                    		 edit = new Edit (ew.getClazz(), key.getIdString());
-                    		 edit.oldValue = mapper.toJson(oldvalues);
-                    		 edit.version = ew.getVersion().orElse(null);
-                    	}
-                    	edit.kind = ew.getKind();
-                    	edit.newValue = mapper.toJson(bean);  //Maybe don't?
-               	     	edit.save();                        
+                    	// If we didn't already start an edit for this
+                    	// then start one and save it. Otherwise just ignore
+                    	// the edit piece.
+						if (!EntityPersistAdapter.isEditPresentUpdate(key)) { 
+							Edit edit = new Edit(ew.getClazz(), key.getIdString());
+							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
+							edit.version = ew.getVersion().orElse(null);
+							
+							edit.kind = ew.getKind();
+							edit.newValue = ew.toFullJson(); 
+							edit.save();
+							
+						}
                     }else {
                         Logger.warn("Entity bean ["+ew.getKind()+"]"
                                     +" doesn't have Id annotation!");

@@ -17,9 +17,9 @@ import java.util.function.Consumer;
 
 import ix.core.CacheStrategy;
 import ix.core.search.LazyList.NamedCallable;
-import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.TimeUtil;
+import ix.core.util.EntityUtils.EntityWrapper;
 import play.Logger;
 
 @CacheStrategy(evictable=false)
@@ -33,17 +33,17 @@ public class SearchResult {
      * 
      * @return
      */
-    public List<FieldFacet> getFieldFacets(){
+    public List<FieldedQueryFacet> getFieldFacets(){
         return suggestFacets;
     }
     
     String key;
     String query;
     List<Facet> facets = new ArrayList<Facet>();
-    List<FieldFacet> suggestFacets = new ArrayList<FieldFacet>();
+    List<FieldedQueryFacet> suggestFacets = new ArrayList<FieldedQueryFacet>();
     
     LazyList<Object> matches = new LazyList<> (o->(EntityWrapper.of(o)).getKey().getIdString());
-    
+    //List<NamedCallable> matches = new ArrayList<>();
     List<?> result; // final result when there are no more updates
     
     
@@ -358,7 +358,7 @@ public class SearchResult {
 		this.facets.add(f);
 	}
 
-	public void addFieldFacet(FieldFacet ff) {
+	public void addFieldQueryFacet(FieldedQueryFacet ff) {
 		this.suggestFacets.add(ff);
 	}
 }

@@ -333,11 +333,11 @@ public class Util {
     
     
     //only here for testing purposes
-    public static void debugSpin(int milliseconds) {
+    public static void debugSpin(long milliseconds) {
     	if(Play.isProd())return;
         long sleepTime = milliseconds*1000000L; // convert to nanoseconds
         long startTime = System.nanoTime();
-        while ((System.nanoTime() - startTime) < sleepTime) {}
+        while ((System.nanoTime() - startTime) < sleepTime) {} //Yes, it's pegging the CPU, that's intentional
     }
     
     public static byte[] serialize (Object obj) throws IOException {

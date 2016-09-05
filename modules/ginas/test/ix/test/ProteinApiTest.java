@@ -81,7 +81,6 @@ public class ProteinApiTest {
 	            EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 	            JsonNode entered = em.valueToTree(ps);
 	            ensurePass( api.submitSubstance(entered));
-	            System.out.println("Put:" + uuid);
             }
             String oldCount=null;
             String total=null;

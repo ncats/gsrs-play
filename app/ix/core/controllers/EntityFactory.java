@@ -1,7 +1,5 @@
 package ix.core.controllers;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -11,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,16 +16,18 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Expression;
 import com.avaje.ebean.FutureRowCount;
 import com.avaje.ebean.Query;
 import com.avaje.ebean.annotation.Transactional;
-import com.avaje.ebean.bean.EntityBean;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -53,16 +52,12 @@ import ix.core.models.BeanViews;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
 import ix.core.models.ForceUpdatableModel;
-import ix.core.models.Principal;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.Java8Util;
 import ix.utils.Global;
 import ix.utils.Util;
-import ix.utils.pojopatch.ChangeEventListener;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import play.Logger;
@@ -77,23 +72,23 @@ public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
 
-    static Model.Finder<Long, Principal> _principalFinder;
-
     static TextIndexerPlugin textIndexerPlugin;
     
     static{
     	init();
     }
     
+    
     public static void init(){
         textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
-    	_principalFinder=new Model.Finder(Long.class, Principal.class);
     }
 
     static TextIndexer getTextIndexer(){
         return textIndexerPlugin.getIndexer();
     }
 
+    
+    
     public static class FetchOptions {
         public int top=10;
         public int skip=0;
@@ -101,67 +96,46 @@ public class EntityFactory extends Controller {
         public List<String> expand = new ArrayList<String>();
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
+        
+        Map<String, Consumer<String[]>> parsers = new HashMap<>();
+        
+        {
+        	Function<String, Optional<Integer>> intParser = s->{
+        		try{
+        			return Optional.of(Integer.parseInt(s));
+        		}catch(NumberFormatException ex){
+        			Logger.trace("Bogus integer value: "+s, ex);
+        		}
+        		return Optional.empty();
+        	};
+        	parsers.put("order", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("expand", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("select", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("top", a->intParser.apply(a[0]).ifPresent(i->top=i));
+        	parsers.put("skip", a->intParser.apply(a[0]).ifPresent(i->skip=i));
+        	parsers.put("filter", a->{
+        		filter=a[0];
+        	});
+        }
 
         
         // only in the context of a request
                         
         public FetchOptions () {
-            for (Map.Entry<String, String[]> me
-                     : request().queryString().entrySet()) {
-                String param = me.getKey();
-                if ("order".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        order.add(s);
-                }
-                else if ("expand".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        expand.add(s);
-                }
-                else if ("select".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        select.add(s);
-                }
-                else if ("top".equalsIgnoreCase(param)) {
-                    String n = me.getValue()[0];
-                    try {
-                        top = Integer.parseInt(n);
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.trace("Bogus top value: "+n, ex);
-                    }
-                }
-                else if ("skip".equalsIgnoreCase(param)) {
-                    String n = me.getValue()[0];
-                    try {
-                        skip = Integer.parseInt(n);
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.trace("Bogus skip value:"+n, ex);
-                    }
-                }
-                else if ("filter".equalsIgnoreCase(param)) {
-                    filter = me.getValue()[0];
-                }
-            }
+        	request().queryString().forEach((param,value)->
+    		parsers.getOrDefault(param.toLowerCase(), s->Logger.trace("unknown option:" + param))
+    				.accept(value)
+        			);
         }
         
         public FetchOptions (int top, int skip, String filter) {
-                try{
-                    for (Map.Entry<String, String[]> me
-                             : request().queryString().entrySet()) {
-                        String param = me.getKey();
-                        if ("order".equalsIgnoreCase(param)) {
-                            for (String s : me.getValue())
-                                order.add(s);
-                        }
-                        else if ("expand".equalsIgnoreCase(me.getKey())) {
-                            for (String s : me.getValue())
-                                expand.add(s);
-                        }
-                    }
-                }catch(Exception e){
-                        
-                }
+        	this();
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -215,7 +189,12 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
-        public static EntityMapper FULL_ENTITY_MAPPER(){
+        /**
+		 * Default value
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public static EntityMapper FULL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Full.class);
         }
         public static EntityMapper INTERNAL_ENTITY_MAPPER(){
@@ -231,8 +210,7 @@ public class EntityFactory extends Controller {
             configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
             this.setSerializationInclusion(Include.NON_NULL);
             _serializationConfig = getSerializationConfig();
-            
-            for (Class v : views) {
+            for (Class<?> v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
             }
             addHandler ();
@@ -241,8 +219,11 @@ public class EntityFactory extends Controller {
         void addHandler () {
             addHandler (new DeserializationProblemHandler () {
                     public boolean handleUnknownProperty
-                        (DeserializationContext ctx, JsonParser parser,
-                         JsonDeserializer deser, Object bean, String property) {
+                        (DeserializationContext ctx, 
+                         JsonParser parser,
+                         JsonDeserializer deser, 
+                         Object bean, 
+                         String property) {
                         return _handleUnknownProperty
                             (ctx, parser, deser, bean, property);
                     }
@@ -308,9 +289,9 @@ public class EntityFactory extends Controller {
         try {
             long start = System.currentTimeMillis();
             List<T> results = query
-                .setFirstRow(options.skip)
-                .setMaxRows(options.top)
-                .findList();
+				                .setFirstRow(options.skip)
+				                .setMaxRows(options.top)
+				                .findList();
             Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
             return results;
         }
@@ -904,10 +885,20 @@ public class EntityFactory extends Controller {
             
             T inst = mapper.treeToValue(node, type);
             
+            
+            //gets the value (if exists)
             Optional<EntityWrapper> oldValue = getCurrentValue(inst);
             
-			ValidationResponse<T> vr = 
-					validator.validate(inst,(T) oldValue.map(o -> o.getValue()).orElse(null));
+            ValidationResponse<T> vr;
+            
+            //If it's present
+            if(oldValue.isPresent()){
+            	//Validate using it and the new value
+            	vr= validator.validate(inst,(T)oldValue.map(o -> o.getValue()).get());	
+            }else{
+            	//Validate using only new value
+            	vr= validator.validate(inst,null);
+            } 
 
             if(rept==RESPONSE_TYPE.FULL){
             	return ok(prepareValidationResponse(vr,true));
@@ -957,31 +948,55 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+" not found");
     }
 
-    protected static Result edits (Object id, Class<?>... cls) {
-    	List<Edit> edits = new ArrayList<Edit>();
-    	FetchOptions fe=new FetchOptions ();
-    	
-    	//if(true)return EditFactory.page(fe.top, fe.skip, fe.filter);
-    	//EditFactory.page(top, skip, filter)
-        for (Class<?> c : cls) {
-        	System.out.print("Find is:" + c.getName());
-        	Query q=EditFactory.finder.where
-                    (Expr.and(Expr.eq("refid", id.toString()),
-                            Expr.eq("kind", c.getName())));
-        	q=fe.applyToQuery(q);
-            List<Edit> tmpedits = q.findList();
-            if(tmpedits!=null){
-            	edits.addAll(tmpedits);
-            }
-        }
-        System.out.println(edits.size());
-        if (!edits.isEmpty()) {
-            ObjectMapper mapper = getEntityMapper ();
-            return Java8Util.ok (mapper.valueToTree(edits));
-        }
 
-        return notFound (request().uri()+": No edit history found!");
-    }
+    //And all expressions together
+    //TODO: There has got to be a cleaner way
+	public static Expression andAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
+		}
+		return retExpr;
+	}
+
+    //Or all expressions together
+    //TODO: There has got to be a cleaner way
+	public static Expression orAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
+		}
+		return retExpr;
+	}
+    
+	protected static Result edits(Object id, Class<?>... cls) {
+		List<Edit> edits = new ArrayList<Edit>();
+		FetchOptions fe = new FetchOptions();
+
+		Expression[] kindExpressions = Arrays.stream(cls)
+				.map(c -> Expr.eq("kind", c.getName()))
+				.collect(Collectors.toList())
+				.toArray(new Expression[0]);
+
+		Query<Edit> q = EditFactory.finder
+				.where(andAll(
+						Expr.eq("refid", id.toString()),
+						orAll(kindExpressions)
+						));
+		
+		fe.applyToQuery(q);
+		List<Edit> tmpedits = q.findList();
+		if (tmpedits != null) {
+			edits.addAll(tmpedits);
+		}
+		
+		if (!edits.isEmpty()) {
+			ObjectMapper mapper = getEntityMapper();
+			return Java8Util.ok(mapper.valueToTree(edits));
+		}
+
+		return notFound(request().uri() + ": No edit history found!");
+	}
     
     /**
      * Handle generic update to field, without special deserializationHandler
@@ -1040,7 +1055,7 @@ public class EntityFactory extends Controller {
     
     //Typically mutates, but doesn't sometimes -- I know, but we delete/create sometimes instead
     
-    public static EntityWrapper itsMorphinTime(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
+    public static EntityWrapper calculateAndApplyDiff(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
     	 boolean usePojoPatch=false;
          if(oWrap.getClazz().equals(nWrap.getClazz())){ //only use POJO patch if the entities are the same type
          	usePojoPatch=true;
@@ -1154,9 +1169,8 @@ public class EntityFactory extends Controller {
             //EditHistory eh = new EditHistory (json.toString());
             
             EntityWrapper savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
-            	
             	EntityWrapper og= EntityWrapper.of(ov);
-                
+
                 vr[0]=validator.validate(newValue,og.getValue());
                 if(!vr[0].isValid()){
                 	return Optional.empty();
@@ -1165,7 +1179,7 @@ public class EntityFactory extends Controller {
                 
                 InxightTransaction tx = InxightTransaction.beginTransaction();
                 try{
-                	entityThatWasSaved=itsMorphinTime(og,EntityWrapper.of(newValue)); //saving happens here
+                	entityThatWasSaved=calculateAndApplyDiff(og,EntityWrapper.of(newValue)); //saving happens here
 	                tx.commit();
 
 	                // This was added because there are times
@@ -1174,6 +1188,7 @@ public class EntityFactory extends Controller {
 	                // so this forces the issue
 	                EntityPersistAdapter.getInstance().deepreindex(newValue);
                 }catch(Exception e){
+                	
                 	e.printStackTrace();
                 }finally{
                 	tx.end();
@@ -1183,10 +1198,10 @@ public class EntityFactory extends Controller {
             
             if(vr[0]==null){
             	return badRequest("Validation Response could not be generated");
-            }
-            
-            if(!vr[0].isValid()){
+            }else if(!vr[0].isValid()){
 	            return badRequest(prepareValidationResponse(vr[0],false));
+	        }else if(savedVersion == null){ //Couldn't happen for some reason
+	        	return internalServerError ("unsuccessful"); //TODO: make this follow a better contract
 	        }
             
             return Java8Util.ok (savedVersion.toJson(mapper));
@@ -1203,7 +1218,12 @@ public class EntityFactory extends Controller {
     
     // This could become a nice method.
     private static Optional<EntityWrapper> getCurrentValue(Object value){
-    	return EntityWrapper.of(value).getKey().fetch().map(EntityWrapper::of);
+    	if(EntityWrapper.of(value).hasKey()){
+    		return EntityWrapper.of(value).getKey().fetch();
+    	}else{
+    		return Optional.empty();
+    	}
+    	
     }
     
 }
