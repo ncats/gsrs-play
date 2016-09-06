@@ -1780,24 +1780,26 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		Document doc = new Document();
 		
 		Consumer<IndexableField> fieldCollector = f->{
-				String text = f.stringValue();
-				if (text != null) {
-					if (DEBUG(2)){
-						Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
-					}
-					TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
-					//tf.set
-					doc.add(tf);
-					if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
-						fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
-							.add(tf);
+				if(f instanceof TextField || f instanceof StringField){
+					String text = f.stringValue();
+					if (text != null) {
+						if (DEBUG(2)){
+							Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+						}
+						TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
+						//tf.set
+						doc.add(tf);
+						if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
+							fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
+								.add(tf);
+						}
 					}
 				}
 				doc.add(f);
 		};
 		
 		//flag the kind of document
-		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
+		
 		
 		ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
 										.withDynamicFieldMaker(this)	
@@ -1810,8 +1812,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
 				
 				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
-				StringField docParent=new StringField(luceneKey.k(),luceneKey.v(),YES);
-				FacetField  docParentFacet =new FacetField(luceneKey.k(),luceneKey.v());
+				StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
+				FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
 				//This is a test of a terrible idea, which just. might. work.
 				fullText.forEach((name,group)->{
 						try{
@@ -1830,7 +1832,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 					});
 			}
 		}
-				
+		
+		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
+		
 		// now index
 		addDoc(doc);
 		
@@ -1892,7 +1896,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
-					qa.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(ANALYZER_VAL_PREFIX+docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
