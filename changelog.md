@@ -25,6 +25,7 @@ Enhancements
    substances.
 10.Fields to be indexed for analysis have been restricted
    to a few names fields.
+11.Added CodeSystem indexes to speed up validation.
 
 Bug Fixes
 ---------
