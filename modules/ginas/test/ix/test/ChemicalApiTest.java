@@ -58,7 +58,7 @@ public class ChemicalApiTest {
         }
     };
     
-    @Test @Ignore  
+    @Test   
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
@@ -120,7 +120,7 @@ public class ChemicalApiTest {
         }
     }
     
-    @Test @Ignore  
+    @Test   
    	public void testFlexMatch() throws Exception {
         JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -131,7 +131,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test @Ignore  
+    @Test   
    	public void testFlexMatchWith2Moieties() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -145,7 +145,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test @Ignore  
+    @Test   
    	public void testFlexMatchWithIonsReturnsParents() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -160,7 +160,7 @@ public class ChemicalApiTest {
             assertTrue("Should have 2 results for flex match, but found something else",html.contains("<span id=\"record-count\" class=\"label label-default\">2</span>"));
         }
    	}
-    @Test @Ignore  
+    @Test   
    	public void testBadFlexMatchReturnsNothing() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -177,7 +177,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test @Ignore  
+    @Test   
    	public void testExactMatchReturnsOnlyExactMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -202,7 +202,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test @Ignore  
+    @Test   
    	public void substructureSearchSimple() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -218,7 +218,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test @Ignore  
+    @Test   
    	public void testSubstructureSearchSpecificity() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -234,7 +234,7 @@ public class ChemicalApiTest {
         }
    	}
     
-    @Test @Ignore  
+    @Test   
     public void ensureWarningOnPentavalentCarbon(){
     	try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
@@ -256,7 +256,7 @@ public class ChemicalApiTest {
         }
     }
     
-    @Test @Ignore  
+    @Test   
 	public void testChemicalExportAsSDF() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -272,7 +272,7 @@ public class ChemicalApiTest {
 			
 		}
 	}
-    @Test @Ignore  
+    @Test   
 	public void testChemicalExportAsSmiles() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -290,7 +290,7 @@ public class ChemicalApiTest {
 		}
 	}
     
-    @Test @Ignore  
+    @Test   
     public void testMolfileMoietyDecomposeDoesNotIncreaseStructureTotal() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
@@ -359,7 +359,7 @@ public class ChemicalApiTest {
         assertEquals(oldCount, newCount);
     }
     
-    @Test @Ignore  
+    @Test   
     public void testExportTemporaryAfterMoietyDecompose() throws Exception {
     	String molfile="\n" + 
     			"   JSDraw204021619552D\n" + 
@@ -479,7 +479,7 @@ public class ChemicalApiTest {
 	 * components 
 	 * @throws Exception
 	 */
-	@Test @Ignore 
+	@Test  
 	public void testCanonicalMolForms() throws Exception {
 		
 		
@@ -498,15 +498,29 @@ public class ChemicalApiTest {
 		}
 
 	}
+	
+	/*
+	 * Here's a test.
+	 * 
+	 * How about adding 10,000 substances. Then, go to the browse page.
+	 * 
+	 * Click the last page.
+	 * 
+	 * Here's what I want to know.
+	 * 
+	 * #1. How long does it take to go the last page?
+	 * #2. How much memory is being taken up at this time?
+	 * #3.
+	 * 
+	 * 
+	 */
     
     public static void ensureExport(SubstanceAPI api, JsonNode structure){
     	String id = structure.at("/id").asText();
     	JsonNode uuidJSON=structure.at("/uuid");
-    	if(
-    			 uuidJSON!= null &&
+    	if(uuidJSON!= null &&
     			!uuidJSON.isMissingNode() &&
     			!uuidJSON.isNull()
-    			
     			){
     		id = uuidJSON.asText();
     	}

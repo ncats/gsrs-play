@@ -2,11 +2,21 @@ package ix.core.search.text;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.InputStreamSource;
 
 import ix.utils.ExecutionStack;
 
+
+/**
+ * Obviously not thread-safe. Don't try to use the same PathStack in two
+ * different threads!
+ * @author peryeata
+ *
+ */
 public class PathStack implements ExecutionStack<String>{
 	LinkedList<String> realStack = new LinkedList<String>();
 	
@@ -23,6 +33,21 @@ public class PathStack implements ExecutionStack<String>{
 		}
 	}
 	
+	
+	
+	public void pushAndPopWith(List<String> obj, Runnable r){
+		realStack.addAll(obj);
+		try{
+			r.run();
+		}finally{
+			IntStream.range(0, obj.size()).forEach(i->{
+				realStack.pop();
+			});
+		}
+	}
+	
+	
+	
 	/* (non-Javadoc)
 	 * @see ix.core.search.text.ExecutionStack#getFirst()
 	 */
@@ -31,10 +56,11 @@ public class PathStack implements ExecutionStack<String>{
 		return realStack.getFirst();
 	}
 	
+	//Pretty lazy, really ... but don't optimize it
 	public String toPath() {
 		StringBuilder sb = new StringBuilder(256);
 		// TP: Maybe do this?
-		sb.append(TextIndexer.ROOT + "_");
+		sb.append(TextIndexer.ROOT + "_"); //TODO: abstract this away somehow?
 
 		for (Iterator<String> it = realStack.descendingIterator(); it.hasNext();) {
 			String p =  it.next();

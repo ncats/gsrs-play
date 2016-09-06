@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,14 +39,15 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
-import ix.core.search.EntityFetcher;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.search.text.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
+import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.TimeProfiler;
 import ix.utils.Tuple;
+import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -63,6 +65,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             this.refId = refId;
         }
 
+        public boolean isLocked(){
+        	return this.lock.isLocked();
+        }
+        
+        public boolean tryLock(){
+        	return this.lock.tryLock();
+        }
+        
 
         public void acquire(){
             synchronized (count){
@@ -117,19 +127,22 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     private Map<Class<?>, List<EntityProcessor>> extraProcessors=new HashMap<>();
     
-    private static Map<String, MyLock> lockMap;
+    
+    //Do we need both?
+    private static Map<Key, MyLock> lockMap;
+    private static ConcurrentHashMap<Key, Edit> editMap;
     
     private TextIndexerPlugin textIndexerPlugin =
             Play.application().plugin(TextIndexerPlugin.class);
     private static StructureIndexerPlugin strucProcessPlugin;
     private static SequenceIndexerPlugin seqProcessPlugin;
     
-    private static ConcurrentHashMap<String, Integer> alreadyLoaded;
+    private static ConcurrentHashMap<Key, Integer> alreadyLoaded;
     
     public static EntityPersistAdapter getInstance(){
     	return _instance;
     }
-    private static ConcurrentHashMap<String, Edit> editMap;
+    
 
 
     static{
@@ -152,76 +165,131 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
      * @param bean
      * @return
      */
-    public static Edit storeEditForPossibleUpdate(Object bean){
-    	if(bean==null)return null;
-    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
-    	String oldJSON = mapper.toJson(bean);
-    	EntityInfo ei = EntityUtils.getEntityInfoFor(bean);
-    	Tuple<String,String> f_id=ei.getFieldAndId(bean);
+    public static Edit createAndPushEditForWrappedEntity(EntityWrapper ew){
+    	Objects.requireNonNull(ew);
+    	String oldJSON = ew.toFullJson();
     	
-    	Edit e = new Edit(ei.getClazz(),f_id.v());
+    	Edit e = new Edit(ew.getClazz(),ew.getKey().getIdString());
     	e.oldValue=oldJSON;
-    	e.version=ei.getVersionAsStringFor(bean);
+    	e.path=null;
     	
-    	
-    	storeEditForUpdate(f_id,e);
+    	if(ew.getVersion().isPresent()){
+    		e.version=ew.getVersion().get().toString();
+    		//TODO: consider this
+    		//e.comments = e.version + " comment";
+    	}
+    	storeEditForUpdate(ew.getKey(),e);
     	return e;
     }
 
+    
+    /**
+     * Used to apply the change operation during a locked edit.
+     * Empty optional is used to cancel an operation, and a non-empty optional
+     * will be used just to pass through.
+     *  
+     * @author peryeata
+     *
+     * @param <T>
+     */
     public interface ChangeOperation<T>{
-        void apply(T obj) throws Exception;
+        Optional apply(T obj) throws Exception; //Can't be of T type, unfortunately ... may return different thing
     }
 
-    public static <T> void performChange(String id, Supplier<T> objSupplier, ChangeOperation<T> changeOp){
+    /**
+     * This is the same as performChange, except that it takes in the object
+     * to be changed rather than the key to retrieve that object.
+     * 
+     * Note that the actual object will still be fetched using the key
+     * from the database. This is because it may be stale at this point.
+     * 
+     * @param t
+     * @param changeOp
+     * @return
+     */
+    public static <T> EntityWrapper performChangeOn(T t,ChangeOperation<T> changeOp){
+    	EntityWrapper<T> wrapped = EntityWrapper.of(t);
+    	return performChange(wrapped.getKey(),changeOp);
+    }
+    
+    //This should do 2 things
+    // #1, It should lock the object from being updated, blocking if necessary
+    // #2, It should create and save the versioned Edit
+    //
+    //  This accepts a change operation, which should do the actual saving and changing
+    
+    
+    // Returns the thing
+    public static <T> EntityWrapper performChange(Key key, ChangeOperation<T> changeOp){
        // Objects.requireNonNull(id);
-        Objects.requireNonNull(objSupplier);
+        Objects.requireNonNull(key);
         Objects.requireNonNull(changeOp);
 
-        MyLock lock = lockMap.computeIfAbsent(id, new Function<String, MyLock>() {
+        MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
             @Override
-            public MyLock apply(String key) {
-                return new MyLock(key);
-            }});
+            public MyLock apply(Key key) {
+                return new MyLock(key.toString()); //This should work, but feels wrong
+            }
+        });
 
-        lock.acquire();
+        if(lock.isLocked()){
+        	System.out.println("Record " + key + " is locked. Waiting ...");
+        }
         
+        lock.acquire(); //acquire the lock (blocks)
         
-        T bean = objSupplier.get();
+        EntityWrapper<T> ew = key.fetch().get(); //supplies the object to be edited,
+        										 //you could have a different supplier
+        										 //for this, but it's nice to be sure
+        										 //that the object can't be stale
         Edit e=null;
         try{
-            e=storeEditForPossibleUpdate(bean);
-            if(e ==null){
-                return;
-            }
-            changeOp.apply(bean);
+        	
+            e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
+                                                     //existence of an active edit
+            								   		 //let's hope it works anyway!
+            
+            Optional op = changeOp.apply((T)ew.getValue()); //saving happens here
+            												//So should anything with the edit
+            												//inside of a post Update hook
+            EntityWrapper saved=null;
+            //didn't work, according to change operation
+            if(!op.isPresent()){
+            	System.out.println("Couldn't perform change.");
+            	return null; 
+            }else{
+            	saved = EntityWrapper.of(op.get());
+			}
+			e.kind = saved.getKind();
+			e.newValue = saved.toFullJson();
+			e.save();
+
+            return saved;
         }catch(Exception ex){
             ex.printStackTrace();
             throw new IllegalStateException(ex);
         }finally{
             if(e !=null) {
-            	//This part wasn't right before ... should be ok now
-            	//Still, when do we actually need to pop?
-                popEditForUpdate(EntityUtils.getEntityInfoFor(bean).getFieldAndId(bean));
+                popEditForUpdate(key); //When we're all done, release it
             }
-            lock.release();
+            lock.release(); //release the lock
         }
     }
 
     
-    private static void storeEditForUpdate(Tuple<String,String> fieldAndId, Edit e){
-    	String s1=fieldAndId.k() + ":" + fieldAndId.v();
-    	editMap.put(s1,e);
+    private static void storeEditForUpdate(Key k, Edit e){
+    	if(editMap.containsKey(k))throw new IllegalStateException("Concurrent edit may have occured, bailing out");
+    	editMap.put(k,e);
     }
     
     
-    public static Edit popEditForUpdate(Tuple<String,String> fieldAndId){
-    	String s1=fieldAndId.k() + ":" + fieldAndId.v();
-    	Edit e= editMap.get(s1);
-    	if(e!=null){
-    		editMap.remove(s1);
-    	}
-    	return e;
+    public static Edit popEditForUpdate(Key key){
+    	return editMap.remove(key);	
     }
+    public static boolean isEditPresentUpdate(Key key){
+    	return editMap.containsKey(key);
+    }
+    
     public static int getEditUpdateCount(){
     	return editMap.size();
     }
@@ -230,7 +298,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
     	if(ls!=null){
     		for(Object o:ls){
-    			if(o instanceof Map){
+    			if(o instanceof Map){ //TODO: This can be parsed with a little less strangeness
 	    			Map m = (Map)o;
 	    			String entityClass=(String) m.get("class");
 	    			String processorClass=(String) m.get("processor");
@@ -513,41 +581,32 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){
-    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
-    	EntityWrapper<?> ew= new EntityWrapper(bean);
-    	
+    	EntityWrapper<?> ew= EntityWrapper.of(bean);
     	if (ew.ignorePostUpdateHooks()) {
             return;
         }
-    	
-        Tuple<String,String> fieldAndId = ew.getIdAndFieldName();
+    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
                 try {
-                    if (fieldAndId.v() != null) {
-                    	Edit edit=EntityPersistAdapter.popEditForUpdate(fieldAndId);
-                    	//TP: Are these done 2 places now?
-                    	//won't edits be stored twice?
-                    	//Also, this isn't sufficient to capture everything.
-                    	//It seems that it only grabs the previous values
-                    	//that are top-level. If an object inside a collection,
-                    	//or with some other identifier changes internally,
-                    	//that info is lost.
-                    	if(edit==null){
-                    		 edit = new Edit (ew.getClazz(), fieldAndId.v());
-                    		 edit.oldValue = mapper.toJson(oldvalues);
-                    		 edit.version = ew.getVersion().orElse(null);
-                    	}else{
-                    		
-                    	}
-                    	edit.kind = ew.getKind();
-                    	edit.newValue = mapper.toJson(bean);
-               	     	edit.save();                        
-                    }
-                    else {
-                        Logger.warn("Entity bean ["+ew.getKind()+"]="+fieldAndId.v()
+                    if (ew.isEntity() && ew.hasKey()) {
+                    	Key key = ew.getKey();
+                    	// If we didn't already start an edit for this
+                    	// then start one and save it. Otherwise just ignore
+                    	// the edit piece.
+						if (!EntityPersistAdapter.isEditPresentUpdate(key)) { 
+							Edit edit = new Edit(ew.getClazz(), key.getIdString());
+							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
+							edit.version = ew.getVersion().orElse(null);
+							
+							edit.kind = ew.getKind();
+							edit.newValue = ew.toFullJson(); 
+							edit.save();
+							
+						}
+                    }else {
+                        Logger.warn("Entity bean ["+ew.getKind()+"]"
                                     +" doesn't have Id annotation!");
                     }
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                     Logger.trace("Can't retrieve bean id", ex);
                 }
             
@@ -579,7 +638,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             Logger.warn("Can't update bean index "+bean, ex);
         }
         
-        IxCache.removeAllChildKeys(ew.getGlobalKey());
+        IxCache.removeAllChildKeys(ew.getKey().toString());
     } 
 
     @Override
@@ -664,7 +723,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     
     public void deepreindex(Object bean, boolean deleteFirst){
-    	Java8ForOldEbeanHelper.deepreindex(this,new EntityWrapper(bean),deleteFirst);
+    	Java8ForOldEbeanHelper.deepreindex(this,EntityWrapper.of(bean),deleteFirst);
     }
     
 	public void reindex(Object bean){
@@ -674,8 +733,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     public void reindex(EntityWrapper ew, boolean deleteFirst){
     	
         try {
-        	if(ew.hasGlobalKey()){
-	        	String key=ew.getGlobalKey(); // Is this one the best to use?
+        	if(ew.hasKey()){
+	        	Key key=ew.getKey();
 	            if(key!=null) {
 	            	if(alreadyLoaded.containsKey(key)){
 	                    return;

@@ -397,12 +397,11 @@ public class SequenceIndexer {
 
         closeAndIgnore(kmerDir);
         closeAndIgnore(indexDir);
-        System.out.println("in shutdown");
+        
         if (localThreadPool) {
             threadPool.shutdownNow();
-
         }
-        System.out.println("done shutdown");
+        
 
     }
 

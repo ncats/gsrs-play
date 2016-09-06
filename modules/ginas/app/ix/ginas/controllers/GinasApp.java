@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import ix.core.controllers.AdminFactory;
@@ -17,6 +18,7 @@ import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.Java8Util;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.ginas.utils.reindex.MultiReIndexListener;
@@ -56,7 +58,6 @@ import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
-import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.ginas.controllers.v1.CV;
@@ -825,7 +826,10 @@ public class GinasApp extends App {
         
         try {
             long start = System.currentTimeMillis();
+            
+            
             SearchResult result = getOrElse(sha1, ()->{
+            				
                             SearchOptions options = 
                             		new SearchOptions(Substance.class, total, 0, FACET_DIM)
                             			 .parse(params);
@@ -1056,7 +1060,6 @@ public class GinasApp extends App {
         	
             SearchResultContext context = App.substructure
                 (query, rows, page, new GinasSearchResultProcessor(isWaitSet()));
-            System.out.println("Ok, got the context");
             return App.fetchResult
                 (context, rows, page, 
                  new SubstanceResultRenderer (CHEMICAL_FACETS));
@@ -1085,6 +1088,9 @@ public class GinasApp extends App {
      * 
      * While it's not as pretty, I'm defaulting to using the uuid or
      * approvalID.
+     * 
+     * Update: When is this called now? In constructing a URL probably?
+     * 
      */
     public static String getId(Substance substance) {
         return substance.getUuid().toString().substring(0, 8);
@@ -1362,23 +1368,30 @@ public class GinasApp extends App {
 	}
     
     
-    // sigh ... this is the best of a bunch of bad options now
+	
 
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
-        
+    	int index;
+    	
         GinasSearchResultProcessor(boolean wait) {
         	this.setWait(wait);
         }
 
-        int index;
+        
         protected ChemicalSubstance instrument(StructureIndexer.Result r)
             throws Exception {
+        	
         	//Shouldn't this be cached somewhere?
+        	//Also, why bother fetching the whole thing?
+        	//Just need the key, really ... 
+        	
             List<ChemicalSubstance> chemicals = SubstanceFactory
-            		.chemfinder
-            		.where().eq("structure.id", r.getId())
-            		.findList();
+						            		.chemfinder
+						            		.where()
+						            		.eq("structure.id", r.getId())
+						            		.findList(); //Might be slow ... probably a better way to do
+						            					 //this, that uses cache?
             
             double similarity=r.getSimilarity();
             Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
@@ -1386,7 +1399,6 @@ public class GinasApp extends App {
                          
             ChemicalSubstance chem = null;
             if (!chemicals.isEmpty()) {
-            	
                 int[] amap = new int[r.getMol().getAtomCount()];
                 int i = 0, nmaps = 0;
                 for (MolAtom ma : r.getMol().getAtomArray()) {
@@ -1396,17 +1408,14 @@ public class GinasApp extends App {
                     }
                     ++i;
                 }
-
-                chem = chemicals.iterator().next();             
+                chem = chemicals.iterator().next();
                 if (nmaps > 0) {
                 	String cachekey="AtomMaps/"+getContext().getId()+"/" +r.getId();
                     IxCache.setTemp(cachekey, amap);
                 }
                 IxCache.setTemp("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
+                
             }
-           
-            
-            
             return chem;
         }
     }
@@ -1419,9 +1428,8 @@ public class GinasApp extends App {
         protected ProteinSubstance instrument (SequenceIndexer.Result r)
             throws Exception {
             List<ProteinSubstance> proteins = SubstanceFactory.protfinder
-                .where().eq("protein.subunits.uuid", r.id).findList();
-            ProteinSubstance protein =
-                proteins.isEmpty() ? null : proteins.get(0);
+                .where().eq("protein.subunits.uuid", r.id).findList(); //also slow
+            ProteinSubstance protein = proteins.isEmpty() ? null : proteins.get(0);
             if (protein != null) {
                 IxCache.setTemp("Alignment/"+getContext().getId()+"/"+r.id, r);
             }

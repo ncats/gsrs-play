@@ -27,9 +27,9 @@ import ix.core.models.Acl;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityInfo;
+import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
+import ix.core.util.EntityUtils.EntityInfo;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Global;
 import play.Logger;
@@ -99,7 +99,7 @@ public class RouteFactory extends Controller {
                                  +" for factory "+factory.getClass()
                                  +" doesn't have any Id annotation!");
                 }else {
-                    Class<?> c = ei.getIDFieldInfo().get().getType();
+                    Class<?> c = ei.getIdType();
                     if (UUID.class.isAssignableFrom(c)) {
                         Logger.debug("## "+ei.getName()
                                      +" is globally unique!");

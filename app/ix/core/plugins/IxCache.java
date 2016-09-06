@@ -1,13 +1,14 @@
 package ix.core.plugins;
 
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.util.EntityUtils.Key;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Application;
@@ -15,7 +16,8 @@ import play.Logger;
 import play.Plugin;
 
 public class IxCache extends Plugin {
-
+	private AtomicLong lastNotifiedChange=new AtomicLong(0l); // The last timestamp IxCache was told there was a change
+	
     static final int DEFAULT_MAX_ELEMENTS = 10000;
     static final int DEFAULT_TIME_TO_LIVE = 60*60; // 1hr
     static final int DEFAULT_TIME_TO_IDLE = 60*60; // 1hr
@@ -29,21 +31,14 @@ public class IxCache extends Plugin {
 
     private GateKeeper gateKeeper;
 
-
     static private IxCache _instance;
 
-    
-    
     public IxCache (Application app) {
         this.app = app;
     }
 
-
     public IxCache( GateKeeper gateKeeper) {
-
         app = null;
-
-
         this.gateKeeper =gateKeeper;
     }
 
@@ -65,9 +60,6 @@ public class IxCache extends Plugin {
 
         int timeToIdle = app.configuration()
                 .getInt(CACHE_TIME_TO_IDLE, DEFAULT_TIME_TO_IDLE);
-
-    System.out.println("####################");
-        System.out.println("max elements = " + maxElements);
 
         GateKeeper gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
                 .debugLevel(debugLevel)
@@ -132,20 +124,13 @@ public class IxCache extends Plugin {
     	return getOrElse(key,generator,0);
     }
     
-    
-
-    
-    
     // mimic play.Cache 
     public static <T> T getOrElse (String key, Callable<T> generator,
                                    int seconds) throws Exception {
-
         checkInitialized();
         return _instance.gateKeeper.getOrElse(key,  generator,seconds);
 
     }
-    
-    
     
     public static void clearCache(){
         _instance.gateKeeper.clear();
@@ -168,8 +153,6 @@ public class IxCache extends Plugin {
     public static Stream<Element> toJsonStream(int top, int skip){
         checkInitialized();
         return _instance.gateKeeper.elements(top,skip);
-
-
     }
 
 
@@ -232,6 +215,11 @@ public class IxCache extends Plugin {
 		}
 		return (T)o;
 	}
+	
+
+	public static Object getOrFetchTempRecord(Key k) throws Exception {
+		return getOrElseTemp(k.toString(), ()->k.fetch().get().getValue());
+	}
 
 	/**
 	 * Used for temporary cache storage which may be needed across
@@ -247,6 +235,9 @@ public class IxCache extends Plugin {
 		return getRaw(key);
 	}
 	
+	
+	
+	
 	/**
 	 * Used for temporary cache storage which may be needed across
 	 * users or within both attached and detached sessions 
@@ -261,140 +252,35 @@ public class IxCache extends Plugin {
 	public static void setTemp(String key, Object value) {
 		setRaw(key, value);
 	}
+
+
+	/**
+	 * Whenever there's a change to some underlying data store (Lucene, Database, etc)
+	 * that this cache will be caching, you can mark it here. Depending on certain
+	 * policy considerations, you may be able to reject things older than this time of change
+	 * 
+	 */
+	public static void markChange() {
+		_instance.notifyChange(System.currentTimeMillis());
+	}
 	
 	
-	/* Here are the interfaces
-    public Object createEntry (Object key) throws Exception {
-        if (!(key instanceof Serializable)) {
-            throw new IllegalArgumentException
-                ("Cache key "+key+" is not serliazable!");
-        }
-
-        Element elm = null;
-        try {
-            DatabaseEntry dkey = getKeyEntry (key);
-            DatabaseEntry data = new DatabaseEntry ();
-            OperationStatus status = db.get(null, dkey, data, null);
-            if (status == OperationStatus.SUCCESS) {
-                ObjectInputStream ois = new ObjectInputStream
-                    (new ByteArrayInputStream
-                     (data.getData(), data.getOffset(), data.getSize()));
-                elm = new Element (key, ois.readObject());
-                ois.close();
-            }
-            else if (status == OperationStatus.NOTFOUND) {
-                // 
-            }
-            else {
-                Logger.warn("Unknown status for key "+key+": "+status);
-            }
-        }
-        catch (Exception ex) {
-            Logger.error("Can't recreate entry for "+key, ex);
-        }
-        return elm;
-    }
-    
-   
-    @Override
-    public void init () {
-        try {
-            File dir = new File (ctx.cache(), "ix");
-            dir.mkdirs();
-            EnvironmentConfig envconf = new EnvironmentConfig ();
-            envconf.setAllowCreate(true);
-            Environment env = new Environment (dir, envconf);
-            DatabaseConfig dbconf = new DatabaseConfig ();
-            dbconf.setAllowCreate(true);
-            db = env.openDatabase(null, CACHE_NAME, dbconf);
-        }
-        catch (Exception ex) {
-            Logger.error("Can't initialize lucene for "+ctx.cache(), ex);
-        }
-    }
-    
-    @Override
-    public void dispose () {
-        if (db != null) {       
-            try {
-                Logger.debug("#### closing cache writer "+cache.getName()
-                             +"; "+db.count()+" entries #####");
-                db.close();
-            }
-            catch (Exception ex) {
-                Logger.error("Can't close lucene index!", ex);
-            }
-        }
-    }
-    
-    @Override
-    public void delete (CacheEntry entry) {
-        Object key = entry.getKey();
-        if (!(key instanceof Serializable))
-            return;
-
-        try {
-            DatabaseEntry dkey = getKeyEntry (key);
-            OperationStatus status = db.delete(null, dkey);
-            if (status != OperationStatus.SUCCESS)
-                Logger.warn("Delete cache key '"
-                            +key+"' returns status "+status);
-        }
-        catch (Exception ex) {
-            Logger.error("Deleting cache "+key+" from persistence!", ex);
-        }
-    }
-    
-    @Override
-    public void write (Element elm) {
-        Serializable key = elm.getKey();
-        if (key != null) {
-            //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
-            try {
-                DatabaseEntry dkey = getKeyEntry (key);
-                DatabaseEntry data = new DatabaseEntry
-                    (Util.serialize(elm.getObjectValue()));
-                OperationStatus status = db.put(null, dkey, data);
-                if (status != OperationStatus.SUCCESS)
-                    Logger.warn
-                        ("** PUT for key "+key+" returns status "+status);
-            }
-            catch (Exception ex) {
-                Logger.error("Can't write cache element: key="
-                             +key+" value="+elm.getObjectValue(), ex);
-            }
-        }
-        else {
-            Logger.warn("Key "+elm.getObjectKey()+" isn't serializable!");
-        }
-    }
-
-    @Override
-    public void deleteAll (Collection<CacheEntry> entries) {
-        for (CacheEntry e : entries)
-            delete (e);
-    }
-    
-    @Override
-    public void writeAll (Collection<Element> entries) {
-        for (Element elm : entries)
-            write (elm);
-    }
-
-    @Override
-    public void throwAway (Element elm,
-                           SingleOperationType op, RuntimeException ex) {
-        Logger.error("Throwing away cache element "+elm.getKey(), ex);
-    }
-
-    @Override
-    public CacheWriter clone (Ehcache cache) {
-        throw new UnsupportedOperationException
-            ("This implementation doesn't support clone operation!");
-    }
-    
-    */
-//}
-
+	/**
+	 * Stores the latest of the two time stamps as the time that things 
+	 * should be fresh AFTER (possibly stale before this time).
+	 * @param time
+	 */
+	public void notifyChange(long time){
+		lastNotifiedChange.updateAndGet(u-> Math.max(u,time));
+	}
+	
+	public boolean hasBeenNotifiedSince(long thistime){
+		if(lastNotifiedChange.get()>thistime)return true;
+		return false;
+	}
+	
+	public static boolean hasChangedSince(long t){
+		return _instance.hasBeenNotifiedSince(t);
+	}
 	
 }

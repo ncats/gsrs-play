@@ -1,12 +1,13 @@
 package ix.ginas.controllers.v1;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
@@ -18,17 +19,12 @@ import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
-import ix.core.controllers.KeywordFactory;
-import ix.core.controllers.StructureFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
-import ix.core.models.Group;
-import ix.core.models.Predicate;
 import ix.core.models.Principal;
-import ix.core.models.Structure;
 import ix.core.models.UserProfile;
+import ix.core.util.EntityUtils;
 import ix.core.util.TimeUtil;
-import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -44,7 +40,6 @@ import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
-import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
@@ -58,87 +53,69 @@ public class SubstanceFactory extends EntityFactory {
 	static public Model.Finder<UUID, Substance> finder;
 
 	// Do we still need these?
-	//Yes used in GinasApp
+	// Yes used in GinasApp
 	static public Model.Finder<UUID, ChemicalSubstance> chemfinder;
 	static public Model.Finder<UUID, ProteinSubstance> protfinder;
 
-	static{
+	static {
 		init();
 	}
 
-	public static void init(){
+	public static void init() {
 		finder = new Model.Finder(UUID.class, Substance.class);
-		chemfinder = new Model.Finder(UUID.class,
-				ChemicalSubstance.class);
-		protfinder = new Model.Finder(UUID.class,
-				ProteinSubstance.class);
+		chemfinder = new Model.Finder(UUID.class, ChemicalSubstance.class);
+		protfinder = new Model.Finder(UUID.class, ProteinSubstance.class);
 	}
-
 
 	public static Substance getSubstance(String id) {
 		if (id == null)
 			return null;
 		return getSubstance(UUID.fromString(id));
 	}
-	
-	public static Expression andAll(Expression... e){
-		Expression retExpr=e[0];
-		
-		for(Expression expr:e){
-			retExpr=com.avaje.ebean.Expr.and(retExpr, expr);
-		}
-		return retExpr;
-	}
-	
+
 	public static Substance getSubstanceVersion(String id, String version) {
 		if (id == null)
 			return null;
-		//System.out.println("Looking for history, this is likely broken");
-		List<Edit> edits = new ArrayList<Edit>();
-    	Class oclass=null;
-
-		List<Substance> slist = resolve(id);
-		if(slist!=null && !slist.isEmpty() && slist.size()==1){
-			Substance current = slist.get(0);
-			if(current.version.equals(version)){
-				return current;
+		
+		Substance s = SubstanceFactory.getSubstance(id);
+		if (s != null) {
+			if (s.version.equals(version)) {
+				return s;
 			}
 		}
-
-        for (Class<?> c : Substance.getAllClasses()) {
-        	Query q=EditFactory.finder.where
-                    (andAll(
-                    		Expr.eq("refid", id.toString()),
-                            Expr.eq("kind", c.getName()),
-                            Expr.eq("version", version),
-                            Expr.isNull("path"))
-                     );
-        	List<Edit> tmpedits = q.findList();
-            if(tmpedits!=null && !tmpedits.isEmpty()){
-            	//System.out.println("OK, I found some");
-            	edits.addAll(tmpedits);
-            	oclass=c;
-            	break;
-            }
-        }
-        
-        if(edits.size()>1){
-        	Logger.error("more than one edit with version:" + version);
-        }else{
-	        if (!edits.isEmpty()) {
-	            EntityMapper em=getEntityMapper();
-	            try{
-	            	Substance s = (Substance)em.readValue(edits.get(0).oldValue,oclass);
-	            	return s;
-	            }catch(Exception e){
-	            	e.printStackTrace();
-	            }
-	        }
-        }
-
-        return null;
+		
+		//TODO: make generic somewhere
+		// for instance, couldn't edit fetching happen even on 
+		// the EnityWrapper?
+		// It would be awesome if we could say something 
+		// on any given record like:
+		//	.getEdits()
+		//	.getVersion(int i)
+		// etc ...
+		//
+		// Instead, it's quite hodge-podge now
+		
+		List<Expression> kindExpressions=
+			Arrays.stream(Substance.getAllClasses())
+					.map(c -> Expr.eq("kind",c.getName()))
+					.collect(Collectors.toList());
+				
 		
 		
+		Query<Edit> q = EditFactory.finder.where(andAll(Expr.eq("refid", id.toString()),
+												  orAll(kindExpressions.toArray(new Expression[0])),
+												  		Expr.eq("version", version), 
+												  		Expr.isNull("path")));
+		Edit e=q.findUnique();
+		try{
+			//Good idea? Maybe, Maybe not.
+			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
+		}catch(Exception e1){
+			e1.printStackTrace();
+		}
+
+		return null;
+
 	}
 
 	public static Substance getSubstance(UUID uuid) {
@@ -150,7 +127,8 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getFullSubstance(SubstanceReference subRef) {
-		if(subRef==null)return null;
+		if (subRef == null)
+			return null;
 		return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
 	}
 
@@ -172,29 +150,29 @@ public class SubstanceFactory extends EntityFactory {
 		}
 		return realList;
 	}
-	
-
 
 	/**
 	 * Returns the substance corresponding to the supplied uuid or approvalID.
 	 * 
 	 * If either is null, it will not be used in resolving. This method returns
-	 * first based on the UUID, and falls back to the approvalID if nothing is found.
+	 * first based on the UUID, and falls back to the approvalID if nothing is
+	 * found.
 	 * 
 	 * @param approvalID
 	 * @param uuid
 	 * @return
 	 */
 	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
-		try{
-			if(approvalID==null && uuid == null)return null;
-			
-			Substance s = (uuid!=null)?getSubstance(uuid):null;
-			if (s == null && approvalID !=null){
-				s=getSubstanceByApprovalID(approvalID);
+		try {
+			if (approvalID == null && uuid == null)
+				return null;
+
+			Substance s = (uuid != null) ? getSubstance(uuid) : null;
+			if (s == null && approvalID != null) {
+				s = getSubstanceByApprovalID(approvalID);
 			}
 			return s;
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -281,14 +259,11 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result create() {
-		
+
 		JsonNode value = request().body().asJson();
 		Class subClass = getClassFromJson(value);
-		DefaultSubstanceValidator sv = DefaultSubstanceValidator.NEW_SUBSTANCE_VALIDATOR(
-				GinasProcessingStrategy
-				.ACCEPT_APPLY_ALL_WARNINGS()
-				.markFailed()
-				);
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator
+				.NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().markFailed());
 		return create(subClass, finder, sv);
 	}
 
@@ -347,10 +322,9 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result updateEntity() {
-		DefaultSubstanceValidator sv = DefaultSubstanceValidator.UPDATE_SUBSTANCE_VALIDATOR(
-				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS()
-				);
-		
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator
+				.UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+
 		if (!request().method().equalsIgnoreCase("PUT")) {
 			return badRequest("Only PUT is accepted!");
 		}
@@ -366,9 +340,8 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result update(UUID uuid, String field) {
-		DefaultSubstanceValidator sv = DefaultSubstanceValidator.UPDATE_SUBSTANCE_VALIDATOR(
-							GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS()
-				);
+		DefaultSubstanceValidator sv = DefaultSubstanceValidator
+				.UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
 
 		// if(true)return ok("###");
 		try {
@@ -381,81 +354,82 @@ public class SubstanceFactory extends EntityFactory {
 		}
 	}
 
-	//silly test
-	//silly test
-		public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
-			//System.out.println("Dupe chack");
-			String hash = cs.structure.getLychiv4Hash();
-			List<Substance> dupeList= new ArrayList<Substance>();
-			dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
-			return dupeList;
-		}
-	//TODO
+	// silly test
+	// silly test
+	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
+		// System.out.println("Dupe chack");
+		String hash = cs.structure.getLychiv4Hash();
+		List<Substance> dupeList = new ArrayList<Substance>();
+		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+		return dupeList;
+	}
+	// TODO
 	/*
-	 * This filter isn't quite sufficient for what we need, though it's a good start
+	 * This filter isn't quite sufficient for what we need, though it's a good
+	 * start
 	 * 
 	 * 
 	 * 
 	 */
-//	public static class UserGroupAccessSubstanceFilter<Substance> extends Predicate {
-//		
-//
-//		UserProfile profile = UserFetcher.getActingUserProfile(true);
-//		Principal user = profile != null ? profile.user : null;
-//		boolean hasAdmin = false;
-//		Set<Group> groups=null;
-//		
-//		public UserGroupAccessSubstanceFilter(){
-//			if(profile!=null){
-//				groups=new HashSet<Group>(profile.getGroups());
-//			}
-//			if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
-//				hasAdmin=true;
-//			}
-//			if(groups==null){
-//				groups=new HashSet<Group>();
-//			}
-//		}
-//
-//		public boolean accept(Substance sub) {
-//			if(hasAdmin)return true;
-//			//System.out.println("looking for access");
-//			//Group group = (Group) grp;
-//			Substance substance = (Substance) sub;
-//			Set<Group> accessG = substance.getAccess();
-//			
-//			if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
-//				return true;
-//			}
-//			//System.out.println("Group 1:" + accessG);
-//			//System.out.println("Group 2:" + groups);
-//			if(Collections.disjoint(accessG, groups)){
-//				//System.out.println("Won't show:" + sub.getName());
-//				return false;
-//			}
-//			return true;
-//		}
-//
-//	}
-//	public static class AcceptAllFilter extends EntityFilter<Substance> {
-//
-//		@Override
-//		public boolean accept(Substance sub) {
-//			return true;
-//		}
-//		
-//	}
+	// public static class UserGroupAccessSubstanceFilter<Substance> extends
+	// Predicate {
+	//
+	//
+	// UserProfile profile = UserFetcher.getActingUserProfile(true);
+	// Principal user = profile != null ? profile.user : null;
+	// boolean hasAdmin = false;
+	// Set<Group> groups=null;
+	//
+	// public UserGroupAccessSubstanceFilter(){
+	// if(profile!=null){
+	// groups=new HashSet<Group>(profile.getGroups());
+	// }
+	// if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
+	// hasAdmin=true;
+	// }
+	// if(groups==null){
+	// groups=new HashSet<Group>();
+	// }
+	// }
+	//
+	// public boolean accept(Substance sub) {
+	// if(hasAdmin)return true;
+	// //System.out.println("looking for access");
+	// //Group group = (Group) grp;
+	// Substance substance = (Substance) sub;
+	// Set<Group> accessG = substance.getAccess();
+	//
+	// if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
+	// return true;
+	// }
+	// //System.out.println("Group 1:" + accessG);
+	// //System.out.println("Group 2:" + groups);
+	// if(Collections.disjoint(accessG, groups)){
+	// //System.out.println("Won't show:" + sub.getName());
+	// return false;
+	// }
+	// return true;
+	// }
+	//
+	// }
+	// public static class AcceptAllFilter extends EntityFilter<Substance> {
+	//
+	// @Override
+	// public boolean accept(Substance sub) {
+	// return true;
+	// }
+	//
+	// }
 
 	public static SequenceIndexer getSeqIndexer() {
 		return EntityPersistAdapter.getSequenceIndexer();
 	}
 
-
-
 	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top, int skip, Subunit subunit) {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();
 		try {
-			ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF, CutoffType.GLOBAL);
+			ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF,
+					CutoffType.GLOBAL);
 			int i = 0;
 			while (re.hasMoreElements()) {
 				SequenceIndexer.Result r = re.nextElement();
@@ -483,12 +457,12 @@ public class SubstanceFactory extends EntityFactory {
 	public static Result approve(String substanceId) {
 		try {
 			List<Substance> substances = SubstanceFactory.resolve(substanceId);
-		
+
 			if (substances.size() == 1) {
 				Substance s = substances.get(0);
 				approveSubstance(s);
 				s.save();
-				EntityMapper em=EntityMapper.FULL_ENTITY_MAPPER();
+				EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
 				return ok(em.toJson(s));
 			}
 			throw new IllegalStateException("More than one substance matches that term");
@@ -500,23 +474,23 @@ public class SubstanceFactory extends EntityFactory {
 	public static Result approve(UUID substanceId) {
 		return approve(substanceId.toString());
 	}
-	
+
 	public static List<Substance> resolve(String name) {
 		if (name == null) {
 			return null;
 		}
-		
-		try{
-			Substance s=finder.byId(UUID.fromString(name));
-			if(s!=null){
+
+		try {
+			Substance s = finder.byId(UUID.fromString(name));
+			if (s != null) {
 				List<Substance> retlist = new ArrayList<Substance>();
 				retlist.add(s);
 				return retlist;
 			}
-		}catch(Exception e){
-			
+		} catch (Exception e) {
+
 		}
-		
+
 		List<Substance> values = new ArrayList<Substance>();
 		if (name.length() == 8) { // might be uuid
 			values = finder.where().istartsWith("uuid", name).findList();
@@ -541,7 +515,7 @@ public class SubstanceFactory extends EntityFactory {
 
 		UserProfile up = UserFetcher.getActingUserProfile(false);
 		Principal user = null;
-		if(s.status==Substance.STATUS_APPROVED){
+		if (s.status == Substance.STATUS_APPROVED) {
 			throw new IllegalStateException("Cannot approve an approved substance");
 		}
 		if (up == null || up.user == null) {
@@ -578,6 +552,6 @@ public class SubstanceFactory extends EntityFactory {
 		s.approvalID = GinasUtils.getAPPROVAL_ID_GEN().generateID();
 		s.approved = TimeUtil.getCurrentDate();
 		s.approvedBy = user;
-		s.status=Substance.STATUS_APPROVED;
+		s.status = Substance.STATUS_APPROVED;
 	}
 }

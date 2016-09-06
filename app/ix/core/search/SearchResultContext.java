@@ -46,7 +46,7 @@ public class SearchResultContext {
     String mesg;
     Long start;
     Long stop;
-    List<FieldFacet> fieldFacets=null;
+    List<FieldedQueryFacet> fieldFacets=null;
     Collection results = new LinkedBlockingDeque();
     String id = Util.randvar (10);
     Integer total;
@@ -116,7 +116,7 @@ public class SearchResultContext {
         this.key=result.getKey();
     }
     
-    public List<FieldFacet> getFieldFacets(){
+    public List<FieldedQueryFacet> getFieldFacets(){
     	return fieldFacets;
     }
 

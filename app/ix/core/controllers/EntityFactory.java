@@ -1,7 +1,5 @@
 package ix.core.controllers;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -11,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,16 +16,18 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Expression;
 import com.avaje.ebean.FutureRowCount;
 import com.avaje.ebean.Query;
 import com.avaje.ebean.annotation.Transactional;
-import com.avaje.ebean.bean.EntityBean;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -53,16 +52,12 @@ import ix.core.models.BeanViews;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
 import ix.core.models.ForceUpdatableModel;
-import ix.core.models.Principal;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.search.text.EntityUtils.EntityWrapper;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.Java8Util;
 import ix.utils.Global;
 import ix.utils.Util;
-import ix.utils.pojopatch.ChangeEventListener;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import play.Logger;
@@ -77,23 +72,23 @@ public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
 
-    static Model.Finder<Long, Principal> _principalFinder;
-
     static TextIndexerPlugin textIndexerPlugin;
     
     static{
     	init();
     }
     
+    
     public static void init(){
         textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
-    	_principalFinder=new Model.Finder(Long.class, Principal.class);
     }
 
     static TextIndexer getTextIndexer(){
         return textIndexerPlugin.getIndexer();
     }
 
+    
+    
     public static class FetchOptions {
         public int top=10;
         public int skip=0;
@@ -101,67 +96,46 @@ public class EntityFactory extends Controller {
         public List<String> expand = new ArrayList<String>();
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
+        
+        Map<String, Consumer<String[]>> parsers = new HashMap<>();
+        
+        {
+        	Function<String, Optional<Integer>> intParser = s->{
+        		try{
+        			return Optional.of(Integer.parseInt(s));
+        		}catch(NumberFormatException ex){
+        			Logger.trace("Bogus integer value: "+s, ex);
+        		}
+        		return Optional.empty();
+        	};
+        	parsers.put("order", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("expand", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("select", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("top", a->intParser.apply(a[0]).ifPresent(i->top=i));
+        	parsers.put("skip", a->intParser.apply(a[0]).ifPresent(i->skip=i));
+        	parsers.put("filter", a->{
+        		filter=a[0];
+        	});
+        }
 
         
         // only in the context of a request
                         
         public FetchOptions () {
-            for (Map.Entry<String, String[]> me
-                     : request().queryString().entrySet()) {
-                String param = me.getKey();
-                if ("order".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        order.add(s);
-                }
-                else if ("expand".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        expand.add(s);
-                }
-                else if ("select".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        select.add(s);
-                }
-                else if ("top".equalsIgnoreCase(param)) {
-                    String n = me.getValue()[0];
-                    try {
-                        top = Integer.parseInt(n);
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.trace("Bogus top value: "+n, ex);
-                    }
-                }
-                else if ("skip".equalsIgnoreCase(param)) {
-                    String n = me.getValue()[0];
-                    try {
-                        skip = Integer.parseInt(n);
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.trace("Bogus skip value:"+n, ex);
-                    }
-                }
-                else if ("filter".equalsIgnoreCase(param)) {
-                    filter = me.getValue()[0];
-                }
-            }
+        	request().queryString().forEach((param,value)->
+    		parsers.getOrDefault(param.toLowerCase(), s->Logger.trace("unknown option:" + param))
+    				.accept(value)
+        			);
         }
         
         public FetchOptions (int top, int skip, String filter) {
-                try{
-                    for (Map.Entry<String, String[]> me
-                             : request().queryString().entrySet()) {
-                        String param = me.getKey();
-                        if ("order".equalsIgnoreCase(param)) {
-                            for (String s : me.getValue())
-                                order.add(s);
-                        }
-                        else if ("expand".equalsIgnoreCase(me.getKey())) {
-                            for (String s : me.getValue())
-                                expand.add(s);
-                        }
-                    }
-                }catch(Exception e){
-                        
-                }
+        	this();
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -175,7 +149,7 @@ public class EntityFactory extends Controller {
         	}
         	return f;
         }
-        public Query applyToQuery(Query q){
+        public <T> Query<T> applyToQuery(Query<T> q){
         	for (String path : this.expand) {
                 Logger.debug("  -> fetch "+path);
                 q = q.fetch(path);
@@ -215,7 +189,12 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
-        public static EntityMapper FULL_ENTITY_MAPPER(){
+        /**
+		 * Default value
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public static EntityMapper FULL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Full.class);
         }
         public static EntityMapper INTERNAL_ENTITY_MAPPER(){
@@ -231,8 +210,7 @@ public class EntityFactory extends Controller {
             configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
             this.setSerializationInclusion(Include.NON_NULL);
             _serializationConfig = getSerializationConfig();
-            
-            for (Class v : views) {
+            for (Class<?> v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
             }
             addHandler ();
@@ -241,8 +219,11 @@ public class EntityFactory extends Controller {
         void addHandler () {
             addHandler (new DeserializationProblemHandler () {
                     public boolean handleUnknownProperty
-                        (DeserializationContext ctx, JsonParser parser,
-                         JsonDeserializer deser, Object bean, String property) {
+                        (DeserializationContext ctx, 
+                         JsonParser parser,
+                         JsonDeserializer deser, 
+                         Object bean, 
+                         String property) {
                         return _handleUnknownProperty
                             (ctx, parser, deser, bean, property);
                     }
@@ -291,83 +272,7 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static class EditHistory implements PropertyChangeListener {
-        List<Edit> edits = new ArrayList<Edit>();
-        ObjectMapper mapper = getEntityMapper ();
-        public Edit edit;
-        
-        
-        
-        public EditHistory (String payload) throws Exception {
-            edit = new Edit ();
-            edit.path = null; 
-            edit.newValue = payload;
-           
-        }
-        
-
-        public void add (Edit e) { edits.add(e); }
-        public List<Edit> edits () { return edits; }
-        public void attach (Object ebean, final Callable callback) {
-            if (ebean instanceof EntityBean) {
-                ((EntityBean)ebean)._ebean_intercept()
-                    .addPropertyChangeListener(new PropertyChangeListener(){
-
-						@Override
-						public void propertyChange(PropertyChangeEvent evt) {
-							//System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
-							EditHistory.this.propertyChange(evt);
-							try {
-								callback.call();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-                    	
-                    	
-                    });
-                
-            }
-            else {
-                throw new IllegalArgumentException
-                    (ebean+" is not of an EntityBean!");
-            }
-        }
-        public void detach (Object ebean) {
-            if (ebean instanceof EntityBean) {
-                ((EntityBean)ebean)._ebean_intercept()
-                    .removePropertyChangeListener(this);
-            }
-            else {
-                throw new IllegalArgumentException
-                    (ebean+" is not of an EntityBean!");
-            }
-        }
-
-        public void propertyChange (PropertyChangeEvent e) {
-            Logger.debug("### "+e.getSource()+": propertyChange: name="
-                         +e.getPropertyName()+" old="+e.getOldValue()
-                         +" new="+e.getNewValue());
-            try {
-                Edit edit = new Edit ();
-                
-                String id = new EntityWrapper(e.getSource()).getIdAsString();
-                if (id != null)
-                    edit.refid = id;
-                else
-                    Logger.warn("No id set of edit for "+e.getSource());
-                edit.kind = e.getSource().getClass().getName();
-                edit.path = e.getPropertyName();
-                edit.oldValue = mapper.writeValueAsString(e.getOldValue());
-                edit.newValue = mapper.writeValueAsString(e.getNewValue());
-                edits.add(edit);
-                
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
+    
 
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {
@@ -384,9 +289,9 @@ public class EntityFactory extends Controller {
         try {
             long start = System.currentTimeMillis();
             List<T> results = query
-                .setFirstRow(options.skip)
-                .setMaxRows(options.top)
-                .findList();
+				                .setFirstRow(options.skip)
+				                .setMaxRows(options.top)
+				                .findList();
             Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
             return results;
         }
@@ -957,6 +862,7 @@ public class EntityFactory extends Controller {
         try {
         	
             ObjectMapper mapper = new ObjectMapper();
+            //Why don't we use this in the other place?
             mapper.addHandler(new DeserializationProblemHandler() {
                     public boolean handleUnknownProperty(
                                                          DeserializationContext ctx, JsonParser parser,
@@ -974,26 +880,38 @@ public class EntityFactory extends Controller {
                         return true;
                     }
                 });
-
             
             JsonNode node = request().body().asJson();
             
             T inst = mapper.treeToValue(node, type);
             
-			ValidationResponse<T> vr = validator.validate(inst,
-					(T) getCurrentValue(inst).map(o -> o.getValue()).orElse(null));
+            
+            //gets the value (if exists)
+            Optional<EntityWrapper> oldValue = getCurrentValue(inst);
+            
+            ValidationResponse<T> vr;
+            
+            //If it's present
+            if(oldValue.isPresent()){
+            	//Validate using it and the new value
+            	vr= validator.validate(inst,(T)oldValue.map(o -> o.getValue()).get());	
+            }else{
+            	//Validate using only new value
+            	vr= validator.validate(inst,null);
+            } 
 
             if(rept==RESPONSE_TYPE.FULL){
-            	return ok(validationResponse(vr,true));
+            	return ok(prepareValidationResponse(vr,true));
             }else{
-            	return ok(validationResponse(vr,false));
+            	return ok(prepareValidationResponse(vr,false));
             }
         } catch (Throwable ex) {
+        	ex.printStackTrace();
         	ValidationResponse vr = new ValidationResponse(null);
         	vr.setInvalid();
         	vr.addValidationMessage(new ExceptionValidationMessage(ex));
         	//should this be ok? Or internalServerError?
-            return ok(validationResponse(vr,false));
+            return ok(prepareValidationResponse(vr,false));
         }
     }
     
@@ -1007,9 +925,9 @@ public class EntityFactory extends Controller {
     }
     
     protected static JsonNode validationResponse(ValidationResponse vr){
-    	return validationResponse(vr,false);
+    	return prepareValidationResponse(vr,false);
     }
-    protected static JsonNode validationResponse(ValidationResponse vr, boolean full){
+    protected static JsonNode prepareValidationResponse(ValidationResponse vr, boolean full){
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
     	if(full){
     		mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
@@ -1030,30 +948,55 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+" not found");
     }
 
-    protected static Result edits (Object id, Class<?>... cls) {
-    	List<Edit> edits = new ArrayList<Edit>();
-    	FetchOptions fe=new FetchOptions ();
-    	
-    	//if(true)return EditFactory.page(fe.top, fe.skip, fe.filter);
-    	//EditFactory.page(top, skip, filter)
-        for (Class<?> c : cls) {
-        	Query q=EditFactory.finder.where
-                    (Expr.and(Expr.eq("refid", id.toString()),
-                            Expr.eq("kind", c.getName())));
-        	q=fe.applyToQuery(q);
-            List<Edit> tmpedits = q
-                .findList();
-            if(tmpedits!=null){
-            	edits.addAll(tmpedits);
-            }
-        }
-        if (!edits.isEmpty()) {
-            ObjectMapper mapper = getEntityMapper ();
-            return Java8Util.ok (mapper.valueToTree(edits));
-        }
 
-        return notFound (request().uri()+": No edit history found!");
-    }
+    //And all expressions together
+    //TODO: There has got to be a cleaner way
+	public static Expression andAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
+		}
+		return retExpr;
+	}
+
+    //Or all expressions together
+    //TODO: There has got to be a cleaner way
+	public static Expression orAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
+		}
+		return retExpr;
+	}
+    
+	protected static Result edits(Object id, Class<?>... cls) {
+		List<Edit> edits = new ArrayList<Edit>();
+		FetchOptions fe = new FetchOptions();
+
+		Expression[] kindExpressions = Arrays.stream(cls)
+				.map(c -> Expr.eq("kind", c.getName()))
+				.collect(Collectors.toList())
+				.toArray(new Expression[0]);
+
+		Query<Edit> q = EditFactory.finder
+				.where(andAll(
+						Expr.eq("refid", id.toString()),
+						orAll(kindExpressions)
+						));
+		
+		fe.applyToQuery(q);
+		List<Edit> tmpedits = q.findList();
+		if (tmpedits != null) {
+			edits.addAll(tmpedits);
+		}
+		
+		if (!edits.isEmpty()) {
+			ObjectMapper mapper = getEntityMapper();
+			return Java8Util.ok(mapper.valueToTree(edits));
+		}
+
+		return notFound(request().uri() + ": No edit history found!");
+	}
     
     /**
      * Handle generic update to field, without special deserializationHandler
@@ -1109,6 +1052,94 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, new DefaultValidator());
     }
     
+    
+    //Typically mutates, but doesn't sometimes -- I know, but we delete/create sometimes instead
+    
+    public static EntityWrapper calculateAndApplyDiff(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
+    	 boolean usePojoPatch=false;
+         if(oWrap.getClazz().equals(nWrap.getClazz())){ //only use POJO patch if the entities are the same type
+         	usePojoPatch=true;
+         }
+         
+         if(usePojoPatch){
+         	doPojoPatch(oWrap,nWrap); //saves too!
+         	return oWrap; //Mutated
+         }else{
+         	
+         	Model oldValue=(Model)oWrap.getValue();
+         	oldValue.delete();
+         	
+         	// Now need to take care of bad update pieces:
+         	//	1. Version not incremented correctly (post update hooks not called) 
+         	//  2. Some metadata / audit data may be problematic
+         	//  3. The update hooks are called explicitly now
+         	//     ... and that's a weird thing to do, because the persist hooks
+         	//     will get called too. Does someone really expect things to
+         	//     get called twice?
+         	
+         	Model newValue = (Model)nWrap.getValue();
+         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
+         	newValue.save(); 
+         	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, oldValue);
+         	
+         	//This doesn't morph the object, so we're in trouble
+         	return nWrap; //Delete & Create
+         }
+    }
+    
+    public static void doPojoPatch(EntityWrapper oldValue, EntityWrapper newValue) throws Exception{
+    	
+    	Object rawOld = oldValue.getValue();
+    	Object rawNew = newValue.getValue();
+    	
+    	//Get the difference as a patch
+        PojoPatch patch =PojoDiff.getDiff(rawOld, rawNew);
+        
+        
+        final List<Object> removed = new ArrayList<Object>();
+        //Apply the changes, grabbing every change along the way
+        Stack changeStack=patch.apply(rawOld,c->{
+				//System.out.println("Change IS:" + c);
+				if("remove".equals(c.op)){
+					removed.add(c.oldValue);
+				}
+        });
+        
+        
+    	while(!changeStack.isEmpty()){
+    		Object v=changeStack.pop();
+    		if(!EntityWrapper.of(v).isIgnoredModel()){
+        		if(v instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
+        			//System.out.println("Force update for:" + v);
+            		((ForceUpdatableModel)v).forceUpdate();
+            	}else if(v instanceof Model){
+            		//System.out.println("Regular update for:" + v);
+            		((Model)v).update();
+            	}else{
+            		//System.out.println("Nothing to do for:" + v);
+            	}
+    		}
+    	}
+
+    	//explicitly delete deleted things
+    	
+    	//This should ONLY delete objects which "belong"
+    	//to something. That is, have a @SingleParent annotation
+    	//inside
+    	
+    	// TODO: Move to EntityInfo
+    	for(Object toDelete : removed){
+    		if(toDelete !=null){
+        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
+        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
+        			if(toDelete instanceof Model){
+        				System.out.println("deleting:" + ((Model)toDelete));
+        				((Model)toDelete).delete();
+        			}
+            	}
+    		}
+    	}
+    }
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
@@ -1118,134 +1149,62 @@ public class EntityFactory extends Controller {
     protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
-    	InxightTransaction tx = InxightTransaction.beginTransaction();
+    	
     	//EntityWrapper oldValuaeContainer = null;
-    	EntityWrapper<?> og=null;
+//    	EntityWrapper<?> eg=null;
         try {       
+        	
+        	//Get NEW object from JSON
             Object newValue = mapper.treeToValue(json, type);
-
             
             //Fetch old value
-            og =  getCurrentValue(newValue).orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
+            EntityWrapper<?> eg =  getCurrentValue(newValue)
+            		.orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
             
-            String oldVersion = og.getVersion().orElse(null);
-            String oldJSON = og.toJson(mapper).toString();
+            //validation response holder
+            ValidationResponse[] vr = new ValidationResponse[]{null};
             
             
-            //validate new value
-            ValidationResponse vr=validator.validate(newValue,og.getValue());
-	        if(!vr.isValid()){
-	            return badRequest(validationResponse(vr,false));
+            //Do we still need this???
+            //EditHistory eh = new EditHistory (json.toString());
+            
+            EntityWrapper savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
+            	EntityWrapper og= EntityWrapper.of(ov);
+
+                vr[0]=validator.validate(newValue,og.getValue());
+                if(!vr[0].isValid()){
+                	return Optional.empty();
+                }
+                EntityWrapper entityThatWasSaved=null;
+                
+                InxightTransaction tx = InxightTransaction.beginTransaction();
+                try{
+                	entityThatWasSaved=calculateAndApplyDiff(og,EntityWrapper.of(newValue)); //saving happens here
+	                tx.commit();
+
+	                // This was added because there are times
+	                // when the parent entity isn't actually
+	                // updated at all, at least from the ebean perspective
+	                // so this forces the issue
+	                EntityPersistAdapter.getInstance().deepreindex(newValue);
+                }catch(Exception e){
+                	
+                	e.printStackTrace();
+                }finally{
+                	tx.end();
+                }
+                return Optional.ofNullable(entityThatWasSaved);
+            });
+            
+            if(vr[0]==null){
+            	return badRequest("Validation Response could not be generated");
+            }else if(!vr[0].isValid()){
+	            return badRequest(prepareValidationResponse(vr[0],false));
+	        }else if(savedVersion == null){ //Couldn't happen for some reason
+	        	return internalServerError ("unsuccessful"); //TODO: make this follow a better contract
 	        }
-
-            EditHistory eh = new EditHistory (json.toString());
             
-            //this saves and everything
-            eh.edit=EntityPersistAdapter.storeEditForPossibleUpdate(og.getValue());
-            
-            boolean usePojoPatch=true;
-            if(!og.getClazz().equals(type)){
-            	usePojoPatch=false;
-            }
-            
-            if(usePojoPatch){
-	            //Get the difference as a patch
-	            PojoPatch patch =PojoDiff.getDiff(og.getValue(), newValue);
-	            
-	            
-	            final List<Object> removed = new ArrayList<Object>();
-	            //Apply the changes, grabbing every change along the way
-	            Stack changeStack=patch.apply(og.getValue(),new ChangeEventListener(){
-					@Override
-					public void handleChange(ix.utils.pojopatch.Change c) {
-						//System.out.println("Change IS:" + c);
-						if("remove".equals(c.op)){
-							removed.add(c.oldValue);
-						}
-					}
-	            });
-	            
-	            
-	        	while(!changeStack.isEmpty()){
-	        		Object v=changeStack.pop();
-	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
-		        		if(v instanceof ForceUpdatableModel){
-		        			//System.out.println("Force update for:" + v);
-		            		((ForceUpdatableModel)v).forceUpdate();
-		            	}else if(v instanceof Model){
-		            		//System.out.println("Regular update for:" + v);
-		            		((Model)v).update();
-		            	}else{
-		            		//System.out.println("Nothing to do for:" + v);
-		            	}
-	        		}
-	        	}
-
-	        	//explicitly delete deleted things
-	        	
-	        	//This should ONLY delete objects which "belong"
-	        	//to something. That is, have a @SingleParent annotation
-	        	//inside
-	        	for(Object toDelete : removed){
-	        		if(toDelete !=null){
-		        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
-		        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
-		        			if(toDelete instanceof Model){
-		        				System.out.println("deleting:" + ((Model)toDelete));
-		        				((Model)toDelete).delete();
-		        			}
-		            	}
-	        		}
-	        	}
-	        	
-	        	
-	        	//The old value is now the new value
-	        	newValue = og.getValue();
-	        	
-            }else{
-            	Model m=(Model)og.getValue();
-            	m.delete();
-            	// Now need to take care of bad update pieces:
-            	//	1. Version not incremented correctly (post update hooks not called) 
-            	//  2. Some metadata / audit data may be problematic
-
-            	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
-            	((Model)newValue).save();
-            	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
-            	
-            }
-        	EntityWrapper newEnt = new EntityWrapper(newValue);
-            String newJSON=mapper.toJson(newValue);
-            
-            
-            //Should this be here?
-            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
-            
-            tx.commit();
-            
-            //granular parts not working yet
-            if (newValue != null) {
-	                eh.edit.refid = newEnt.getIdAsString();
-	                eh.edit.kind = newEnt.getKind();
-	                eh.edit.oldValue=oldJSON;
-	                eh.edit.newValue=newJSON;
-	                eh.edit.version=oldVersion;
-	                eh.edit.save();
-	                for (Edit e : eh.edits()) {
-	                    e.batch = eh.edit.id.toString();
-	                    e.save();
-	                }
-	                Logger.debug("** New edit history "+eh.edit.id);
-            }
-            
-            // This was added because there are times
-            // when the parent entity isn't actually
-            // updated at all, at least from the ebean perspective
-            // so this forces the issue
-            
-            EntityPersistAdapter.getInstance().deepreindex(newValue);
-            
-            return Java8Util.ok (mapper.valueToTree(newValue));
+            return Java8Util.ok (savedVersion.toJson(mapper));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
@@ -1253,53 +1212,18 @@ public class EntityFactory extends Controller {
             
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
-        }finally {
-        	if(og!=null){
-        		EntityInfo ei =EntityUtils.getEntityInfoFor(og.getValue());
-        		EntityPersistAdapter.popEditForUpdate(ei.getFieldAndId(og.getValue()));
-        	}
-            tx.end();
         }
     }
 
     
-    // This could become a nice method. It isn't now ... 
-    // It's unclear if you really need to attempt to
-    // grab every extending class or not.
-    //
-    //
+    // This could become a nice method.
     private static Optional<EntityWrapper> getCurrentValue(Object value){
-    	EntityWrapper thisvalue = EntityWrapper.of(value);
+    	if(EntityWrapper.of(value).hasKey()){
+    		return EntityWrapper.of(value).getKey().fetch();
+    	}else{
+    		return Optional.empty();
+    	}
     	
-        if (!thisvalue.isEntity())
-            throw new IllegalArgumentException("Class "+thisvalue.getKind()+" is not an entity");
-        if (!thisvalue.hasIdField())
-            throw new IllegalArgumentException("Class "+thisvalue.getKind()+" is not an entity");
-        
-        LinkedHashSet<EntityInfo> possibleClasses = new LinkedHashSet<EntityInfo>();
-        possibleClasses.add(thisvalue.getEntityInfo());
-        possibleClasses.addAll(thisvalue.getEntityInfo().getAllEquivalentEntityInfos());
-        
-        Object id = thisvalue.getId().get();
-        Object xval = null;
-        //This may not be necessary after all?
-        for(EntityInfo ee:possibleClasses){
-	        if (id != null) {
-	        	xval = ee.getFinder().byId(id);
-	        }else{
-	            // if this entity has no id set, then we see if there is a
-	            // unique column defined.. if so, we retrieve it
-	        	xval=ee.getUniqueColumns().stream().map(c->{
-	        		return c.getValue(value).flatMap(v->{
-	        			Object dbv=ee.getFinder().where().eq(c.getColumnName(),v)
-                    			.findUnique();
-	        			return Optional.ofNullable(dbv);
-	        		});
-	        	}).filter(Optional::isPresent).findAny();
-	        	if(xval!=null)break;
-	        }
-        }
-        return Optional.ofNullable(EntityWrapper.of(xval));
     }
     
 }

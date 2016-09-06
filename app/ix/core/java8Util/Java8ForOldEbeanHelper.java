@@ -10,13 +10,8 @@ import java.util.function.Consumer;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EntityFactory;
-import ix.core.search.text.EntityUtils;
-import ix.core.search.text.EntityUtils.EntityAnalyzer;
-import ix.core.search.text.EntityUtils.EntityInfo;
-import ix.core.search.text.EntityUtils.EntityWrapper;
-import ix.core.util.CachedSupplier;
-import play.db.ebean.Model;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 
 /**
  * This class was created so Ebean enchanced classes using Play 2.3 can use Java
@@ -24,6 +19,12 @@ import play.db.ebean.Model;
  * features into not only a separate class but a different package so they
  * aren't "enhanced" by ebean and it's java 7 bytecode parser. Not doing this
  * will cause silent errors and make persisting to the database not work.
+ * 
+ * 
+ * Update: It appears that we have to do some work to determine which
+ * packages are "OK", and which are not. I believe any that are explicitly
+ * mentioned for Ebean to analyze (typically in the conf file) are the 
+ * issues.
  *
  * Created by katzelda on 6/28/16.
  */
@@ -253,11 +254,11 @@ public class Java8ForOldEbeanHelper {
 		}
 
 		if (ew.isEntity()) {
-			String ids = ew.getIdAsString();
+			Key k = ew.getKey();
 
 			ew.streamStructureFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
 				try {
-					epa.getStructureIndexer().add(ids, str.toString());
+					epa.getStructureIndexer().add(k.getIdString(), str.toString());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -265,7 +266,7 @@ public class Java8ForOldEbeanHelper {
 			
 			ew.streamSequenceFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
 				try {
-					epa.getSequenceIndexer().add(ids, str.toString());
+					epa.getSequenceIndexer().add(k.getIdString(), str.toString());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -273,22 +274,22 @@ public class Java8ForOldEbeanHelper {
 		}
 	}
 
-	public static void deleteIndexOnBean(EntityPersistAdapter epa, EntityWrapper bean) throws Exception {
+	public static void deleteIndexOnBean(EntityPersistAdapter epa, EntityWrapper<?> beanWrapped) throws Exception {
 		if (epa.getTextIndexerPlugin() != null){
 			epa.getTextIndexerPlugin()
 					.getIndexer()
-					.remove(bean.getValue()); //should be fine
+					.remove(beanWrapped); 
 		}
 		
-		if (bean.isEntity()) {
-			String id =bean.getIdAsString();
-			bean.getEntityInfo().getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
-				tryTaskAtMost(() -> epa.getSequenceIndexer().remove(id), t -> t.printStackTrace(), 2);
+		if (beanWrapped.isEntity() && beanWrapped.hasKey()) {
+			Key key = beanWrapped.getKey();
+			beanWrapped.getEntityInfo().getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
+				tryTaskAtMost(() -> epa.getSequenceIndexer().remove(key.getIdString()), t -> t.printStackTrace(), 2);
 				
 			});
 			
-			bean.getEntityInfo().getStructureFieldInfo().stream().findAny().ifPresent(s -> {
-				tryTaskAtMost(() -> epa.getStructureIndexer().remove(id), t -> t.printStackTrace(), 2);
+			beanWrapped.getEntityInfo().getStructureFieldInfo().stream().findAny().ifPresent(s -> {
+				tryTaskAtMost(() -> epa.getStructureIndexer().remove(key.getIdString()), t -> t.printStackTrace(), 2);
 			});
 		}
 	}
@@ -302,11 +303,7 @@ public class Java8ForOldEbeanHelper {
 	 * @param deleteFirst
 	 */
 	public static void deepreindex(EntityPersistAdapter epa, EntityWrapper<?> bean, boolean deleteFirst) {
-		bean.analyze()
-			.execute(t->{
-				EntityWrapper child = t.v();
-				epa.reindex(child, deleteFirst);
-			});
+		bean.traverse().execute((p, child)->epa.reindex(child, deleteFirst));
 	}
 
 	private interface ThrowingRunnable {

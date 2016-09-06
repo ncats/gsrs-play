@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -332,11 +333,11 @@ public class Util {
     
     
     //only here for testing purposes
-    public static void debugSpin(int milliseconds) {
+    public static void debugSpin(long milliseconds) {
     	if(Play.isProd())return;
         long sleepTime = milliseconds*1000000L; // convert to nanoseconds
         long startTime = System.nanoTime();
-        while ((System.nanoTime() - startTime) < sleepTime) {}
+        while ((System.nanoTime() - startTime) < sleepTime) {} //Yes, it's pegging the CPU, that's intentional
     }
     
     public static byte[] serialize (Object obj) throws IOException {
@@ -454,6 +455,18 @@ public class Util {
 	}
 
 	
+	public static <T> Collection<T> combine(Collection<T> c1, Collection<T> c2){
+		c1.addAll(c2);
+		return c1;
+	}
+	
+	public static <T> Set<T> combine(Set<T> c1, Set<T> c2){
+		System.out.println("Hurray!");
+		c1.addAll(c2);
+		return c1;
+	}
+	
+	
 	private static class CounterFunction<K> implements Function<K,Tuple<Integer,K>>{
 		AtomicInteger count= new AtomicInteger();
 		
@@ -464,7 +477,7 @@ public class Util {
 		}
 	}
 	
-	public static <K> Function<K,Tuple<Integer,K>> addIndex(){
+	public static <K> Function<K,Tuple<Integer,K>> toIndexedTuple(){
 		return new CounterFunction<K>();
 	}
 	

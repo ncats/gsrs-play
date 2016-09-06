@@ -91,14 +91,9 @@ public class TextIndexerPlugin extends Plugin {
                 }
             }
             indexer.shutdown();
-            System.out.println("###### Shut it all down");
             Logger.info("Plugin " + getClass().getName() + " stopped!");
         }
         
-        System.out.println("###### Now it's shutdown");
-        
-        
-
         closed=true;
         indexer=null;
     }
