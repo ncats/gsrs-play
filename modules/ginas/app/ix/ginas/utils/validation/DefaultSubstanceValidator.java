@@ -1,8 +1,11 @@
 package ix.ginas.utils.validation;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ix.core.AbstractValidator;
+import ix.core.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.ValidationMessage;
 import ix.core.ValidationResponse;
@@ -10,7 +13,6 @@ import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
-import ix.core.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 
@@ -24,6 +26,95 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		IGNORE
 	}
 	METHOD_TYPE method=null;
+	
+	public static enum RECORD_CHANGES{
+		
+		
+		
+									// 1
+		DEFINING_CHANGE,			//Something has changed (added / modified / removed) 
+									//that's part of the "special" set of fields likely
+									//to be defining
+					
+									// 2
+		PUBLIC_CHANGE,				//Something has changed (added / modified / removed)
+									//that's part of the public domain data,
+									//therefore it would go down stream to NLM (and others)
+		
+									// 3
+		APPROVAL_ID_GENERATED,		//An approvalID (UNII is generated)
+		
+								    // 4
+		NEW_RECORD,					//A new record is put into the database
+
+	    							// 5
+		DEPRECATED,					//A record is being (effectively) removed from the
+									//database 
+
+									// 6
+		INVOLVES_APPROVED_RECORD,	//Something has changed (added / modified / removed) 
+									//on a record which has been approved
+		
+									// 7
+		APPROVAL_ID_CHANGED_AFTER,	//The approval ID for an existing record
+									//is changing (maybe a UNII switch, maybe 
+									//manual override
+		
+									// 8
+		CURRENT_USER_IS_PREVIOUS	//The current user making the change is also
+									//the one responsible for the last change.
+		
+		
+	}
+	
+	public Set<RECORD_CHANGES> change_types= new HashSet<RECORD_CHANGES>();
+	
+	
+	
+	//Is the change:
+	// 1. Changing a defining element of a record?
+	// 2. Causing a change in public visibility? (public data from report would change)
+	// 3. Causing the generation of a new UNII / approvalID?
+	// 4. Creating a new record?
+	// 5. Changing an approved record?
+	// 6. Deprecating an existing record?
+//
+//	
+//	public static enum PRIVALEDGES{
+//		QUERY,
+//		REGISTER_NON_PUBLIC, //1,0,0,1
+//		
+//		EDIT_NON_APPROVED_NON_DEFINING_PUBLIC,//0,0,0,0
+//		EDIT_NON_APPROVED_DEFINING_PUBLIC,    //0,0,0,1
+//		EDIT_NON_APPROVED_NON_DEFINING_PUBLIC,//0,0,0,1
+//		EDIT_NON_APPROVED_DEFINING_PUBLIC,
+//		
+//		EDIT_APPROVED_NON_DEFINING,
+//		EDIT_APPROVED_DEFINING,
+//		EDIT_PUBLIC,
+//		
+//		APPROVE_NEW,
+//		CHANGE_APPROVAL_ID,
+//		REGISTER_PUBLIC,
+//
+//
+//		DEPRECATE_NON_APPROVED,
+//		DEPRECATE_APPROVED,
+//		DEPRECATE_PUBLIC,
+//		DEPRECATE_NON_PUBLIC,
+//		BULK_UPLOAD,
+//		ADD_USERS,
+//		CHANGE_USER_ROLES,
+//		ADD_CV_TERM
+////		APPROVE_EDITS_NON_DEFINING
+////		APPROVE_EDITS_DEFINING
+////		APPROVE_OWN_EDITS
+////		MERGE,
+//		
+//		
+//	}
+//	
+//	
 	
 	private UserProfile getCurrentUser(){
 		UserProfile up= UserFetcher.getActingUserProfile(true);
@@ -55,9 +146,49 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		return new DefaultSubstanceValidator(strategy,METHOD_TYPE.BATCH);
 	}
 	
+	
+//	public static enum RECORD_CHANGES{
+//		DEFINING_CHANGE,          
+//		PUBLIC_CHANGE,            // For now, just a public flag change?
+//		APPROVAL_ID_GENERATED,    // 
+//		NEW_RECORD,               // Easy
+//		INVOLVES_APPROVED_RECORD, // Easy
+//      
+//		DEPRECATED
+//	}
+	
 	@Override
 	public ValidationResponse<Substance> validate(Substance objnew, Substance objold) {
-		String TIME_KEY="validating";
+		//Set<RECORD_CHANGES> categories = new HashSet<RECORD_CHANGES>();
+		
+		if(objold==null){
+			change_types.add(RECORD_CHANGES.NEW_RECORD);
+		}
+		
+		// PUBLIC CHANGE: (simple is did the main record pd change?)
+		// 1. Find full set of elements in old object
+		// 2. Find full set of elements in new object
+		// 3. Restrict the elements from each list to only
+		//    those that are public
+		// 4. If the disjoint of the 2 sets is non-empty
+		//    then there's a public change
+		// 5. Then the tricky part of actually determining
+		//    something else... TODO
+		
+		// DEFINING CHANGE:
+		// Some extra subset from above? TODO
+		
+		
+		
+		// 
+		
+		
+		
+		// APPROVAL_ID_GENERATED (can't do it here)
+		// 
+		
+		
+		
 		//TimeProfiler.addGlobalTime(TIME_KEY);
 		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
 		if(this.method==METHOD_TYPE.IGNORE){
@@ -71,40 +202,27 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 			//only for non-batch loads
 			if(this.method!=METHOD_TYPE.BATCH){
 				if(objold!=null){
-					changeSubstanceValation(objnew,objold,vlad);
+					changeSubstanceValidation(objnew,objold,vlad);
 				}else{
-					addNewSubstanceValation(objnew,vlad);
+					addNewSubstanceValidation(objnew,vlad);
 				}
 				
 			}
 			if (objnew.isPublic()){
-				boolean allowed = false;
-				for (Reference r : objnew.references) {
-					if(		   r.isPublicDomain() 
-							&& r.isPublicReleaseReference()
-							&& r.isPublic()){
-						allowed=true;
-						break;
-					}
-				}
+				boolean allowed = objnew.references.stream()
+					.filter(Reference::isPublic)
+					.filter(Reference::isPublicDomain)
+					.filter(Reference::isPublicReleaseReference)
+					.findAny().isPresent();
 				
 				if (!allowed) {
 					if(this.method!=METHOD_TYPE.BATCH){
 						vlad.add(GinasProcessingMessage
 								.ERROR_MESSAGE("Public records must have a PUBLIC DOMAIN reference with a '"
 										+ Reference.PUBLIC_DOMAIN_REF + "' tag"));
-					}else{
-						//TODO, fix logic here
-//						for(Reference r:objnew.references){
-//							if(r.isPublic() && r.isPublicDomain()){
-//								r.makePublicReleaseReference();
-//							}
-//						}
 					}
 				}
-				
 			}
-			
 			
 			if(vlad!=null){
 				for(ValidationMessage gpm:vlad){
@@ -129,8 +247,10 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		}
 	}
 
+	//TODO: All of this is ad-hoc, and needs to be moved to a more generic framework.
+	
 	// only for old
-	private void changeSubstanceValation(Substance objnew,Substance objold, List<GinasProcessingMessage> vlad) {
+	private void changeSubstanceValidation(Substance objnew,Substance objold, List<GinasProcessingMessage> vlad) {
 		UserProfile up = getCurrentUser();
 		if(!objnew.getClass().equals(objold.getClass())){
 			vlad.add(GinasProcessingMessage.WARNING_MESSAGE("Substance class should not typically be changed"));
@@ -141,19 +261,26 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		}
 		
 		
+		
+		
 		if (objnew.isPublic() && !objold.isPublic()) {
 			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperUpdate))) {
 				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can make a substance public"));
 			}
 		}
 		
-		
 
+		//Making a change to a validated record
+		if (objnew.isValidated()) {
+			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperUpdate))) {
+				vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Only superUpdate users can update approved substances"));
+			}
+		}
+		
+		
+		//Changed approvalID
 		if (objold.approvalID != null) {
 			if (!objold.approvalID.equals(objnew.approvalID)) {
-				
-				
-				
 				// Can't change approvalID!!! (unless admin)
 				if (up.hasRole(Role.Admin)) {
 					if(!GinasUtils.getAPPROVAL_ID_GEN().isValidId(objnew.approvalID)){
@@ -170,12 +297,13 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 							"The approvalID for the record has changed. Was ('" + objold.approvalID + "') but now is ('"
 									+ objnew.approvalID + "'). This is not allowed, except by an admin."));
 				}
-
 			}
 		}
 	}
+	
+	
 	//only for new
-	private void addNewSubstanceValation(Substance objnew,List<GinasProcessingMessage> vlad){
+	private void addNewSubstanceValidation(Substance objnew,List<GinasProcessingMessage> vlad){
 		
 		UserProfile up=getCurrentUser();
 		if (objnew.isPublic()) {

@@ -8,13 +8,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,12 +28,8 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import ix.core.IgnoredModel;
 import ix.core.controllers.EntityFactory;
-import ix.core.models.BaseModel;
-import ix.core.models.ForceUpdatableModel;
-import ix.utils.EntityUtils;
-import play.db.ebean.Model;
+import ix.core.util.EntityUtils.EntityWrapper;
 
 
 /**
@@ -1053,11 +1047,11 @@ public class PojoDiff {
 			public Object set(Object instance, Object value) {
 				try{
 					Object delegateInstance=m.get(instance);
-					System.out.println("Setting:" + m + " to " + value.getClass() + value + " on " +delegateInstance);
+					//System.out.println("Setting:" + m + " to " + value.getClass() + value + " on " +delegateInstance);
 					Object ret=g.set(delegateInstance,value);;
 					if(g instanceof FieldSetter){
 						Object onow=((FieldSetter)g).m.get(delegateInstance);
-						System.out.println("And now it's:" + onow);
+						//System.out.println("And now it's:" + onow);
 					}
 					return  ret;
 				}catch(Exception e){
@@ -1082,8 +1076,8 @@ public class PojoDiff {
 			int i=0;
 			for(Object o:c){
 				try {
-					Object oid=EntityUtils.getId(o);
-					if(id.equals(oid.toString())){
+					EntityWrapper ew = EntityWrapper.of(o);
+					if(ew.hasKey() && id.equals(ew.getKey().getIdString())){
 						return i;
 					}
 				} catch (Exception e) {

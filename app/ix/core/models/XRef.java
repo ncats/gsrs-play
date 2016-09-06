@@ -1,22 +1,24 @@
 package ix.core.models;
 
-import java.util.UUID;
-import java.util.List;
 import java.util.ArrayList;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
+import java.util.List;
+import java.util.UUID;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
-import play.Logger;
-import play.db.ebean.Model;
-import ix.core.controllers.EntityFactory;
-import ix.utils.EntityUtils;
-import ix.utils.Global;
-
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
+import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.utils.Global;
+import play.Logger;
 
 @Entity
 @Table(name="ix_core_xref")
@@ -60,21 +62,19 @@ public class XRef extends IxModel {
     }
 
     public XRef (Object instance) {
-        Class cls = instance.getClass();
-        if (null == cls.getAnnotation(Entity.class))
+    	EntityWrapper ew = EntityWrapper.of(instance);
+        if (!ew.isEntity())
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
-        	Object id = EntityUtils.getId(instance);
-            if (id != null) {
-                    this.refid = id.toString();
+            if (ew.hasKey()) {
+                    this.refid = ew.getKey().getIdString();
             } else {
                     throw new IllegalArgumentException
-                       (cls.getName()+": Can't create XRef with null id!");
+                       (ew.getKind()+": Can't create XRef with null id!");
             }
-            kind = cls.getName();
-        }
-        catch (Exception ex) {
+            kind = ew.getKind();
+        }catch (Exception ex) {
             throw new IllegalArgumentException (ex);
         }
 
@@ -88,23 +88,14 @@ public class XRef extends IxModel {
     public Object deRef (boolean force) {
         if (_instance == null || force) {
             try {
-                Class cls = Class.forName(kind);
-                Field fid = EntityUtils.getIdFieldForClass(cls);
-                if (fid != null) {
-                    Class type = fid.getType();
-                    Model.Finder finder = new Model.Finder(type, cls);
-                    if (Long.class.isAssignableFrom(type))
-                        _instance = finder.byId(Long.parseLong(refid));
-                    else if (UUID.class.isAssignableFrom(type))
-                        _instance = finder.byId(UUID.fromString(refid));
-                    else
-                        _instance = finder.byId(refid);
-                }
-                else {
+            	EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
+            	if (!ei.hasIdField()){
                     throw new RuntimeException
                         ("Class "+kind+" doesn't have any fields "
                          +"annotated with @Id!");
                 }
+            	_instance=ei.findById(refid);
+                
             }
             catch (Exception ex) {
                 Logger.trace("Can't retrieve XRef "+kind+":"+refid, ex);
@@ -133,16 +124,15 @@ public class XRef extends IxModel {
 
     public boolean referenceOf (Object instance) {
         try {
-            Class cls = Class.forName(kind);
-            Class type = instance.getClass();
-            if (cls.isAssignableFrom(type) || type.isAssignableFrom(cls)) {
-                Object id=EntityUtils.getId(instance);
-            	if (id != null) {
-                    return refid.equals(id.toString());
+            EntityInfo refEntityInfo = EntityUtils.getEntityInfoFor(kind);
+            EntityWrapper ew = EntityWrapper.of(instance);
+            if (ew.getEntityInfo().isParentOrChildOf(refEntityInfo)) {
+                if (ew.getId().isPresent()) {
+                    return refid.equals(ew.getKey().getIdString());
                 }
                 else {
                     Logger.error
-                        ("Class "+type.getName()+" has no @Id annotation, or no Id found!");
+                        ("Class "+ew.getKind()+" has no @Id annotation, or no Id found!");
                 }
             }
         }

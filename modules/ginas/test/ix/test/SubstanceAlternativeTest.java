@@ -26,8 +26,9 @@ public class SubstanceAlternativeTest {
     @Rule
     public TestNamePrinter printer = new TestNamePrinter();
 
-
     File resource ;
+    
+    
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
     private SubstanceAPI api;
@@ -48,31 +49,36 @@ public class SubstanceAlternativeTest {
 
     @Test
     public void testAPIAlternativeSubstanceSubmitValidate()   throws Exception {
-        //submit primary
-        resource = new File("test/testJSON/alternative/Prim1.json");
-        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
-        String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
-        ensurePass(api.submitSubstance(js));
-
-        //submit alternative
-        resource = new File("test/testJSON/alternative/PostAlt.json");
-        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
-        String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
-        ensurePass(api.submitSubstance(jsA));
-
-        //check alternative relationship with primary
-        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
-        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
-        assertTrue(refUuidA.equals(uuid));
-
-        //check primary relationship with alternative
-        JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
-        String refUuid = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetched);
-        assertTrue(refUuid.equals(uuidA));
+    	try{
+	        //submit primary
+	        resource = new File("test/testJSON/alternative/Prim1.json");
+	        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+	        String uuid = js.get("uuid").asText();
+	        JsonNode validationResult = api.validateSubstanceJson(js);
+	        SubstanceJsonUtil.ensureIsValid(validationResult);
+	        ensurePass(api.submitSubstance(js));
+	
+	        //submit alternative
+	        resource = new File("test/testJSON/alternative/PostAlt.json");
+	        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
+	        String uuidA = jsA.get("uuid").asText();
+	        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+	        SubstanceJsonUtil.ensureIsValid(validationResultA);
+	        ensurePass(api.submitSubstance(jsA));
+	
+	        //check alternative relationship with primary
+	        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
+	        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+	        assertTrue(refUuidA.equals(uuid));
+	
+	        //check primary relationship with alternative
+	        JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
+	        String refUuid = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetched);
+	        assertTrue(refUuid.equals(uuidA));
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw e;
+    	}
     }
 
     @Test
@@ -82,9 +88,9 @@ public class SubstanceAlternativeTest {
         resource = new File("test/testJSON/alternative/Prim1.json");
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
-        ensurePass(api.submitSubstance(js));
+        JsonNode validationResult = api.validateSubstanceJson(js); //should have JSON substance builder!
+        SubstanceJsonUtil.ensureIsValid(validationResult);		   //Oh man! Everyone will think we're so
+        ensurePass(api.submitSubstance(js));					   //cool then! I can't even imagine ...
 
         //submit alternative
         resource = new File("test/testJSON/alternative/PostAlt.json");

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -63,7 +64,7 @@ public class ApprovalWorkflowTest {
             }
 
 
-        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.Approver))){
             String approvalID;
             JsonNode before = null;
             JsonNode after = null;
@@ -95,7 +96,7 @@ public class ApprovalWorkflowTest {
 	public void testNonAdminCantChangeApprovalID() throws Exception {
         String uuid;
         final File resource=new File("test/testJSON/toapprove.json");
-        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+        try(RestSession session = ts.newRestSession(ts.createUser(Role.DataEntry, Role.SuperDataEntry));
         		InputStream is = new FileInputStream(resource)){
 
 
@@ -107,7 +108,7 @@ public class ApprovalWorkflowTest {
             }
 
 
-        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.SuperDataEntry, Role.SuperUpdate, Role.Approver))){
             String approvalID;
             JsonNode before = null;
             JsonNode after = null;
@@ -145,7 +146,7 @@ public class ApprovalWorkflowTest {
             }
 
 
-        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.Approver, Role.SuperUpdate))){
             String approvalID;
             JsonNode before = null;
             JsonNode after = null;
@@ -180,7 +181,7 @@ public class ApprovalWorkflowTest {
 	public void testAdminCannotChangeApprovalIDToInvalid() throws Exception {
         String uuid;
         final File resource=new File("test/testJSON/toapprove.json");
-        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
+        try(RestSession session = ts.newRestSession(ts.createUser(Role.SuperDataEntry));
         		InputStream is = new FileInputStream(resource)){
 
 
@@ -192,7 +193,7 @@ public class ApprovalWorkflowTest {
             }
 
 
-        try(RestSession session2 = ts.newRestSession(ts.getFakeUser2())){
+        try(RestSession session2 = ts.newRestSession(ts.createUser(Role.Approver))){
             String approvalID;
             JsonNode before = null;
             JsonNode after = null;
@@ -241,8 +242,8 @@ public class ApprovalWorkflowTest {
 	@Test
 	public void testFailDoubeApproved()  throws Exception {
         final File resource=new File("test/testJSON/toapprove.json");
-        try(RestSession session = ts.newRestSession(ts.getFakeUser1());
-            RestSession session2 = ts.newRestSession(ts.getFakeUser2());
+        try(RestSession session = ts.newRestSession(ts.createUser(Role.SuperDataEntry, Role.SuperUpdate, Role.Approver));
+            RestSession session2 = ts.newRestSession(ts.createUser(Role.SuperDataEntry, Role.SuperUpdate, Role.Approver));
             InputStream is = new FileInputStream(resource)) {
 
             JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(new ObjectMapper().readTree(is));

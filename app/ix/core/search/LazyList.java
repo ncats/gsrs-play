@@ -12,10 +12,10 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 
 /**
- * This is a List where objects are stored using {@link java.util.concurrent.Callable} to 
+ * This is a List where objects are stored using {@link ix.core.search.NamedCallable} to 
  * lazily fetch them. Instantiating this list and using it by itself is rather pointless,
  * as it just wraps objects with a Callable wrapper. However, using {@link #addCallable(Callable)} will allow
- * certain List / Collection operations to still be performed while defering the actual fetching of the objects.
+ * certain List / Collection operations to still be performed while deferring the actual fetching of the objects.
  * 
  * This is useful when actual acquisition of objects is prohibitively expensive, or the objects
  * would be prohibitively large in memory, but a List would still be useful for existing pipelines
@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
  *
  * @param <K>
  */
-public class FutureList<K> implements List<K>{
+public class LazyList<K> implements List<K>{
 	private ObjectNamer objectNamer;
 	
 	
@@ -41,10 +41,7 @@ public class FutureList<K> implements List<K>{
 		}
 	}
 	
-	
-	
-	
-	public FutureList(ObjectNamer objectNamer){
+	public LazyList(ObjectNamer objectNamer){
 		this.objectNamer=objectNamer;
 	}
 	
@@ -53,7 +50,7 @@ public class FutureList<K> implements List<K>{
 		String name=null;
 		public DefaultNamedCallable(K k){
 			this.k=k;
-			name = FutureList.this.objectNamer.nameFor(k);
+			name = LazyList.this.objectNamer.nameFor(k);
 		}
 		@Override
 		public K call() throws Exception {
@@ -262,13 +259,13 @@ public class FutureList<K> implements List<K>{
 	
 	@Override
 	public ListIterator<K> listIterator() {
-		return new FutureList.LazyListIterator<K>(this,0);
+		return new LazyList.LazyListIterator<K>(this,0);
 		
 	}
 
 	@Override
 	public ListIterator<K> listIterator(int index) {
-		return new FutureList.LazyListIterator<K>(this,index);
+		return new LazyList.LazyListIterator<K>(this,index);
 	}
 
 	@Override
@@ -337,8 +334,9 @@ public class FutureList<K> implements List<K>{
             i.set(e);
         }
     }
-	private static final class DefaultComparator<E extends Comparable<E>> implements Comparator<E>
-	{
+	
+	//used to get the default Comparators
+	private static final class DefaultComparator<E extends Comparable<E>> implements Comparator<E>{
 	    @SuppressWarnings( "rawtypes" )
 	    private static final DefaultComparator<?> INSTANCE = new DefaultComparator();
 
@@ -349,20 +347,16 @@ public class FutureList<K> implements List<K>{
 	     *
 	     * @return an instance of DefaultComparator for comparing instances of the requested type.
 	     */
-	    public static <T extends Comparable<T>> Comparator<T> getInstance()
-	    {
+	    public static <T extends Comparable<T>> Comparator<T> getInstance(){
 	        @SuppressWarnings("unchecked")
 	        Comparator<T> result = (Comparator<T>)INSTANCE;
 	        return result;
 	    }
 
-	    private DefaultComparator()
-	    {
-	    }
+	    private DefaultComparator(){}
 
 	    @Override
-	    public int compare( E o1, E o2 )
-	    {
+	    public int compare( E o1, E o2 ){
 	        if( o1 == o2 )
 	            return 0;
 	        if( o1 == null )

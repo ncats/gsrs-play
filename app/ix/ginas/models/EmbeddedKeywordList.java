@@ -22,9 +22,7 @@ public class EmbeddedKeywordList implements List<Keyword>, Serializable{
 		this.addAll(col);
 	}
 	
-	public EmbeddedKeywordList(){
-		
-	}
+	public EmbeddedKeywordList(){}
 	
 	public int size() {
 		return keywords.size();

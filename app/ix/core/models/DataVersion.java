@@ -9,6 +9,4 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(value=RetentionPolicy.RUNTIME)
 @Target(value={ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
-public @interface DataVersion {
-	
-}
+public @interface DataVersion {}

@@ -16,14 +16,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import ix.core.CacheStrategy;
-import ix.core.search.FutureList.NamedCallable;
+import ix.core.search.LazyList.NamedCallable;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.TimeUtil;
-import ix.utils.EntityUtils;
+import ix.core.util.EntityUtils.EntityWrapper;
 import play.Logger;
 
 @CacheStrategy(evictable=false)
 public class SearchResult {
+	
 
 
     /**
@@ -32,17 +33,17 @@ public class SearchResult {
      * 
      * @return
      */
-    public List<FieldFacet> getFieldFacets(){
+    public List<FieldedQueryFacet> getFieldFacets(){
         return suggestFacets;
     }
     
     String key;
     String query;
     List<Facet> facets = new ArrayList<Facet>();
-    List<FieldFacet> suggestFacets = new ArrayList<FieldFacet>();
+    List<FieldedQueryFacet> suggestFacets = new ArrayList<FieldedQueryFacet>();
     
-    FutureList<Object> matches = new FutureList<> (o->EntityUtils.getIdForBeanAsString(o));
-    
+    LazyList<Object> matches = new LazyList<> (o->(EntityWrapper.of(o)).getKey().getIdString());
+    //List<NamedCallable> matches = new ArrayList<>();
     List<?> result; // final result when there are no more updates
     
     
@@ -267,23 +268,21 @@ public class SearchResult {
         
         List list = matches;
         
-        
         if (finished) {
         	if(idComparator!=null){
-        		if(list instanceof FutureList){
-        			((FutureList<Object>) list).sortByNames(idComparator);
+        		if(list instanceof LazyList){
+        			((LazyList<Object>) list).sortByNames(idComparator);
         		}else{
         			//This may take a long time in certain cases
             		Collections.sort(list,(o1,o2)->{
-            			String id1 = EntityUtils.getIdForBeanAsString(o1);
-    	                String id2 = EntityUtils.getIdForBeanAsString(o2);
+            			String id1 = EntityWrapper.of(o1).getKey().getIdString();
+    	                String id2 = EntityWrapper.of(o2).getKey().getIdString();
     	                return idComparator.compare(id1, id2);
             		});
         		}
         	}
             result = list;
         }
-        
         return list;
     }
     public boolean isEmpty () { return matches.isEmpty(); }
@@ -359,7 +358,9 @@ public class SearchResult {
 		this.facets.add(f);
 	}
 
-	public void addFieldFacet(FieldFacet ff) {
-		this.suggestFacets.add(ff);
+	public void addFieldQueryFacet(FieldedQueryFacet ff) {
+		if(ff.getDisplayField()!=null){
+			this.suggestFacets.add(ff);
+		}
 	}
 }

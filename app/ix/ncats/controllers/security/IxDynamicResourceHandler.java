@@ -54,7 +54,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                 });
         HANDLERS.put(CAN_APPROVE,
                 new SimpleRoleDynamicResourceHandler(
-                        Role.SuperUpdate
+                        Role.Approver
                 ));
         HANDLERS.put(CAN_REGISTER,
                 new SimpleRoleDynamicResourceHandler(
@@ -71,7 +71,6 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                                      final String meta,
                                      final DeadboltHandler deadboltHandler,
                                      final Http.Context ctx){
-
                 return true;
             }
 

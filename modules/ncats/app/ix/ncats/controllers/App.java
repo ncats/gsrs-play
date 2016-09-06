@@ -1164,15 +1164,13 @@ public class App extends Authentication {
                          +" rows="+rows+" page="+page+" key="+key);
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
-                 key, new Callable<SearchResultContext> () {
-                         public SearchResultContext call () throws Exception {
+                 key, ()->{
                              processor.setResults
                                  (rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
                              ctx.setKey(key);
                              Logger.debug("## cache missed: "+key+" => "+ctx);
                              return ctx;
-                         }
                      });
         }
         catch (Exception ex) {
@@ -1195,15 +1193,14 @@ public class App extends Authentication {
             //final String key = "similarity/"+getKey (query + request().getQueryString("order"), threshold);
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
-                 key, new Callable<SearchResultContext> () {
-                         public SearchResultContext call () throws Exception {
+                 key, ()->{
                              processor.setResults
-                                 (rows, EntityPersistAdapter.getStructureIndexer().similarity
-                                  (query, threshold, 0));
+                                 (rows, 
+                               EntityPersistAdapter.getStructureIndexer().similarity(query, threshold, 0)
+                                		 );
                              SearchResultContext ctx = processor.getContext();
                              ctx.setKey(key);
                              return ctx;
-                         }
                      });
         }
         catch (Exception ex) {
@@ -1669,11 +1666,7 @@ public class App extends Authentication {
         final String key = "resolve/"+name;
         
         try {
-            return getOrElse (key, new Callable<Result> () {
-                    public Result call () throws Exception {
-                        return _resolve (name);
-                    }
-                });
+            return getOrElse (key, ()->_resolve (name));
         }catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't resolve \""+name+"\"!", ex);

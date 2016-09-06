@@ -43,9 +43,9 @@ public abstract class AbstractSubstanceBuilder<K extends Substance>{
 	
 	public AbstractSubstanceBuilder<K> addCode(String codeSystem, String code){
 		return andThen(s->{
-			Code c=new Code(codeSystem,code);
-			c.addReference(getOrAddFirstReference(s));
-			s.codes.add(c);
+			Code n=new Code(codeSystem,code);
+			n.addReference(getOrAddFirstReference(s));
+			s.codes.add(n);
 			return s;
 		});
 	}

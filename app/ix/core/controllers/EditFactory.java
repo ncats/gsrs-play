@@ -1,18 +1,15 @@
 package ix.core.controllers;
 
-import java.io.*;
-import java.util.*;
-
-import ix.core.util.Java8Util;
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-import ix.core.NamedResource;
-import ix.core.models.Edit;
-import ix.core.models.Figure;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.NamedResource;
+import ix.core.models.Edit;
+import ix.core.util.Java8Util;
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
 
 @NamedResource(name="edits",
 type=Edit.class,

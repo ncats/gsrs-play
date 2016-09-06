@@ -21,16 +21,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -39,8 +35,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -48,23 +44,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.Entity;
-
-import ix.ginas.utils.reindex.ReIndexListener;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoubleField;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.FloatField;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.DrillSideways;
 import org.apache.lucene.facet.FacetField;
@@ -110,14 +102,12 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.suggest.DocumentDictionary;
-import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
-import org.reflections.Reflections;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -126,36 +116,40 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.Indexable;
-import ix.core.search.DefaultSearchContextAnalyzerGenerator;
-import ix.core.search.FieldFacet;
-import ix.core.search.FieldFacet.MATCH_TYPE;
+import ix.core.plugins.IxCache;
+import ix.core.search.FieldedQueryFacet;
+import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
 import ix.core.search.InxightInfixSuggester;
-import ix.core.search.SearchAnalyzer;
-import ix.core.search.SearchContextAnalyzerGenerator;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
-import ix.core.search.text.EntityTextIndexer.EntityInfo;
 import ix.core.util.CachedSupplier;
+import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
-import ix.utils.EntityUtils;
+import ix.ginas.utils.reindex.ReIndexListener;
 import ix.utils.Global;
-import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
-import oracle.net.aso.e;
 import play.Logger;
 import play.Play;
 
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer implements Closeable, ReIndexListener {
+public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMaker, PrimitiveFieldMaker {
+	public static final String IX_BASE_PACKAGE = "ix";
+	
+	public static final boolean INDEXING_ENABLED = Play.application().configuration().getBoolean("ix.textindex.enabled",true);
+	
+	private static final boolean USE_ANALYSIS = true; 
 	private static final String ANALYZER_FIELD = "M_FIELD";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
-	private static final String IX_BASE_PACKAGE = "ix";
+	
+	
 	private static final char SORT_DESCENDING_CHAR = '$';
 	private static final char SORT_ASCENDING_CHAR = '^';
 	private static final int EXTRA_PADDING = 2;
@@ -167,7 +161,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public static final String GIVEN_START_WORD = "^";
 	static final String ROOT = "root";
 	
-	private static final boolean USE_ANALYSIS = true; 
+	
 
 	public void deleteAll() {
 		try {
@@ -534,16 +528,16 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 		private void flush() {
 
-			File file = getFacetsConfigFile();
-			if (file.lastModified() < lastModified.get()) {
+			File configFile = getFacetsConfigFile();
+			if (TextIndexer.this.hasBeenModifiedSince(configFile.lastModified())) {
 				Logger.debug(
 						Thread.currentThread() + ": " + getClass().getName() + " writing FacetsConfig " + new Date());
-				saveFacetsConfig(file, facetsConfig);
+				saveFacetsConfig(configFile, facetsConfig);
 			}
 
-			file = getSorterConfigFile();
-			if (file.lastModified() < lastModified.get()) {
-				saveSorters(file, sorters);
+			File sortFile = getSorterConfigFile();
+			if (TextIndexer.this.hasBeenModifiedSince(sortFile.lastModified())) {
+				saveSorters(sortFile, sorters);
 			}
 
 			if (indexWriter.hasUncommittedChanges()) {
@@ -598,8 +592,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	private boolean isShutDown = false;
 
-	private static Map<String, SearchContextAnalyzerGenerator> defaultSearchAnalyzers = new HashMap<String, SearchContextAnalyzerGenerator>();
-
 	private FlushDaemon flushDaemon;
 
 	SearcherManager searchManager;
@@ -607,7 +599,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	
 	private static Set<String> deepKinds;
 	static {
-		System.out.println("static initializer");
 		init();
 	}
 
@@ -620,47 +611,31 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				});
 			}
 			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
-			deepKinds = Play.application().configuration().getStringList("ix.index.deepfields", new ArrayList<String>())
-					.stream().map(s -> {
-						try {
-							return Class.forName(s);
-						} catch (Exception e) {
-							e.printStackTrace();
-							return null;
-						}
-					}).filter(k -> k != null).map(k -> createKindSetFromClass(k)).reduce((s, c) -> {
-						s.addAll(c);
-						return s;
-					}).orElse(new HashSet<String>());
+			deepKinds = Play.application().configuration()
+									.getStringList("ix.index.deepfields", new ArrayList<String>())
+									.stream()
+									.map(s->{
+										try{
+											return EntityUtils.getEntityInfoFor(s).getTypeAndSubTypes();
+										}catch(Exception e){
+											e.printStackTrace();
+											return null;
+										}
+									 })
+									.filter(Objects::nonNull)
+									.reduce(Util::combine)	// must exist in another package too
+									.map(l->l.stream())
+									.get()
+									.map(ei->ei.getName())
+									.collect(Collectors.toSet());
+			
 			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
-			registerDefaultAnalyzers();
 
 			ALREADY_INITIALIZED.set(true);
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public static void registerDefaultAnalyzers() {
-		Play.application().configuration().getList("ix.core.searchanalyzers",
-				new ArrayList<Object>()).stream()
-					.filter(o->o instanceof Map)
-					.map(o->(Map)o)
-					.forEach(m->{
-						String entityClass   = (String) m.get("class");
-						String analyzerClass = (String) m.get("analyzer");
-						Map params = (Map) m.get("with");
-						try {
-							Class<?> entityCls = Class.forName(entityClass);
-							Class<?> analyzerCls = Class.forName(analyzerClass);
-							SearchContextAnalyzerGenerator generator = 
-									new DefaultSearchContextAnalyzerGenerator(entityCls, analyzerCls, params);
-							defaultSearchAnalyzers.put(entityCls.getName(), generator);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
-	}
 
 	public static TextIndexer getInstance(File baseDir) throws IOException {
 
@@ -911,21 +886,30 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					f = new TermsFilter(terms);
 				}
 				if(options.order.isEmpty()){
-					Map<String, Integer> rank = new HashMap<String, Integer>();
-					Util.forEachIndex(subset, (i,entity)->{
-						rank.put(EntityUtils.getIdForBeanAsString(entity), i);
-					});
-					if (!rank.isEmpty()) {
-						searchResult.setRank(rank);
-					}
+					Map<String, Integer> rank = 
+					subset.stream()
+						.map(o->EntityWrapper.of(o).getKey().getIdString())
+						.map(Util.toIndexedTuple())		//Yes, I mean for this to be a function call, not a function
+						.collect(Collectors.toMap(Tuple::v, Tuple::k));
+					searchResult.setRank(rank);
 				}
 			} else if (options.kind != null) {
-				f = new FieldCacheTermsFilter(FIELD_KIND, createKindSetFromOptions(options).toArray(new String[0]));
+				
+				f = new FieldCacheTermsFilter(FIELD_KIND, createKindArrayFromOptions(options));
 			}
 			search(searchResult, query, f);
 		}
 
 		return searchResult;
+	}
+
+	private String[] createKindArrayFromOptions(SearchOptions options) {
+		return options.getKindInfo()
+				.getTypeAndSubTypes()
+				.stream()
+				.map(s->s.getName())
+				.collect(Collectors.toList()).toArray(new String[0]);
+				//.toArray();
 	}
 
 	public SearchResult filter(Collection<?> subset) throws IOException {
@@ -935,10 +919,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	protected List<Term> getTerms(Collection<?> subset) {
 		return subset.stream()
-				.map(o -> getTerm(o))
+				.map(this::getTerm)
 				.filter(t -> t != null)
 				.collect(Collectors.toList());
-
 	}
 
 	protected TermsFilter getTermsFilter(Collection<?> subset) {
@@ -972,20 +955,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		return filters;
 	}
 	
-	public Set<String> createKindSetFromOptions(SearchOptions options){
-		return createKindSetFromClass(options.kind);
-	}
 	
-	
-	public static Set<String> createKindSetFromClass(Class<?> kind){
-		Set<String> kinds = new TreeSet<String>();
-		kinds.add(kind.getName());
-		Reflections reflections = new Reflections(IX_BASE_PACKAGE);
-		for (Class<?> c : reflections.getSubTypesOf(kind)) {
-			kinds.add(c.getName());
-		}
-		return kinds;
-	}
 		
 	public Sort createSorterFromOptions(SearchOptions options) {
 		Sort sorter = null;
@@ -1025,6 +995,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			if (!fields.isEmpty()) {
 				sorter = new Sort(fields.toArray(new SortField[0]));
 			}
+			
+			
 		}
 		return sorter;
 	}
@@ -1069,15 +1041,38 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			.forEach(f -> sr.addFacet(f));
 	}
 	
+	
+	// Abstracted interface to help with cleaning up workflow
+	// Call search, then call getTopDocs and/or getFacets
+	// It's
+	
 	public static interface LuceneSearchProvider{
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
+	}
+	public static interface LuceneSearchProviderResult{
 		public TopDocs getTopDocs();
 		public Facets getFacets();
 	}
-	
-	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
+	public static class DefaultLuceneSearchProviderResult implements LuceneSearchProviderResult{
 		private TopDocs hits=null;
 		private Facets facets=null;
+		public DefaultLuceneSearchProviderResult(TopDocs hits,Facets facets){
+			this.hits=hits;
+			this.facets=facets;
+		}
+		@Override
+		public TopDocs getTopDocs() {
+			return hits;
+		}
+		@Override
+		public Facets getFacets() {
+			return facets;
+		}
+		
+	}
+	
+	
+	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
 		Sort sorter;
 		Filter filter;
 		Query query;
@@ -1090,21 +1085,12 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			this.query=query;
 			this.max=max;
 			this.facetCollector=facetCollector;
-			
 		}
 
 		@Override
-		public TopDocs getTopDocs() {
-			return hits;
-		}
-
-		@Override
-		public Facets getFacets() {
-			return facets;
-		}
-
-		@Override
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+			TopDocs hits=null;
+			Facets facets=null;
 			//FacetsCollector.
 			//with sorter
 			if (sorter != null) { 
@@ -1114,7 +1100,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				hits = (FacetsCollector.search(searcher, query, filter, max, facetCollector));
 			}
 			facets = new FastTaxonomyFacetCounts(taxon, facetsConfig, facetCollector);
-			
+			return new DefaultLuceneSearchProviderResult(hits,facets);
 		}
 		
 	}
@@ -1132,26 +1118,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			this.filter=filter;
 			this.ddq=query;
 			this.options=options;
-			this.facetCollector=facetCollector;
-			
+			this.facetCollector=facetCollector;	
 		}
 
 		@Override
-		public TopDocs getTopDocs() {
-			return hits;
-		}
-
-		@Override
-		public Facets getFacets() {
-			return facets;
-		}
-
-		@Override
-		public void search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
 			DrillSideways sideway = new DrillSideways(searcher, facetsConfig, taxon);
 			DrillSideways.DrillSidewaysResult swResult = sideway.search(ddq, filter, null, options.max(),
 					sorter, false, false);
-
+			
 			/*
 			 * TODO: is this the only way to collect the counts for
 			 * range/dynamic facets?
@@ -1162,11 +1137,118 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 			facets = swResult.facets;
 			hits = swResult.hits;
+			return new DefaultLuceneSearchProviderResult(hits,facets);
 		}
 		
 	}
 	
+	// This is not yet fully realized. It works as intended,
+	// but the right design is ideally to have this be a 
+	// BiConsumer that simply does all Field 
+	public class IndexingFieldCreator implements BiConsumer<PathStack, EntityUtils.EntityWrapper>{
+		
+		private Consumer<IndexableField> toAdd= null;
+		private DynamicFieldMaker dynamicFacets = null;
+		private PrimitiveFieldMaker indexPerformer=null;
+		
 	
+		
+		public IndexingFieldCreator(Consumer<IndexableField> toAdd){
+			this.toAdd=toAdd;
+		}
+		public IndexingFieldCreator withDynamicFieldMaker(DynamicFieldMaker dynamicFacets){
+			this.dynamicFacets=dynamicFacets;
+			return this;
+		}
+		public IndexingFieldCreator withPrimitiveFieldMaker(PrimitiveFieldMaker indexPerformer){
+			this.indexPerformer=indexPerformer;
+			return this;
+		}
+		
+		public IndexingFieldCreator(Consumer<IndexableField> toAdd, 
+					DynamicFieldMaker dynamicFacets, 
+					PrimitiveFieldMaker indexPerformer) {
+			this.toAdd = toAdd; 					//where to put the fields
+			this.dynamicFacets = dynamicFacets;			//how to make the Dynamic Facets
+			this.indexPerformer = indexPerformer;		//how to make the 
+		}
+	
+	
+		public void acceptWithGeneric(PathStack path, EntityUtils.EntityWrapper<Object> ew) {
+			if (toAdd != null) {
+				toAdd.accept(new FacetField(DIM_CLASS, ew.getKind()));
+				ew.getId().ifPresent(o -> {
+					if (o instanceof Long) {
+						toAdd.accept(new LongField(ew.getInternalIdField(), (Long) o, YES));  
+					} else {
+						toAdd.accept(new StringField(ew.getInternalIdField(), o.toString(), YES));  //Only Special case
+					}
+					toAdd.accept(new StringField(ew.getIdField(), o.toString(), NO));
+				});
+	
+				// primitive fields only, they should all get indexed
+				ew.streamFieldsAndValues(f -> f.isPrimitive()).forEach(fi -> {
+					path.pushAndPopWith(fi.k().getName(), () -> {
+						indexPerformer.create(toAdd, path.getFirst(), fi.v(), path.toPath(),
+								fi.k().getIndexable());
+					});
+				});
+	
+				ew.getDynamicFacet().ifPresent(fv -> {
+					path.pushAndPopWith(fv.k(), () -> {
+						dynamicFacets.create(toAdd, fv.k(), fv.v(), path.toPath());
+					});
+				});
+	
+				ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
+					path.pushAndPopWith(t.k().getName(), () -> {
+						t.k().forEach(t.v(), (i, o) -> {
+							path.pushAndPopWith(i + "", () -> {
+								indexPerformer.create(toAdd, path.getFirst(), o,
+										path.toPath(), t.k().getIndexable());
+							});
+						});
+					});
+				});// each array / collection
+	
+				ew.streamMethodsAndValues(m -> !m.isArrayOrCollection()).forEach(t -> {
+					path.pushAndPopWith(t.k().getName(), () -> {
+						indexPerformer.create(toAdd, path.getFirst(), t.v(), path.toPath(),
+								t.k().getIndexable());
+					});
+				});// each non-array
+	
+				ew.streamFieldsAndValues(f -> (!f.isPrimitive() && !f.isArrayOrCollection())).forEach(fi -> {
+					path.pushAndPopWith(fi.k().getName(), () -> {
+						if (fi.k().isEntityType()) {
+							if (toAdd != null) {
+								if (fi.k().isExplicitlyIndexable()) {
+									indexPerformer.create(toAdd, path.getFirst(), fi.v(),
+											path.toPath(), fi.k().getIndexable());
+								}
+							}
+						} else { // treat as string
+							if (toAdd != null) {
+								indexPerformer.create(toAdd, path.getFirst(), fi.v(),
+										path.toPath(), fi.k().getIndexable());
+							}
+						}
+					}); // for each field with value
+				}); // foreach non-primitive field
+			}
+		}
+	
+		
+		//Just had some generic problems, so this delegates
+		// TODO: clean up
+		@Override
+		public void accept(PathStack t, EntityUtils.EntityWrapper u) {
+			acceptWithGeneric(t, u);
+		}
+		
+
+	}
+
 	// This is the most important method, everything goes here
 	protected SearchResult search(IndexSearcher searcher, SearchResult searchResult, Query query, Filter filter)
 			throws IOException {
@@ -1212,21 +1294,30 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					// fetchQueue.put(payload);
 					threadPool.submit(() -> {
 						try {
-							long tstart = System.currentTimeMillis();
-							Logger.debug(Thread.currentThread() + ": fetching payload " + payload.hits.totalHits
-									+ " for " + payload.result);
-
-							payload.fetch();
-
-							Logger.debug(Thread.currentThread() + ": ## fetched " + payload.result.size()
-									+ " for result " + payload.result + " in "
-									+ String.format("%1$dms", System.currentTimeMillis() - tstart));
-						} catch (Exception ex) {
-							ex.printStackTrace();
-							Logger.error("Error in processing payload", ex);
+							withSearcher(s->{
+									long tstart = System.currentTimeMillis();
+									Logger.debug(Thread.currentThread() + ": fetching payload " + payload.hits.totalHits
+											+ " for " + payload.result);
+									payload.setSearcher(s);
+									try{
+										payload.fetch();
+									}catch(InterruptedException e){
+										throw new IOException(e); //just to make it throw through withSearcher
+									}
+									Logger.debug(Thread.currentThread() + ": ## fetched " + payload.result.size()
+											+ " for result " + payload.result + " in "
+											+ String.format("%1$dms", System.currentTimeMillis() - tstart));
+								return payload;
+							});
+						} catch (Exception e) {
+							e.printStackTrace();
+							System.out.println("Search failed at:" + searchResult.getMatches().size());
+							Logger.error("Error in processing payload", e);
 						}
+						
 					});
 				} else {
+					
 					searchResult.done();
 				}
 			}
@@ -1268,6 +1359,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		// code in the SearchOptions class. If it's Lucene-specific,
 		// then the parser is here. If it's a more general function,
 		// then it's put into SearchOptions directly.
+		//
+		// This may change in the future
 		
 		Sort sorter = createSorterFromOptions(options);
 		List<Filter> filtersFromOptions = createAndRemoveRangeFiltersFromOptions(options)
@@ -1313,40 +1406,47 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 		} // facets is empty
 
-		lsp.search(searcher, taxon);
-		hits=lsp.getTopDocs();
+		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon);
+		hits=lspResult.getTopDocs();
 		
-		collectBasicFacets(lsp.getFacets(), searchResult);
+		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
 		
 		//Beginning of an idea
 		if(USE_ANALYSIS){
+			System.out.println("Analyzing");
 			getQueryBreakDownFor(query).stream().forEach(oq->{
 				try{
-					//System.out.println(oq.k().toString());
 					FacetsCollector facetCollector2 = new FacetsCollector();
-					List<String> analyzers = createKindSetFromOptions(options)
+					List<String> analyzers = EntityUtils.getEntityInfoFor(options.kind)
+												.getTypeAndSubTypes()
 								.stream()
-								.map(s->ANALYZER_VAL_PREFIX + s)
+								.map(e->e.getName())
+								.map(n->ANALYZER_VAL_PREFIX + n)
+								.peek(System.out::println)
 								.collect(Collectors.toList());
 					
 					Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
-					//System.out.println(query.toString());
 					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
-					
-					lsp2.search(searcher, taxon);
-					lsp2.getFacets().getAllDims(options.fdim).forEach(fr->{
+					System.out.println("Ok ...");
+					LuceneSearchProviderResult res=lsp2.search(searcher, taxon);
+					res.getFacets().getAllDims(options.fdim).forEach(fr->{
+						System.out.println(fr.dim);
+						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
+							
 						Arrays.stream(fr.labelValues).forEach(lv->{
-							if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
-								searchResult.addFieldFacet(
-										new FieldFacet(lv.label, searchResult.getQuery(), lv.value.intValue(), oq.v())
-												.explicitQuery(serializeAndRestrictQueryToField(oq.k(),lv.label)));
-							}
-						});
+						
+								String newQuery = serializeAndRestrictQueryToField(oq.k(),lv.label);
+								searchResult.addFieldQueryFacet(
+										new FieldedQueryFacet(lv.label)
+												.withExplicitCount(lv.value.intValue())
+												.withExplicitQuery(newQuery)
+												.withExplicitMatchType(oq.v())
+												);
+								});
+						}
 					});
 				}catch(Exception e){e.printStackTrace();}
-				//FieldFacet
-				//get count?
 			});
 		} //End of Idea
 		
@@ -1585,18 +1685,23 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 	}
 
-	protected Term getTerm(Object entity) {
+	protected <T> Term getTerm(T entity) {
 		if (entity == null)
 			return null;
-
-		Tuple<String,String> fieldAndID=EntityTextIndexer.getEntityInfoFor(entity).getFieldAndId(entity);
 		
-		if (fieldAndID.v() == null) {
+		EntityWrapper<T> ew= EntityWrapper.of(entity);
+		
+		Optional<Term> oTerm=ew.getOptionalKey().map(key->{
+			Tuple<String,String> kv= key.asLuceneIdTuple(); 
+			return new Term(kv.k(), kv.v());
+		});
+		
+		if(!oTerm.isPresent()){
 			Logger.warn("Entity " + entity + "[" + entity.getClass() + "] has no Id field!");
 			return null;
 		}
 		
-		return new Term(fieldAndID.k(), fieldAndID.v());
+		return oTerm.get();
 	}
 
 	public Document getDoc(Object entity) throws Exception {
@@ -1658,29 +1763,33 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	/**
 	 * recursively index any object annotated with Entity
 	 */
-	public void add(Object entity) throws IOException {
-		if (entity == null) {return;}
-		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(entity);
-		if(!ei.shouldIndex()){
+	public void add(EntityWrapper ew) throws IOException {
+		if(!INDEXING_ENABLED)return;
+		Objects.requireNonNull(ew);
+		try{
+		if(!ew.shouldIndex()){
 			if (DEBUG(2)) {
-				Logger.debug(">>> Not indexable " + entity);
+				Logger.debug(">>> Not indexable " + ew.getValue());
 			}
 			return;
 		}
 		if (DEBUG(2)){
-			Logger.debug(">>> Indexing " + entity + "...");
+			Logger.debug(">>> Indexing " + ew.getValue() + "...");
 		}
 
 		CachedSupplier<Boolean> isDeep  = 
-				CachedSupplier.of(()->deepKinds.contains(ei.getName()));
+				CachedSupplier.of(()->deepKinds.contains(ew.getKind()));
+		
+		
 		HashMap<String,List<TextField>> fullText = new HashMap<>();
 		Document doc = new Document();
 		
-		Consumer<IndexableField> fields = f->{
+		Consumer<IndexableField> fieldCollector = f->{
 				String text = f.stringValue();
 				if (text != null) {
-					if (DEBUG(2))
+					if (DEBUG(2)){
 						Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+					}
 					TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
 					//tf.set
 					doc.add(tf);
@@ -1692,21 +1801,22 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				doc.add(f);
 		};
 		
-		fields.accept(new StringField(FIELD_KIND, ei.getName(), YES));
+		//flag the kind of document
+		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 		
+		ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
+										.withDynamicFieldMaker(this)	
+										.withPrimitiveFieldMaker(this)
+					);
 		
-		
-		instrument(new PathStack(), entity, fields, null);
-
-		
-		
-		
-		if(USE_ANALYSIS && isDeep.call()){
-			String mid=EntityUtils.getIdForBeanAsString(entity);
-			if(mid!=null){
-				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ei.getName(),YES);
-				StringField docParent=new StringField(FIELD_KIND + ".id",mid,YES);
-				FacetField  docParentFacet =new FacetField(FIELD_KIND + ".id",mid);
+		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
+			Key key =ew.getKey();
+			if(!key.getIdString().equals("")){  //probably not needed
+				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
+				
+				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
+				StringField docParent=new StringField(luceneKey.k(),luceneKey.v(),YES);
+				FacetField  docParentFacet =new FacetField(luceneKey.k(),luceneKey.v());
 				//This is a test of a terrible idea, which just. might. work.
 				fullText.forEach((name,group)->{
 						try{
@@ -1730,87 +1840,71 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		addDoc(doc);
 		
 		if (DEBUG(2))
-			Logger.debug("<<< " + entity);
+			Logger.debug("<<< " + ew.getValue());
+		}catch(Exception e){
+			e.printStackTrace();
+			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems");
+		}finally{
+			//System.out.println("||| " + ew.getKey());
+		}
+		
 	}
 
 	public void addDoc(Document doc) throws IOException {
+		
 		doc = facetsConfig.build(taxonWriter, doc);
 		if (DEBUG(2))
 			Logger.debug("++ adding document " + doc);
 		indexWriter.addDocument(doc);
-		lastModified.set(TimeUtil.getCurrentTimeMillis());
+		markChange();
 	}
 
+	//TODO: Should be an interface, which can throw a DataHasChange event ... or something 
+	// like that
+	public void markChange(){
+		lastModified.set(TimeUtil.getCurrentTimeMillis());
+		IxCache.markChange();
+		
+	}
+	
+	
+	
+	public boolean hasBeenModifiedSince(long thistime){
+		if(lastModified()>thistime)return true;
+		return false;
+	}
+	
 	public long lastModified() {
 		return lastModified.get();
 	}
 
-	/**
-	 * I don't think we use this right now,
-	 * instead, we use remove and an explicit
-	 * add later. 
-	 * @param entity
-	 * @throws IOException
-	 */
-	@Deprecated
-	public void update(Object entity) throws IOException {
-		// String idString=null;
-		EntityInfo ei=EntityTextIndexer.getEntityInfoFor(entity);
-		if (!ei.isEntity()) {
-			return;
-		}
 
-		if (DEBUG(2))
-			Logger.debug(">>> Updating " + entity + "...");
-
-		try {
-			Tuple<String,String> fieldAndId=ei.getFieldAndId(entity);
-			
-			if (fieldAndId.v() != null) {
-				BooleanQuery q = new BooleanQuery();
-				q.add(new TermQuery(new Term(fieldAndId.k(), fieldAndId.v())), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, ei.getName())), BooleanClause.Occur.MUST);
-				indexWriter.deleteDocuments(q);
-
-				if (DEBUG(2))
-					Logger.debug("++ Updating " + fieldAndId.k() + "=" + fieldAndId.v());
-
-				// now reindex .. there isn't an IndexWriter.update
-				// that takes a Query
-				add(entity);
-			}
-		} catch (Exception ex) {
-			Logger.trace("Unable to update index for " + entity, ex);
-		}
-
-		if (DEBUG(2))
-			Logger.debug("<<< " + entity);
-	}
-
-	public void remove(Object entity) throws Exception {
-		EntityInfo ei = EntityTextIndexer.getEntityInfoFor(entity);
+	public void remove(EntityWrapper ew) throws Exception {
 		
-		if (ei.isEntity()) {
-			String id = ei.getIdString(entity).get();
-			if (id != null) {
-				String field = ei.getExternalIdFieldName();
+		if (ew.isEntity()) {
+			if (ew.hasKey()) {
+				Key key= ew.getKey();
+				Tuple<String,String> docKey=key.asLuceneIdTuple();
 				if (DEBUG(2)){
-					Logger.debug("Deleting document " + field + "=" + id + "...");
+					Logger.debug("Deleting document " + docKey.k() + "=" + docKey.v() + "...");
 				}
-				BooleanQuery q = new BooleanQuery();
-				q.add(new TermQuery(new Term(field, id)), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, ei.getName())), BooleanClause.Occur.MUST);
-				indexWriter.deleteDocuments(q);
 				
-				if(USE_ANALYSIS){
+				BooleanQuery q = new BooleanQuery();
+				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
+				indexWriter.deleteDocuments(q);
+				markChange();
+				
+				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
-					qa.add(new TermQuery(new Term(field, id)), BooleanClause.Occur.MUST);
-					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ei.getName())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
+				markChange();
 				
 			} else {
-				Logger.warn("Entity " + ei.getName() + "'s Id field is null!");
+				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
 			}
 		} else {
 			throw new IllegalArgumentException("Object is not of type Entity");
@@ -1831,318 +1925,29 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	
 	
 	
-	protected void instrument(PathStack path, 
-			Object entity, 
-			Consumer<IndexableField> ixFields,
-			LinkedReferenceSet<Object> prevEntities) {
-		
-		// This is a problem because of infinite recursion. It
-		// can actually happen really easily on ManyToOne
-		// JPA annotations.
 
-		// This is to avoid infinite recurse. If this object has already been
-		// seen here, then things would explode.
-		LinkedReferenceSet<Object> entities = (prevEntities!=null)?prevEntities: new LinkedReferenceSet<>();
-		if (entities.contains(entity)) {
-			return;
-		}
-		
-		entities.pushAndPopWith(entity,()->{
-			try {
-				
-				EntityTextIndexer.EntityInfo entityInfo = EntityTextIndexer.getEntityInfoFor(entity.getClass());
+
 	
-				String kind = entityInfo.getName();
-				ixFields.accept(new FacetField(DIM_CLASS, kind));
-				
-				
-				entityInfo.getIDFieldInfo().ifPresent(fi->
-						fi.getValue(entity).ifPresent(value -> {
-								if (value instanceof Long) {
-									ixFields.accept(new LongField(entityInfo.getInternalIdField(), (Long) value, YES));
-								} else {
-									ixFields.accept(new StringField(entityInfo.getInternalIdField(), value.toString(), YES));
-								}
-								ixFields.accept(new StringField(entityInfo.getExternalIdFieldName(), value.toString(), NO));
-							}
-						)
-				);
-				
-				entityInfo.getFieldInfo().stream().sequential().forEach(fi -> {
-						fi.getValue(entity).ifPresent(value->{
-							path.pushAndPopWith(fi.getName(),()->{
-								try{
-									if (DEBUG(2)) {
-										Logger.debug("++ " + path.toPath() + ": type=" + fi.getType() + " value=" + value);
-									}
-									
-									if (fi.isPrimitive()) {
-										indexField(ixFields, fi.getIndexable(), path, value, Store.NO);
-									}else if (fi.isArrayOrCollection()) {
-										// MUST be done in order
-										fi.forEach(value, (i, o) -> {
-											path.pushAndPopWith(String.valueOf(i), ()->{
-												instrument(path, o, ixFields, entities);	
-											});
-										});
-									}else if (fi.isEntityType()) {
-										// the value might be an entity, but the declared
-										// type is something more generic, but it's been
-										// simplified
-										// here.
-				
-										// composite type; recurse
-										if(fi.getIndexable().recurse()){
-											instrument(path, value, ixFields, entities);
-										}
-										if (fi.isExplicitlyIndexable()) {
-											indexField(ixFields, fi.getIndexable(), path, value, Store.NO);
-										}
-									}else { // treat as string
-										indexField(ixFields, fi.getIndexable(), path, value, Store.NO);
-									}
-								} catch (Throwable ex) {
-									ex.printStackTrace();
-									if (DEBUG(3)) {
-										Logger.warn(entity.getClass() + ": Field " + fi.getName() + " is not indexable due to "
-												+ ex.getMessage());
-									}
-								}});
-						}); // for each field with value
-				}); // foreach field
-	
-				entityInfo.getDynamicFacet(entity).ifPresent(fv->{
-					facetsConfig.setMultiValued(fv[0], true);
-					facetsConfig.setRequireDimCount(fv[0], true);
-					ixFields.accept(new FacetField(fv[0], fv[1]));
-					
-					// and full text
-					path.pushAndPopWith(fv[0],()->{
-					ixFields.accept(new TextField(path.toPath(), TextIndexer.START_WORD + fv[1] + TextIndexer.STOP_WORD, NO));
-					});
-					
-					// all dynamic facets are suggestible???
-					suggestField(fv[0], fv[1]);
-				});
-				
-				entityInfo.getMethodInfo().stream().sequential().forEach(mi -> {
-					mi.getValue(entity).ifPresent(value -> {
-						path.pushAndPopWith(mi.getName(),()->{
-							try {
-								if (mi.isArrayOrCollection()) {
-									mi.forEach(value, (i, o) -> {
-										path.pushAndPopWith(String.valueOf(i), ()->{
-											indexField(ixFields, mi.getIndexable(), path, o, Store.NO);
-										});
-									});
-								} else {
-									indexField(ixFields, mi.getIndexable(), path, value, Store.NO);
-								}
-							} catch (Exception ex) {
-								ex.printStackTrace();
-								Logger.trace("Fetching entity methods", ex);
-							}});
-					});
-				});
-				
-			} catch (Throwable ex) {
-				ex.printStackTrace();
-				Logger.trace("Fetching entity method / fields", ex);
-			}
-		});
+	/**
+	 * Gets the Facet field for a range query. Find the interval that the
+	 * given value falls within. Uses that to make a Facet.
+	 * @param name
+	 * @param ranges
+	 * @param value
+	 * @return
+	 */
+	static FacetField getRangeFacet(String name, long[] ranges, long value) {		
+		if (ranges.length == 0)return null;
+		if (value < ranges[0])return new FacetField(name, "<" + ranges[0]);
 		
-	}
-
-	void suggestField(String name, String value) {
-
-		name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
-
-		try {
-			SuggestLookup lookup = lookups.computeIfAbsent(name, n -> {
-				try {
-					return new SuggestLookup(n);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					Logger.trace("Can't create Lookup!", ex);
-					return null;
-				}
-			});
-			if (lookup != null) {
-				lookup.add(value);
-			}
-
-		} catch (Exception ex) {
-			Logger.trace("Can't create Lookup!", ex);
-		}
-	}
-
-
-	void indexField(Consumer<IndexableField> fields, Indexable indexable, PathStack path, Object value,
-			org.apache.lucene.document.Field.Store store) {
-		String name = path.getFirst();
-		String full = path.toPath();
-		String fname = indexable.name().isEmpty() ? name : indexable.name();
-		boolean sorterAdded = false;
-		boolean asText = true;
-		if (value instanceof Long) {
-			// fields.add(new NumericDocValuesField (full, (Long)value));
-			Long lval = (Long) value;
-			fields.accept(new LongField(full, lval, NO));
-			asText = indexable.facet();
-			if (!asText && !name.equals(full))
-				fields.accept(new LongField(name, lval, store));
-			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
-				fields.accept(new LongField(SORT_PREFIX + full, lval, store));
-				sorterAdded = true;
-			}
-			FacetField ff = getRangeFacet(fname, indexable.ranges(), lval);
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-				asText = false;
-			}
-		} else if (value instanceof Integer) {
-			// fields.add(new IntDocValuesField (full, (Integer)value));
-			Integer ival = (Integer) value;
-			fields.accept(new IntField(full, ival, NO));
-			asText = indexable.facet();
-			if (!asText && !name.equals(full))
-				fields.accept(new IntField(name, ival, store));
-
-			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.INT);
-				fields.accept(new IntField(SORT_PREFIX + full, ival, store));
-				sorterAdded = true;
-			}
-
-			FacetField ff = getRangeFacet(fname, indexable.ranges(), ival);
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-				asText = false;
-			}
-		} else if (value instanceof Float) {
-			// fields.add(new FloatDocValuesField (full, (Float)value));
-			Float fval = (Float) value;
-			fields.accept(new FloatField(name, fval, store));
-			if (!full.equals(name))
-				fields.accept(new FloatField(full, fval, NO));
-
-			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.FLOAT);
-				fields.accept(new FloatField(SORT_PREFIX + full, fval, NO));
-				sorterAdded = true;
-			}
-
-			FacetField ff = getRangeFacet(fname, indexable.dranges(), fval, indexable.format());
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-			}
-			asText = false;
-		} else if (value instanceof Double) {
-			// fields.add(new DoubleDocValuesField (full, (Double)value));
-			Double dval = (Double) value;
-			fields.accept(new DoubleField(name, dval, store));
-			if (!full.equals(name)) {
-				fields.accept(new DoubleField(full, dval, NO));
-			}
-			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.DOUBLE);
-				fields.accept(new DoubleField(SORT_PREFIX + full, dval, NO));
-				sorterAdded = true;
-			}
-
-			FacetField ff = getRangeFacet(fname, indexable.dranges(), dval, indexable.format());
-			if (ff != null) {
-				facetsConfig.setMultiValued(fname, true);
-				facetsConfig.setRequireDimCount(fname, true);
-				fields.accept(ff);
-			}
-			asText = false;
-		} else if (value instanceof java.util.Date) {
-			long date = ((Date) value).getTime();
-			fields.accept(new LongField(name, date, YES));
-			if (!full.equals(name))
-				fields.accept(new LongField(full, date, NO));
-			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
-				fields.accept(new LongField(SORT_PREFIX + full, date, NO));
-				sorterAdded = true;
-			}
-			asText = indexable.facet();
-			if (asText) {
-				value = YEAR_DATE_FORMAT.get().format(date);
-			}
-		}
-
-		if (asText) {
-			String text = value.toString();
-			String dim = indexable.name();
-			if ("".equals(dim)){
-				dim = path.toPath();
-			}
-
-			if (indexable.facet() || indexable.taxonomy()) {
-				facetsConfig.setMultiValued(dim, true);
-				facetsConfig.setRequireDimCount(dim, true);
-
-				if (indexable.taxonomy()) {
-					facetsConfig.setHierarchical(dim, true);
-					fields.accept(new FacetField(dim, text.split(indexable.pathsep())));
-				} else {
-					fields.accept(new FacetField(dim, text));
-				}
-			}
-
-			if (indexable.suggest()) {
-				// also index the corresponding text field with the
-				// dimension name
-				fields.accept(new TextField(dim, text, NO));
-				suggestField(dim, text);
-			}
-
-
-			if (!(value instanceof Number)) {
-				if (!name.equals(full)){
-					// Added exact match
-					fields.accept(new TextField(full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
-				}
-			}
-
-			// Add specific sort column only if it's not added by some other
-			// mechanism
-			if (indexable.sortable() && !sorterAdded) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.STRING);
-				fields.accept(new StringField(SORT_PREFIX + full, text, store));
-			}
-			// Added exact match
-			fields.accept(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
-		}
-	}
-
-	static FacetField getRangeFacet(String name, long[] ranges, long value) {
-		if (ranges.length == 0)
-			return null;
-
-		if (value < ranges[0]) {
-			return new FacetField(name, "<" + ranges[0]);
-		}
-
-		int i = 1;
+		int i=0;
 		for (; i < ranges.length; ++i) {
 			if (value < ranges[i])
 				break;
 		}
-
 		if (i == ranges.length) {
 			return new FacetField(name, ">" + ranges[i - 1]);
 		}
-
 		return new FacetField(name, ranges[i - 1] + ":" + ranges[i]);
 	}
 
@@ -2261,6 +2066,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		return config;
 	}
 
+
 	static ConcurrentMap<String, SortField.Type> loadSorters(File file) {
 		ConcurrentMap<String, SortField.Type> sorters = new ConcurrentHashMap<String, SortField.Type>();
 		if (file.exists()) {
@@ -2323,29 +2129,19 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 
 	@Override
-	public void doneReindex() {
-
-	}
+	public void doneReindex() {}
 
 	@Override
-	public void recordReIndexed(Object o) {
-
-	}
+	public void recordReIndexed(Object o) {	}
 
 	@Override
-	public void error(Throwable t) {
-
-	}
+	public void error(Throwable t) {	}
 
 	@Override
-	public void totalRecordsToIndex(int total) {
-
-	}
+	public void totalRecordsToIndex(int total) {	}
 
 	@Override
-	public void countSkipped(int numSkipped) {
-
-	}
+	public void countSkipped(int numSkipped) {	}
 
 	public void shutdown() {
 		if (isShutDown) {
@@ -2356,10 +2152,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				try {
 					isShutDown = true;
 					scheduler.shutdown();
-					System.out.println("Awaiting shutdown");
 					scheduler.awaitTermination(1, TimeUnit.MINUTES);
-					System.out.println("finished shutdown");
-					System.out.println("final daemon run");
 					flushDaemon.execute();
 				} catch (Throwable e) {
 					e.printStackTrace();
@@ -2393,15 +2186,10 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			Logger.trace("Closing index", ex);
 		} finally {
 			if (indexers != null) {
-
 				if (baseDir != null) {
 					TextIndexer indexer = indexers.remove(baseDir);
 				}
 			}
-			System.out.println("removed baseDir " + baseDir);
-			// System.out.println("indexers left after shutdown =" +
-			// indexers.keySet());
-
 			if (!isEmptyPool) {
 				threadPool.shutdown();
 				try {
@@ -2422,6 +2210,201 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			closeable.close();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
+		}
+	}
+
+	// ************************************
+	// Things that modify state are below:
+	
+	
+	//make the fields for the dynamic facets
+	@Override
+	public void create(Consumer<IndexableField> fieldTaker, String name, String value, String path) {
+		facetsConfig.setMultiValued(name, true);
+		facetsConfig.setRequireDimCount(name, true);
+		fieldTaker.accept(new FacetField(name, value));
+		fieldTaker.accept(new TextField(path, TextIndexer.START_WORD + value + TextIndexer.STOP_WORD, NO));
+		addSuggestedField(name,value);
+		
+	}
+
+	//make the fields for the primitive fields
+	@Override
+	public void create(Consumer<IndexableField> fields, String name, Object value, String full, Indexable indexable) {
+		// Used to be configurable, now just always NO
+		// for all cases we use.
+		org.apache.lucene.document.Field.Store store = Store.NO;
+		
+		String fname = indexable.name().isEmpty() ? name : indexable.name();
+		boolean sorterAdded = false;
+		boolean asText = true;
+		if (value instanceof Long) {
+			// fields.add(new NumericDocValuesField (full, (Long)value));
+			Long lval = (Long) value;
+			fields.accept(new LongField(full, lval, NO));
+			asText = indexable.facet();
+			if (!asText && !name.equals(full))
+				fields.accept(new LongField(name, lval, store));
+			if (indexable.sortable()) {
+				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
+				fields.accept(new LongField(SORT_PREFIX + full, lval, store));
+				sorterAdded = true;
+			}
+			FacetField ff = getRangeFacet(fname, indexable.ranges(), lval);
+			if (ff != null) {
+				facetsConfig.setMultiValued(fname, true);
+				facetsConfig.setRequireDimCount(fname, true);
+				fields.accept(ff);
+				asText = false;
+			}
+		} else if (value instanceof Integer) {
+			// fields.add(new IntDocValuesField (full, (Integer)value));
+			Integer ival = (Integer) value;
+			fields.accept(new IntField(full, ival, NO));
+			asText = indexable.facet();
+			if (!asText && !name.equals(full))
+				fields.accept(new IntField(name, ival, store));
+
+			if (indexable.sortable()) {
+				sorters.put(SORT_PREFIX + full, SortField.Type.INT);
+				fields.accept(new IntField(SORT_PREFIX + full, ival, store));
+				sorterAdded = true;
+			}
+
+			FacetField ff = getRangeFacet(fname, indexable.ranges(), ival);
+			if (ff != null) {
+				facetsConfig.setMultiValued(fname, true);
+				facetsConfig.setRequireDimCount(fname, true);
+				fields.accept(ff);
+				asText = false;
+			}
+		} else if (value instanceof Float) {
+			// fields.add(new FloatDocValuesField (full, (Float)value));
+			Float fval = (Float) value;
+			fields.accept(new FloatField(name, fval, store));
+			if (!full.equals(name))
+				fields.accept(new FloatField(full, fval, NO));
+
+			if (indexable.sortable()) {
+				sorters.put(SORT_PREFIX + full, SortField.Type.FLOAT);
+				fields.accept(new FloatField(SORT_PREFIX + full, fval, NO));
+				sorterAdded = true;
+			}
+
+			FacetField ff = getRangeFacet(fname, indexable.dranges(), fval, indexable.format());
+			if (ff != null) {
+				facetsConfig.setMultiValued(fname, true);
+				facetsConfig.setRequireDimCount(fname, true);
+				fields.accept(ff);
+			}
+			asText = false;
+		} else if (value instanceof Double) {
+			// fields.add(new DoubleDocValuesField (full, (Double)value));
+			Double dval = (Double) value;
+			fields.accept(new DoubleField(name, dval, store));
+			if (!full.equals(name)) {
+				fields.accept(new DoubleField(full, dval, NO));
+			}
+			if (indexable.sortable()) {
+				sorters.put(SORT_PREFIX + full, SortField.Type.DOUBLE);
+				fields.accept(new DoubleField(SORT_PREFIX + full, dval, NO));
+				sorterAdded = true;
+			}
+
+			FacetField ff = getRangeFacet(fname, indexable.dranges(), dval, indexable.format());
+			if (ff != null) {
+				facetsConfig.setMultiValued(fname, true);
+				facetsConfig.setRequireDimCount(fname, true);
+				fields.accept(ff);
+			}
+			asText = false;
+		} else if (value instanceof java.util.Date) {
+			long date = ((Date) value).getTime();
+			fields.accept(new LongField(name, date, YES));
+			if (!full.equals(name))
+				fields.accept(new LongField(full, date, NO));
+			if (indexable.sortable()) {
+				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
+				fields.accept(new LongField(SORT_PREFIX + full, date, NO));
+				sorterAdded = true;
+			}
+			asText = indexable.facet();
+			if (asText) {
+				value = YEAR_DATE_FORMAT.get().format(date);
+			}
+		}
+
+		if (asText) {
+			String text = value.toString();
+			String dim = indexable.name();
+			if ("".equals(dim)){
+				dim = full;
+			}
+
+			if (indexable.facet() || indexable.taxonomy()) {
+				facetsConfig.setMultiValued(dim, true);
+				facetsConfig.setRequireDimCount(dim, true);
+
+				if (indexable.taxonomy()) {
+					facetsConfig.setHierarchical(dim, true);
+					fields.accept(new FacetField(dim, text.split(indexable.pathsep())));
+				} else {
+					fields.accept(new FacetField(dim, text));
+				}
+			}
+
+			if (indexable.suggest()) {
+				// also index the corresponding text field with the
+				// dimension name
+				fields.accept(new TextField(dim, text, NO));
+				addSuggestedField(dim, text);
+			}
+
+
+			if (!(value instanceof Number)) {
+				if (!name.equals(full)){
+					// Added exact match
+					fields.accept(new TextField(full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
+				}
+			}
+
+			// Add specific sort column only if it's not added by some other
+			// mechanism
+			if (indexable.sortable() && !sorterAdded) {
+				sorters.put(SORT_PREFIX + full, SortField.Type.STRING);
+				fields.accept(new StringField(SORT_PREFIX + full, text, store));
+			}
+			// Added exact match
+			fields.accept(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
+		}
+	}
+	
+
+	
+	/**
+	 * Add the specified field and value pair to the suggests
+	 * which are used for type-ahead queries.
+	 * @param name
+	 * @param value
+	 */
+	void addSuggestedField(String name, String value) {
+		name = SUGGESTION_WHITESPACE_PATTERN.matcher(name).replaceAll("_");
+		try {
+			SuggestLookup lookup = lookups.computeIfAbsent(name, n -> {
+				try {
+					return new SuggestLookup(n);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					Logger.trace("Can't create Lookup!", ex);
+					return null;
+				}
+			});
+			if (lookup != null) {
+				lookup.add(value);
+			}
+
+		} catch (Exception ex) {
+			Logger.trace("Can't create Lookup!", ex);
 		}
 	}
 }

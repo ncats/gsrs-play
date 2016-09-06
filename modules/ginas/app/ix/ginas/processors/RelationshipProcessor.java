@@ -1,24 +1,17 @@
 package ix.ginas.processors;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.models.Group;
-import ix.ginas.controllers.v1.ControlledVocabularyFactory;
-import play.db.ebean.Model;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
-import ix.ginas.models.v1.VocabularyTerm;
-import play.Logger;
+import play.db.ebean.Model;
 
 public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	public Model.Finder<UUID, Relationship> finder;
@@ -36,47 +29,25 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		addInverse(obj);
 	}
 	
-	public void addInverse(final Relationship obj){
+	public void addInverse(final Relationship thisRelationship){
 		//System.out.println("Adding inverse relationship");
-		if(obj.isGenerator() && obj.isAutomaticInvertable()){
+		if(thisRelationship.isGenerator() && thisRelationship.isAutomaticInvertable()){
 			//System.out.println("It's a real invertable thing");
-			final SubstanceReference oldSub=obj.fetchOwner().asSubstanceReference();
-			final Substance newSub=SubstanceFactory.getFullSubstance(obj.relatedSubstance);
+			final Substance thisSubstance=thisRelationship.fetchOwner();
+			final Substance otherSubstance=SubstanceFactory.getFullSubstance(thisRelationship.relatedSubstance); //db fetch
 			
-//			EntityPersistAdapter.performChange(newSub,new Callable(){
-//				@Override
-//				public Object call() throws Exception {
-//					//System.out.println("Performing change");
-//					if(createAndAddInvertedRelationship(obj,oldSub,newSub)!=null){
-//						//System.out.println("Forcing update");
-//						newSub.forceUpdate();
-//						//System.out.println("Done");
-//					}else{
-//						//System.out.println("Failed to create");
-//					}
-//					return null;
-//				}
-//			});
-			if(newSub ==null){
+			if(otherSubstance ==null){ //probably warn
 				return;
 			}
-			EntityPersistAdapter.performChange(
-					newSub.getOrGenerateUUID().toString(),
-					new Supplier<Substance>() {
-                           @Override
-                           public Substance get() {
-                               return SubstanceFactory.getFullSubstance(obj.relatedSubstance);
-                           }
-                       },
-
-					new EntityPersistAdapter.ChangeOperation<Substance>() {
-						@Override
-						public void apply(Substance s) throws Exception {
-							if (createAndAddInvertedRelationship(obj, oldSub, s) != null) {
-								//System.out.println("Forcing update");
-								s.forceUpdate();
-							}
+			EntityPersistAdapter.performChangeOn(
+					otherSubstance,
+					s -> {
+						Relationship r=createAndAddInvertedRelationship(thisRelationship, thisSubstance.asSubstanceReference(), s);
+						if (r != null) {
+							//r.save();
+							s.forceUpdate();
 						}
+						return Optional.of(s);
 					}
 			);
 
@@ -116,7 +87,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 						return null;
 					}
 				}
-				
 				//System.out.println("Making citation");
 				Reference ref1 = Reference.SYSTEM_GENERATED();
 				ref1.citation="Generated from relationship on:'" + oldSub.refPname + "'"; 
@@ -161,33 +131,13 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			for(final Relationship r1 : rel){
 				if(!r1.isGenerator()){
 					r1.setOkToRemove();
-					//System.out.println("Removing:" + r1.uuid);
 					final Substance osub=r1.fetchOwner();
-//					EntityPersistAdapter.performChange(osub,new Callable(){
-//						@Override
-//						public Object call() throws Exception {
-//							EntityPersistAdapter.storeEditForPossibleUpdate(osub);
-//							r1.delete();
-//							osub.forceUpdate();
-//							return null;
-//						}
-//					});
 					if(osub !=null) {
-						EntityPersistAdapter.performChange(osub.getOrGenerateUUID().toString(), new Supplier<Substance>() {
-
-									@Override
-									public Substance get() {
-										return osub;
-									}
-								},
-								new EntityPersistAdapter.ChangeOperation<Substance>() {
-									@Override
-									public void apply(Substance obj) throws Exception {
-										r1.delete();
-										osub.forceUpdate();
-									}
-								}
-						);
+						EntityPersistAdapter.performChangeOn(osub, osub2->{
+							r1.delete(); //Does this actually work? Not sure
+							osub2.forceUpdate();
+							return Optional.of(osub2);
+						}); 
 					}
 					
 				}

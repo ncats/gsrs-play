@@ -4,13 +4,18 @@ import java.util.Enumeration;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import ix.utils.Util;
 import play.Logger;
+import play.Play;
 import play.libs.Akka;
 
 /**
  * Structure searching
  */
 public abstract class SearchResultProcessor<T, R> {
+	public static final long debugDealy = Play.application().configuration().getLong("ix.settings.debug.processordelay");
+	
+	
     protected Enumeration<T> results;
     final SearchResultContext context = new SearchResultContext ();
     boolean wait=false;
@@ -56,6 +61,7 @@ public abstract class SearchResultProcessor<T, R> {
     }
     
     public int process (int max) throws Exception {
+    	
         while (results.hasMoreElements()
                && !isDone () 
                && (max <= 0 || context.getCount() < max)) {
@@ -65,7 +71,7 @@ public abstract class SearchResultProcessor<T, R> {
             // to simulate both slow fetches and slow lucene processing
             //System.out.println("Processing:" + r);
             
-            //Util.debugSpin(10);
+            Util.debugSpin(debugDealy);
             
             try {
                 R obj = instrument (r);

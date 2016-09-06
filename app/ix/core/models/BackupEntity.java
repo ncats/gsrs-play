@@ -1,9 +1,9 @@
 package ix.core.models;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -25,7 +25,7 @@ public class BackupEntity extends IxModel{
 	public static final EntityMapper em = EntityMapper.INTERNAL_ENTITY_MAPPER();
 	
 	@Id
-	private Long id;
+	public Long id;
 	
 	@Column(unique = true)
 	private String refid;
@@ -57,10 +57,7 @@ public class BackupEntity extends IxModel{
 			return null;
 		}
 	}
-	private InputStream asStream() throws Exception{
-		InputStream stream = new ByteArrayInputStream(getBytes());
-		return stream;
-	}
+	
 	
 	@JsonIgnore
 	private byte[] getBytes() throws Exception{
@@ -95,7 +92,8 @@ public class BackupEntity extends IxModel{
 	public void setInstantiated(BaseModel o) throws Exception{
 		kind=o.getClass().getName();
 		refid=o.fetchGlobalId();
-		String json=em.toJson(o);
+		String json = em.toJson(o);
+		Objects.requireNonNull(json);
 		setBytes(json.getBytes(StandardCharsets.UTF_8));
 		sha1=Util.sha1(data);
 	}

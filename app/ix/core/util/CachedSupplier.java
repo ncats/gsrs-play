@@ -30,7 +30,7 @@ public class CachedSupplier<K> implements Supplier<K>{
 		return cache;
 	}
 	
-	public static <K> CachedSupplier<K> of(Supplier<K> c){
-		return new CachedSupplier<K>(c);
+	public static <K> CachedSupplier<K> of(Supplier<K> supplier){
+		return new CachedSupplier<K>(supplier);
 	}
 }

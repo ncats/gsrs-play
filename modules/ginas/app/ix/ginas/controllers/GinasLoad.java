@@ -235,8 +235,6 @@ public class GinasLoad extends App {
 		}
 		GinasSDFUtils.setPathMappers(payloadUUID, mappers);
 
-		System.out.println("##################################");
-		System.out.println("mapper rules:" + mappers.size());
 		for (GinasSDFUtils.PATH_MAPPER pth : mappers) {
 			System.out.println("path:" + pth.path);
 		}

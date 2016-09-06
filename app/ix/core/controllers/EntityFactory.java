@@ -1,47 +1,35 @@
 package ix.core.controllers;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OptimisticLockException;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Expression;
 import com.avaje.ebean.FutureRowCount;
 import com.avaje.ebean.Query;
 import com.avaje.ebean.annotation.Transactional;
-import com.avaje.ebean.bean.EntityBean;
-import com.avaje.ebean.bean.EntityBeanIntercept;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -50,7 +38,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.DefaultValidator;
@@ -61,21 +48,16 @@ import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
-import ix.core.models.BaseModel;
 import ix.core.models.BeanViews;
-import ix.core.models.DataVersion;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
 import ix.core.models.ForceUpdatableModel;
-import ix.core.models.Principal;
-import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.Java8Util;
-import ix.utils.EntityUtils;
 import ix.utils.Global;
 import ix.utils.Util;
-import ix.utils.pojopatch.ChangeEventListener;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 import play.Logger;
@@ -90,23 +72,23 @@ public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
 
-    static Model.Finder<Long, Principal> _principalFinder;
-
     static TextIndexerPlugin textIndexerPlugin;
     
     static{
     	init();
     }
     
+    
     public static void init(){
         textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
-    	_principalFinder=new Model.Finder(Long.class, Principal.class);
     }
 
     static TextIndexer getTextIndexer(){
         return textIndexerPlugin.getIndexer();
     }
 
+    
+    
     public static class FetchOptions {
         public int top=10;
         public int skip=0;
@@ -114,67 +96,46 @@ public class EntityFactory extends Controller {
         public List<String> expand = new ArrayList<String>();
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
+        
+        Map<String, Consumer<String[]>> parsers = new HashMap<>();
+        
+        {
+        	Function<String, Optional<Integer>> intParser = s->{
+        		try{
+        			return Optional.of(Integer.parseInt(s));
+        		}catch(NumberFormatException ex){
+        			Logger.trace("Bogus integer value: "+s, ex);
+        		}
+        		return Optional.empty();
+        	};
+        	parsers.put("order", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("expand", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("select", a->{
+        		order=Arrays.stream(a).collect(Collectors.toList());
+        	});
+        	parsers.put("top", a->intParser.apply(a[0]).ifPresent(i->top=i));
+        	parsers.put("skip", a->intParser.apply(a[0]).ifPresent(i->skip=i));
+        	parsers.put("filter", a->{
+        		filter=a[0];
+        	});
+        }
 
         
         // only in the context of a request
                         
         public FetchOptions () {
-            for (Map.Entry<String, String[]> me
-                     : request().queryString().entrySet()) {
-                String param = me.getKey();
-                if ("order".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        order.add(s);
-                }
-                else if ("expand".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        expand.add(s);
-                }
-                else if ("select".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        select.add(s);
-                }
-                else if ("top".equalsIgnoreCase(param)) {
-                    String n = me.getValue()[0];
-                    try {
-                        top = Integer.parseInt(n);
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.trace("Bogus top value: "+n, ex);
-                    }
-                }
-                else if ("skip".equalsIgnoreCase(param)) {
-                    String n = me.getValue()[0];
-                    try {
-                        skip = Integer.parseInt(n);
-                    }
-                    catch (NumberFormatException ex) {
-                        Logger.trace("Bogus skip value:"+n, ex);
-                    }
-                }
-                else if ("filter".equalsIgnoreCase(param)) {
-                    filter = me.getValue()[0];
-                }
-            }
+        	request().queryString().forEach((param,value)->
+    		parsers.getOrDefault(param.toLowerCase(), s->Logger.trace("unknown option:" + param))
+    				.accept(value)
+        			);
         }
         
         public FetchOptions (int top, int skip, String filter) {
-                try{
-                    for (Map.Entry<String, String[]> me
-                             : request().queryString().entrySet()) {
-                        String param = me.getKey();
-                        if ("order".equalsIgnoreCase(param)) {
-                            for (String s : me.getValue())
-                                order.add(s);
-                        }
-                        else if ("expand".equalsIgnoreCase(me.getKey())) {
-                            for (String s : me.getValue())
-                                expand.add(s);
-                        }
-                    }
-                }catch(Exception e){
-                        
-                }
+        	this();
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -188,7 +149,7 @@ public class EntityFactory extends Controller {
         	}
         	return f;
         }
-        public Query applyToQuery(Query q){
+        public <T> Query<T> applyToQuery(Query<T> q){
         	for (String path : this.expand) {
                 Logger.debug("  -> fetch "+path);
                 q = q.fetch(path);
@@ -228,7 +189,12 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
-        public static EntityMapper FULL_ENTITY_MAPPER(){
+        /**
+		 * Default value
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public static EntityMapper FULL_ENTITY_MAPPER(){
         	return new EntityMapper(BeanViews.Full.class);
         }
         public static EntityMapper INTERNAL_ENTITY_MAPPER(){
@@ -244,8 +210,7 @@ public class EntityFactory extends Controller {
             configure (SerializationFeature.WRITE_NULL_MAP_VALUES, false);
             this.setSerializationInclusion(Include.NON_NULL);
             _serializationConfig = getSerializationConfig();
-            
-            for (Class v : views) {
+            for (Class<?> v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
             }
             addHandler ();
@@ -254,8 +219,11 @@ public class EntityFactory extends Controller {
         void addHandler () {
             addHandler (new DeserializationProblemHandler () {
                     public boolean handleUnknownProperty
-                        (DeserializationContext ctx, JsonParser parser,
-                         JsonDeserializer deser, Object bean, String property) {
+                        (DeserializationContext ctx, 
+                         JsonParser parser,
+                         JsonDeserializer deser, 
+                         Object bean, 
+                         String property) {
                         return _handleUnknownProperty
                             (ctx, parser, deser, bean, property);
                     }
@@ -297,88 +265,14 @@ public class EntityFactory extends Controller {
                     : writeValueAsString (obj);
             }
             catch (Exception ex) {
+            	ex.printStackTrace();
                 Logger.trace("Can't write Json", ex);
             }
             return null;
         }
     }
 
-    protected static class EditHistory implements PropertyChangeListener {
-        List<Edit> edits = new ArrayList<Edit>();
-        ObjectMapper mapper = getEntityMapper ();
-        public Edit edit;
-        
-        
-        
-        public EditHistory (String payload) throws Exception {
-            edit = new Edit ();
-            edit.path = null; 
-            edit.newValue = payload;
-           
-        }
-        
-
-        public void add (Edit e) { edits.add(e); }
-        public List<Edit> edits () { return edits; }
-        public void attach (Object ebean, final Callable callback) {
-            if (ebean instanceof EntityBean) {
-                ((EntityBean)ebean)._ebean_intercept()
-                    .addPropertyChangeListener(new PropertyChangeListener(){
-
-						@Override
-						public void propertyChange(PropertyChangeEvent evt) {
-							//System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
-							EditHistory.this.propertyChange(evt);
-							try {
-								callback.call();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-                    	
-                    	
-                    });
-                
-            }
-            else {
-                throw new IllegalArgumentException
-                    (ebean+" is not of an EntityBean!");
-            }
-        }
-        public void detach (Object ebean) {
-            if (ebean instanceof EntityBean) {
-                ((EntityBean)ebean)._ebean_intercept()
-                    .removePropertyChangeListener(this);
-            }
-            else {
-                throw new IllegalArgumentException
-                    (ebean+" is not of an EntityBean!");
-            }
-        }
-
-        public void propertyChange (PropertyChangeEvent e) {
-            Logger.debug("### "+e.getSource()+": propertyChange: name="
-                         +e.getPropertyName()+" old="+e.getOldValue()
-                         +" new="+e.getNewValue());
-            try {
-                Edit edit = new Edit ();
-                Object id = EntityUtils.getId (e.getSource());
-                if (id != null)
-                    edit.refid = id.toString();
-                else
-                    Logger.warn("No id set of edit for "+e.getSource());
-                edit.kind = e.getSource().getClass().getName();
-                edit.path = e.getPropertyName();
-                edit.oldValue = mapper.writeValueAsString(e.getOldValue());
-                edit.newValue = mapper.writeValueAsString(e.getNewValue());
-                edits.add(edit);
-                
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
+    
 
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {
@@ -395,9 +289,9 @@ public class EntityFactory extends Controller {
         try {
             long start = System.currentTimeMillis();
             List<T> results = query
-                .setFirstRow(options.skip)
-                .setMaxRows(options.top)
-                .findList();
+				                .setFirstRow(options.skip)
+				                .setMaxRows(options.top)
+				                .findList();
             Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
             return results;
         }
@@ -670,6 +564,8 @@ public class EntityFactory extends Controller {
         }
     }
     
+    
+    //Prime canididate for rewrite with EntityWrapper
     protected static <T> Result field (Object inst, String field) {
         /*
         Query<T> query = finder.query();
@@ -966,6 +862,7 @@ public class EntityFactory extends Controller {
         try {
         	
             ObjectMapper mapper = new ObjectMapper();
+            //Why don't we use this in the other place?
             mapper.addHandler(new DeserializationProblemHandler() {
                     public boolean handleUnknownProperty(
                                                          DeserializationContext ctx, JsonParser parser,
@@ -983,35 +880,54 @@ public class EntityFactory extends Controller {
                         return true;
                     }
                 });
-
             
             JsonNode node = request().body().asJson();
             
             T inst = mapper.treeToValue(node, type);
             
-            FetchedValue oldValueContainer=getCurrentValue(inst);
             
+            //gets the value (if exists)
+            Optional<EntityWrapper> oldValue = getCurrentValue(inst);
             
+            ValidationResponse<T> vr;
             
-            ValidationResponse<T> vr=validator.validate(inst,(T)oldValueContainer.value);
-            
-            if(rept==RESPONSE_TYPE.FULL){
-            	return ok(validationResponse(vr,true));
+            //If it's present
+            if(oldValue.isPresent()){
+            	//Validate using it and the new value
+            	vr= validator.validate(inst,(T)oldValue.map(o -> o.getValue()).get());	
             }else{
-            	return ok(validationResponse(vr,false));
+            	//Validate using only new value
+            	vr= validator.validate(inst,null);
+            } 
+
+            if(rept==RESPONSE_TYPE.FULL){
+            	return ok(prepareValidationResponse(vr,true));
+            }else{
+            	return ok(prepareValidationResponse(vr,false));
             }
         } catch (Throwable ex) {
+        	ex.printStackTrace();
         	ValidationResponse vr = new ValidationResponse(null);
         	vr.setInvalid();
         	vr.addValidationMessage(new ExceptionValidationMessage(ex));
         	//should this be ok? Or internalServerError?
-            return ok(validationResponse(vr,false));
+            return ok(prepareValidationResponse(vr,false));
         }
     }
-    protected static JsonNode validationResponse(ValidationResponse vr){
-    	return validationResponse(vr,false);
+    
+    public static UUID toUUID (String id) {
+        if (id.length() == 32) { // without -'s
+            id = id.substring(0,8)+"-"+id.substring(8,12)+"-"
+                +id.substring(12,16)+"-"+id.substring(16,20)+"-"
+                +id.substring(20);
+        }
+        return UUID.fromString(id);
     }
-    protected static JsonNode validationResponse(ValidationResponse vr, boolean full){
+    
+    protected static JsonNode validationResponse(ValidationResponse vr){
+    	return prepareValidationResponse(vr,false);
+    }
+    protected static JsonNode prepareValidationResponse(ValidationResponse vr, boolean full){
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
     	if(full){
     		mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
@@ -1032,30 +948,55 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+" not found");
     }
 
-    protected static Result edits (Object id, Class<?>... cls) {
-    	List<Edit> edits = new ArrayList<Edit>();
-    	FetchOptions fe=new FetchOptions ();
-    	
-    	//if(true)return EditFactory.page(fe.top, fe.skip, fe.filter);
-    	//EditFactory.page(top, skip, filter)
-        for (Class<?> c : cls) {
-        	Query q=EditFactory.finder.where
-                    (Expr.and(Expr.eq("refid", id.toString()),
-                            Expr.eq("kind", c.getName())));
-        	q=fe.applyToQuery(q);
-            List<Edit> tmpedits = q
-                .findList();
-            if(tmpedits!=null){
-            	edits.addAll(tmpedits);
-            }
-        }
-        if (!edits.isEmpty()) {
-            ObjectMapper mapper = getEntityMapper ();
-            return Java8Util.ok (mapper.valueToTree(edits));
-        }
 
-        return notFound (request().uri()+": No edit history found!");
-    }
+    //And all expressions together
+    //TODO: There has got to be a cleaner way
+	public static Expression andAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
+		}
+		return retExpr;
+	}
+
+    //Or all expressions together
+    //TODO: There has got to be a cleaner way
+	public static Expression orAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
+		}
+		return retExpr;
+	}
+    
+	protected static Result edits(Object id, Class<?>... cls) {
+		List<Edit> edits = new ArrayList<Edit>();
+		FetchOptions fe = new FetchOptions();
+
+		Expression[] kindExpressions = Arrays.stream(cls)
+				.map(c -> Expr.eq("kind", c.getName()))
+				.collect(Collectors.toList())
+				.toArray(new Expression[0]);
+
+		Query<Edit> q = EditFactory.finder
+				.where(andAll(
+						Expr.eq("refid", id.toString()),
+						orAll(kindExpressions)
+						));
+		
+		fe.applyToQuery(q);
+		List<Edit> tmpedits = q.findList();
+		if (tmpedits != null) {
+			edits.addAll(tmpedits);
+		}
+		
+		if (!edits.isEmpty()) {
+			ObjectMapper mapper = getEntityMapper();
+			return Java8Util.ok(mapper.valueToTree(edits));
+		}
+
+		return notFound(request().uri() + ": No edit history found!");
+	}
     
     /**
      * Handle generic update to field, without special deserializationHandler
@@ -1066,6 +1007,7 @@ public class EntityFactory extends Controller {
      * @param finder
      * @return
      */
+    @Deprecated
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
                 return update (id,field,type,finder, null, null);
@@ -1073,372 +1015,25 @@ public class EntityFactory extends Controller {
     
     // This expects an update of the full record to be done using "/path/*"
     // or "/path/_"
-    //TODO: allow high-level changes to be captured
+    //
+    //
+    // TODO: allow high-level changes to be captured
+    // =======================
+    // Update: This is no longer being used, due to the logic
+    // never being determined via ebean. Need to disable it.
+    //
+    @Deprecated
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder,
          DeserializationProblemHandler deserializationHandler, Validator<T> validator) {
-
-        if (!request().method().equalsIgnoreCase("PUT")) {
-            return badRequest ("Only PUT is accepted!");
-        }
-
-        String content = request().getHeader("Content-Type");
-        if (content == null || (content.indexOf("application/json") < 0
-                                && content.indexOf("text/json") < 0)) {
-            return badRequest ("Mime type \""+content+"\" not supported!");
-        }
-
-        Object tempid=id;
-        Object temptype=type;
-
-        List<Object[]> changes = new ArrayList<Object[]>();
-        
-        T obj = finder.ref(id);
-        if (obj == null)
-            return notFound ("Not a valid entity id="+id);
-
-        
-        Object[] rootChange = new Object[]{
-                null, 
-                (new ObjectMapper()).valueToTree(obj).toString(),
-                null,
-                type,
-                id};
-        final Map<Object,Model> oldObjects = new HashMap<Object,Model>();
-        recursivelyApply(obj, "", new EntityCallable() {
-                @Override
-                public void call(Object m, String path) {
-                    if (m instanceof Model) {
-                        try {
-                            
-                            Method f = EntityUtils.getIdSettingMethodForBean(m);
-                            Object _id = EntityUtils.getIdForBean(m);
-                            oldObjects.put(_id, (Model) m);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-        Principal principal = null;
-        if (request().username() != null) {
-            principal = _principalFinder
-                .where().eq("name", request().username())
-                .findUnique();
-            // create new user if doesn't exist
-            /*
-            if (principal == null) {
-                principal = new Principal (request().username());
-                principal.save();
-            }
-            */
-        }
-
-        /**
-         * TODO: have a mechanism whereby the principal is verified
-         * to her permission to update this field
-         */
-
-        Logger.debug("Updating "+obj.getClass()+": id="+id+" field="+field);
-        try {
-            ObjectMapper mapper = getEntityMapper ();
-            if(deserializationHandler!=null)
-                mapper.addHandler(deserializationHandler);
-            JsonNode value = request().body().asJson();
-
-            String[] paths = field.split("/");
-            if (paths.length == 1 
-                && (paths[0].equals("_") || paths[0].equals("*"))) {
-                final T inst = mapper.treeToValue(value, type);
-                ValidationResponse vr=validator.validate(inst);
-                if(!vr.isValid()){
-	            	return badRequest(validationResponse(vr,false));
-	            }
-                try {
-                    Method m=EntityUtils.getIdSettingMethodForBean(inst);
-                    m.invoke(inst, id);
-                }catch (Exception ex) {
-                    ex.printStackTrace();
-                    return internalServerError (ex.getMessage());
-                }
-                obj=inst;
-                recursivelyApply(inst, "", new EntityCallable(){
-                        @Override
-                        public void call(Object m, String path) {
-                            if(inst == m)return;
-                            Model old=null;
-                            if(m instanceof Model){
-                                try{
-                                    
-                                    Method f=EntityUtils.getIdSettingMethodForBean(m);
-                                    Object _id=EntityUtils.getIdForBean(m);
-
-                                    //Get old model, do something with it?
-                                    old=oldObjects.get(_id);
-                                    if(_id==null){
-                                        //((Model) m).save();
-                                    }else{
-                                        if(f!=null){
-                                            f.invoke(m,_id);
-                                        }
-                                                                        
-                                        ((Model)m).update(_id);
-                                        Logger.debug("Success updating:" + path);
-                                    }
-                                                                
-                                }catch(OptimisticLockException e){
-                                                                
-                                    Logger.error("Lock error:" + path + "\t" + m.getClass().getName());
-                                    if(m instanceof Structure && old!=null){
-                                        Logger.error("Lock change:" + ((Structure)m).lastEdited + "\t" + ((Structure)old).lastEdited);  
-                                    }
-                                    if(m.getClass().getName().contains("tructure"))
-                                        e.printStackTrace();
-                                                                
-                                    //Logger.debug((new ObjectMapper()).valueToTree(m).toString());
-                                }catch(Exception e){
-                                    Logger.error("Error updating:" + path + "\t" + m.getClass().getName());
-                                    e.printStackTrace();
-                                                                
-                                }
-                            }
-                        }});
-                
-            } else {
-                Object inst = obj;
-                StringBuilder uri = new StringBuilder ();
-
-                Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
-
-                for (int i = 0; i < paths.length; ++i) {
-                    Logger.debug("paths["+i+"/"+paths.length+"]:"+paths[i]);
-
-                    String pname = paths[i]; // field name
-                    Integer pindex = null; // field index if field is a list
-
-                    Matcher matcher = regex.matcher(pname);
-                    if (matcher.find()) {
-                        pname = matcher.group(1);
-                        pindex = Integer.parseInt(matcher.group(2));
-                    }
-                    Logger.debug("pname="+pname+" pindex="+pindex);
-                    
-                    try {
-                        uri.append("/"+paths[i]);
-
-                        Field f = inst.getClass().getField(pname);
-                        String fname = f.getName();
-                        String bname = getBeanName (fname);
-                        Class<?> ftype = f.getType();
-
-                        Object val = f.get(inst);
-                        Object valp = val;
-                        if (pindex != null) {
-                            if (val == null) {
-                                return internalServerError 
-                                    ("Property \""+fname+"\" is null!");
-                            }
-
-                            if (ftype.isArray()) {
-                                if (pindex >= Array.getLength(val) 
-                                    || pindex < 0) {
-                                    return badRequest
-                                        (uri+": array index out of bound "
-                                         +pindex);
-                                }
-
-                                val = Array.get(val, pindex);
-                            }
-                            else if (Collection
-                                     .class.isAssignableFrom(ftype)) {
-                                if (pindex >= ((Collection)val).size()
-                                    || pindex < 0)
-                                    return badRequest
-                                        (uri+": list index out bound "
-                                         +pindex);
-                                Iterator it = ((Collection)val).iterator();
-
-                                for (int k = 0; it.hasNext()
-                                         && k < pindex; ++k)
-                                    val = it.next();
-                            }
-                            else {
-                                return badRequest 
-                                    ("Property \""
-                                     +fname+"\" is not an array or list");
-                            }
-                            Logger.debug(fname+"["+pindex+"] = "+val);
-                        }
-                        
-                        {
-                            /*
-                              try {
-                              Method m = inst.getClass()
-                              .getMethod("get"+bname);
-                              val = m.invoke(inst);
-                              }
-                              catch (NoSuchMethodException ex) {
-                              Logger.warn("Can't find bean getter for "
-                              +"field \""+fname+"\" in class "
-                              +inst.getClass());
-                              val = f.get(inst);
-                              }
-                            */
-                            String oldVal = mapper.writeValueAsString(val);
-                            
-                            //if this is not the final piece
-                            if (i+1 < paths.length) {
-                                if (val == null) {
-                                    // create new instance
-                                    Logger.debug
-                                        (uri+": new instance "+f.getType());
-                                    val = f.getType().newInstance();
-                                }
-                            }
-                            else {
-                                
-                                // check to see if it references an existing 
-                                // entity
-                                if (value != null && !value.isNull()) {
-                                    try {
-                                        Logger.debug("Saving ...." );
-                                        val = getJsonValue 
-                                            (valp, value, f, pindex);
-                                        Logger.debug("Saved" );
-                                    }
-                                    catch (Exception ex) {
-                                        Logger.trace
-                                            ("Can't retrieve value", ex);
-                                        
-                                        return internalServerError
-                                            (ex.getMessage());
-                                    }
-                                }
-                                else {
-                                    val = null;
-                                }
-                                
-                                Logger.debug("Updating "+f.getDeclaringClass()
-                                             +"."+f.getName()+" = new:"
-                                             + (val != null ? 
-                                                (val.getClass()+" "+val)
-                                                : "null")
-                                             +" old:"+oldVal);
-                            }
-                            
-                            /*
-                             * We can't use f.set(inst, val) here since it
-                             * doesn't generate proper notifications to ebean
-                             * for update
-                             */
-                            if(pindex == null){
-                            try {
-                                Method set = inst.getClass().getMethod
-                                    ("set"+bname, ftype);
-                                set.invoke(inst, val);
-                                changes.add(new Object[]{
-                                                uri.toString(), 
-                                                oldVal,
-	                                                val,
-	                                                temptype,
-	                                                tempid});
-                            }
-                            catch (Exception ex) {
-                                Logger.error
-                                    ("Can't find bean setter for field \""
-                                     +fname+"\" in class "
-                                     +inst.getClass(),
-                                     ex);
-                                
-                                return internalServerError
-                                    ("Unable to map path "+uri+"!");
-                            }
-                        }
-                        }
-
-                        if (val != null) {
-                            ftype = val.getClass();
-                            if (null != ftype.getAnnotation(Entity.class)) {
-                                Object tid=EntityUtils.getIdForBean(val);
-                                if(tid!=null){
-                                    tempid=tid;
-                                    temptype=ftype;
-                                }
-                            }
-                        }
-                        inst = val;
-                    }
-                    catch (NoSuchFieldException ex) {
-                        Logger.error(uri.toString(), ex);
-                        return notFound ("Invalid field path: "+uri);
-                    }
-                }
-               
-            }
-            
-            //System.out.println((new ObjectMapper()).valueToTree(obj));
-            
-                obj.update();
-            rootChange[0]="/";
-            rootChange[2]=obj;
-            changes.add(rootChange);
-
-            return Java8Util.ok (mapper.valueToTree(obj));
-                    }
-                    catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error("Instance "+id, ex);
-            return internalServerError (ex.getMessage());
-                    }
+    	return forbidden ("Update field methods not available at this time");
     } // update ()
     
     public interface EntityCallable{
         void call(Object m, String path);
     }
-    public static void recursivelyApply(Model entity,EntityCallable c){
-    	recursivelyApply(entity,"",c);
-    }
-    private static void recursivelyApply(Model entity, String path,
-                                           EntityCallable c){
-    	
-        try{
-        	
-        	c.call(entity, path);
-            for(Field f: entity.getClass().getFields()){
-                Class type= f.getType();
-                Annotation e=type.getAnnotation(Entity.class);
-               
-                if(e!=null){
-                    try {
-                        Object nextEntity=f.get(entity);
-                        if(nextEntity instanceof Model){
-                            recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
-                        }
-                    } catch (IllegalArgumentException e1) {
-                        e1.printStackTrace();
-                    } catch (IllegalAccessException e1) {
-                        e1.printStackTrace();
-                    }
-                } else if (Collection.class.isAssignableFrom(type)) {
-                    Collection col = (Collection) f.get(entity);
-                    if(col!=null){
-                    	
-                        int i=0;
-                        for(Object nextEntity:col){
-                            if(nextEntity instanceof Model){
-                                recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
-                            }
-                            i++;
-                        }
-                    }
-                }
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        
-    }
-
+    
+    
     protected static Result updateEntity (Class<?> type) {
 
         if (!request().method().equalsIgnoreCase("PUT")) {
@@ -1457,6 +1052,94 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, new DefaultValidator());
     }
     
+    
+    //Typically mutates, but doesn't sometimes -- I know, but we delete/create sometimes instead
+    
+    public static EntityWrapper calculateAndApplyDiff(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
+    	 boolean usePojoPatch=false;
+         if(oWrap.getClazz().equals(nWrap.getClazz())){ //only use POJO patch if the entities are the same type
+         	usePojoPatch=true;
+         }
+         
+         if(usePojoPatch){
+         	doPojoPatch(oWrap,nWrap); //saves too!
+         	return oWrap; //Mutated
+         }else{
+         	
+         	Model oldValue=(Model)oWrap.getValue();
+         	oldValue.delete();
+         	
+         	// Now need to take care of bad update pieces:
+         	//	1. Version not incremented correctly (post update hooks not called) 
+         	//  2. Some metadata / audit data may be problematic
+         	//  3. The update hooks are called explicitly now
+         	//     ... and that's a weird thing to do, because the persist hooks
+         	//     will get called too. Does someone really expect things to
+         	//     get called twice?
+         	
+         	Model newValue = (Model)nWrap.getValue();
+         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
+         	newValue.save(); 
+         	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, oldValue);
+         	
+         	//This doesn't morph the object, so we're in trouble
+         	return nWrap; //Delete & Create
+         }
+    }
+    
+    public static void doPojoPatch(EntityWrapper oldValue, EntityWrapper newValue) throws Exception{
+    	
+    	Object rawOld = oldValue.getValue();
+    	Object rawNew = newValue.getValue();
+    	
+    	//Get the difference as a patch
+        PojoPatch patch =PojoDiff.getDiff(rawOld, rawNew);
+        
+        
+        final List<Object> removed = new ArrayList<Object>();
+        //Apply the changes, grabbing every change along the way
+        Stack changeStack=patch.apply(rawOld,c->{
+				//System.out.println("Change IS:" + c);
+				if("remove".equals(c.op)){
+					removed.add(c.oldValue);
+				}
+        });
+        
+        
+    	while(!changeStack.isEmpty()){
+    		Object v=changeStack.pop();
+    		if(!EntityWrapper.of(v).isIgnoredModel()){
+        		if(v instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
+        			//System.out.println("Force update for:" + v);
+            		((ForceUpdatableModel)v).forceUpdate();
+            	}else if(v instanceof Model){
+            		//System.out.println("Regular update for:" + v);
+            		((Model)v).update();
+            	}else{
+            		//System.out.println("Nothing to do for:" + v);
+            	}
+    		}
+    	}
+
+    	//explicitly delete deleted things
+    	
+    	//This should ONLY delete objects which "belong"
+    	//to something. That is, have a @SingleParent annotation
+    	//inside
+    	
+    	// TODO: Move to EntityInfo
+    	for(Object toDelete : removed){
+    		if(toDelete !=null){
+        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
+        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
+        			if(toDelete instanceof Model){
+        				System.out.println("deleting:" + ((Model)toDelete));
+        				((Model)toDelete).delete();
+        			}
+            	}
+    		}
+    	}
+    }
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
@@ -1466,138 +1149,62 @@ public class EntityFactory extends Controller {
     protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
-    	InxightTransaction tx = InxightTransaction.beginTransaction();
-    	FetchedValue oldValueContainer = null;
+    	
+    	//EntityWrapper oldValuaeContainer = null;
+//    	EntityWrapper<?> eg=null;
         try {       
+        	
+        	//Get NEW object from JSON
             Object newValue = mapper.treeToValue(json, type);
-
+            
             //Fetch old value
-            oldValueContainer=getCurrentValue(newValue);
-            String oldVersion=EntityUtils.getVersionForBeanAsString(oldValueContainer.value);
+            EntityWrapper<?> eg =  getCurrentValue(newValue)
+            		.orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
+            
+            //validation response holder
+            ValidationResponse[] vr = new ValidationResponse[]{null};
+            
+            
+            //Do we still need this???
+            //EditHistory eh = new EditHistory (json.toString());
+            
+            EntityWrapper savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
+            	EntityWrapper og= EntityWrapper.of(ov);
 
+                vr[0]=validator.validate(newValue,og.getValue());
+                if(!vr[0].isValid()){
+                	return Optional.empty();
+                }
+                EntityWrapper entityThatWasSaved=null;
+                
+                InxightTransaction tx = InxightTransaction.beginTransaction();
+                try{
+                	entityThatWasSaved=calculateAndApplyDiff(og,EntityWrapper.of(newValue)); //saving happens here
+	                tx.commit();
+
+	                // This was added because there are times
+	                // when the parent entity isn't actually
+	                // updated at all, at least from the ebean perspective
+	                // so this forces the issue
+	                EntityPersistAdapter.getInstance().deepreindex(newValue);
+                }catch(Exception e){
+                	
+                	e.printStackTrace();
+                }finally{
+                	tx.end();
+                }
+                return Optional.ofNullable(entityThatWasSaved);
+            });
             
-            if(oldValueContainer.value==null){
-            	throw new IllegalStateException("Cannot update a non-existing record");
-            }
-            
-            String oldJSON=mapper.toJson(oldValueContainer.value);
-            
-            
-            //validate new value
-            ValidationResponse vr=validator.validate(newValue,oldValueContainer.value);
-	        if(!vr.isValid()){
-	            return badRequest(validationResponse(vr,false));
+            if(vr[0]==null){
+            	return badRequest("Validation Response could not be generated");
+            }else if(!vr[0].isValid()){
+	            return badRequest(prepareValidationResponse(vr[0],false));
+	        }else if(savedVersion == null){ //Couldn't happen for some reason
+	        	return internalServerError ("unsuccessful"); //TODO: make this follow a better contract
 	        }
-
-            EditHistory eh = new EditHistory (json.toString());
             
-            //this saves and everything
-            eh.edit=EntityPersistAdapter.storeEditForPossibleUpdate(oldValueContainer.value);
-            
-            boolean usePojoPatch=true;
-            if(!oldValueContainer.cls.equals(type)){
-            	usePojoPatch=false;
-            }
-            
-            if(usePojoPatch){
-	            //Get the difference as a patch
-	            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
-	            
-	            
-	            final List<Object> removed = new ArrayList<Object>();
-	            //Apply the changes, grabbing every change along the way
-	            Stack changeStack=patch.apply(oldValueContainer.value,new ChangeEventListener(){
-					@Override
-					public void handleChange(ix.utils.pojopatch.Change c) {
-						//System.out.println("Change IS:" + c);
-						if("remove".equals(c.op)){
-							removed.add(c.oldValue);
-						}
-					}
-	            });
-	            
-	            
-	        	while(!changeStack.isEmpty()){
-	        		Object v=changeStack.pop();
-	        		if(!v.getClass().isAnnotationPresent(IgnoredModel.class)){
-		        		if(v instanceof ForceUpdatableModel){
-		        			//System.out.println("Force update for:" + v);
-		            		((ForceUpdatableModel)v).forceUpdate();
-		            	}else if(v instanceof Model){
-		            		//System.out.println("Regular update for:" + v);
-		            		((Model)v).update();
-		            	}else{
-		            		//System.out.println("Nothing to do for:" + v);
-		            	}
-	        		}
-	        	}
-
-	        	//explicitly delete deleted things
-	        	
-	        	//This should ONLY delete objects which "belong"
-	        	//to something. That is, have a @SingleParent annotation
-	        	//inside
-	        	for(Object toDelete : removed){
-	        		if(toDelete !=null){
-		        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
-		        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
-		        			if(toDelete instanceof Model){
-		        				System.out.println("deleting:" + ((Model)toDelete));
-		        				((Model)toDelete).delete();
-		        			}
-		            	}
-	        		}
-	        	}
-	        	
-	        	
-	        	//The old value is now the new value
-	        	newValue = oldValueContainer.value;
-	        	
-            }else{
-            	Model m=(Model)oldValueContainer.value;
-            	m.delete();
-            	// Now need to take care of bad update pieces:
-            	//	1. Version not incremented correctly (post update hooks not called) 
-            	//  2. Some metadata may be problematic
-
-            	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
-            	((Model)newValue).save();
-            	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, m);
-            	
-            }
-        	
-        	
-        	
-        	
-            String newJSON=mapper.toJson(newValue);
-            
-            
-            //Should this be here?
-            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
-            
-            tx.commit();
-            //granular parts not working yet
-            if (newValue != null) {
-            	    Object id = EntityUtils.getId (newValue);
-	                eh.edit.refid = id != null ? id.toString() : null;
-	                eh.edit.kind = newValue.getClass().getName();
-	                eh.edit.oldValue=oldJSON;
-	                eh.edit.newValue=newJSON;
-	                eh.edit.version=oldVersion;
-	                eh.edit.save();
-	                for (Edit e : eh.edits()) {
-	                    e.batch = eh.edit.id.toString();
-	                    e.save();
-	                }
-	                Logger.debug("** New edit history "+eh.edit.id);
-            }
-            // This was added because there are times
-            // when the parent entity isn't actually
-            // updated at all, at least from the ebean perspective
-            
-            EntityPersistAdapter.getInstance().deepreindex(newValue);
-            
-            return Java8Util.ok (mapper.valueToTree(newValue));
+            return Java8Util.ok (savedVersion.toJson(mapper));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             System.out.println(ex.getMessage());
@@ -1606,657 +1213,17 @@ public class EntityFactory extends Controller {
             //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
-        finally {
-        	if(oldValueContainer!=null){
-        		EntityPersistAdapter.popEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id);
-        	}
-            tx.end();
-        }
     }
 
     
-    static boolean isValid (Field f) {
-        int mods = f.getModifiers();
-        JsonProperty jp;
-        
-        return (!Modifier.isStatic(mods)
-                && !Modifier.isFinal(mods)
-                && !Modifier.isTransient(mods)
-                //&& f.getAnnotation(JsonIgnore.class) == null
-                && f.getAnnotation(DataVersion.class) == null
-                && f.getAnnotation(Id.class) == null);
-    }
-
-    /**
-     * set value of field using property bean instead of field-based
-     * as it's not recognized by ebean
-     */
-    static Object setValue (Object instance, Field field, Object value)
-        throws Exception {
-    	//System.out.println("Setting field:" + field.getName());
-        Logger.debug("** setValue: field "+field.getName()+"["
-                     +instance.getClass().getName()+"] value="+value);
-        
-        String method = "set" + getBeanName (field.getName());
-        Object old = field.get(instance);
-        try {
-            Method set = instance.getClass().getMethod
-                (method, field.getType());
-            set.invoke(instance, value);
-        }
-        catch (NoSuchMethodException ex) {
-            Logger.warn("No method \""+method
-                        +"\" found in class "+instance.getClass().getName());
-            if (instance instanceof EntityBean) {
-                // find the closest match?
-                Method set = null;
-                for (Method m : instance.getClass().getMethods()) {
-                    if (m.getName().startsWith("set")) {
-                        Class[] types = m.getParameterTypes();
-                        if (types.length == 1
-                            && types[0].isAssignableFrom(field.getType())) {
-                            // let's assume this is what we're looking for
-                            set = m;
-                            break;
-                        }
-                    }
-                }
-                
-                if (set == null) {
-                    throw ex;
-                }
-            }
-            else { // revert to field-based
-                field.set(instance, value);
-            }
-        }
-        return old;
-    }
-
-    static void debugBean (Object value) throws Exception {
-        if (value == null) {
-            return;
-        }
-        else if (!(value instanceof EntityBean)) {
-            Logger.warn("Not an EntityBean: "+value
-                        +"["+value.getClass().getName()+"]");
-            return;
-        }
-
-        EntityBean bean = (EntityBean)value;
-        EntityBeanIntercept ebi = bean._ebean_intercept();
-
-        Class cls = value.getClass();
-        int c = ebi.getPersistenceContext().size(cls);
-        Logger.debug("## There are "+c+" instance of "+cls.getName()+
-                     " in the Ebean persitence context!");
-        Logger.debug("## intercepting="+ebi.isIntercepting()
-                     +" dirty=" + ebi.isDirty()+" new="+ebi.isNew()
-                     +" ref="+ebi.isReference()
-                     +" context="+ebi.getPersistenceContext());
-    }
-
-    
-    public static class Instrumented{
-    	Object newObject;
-    	boolean changed=false;
-    }
-    /**
-     * Ok, this method seems overly complicated. What it's doing is recursively
-     * going through and saving each property. That sounds fine, but it causes a 
-     * lot of problems elsewhere.
-     * 
-     * For example, because this is a depth-first traversal, the individual elements
-     * will be changed before the parent is. Elsewhere, in a postUpdate hook, each model
-     * tries to save its full serialized version before and after update. So consider
-     * the following:
-     * 
-     * OLD value:
-     * {
-     *  version:1,
-     * 	names:[
-     * 		{
-     * 			"name":"oldname"
-     * 		}
-     *  ]
-     * }
-     * 
-     * NEW value:
-     * {
-     *  version:2,
-     * 	names:[
-     * 		{
-     * 			"name":"newname"
-     * 		}
-     *  ]
-     * }
-     * 
-     * This code will save the "newname" change at '/names/0/' before saving '/'.
-     * Then, when the postUpdate hook is called on the parent ('/'), it will fetch
-     * the value before update and store it. In this case, that value will still 
-     * point to the "newname" updated object. 
-     * 
- * 
-     * Another problem is that this method uses reflection, and trusts that the POJO
-     * are roughly what they need to be for updating. With advanced getters/setters,
-     * this may cause problems.
-     * 
-     * @param eh
-     * @param value
-     * @param json
-     * @return
-     * @throws Exception
-     */
-    protected static Instrumented instrument
-    (EditHistory eh, Object value, JsonNode json, String path) throws Exception {
-    	FetchedValue fv=getCurrentValue(value);
-    	
-    	Class cls;
-    	Object xval;
-    	Object id;
-    	
-	    cls=fv.getValueClass();
-	    id=fv.id;
-	    xval=fv.value;
-	    final Instrumented retInst= new Instrumented();
-	    
-	    
-	    /*
-	    if(xval!=null){
-		    EntityMapper om = EntityMapper.FULL_ENTITY_MAPPER();
-		    JsonNode o=om.valueToTree(xval);
-		    JsonNode n=om.valueToTree(fv.value);
-		    JsonNode jp = JsonDiff.asJson(o,n);
-			for(JsonNode jschange: jp){
-		    	System.out.println("#READ CHANGE:" + jschange + " old:" + o.at(jschange.get("path").asText()));
-		
-		    }
-	    }*/
-	    //xval=fv.value;
-    
-    
-    
-    
-    if (xval == null) {
-    	if(!(value instanceof Model)){
-    		retInst.newObject=value;
-    		return retInst;
-    	}
-    	System.out.println("Saving new:" + path);
-    	((Model)value).save();
-    	
-        id = EntityUtils.getId (value);
-        Logger.debug("<<< " + id);
-        
-        Edit e = new Edit (value.getClass(), id);
-        ObjectMapper mapper = new ObjectMapper ();
-        e.newValue = mapper.writeValueAsString(value);
-        eh.add(e);
-        retInst.newObject=value;
-        
-        //retInst.changed=true;
-        return retInst;
-    }else{
-    	
-    }
-
-    
-    
-    eh.attach(xval, new Callable(){
-
-		@Override
-		public Object call() throws Exception {
-			
-			//retInst.changed=true;
-			return null;
-		}
-    	
-    });
-
-    // now sync up val and value
-    Map<Field, Object> values = new HashMap<Field, Object>();
-    for (Field f : cls.getFields()) {
-        JsonProperty prop = f.getAnnotation(JsonProperty.class);
-        JsonNode node = null;
-        if(json!=null){
-        	node=json.get(prop != null ? prop.value() : f.getName());
-        }
-
-        Class type = f.getType();       
-        Logger.debug("field \""+f.getName()+"\"["+type
-                     +"] valid="+isValid(f)
-                     +" node="+node);            
-        if (!isValid (f) 
-        		//|| node == null
-        		)
-            continue;
-        
-        Object v = f.get(value);
-        if (v != null) {
-            if (type.getAnnotation(Entity.class) != null) {
-            	Instrumented sinst=instrument (eh, v, node,path+ "/" + f.getName());
-                retInst.changed|=sinst.changed;
-                setValue (xval, f, sinst.newObject);
-            }
-            else if (type.isArray()) {
-                Class<?> t = type.getComponentType();
-                if (t.getAnnotation(Entity.class) != null) {
-                    int len = Array.getLength(v);
-                    Object vv = f.get(xval);
-                    if (vv != null && Array.getLength(vv) > 0) {
-                        Logger.debug("$$ TODO: handle array properly!");
-                    }
-                    else {
-                        Object vals = Array.newInstance(t, len);
-                        for (int i = 0; i < len; ++i) {
-                            Object xv = Array.get(v, i);
-                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
-                            retInst.changed|=sinst.changed;
-                            Array.set(vals, i,
-                                      sinst.newObject);
-                        }
-                        setValue (xval, f, vals);
-                    }
-                }
-                else {
-                    // just copy over
-                    setValue (xval, f, v);
-                }
-            }
-            else if (Collection.class.isAssignableFrom(type)) {
-                Collection col = (Collection)v;
-                //Logger.debug("Enter Collection.."+col.size());
-                if (!col.isEmpty()) {
-                    Class t = getComponentType (f.getGenericType());
-                    //Logger.debug("..component type "+t);
-                    if (t.getAnnotation(Entity.class) != null) {
-                        Collection xcol = (Collection)f.get(xval);
-                        if (xcol == null) {
-                            setValue (xval, f, xcol = new ArrayList ());
-                        }
-                        // update the list wholesale..
-                        xcol.clear();
-                        
-                        int i = 0;
-                        for (Iterator it = col.iterator();
-                             it.hasNext(); ++i) {
-                            Object xv = it.next();
-                            Logger.debug(i+": "+xv+" <=> "+node.get(i));
-                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
-                            retInst.changed|=sinst.changed;
-                            xv = sinst.newObject;
-                            xcol.add(xv);
-                        }
-                    }
-                    else {
-                        setValue (xval, f, v);
-                    }
-                }
-            }
-            else {
-                setValue (xval, f, v);
-            }
-        }
-    }
-    
-    if(false || xval instanceof ForceUpdatableModel){
-    	
-    	
-    	boolean applied=((ForceUpdatableModel)xval).tryUpdate();
-    	if(!applied && retInst.changed){
-    		((ForceUpdatableModel)xval).forceUpdate();
-    		applied=true;
+    // This could become a nice method.
+    private static Optional<EntityWrapper> getCurrentValue(Object value){
+    	if(EntityWrapper.of(value).hasKey()){
+    		return EntityWrapper.of(value).getKey().fetch();
     	}else{
-    		
-    	}
-    	retInst.changed|=applied;
-    	
-    }else{
-    	if(xval instanceof Model){
-    		((Model)xval).update();
-    	}
-    }
-    
-    
-    
-    
-    Logger.debug("<<< "+id);
-    eh.detach(xval);
-    retInst.newObject=xval;
-    return retInst;
-}
-    public static class FetchedValue{
-    	public Object value;
-    	public Object id;
-    	public Class cls;
-    	
-    	public FetchedValue(Object val, Object id, Class cls){
-    		this.value=val;
-    		this.id=id;
-    		this.cls=cls;
-    	}
-    	
-    	public Class getValueClass(){
-    		return cls;
+    		return Optional.empty();
     	}
     	
     }
     
-    private static FetchedValue getCurrentValue(Object value) throws Exception{
-    	Class<?> cls = value.getClass();
-        if (cls.getAnnotation(Entity.class) == null)
-            throw new IllegalArgumentException
-                ("Class "+cls.getName()+" is not an entity");
-
-        //Need to get out all super classes as well
-        Field idf = EntityUtils.getIdField (value);
-        if (idf == null)
-            throw new IllegalArgumentException
-                ("Entity "+cls.getName()+" has no Id field!");
-        Object xval = null;
-        Object id=null;
-        
-        LinkedHashSet<Class<?>> possibleClasses = new LinkedHashSet<Class<?>>();
-        possibleClasses.add(cls);
-        if(value instanceof BaseModel){
-    		Class<?>[] classes=((BaseModel)value).fetchEquivalentClasses();
-    		for(Class<?> c:classes){
-    			possibleClasses.add(c);
-    		}
-    	}
-        Class<?> lastClass=null;
-        //This may not be necessary after all?
-        for(Class<?> c:possibleClasses){
-        	
-        	lastClass=c;
-        	
-	        Model.Finder finder = new Model.Finder
-	            (idf.getType(), c);
-	
-	        
-	        
-	        id = idf.get(value);
-	        if (id == null) {
-	            // if this entity has no id set, then we see if there is a
-	            // unique column defined.. if so, we retrieve it
-	            List<Field> columns = EntityUtils.getFields (value, Column.class);
-	            // now check which field has unique annotation
-	            for (Field f : columns) {
-	                Column column = (Column)f.getAnnotation(Column.class);
-	                if (column.unique()) {
-	                    Logger.debug("Field \""+f.getName()
-	                                 +"\" contains unique value for class "
-	                                 +value.getClass().getName());
-	                    xval = finder.where()
-	                        .eq(column.name().equals("")
-	                            ? f.getName() : column.name(),
-	                            f.get(value))
-	                        .findUnique();
-	                    
-	                    if (xval != null){
-	                        id = EntityUtils.getId (xval);
-	                        
-	                    }
-	                    
-	                    break;
-	                }
-	            }
-	        }
-	        else {
-	            xval = finder.byId(id);
-	        }
-	        if(xval!=null){
-	        	cls=xval.getClass();
-	        	break;
-	    	}
-        }
-        return new FetchedValue(xval,id,cls);
-    }
-    
-    protected static Object getJsonValue 
-        (Object val, JsonNode value, Field field, Integer index) 
-        throws Exception {
-
-        JsonNode node = value.get("id");
-        Class<?> ftype = field.getType();
-
-        Logger.debug("node: "+node+" "+ftype.getName()+"; val="+val);
-        ObjectMapper mapper = getEntityMapper ();
-        if (node != null && !node.isNull()) {
-            long id = node.asLong();
-
-            Model.Finder finder = new Model.Finder(Long.class, ftype);
-            val = finder.byId(id);
-        }
-        else if (value.isArray()) {
-            // if index is null, we replace the list
-            // if index >= 0, then we append as the index position
-            if (ftype.isArray()) {
-                Class<?> c = ftype.getComponentType();
-                if (val == null || index == null) {
-                    val = Array.newInstance(c, value.size());
-                    for (int k = 0; k < value.size(); ++k) {
-                        Array.set(val, k, mapper.treeToValue(value.get(k), c));
-                    }
-                }
-                else {
-                    int len = Math.max(0, index);
-                    if (len > Array.getLength(val)) {
-                        throw new IllegalArgumentException
-                            ("Invalid array index: "+len);
-                    }
-                    Object newval = Array.newInstance(c, value.size()+len);
-                    int k = 0;
-                    for (; k < len; ++k)
-                        Array.set(newval, k, Array.get(val, k));
-                    for (int i = 0; i < value.size(); ++i, ++k)
-                        Array.set(newval, k, 
-                                  mapper.treeToValue(value.get(i), c));
-                    val = newval;
-                }
-                Logger.debug("Converted Json to Array (size="
-                             +Array.getLength(val)+") of "+c);
-            }
-            else if (Collection.class.isAssignableFrom(ftype)) {
-                if (val == null || index == null) {
-                    val = new ArrayList ();
-                    index = -1;
-                }
-                else if (index > ((Collection)val).size())
-                    throw new IllegalArgumentException
-                        ("Invalid list index: "+index);
-
-                Collection vals = (Collection)val;
-                Class cls = getComponentType (field.getGenericType());
-
-                /* for now we only handle append or replace... no
-                 * insert in a specific position 
-                 */
-                if (index < 0) {
-                    for (Object obj : vals) {
-                        if (obj instanceof Model) {
-                            ((Model)obj).delete();
-                        }
-                    }
-                }
-                
-                for (int k = 0; k < value.size(); ++k) {
-                    vals.add(mapper.treeToValue(value.get(k), cls));
-                }
-
-                /*
-                else {
-                    ArrayList copy = new ArrayList ();
-                    Iterator it = vals.iterator();
-                    for (int k = 0; k < index && it.hasNext(); ++k)
-                        copy.add(it.next());
-
-                    for (int i = 0; i < value.size(); ++i)
-                        copy.add(mapper.treeToValue(value.get(i), cls));
-
-                    while (it.hasNext())
-                        copy.add(it.next());
-
-                    vals.addAll(copy);
-                }
-                */
-                Logger.debug("Converted Json to List (size="
-                             +((Collection)val).size()+") of "+cls);
-            }
-            else {
-                Logger.error("Json is of type array "
-                             +"but "+field.getDeclaringClass()+"."
-                             +field.getName()+" is of type "+ftype);
-            }
-        }
-        else if (ftype.isArray()) {
-            Class<?> c = ftype.getComponentType();
-
-            if (index == null 
-                || index < 0 
-                || index >= Array.getLength(val)) {
-                if (val == null) {
-                    val = Array.newInstance(c, 1);
-                    index = 0;
-                }
-                else {
-                    index = Array.getLength(val);
-                    Object newval = Array.newInstance(c, index+1);
-                    // copy array
-                    for (int i = 0; i < index; ++i)
-                        Array.set(newval, i, Array.get(val, i));
-                    val = newval;
-                }
-            }
-            else {
-                int len = Array.getLength(val);
-                Object newval = Array.newInstance(c, len);
-                // copy array
-                for (int i = 0; i < len; ++i)
-                    Array.set(newval, i, Array.get(val, i));
-                val = newval;
-            }
-            Array.set(val, index, mapper.treeToValue(value, c));
-        }
-        else if (Collection.class.isAssignableFrom(ftype)) {
-            Logger.debug("Should be a collection dude");
-            Class<?> c = getComponentType (field.getGenericType());
-            
-            if (index == null || index < 0 
-                || index >= ((Collection)val).size()) {
-                
-                if (val == null) {
-                    val = new ArrayList ();
-                }
-                else {
-                    ArrayList newval = new ArrayList ();
-                    newval.addAll((Collection)val);
-                    val = newval;
-                }
-                ((Collection)val).add(mapper.treeToValue(value, c));
-            }
-            else {
-                Logger.debug("Yeah, there's an index");
-                ArrayList newval = new ArrayList ();
-                newval.addAll((Collection)val);
-                Object el = newval.get(index);
-                // now update this object
-                if (el != null) {
-                    updateBean (el, value);
-                    Logger.debug("Updating "+el+" with "+value);
-                }
-                val = newval;
-            }
-        }
-        else {
-            val = mapper.treeToValue(value, ftype);
-        }
-
-        return val;
-    } // getJsonValue ()
-
-    static Class<?> getComponentType (Type type) {
-        Class cls;
-        if (type instanceof ParameterizedType) {
-            Type[] types = ((ParameterizedType)type)
-                .getActualTypeArguments();
-            
-            if (types.length != 1) {
-                throw new IllegalStateException
-                    ("Nested generic types not supported!");
-            }
-            cls = (Class)types[0];
-        }
-        else {
-            cls = (Class)type;
-        }
-        return cls;
-    }
-
-    static String getBeanName (String field) {
-        return Character.toUpperCase(field.charAt(0))+field.substring(1);
-    }
-
-    static void updateBean (Object bean, JsonNode value) {
-        ObjectMapper mapper;
-        Iterator<Map.Entry<String, JsonNode>> it = value.fields();
-        while (it.hasNext()) {
-                mapper = new ObjectMapper ();
-            Map.Entry<String, JsonNode> jf = it.next();
-            String set = "set"+getBeanName (jf.getKey());
-            Class<?> type = null;
-            try {
-                Field bf = bean.getClass().getField(jf.getKey());
-                type = bf.getType();
-                Method m = bean.getClass().getMethod(set, type);
-                //@JsonDeserialize(using=KeywordListDeserializer.class)
-                JsonDeserialize jdes=bf.getAnnotation(JsonDeserialize.class);
-                if(jdes!=null){
-                        JsonDeserializer jder=jdes.using().newInstance();
-                        SimpleModule module =
-                                          new SimpleModule("CustomDeserializer",
-                                              new Version(1, 0, 0, null));
-                        module.addDeserializer(type, jder);
-                        mapper.registerModule(module);
-                }
-                m.invoke(bean, mapper.treeToValue(jf.getValue(), type));
-            }
-            catch (NoSuchFieldException ex) {
-                Logger.debug("Ignore field '"+jf.getKey()+"'");
-            }
-            catch (NoSuchMethodException ex) {
-            	System.out.println("No such method '"
-                        +set+"("+type+")' for class "
-                        +bean.getClass());
-                Logger.error("No such method '"
-                             +set+"("+type+")' for class "
-                             +bean.getClass());
-            }
-            catch (Exception ex) {
-                Logger.trace("Can't update bean '"+set+"'", ex);
-            }
-        }
-    }
-
-    public static UUID toUUID (String id) {
-        if (id.length() == 32) { // without -'s
-            id = id.substring(0,8)+"-"+id.substring(8,12)+"-"
-                +id.substring(12,16)+"-"+id.substring(16,20)+"-"
-                +id.substring(20);
-        }
-        return UUID.fromString(id);
-    }
-
-    public static abstract class EntityFilter<K> {
-        public abstract boolean accept (K sub);
-        public List filter(List<K> results) {
-			List<K> filteredSubstances = new ArrayList<K>();
-			for (K sub : results) {
-				if (accept(sub)) {
-					filteredSubstances.add(sub);
-				}
-			}
-			return filteredSubstances;
-		}
-    }
 }

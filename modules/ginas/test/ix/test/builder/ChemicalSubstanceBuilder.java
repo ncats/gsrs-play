@@ -19,8 +19,8 @@ public class ChemicalSubstanceBuilder extends AbstractSubstanceBuilder<ChemicalS
 	public ChemicalSubstanceBuilder setStructure(String smiles){
 		this.andThen(cs->{
 			cs.structure=new GinasChemicalStructure();
-			cs.structure.smiles=smiles;
-			cs.references.add(getOrAddFirstReference(cs));
+			cs.structure.molfile=smiles;
+			cs.structure.addReference(getOrAddFirstReference(cs));
 			return cs;
 		});
 		return this;
