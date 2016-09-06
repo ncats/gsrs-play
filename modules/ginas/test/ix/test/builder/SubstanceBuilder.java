@@ -1,5 +1,7 @@
 package ix.test.builder;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -41,7 +43,9 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 	public NucleicAcidSubstanceBuilder asNucleicAcid(){
 		return new NucleicAcidSubstanceBuilder();
 	}
-
+    public static <S extends Substance, B extends AbstractSubstanceBuilder<S,B>> B  from(InputStream json) throws IOException{
+        return from(mapper.readTree(json));
+    }
 	public static <S extends Substance, B extends AbstractSubstanceBuilder<S,B>> B  from(JsonNode json){
 
 		Substance substance = GinasUtils.makeSubstance(json);
