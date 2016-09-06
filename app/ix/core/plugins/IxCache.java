@@ -278,7 +278,7 @@ public class IxCache extends Plugin {
 		return false;
 	}
 	
-	public static boolean hasChangedSince(long t){
+	public static boolean mightBeDirtySince(long t){
 		return _instance.hasBeenNotifiedSince(t);
 	}
 	

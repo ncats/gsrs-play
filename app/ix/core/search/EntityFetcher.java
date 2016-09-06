@@ -33,7 +33,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		SUPER_LOCAL_EAGER					//Store object here, right away, return it directly (this is almost what
 											//happened before)
 	}
-	public static final CacheType cacheType = CacheType.GLOBAL_CACHE; //this one is probably the best option
+	public static final CacheType cacheType = CacheType.GLOBAL_CACHE; //This is probably the best option
 	
 	
 	
@@ -60,12 +60,16 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 			case GLOBAL_CACHE:
 				return (K) IxCache.getOrFetchTempRecord(theKey);
 			case GLOBAL_CACHE_WHEN_NOT_CHANGED:
-				throw new UnsupportedOperationException("Global timeout cache not supported yet for this operation");
+				if(IxCache.mightBeDirtySince(lastFetched)){
+					IxCache.setTemp(theKey.toString(), findObject ());
+				}
+				return (K)IxCache.getTemp(theKey.toString());
+//				throw new UnsupportedOperationException("Global timeout cache not supported yet for this operation");
 			case NO_CACHE:
 				return (K) findObject();
 			case SUPER_LOCAL_CACHE_WHEN_NOT_CHANGED:
 			case SUPER_LOCAL_EAGER:
-				if(IxCache.hasChangedSince(lastFetched)){
+				if(IxCache.mightBeDirtySince(lastFetched)){
 					reload();
 				}
 				return stored.get();
