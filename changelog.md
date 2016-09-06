@@ -21,6 +21,8 @@ Enhancements
    approval access. Instead, SuperUpdater can now also
    update record information for previously approved
    substances.
+8. Fields to be indexed for analysis have been restricted
+   to a few names fields.
 
 Bug Fixes
 ---------

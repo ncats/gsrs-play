@@ -1414,6 +1414,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		
 		//Beginning of an idea
 		if(USE_ANALYSIS){
+			System.out.println("Analyzing");
 			getQueryBreakDownFor(query).stream().forEach(oq->{
 				try{
 					FacetsCollector facetCollector2 = new FacetsCollector();
@@ -1422,15 +1423,19 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 								.stream()
 								.map(e->e.getName())
 								.map(n->ANALYZER_VAL_PREFIX + n)
+								.peek(System.out::println)
 								.collect(Collectors.toList());
 					
 					Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
 					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
-					
-					lsp2.search(searcher, taxon);
-					lspResult.getFacets().getAllDims(options.fdim).forEach(fr->{
+					System.out.println("Ok ...");
+					LuceneSearchProviderResult res=lsp2.search(searcher, taxon);
+					res.getFacets().getAllDims(options.fdim).forEach(fr->{
+						System.out.println(fr.dim);
+						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
+							
 						Arrays.stream(fr.labelValues).forEach(lv->{
-							if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
+						
 								String newQuery = serializeAndRestrictQueryToField(oq.k(),lv.label);
 								searchResult.addFieldQueryFacet(
 										new FieldedQueryFacet(lv.label)
@@ -1438,8 +1443,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 												.withExplicitQuery(newQuery)
 												.withExplicitMatchType(oq.v())
 												);
-							}
-						});
+								});
+						}
 					});
 				}catch(Exception e){e.printStackTrace();}
 			});
@@ -1806,7 +1811,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		
 		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
 			Key key =ew.getKey();
-			if(key.getIdString().equals("")){  //probably not needed
+			if(!key.getIdString().equals("")){  //probably not needed
 				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
 				
 				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
