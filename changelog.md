@@ -49,7 +49,7 @@ Bug Fixes
 6. Fixed IndexAlreadyClosedException problem, where
    the Lucene index was closed before all the
    results were fetched from the database.
-
+7. Tags now different than Reference tags, as intended
  
 
 A Deeper look
