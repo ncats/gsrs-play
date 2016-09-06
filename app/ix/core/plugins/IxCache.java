@@ -216,7 +216,6 @@ public class IxCache extends Plugin {
 		return (T)o;
 	}
 	
-
 	public static Object getOrFetchTempRecord(Key k) throws Exception {
 		return getOrElseTemp(k.toString(), ()->k.fetch().get().getValue());
 	}
