@@ -6,23 +6,24 @@ import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Substance;
 
-public class ChemicalSubstanceBuilder extends AbstractSubstanceBuilder<ChemicalSubstance>{
-	public ChemicalSubstanceBuilder(AbstractSubstanceBuilder<Substance> sb){
-		this.andThen(c->(ChemicalSubstance)sb.afterCreate().apply(c));
+public class ChemicalSubstanceBuilder extends AbstractSubstanceBuilder<ChemicalSubstance, ChemicalSubstanceBuilder>{
+
+
+	@Override
+	protected ChemicalSubstanceBuilder getThis() {
+		return this;
 	}
 	
 	@Override
 	public Supplier<ChemicalSubstance> getSupplier(){
-		return (()->new ChemicalSubstance());
+		return ChemicalSubstance::new;
 	}
 	
 	public ChemicalSubstanceBuilder setStructure(String smiles){
-		this.andThen(cs->{
+		return andThen(cs->{
 			cs.structure=new GinasChemicalStructure();
 			cs.structure.molfile=smiles;
 			cs.references.add(getOrAddFirstReference(cs));
-			return cs;
 		});
-		return this;
 	}
 }

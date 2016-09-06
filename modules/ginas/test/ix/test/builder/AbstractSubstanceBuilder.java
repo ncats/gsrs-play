@@ -12,41 +12,45 @@ import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
-public abstract class AbstractSubstanceBuilder<K extends Substance>{
+public abstract class AbstractSubstanceBuilder<S extends Substance, T extends AbstractSubstanceBuilder<S,T>>{
 	
-	Function<K,K> andThen = (f->f);
+	Function<S, S> andThen = (f->f);
 	
-	public abstract Supplier<K> getSupplier();
+	public abstract Supplier<S> getSupplier();
+
+	protected abstract T getThis();
 	
-	
-	public AbstractSubstanceBuilder<K> andThen(Function<K,K> fun){
+	public T andThen(Function<S, S> fun){
 		andThen = andThen.andThen(fun);
-		return this;
+		return getThis();
 	}
+
+    public T andThen(Consumer<S> fun){
+        andThen = andThen.andThen(s ->{ fun.accept(s); return s;});
+        return getThis();
+    }
 	
-	public Supplier<K> asSupplier(){
+	public Supplier<S> asSupplier(){
 		return (()->afterCreate().apply(getSupplier().get()));
 	}
 	
-	public Function<K,K> afterCreate(){
+	public Function<S, S> afterCreate(){
 		return andThen;
 	}
 	
-	public AbstractSubstanceBuilder<K> addName(String name){
+	public T addName(String name){
 		return andThen(s->{
 			Name n=new Name(name);
 			n.addReference(getOrAddFirstReference(s));
 			s.names.add(n);
-			return s;
 		});
 	}
 	
-	public AbstractSubstanceBuilder<K> addCode(String codeSystem, String code){
+	public T addCode(String codeSystem, String code){
 		return andThen(s->{
 			Code c=new Code(codeSystem,code);
 			c.addReference(getOrAddFirstReference(s));
 			s.codes.add(c);
-			return s;
 		});
 	}
 	
@@ -63,7 +67,7 @@ public abstract class AbstractSubstanceBuilder<K extends Substance>{
 		}
 	}
 	
-	public K build(){
+	public S build(){
 		return afterCreate().apply(getSupplier().get());
 	}
 	
