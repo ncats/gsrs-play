@@ -694,9 +694,9 @@ public class EntityUtils {
 			return (this.idField != null);
 		}
 
-		public Object findById(String id) {
+		public T findById(String id) {
 			//Object nativeId=formatIdToNative(id);
-			return this.getFinder().byId(id);
+			return (T) this.getFinder().byId(id);
 		}
 
 		public T fromJson(String oldValue) throws JsonParseException, JsonMappingException, IOException {

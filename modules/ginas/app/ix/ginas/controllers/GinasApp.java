@@ -655,16 +655,13 @@ public class GinasApp extends App {
             response().setContentType("application/x-download");
             response().setHeader("Content-disposition","attachment; filename=" + fname);
 
-            Executors.newSingleThreadExecutor().submit(new Runnable () {
-                @Override
-                public void run() {
+            Executors.newSingleThreadExecutor().submit(()->{
                     try {
                         exporter.exportForEachAndClose(src.getResults());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
-            });
+                });
 
 	    	return ok(pis);
     	}catch(Exception e){
