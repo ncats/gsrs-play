@@ -46,29 +46,7 @@ public class ChemicalSubstance extends Substance  {
     @JsonView(BeanViews.Full.class)
     public List<Moiety> moieties = new ArrayList<Moiety>();
 
-    public ChemicalSubstance () {
-        super (SubstanceClass.chemical);
-    }
-    
-    @JsonView(BeanViews.Compact.class)
-    @JsonProperty("_moieties")
-    public JsonNode getJsonMoieties () {
-        JsonNode node = null;
-        if (!moieties.isEmpty()) {
-            try {
-                ObjectNode n = mapper.createObjectNode();
-                n.put("count", moieties.size());
-                n.put("href", Global.getRef(getClass (), getUuid())
-                      +"/moieties");
-                node = n;
-            }catch (Exception ex) {
-                // this means that the class doesn't have the NamedResource
-                // annotation, so we can't resolve the context
-                node = mapper.valueToTree(moieties);
-            }
-        }
-        return node;
-    }
+
 
     @Indexable(name="SubstanceStereochemistry", facet=true)
     @JsonIgnore
@@ -78,7 +56,32 @@ public class ChemicalSubstance extends Substance  {
     
     @Transient 
     private int[] atomMaps=null;
-    
+
+
+    public ChemicalSubstance () {
+        super (SubstanceClass.chemical);
+    }
+
+
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("_moieties")
+    public JsonNode getJsonMoieties () {
+        JsonNode node = null;
+        if (!moieties.isEmpty()) {
+            try {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("count", moieties.size());
+                n.put("href", Global.getRef(getClass (), getUuid())
+                        +"/moieties");
+                node = n;
+            }catch (Exception ex) {
+                // this means that the class doesn't have the NamedResource
+                // annotation, so we can't resolve the context
+                node = mapper.valueToTree(moieties);
+            }
+        }
+        return node;
+    }
     @JsonIgnore
     @Transient 
     public int[] getAtomMaps(){
