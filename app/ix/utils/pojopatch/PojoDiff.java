@@ -1074,6 +1074,7 @@ public class PojoDiff {
 		}
 		private static int getObjectWithID(Collection c, String id){
 			int i=0;
+
 			for(Object o:c){
 				try {
 					EntityWrapper ew = EntityWrapper.of(o);
@@ -1081,7 +1082,7 @@ public class PojoDiff {
 						return i;
 					}
 				} catch (Exception e) {
-					
+					e.printStackTrace();
 				}
 				i++;
 			}
@@ -1123,11 +1124,17 @@ public class PojoDiff {
 			
 			if(o instanceof Collection){
 				final int c=getCollectionPostion((Collection)o,prop,true);
-				
-				if(((Collection)o).size()<=c){
+				if(c == -1){
+					throw new IllegalStateException("Element '" + prop + "' does not exist in collection : " + o);
+				}
+				if(((Collection)o).size()<c){
 					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + ((Collection)o).size());
 				}
 				int i=0;
+				if(o instanceof List){
+					//random access
+					return ((List)o).get(c);
+				}
 				for(Object f:(Collection)o){
 					if(i==c){
 						return f;
@@ -1323,10 +1330,13 @@ public class PojoDiff {
 		}
 		public static Object getObjectAt(Object src, String objPointer, Collection chainChange){
 			//System.out.println(objPointer);
-			if(chainChange!=null)
+			if(chainChange!=null) {
 				chainChange.add(src);
+			}
 			String[] paths= objPointer.split("/");
-			if(paths.length<=1)return src;
+			if(paths.length<=1){
+				return src;
+			}
 			String curPath = paths[1];
 			
 			String subPath=objPointer.substring(curPath.length()+1);
