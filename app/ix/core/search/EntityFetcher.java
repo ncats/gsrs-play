@@ -23,15 +23,84 @@ import play.Play;
  */
 public class EntityFetcher<K> implements NamedCallable<K>{
 	public static final long debugDealy = Play.application().configuration().getLong("ix.settings.debug.dbdelay");
-	public static enum CacheType{
-		NO_CACHE,
-		GLOBAL_CACHE,						//Everyone sees everything (works)
-		GLOBAL_CACHE_WHEN_NOT_CHANGED, 		//look at last indexing, is it older then last time this was put?
-		SUPER_LOCAL_CACHE_WHEN_NOT_CHANGED, //look at last indexing, is it older then last time this was called?
-		DEFAULT_CACHE,						//OLD way (user-specific) (WARNING: BROKEN?)
-		ACTIVE_LOAD,						//Store object here, return it directly
-		SUPER_LOCAL_EAGER					//Store object here, right away, return it directly (this is almost what
-											//happened before)
+
+
+	public enum CacheType{
+		/**
+		 * Don't use a cache always refetch from db.
+		 */
+		NO_CACHE{
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {
+				return (K) fetcher.findObject();
+			}
+		},
+		/**
+		 * Everyone sees everything (works)
+		 */
+		GLOBAL_CACHE{
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception{
+				return (K) IxCache.getOrFetchTempRecord(fetcher.theKey);
+			}
+		},
+		/**
+		 * look at last indexing, is it older then last time this was put?
+		 */
+		GLOBAL_CACHE_WHEN_NOT_CHANGED{
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {
+				if(IxCache.mightBeDirtySince(fetcher.lastFetched)){
+					IxCache.setTemp(fetcher.theKey.toString(), fetcher.findObject ());
+				}
+				return (K)IxCache.getTemp(fetcher.theKey.toString());
+			}
+		},
+		/**
+		 * look at last indexing, is it older then last time this was called?
+		 */
+		SUPER_LOCAL_CACHE_WHEN_NOT_CHANGED{
+			//for now copy super local eager
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {
+				return SUPER_LOCAL_EAGER.get(fetcher);
+			}
+		},
+		/**
+		 * OLD way (user-specific) (WARNING: BROKEN?)
+		 */
+		DEFAULT_CACHE{
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {
+				return (K) IxCache.getOrElse(fetcher.theKey.toString(),() -> fetcher.findObject());
+			}
+		},
+		/**
+		 * Store object here, return it directly.
+		 */
+		ACTIVE_LOAD{
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {
+				return fetcher.getOrReload().get();
+			}
+		},
+		/**
+		 * Store object here, right away, return it directly (this is almost what happened before).
+		 */
+		SUPER_LOCAL_EAGER {
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {
+				if(IxCache.mightBeDirtySince(fetcher.lastFetched)){
+					fetcher.reload();
+				}
+				return fetcher.stored.get();
+			}
+		}
+		;
+
+
+		 abstract <K> K get(EntityFetcher<K> fetcher) throws Exception;
+
 	}
 	public static final CacheType cacheType = CacheType.GLOBAL_CACHE; //This is probably the best option
 	
@@ -56,30 +125,8 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	// concerns
 	@Override
 	public K call() throws Exception {
-		switch(cacheType){
-			case GLOBAL_CACHE:
-				return (K) IxCache.getOrFetchTempRecord(theKey);
-			case GLOBAL_CACHE_WHEN_NOT_CHANGED:
-				if(IxCache.mightBeDirtySince(lastFetched)){
-					IxCache.setTemp(theKey.toString(), findObject ());
-				}
-				return (K)IxCache.getTemp(theKey.toString());
-//				throw new UnsupportedOperationException("Global timeout cache not supported yet for this operation");
-			case NO_CACHE:
-				return (K) findObject();
-			case SUPER_LOCAL_CACHE_WHEN_NOT_CHANGED:
-			case SUPER_LOCAL_EAGER:
-				if(IxCache.mightBeDirtySince(lastFetched)){
-					reload();
-				}
-				return stored.get();
-			case ACTIVE_LOAD:
-				return getOrReload().get();
-			default:
-			case DEFAULT_CACHE:
-				return (K) IxCache.getOrElse(theKey.toString(),() -> findObject());	
-				
-		}
+
+		return cacheType.get(this);
 	}
 	
 	public String getName(){
