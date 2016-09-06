@@ -13,7 +13,7 @@ Enhancements
 4. Allow searching by code systems (BDNUM, CAS, etc)
 5. Improved keyboard navigation for 508 compliance
 6. Restrict to names or code search options
-7. Improved inital browse and paging now far more robust
+7. Improved initial browse and paging now far more robust
    and less likely to cause problems
 8. Added debugging utilities for developers to add specific
    delays to database fetches and structure processing,
@@ -35,7 +35,8 @@ Bug Fixes
    is complete. Now it refreshes when ready. 
 2. Reindexing previously wouldn't update autosuggest
    or sorting operations, unless the application was
-   also restarted. Now the reindexing works in-place.
+   also restarted. Now the reindexing will correctly update autosuggest
+   without a restart.
 3. Empty modifications were being saved which would break display,
    wrapped each display with a null check.
 4. In some bulk loads, the same record may have been 
@@ -159,9 +160,10 @@ A Deeper look
 
    There are disadvantages too. For one, after a search 
    is loaded, early paging will be a little slower (not
-   usually noticibly). However, every page loads just
+   usually noticably). However, every page loads just
    as fast as any other page. Previously, clicking
-   the last page on a large set could be very problematic.
+   the last page on a large set could hang the system
+   until all the results were fetched.
    The second disadvantage is export. Previously, the
    export mechanism took advantage of having pre-loaded
    forms of the objects to iterate over. Now it may have
