@@ -65,47 +65,6 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public static final String H_LyChI_L4 = "LyChI_L4";
     public static final String H_InChI_Key = "InChI_Key";
 
-    // stereochemistry
-    /* public enum Stereo {
-        ABSOLUTE("ABSOLUTE"),
-        ACHIRAL("ACHIRAL"),
-        RACEMIC("RACEMIC"),
-        MIXED("MIXED"),
-        EPIMERIC("EPIMERIC"),
-        UNKNOWN("UNKNOWN");
-
-        public final String value;
-
-        private Stereo(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() { return value.toString(); }
-
-        @JsonValue
-        public String toValue() {
-            return value.toString();
-        }
-
-        @JsonCreator
-        public static Stereo forValue(String value) {
-            if (value.equalsIgnoreCase("ABSOLUTE"))
-                return Stereo.ABSOLUTE;
-            if (value.equalsIgnoreCase("ACHIRAL") )
-                return Stereo.ACHIRAL;
-            if (value.equalsIgnoreCase("RACEMIC") )
-                return Stereo.RACEMIC;
-            if (value.equalsIgnoreCase("MIXED") )
-                return Stereo.MIXED;
-            if (value.equalsIgnoreCase("EPIMERIC") )
-                return Stereo.EPIMERIC;
-            if (value.equalsIgnoreCase("UNKNOWN"))
-                return Stereo.UNKNOWN;
-            return null;
-        }
-    }*/
-
     public static class StereoSerializer extends JsonSerializer<Stereo> {
     	public StereoSerializer(){
     		super();
@@ -205,8 +164,8 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     @Lob
     @Basic(fetch = FetchType.EAGER)
-    @Indexable(indexed = false, structure=true) //should totes allow for this
-    public String molfile;						//on a method
+    @Indexable(indexed = false) 
+    public String molfile;				
 
     @Lob
     @Basic(fetch = FetchType.EAGER)
@@ -259,24 +218,13 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     public List<XRef> links = new ArrayList<XRef>();
 
     @Transient
-    private ObjectMapper mapper = new ObjectMapper();
+    private static ObjectMapper mapper = new ObjectMapper();
 
-        /*
-         * @Transient
-         * 
-         * @JsonIgnore public transient Object mol; // a transient mol object
-         */
     public Integer count = 1; // moiety count?
     public Structure() {}
     
     
     
-//    @JsonIgnore
-//    @Indexable(indexed=false, structure=true)
-//    public String theThingtoIndex(){
-//    	return this.molfile;
-//    }
-
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_properties")
     public JsonNode getJsonProperties() {

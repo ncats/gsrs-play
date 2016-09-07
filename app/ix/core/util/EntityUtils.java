@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.Backup;
 import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
@@ -211,8 +212,10 @@ public class EntityUtils {
 		}
 
 		public Stream<Tuple<MethodOrFieldMeta, Object>> streamStructureFieldAndValues(Predicate<MethodOrFieldMeta> p) {
-			return ei.getStructureFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
-					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
+			return ei.getStructureFieldInfo().stream().filter(p)
+					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+					.filter(t -> t.v().isPresent())
+					.map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
 		public List<MethodOrFieldMeta> getStructureFieldAndValues() {
@@ -359,6 +362,7 @@ public class EntityUtils {
 		Inheritance inherits;
 		boolean isIgnoredModel = false;
 
+		boolean hasBackup = false;
 		EntityInfo<?> ancestorInherit;
 
 		public static boolean isPlainOldEntityField(FieldMeta f) {
@@ -372,6 +376,8 @@ public class EntityUtils {
 			Objects.requireNonNull(cls);
 
 			this.cls = cls;
+			this.hasBackup = (cls.getAnnotation(Backup.class) != null);
+			
 			this.isIgnoredModel = (cls.getAnnotation(IgnoredModel.class) != null);
 			this.indexable = (Indexable) cls.getAnnotation(Indexable.class);
 			this.table = (Table) cls.getAnnotation(Table.class);
@@ -421,9 +427,11 @@ public class EntityUtils {
 				}
 			}).collect(Collectors.toList());
 
-			seqFields = Stream.concat(fields.stream(), methods.stream()).filter(f -> f.isSequence())
+			seqFields = Stream.concat(fields.stream(), methods.stream())
+					.filter(f -> f.isSequence())
 					.collect(Collectors.toList());
-			strFields = Stream.concat(fields.stream(), methods.stream()).filter(f -> f.isStructure())
+			strFields = Stream.concat(fields.stream(), methods.stream())
+					.filter(f -> f.isStructure())
 					.collect(Collectors.toList());
 
 			fields.removeIf(f -> !f.isTextEnabled());
@@ -475,9 +483,10 @@ public class EntityUtils {
 			if (idType != null) {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
-
 		}
 
+		
+		
 		public EntityInfo<?> getInherittedRootEntityInfo() {
 			return ancestorInherit;
 		}
@@ -694,9 +703,9 @@ public class EntityUtils {
 			return (this.idField != null);
 		}
 
-		public Object findById(String id) {
+		public T findById(String id) {
 			//Object nativeId=formatIdToNative(id);
-			return this.getFinder().byId(id);
+			return (T) this.getFinder().byId(id);
 		}
 
 		public T fromJson(String oldValue) throws JsonParseException, JsonMappingException, IOException {
@@ -705,6 +714,10 @@ public class EntityUtils {
 
 		private static final <T> EntityInfo<T> of(Class<T> cls) {
 			return new EntityInfo<T>(cls);
+		}
+
+		public boolean hasBackup() {
+			return this.hasBackup;
 		}
 
 		// HERE BE DRAGONS!!!!
@@ -1151,6 +1164,8 @@ public class EntityUtils {
 			this.kind = k;
 			this._id = id;
 		}
+		
+		
 
 		public String getKind() {
 			return this.kind.getName();
@@ -1172,7 +1187,7 @@ public class EntityUtils {
 		public String toString() {
 			return kind.getName() + ID_FIELD_NATIVE_SUFFIX + ":" + getIdString();
 		}
-
+		
 		/**
 		 * Returns null if not present
 		 * @return
@@ -1180,6 +1195,8 @@ public class EntityUtils {
 		private Object nativeFetch(){
 			return kind.getFinder().byId(this.getIdNative());
 		}
+		
+		
 		// fetches from finder
 		public Optional<EntityWrapper> fetch() {
 			Object o=nativeFetch();
@@ -1190,6 +1207,10 @@ public class EntityUtils {
 
 		public Tuple<String, String> asLuceneIdTuple() {
 			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
+		}
+
+		public static Key of(EntityInfo meta, Object id) {
+			return new Key(meta, id);
 		}
 
 		// For lucene document
@@ -1210,7 +1231,7 @@ public class EntityUtils {
 		// For EntityWrapper (weird place for this, I know)
 		public static Key of(EntityWrapper ew) throws NoSuchElementException {
 			Objects.requireNonNull(ew);
-			return new Key(ew.getEntityInfo(), ew.getId().get().toString());
+			return new Key(ew.getEntityInfo(), ew.getId().get());
 		}
 
 		@Override
@@ -1230,6 +1251,10 @@ public class EntityUtils {
 																// could be done
 			}
 		}
+
+
+
+		
 
 	}
 

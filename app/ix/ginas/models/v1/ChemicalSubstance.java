@@ -115,4 +115,10 @@ public class ChemicalSubstance extends Substance  {
     protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
         return structure.toChemical(messages);
     }
+    
+    @JsonIgnore
+    @Indexable(indexed=false, structure=true)
+	public String getStructureMolfile(){
+		return structure.molfile;
+	}
 }

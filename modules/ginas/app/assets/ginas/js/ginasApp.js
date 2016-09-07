@@ -3,6 +3,7 @@
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
         'angularSpinners', 'filterListener', 'validatorListener'
+
     ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
      })
@@ -531,7 +532,6 @@
 
         $window.SDFFields = {};
 
-
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
             var r = (_.indexOf(t, path) >= 0) ? 'active' : '';
@@ -561,10 +561,6 @@
                 break;
             }
 
-            //Todo: this only works on the homepage//
-            console.log($location);
-            console.log($window.location);
-            console.log(baseurl);
             var search = "q="+$scope.q;
             $window.location = $window.location.origin + baseurl +"substances?"+ search;
         //    $window.location.search = "q="+$scope.q;
@@ -1745,27 +1741,21 @@
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
-                        template = angular.element(' <a aria-label="Upload" uib-tooltip ="Upload" structureid=structureid format=format export><span class="sr-only">Upload Data</span><i class="fa fa-upload fa-2x"></i></a>');
+                        template = angular.element(' <a aria-label="Upload" uib-tooltip ="Upload" tabindex="0" role="button" structureid=structureid format=format export><span class="sr-only">Upload Data</span><i class="fa fa-upload fa-2x"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         break;
                     case "import":
-                        template = angular.element(' <a aria-label="Import" uib-tooltip ="Import" ng-click="open()"><span class="sr-only">Import Data</span><i class="fa fa-clipboard fa-2x success"></i></a>');
+                        template = angular.element(' <a aria-label="Import" uib-tooltip ="Import" tabindex="0" role="button" ng-keypress="open();" ng-click="open()"><span class="sr-only">Import Data</span><i class="fa fa-clipboard fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         templateUrl = baseurl + "assets/templates/modals/mol-import.html";
                         break;
                     case "export":
-                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" ng-click = "getExport()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
+                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" tabindex="0" role="button" ng-keypress="getExport()" ng-click = "getExport()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         templateUrl = baseurl + "assets/templates/modals/mol-export.html";
-                        break;
-                    case "reference":
-                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "open()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        templateUrl = baseurl + "assets/templates/modals/reference-modal.html";
                         break;
                 }
 

@@ -19,12 +19,6 @@ import ix.ginas.models.v1.Substance;
 
 @MappedSuperclass
 public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
-//    @JsonIgnore
-//    //@OneToOne(cascade=CascadeType.ALL)
-//    @Basic(fetch=FetchType.LAZY)
-//    @OneToOne(cascade = CascadeType.ALL)
-//	public GinasReferenceContainer recordReference;
-	
 	
 	//@JsonIgnore
 	private EmbeddedKeywordList internalReferences = new EmbeddedKeywordList();

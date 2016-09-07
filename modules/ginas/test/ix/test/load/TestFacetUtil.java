@@ -64,7 +64,7 @@ public final class TestFacetUtil {
             put("800:1000", 1);
         }});
         expectedFacets.put( "GInAS Tag", new HashMap<String, Integer>(){{
-            put("NOMEN", 17);
+//            put("NOMEN", 17); //Note, this was removed, as it was only in the tags by accident
             put("WARNING", 17);
             put("WHO-DD", 6);
             put("MI", 6);

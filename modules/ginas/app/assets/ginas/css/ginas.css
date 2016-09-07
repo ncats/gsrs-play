@@ -1187,24 +1187,7 @@ pre.fixedsize{
     padding-top: 1%;
     padding-bottom: 1%;
 }
-.helper-info{
-    padding: 5px;
-    margin: 5px;
-    background-color: #e3eaf7;
-}
-.helper-info i {
-    margin-right: 10px;
-    margin-left: 10px;
-}
-span.helper-title {
-    font-weight: bold;
-    background-color: #a4c7e2;
-    width: 106%;
-    display: block;
-    margin-left: -3%;
-    color: #333333;
-    font-size: medium;
-}
+
 amino-acid.selected-acid a {
     background: #00faff !important;
 }
@@ -1237,4 +1220,15 @@ span#record-count {
     padding: .35em .6em .35em .6em;
     margin-top: 2px;
     display: inline-block;
+}
+
+.help-info{
+    margin-left: 15px;
+    padding-top:15px;
+}
+
+.navbar-btn{
+    padding: 6px 12px !important;
+    margin-left: 15px;
+    margin-top: 15px;
 }

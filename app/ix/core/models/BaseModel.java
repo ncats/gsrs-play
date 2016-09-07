@@ -7,15 +7,15 @@ import play.db.ebean.Model;
 @MappedSuperclass
 public abstract class BaseModel extends Model{
 
+	//This may be less necessary now that `Key`
+	//exists
 	public abstract String fetchGlobalId();
 	
 	public BaseModel(){
 		
 	}
 	
-	//Man I wish this could be a forced static method
-	//for everything
-	
+	//This may no longer be necessary
 	public Class<?>[] fetchEquivalentClasses() {
 		return new Class<?>[]{this.getClass()};
 	}

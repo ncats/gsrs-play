@@ -359,6 +359,8 @@ public class SearchResult {
 	}
 
 	public void addFieldQueryFacet(FieldedQueryFacet ff) {
-		this.suggestFacets.add(ff);
+		if(ff.getDisplayField()!=null){
+			this.suggestFacets.add(ff);
+		}
 	}
 }

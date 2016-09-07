@@ -9,7 +9,7 @@
 
     }
 
-    @ginas("Register", kind) {
+    @ginas("Register", kind, true) {
         @menu()
     } {
         <div ng-cloak="" ng-init="form={}">
@@ -161,11 +161,11 @@
         <div ng-if="diff==true">
             <div class ="row info">
                 <div class = "col-md-6">
-                    <span>from form</span>
+                    <label>from form</label>
                     <textarea class="form-control" rows="10" ng-model="left"></textarea>
                 </div>
                 <div class = "col-md-6">
-                    <span>from api</span>
+                    <label>from api</label>
                     <textarea class="form-control" rows="10" ng-model="right"></textarea>
                 </div>
             </div>

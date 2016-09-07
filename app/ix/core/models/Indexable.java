@@ -13,6 +13,7 @@ public @interface Indexable {
     boolean suggest () default false;
     boolean sequence() default false;
 	boolean structure() default false;
+	boolean fullText() default true;
     String pathsep () default "/"; // path separator for
     // if empty, use the instance variable name
     String name () default "";

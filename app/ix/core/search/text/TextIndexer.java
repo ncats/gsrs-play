@@ -145,7 +145,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	
 	public static final boolean INDEXING_ENABLED = Play.application().configuration().getBoolean("ix.textindex.enabled",true);
 	
-	private static final boolean USE_ANALYSIS = true; 
+	private static final boolean USE_ANALYSIS = Play.application().configuration().getBoolean("ix.textindex.fieldsuggest",true);
 	private static final String ANALYZER_FIELD = "M_FIELD";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
 	
@@ -1426,11 +1426,11 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 					
 					Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
 					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
-					
-					lsp2.search(searcher, taxon);
-					lspResult.getFacets().getAllDims(options.fdim).forEach(fr->{
+					LuceneSearchProviderResult res=lsp2.search(searcher, taxon);
+					res.getFacets().getAllDims(options.fdim).forEach(fr->{
+						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
+							
 						Arrays.stream(fr.labelValues).forEach(lv->{
-							if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
 								String newQuery = serializeAndRestrictQueryToField(oq.k(),lv.label);
 								searchResult.addFieldQueryFacet(
 										new FieldedQueryFacet(lv.label)
@@ -1438,8 +1438,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 												.withExplicitQuery(newQuery)
 												.withExplicitMatchType(oq.v())
 												);
-							}
-						});
+								});
+						}
 					});
 				}catch(Exception e){e.printStackTrace();}
 			});
@@ -1780,24 +1780,26 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		Document doc = new Document();
 		
 		Consumer<IndexableField> fieldCollector = f->{
-				String text = f.stringValue();
-				if (text != null) {
-					if (DEBUG(2)){
-						Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
-					}
-					TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
-					//tf.set
-					doc.add(tf);
-					if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
-						fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
-							.add(tf);
+				if(f instanceof TextField || f instanceof StringField){
+					String text = f.stringValue();
+					if (text != null) {
+						if (DEBUG(2)){
+							Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+						}
+						TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
+						//tf.set
+						doc.add(tf);
+						if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
+							fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
+								.add(tf);
+						}
 					}
 				}
 				doc.add(f);
 		};
 		
 		//flag the kind of document
-		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
+		
 		
 		ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
 										.withDynamicFieldMaker(this)	
@@ -1806,12 +1808,12 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		
 		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
 			Key key =ew.getKey();
-			if(key.getIdString().equals("")){  //probably not needed
+			if(!key.getIdString().equals("")){  //probably not needed
 				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
 				
 				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
-				StringField docParent=new StringField(luceneKey.k(),luceneKey.v(),YES);
-				FacetField  docParentFacet =new FacetField(luceneKey.k(),luceneKey.v());
+				StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
+				FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
 				//This is a test of a terrible idea, which just. might. work.
 				fullText.forEach((name,group)->{
 						try{
@@ -1830,7 +1832,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 					});
 			}
 		}
-				
+		
+		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
+		
 		// now index
 		addDoc(doc);
 		
@@ -1892,7 +1896,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
-					qa.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(ANALYZER_VAL_PREFIX+docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}

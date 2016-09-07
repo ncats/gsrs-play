@@ -287,7 +287,7 @@
         };
     });
 
-    ginasFormElements.directive('gsrsInput', function ($templateRequest, $compile, CVFields, filterService) {
+    ginasFormElements.directive('gsrsInput', function ($templateRequest, $timeout, $compile, CVFields, filterService) {
         return {
             restrict: 'E',
             //templateUrl: baseurl + "assets/templates/elements/text-view-edit2.html",
@@ -365,6 +365,8 @@
 
                     };
 
+
+
                     scope.undo = function () {
                         if (scope.changed == true) {
                             scope.obj = temp;
@@ -381,13 +383,13 @@
                     }
 
                     //this will manage the cv retrieval for dropdown/multi select
-                    if(attrs.cv){
+                    if(attrs.cv) {
                         scope.cv = attrs.cv;
                         CVFields.getCV(attrs.cv).then(function (response) {
                             scope.values = _.orderBy(response.data.content[0].terms, ['display'], ['asc']);
                             //bump English and United States up to the top
-                            scope.values = _.orderBy( scope.values, function (cv) {
-                                return cv.display == 'English' ||  cv.display == 'United States';
+                            scope.values = _.orderBy(scope.values, function (cv) {
+                                return cv.display == 'English' || cv.display == 'United States';
                             }, ['desc']);
 
                             if (response.data.content[0].filterable == true) {
@@ -403,8 +405,8 @@
                                 }];
                                 scope.values = _.union(scope.values, other);
                             }
-                            _.forEach(scope.values, function(term){
-                                if(term.selected == true){
+                            _.forEach(scope.values, function (term) {
+                                if (term.selected == true) {
                                     if (_.isUndefined(scope.obj)) {
                                         if (attrs.type == 'multi') {
                                             scope.obj = [];
@@ -415,14 +417,14 @@
                                         scope.edit = false;
                                     }
                                 }
-                                });
+                            });
 
                         });
 
                         //adds a new cv element to the cv. the update cv function is not working however, and should be fixed
                         /////////////////////////////fix updateCV method
                         scope.makeNewCV = function () {
-                            if(!_.isUndefined(scope.obj.new)) {
+                            if (!_.isUndefined(scope.obj.new)) {
                                 var exists = _.find(scope.values, function (cv) {
                                     return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
                                 });
@@ -437,15 +439,8 @@
                                     alert(scope.obj.new + ' exists in the cv');
                                     scope.obj = {};
                                 }
-                            }else{
+                            } else {
                                 scope.obj = undefined;
-                            }
-                        };
-
-                        //this doesn't toggle so much as set false...
-                        scope.toggleEdit = function () {
-                            if (scope.obj) {
-                                scope.edit = false;
                             }
                         };
 
@@ -516,6 +511,24 @@
                     } else {
                         scope.max = 'MAX_SAFE_INTEGER';
                     }
+
+                    scope.toggleEdit = function () {
+                        if (scope.obj) {
+                            var r;
+                            scope.edit = !scope.edit;
+                            switch (attrs.type) {
+                                case "dropdown":
+                                    r = element[0].querySelectorAll('select');
+                                    break;
+                                case "multi":
+                                    r = element[0].querySelectorAll('input');
+                                    break;
+                            }
+                            $timeout(function () {
+                                r[0].focus();
+                            });
+                        }
+                    };
 
                     var template = angular.element(html);
                     element.append(template);
@@ -883,7 +896,7 @@
                             var b = new Blob([json], {type: "application/json"});
                             scope.url = URL.createObjectURL(b);
                             element.replaceWith($compile(
-                                '<a class="btn btn-primary" download="results.json"' +
+                                '<a class="btn btn-primary" tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
@@ -896,7 +909,7 @@
                             var b = new Blob([json], {type: "application/json"});
                             scope.url = URL.createObjectURL(b);
                             element.replaceWith($compile(
-                                '<a class="btn btn-primary" download="results.json"' +
+                                '<a class="btn btn-primary"tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
@@ -916,7 +929,7 @@
                         }
                         scope.url = URL.createObjectURL(b);
                         element.replaceWith($compile(
-                            '<a class="btn btn-primary" download="results.' + fileType +
+                            '<a class="btn btn-primary"tabindex="0" role="button" download="results.' + fileType +
                             '" href="' + scope.url + '" target = "_self" id ="download">' +
                             '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                             '</a>'
@@ -927,14 +940,14 @@
                     }
                 }
              },
-            template: '<a class="btn btn-primary" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
+            template: '<a class="btn btn-primary" tabindex="0" role="button" ng-keypress = "make();" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
         };
     });
 
     ginasFormElements.directive('deleteButton', function () {
         return {
             restrict: 'E',
-            template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
+            template: '<label ng-if=!showlabel>Delete</label><br/><a ng-click="deleteObj()" ng-keypress="deleteObj();" tabindex="0" role="button" uib-tooltip="Delete Item"><i class="fa fa-trash fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                     scope.showlabel= attrs.showlabel;
 
@@ -966,8 +979,10 @@
             },
             link: function (scope, element, attrs) {
                 scope.stage = true;
+                //scope.info = helpFactory.getField(scope.type);
+                scope.info = "Coming Soon!";
                 var template;
-                var url = baseurl + "assets/templates/info/";
+                var url = baseurl + "assets/templates/info/info-template.html";
                 if (attrs.mark == "exclaim") {
                     template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" uib-tooltip="click for description"></i></span>');
                 } else {
@@ -975,14 +990,15 @@
                 }
                 element.append(template);
                 $compile(template)(scope);
-                if (attrs.info) {
-                    url = url + attrs.info + '-info.html';
-                } else {
-                    url = url + 'code-info.html';
-                }
+                //if (attrs.info) {
+                //    url = url + attrs.info + '-info.html';
+                //} else {
+                //    url = url + 'info-template.html';
+                //}
 
 
                 scope.showInfo = function () {
+                    console.log(scope);
                     toggler.show(scope, scope.type, url);
                 };
             }
@@ -991,6 +1007,7 @@
 
     ginasFormElements.directive('modalFormButton', function ($uibModal) {
         return {
+            rstrict:'E',
             replace: true,
             scope: {
                 referenceobj: '=?',
@@ -1013,7 +1030,7 @@
                         break;
                     case "nameorg":
                         templateurl =  baseurl + "assets/templates/selectors/name-org-selector.html";
-                        break; 
+                        break;
                     case "parameter":
                         templateurl =  baseurl + "assets/templates/selectors/parameter-selector.html";
                         break;

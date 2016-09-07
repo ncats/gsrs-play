@@ -216,7 +216,6 @@ public class IxCache extends Plugin {
 		return (T)o;
 	}
 	
-
 	public static Object getOrFetchTempRecord(Key k) throws Exception {
 		return getOrElseTemp(k.toString(), ()->k.fetch().get().getValue());
 	}
@@ -279,7 +278,7 @@ public class IxCache extends Plugin {
 		return false;
 	}
 	
-	public static boolean hasChangedSince(long t){
+	public static boolean mightBeDirtySince(long t){
 		return _instance.hasBeenNotifiedSince(t);
 	}
 	

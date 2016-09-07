@@ -77,7 +77,7 @@ public class Parameter extends GinasCommonSubData {
     	}
     }
     
-/*    public String toString(){
-    	return name + "," + type + "," + value.toString();
-    }*/
+    public String toString(){
+    	return getUuid() + "  " +  name + "," + type + "," + (value ==null ? "null amount" : value.toString());
+    }
 }

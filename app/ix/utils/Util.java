@@ -330,6 +330,7 @@ public class Util {
     
     //only here for testing purposes
     public static void debugSpin(long milliseconds) {
+    	if(milliseconds<=0)return;
     	if(Play.isProd())return;
         long sleepTime = milliseconds*1000000L; // convert to nanoseconds
         long startTime = System.nanoTime();

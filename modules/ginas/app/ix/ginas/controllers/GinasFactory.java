@@ -146,7 +146,7 @@ public class GinasFactory extends EntityFactory {
                 }catch(IllegalArgumentException e){
                     seq=id;
                 }
-                if(seq==null) {
+                if (seq == null) {
                     seq = EntityPersistAdapter
                         .getSequenceIndexer().getSeq(id);
                 }

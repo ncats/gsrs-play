@@ -1,10 +1,12 @@
-<div class ="col-md-4 col-md-pull-left">
-    <button class="btn btn-primary label-offset det text-capitalize" ng-click="toggle();" id = "{{type}}-toggle">
+<div class="col-md-6 col-md-pull-left">
+    <button class="btn btn-primary label-offset det text-capitalize" ng-click="toggle();" id="{{type}}-toggle">
         <i ng-show="iscollapsed" class="fa fa-caret-right"></i>
         <i ng-hide="iscollapsed" class="fa fa-caret-down"></i>
         {{heading}}&nbsp;<span class="badge" ng-show="length>0">
         {{count}}
-                        {{count || getLength()}}</span> </button>
-    <info-button path= {{path}} type = "{{type}}" heading= "{{heading}}" ></info-button>
-    <div class={{type}}></div>
+                        {{count || getLength()}}</span></button>
+    <info-button path={{path}} type="{{type}}" heading="{{heading}}"></info-button>
+            <div class={{type}}></div>
+        </div>
+    </div>
 </div>

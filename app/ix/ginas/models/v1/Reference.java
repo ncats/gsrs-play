@@ -52,7 +52,7 @@ public class Reference extends GinasCommonData {
     
     @JSONEntity(title = "Tags", format = "table", itemsTitle = "Tag", itemsFormat = JSONConstants.CV_DOCUMENT_COLLECTION, isUniqueItems = true)
     @JsonSerialize(using=KeywordListSerializer.class) 
-    @JsonDeserialize(contentUsing=KeywordDeserializer.TagDeserializer.class) 
+    @JsonDeserialize(contentUsing=KeywordDeserializer.ReferenceTagDeserializer.class) 
     @Basic(fetch=FetchType.LAZY)
     public EmbeddedKeywordList tags = new EmbeddedKeywordList();
     

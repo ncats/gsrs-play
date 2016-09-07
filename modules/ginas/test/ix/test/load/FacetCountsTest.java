@@ -70,7 +70,7 @@ public class FacetCountsTest {
             }});
 
             partialFacets.put("GInAS Tag", new HashMap<String,Integer>(){{
-                put("NOMEN", 9);
+//                put("NOMEN", 9); //Accidentally added before, removed now
                 put("WARNING", 9);
                 put("MI", 2);
                 put("WHO-DD", 2);
