@@ -38,7 +38,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
+import ix.core.controllers.BackupFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.Backup;
 import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
@@ -359,6 +361,7 @@ public class EntityUtils {
 		Inheritance inherits;
 		boolean isIgnoredModel = false;
 
+		boolean hasBackup = false;
 		EntityInfo<?> ancestorInherit;
 
 		public static boolean isPlainOldEntityField(FieldMeta f) {
@@ -372,6 +375,8 @@ public class EntityUtils {
 			Objects.requireNonNull(cls);
 
 			this.cls = cls;
+			this.hasBackup = (cls.getAnnotation(Backup.class) != null);
+			
 			this.isIgnoredModel = (cls.getAnnotation(IgnoredModel.class) != null);
 			this.indexable = (Indexable) cls.getAnnotation(Indexable.class);
 			this.table = (Table) cls.getAnnotation(Table.class);
@@ -475,9 +480,10 @@ public class EntityUtils {
 			if (idType != null) {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
-
 		}
 
+		
+		
 		public EntityInfo<?> getInherittedRootEntityInfo() {
 			return ancestorInherit;
 		}
@@ -705,6 +711,10 @@ public class EntityUtils {
 
 		private static final <T> EntityInfo<T> of(Class<T> cls) {
 			return new EntityInfo<T>(cls);
+		}
+
+		public boolean hasBackup() {
+			return this.hasBackup;
 		}
 
 		// HERE BE DRAGONS!!!!
@@ -1151,6 +1161,8 @@ public class EntityUtils {
 			this.kind = k;
 			this._id = id;
 		}
+		
+		
 
 		public String getKind() {
 			return this.kind.getName();
@@ -1172,7 +1184,7 @@ public class EntityUtils {
 		public String toString() {
 			return kind.getName() + ID_FIELD_NATIVE_SUFFIX + ":" + getIdString();
 		}
-
+		
 		/**
 		 * Returns null if not present
 		 * @return
@@ -1180,6 +1192,8 @@ public class EntityUtils {
 		private Object nativeFetch(){
 			return kind.getFinder().byId(this.getIdNative());
 		}
+		
+		
 		// fetches from finder
 		public Optional<EntityWrapper> fetch() {
 			Object o=nativeFetch();
@@ -1210,7 +1224,7 @@ public class EntityUtils {
 		// For EntityWrapper (weird place for this, I know)
 		public static Key of(EntityWrapper ew) throws NoSuchElementException {
 			Objects.requireNonNull(ew);
-			return new Key(ew.getEntityInfo(), ew.getId().get().toString());
+			return new Key(ew.getEntityInfo(), ew.getId().get());
 		}
 
 		@Override

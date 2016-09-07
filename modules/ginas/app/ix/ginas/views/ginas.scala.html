@@ -1,5 +1,5 @@
 @import play.api.Play.current
-@(title: String, kind: String)(menu: Html)(content: Html)
+@(title: String, kind: String, showSketcher: Boolean = false)(menu: Html)(content: Html)
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
@@ -34,11 +34,14 @@
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ng-tags-input.bootstrap.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/json-formatter.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
-
-   
+    
+    
+    
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
-
+   
+@*
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("html2canvas.js"))'></script>
+*@    
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("moment.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'></script>
@@ -69,44 +72,39 @@
 
 	@*/*
     	//This really shouldn't be loaded unless we're using jsdraw 
+    	
 	*/*@
+	@if(showSketcher){
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
     <script src='@routes.Assets.at("javascripts/JSDraw4.0.7/Scilligence.JSDraw2.Pro.js")'></script>
+    }
     <script type="text/javascript">
         var session = {
-        
-        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {         
-            username:"@ix.ncats.controllers.auth.Authentication.getUser().username"
-        } else {
-            username:null
-        }
+	        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {         
+	            username:"@ix.ncats.controllers.auth.Authentication.getUser().username"
+	        } else {
+	            username:null
+	        }
         };
     	var baseurl = "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/";
     </script>
 </head>
 <body scroll-spy="breadcrumb" data-target="#breadcrumb" ng-controller ="GinasController as GinasCtrl">
-
-        <div class="row-fluid" id="main-menu">@menu </div>
-
+   	<div class="row-fluid" id="main-menu">@menu</div>
     <div class="container" id="content" >
-
         @content
         <mol-export></mol-export>
     </div>
-
-    <script>
-/*@*
-    window.strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
-*@*/
+<script>
   $(document).ready(function(){
-  $('body').scrollspy({
-    offset:300
-  });
-  $('#affix').affix({
-  offset: {
-    top: 50
-  }
-  })
+	  $('body').scrollspy({
+	    offset:300
+	  });
+	  $('#affix').affix({
+		  offset: {
+		    top: 50
+		  }
+	  })
   });
 </script>
 

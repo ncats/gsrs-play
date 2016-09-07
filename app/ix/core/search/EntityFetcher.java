@@ -4,6 +4,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
+import ix.core.controllers.BackupFactory;
 import ix.core.plugins.IxCache;
 import ix.core.search.LazyList.NamedCallable;
 import ix.core.util.EntityUtils.Key;
@@ -63,7 +64,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 			//for now copy super local eager
 			@Override
 			<K> K get(EntityFetcher<K> fetcher) throws Exception {
-				return SUPER_LOCAL_EAGER.get(fetcher);
+				return LOCAL_EAGER.get(fetcher);
 			}
 		},
 		/**
@@ -87,13 +88,24 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		/**
 		 * Store object here, right away, return it directly (this is almost what happened before).
 		 */
-		SUPER_LOCAL_EAGER {
+		LOCAL_EAGER {
 			@Override
 			<K> K get(EntityFetcher<K> fetcher) throws Exception {
 				if(IxCache.mightBeDirtySince(fetcher.lastFetched)){
 					fetcher.reload();
 				}
 				return fetcher.stored.get();
+			}
+		},
+		BACKUP_JSON_EAGER {
+			@Override
+			<K> K get(EntityFetcher<K> fetcher) throws Exception {				
+				if(fetcher.theKey.getEntityInfo().hasBackup()){
+					return IxCache.getOrElseTemp(fetcher.theKey.toString(), ()->(K) BackupFactory.getByKey(fetcher.theKey).getInstantiated());
+				}else{
+					System.out.println("Fetching otherwise");
+				}
+				return GLOBAL_CACHE.get(fetcher);
 			}
 		}
 		;
@@ -105,9 +117,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	public static final CacheType cacheType = CacheType.GLOBAL_CACHE; //This is probably the best option
 	
 	
-	
-	
-	Key theKey;
+	final Key theKey;
 	
 	private Optional<K> stored = Optional.empty(); //
 	
@@ -116,7 +126,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	public EntityFetcher(Key theKey) throws Exception{
 		Objects.requireNonNull(theKey);
 		this.theKey=theKey;
-		if(cacheType == CacheType.SUPER_LOCAL_EAGER){
+		if(cacheType == CacheType.LOCAL_EAGER){
 			reload();
 		}
 	}

@@ -1,10 +1,13 @@
 package ix.core.controllers;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.NamedResource;
 import ix.core.models.BackupEntity;
 import ix.core.models.BaseModel;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
 import play.Logger;
 import play.db.ebean.Model;
@@ -36,8 +39,21 @@ public class BackupFactory extends EntityFactory {
     
     public static BackupEntity getByRefId(String refid){
     	BackupEntity be = finder.where().eq("refid", refid).findUnique();
-    	
     	return be;
+    }
+    
+    
+
+    public static BackupEntity getByKey(Key k){
+    	if(k.getIdNative() instanceof UUID ||
+    			k.getIdNative() instanceof String){
+    		return getByRefId(k.getIdString()); //TODO: this part is inconsistent
+			//because the UUIDs considered unique
+			//globally, but other IDs are not 
+			//considered globally unique
+    	}
+    	
+    	return null;
     }
   
     
@@ -73,7 +89,11 @@ public class BackupFactory extends EntityFactory {
     }
     
     public static BackupEntity fetchBackupVersion(BaseModel bm){
-    	return getByRefId(bm.fetchGlobalId());
+    	return getByRefId(bm.fetchGlobalId()); // should probably use "Key" here instead
     }
+    
+    
+    
+    
 
 }
