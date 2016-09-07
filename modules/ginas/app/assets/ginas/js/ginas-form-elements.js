@@ -896,7 +896,7 @@
                             var b = new Blob([json], {type: "application/json"});
                             scope.url = URL.createObjectURL(b);
                             element.replaceWith($compile(
-                                '<a class="btn btn-primary" download="results.json"' +
+                                '<a class="btn btn-primary" tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
@@ -909,7 +909,7 @@
                             var b = new Blob([json], {type: "application/json"});
                             scope.url = URL.createObjectURL(b);
                             element.replaceWith($compile(
-                                '<a class="btn btn-primary" download="results.json"' +
+                                '<a class="btn btn-primary"tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Page Results"></i>' +
                                 '</a>'
@@ -929,7 +929,7 @@
                         }
                         scope.url = URL.createObjectURL(b);
                         element.replaceWith($compile(
-                            '<a class="btn btn-primary" download="results.' + fileType +
+                            '<a class="btn btn-primary"tabindex="0" role="button" download="results.' + fileType +
                             '" href="' + scope.url + '" target = "_self" id ="download">' +
                             '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                             '</a>'
@@ -940,7 +940,7 @@
                     }
                 }
              },
-            template: '<a class="btn btn-primary" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
+            template: '<a class="btn btn-primary" tabindex="0" role="button" ng-keypress = "make();" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
         };
     });
 

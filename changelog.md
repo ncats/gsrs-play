@@ -5,14 +5,14 @@ Changes:
 
 Enhancements
 ------------
-1. Improve indexing performance
+1. Improve indexing performance (Addresses GSRS-102 and GSRS-76)
 2. Lazy-load search results to improve search performance
-   and stability.
+   and stability. (Addresses GSRS-102 and GSRS-76)
 3. Improved search analyzer to show more accurate suggestions
-   for restricting global searches.
+   for restricting global searches. (Addresses GSRS-102 and GSRS-76)
 4. Allow searching by code systems (BDNUM, CAS, etc)
 5. Improved keyboard navigation for 508 compliance
-6. Restrict to names or code search options
+6. Restrict to names or code search options (GSRS-87)
 7. Improved initial browse and paging now far more robust
    and less likely to cause problems
 8. Added debugging utilities for developers to add specific
@@ -22,20 +22,20 @@ Enhancements
    can approve substances. SuperUpdater role no longer has
    approval access. Instead, SuperUpdater can now also
    update record information for previously approved
-   substances.
+   substances. (GSRS-86)
 10.Fields to be indexed for analysis have been restricted
-   to a few names fields.
+   to a few names fields. (Addresses GSRS-102)
 11.Added CodeSystem indexes to speed up validation.
 12.Only load sketcher on pages that use it, to speed up
    page loads.
-13.Structure searches now use cache in processing. 
+13.Structure searches now use cache in processing. (Addresses GSRS-102)
 
 Bug Fixes
 ---------
 1. Fixed structure search reloading issue. A quickly 
    returning substructure search might have the wrong
    infomation before, and not refresh when the search
-   is complete. Now it refreshes when ready. 
+   is complete. Now it refreshes when ready. (Addresses GSRS-102)
 2. Reindexing previously wouldn't update autosuggest
    or sorting operations, unless the application was
    also restarted. Now the reindexing will correctly update autosuggest
