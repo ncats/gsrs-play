@@ -1122,8 +1122,9 @@ public class ValidationUtils {
 			ChemicalSubstance cs, GinasProcessingStrategy strat) {
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 		if (cs.structure == null) {
-			gpm.add(GinasProcessingMessage
-					.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
+			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
+			System.out.println("This shold not be possible");
+			return gpm;
 		}
 
 		try {

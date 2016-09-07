@@ -1,6 +1,11 @@
 package ix.ginas.models.v1;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -30,10 +35,16 @@ import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.GinasProcessingMessage;
-import ix.core.models.*;
+import ix.core.models.Backup;
+import ix.core.models.BeanViews;
+import ix.core.models.DataValidated;
+import ix.core.models.DataVersion;
+import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.core.models.Principal;
+import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.TimeUtil;
-import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.DateDeserializer;
 import ix.ginas.models.serialization.KeywordDeserializer;

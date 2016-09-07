@@ -8,6 +8,7 @@ import ix.core.controllers.BackupFactory;
 import ix.core.plugins.IxCache;
 import ix.core.search.LazyList.NamedCallable;
 import ix.core.util.EntityUtils.Key;
+import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.Util;
 import play.Play;
 
@@ -171,4 +172,12 @@ public class EntityFetcher<K> implements NamedCallable<K>{
         //System.out.println("added:" + matches.size());
 		return (K) theKey.fetch().get().getValue();
     }
+
+	public static EntityFetcher<?> of(Key k) throws Exception {
+		return new EntityFetcher<>(k);
+	}
+	
+	public static <T> EntityFetcher<T> of(Key k, Class<T> cls) throws Exception {
+		return new EntityFetcher<>(k);
+	}
 }

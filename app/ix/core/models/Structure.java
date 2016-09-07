@@ -164,8 +164,8 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     
     @Lob
     @Basic(fetch = FetchType.EAGER)
-    @Indexable(indexed = false, structure=true) //should totes allow for this
-    public String molfile;						//on a method
+    @Indexable(indexed = false) 
+    public String molfile;				
 
     @Lob
     @Basic(fetch = FetchType.EAGER)

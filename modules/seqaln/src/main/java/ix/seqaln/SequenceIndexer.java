@@ -424,7 +424,6 @@ public class SequenceIndexer {
                 Document doc2 = new Document ();
                 doc2.add(idf);
                 doc2.add(kmerf);
-                //System.err.println(kmer+": "+positions);
                 for (int i = positions.nextSetBit(0);
                      i>=0; i = positions.nextSetBit(i+1)) {
                     doc2.add(new IntField (FIELD_POSITION, i, YES));

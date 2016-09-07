@@ -26,6 +26,9 @@ Enhancements
 10.Fields to be indexed for analysis have been restricted
    to a few names fields.
 11.Added CodeSystem indexes to speed up validation.
+12.Only load sketcher on pages that use it, to speed up
+   page loads.
+13.Structure searches now use cache in processing. 
 
 Bug Fixes
 ---------

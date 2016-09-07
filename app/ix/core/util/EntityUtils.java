@@ -38,7 +38,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
-import ix.core.controllers.BackupFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Backup;
 import ix.core.models.DataValidated;
@@ -213,8 +212,10 @@ public class EntityUtils {
 		}
 
 		public Stream<Tuple<MethodOrFieldMeta, Object>> streamStructureFieldAndValues(Predicate<MethodOrFieldMeta> p) {
-			return ei.getStructureFieldInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
-					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
+			return ei.getStructureFieldInfo().stream().filter(p)
+					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+					.filter(t -> t.v().isPresent())
+					.map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
 		public List<MethodOrFieldMeta> getStructureFieldAndValues() {
@@ -426,9 +427,11 @@ public class EntityUtils {
 				}
 			}).collect(Collectors.toList());
 
-			seqFields = Stream.concat(fields.stream(), methods.stream()).filter(f -> f.isSequence())
+			seqFields = Stream.concat(fields.stream(), methods.stream())
+					.filter(f -> f.isSequence())
 					.collect(Collectors.toList());
-			strFields = Stream.concat(fields.stream(), methods.stream()).filter(f -> f.isStructure())
+			strFields = Stream.concat(fields.stream(), methods.stream())
+					.filter(f -> f.isStructure())
 					.collect(Collectors.toList());
 
 			fields.removeIf(f -> !f.isTextEnabled());
@@ -1206,6 +1209,10 @@ public class EntityUtils {
 			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
 		}
 
+		public static Key of(EntityInfo meta, Object id) {
+			return new Key(meta, id);
+		}
+
 		// For lucene document
 		public static Key of(Document doc) throws Exception {
 			 // TODO: This should be moved to somewhere more Abstract, probably
@@ -1244,6 +1251,10 @@ public class EntityUtils {
 																// could be done
 			}
 		}
+
+
+
+		
 
 	}
 

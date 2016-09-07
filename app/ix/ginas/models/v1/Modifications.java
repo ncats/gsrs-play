@@ -1,22 +1,17 @@
 package ix.ginas.models.v1;
 
-import java.util.UUID;
-import java.util.Date;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 
-import javax.persistence.*;
-
-import play.Logger;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-import ix.core.models.Indexable;
-import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.utils.JSONEntity;
 
 @Entity
 @Table(name="ix_ginas_modifications")
@@ -44,11 +39,6 @@ public class Modifications extends GinasCommonSubData {
     
     @JsonIgnore
     public int getLength(){
-        /*
-        Logger.info("agent " + this.agentModifications.size());
-        Logger.info("phy " + this.physicalModifications.size());
-        Logger.info("struc " + this.structuralModifications.size());
-        */
         return this.agentModifications.size() + this.physicalModifications.size() + this.structuralModifications.size();
     }
 }

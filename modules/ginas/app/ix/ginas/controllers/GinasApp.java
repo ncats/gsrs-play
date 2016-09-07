@@ -6,28 +6,23 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import ix.core.controllers.AdminFactory;
-import ix.core.controllers.PrincipalFactory;
-import ix.core.models.*;
-import ix.core.plugins.TextIndexerPlugin;
-import ix.core.util.Java8Util;
-import ix.core.util.EntityUtils.EntityWrapper;
-import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
-import ix.ginas.exporters.SubstanceExporterFactory;
-import ix.ginas.utils.reindex.MultiReIndexListener;
-import ix.ginas.utils.reindex.ReIndexListener;
-import ix.ginas.utils.reindex.ReIndexService;
-import ix.ncats.controllers.App;
-import ix.ncats.controllers.DefaultResultRenderer;
-import ix.ncats.controllers.FacetDecorator;
-import ix.ncats.controllers.crud.Administration;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,12 +32,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
 import chemaxon.struc.MolAtom;
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import ix.core.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
+import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
@@ -50,8 +49,11 @@ import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
+import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.EntityFetcher;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.TermFilter;
 import ix.core.search.SearchResult;
@@ -60,10 +62,17 @@ import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
+import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
+import ix.core.util.Java8Util;
+import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.exporters.Exporter;
+import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -92,22 +101,26 @@ import ix.ginas.models.v1.Subunit;
 import ix.ginas.models.v1.Sugar;
 import ix.ginas.models.v1.Unit;
 import ix.ginas.models.v1.VocabularyTerm;
-import ix.core.GinasProcessingMessage;
+import ix.ginas.utils.reindex.MultiReIndexListener;
+import ix.ginas.utils.reindex.ReIndexListener;
+import ix.ginas.utils.reindex.ReIndexService;
+import ix.ncats.controllers.App;
+import ix.ncats.controllers.DefaultResultRenderer;
+import ix.ncats.controllers.FacetDecorator;
+import ix.ncats.controllers.crud.Administration;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
+import play.data.DynamicForm;
+import play.data.Form;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
-import play.data.DynamicForm;
-import play.data.Form;
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
 import tripod.chem.indexer.StructureIndexer;
 
 public class GinasApp extends App {
@@ -1019,7 +1032,7 @@ public class GinasApp extends App {
         try {
             SearchResultContext context = similarity
                 (query, threshold, rows,
-                 page, new GinasSearchResultProcessor(isWaitSet()));
+                 page, new StructureSearchResultProcessor(isWaitSet()));
             return fetchResult (context, rows, page,
                                 new SubstanceResultRenderer (CHEMICAL_FACETS));
         }
@@ -1056,7 +1069,7 @@ public class GinasApp extends App {
         try {
         	
             SearchResultContext context = App.substructure
-                (query, rows, page, new GinasSearchResultProcessor(isWaitSet()));
+                (query, rows, page, new StructureSearchResultProcessor(isWaitSet()));
             return App.fetchResult
                 (context, rows, page, 
                  new SubstanceResultRenderer (CHEMICAL_FACETS));
@@ -1367,11 +1380,12 @@ public class GinasApp extends App {
     
 	
 
-    public static class GinasSearchResultProcessor
+    public static class StructureSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
     	int index;
+    	EntityInfo<ChemicalSubstance> chemMeta=EntityUtils.getEntityInfoFor(ChemicalSubstance.class);
     	
-        GinasSearchResultProcessor(boolean wait) {
+        StructureSearchResultProcessor(boolean wait) {
         	this.setWait(wait);
         }
 
@@ -1379,23 +1393,17 @@ public class GinasApp extends App {
         protected ChemicalSubstance instrument(StructureIndexer.Result r)
             throws Exception {
         	
-        	//Shouldn't this be cached somewhere?
-        	//Also, why bother fetching the whole thing?
-        	//Just need the key, really ... 
         	
-            List<ChemicalSubstance> chemicals = SubstanceFactory
-						            		.chemfinder
-						            		.where()
-						            		.eq("structure.id", r.getId())
-						            		.findList(); //Might be slow ... probably a better way to do
-						            					 //this, that uses cache?
+        	Key k=Key.of(chemMeta,UUID.fromString(r.getId()));
+        	EntityFetcher<ChemicalSubstance> efetch = EntityFetcher.of(k, chemMeta.getClazz());
+        	
+        	ChemicalSubstance chem = efetch.call(); 
             
-            double similarity=r.getSimilarity();
-            Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
-                                       r.getId(), r.getSimilarity()));
-                         
-            ChemicalSubstance chem = null;
-            if (!chemicals.isEmpty()) {
+            if (chem!=null) {
+            	UUID structureID = chem.structure.id;
+            	double similarity=r.getSimilarity();
+                Logger.debug(String.format("%1$ 5d: matched %2$s %3$.3f", ++index,
+                                           r.getId(), r.getSimilarity()));
                 int[] amap = new int[r.getMol().getAtomCount()];
                 int i = 0, nmaps = 0;
                 for (MolAtom ma : r.getMol().getAtomArray()) {
@@ -1405,13 +1413,11 @@ public class GinasApp extends App {
                     }
                     ++i;
                 }
-                chem = chemicals.iterator().next();
                 if (nmaps > 0) {
-                	String cachekey="AtomMaps/"+getContext().getId()+"/" +r.getId();
+                	String cachekey="AtomMaps/"+getContext().getId()+"/" +structureID;
                     IxCache.setTemp(cachekey, amap);
                 }
-                IxCache.setTemp("Similarity/"+getContext().getId()+"/" +r.getId(), similarity);
-                
+                IxCache.setTemp("Similarity/"+getContext().getId()+"/" +structureID, similarity);
             }
             return chem;
         }
