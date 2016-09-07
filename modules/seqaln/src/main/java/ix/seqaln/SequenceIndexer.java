@@ -258,16 +258,6 @@ public class SequenceIndexer {
         }
     }
 
-    class SearchRefresher implements Runnable {
-        public void run () {
-            try {
-                kmerSearchManager.maybeRefresh();
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
     
     public static final String FIELD_KMER = "_KMER";
     public static final String FIELD_ID = "_ID";
@@ -289,7 +279,7 @@ public class SequenceIndexer {
     private ExecutorService threadPool;
     private boolean localThreadPool = false;
     private SearcherManager kmerSearchManager;
-    private SearcherManager searchManager;
+    private SearcherManager seqSearchManager;
     
     private AtomicLong lastModified = new AtomicLong (0);
     
@@ -335,15 +325,14 @@ public class SequenceIndexer {
                 (kmerDir, new IndexWriterConfig
                  (LUCENE_VERSION, indexAnalyzer));
             kmerSearchManager = new SearcherManager (kmerWriter, true, null);
-            searchManager = new SearcherManager (indexWriter, true, null);
+            seqSearchManager = new SearcherManager (indexWriter, true, null);
             _kmerReader = DirectoryReader.open(kmerWriter, true);
             _indexReader = DirectoryReader.open(indexWriter, true);
-        }
-        else {
+        }else {
             _kmerReader = DirectoryReader.open(kmerDir);
             _indexReader = DirectoryReader.open(indexDir);
             kmerSearchManager = new SearcherManager (kmerDir, null);
-            searchManager = new SearcherManager (indexDir, null);
+            seqSearchManager = new SearcherManager (indexDir, null);
         }
 
         this.baseDir = dir;
@@ -387,7 +376,7 @@ public class SequenceIndexer {
     
     public void shutdown () {
         closeAndIgnore(kmerSearchManager);
-        closeAndIgnore(searchManager);
+        closeAndIgnore(seqSearchManager);
 
         closeAndIgnore(_kmerReader);
         closeAndIgnore(_indexReader);
@@ -448,57 +437,6 @@ public class SequenceIndexer {
         }
     }
 
-    private class SequenceDocuments{
-        Document indexDoc;
-        List<Document> kmerDocs = new ArrayList<>();
-
-
-        private final String id;
-
-        public SequenceDocuments(String id, String seq){
-            this.id = id;
-            StringField idf = new StringField (FIELD_ID, id, YES);
-
-            indexDoc = new Document ();
-            indexDoc.add(idf);
-            indexDoc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
-            indexDoc.add(new StoredField (FIELD_SEQ, seq.toString()));
-
-            Kmers kmers = Kmers.create(seq);
-            for (String kmer : kmers.kmers()) {
-                BitSet positions = kmers.positions(kmer);
-
-                Document doc2 = new Document ();
-                doc2.add(idf);
-                doc2.add(new StringField (FIELD_KMER, kmer, YES));
-                //System.err.println(kmer+": "+positions);
-                for (int i = positions.nextSetBit(0);
-                     i>=0; i = positions.nextSetBit(i+1)) {
-                    doc2.add(new IntField (FIELD_POSITION, i, YES));
-                }
-                kmerDocs.add(doc2);
-            }
-        }
-
-        public void addToIndexes() throws IOException{
-            try {
-                indexWriter.addDocument(indexDoc);
-                kmerWriter.addDocuments(kmerDocs);
-            }finally{
-                lastModified.set(System.currentTimeMillis());
-            }
-        }
-
-        public void updateIndexes() throws IOException{
-            Term term = new Term (FIELD_ID, id);
-            try {
-                indexWriter.updateDocument(term, indexDoc);
-                kmerWriter.updateDocuments(term, kmerDocs);
-            }finally{
-                lastModified.set(System.currentTimeMillis());
-            }
-        }
-    }
 
     public long lastModified () { return lastModified.get(); }
     
@@ -520,28 +458,21 @@ public class SequenceIndexer {
             return new ResultEnumeration(null);
         }
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
-        threadPool.submit(new Runnable () {
-                public void run () {
-
+        threadPool.submit(()->{
                     ix.core.util.StopWatch.timeElapsed(()->{
-                    try {
-
-                        search (out, query, identity, gap, rt);
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    finally{
-                        try {
-                            out.put(POISON_RESULT);// finish
-                        } catch (InterruptedException e) {
-                            Logger.error(e.getMessage(), e);
-                        } 
-                    }
-                    
+	                    try {
+	                        search (out, query, identity, gap, rt);
+	                    }catch (Exception ex) {
+	                        ex.printStackTrace();
+	                    }finally{
+	                        try {
+	                            out.put(POISON_RESULT);// finish
+	                        }catch (InterruptedException e) {
+	                            Logger.error(e.getMessage(), e);
+	                        } 
+	                    }
                     });
-                }
-            });
+                });
         
         return new ResultEnumeration (out);
     }
@@ -559,14 +490,13 @@ public class SequenceIndexer {
         IndexSearcher searcher = kmerSearchManager.acquire();
         try {
             search (searcher, results, query, identity, gap, rt);
-        }
-        finally {
+        }finally {
             kmerSearchManager.release(searcher);
         }
         searcher = null;
     }
    
-    protected void search (IndexSearcher searcher,
+    protected void search (IndexSearcher kmerSearcher,
                            BlockingQueue<Result> results,
                            String query, double identity, int gap, CutoffType rt)
         throws Exception {
@@ -574,25 +504,25 @@ public class SequenceIndexer {
         Kmers kmers = Kmers.create(query);
         final int K = kmers.getK();
         
-        int ndocs = Math.max(1, searcher.getIndexReader().numDocs());
+        int ndocs = Math.max(1, kmerSearcher.getIndexReader().numDocs());
         final Map<String, List<HSP>> hsp = new TreeMap<String, List<HSP>>();
 
         for (Map.Entry<String, BitSet> entry : kmers.positionEntrySet()) {
-
             if(Thread.currentThread().isInterrupted()){
                 return;
             }
             String kmer = entry.getKey();
             TermQuery tq = new TermQuery (new Term (FIELD_KMER, kmer));
-            TopDocs docs = searcher.search(tq, ndocs);
+            TopDocs docs = kmerSearcher.search(tq, ndocs);
             BitSet positions = entry.getValue();
             for (int i = 0; i < docs.totalHits; ++i) {
-                Document doc = searcher.doc(docs.scoreDocs[i].doc);
+                Document doc = kmerSearcher.doc(docs.scoreDocs[i].doc);
                 final String id = doc.get(FIELD_ID);
 
                 List<HSP> hits = hsp.computeIfAbsent(id, k-> new ArrayList<>());
                 
                 IndexableField[] pos = doc.getFields(FIELD_POSITION);
+                
                 for (int j = 0; j < pos.length; ++j) {
                     int k = pos[j].numericValue().intValue();
                     for (int l = positions.nextSetBit(0);
@@ -613,7 +543,7 @@ public class SequenceIndexer {
             if(seq ==null){
                 System.err.println("error sequence indexer cache invalid for key " + me.getKey());
                 TermQuery tq = new TermQuery (new Term (FIELD_ID, me.getKey()));
-                TopDocs docs = searcher.search(tq, ndocs);
+                TopDocs docs = kmerSearcher.search(tq, ndocs);
                 for(ScoreDoc scoreDoc :docs.scoreDocs){
                     //System.err.println(searcher.doc(scoreDoc.doc));
                 }
@@ -629,11 +559,9 @@ public class SequenceIndexer {
             HSP bgn = null, end = null;
             List<SEG> segments = new ArrayList<SEG>();
             for (HSP h : me.getValue()) {
-                //System.err.println("  "+h);
                 if (end == null) {
                     bgn = h;
-                }
-                else {
+                }else {
                     if (h.i < end.i || h.j < end.j
                         || ((h.i - (end.i+K)) > gap
                             && (h.j - (end.j+K)) > gap)
@@ -687,7 +615,6 @@ public class SequenceIndexer {
                 }
                 result.alignments.add(aln);
             }
-
             if(maxaln!=null){
             	double score =0;
             	switch(rt){
@@ -702,9 +629,7 @@ public class SequenceIndexer {
 						break;
 					default:
 						break;
-	            	
             	}
-	            
 	            if (score >= identity) {
 	                results.put(result);
 	            }
@@ -716,12 +641,9 @@ public class SequenceIndexer {
         try {
             return getOrElse
                 (getClass().getName()+"/"+FIELD_SEQ+"/"+id,
-                 new Callable<String> () {
-                     public String call () throws Exception {
-                         searchManager.maybeRefresh();
-                         
-                         IndexSearcher searcher = searchManager.acquire();
-                         String seq = null;
+                      ()->{
+                         seqSearchManager.maybeRefresh();
+                         IndexSearcher searcher = seqSearchManager.acquire();
                          try {
                              TopDocs docs = searcher.search
                                  (new TermQuery (new Term (FIELD_ID, id)), 1);
@@ -730,16 +652,12 @@ public class SequenceIndexer {
                                      (docs.scoreDocs[0].doc);
                                 return d.get(FIELD_SEQ);
                              }
+                         }finally {
+                             seqSearchManager.release(searcher);
                          }
-                         finally {
-                             searchManager.release(searcher);
-                         }
-                         
                          return null;
-                     }
-                 });
-        }
-        catch (Exception ex) {
+                     });
+        }catch (Exception ex) {
             ex.printStackTrace();
         }
         return null;
