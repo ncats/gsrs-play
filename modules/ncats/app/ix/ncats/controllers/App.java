@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import ix.core.util.Java8Util;
+import ix.utils.UUIDUtil;
 import play.Play;
 import play.db.DB;
 import play.Logger;
@@ -1568,7 +1569,7 @@ public class App extends Authentication {
     public static String getSmiles(String id, int max) {
     	 if (id != null) {
              String seq=null;
-             if(!Util.isUUID(id)){
+             if(!UUIDUtil.isUUID(id)){
          		seq= id;
          	 }else{
                  Structure structure=StructureFactory.getStructure(id);

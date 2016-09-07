@@ -28,6 +28,7 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.crud.Administration;
+import ix.utils.UUIDUtil;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1342,7 +1343,7 @@ public class GinasApp extends App {
     
 	public static Structure getStructureFrom(String str) {
 		if(str==null) return null;
-		if(Util.isUUID(str)){
+		if(UUIDUtil.isUUID(str)){
     		Structure s = StructureFactory.getStructure(str);
     		if(s!=null){
     			return s;
@@ -1523,7 +1524,7 @@ public class GinasApp extends App {
                                     final String format, 
                                     final int size,
                                     final String context) {
-    	if(!Util.isUUID(id)){
+    	if(!UUIDUtil.isUUID(id)){
     		return App.render(id,size);
     	}
         //Logger.debug("Fetching structure");

@@ -3,17 +3,15 @@ package ix.test.builder;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasUtils;
+import ix.ginas.utils.JsonSubstanceFactory;
 
 //public SubstanceBuilder
 public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, SubstanceBuilder>{
@@ -55,7 +53,7 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
     }
 	public static <S extends Substance, B extends AbstractSubstanceBuilder<S,B>> B  from(JsonNode json){
 
-		Substance substance = GinasUtils.makeSubstance(json);
+		Substance substance = JsonSubstanceFactory.makeSubstance(json);
 		if(substance instanceof ChemicalSubstance){
 			return (B) new ChemicalSubstanceBuilder((ChemicalSubstance) substance);
 		}

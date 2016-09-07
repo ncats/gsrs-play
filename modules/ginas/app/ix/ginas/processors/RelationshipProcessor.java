@@ -56,7 +56,7 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			//of play and ebean we are using can't handle java 8 features
 //			EntityPersistAdapter.performChange(
 //					obj.relatedSubstance.refuuid,
-//					() ->  SubstanceFactory.getFullSubstance(obj.relatedSubstance),
+//					() ->  JsonSubstanceFactory.getFullSubstance(obj.relatedSubstance),
 //
 //					(s) -> {
 //						if (createAndAddInvertedRelationship(obj, oldSub, s) != null) {

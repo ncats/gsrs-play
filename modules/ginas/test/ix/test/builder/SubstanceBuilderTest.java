@@ -30,19 +30,28 @@ public class SubstanceBuilderTest {
     }
 
     @Test
-    public void ChemicalSubstanceFromJson() throws Exception{
-        ///home/katzelda/GIT/inxight3/modules/ginas/test/testJSON/pass/2moities.json
-        String path = "test/testJSON/pass/2moities.json";
-
+    public void ChemicalSubstanceFromJsonInputStream() throws Exception{
         try(InputStream in = new FileInputStream(new File("test/testJSON/pass/2moities.json"))){
             assertNotNull(in);
             ChemicalSubstanceBuilder builder = SubstanceBuilder.from(in);
 
-            ChemicalSubstance substance = builder.build();
-
-            assertEquals("1db30542-0cc4-4098-9d89-8340926026e9", substance.getUuid().toString());
-            assertEquals(2, substance.moieties.size());
+            assert2MoietiesBuiltCorrectly(builder);
         }
+    }
+
+    @Test
+    public void ChemicalSubstanceFromJsonFile() throws Exception{
+        ChemicalSubstanceBuilder builder = SubstanceBuilder.from(new File("test/testJSON/pass/2moities.json"));
+
+        assert2MoietiesBuiltCorrectly(builder);
+
+    }
+
+    private void assert2MoietiesBuiltCorrectly(ChemicalSubstanceBuilder builder) {
+        ChemicalSubstance substance = builder.build();
+
+        assertEquals("1db30542-0cc4-4098-9d89-8340926026e9", substance.getUuid().toString());
+        assertEquals(2, substance.moieties.size());
     }
 
     @Test

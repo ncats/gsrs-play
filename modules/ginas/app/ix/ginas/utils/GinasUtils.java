@@ -13,18 +13,14 @@ import java.util.List;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.GinasProcessingMessage;
 import ix.core.UserFetcher;
 import ix.core.models.ProcessingRecord;
-import ix.core.models.Structure;
 import ix.core.models.XRef;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadExtractedRecord;
 import ix.core.plugins.GinasRecordProcessorPlugin.TransformedRecord;
@@ -32,21 +28,9 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
-import ix.core.stats.Statistics;
-import ix.core.util.TimeUtil;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.MixtureSubstance;
-import ix.ginas.models.v1.NucleicAcidSubstance;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
-import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.seqaln.SequenceIndexer;
-import ix.utils.Global;
 import play.Logger;
 import play.Play;
 
@@ -98,103 +82,12 @@ public class GinasUtils {
 	}
 
 	public static Substance makeSubstance(JsonNode tree) {
-		return makeSubstance(tree, null);
+		return JsonSubstanceFactory.makeSubstance(tree, null);
 	}
 
-	public static Substance makeSubstance(JsonNode tree, List<GinasProcessingMessage> messages) {
 
-		JsonNode subclass = tree.get("substanceClass");
-		ObjectMapper mapper = new ObjectMapper();
-
-		mapper.addHandler(new GinasV1ProblemHandler(messages));
-		Substance sub = null;
-		if (subclass != null && !subclass.isNull()) {
-
-			Substance.SubstanceClass type;
-			try {
-				type = Substance.SubstanceClass.valueOf(subclass.asText());
-			} catch (Exception e) {
-				throw new IllegalStateException("Unimplemented substance class:" + subclass.asText());
-			}
-			try {
-				switch (type) {
-				case chemical:
-					
-					ObjectNode structure = (ObjectNode)tree.at("/structure");
-					fixStereoOnStructure(structure);
-					for(JsonNode moiety: tree.at("/moieties")){
-						fixStereoOnStructure((ObjectNode)moiety);
-					}
-					
-					sub = mapper.treeToValue(tree, ChemicalSubstance.class);
-					
-
-					try {
-						((ChemicalSubstance) sub).structure.smiles = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
-								.createChemical(((ChemicalSubstance) sub).structure.molfile, Chemical.FORMAT_MOL)
-								.export(Chemical.FORMAT_SMILES);
-					} catch (Exception e) {
-
-					}
-
-					return sub;
-				case protein:
-					sub = mapper.treeToValue(tree, ProteinSubstance.class);
-					return sub;
-				case mixture:
-					sub = mapper.treeToValue(tree, MixtureSubstance.class);
-					return sub;
-				case nucleicAcid:
-					sub = mapper.treeToValue(tree, NucleicAcidSubstance.class);
-					return sub;
-				case polymer:
-					sub = mapper.treeToValue(tree, PolymerSubstance.class);
-					return sub;
-				case structurallyDiverse:
-					sub = mapper.treeToValue(tree, StructurallyDiverseSubstance.class);
-					return sub;
-				case specifiedSubstanceG1:
-					sub = mapper.treeToValue(tree, SpecifiedSubstanceGroup1Substance.class);
-					return sub;
-				case concept:
-					sub = mapper.treeToValue(tree, Substance.class);
-					return sub;
-				default:
-					throw new IllegalStateException(
-							"JSON parse error: Unimplemented substance class:\"" + subclass.asText() + "\"");
-				}
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
-				throw new IllegalStateException("JSON parse error:" + e.getMessage());
-			}
-		} else {
-			throw new IllegalStateException("Not a valid JSON substance! \"substanceClass\" cannot be null!");
-		}
-	}
 	
-	public static void fixStereoOnStructure(ObjectNode structure){
-		JsonNode jsn=structure.at("/stereochemistry");
-		try{
-			Structure.Stereo str=Structure.Stereo.valueOf(jsn.asText());
-		}catch(Exception e){
-			//e.printStackTrace();
-			//System.out.println("Unknown stereo:'" + jsn.asText() + "'");
-			if(!jsn.asText().equals("")){
-				//System.out.println("Is not nothin");
-				String newStereo=jsn.toString();
-				JsonNode oldnode=structure.get("stereocomments");
-				
-				if(oldnode!=null && !oldnode.isNull() && !oldnode.isMissingNode() &&
-						!oldnode.toString().equals("")){
-					newStereo+=";" +oldnode.toString();
-				}
-				structure.put("stereocomments",newStereo);
-				structure.put("atropisomerism", "Yes");
-				
-			}
-			structure.put("stereochemistry", "UNKNOWN");
-		}
-	}
+
 	
 	public static boolean persistSubstances(Collection<Substance> subs){
 		Transaction tx = Ebean.beginTransaction();
@@ -212,22 +105,7 @@ public class GinasUtils {
 	}
 	
 
-	public static boolean persistSubstance(Substance theRecordToPersist, List<String> errors) {
-		boolean worked = false;
-		Transaction tx = Ebean.beginTransaction();
-		try {
-			theRecordToPersist.save();
-			tx.commit();
-			worked = true;
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			if (errors != null)
-				errors.add(ex.getMessage());
-		} finally {
-			tx.end();
-		}
-		return worked;
-	}
+
 
 	
 
@@ -249,7 +127,7 @@ public class GinasUtils {
 				boolean worked = false;
 				List<String> errors = new ArrayList<String>();
 				if (prec.recordToPersist != null) {
-					worked = GinasUtils.persistSubstance(prec.recordToPersist, errors);
+					worked = persistSubstance(prec.recordToPersist, errors);
 					if (worked) {
 						prec.rec.status = ProcessingRecord.Status.OK;
 						prec.rec.xref = new XRef(prec.recordToPersist);
@@ -276,6 +154,23 @@ public class GinasUtils {
 			}finally{
 				UserFetcher.setLocalThreadUser(null);
 			}
+		}
+
+		private static boolean persistSubstance(Substance theRecordToPersist, List<String> errors) {
+			boolean worked = false;
+			Transaction tx = Ebean.beginTransaction();
+			try {
+				theRecordToPersist.save();
+				tx.commit();
+				worked = true;
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				if (errors != null)
+					errors.add(ex.getMessage());
+			} finally {
+				tx.end();
+			}
+			return worked;
 		}
 	}
 	
