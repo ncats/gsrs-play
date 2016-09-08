@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
+import ix.utils.UUIDUtil;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1352,7 +1353,7 @@ public class GinasApp extends App {
     
 	public static Structure getStructureFrom(String str) {
 		if(str==null) return null;
-		if(Util.isUUID(str)){
+		if(UUIDUtil.isUUID(str)){
     		Structure s = StructureFactory.getStructure(str);
     		if(s!=null){
     			return s;
@@ -1526,7 +1527,7 @@ public class GinasApp extends App {
                                     final String format, 
                                     final int size,
                                     final String context) {
-    	if(!Util.isUUID(id)){
+    	if(!UUIDUtil.isUUID(id)){
     		return App.render(id,size);
     	}
         //Logger.debug("Fetching structure");
