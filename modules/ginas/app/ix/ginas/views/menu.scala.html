@@ -101,8 +101,9 @@
 
                 @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li>
-                        <a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">
-                            Login</button></a>
+                        <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login"
+                        id ="login-button" target="_self">
+                            Login</a>
                     </li>
                 }
             </ul>

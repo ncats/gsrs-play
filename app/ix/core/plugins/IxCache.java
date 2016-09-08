@@ -1,6 +1,7 @@
 package ix.core.plugins;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -8,6 +9,7 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.Key;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
@@ -217,7 +219,13 @@ public class IxCache extends Plugin {
 	}
 	
 	public static Object getOrFetchTempRecord(Key k) throws Exception {
-		return getOrElseTemp(k.toString(), ()->k.fetch().get().getValue());
+		return getOrElseTemp(k.toString(), ()->{
+            Optional<EntityUtils.EntityWrapper> ret = k.fetch();
+            if(ret.isPresent()){
+                return ret.get().getValue();
+            }
+            return null;
+        });
 	}
 
 	/**

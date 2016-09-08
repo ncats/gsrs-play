@@ -22,6 +22,7 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Unit;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.utils.UUIDUtil;
 import ix.utils.Util;
 import play.Logger;
 import play.db.ebean.Model;
@@ -113,7 +114,7 @@ public class GinasFactory extends EntityFactory {
         public static String getSmiles(String id, int max) {
         	 if (id != null) {
                  String seq=null;
-                 if(!Util.isUUID(id)){
+                 if(!UUIDUtil.isUUID(id)){
              		seq= id;
              	 }else{
 	                 Structure structure=StructureFactory.getStructure(id);
