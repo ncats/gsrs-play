@@ -686,16 +686,16 @@
                     sort = "order=$Display%20Name";
                     break;
                 case "RefAsc":
-                    sort = "order=$Display%20Name";
+                    sort = "order=^Reference%20Count";
                     break;
                 case "RefDesc":
-                    sort = "order=$Display%20Name";
+                    sort = "order=$Reference%20Count";
                     break;
                 case "EditAsc":
-                    sort = "order=$Display%20Name";
+                    sort = "order=^Last%20Edited%20By";
                     break;
                 case "EditDesc":
-                    sort = "order=$Display%20Name";
+                    sort = "order=$Last%20Edited%20By";
                     break;
             }
 
