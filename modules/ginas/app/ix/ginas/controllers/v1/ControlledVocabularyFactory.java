@@ -90,8 +90,6 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	}
 
 	// TODO: 7/7/16 Need to a function to delete the old cv before adding a new one
-	
-	
 	public static void loadCVFile() {
 		MultipartFormData requestData = request().body().asMultipartFormData();
 		MultipartFormData.FilePart filepart = requestData.getFile("file-name");
@@ -118,9 +116,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 							+") while parsing "
 							+bean+"; skipping it..");
 					parser.skipChildren();
-				}
-				catch (IOException ex) {
-
+				}catch (IOException ex) {
 					Logger.error
 							("Unable to handle unknown property!", ex);
 					return false;

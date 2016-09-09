@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,6 +46,7 @@ import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
 import ix.utils.LinkedReferenceSet;
@@ -319,6 +321,14 @@ public class EntityUtils {
 		public String getInternalIdField() {
 			return this.ei.getInternalIdField();
 		}
+
+		public Stream<Keyword> streamMethodKeywordFacets() {
+			return this.ei.getKeywordFacetMethods()
+								.stream()
+								.map(m->m.getValue(this._k))
+								.filter(Optional::isPresent)
+								.map(o->(Keyword)o.get());
+		}
 	}
 
 	public static class EntityInfo<T> {
@@ -332,6 +342,7 @@ public class EntityUtils {
 		List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
 
 		List<MethodMeta> methods;
+		List<MethodMeta> keywordFacetMethods;
 
 		List<FieldMeta> uniqueColumnFields;
 
@@ -367,6 +378,10 @@ public class EntityUtils {
 
 		public static boolean isPlainOldEntityField(FieldMeta f) {
 			return (!f.isPrimitive() && !f.isArrayOrCollection() && f.isEntityType() && f.getIndexable().recurse());
+		}
+
+		public List<MethodMeta> getKeywordFacetMethods() {
+			return this.keywordFacetMethods;
 		}
 
 		Supplier<Set<EntityInfo<? extends T>>> forLater;
@@ -426,6 +441,12 @@ public class EntityUtils {
 					validatedField = m;
 				}
 			}).collect(Collectors.toList());
+			
+			this.keywordFacetMethods = methods.stream()
+									.filter(m->m.isGetter())
+									.filter(m->m.getType().isAssignableFrom(Keyword.class))
+									.filter(m->m.getIndexable()!=null)
+									.collect(Collectors.toList());
 
 			seqFields = Stream.concat(fields.stream(), methods.stream())
 					.filter(f -> f.isSequence())
@@ -1303,13 +1324,14 @@ public class EntityUtils {
 					});
 				});
 				
-				
 				//only Entities are recursed for non-arrays
 				ew.streamFieldsAndValues(EntityInfo::isPlainOldEntityField).forEach(fi -> {
 					path.pushAndPopWith(fi.k().getName(), () -> {
 						next(EntityWrapper.of(fi.v()));
 					});
 				});
+				
+				
 			});
 		}
 	}

@@ -1199,6 +1199,12 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 						dynamicFacets.create(toAdd, fv.k(), fv.v(), path.toPath());
 					});
 				});
+				
+				ew.streamMethodKeywordFacets().forEach(kw -> {
+					path.pushAndPopWith(kw.label, () -> {
+						dynamicFacets.create(toAdd, kw.label, kw.getValue(), path.toPath());
+					});
+				});
 	
 				ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
 					path.pushAndPopWith(t.k().getName(), () -> {

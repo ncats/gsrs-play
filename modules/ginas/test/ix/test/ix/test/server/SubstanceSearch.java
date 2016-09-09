@@ -197,14 +197,19 @@ public class SubstanceSearch {
 
         Scanner scanner = new Scanner(html.asText());
 
-        String line;
-        do{
+        String line=null;
+        while(scanner.hasNextLine()){
             line = scanner.nextLine();
-        }while(line !=null && !line.contains("Record Status"));
+            if(line.contains("Record Status"))break;
+//            System.out.println("line:"+line);
+            line=null;
+        }
+        
         //can't get the Pattern matching to work as expected
-        if(line ==null ){
+        if(line==null){
             throw new IOException("no facets found");
         }
+        
         String facetName = line.trim();
 
         map.put(facetName, new HashMap<String, Integer>());

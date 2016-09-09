@@ -531,14 +531,19 @@ public class App extends Authentication {
     }
 
     public static Facet[] filter (List<Facet> facets, String... names) {
-        Set<String> keepNames = Arrays.stream(names).collect(Collectors.toSet());
-        return filter(facets, f-> keepNames.contains(f));
+    	Map<String,Facet> facetMap = facets
+    				.stream()
+    				.collect(Collectors.toMap(Facet::getName, f->f));
+        return Arrays.stream(names)
+        	.map(fn->facetMap.get(fn))
+        	.filter(Objects::nonNull)
+        	.toArray(len->new Facet[len]);
     }
     
     public static Facet[] filter (List<Facet> facets, Predicate<Facet> keepif) {
-        return 	  facets.stream()
+        return facets.stream()
         				.filter(keepif)
-        				.toArray(len-> new Facet[len]);
+        				.toArray(len->new Facet[len]);
     }
 
     public static TextIndexer.Facet[] getFacets (final Class<?> cls,

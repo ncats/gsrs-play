@@ -782,8 +782,8 @@ public class EditingWorkflowTest {
             String htmlbrowseAfter=api.fetchSubstancesUIBrowseHTML();
           
             LineChanges lineChanges=LineChanges.changesFor(htmlbrowseBefore, htmlbrowseAfter);
-            //System.out.println(lineChanges.getInNewButNotOld());
-            //System.out.println(lineChanges.getInOldButNotNew());
+            System.out.println(lineChanges.getInNewButNotOld());
+            System.out.println(lineChanges.getInOldButNotNew());
         	assertTrue("Deprecating only record should yeild no results", htmlbrowseAfter.contains("There are no results to show."));
         	String htmlbrowseAfterDep=api.fetchSubstancesWithDeprecatedUIBrowseHTML();
         	assertFalse("Deprecating only record, and browsing deprecated records should yeild 1 result", htmlbrowseAfterDep.contains("There are no results to show."));
