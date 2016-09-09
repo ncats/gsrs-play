@@ -529,8 +529,10 @@
         $scope.searchLimit = "global";
         $scope.loadingSuggest = false;
         $scope.noResults = false;
+        $scope.selectedSort = localStorageService.get('selectedSort') || {value: "Sort By"};
 
         $window.SDFFields = {};
+
 
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
@@ -560,6 +562,8 @@
                     $scope.q ='root_codes_code:' + $scope.q;
                 break;
             }
+
+            //Todo: this only works on the homepage//
 
             var search = "q="+$scope.q;
             $window.location = $window.location.origin + baseurl +"substances?"+ search;
@@ -644,6 +648,71 @@
             var base = $window.location.pathname.split('/v/')[0];
             var newLocation = "/v/" + $scope.versionNumber;
             $window.location.pathname = base + newLocation;
+        };
+
+        $scope.sortValues = [
+            { "value": "NaAsc",
+               "display": "NAME ASC"
+            },
+            {
+                "value": "NaDesc",
+                "display": "NAME DESC" },
+            {
+                "value": "RefAsc",
+                "display": "REFERENCE COUNT ASC"
+            },
+            {
+                "value": "RefDesc",
+                "display": "REFERENCE COUNT DESC"
+            },
+            {
+                "value": "EditAsc",
+                "display": "LAST EDITED ASC"
+            },
+            {
+                "value": "EditDesc",
+                "display": "LAST EDITED DESC"
+            }
+                ];
+
+        $scope.sortSubstances = function(model) {
+            var sort;
+            console.log($location);
+            switch ($scope.selectedSort.value) {
+                case "NaAsc":
+                    sort = "order=^Display%20Name";
+                    break;
+                case "NaDesc":
+                    sort = "order=$Display%20Name";
+                    break;
+                case "RefAsc":
+                    sort = "order=^Reference%20Count";
+                    break;
+                case "RefDesc":
+                    sort = "order=$Reference%20Count";
+                    break;
+                case "EditAsc":
+                    sort = "order=^Last%20Edited%20By";
+                    break;
+                case "EditDesc":
+                    sort = "order=$Last%20Edited%20By";
+                    break;
+            }
+
+            localStorageService.set('selectedSort', $scope.selectedSort);
+            
+            var newurl = $window.location.origin + baseurl +"substances?"
+
+            if($location.$$search.q) {
+                newurl += "q=" + $location.$$search.q + "&";
+            }
+
+            if($location.$$search.facet) {
+                newurl += "facet=" + $location.$$search.facet + "&";
+            }
+            newurl += sort;
+            console.log(newurl);
+            window.location = newurl;
         };
 
         $scope.compare = function () {

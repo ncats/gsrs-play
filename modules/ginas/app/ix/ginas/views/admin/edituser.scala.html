@@ -16,32 +16,32 @@
                             <table>
                                 <tr><td colspan="2" align="center"><h4>Edit User</h4></td></tr>
                                 <tr align="left">
-                                    <td><lable>User Name</lable></td>
+                                    <td><label>User Name</label></td>
                                     <td> <input class="form-input" type="text" name="username" value="@userForm.user.username" required
                                         @if(userForm.systemAuth == true){readonly="readonly"} /> </td>
                                 </tr>
 
                                 <tr align="left">
-                                    <td><lable>Password</lable></td>
-                                    <td><input class="form-input" type="password" name="password" required
+                                    <td><label>Password</label></td>
+                                    <td><input class="form-input" type="password" name="password"
                                         @if(userForm.systemAuth == true){readonly="readonly"} autocomplete="off"/> </td>
                                 </tr>
 
                                 <tr align="left">
-                                    <td><lable>Email</lable></td>
+                                    <td><label>Email</label></td>
                                     <td><input class="form-input" type="email" name="email" value="@userForm.user.email"
                                         @if(userForm.systemAuth == true){readonly="readonly"} /></td>
                                 </tr>
 
                                 <tr align="left">
-                                    <td><lable>Active</lable></td>
+                                    <td><label>Active</label></td>
                                     <td><input class="form-input" type="checkbox" name="active" value="true"
                                         @if(userForm.active == true){checked="checked"} /></td>
                                 </tr>
 
                                 <tr><td colspan="2"><br/></td></tr>
                                 <tr align="left">
-                                    <td><lable>Roles</lable></td>
+                                    <td><label>Roles</label></td>
                                     <td id="roleGroup">
                                     @for(rs <- Role.options()) {
                                         <input class="form-input" type="checkbox" name="r-@rs.toString()" id="r-@rs.toString()" value="@rs.toString()"
@@ -53,7 +53,7 @@
                                 <tr><td colspan="2"><br/></td></tr>
 
                                 <tr align="left">
-                                    <td align="center"><lable>Groups &nbsp;&nbsp;</lable></td>
+                                    <td align="center"><label>Groups &nbsp;&nbsp;</label></td>
                                     <td id="permGroup">
                                         @for(gs <- AdminFactory.allGroups()) {
                                             <input class="form-input" type="checkbox" name="g-@gs.name" id="g-@gs.name" value="@gs.name"
@@ -62,7 +62,7 @@
                                         }>
                                             <span>@gs.name</span> <br/>
                                         }
-                                        <div id="grpLable">Enter a Group Name</div>
+                                        <div id="grplabel">Enter a Group Name</div>
                                         <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" id="grpName"></div>
                                     </td>
                                 </tr>
@@ -82,12 +82,12 @@
         </div>
     </form>
     <script>
-            $("grpLable").click(function(){
+            $("grplabel").click(function(){
                 $("grpTxtBox").show();
             });
 
             $("grpTxtBox").click(function(){
-                $("grpLable").hide();
+                $("grplabel").hide();
             });
     </script>
 }
