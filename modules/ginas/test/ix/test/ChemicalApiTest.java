@@ -11,9 +11,11 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import ix.core.ValidationMessage;
 import ix.test.util.TestNamePrinter;
 
 import org.junit.Ignore;
@@ -51,12 +53,7 @@ public class ChemicalApiTest {
 	final File chemicalResource=new File("test/testJSON/editChemical.json");
 	final File molformfile=new File("test/molforms.txt");
 	
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-    };
+
     
     @Test   
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
@@ -239,24 +236,22 @@ public class ChemicalApiTest {
     	try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
             SubstanceAPI api = new SubstanceAPI(session);
             JsonNode pentaCarbon = makeChemicalSubstanceJSON("C(C)(C)(C)(C)C");
-            
-            String valmessage="NO VALANCE ERROR";
-            JsonNode validation=api.validateSubstanceJson(pentaCarbon);
-            for(JsonNode validationMessage:validation.at("/validationMessages")){
-            	if(validationMessage.at("/messageType").asText().equals("WARNING")){
-            		String msg=validationMessage.at("/message").asText();
-            		if(msg.contains("Valance Error")){
-            			valmessage=msg;
-            		}
-            	}
-            }
-            assertTrue("Pentavalent carbon should issue a warning message",valmessage.contains("Valance Error"));
-            
+
+			SubstanceAPI.ValidationResponse validationResponse = api.validateSubstance(pentaCarbon);
+
+
+			List<ValidationMessage> messages = validationResponse.getMessages();
+
+			Optional<ValidationMessage>  desiredWarning = messages.stream()
+															.filter(msg -> msg.getMessageType() == ValidationMessage.MESSAGE_TYPE.WARNING &&  msg.getMessage().contains("Valance Error"))
+															.findAny();
+
+			assertTrue("Pentavalent carbon should issue a warning message", desiredWarning.isPresent());
             
         }
     }
-    
-    @Test   
+
+    @Test
 	public void testChemicalExportAsSDF() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 			SubstanceAPI api = new SubstanceAPI(session);

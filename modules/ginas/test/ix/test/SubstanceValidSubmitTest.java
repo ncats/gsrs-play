@@ -82,16 +82,15 @@ public class SubstanceValidSubmitTest {
         public void testAPIValidateSubstance() throws Exception {
 
             JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
-            JsonNode jsonNode1 = api.validateSubstanceJson(js);
-            assertTrue(jsonNode1.get("valid").asBoolean());
+            SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
+            assertTrue(response.isValid());
         }
         @Test
         public void testAPIValidateSubmitSubstance()  throws Exception {
 
             JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
-            JsonNode jsonNode1 = api.validateSubstanceJson(js);
-
-            SubstanceJsonUtil.ensureIsValid(jsonNode1);
+            SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
+            assertTrue(response.isValid());
 
             ensurePass(api.submitSubstance(js));
         }
@@ -100,9 +99,8 @@ public class SubstanceValidSubmitTest {
 
             JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
             String uuid = js.get("uuid").asText();
-            JsonNode validationResult = api.validateSubstanceJson(js);
-
-            SubstanceJsonUtil.ensureIsValid(validationResult);
+            SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
+            assertTrue(response.isValid());
 
             ensurePass(api.submitSubstance(js));
 
@@ -121,9 +119,8 @@ public class SubstanceValidSubmitTest {
 
             String uuid = js.get("uuid").asText();
 
-            JsonNode validationResult = api.validateSubstanceJson(js);
-
-            SubstanceJsonUtil.ensureIsValid(validationResult);
+            SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
+            assertTrue(response.isValid());
 
 
             ensurePass(api.submitSubstance(js));
@@ -135,10 +132,8 @@ public class SubstanceValidSubmitTest {
             //System.out.println("about to test if it's destructive");
             assertThatNonDestructive(js, fetched);
 
-            //validate
-            JsonNode fetchedValidationResult = api.validateSubstanceJson(fetched);
-            SubstanceJsonUtil.ensureIsValid(fetchedValidationResult);
-
+            SubstanceAPI.ValidationResponse response2 = api.validateSubstance(fetched);
+            assertTrue(response2.isValid());
 
 
         }

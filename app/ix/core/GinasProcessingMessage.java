@@ -4,14 +4,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import play.Logger;
 
 public class GinasProcessingMessage implements ValidationMessage{
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
-	
+
+
 	public MESSAGE_TYPE messageType=MESSAGE_TYPE.INFO;
 	public ACTION_TYPE actionType=ACTION_TYPE.DO_NOTHING;
-	
+
 	public String message;
 	public static class Link{
 		public String href;
@@ -20,7 +22,9 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public boolean suggestedChange=false;
 	public boolean appliedChange=false;
 	public List<Link> links = new ArrayList<Link>();
-	
+
+	public GinasProcessingMessage(){}
+
 	public GinasProcessingMessage(MESSAGE_TYPE mtype, String msg){
 		this.messageType=mtype;
 		this.message=msg;
@@ -59,10 +63,11 @@ public class GinasProcessingMessage implements ValidationMessage{
 		}
 		return valid;
 	}
-	
+	@JsonIgnore
 	public boolean isProblem(){
 		return messageType == MESSAGE_TYPE.ERROR ||messageType == MESSAGE_TYPE.WARNING;
 	}
+	@JsonIgnore
 	public boolean isError(){
 		return messageType == MESSAGE_TYPE.ERROR;
 	}
@@ -83,4 +88,6 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public MESSAGE_TYPE getMessageType() {
 		return this.messageType;
 	}
+
+
 }

@@ -69,13 +69,12 @@ public class SubstanceValidateFailTest{
             SubstanceAPI api = new SubstanceAPI(session);
             JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
 
-            WSResponse wsResponse1 = api.validateSubstance(js);
-            JsonNode jsonNode1 = wsResponse1.asJson();
-            assertEquals(OK, wsResponse1.getStatus());
+            SubstanceAPI.ValidationResponse wsResponse1 = api.validateSubstance(js);
 
-            assertFalse(SubstanceJsonUtil.isLiteralNull(jsonNode1));
-            //System.out.println(jsonNode1);
-            assertFalse(SubstanceJsonUtil.isValid(jsonNode1));
+            assertEquals(OK, wsResponse1.getHttpStatus());
+
+            assertFalse(wsResponse1.isNull());
+            assertFalse(wsResponse1.isValid());
 
 
         }catch(Throwable e){
