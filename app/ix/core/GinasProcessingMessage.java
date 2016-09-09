@@ -19,6 +19,9 @@ public class GinasProcessingMessage implements ValidationMessage{
 	}
 	public boolean suggestedChange=false;
 	public boolean appliedChange=false;
+	
+
+	
 	public List<Link> links = new ArrayList<Link>();
 	
 	public GinasProcessingMessage(MESSAGE_TYPE mtype, String msg){
@@ -82,5 +85,14 @@ public class GinasProcessingMessage implements ValidationMessage{
 	@Override
 	public MESSAGE_TYPE getMessageType() {
 		return this.messageType;
+	}
+	
+	
+	public boolean isPossibleDuplicate(){
+		return !this.links.isEmpty();
+	}
+
+	public void makeError() {
+		this.messageType=MESSAGE_TYPE.ERROR;
 	}
 }

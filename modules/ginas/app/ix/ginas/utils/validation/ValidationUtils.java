@@ -585,8 +585,7 @@ public class ValidationUtils {
 							|| !s.getUuid().toString()
 									.equals(cs.getUuid().toString())) {
 						if (dupes <= 0)
-							mes = GinasProcessingMessage
-									.WARNING_MESSAGE("Structure has 1 possible duplicate:");
+							mes = GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
 						dupes++;
 						mes.addLink(GinasUtils.createSubstanceLink(s));
 					}
