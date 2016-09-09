@@ -196,9 +196,7 @@
 	                    	</div>
 	                    </div>
 						<div class="row">	                    	
-	                        <div class = "col-md-9">
-                               
-							   
+        <div class = "col-md-2">
                                <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
@@ -213,17 +211,39 @@
   </ul>
 </div>
 	                        </div>
-	                        <div class= "col-md-3 text-right hidden-xs">
+        <div class="col-md-3  text-left">
+            <select
+            class="form-control"
+            ng-model= selectedSort
+            ng-change="sortSubstances();"
+            ng-options="r.display for r in sortValues track by r.display"
+            placeholder ="Sort By"
+            title="Sort By"
+            name="SortBy"
+            id ="SortBy"
+            aria-label="Sort By">
+                <option class= "text-capitalize" value="" selected>Sort By</option>
+            </select>
+
+
+
+@*
+            <select
+            ng-model="obj.sortValues"
+            field="sortValues"
+            label="Order By"
+            values= sortValues
+            change-function="sortSubstances(model)">
+             </select>*@
+        </div>
+        <div class= "col-md-7 text-right hidden-xs">
 	                            <form class="form" name="grid-select" id = "grid-select">
 	                            <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
 	                            </form>
 	                        </div>
 	                    </div>
 	                </div>
-	                <div class="placeholder-content">
-	                </div>
-	                @content
-
+    <div class="placeholder-content"> @content </div>
 	                <div class="panel-footer">
 	                @if(pages.length > 1) {
 	                    @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
