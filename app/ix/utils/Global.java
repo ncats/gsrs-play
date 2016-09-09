@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 
@@ -123,7 +124,7 @@ public class Global extends GlobalSettings {
 					List roles = (List) m.get("roles");
 					List groups = (List) m.get("groups");
 					Principal p = new Principal(username, email);
-
+					
 					Principal p2 = PrincipalFactory.byUserName(username);
 					if (p2 == null) {
 						try {

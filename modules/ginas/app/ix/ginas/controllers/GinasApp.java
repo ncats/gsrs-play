@@ -1507,8 +1507,6 @@ public class GinasApp extends App {
                                     final String format, final String context) {
     	List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
         
-        
-        
         Chemical c=null;
         Protein p=null;
         

@@ -54,7 +54,6 @@ public class SubstanceFactory extends EntityFactory {
 
 	// Do we still need these?
 	// Yes used in GinasApp
-	static public Model.Finder<UUID, ChemicalSubstance> chemfinder;
 	static public Model.Finder<UUID, ProteinSubstance> protfinder;
 
 	static {
@@ -63,7 +62,6 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static void init() {
 		finder = new Model.Finder(UUID.class, Substance.class);
-		chemfinder = new Model.Finder(UUID.class, ChemicalSubstance.class);
 		protfinder = new Model.Finder(UUID.class, ProteinSubstance.class);
 	}
 

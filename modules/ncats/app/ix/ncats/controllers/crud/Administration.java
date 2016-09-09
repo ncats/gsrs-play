@@ -167,15 +167,6 @@ public class Administration extends App {
                 selectedRoles.add(r);
             }
 
-           /* if (key.contains("p-")) {
-                String permName = requestData.data().get(key);
-                Acl perm = AdminFactory.aclFinder.where().eq("Acl", Acl.Permission.valueOf(permName)).findUnique();
-                if(perm == null) {
-                    perm = new Acl(Acl.Permission.valueOf(permName));
-                }
-                selectedPerms.add(perm);
-            }*/
-
             if (key.contains("g-")) {
                 String grpName = requestData.data().get(key);
                 Group group = AdminFactory.groupfinder.where().eq("name", grpName).findUnique();
@@ -191,15 +182,12 @@ public class Administration extends App {
         user.save();
         profile.user = user;
 
-        if(!password.isEmpty() && password != null) {
+        if(password != null && !password.isEmpty()) {
             profile.setPassword(password);
-
         }
         profile.active = Boolean.parseBoolean(active);
         profile.setRoles(selectedRoles);
         AdminFactory.updateGroups(user.id, selectedGroups);
-        //AdminFactory.updatePermissions(user.id, selectedPerms);
-        //AdminFactory.updateRoles(user.id, selectedRoles);
         profile.save();
 
         flash("success", " " + userName + " has been updated");
