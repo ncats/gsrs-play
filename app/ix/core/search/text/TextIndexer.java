@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ix.core.util.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -124,12 +125,8 @@ import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
-import ix.core.util.CachedSupplier;
-import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.StopWatch;
-import ix.core.util.TimeUtil;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.utils.Global;
 import ix.utils.Tuple;
@@ -612,7 +609,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			}
 			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
 			deepKinds = Play.application().configuration()
-									.getStringList("ix.index.deepfields", new ArrayList<String>())
+									.getStringList("ix.index.deepfields", new ArrayList<>())
 									.stream()
 									.map(s->{
 										try{
@@ -623,9 +620,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 										}
 									 })
 									.filter(Objects::nonNull)
-									.reduce(Util::combine)	// must exist in another package too
-									.map(l->l.stream())
-									.get()
+									.flatMap(Collection::stream)
 									.map(ei->ei.getName())
 									.collect(Collectors.toSet());
 			

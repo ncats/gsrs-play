@@ -168,6 +168,9 @@ public class GinasTestServer extends ExternalResource{
         }
 
 
+        public String getEmail() {
+            return username + "@example.com";
+        }
     }
 
     /**

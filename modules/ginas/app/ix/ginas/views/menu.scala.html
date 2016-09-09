@@ -93,10 +93,11 @@
                         id ="profile-button" target="_self" role="button">
                             <i class="fa fa-user"></i>  @ix.ncats.controllers.auth.Authentication.getUser().username</a>
                     </li>
-
-                    <li><a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout"
-                    id ="logout-button" target="_self" role="button">
-                        Logout</a></li>
+                    @if(!ix.ginas.controllers.GinasApp.isSingleSignOn()) {
+                        <li><a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout"
+                        id ="logout-button" target="_self" role="button">
+                            Logout</a></li>
+                    }
                 }
 
                 @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
