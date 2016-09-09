@@ -22,6 +22,7 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 $templateRequest(url).then(function (html) {
+                    console.log(html);
                     template = angular.element(html);
                     elementResult.append(template);
                     $compile(elementResult)(scope);

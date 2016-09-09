@@ -771,6 +771,7 @@
         };
     });
 
+
     ginasFormElements.directive('substanceChooserSelector', function ($templateRequest, $compile, toggler, substanceFactory, spinnerService, CVFields) {
         return {
             replace: true,
@@ -968,6 +969,29 @@
         };
     });
 
+
+    ///not currently used, but could be helpful if we want to dynamically show the audit content
+    ginasFormElements.directive('auditInfoButton', function (toggler) {
+        return {
+            replace: true,
+            restrict: 'E',
+            scope: {
+                obj: '=',
+                type:'@'
+            },
+            template: '<span ng-click ="showAuditInfo()"><label>Audit Info</label><i class="fa fa-tachometer primary fa-lg" aria-hidden="true" uib-tooltip="click for audit information"></i></span>',
+            link: function (scope, element, attrs) {
+                var url = baseurl + "assets/templates/info/audit-info.html";
+
+                scope.showAuditInfo = function () {
+                    console.log(scope);
+                    toggler.show(scope, scope.type, url);
+                };
+            }
+        };
+    });
+
+
     ginasFormElements.directive('infoButton', function ($compile, toggler) {
         return {
             restrict: 'E',
@@ -984,9 +1008,9 @@
                 var template;
                 var url = baseurl + "assets/templates/info/info-template.html";
                 if (attrs.mark == "exclaim") {
-                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" uib-tooltip="click for description"></i></span>');
+                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" aria-hidden="true" uib-tooltip="click for description"></i></span>');
                 } else {
-                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-question-circle fa-lg"  uib-tooltip="click for description"></i></span>');
+                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-question-circle fa-lg"  aria-hidden="true" uib-tooltip="click for description"></i></span>');
                 }
                 element.append(template);
                 $compile(template)(scope);

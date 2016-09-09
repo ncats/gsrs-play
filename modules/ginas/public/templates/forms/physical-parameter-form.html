@@ -24,6 +24,24 @@
                                 </modal-form-button>
                             </div>
                         </div>
+
+                        <br>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div ng-if="obj.created">
+                                    <label>Created:</label> {{::obj.created | date: 'medium'}}
+                                </div>
+                                <div ng-if="obj.createdBy">
+                                    <label>Created By:</label> {{::obj.createdBy}}
+                                </div>
+                                <div ng-if="obj.lastEdited">
+                                    <label>Last Edited:</label> {{::obj.lastEdited | date: 'medium'}}
+                                </div>
+                                <div ng-if="obj.lastEditedBy">
+                                    <label>Last Edited By:</label> {{::obj.lastEditedBy}}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <hr>
                 </ng-form>
