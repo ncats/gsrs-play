@@ -27,13 +27,14 @@
       @** move all selected filters upfront **@
       @for(i <- 0 until f.size()) {
         @if(App.hasFacet(f.facet,i)) {
-	<div class="list-group-item checkbox row">
+	<div class="list-group-item row">
 	  @defining(App.sha1(f.facet,i)) { id =>
+	    <div class="col-md-1 col-sm-1">
 	       <input type="checkbox" checked="true"
-		      onclick="filterToggle(this)" 
-		    	  class="col-md-2" 
+		     	      onclick="filterToggle(this)" 
 		      aria-label="Toggle @f.facet.getLabel(i)"
 		      id="@id"/>
+		 </div>
 	     <script>
 	        filters['@id'] = {
 	           checked: @App.hasFacet(f.facet,i),
@@ -41,30 +42,34 @@
 	           value: '@App.encode(f.facet, i)'
 	        };
 	     </script>
+	     <div class="col-md-8 col-sm-8" >
 		 @if(f.raw) {
-            <label class="col-md-8" for="@id">@HtmlFormat.raw(f.label(i))</label>
+            <label  for="@id">@HtmlFormat.raw(f.label(i))</label>
          } else {
-            <label class="col-md-8 text-capitalize" for="@id">@f.label(i)</label>
+            <label class="text-capitalize" for="@id">@f.label(i)</label>
          }
+         </div>
+         <div class="col-md-1 col-sm-1" >
            @if(f.raw) {
-             <span class="col-md-2 badge" style="float:right;">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
+             <span class="badge pull-right">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
            } else {
-             <span class="col-md-2 badge" style="float:right;">@f.value(i)@if(searchflag){+}</span>
-           }
+             <span class="badge pull-right">@f.value(i)@if(searchflag){+}</span>
            }
         </div>
-        
+           }
+        </div>
         }
       }
       @for(i <- 0 until Math.min(f.max, f.size())) {
         @if(!App.hasFacet(f.facet,i)) {
-	<div class="list-group-item checkbox row">
+	<div class="list-group-item row">
 	  @defining(App.sha1(f.facet,i)) { id =>
+	  	<div class="col-md-1 col-sm-1">
 	       <input type="checkbox"
 		     	      onclick="filterToggle(this)" 
-		    	  class="col-md-2" 
 		      aria-label="Toggle @f.facet.getLabel(i)"
 		      id="@id"/>
+		 </div>
 	     <script>
 	        filters['@id'] = {
 	           checked: @App.hasFacet(f.facet,i),
@@ -72,16 +77,20 @@
 	           value: '@App.encode(f.facet, i)'
 	        };
 	     </script>
+	     <div class="col-md-8 col-sm-8" >
 		 @if(f.raw) {
-            <label class="col-md-8" for="@id">@HtmlFormat.raw(f.label(i))</label>
+            <label  for="@id">@HtmlFormat.raw(f.label(i))</label>
          } else {
-            <label class="col-md-8 text-capitalize" for="@id">@f.label(i)</label>
+            <label class="text-capitalize" for="@id">@f.label(i)</label>
          }
+         </div>
+        	 <div class="col-md-1  col-sm-1" >
            @if(f.raw) {
-             <span class="col-md-2 badge" style="float:right;">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
+             <span class="badge pull-right">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
            } else {
-             <span class="col-md-2 badge" style="float:right;">@f.value(i)@if(searchflag){+}</span>
+             <span class="badge pull-right">@f.value(i)@if(searchflag){+}</span>
            }
+           </div>
            }
         </div>
         }
