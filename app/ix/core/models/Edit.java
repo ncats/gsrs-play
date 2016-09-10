@@ -1,19 +1,25 @@
 package ix.core.models;
 
 import java.util.UUID;
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
-import javax.persistence.*;
 
-import ix.core.util.TimeUtil;
-import play.db.ebean.Model;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.deser.std.JsonNodeDeserializer;
 
 import ix.core.UserFetcher;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.TimeUtil;
 import ix.utils.Global;
 
 @Entity
@@ -56,9 +62,16 @@ public class Edit extends BaseModel {
     public String newValue; // value as Json
 
     public Edit () {}
+    
+    
     public Edit (Class<?> type, Object refid) {
         this.kind = type.getName();
         this.refid = refid.toString();
+    }
+    
+    public Edit (EntityWrapper<?> entity) {
+        this.kind = entity.getKind();
+        this.refid = entity.getKey().getIdString();
     }
     
     @PrePersist

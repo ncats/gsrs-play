@@ -229,10 +229,8 @@ public class SubstanceSearch {
             }
             Matcher rowMatcher = ROW_PATTERN.matcher(trimmed);
             if(rowMatcher.find()){
-
                 map.get(facetName).put(rowMatcher.group(2), Integer.parseInt(rowMatcher.group(4)));
             }else{
-
                 facetName = trimmed;
                 map.put(facetName, new HashMap<String, Integer>());
             }
@@ -252,12 +250,10 @@ public class SubstanceSearch {
 
     private Set<String> getSubstancesFrom(HtmlPage page){
         Set<String> substances = new LinkedHashSet<>();
-
         Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(page.asXml());
         while(matcher.find()){
             substances.add(matcher.group(1));
         }
-
         return substances;
     }
     

@@ -224,7 +224,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
        // Objects.requireNonNull(id);
         Objects.requireNonNull(key);
         Objects.requireNonNull(changeOp);
-
+        
+        
+        
         MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
             @Override
             public MyLock apply(Key key) {
@@ -262,8 +264,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			}
 			e.kind = saved.getKind();
 			e.newValue = saved.toFullJson();
+			e.comments= ew.getChangeReason().orElse(null);
 			e.save();
-
+			
             return saved;
         }catch(Exception ex){
             ex.printStackTrace();
@@ -596,7 +599,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 							Edit edit = new Edit(ew.getClazz(), key.getIdString());
 							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
 							edit.version = ew.getVersion().orElse(null);
-							
+							edit.comments= ew.getChangeReason().orElse(null);
 							edit.kind = ew.getKind();
 							edit.newValue = ew.toFullJson(); 
 							edit.save();

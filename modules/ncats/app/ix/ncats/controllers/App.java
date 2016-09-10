@@ -534,7 +534,8 @@ public class App extends Authentication {
     	Map<String,Facet> facetMap = facets
     				.stream()
     				.collect(Collectors.toMap(Facet::getName, f->f));
-        return Arrays.stream(names)
+       
+    	return Arrays.stream(names)
         	.map(fn->facetMap.get(fn))
         	.filter(Objects::nonNull)
         	.toArray(len->new Facet[len]);

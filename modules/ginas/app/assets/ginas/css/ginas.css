@@ -1232,3 +1232,12 @@ span#record-count {
     margin-left: 15px;
     margin-top: 15px;
 }
+.list-group-item.checkbox.row {
+    padding-left: 30px;
+    border: none;
+}
+
+.list-group-item.checkbox.row label{
+	overflow: hidden;
+    text-overflow: ellipsis;
+}

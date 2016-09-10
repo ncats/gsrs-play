@@ -37,6 +37,7 @@ import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.GinasProcessingMessage;
 import ix.core.models.Backup;
 import ix.core.models.BeanViews;
+import ix.core.models.ChangeReason;
 import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
 import ix.core.models.Indexable;
@@ -138,6 +139,7 @@ public class Substance extends GinasCommonData {
 	public Date approved;
 
 	@Indexable(name="Change Reason", suggest=true)
+	@ChangeReason
 	public String changeReason;
 
 
@@ -1032,4 +1034,6 @@ public class Substance extends GinasCommonData {
 				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
 		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
 	}
+	
+	
 }

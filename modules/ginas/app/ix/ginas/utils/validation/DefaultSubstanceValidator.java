@@ -113,7 +113,6 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 					}
 					vr.addValidationMessage(gpm);
 				}
-				
 			}
 			
 			if(_strategy.handleMessages(objnew, vlad)){
