@@ -1,6 +1,7 @@
 package ix.ginas.controllers.v1;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.io.*;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,6 +13,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import ix.core.DefaultValidator;
 import ix.core.models.Payload;
 import ix.core.plugins.PayloadPlugin;
@@ -128,16 +131,29 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		try {
 			JsonNode rawValues = mapper.readTree(is);
 			for(JsonNode cvValue: rawValues){
+				
 				String domain=cvValue.at("/domain").asText();
-				String termType=cvValue.at("/vocabularyTermType").asText();
+				JsonNode vtype=cvValue.at("/vocabularyTermType");
+				String termType=null;
+				
+				
+				if(!vtype.isTextual()){
+					ObjectNode objn = (ObjectNode)cvValue;
+					//Sometimes stored as an object, instead of a text value
+					objn.set("vocabularyTermType", cvValue.at("/vocabularyTermType/value"));
+				}
+				
+				termType=cvValue.at("/vocabularyTermType").asText();
+				
 				ControlledVocabulary cv =  (ControlledVocabulary) mapper.treeToValue(cvValue, Class.forName(termType));
-				
-				
 				//if there was an ID with this object, get rid of it
 				//it was added by mistake
 				cv.id=null;
-				for(VocabularyTerm vt:cv.terms){
-					vt.id=null;
+				
+				if(cv.terms!=null){ //Terms can be null sometimes now
+					for(VocabularyTerm vt:cv.terms){
+						vt.id=null;
+					}
 				}
 				
 				cv.setVocabularyTermType(getCVClass(domain).getName());
