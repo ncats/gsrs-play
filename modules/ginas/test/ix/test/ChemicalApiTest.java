@@ -240,17 +240,17 @@ public class ChemicalApiTest {
             SubstanceAPI api = new SubstanceAPI(session);
             JsonNode pentaCarbon = makeChemicalSubstanceJSON("C(C)(C)(C)(C)C");
             
-            String valmessage="NO VALANCE ERROR";
+            String valmessage="NO VALENCE ERROR";
             JsonNode validation=api.validateSubstanceJson(pentaCarbon);
             for(JsonNode validationMessage:validation.at("/validationMessages")){
             	if(validationMessage.at("/messageType").asText().equals("WARNING")){
             		String msg=validationMessage.at("/message").asText();
-            		if(msg.contains("Valance Error")){
+            		if(msg.contains("Valence Error")){
             			valmessage=msg;
             		}
             	}
             }
-            assertTrue("Pentavalent carbon should issue a warning message",valmessage.contains("Valance Error"));
+            assertTrue("Pentavalent carbon should issue a warning message",valmessage.contains("Valence Error"));
             
             
         }

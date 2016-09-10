@@ -12,7 +12,6 @@ public class GroupProcessor implements EntityProcessor<Group>{
 	@Override
 	public void prePersist(Group obj) {
 		Logger.debug("Adding a group to CV");
-		//System.out.println("Registering CV group:" + obj.name);
 		ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("ACCESS_GROUP");
 		VocabularyTerm vt=cvv.getTermWithValue(obj.name);
 		Logger.debug("The domain is:" + cvv.domain + " with " + cvv.terms.size() + " terms");

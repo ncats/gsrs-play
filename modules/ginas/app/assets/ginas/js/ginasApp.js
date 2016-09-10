@@ -650,34 +650,35 @@
             $window.location.pathname = base + newLocation;
         };
 
+//We can put this here, but it makes it difficult to expand in the future.
+//The server knows how things can be sorted
         $scope.sortValues = [
             { "value": "NaAsc",
-               "display": "NAME ASC"
+               "display": "Display Name, A-Z"
             },
             {
                 "value": "NaDesc",
-                "display": "NAME DESC" },
+                "display": "Display Name, Z-A" },
             {
                 "value": "RefAsc",
-                "display": "REFERENCE COUNT ASC"
+                "display": "Least References"
             },
             {
                 "value": "RefDesc",
-                "display": "REFERENCE COUNT DESC"
+                "display": "Most References"
             },
             {
                 "value": "EditAsc",
-                "display": "LAST EDITED ASC"
+                "display": "Oldest Change"
             },
             {
                 "value": "EditDesc",
-                "display": "LAST EDITED DESC"
+                "display": "Newest Change"
             }
                 ];
 
         $scope.sortSubstances = function(model) {
             var sort;
-            console.log($location);
             switch ($scope.selectedSort.value) {
                 case "NaAsc":
                     sort = "order=^Display%20Name";
@@ -692,10 +693,10 @@
                     sort = "order=$Reference%20Count";
                     break;
                 case "EditAsc":
-                    sort = "order=^Last%20Edited%20By";
+                    sort = "order=^root_lastEdited";
                     break;
                 case "EditDesc":
-                    sort = "order=$Last%20Edited%20By";
+                    sort = "order=$root_lastEdited";
                     break;
             }
 
