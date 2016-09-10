@@ -31,9 +31,6 @@
                         @filters(facets, searchFlag)
                     </div>
                 </div>
-
-
-
                 <div class="col-md-9">
                 } else {
                 <div class="col-md-12">
@@ -41,9 +38,9 @@
             @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
                 @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
                     <div
-                        @if(total > 0) {
+                        @if(total > 0){
                             class="alert alert-success alert-dismissible"
-                        } else {
+                        }else{
                             class="alert alert-danger alert-dismissible"
                         }
                     role="alert">
@@ -196,7 +193,7 @@
 	                    	</div>
 	                    </div>
 						<div class="row">	                    	
-        <div class = "col-md-2">
+        <div class = "col-md-3">
                                <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
@@ -211,7 +208,11 @@
   </ul>
 </div>
 	                        </div>
-        <div class="col-md-3  text-left">
+        <div class="col-md-5  text-left row">
+        <div class="col-md-3">
+        Sort By:
+        </div>
+        <div class="col-md-9">
             <select
             class="form-control"
             ng-model= selectedSort
@@ -224,8 +225,9 @@
             aria-label="Sort By">
                 <option class= "text-capitalize" value="" selected>Sort By</option>
             </select>
+         </div>   
         </div>
-        <div class= "col-md-7 text-right hidden-xs">
+        <div class= "col-md-4 text-right hidden-xs">
 	                            <form class="form" name="grid-select" id = "grid-select">
 	                            <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
 	                            </form>
