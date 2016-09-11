@@ -13,8 +13,6 @@ Enhancements
 3. Can sort on browse / search
 4. Added missing CV value for relationship
 5. Password no longer required on edit user
-6. 
-
 
 Bug Fixes
 ---------
@@ -22,6 +20,18 @@ Bug Fixes
    an ID as a molecule. This is fixed now.
 
 
+Deeper look
+-----------
+
+1. We can now fetch edit history from the substance 
+   directly. In fact, this can be done for all records
+   using the EntityWrapper.
+2. The @ChangeReason is now an annotation on a field,
+   and this can be used to do certain logical operations
+   during validation ins a generic way. Also, the change
+   reason is now fetched from the generic object,
+   and stored in the comments of the Edit object. This
+   allows for quick browsing of edits.
 
 
 GSRS v1.2.06
