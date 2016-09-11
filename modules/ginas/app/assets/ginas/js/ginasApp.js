@@ -1555,10 +1555,14 @@
                 selected: '='
             },
             link: function (scope, element, attrs) {
-                if(attrs.subclass){
-                    subunitParser.getResidues(attrs.subclass);
+                var sclass = attrs.subclass;
+                if(_.isUndefined(sclass)){
+                	if (_.has(scope.parent, 'protein')) {
+                		sclass="protein";
+                	}else{
+                		sclass="nucleicAcid";
+                	}
                 }
-
                 scope.numbers = true;
                 scope.edit = true;
 
@@ -1607,18 +1611,25 @@
                 if (_.isUndefined(scope.parent)) {
                     APIFetcher.fetch(scope.uuid).then(function (data) {
                         scope.parent = data;
+                        var sclass;
                         if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
                             scope.index = scope.index-0+1;
+                            sclass="protein";
                         } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
                             scope.index = scope.index-0+1;
+							sclass="nucleicAcid";
                         }
-                        scope.parseSubunit();
-
+                        subunitParser.getResidues(sclass).then(function (){
+	                    	scope.parseSubunit();
+                 		});
+                        //scope.parseSubunit();
                     });
                 } else {
-                    scope.parseSubunit();
+                	subunitParser.getResidues(sclass).then(function (){
+	                    scope.parseSubunit();
+                 	});
                 }
 
             },

@@ -18,7 +18,8 @@ Bug Fixes
 ---------
 1. Substructure searches sometimes attempted to render
    an ID as a molecule. This is fixed now.
-
+2. Residue lookup on edit would show all residues as invalid
+   until one change happened. This is fixed now.
 
 Deeper look
 -----------
