@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Backup;
 import ix.core.models.ChangeReason;
@@ -334,6 +335,20 @@ public class EntityUtils {
 		public Optional<String> getChangeReason() {
 			return ei.getChangeReasonFor(_k);
 		}
+		
+		public List<Edit> getEdits(){
+			Optional<Object> opId= this.ei.getNativeIdFor(this._k);
+			if(opId.isPresent()){
+				return EntityFactory.getEdits(this.ei.getNativeIdFor(this._k).get(), 
+					this.ei.getInherittedRootEntityInfo().getTypeAndSubTypes()
+					.stream()
+					.map(em->em.getClazz())
+					.toArray(len->new Class<?>[len]));
+			}else{
+				return new ArrayList<Edit>();
+			}
+		}
+		
 	}
 
 	public static class EntityInfo<T> {

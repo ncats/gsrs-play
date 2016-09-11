@@ -7,21 +7,17 @@ import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 /**
@@ -258,7 +254,6 @@ public class SubstanceSearch {
 
     public static class SearchResult{
         private final Set<String> uuids;
-
         private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
 
         public SearchResult(Set<String> uuids){
@@ -319,26 +314,16 @@ public class SubstanceSearch {
                    return INCREASING.compare(o2, o1);
                 }
             };
-
-
         }
-
-
-
         private static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
             private final Map<T, V> countMap;
-
             private Comparator<V> order;
-
             public SortByValueComparator(Map<T, V> countMap, Comparator<V> order) {
                 this.countMap = countMap;
                 this.order = order;
             }
-
-
             @Override
             public int compare(T s1, T s2) {
-
                 int valueCmp= order.compare(countMap.get(s1), countMap.get(s2));
                 if(valueCmp !=0){
                     return valueCmp;
@@ -348,6 +333,4 @@ public class SubstanceSearch {
             }
         }
     }
-
-
 }

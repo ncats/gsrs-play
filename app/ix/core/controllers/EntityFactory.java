@@ -970,9 +970,25 @@ public class EntityFactory extends Controller {
 	}
     
 	protected static Result edits(Object id, Class<?>... cls) {
+		List<Edit> edits = getEdits(id,cls);
+		
+		if (!edits.isEmpty()) {
+			ObjectMapper mapper = getEntityMapper();
+			return Java8Util.ok(mapper.valueToTree(edits));
+		}
+
+		return notFound(request().uri() + ": No edit history found!");
+	}
+	
+	public static List<Edit> getEdits(Object id, Class<?>... cls) {
 		List<Edit> edits = new ArrayList<Edit>();
 		FetchOptions fe = new FetchOptions();
+		System.out.println("Kinds are:" +Arrays.stream(cls)
+											   .map(c->c.getName())
+											   .reduce((c,t)->c+t).get()
+				);
 
+		System.out.println(id);
 		Expression[] kindExpressions = Arrays.stream(cls)
 				.map(c -> Expr.eq("kind", c.getName()))
 				.collect(Collectors.toList())
@@ -989,14 +1005,10 @@ public class EntityFactory extends Controller {
 		if (tmpedits != null) {
 			edits.addAll(tmpedits);
 		}
-		
-		if (!edits.isEmpty()) {
-			ObjectMapper mapper = getEntityMapper();
-			return Java8Util.ok(mapper.valueToTree(edits));
-		}
-
-		return notFound(request().uri() + ": No edit history found!");
+		return edits;
 	}
+	
+	
     
     /**
      * Handle generic update to field, without special deserializationHandler

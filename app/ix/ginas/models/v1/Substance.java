@@ -40,11 +40,13 @@ import ix.core.models.BeanViews;
 import ix.core.models.ChangeReason;
 import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
+import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.DateDeserializer;
@@ -54,6 +56,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
 
 @Backup
@@ -747,6 +750,8 @@ public class Substance extends GinasCommonData {
 		}
 		i++;
 		this.version=i+"";
+		Util.printExecutionStackTrace();
+		System.out.println("incrementing version");
 	}
 	
 	public List<Note> getNotes(){
@@ -1033,6 +1038,12 @@ public class Substance extends GinasCommonData {
 		messages.add(GinasProcessingMessage
 				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
 		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
+	}
+	
+	
+	@JsonIgnore
+	public List<Edit> getEdits(){
+		return EntityWrapper.of(this).getEdits();
 	}
 	
 	
