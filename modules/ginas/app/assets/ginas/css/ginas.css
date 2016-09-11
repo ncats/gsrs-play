@@ -1249,3 +1249,12 @@ span#record-count {
 .list-group-item.row .badge {
     margin-right: -15px;
 }
+
+/*the grid framework adds negative margins here
+  so we compensate with a little padding*/
+.record-container{
+	padding:0px;
+	padding-left:4px;
+	padding-right:4px;
+}
+
