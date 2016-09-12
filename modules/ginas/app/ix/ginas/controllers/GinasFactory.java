@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,6 +18,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.StructureFactory;
+import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
@@ -358,4 +360,10 @@ public class GinasFactory extends EntityFactory {
 		return ok(ix.ginas.views.html.index.render());
 	}
 
+	
+	public static List<Edit> getEdits(Substance sub){
+		return SubstanceFactory.getEdits(sub.uuid);
+	}
+	
+	
 }

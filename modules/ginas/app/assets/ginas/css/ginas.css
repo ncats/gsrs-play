@@ -1258,3 +1258,10 @@ span#record-count {
 	padding-right:4px;
 }
 
+.small-spacer {
+    margin-top: 10px;
+}
+
+.row.striped {
+    border-top: 1px solid #DADADA;
+}

@@ -90,8 +90,14 @@
                                 <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-model-options="{ getterSetter: true }" ng-change = "redirectVersion()">
                                     <option ng-repeat="v in getRange(1, '@sub.version');">{{v}}</option></select>
                             </code><br/>
+                            
+                            
+                            
+                            
+                            
                             <div>View audit details:  <input type="checkbox" ng-model="audit"></div>
                         </div>
+                        
                         <div class = "col-md-3 pull-right">
                             <h5>Substance ID:</h5>
                             @if(sub.isSubstanceVariant()) {
@@ -113,11 +119,38 @@
                             </div>
                         </div>
                     </div>
+                  
                     <div class = "row table-responsive">
                     @details
                     </div>
                 </div>
             </div>
+             			
+              <div class="row info" id="audit">
+		                <button ng-init="auditscollapse=true" class="btn btn-primary label-offset det" ng-click = "auditscollapse = !auditscollapse">
+		                    <i ng-show="auditscollapse" class="fa fa-caret-right"></i>
+		                    <i ng-hide="auditscollapse" class="fa fa-caret-down"></i>
+		                   Audit Information</button>
+		                <div class="col-md-12 table-responsive" uib-collapse = "auditscollapse">
+		                	<div class="row small-spacer">
+			                    <table class="table table-striped keyvalue">
+			                    <tbody>
+			                    	@if(sub.approved!=null){
+			                        	<tr><td> Approved </td><td>@sub.approved</td></tr>
+			                        	<tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
+			                        }
+			                        <tr><td> Created </td><td>@sub.created</td></tr>
+			                        <tr><td> Created By </td><td>@sub.createdBy</td></tr>
+			                        <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
+			                        <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
+			                        @if(sub.changeReason != null){
+			                            <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
+			                        }
+			                	</tbody>
+			                	</table>
+		                	</div>
+		                </div>
+		           </div>
 
          @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                 <div class="row info table-responsive" id="altrelationships">
@@ -213,29 +246,53 @@
                     <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
                     </div>
             </div>
-
-            <div class="row info" id="audit">
-                <button class="btn btn-primary label-offset det" ng-click = "auditscollapse = !auditscollapse">
-                    <i ng-show="auditscollapse" class="fa fa-caret-right"></i>
-                    <i ng-hide="auditscollapse" class="fa fa-caret-down"></i>
-                   Audit Information</button>
-                <div class="col-md-12 table-responsive" uib-collapse = "auditscollapse">
-                    <table class="table table-striped keyvalue">
-                    <tbody>
-                    	@if(sub.approved!=null){
-                        	<tr><td> Approved </td><td>@sub.approved</td></tr>
-                        	<tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
-                        }
-                        <tr><td> Created </td><td>@sub.created</td></tr>
-                        <tr><td> Created By </td><td>@sub.createdBy</td></tr>
-                        <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
-                        <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
-                        @if(sub.changeReason != null){
-                            <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
-                        }
-                </tbody></table>
-                    </div>
-                </div>
+			<div class="row info" id="history">
+		                <button ng-init="historyscollapse=true" class="btn btn-primary label-offset det" ng-click = "historyscollapse = !historyscollapse">
+		                    <i ng-show="historyscollapse" class="fa fa-caret-right"></i>
+		                    <i ng-hide="historyscollapse" class="fa fa-caret-down"></i>
+		                   History</button>
+		                <div class="col-md-12 table-responsive" uib-collapse = "historyscollapse">
+		                	<div>
+	                            <div class="row">
+	                            		<div class="col-md-1">
+	                            			<h4>Version</h4>
+	                            		</div>
+	                            		<div class="col-md-3">
+	                            			<h4>Change Reason</h4>
+	                            		</div>
+	                            		<div class="col-md-2">
+	                            			<h4>Editor</h4>
+	                            		</div>
+	                            		<div class="col-md-4">
+	                            			<h4>Change Date</h4>
+	                            		</div>
+	                            		<div class="col-md-2">
+	                            		</div>
+	                            </div>
+	                            @for(edit<-sub.getEdits()){
+	                            	<div class="row striped">
+	                            		<div class="col-md-1">
+	                            			@edit.version
+	                            		</div>
+	                            		<div class="col-md-3">
+	                            			@edit.comments
+	                            		</div>
+	                            		<div class="col-md-2">
+	                            			@edit.editor
+	                            		</div>
+	                            		<div class="col-md-4">
+	                            			@edit.getCreatedDate()
+	                            		</div>
+	                            		<div class="col-md-2">
+	                            			<div><a href="@ix.ginas.controllers.routes.GinasApp.substanceVersion(GinasApp.getId(sub), edit.version)" target="_self">View</a></div>
+	                            			@*<div><a href="#">Compare</a></div>*@
+	                            		</div>
+	                            	</div>
+	                            }
+                            </div>
+		                </div>
+		           </div>
+            
         </div>
 </div>
 }

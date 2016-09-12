@@ -13,6 +13,10 @@ Enhancements
 3. Can sort on browse / search
 4. Added missing CV value for relationship
 5. Password no longer required on edit user
+6. Show history and change reason on record view
+7. Improved facet overflow handling
+8. Moved Audit information to top of record, 
+   collapsed by default.
 
 Bug Fixes
 ---------
@@ -20,6 +24,17 @@ Bug Fixes
    an ID as a molecule. This is fixed now.
 2. Residue lookup on edit would show all residues as invalid
    until one change happened. This is fixed now.
+3. To more than one element would sometimes increase the 
+   substance version twice or more, causing issues with
+   retrieving null edit history.
+4. Improved release strategy for Locks on records. Pervious
+   Locks were released logically, but were not released
+   from memory.
+5. Making no change to a record, but saving it would add
+   an entry to the history table, but do nothing else. 
+   This caused a problem, as the software assumes that
+   each version of the substance has 1 entry in the history
+   table. We no longer allow making a non-change to a record.
 
 Deeper look
 -----------
@@ -33,6 +48,64 @@ Deeper look
    reason is now fetched from the generic object,
    and stored in the comments of the Edit object. This
    allows for quick browsing of edits.
+3. The EntityFactory `updateEntity` method used to gather
+   all the changed using `PojoDiff`, and then save each entity
+   from top to bottom in order of finer and finer granularity.
+   It should be that this is unnecessary, as `Ebean` should
+   enforce cascading. However, there have been issues in the
+   past where the full chain of changes were not directly
+   updated, as no change was detected in the record. For example:
+	Substance
+		Modifications
+			Structural Modifications
+   If there is a change to a field on "Structural Modification", 
+   but no other fields up the chain, saving "Substance" will not
+   directly make an update call to the database for the Substance
+   table. It may, however, trigger the saving of "Structural 
+   Modifications" down the chain. But any post-update
+   or pre-update hooks on "Substance" or "Modifications" won't be
+   called. To get around that, we always explicitly force a change
+   to happen on each element in the chain, so that a save will
+   actually be performed, and the hooks will get triggered as
+   expected. To do this, we have a `ForcableUpdateModel` interface
+   with a method `forceUpdate` which should make some internal 
+   change to the Entity (hidden field) so that an update will actually
+   trigger a change. We then call this method on each entity in the
+   chain. However, internally, the Ebean `Model` may also trigger
+   other `update` methods to be called.
+
+   (One possible solution is to instead have a `flagForceUpdate`
+   operation, instead of actually doing both the change and the update
+   in one go. That should allow us to avoid having to call several
+   force updates, and we can only call the top level save, trusting
+   that Ebean will do the rest. However, this remains to be tested.
+   We have a few selective following of Cascade rules that have been
+   tuned due to ideosynchratic behaviors of the models and ebean.)  
+
+   A particular problem with the "forceUpdate" idea  is that the 
+   hooks are sometimes called twice. This is ok from a database 
+   perspective (except for the performance knock). However, if there
+   is some important mutating operation in a preUpdate hook, or
+   a postUpdate hook that is particularly sensitive to the changes
+   since the last call (rather than being state-specific), this
+   can lead to some unexpected results. Specifically here, we found
+   that updating a record in a complex way would cause the Substance
+   record to have its preUpdate hooks called more than once. One of
+   those hooks was a procedure for incrementing the version number
+   the substance. Because of this, the Substance version was double
+   incremented, but only 1 entry was made in the Edit table (as
+   it is saved only once after the full completion of the update).
+   To fix this, we now use the record "MyLock" Lock to track whether the
+   entity has had its hook methods called yet or not, to avoid
+   double-calling. This does not prevent double SQL updates, but it
+   does pretect against high-level double hooks. This solution
+   is not perfect, as we only use a "MyLock" element for the high
+   level entity that we are attempting to update. If there are 
+   sensitivities in sub elements, they are not protected from
+   double hooks at this time.
+
+
+
 
 
 GSRS v1.2.06

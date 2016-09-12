@@ -750,8 +750,6 @@ public class Substance extends GinasCommonData {
 		}
 		i++;
 		this.version=i+"";
-		Util.printExecutionStackTrace();
-		System.out.println("incrementing version");
 	}
 	
 	public List<Note> getNotes(){

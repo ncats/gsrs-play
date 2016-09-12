@@ -1,5 +1,6 @@
 package ix.core.models;
 
+import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.Basic;
@@ -80,7 +81,6 @@ public class Edit extends BaseModel {
     }
     
     
-    
     public String getEditor(){
     	if(editor==null)return null;
     	return editor.username;
@@ -99,5 +99,10 @@ public class Edit extends BaseModel {
     public String fetchGlobalId(){
     	if(this.id==null)return null;
     	return this.id.toString();
+    }
+    
+    @JsonIgnore
+    public Date getCreatedDate(){
+    	return new Date(this.created);
     }
 }

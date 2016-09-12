@@ -99,12 +99,11 @@ public class SubstanceFactory extends EntityFactory {
 					.collect(Collectors.toList());
 				
 		
-		
 		Query<Edit> q = EditFactory.finder.where(andAll(Expr.eq("refid", id.toString()),
 												  orAll(kindExpressions.toArray(new Expression[0])),
 												  		Expr.eq("version", version), 
 												  		Expr.isNull("path")));
-		Edit e=q.findUnique();
+		Edit e=q.findUnique(); //AH!
 		try{
 			//Good idea? Maybe, Maybe not.
 			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
@@ -551,5 +550,9 @@ public class SubstanceFactory extends EntityFactory {
 		s.approved = TimeUtil.getCurrentDate();
 		s.approvedBy = user;
 		s.status = Substance.STATUS_APPROVED;
+	}
+	
+	public static List<Edit> getEdits(UUID uuid) {
+		return getEdits(uuid, Substance.getAllClasses());
 	}
 }
