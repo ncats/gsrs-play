@@ -95,4 +95,8 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public void makeError() {
 		this.messageType=MESSAGE_TYPE.ERROR;
 	}
+
+	public boolean hasLinks() {
+		return !this.links.isEmpty();
+	}
 }

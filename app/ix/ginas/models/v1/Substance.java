@@ -35,6 +35,7 @@ import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.GinasProcessingMessage;
+import ix.core.GinasProcessingMessage.Link;
 import ix.core.models.Backup;
 import ix.core.models.BeanViews;
 import ix.core.models.ChangeReason;
@@ -56,7 +57,6 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
-import ix.utils.Util;
 import play.Logger;
 
 @Backup
@@ -66,6 +66,11 @@ import play.Logger;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
+	
+
+	public static final String VALIDATION_REFERENCE_TYPE = "VALIDATION_MESSAGE";
+
+	public static final String GROUP_ADMIN = "admin";
 
 	public static final boolean REMOVE_INVALID_RELATIONSHIPS = false;
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
@@ -713,6 +718,31 @@ public class Substance extends GinasCommonData {
 		this.notes.add(n);
 		return n;
 	}
+	
+	/**
+	 * Temporary measure to persist validation messages without the use
+	 * of a data model change
+	 * 
+	 * @param note
+	 * @param property
+	 * @return
+	 */
+	public Note addValidationNote(GinasProcessingMessage gpm, Reference r){
+		Note n = new Note();
+		n.note=gpm.getMessageType() + ":" + gpm.getMessage();
+		if(gpm.hasLinks()){
+			for(Link mes : gpm.links){
+				n.note += "\n" + mes.text;
+			}
+		}
+		n.addReference(r);
+		this.notes.add(n);
+		return n;
+	}
+	
+
+	
+	
 	public Note addNote(String note) {
 		Note n = new Note();
 		n.note=note;
@@ -1044,5 +1074,34 @@ public class Substance extends GinasCommonData {
 		return EntityWrapper.of(this).getEdits();
 	}
 	
+	
+	//TODO: implement this
+	@JsonIgnore
+	public List<GinasProcessingMessage> getValidationMessages(){
+		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+		return messages;
+		
+	}
+	
+	/**
+	 * Store the validation message on the record 
+	 * 
+	 * @param gpm
+	 * 
+	 */
+	public void addValidationMessages(List<GinasProcessingMessage> gpm){
+		Reference r = new Reference();
+		r.docType = VALIDATION_REFERENCE_TYPE;
+		r.citation = "GSRS System-generated Validation messages";
+		r.addRestrictGroup(GROUP_ADMIN);
+		r.documentDate = TimeUtil.getCurrentDate();
+		this.references.add(r);
+		for(GinasProcessingMessage message: gpm){
+			Note n=this.addValidationNote(message, r);
+			if(n!=null){
+				n.addRestrictGroup(GROUP_ADMIN);
+			}
+		}
+	}
 	
 }

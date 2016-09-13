@@ -1,19 +1,18 @@
 package ix.ginas.utils;
 
-import ix.core.GinasProcessingMessage;
-import ix.core.models.Keyword;
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.v1.Note;
-import ix.ginas.models.v1.Substance;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import ix.core.GinasProcessingMessage;
+import ix.core.models.Group;
+import ix.ginas.models.v1.Substance;
 
 public abstract class GinasProcessingStrategy {
-	private static final String FAILED = "FAILED";
-	private static final String GROUP_ADMIN = "admin";
-	private static final String WARNING = "WARNING";
-	private static final String FAIL_REASON = "FAIL_REASON";
+	public static final String FAILED = "FAILED";
+	public static final String WARNING = "WARNING";
+	public static final String FAIL_REASON = "FAIL_REASON";
+	
 	//TODO: add messages directly here
 	public List<GinasProcessingMessage> _localMessages = new ArrayList<GinasProcessingMessage>();
 	
@@ -106,8 +105,7 @@ public abstract class GinasProcessingStrategy {
 					throw new IllegalStateException(gpm.message);
 				} else if (failType == HANDLING_TYPE.MARK) {
 					cs.status = GinasProcessingStrategy.FAILED;
-					cs.addPropertyNote(gpm.message, GinasProcessingStrategy.FAIL_REASON);
-					cs.addRestrictGroup(GinasProcessingStrategy.GROUP_ADMIN);
+					cs.addRestrictGroup(Substance.GROUP_ADMIN);
 				} else {
 
 				}
@@ -116,18 +114,14 @@ public abstract class GinasProcessingStrategy {
 		return allow;
 	}
 
-	public void addWarnings(Substance cs, List<GinasProcessingMessage> list) {
+	public void addProblems(Substance cs, List<GinasProcessingMessage> list) {
 		if (warningHandle == HANDLING_TYPE.MARK) {
-			for (GinasProcessingMessage gpm : list) {
-				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.WARNING) {
-					cs.addTag(new Keyword(GinasCommonSubData.TAG, GinasProcessingStrategy.WARNING));
-					Note n=cs.addPropertyNote(gpm.message, GinasProcessingStrategy.WARNING);
-					if(n!=null){
-						n.addRestrictGroup(GinasProcessingStrategy.GROUP_ADMIN);
-					}
-					
-				}
-			}
+			List<GinasProcessingMessage> problems = list.stream()
+				.filter(f->f.isProblem())
+				.collect(Collectors.toList());
+			if(!problems.isEmpty()){
+				cs.addValidationMessages(problems);
+			}			
 		}
 	}
 }

@@ -1,13 +1,10 @@
 package ix.ginas.utils.validation;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import ix.core.AbstractValidator;
 import ix.core.GinasProcessingMessage;
 import ix.core.UserFetcher;
-import ix.core.ValidationMessage;
 import ix.core.ValidationResponse;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
@@ -118,7 +115,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 			if(_strategy.handleMessages(objnew, vlad)){
 				vr.setValid();
 			}
-			_strategy.addWarnings(objnew, vlad);
+			_strategy.addProblems(objnew, vlad);
 	
 			
 			
@@ -145,9 +142,6 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		if(!objold.version.equals(objnew.version)){
 			vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Substance version '" + objnew.version +  "', does not match the stored version '" +  objold.version +"', record may have been changed while being updated"));
 		}
-		
-		
-		
 		
 		if (objnew.isPublic() && !objold.isPublic()) {
 			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperUpdate))) {
