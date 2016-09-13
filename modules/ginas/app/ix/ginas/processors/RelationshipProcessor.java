@@ -36,7 +36,10 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			final Substance thisSubstance=thisRelationship.fetchOwner();
 			final Substance otherSubstance=SubstanceFactory.getFullSubstance(thisRelationship.relatedSubstance); //db fetch
 			
+			
+			
 			if(otherSubstance ==null){ //probably warn
+				System.out.println("Related record is not in database");
 				return;
 			}
 			EntityPersistAdapter.performChangeOn(
@@ -44,28 +47,13 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 					s -> {
 						Relationship r=createAndAddInvertedRelationship(thisRelationship, thisSubstance.asSubstanceReference(), s);
 						if (r != null) {
-							//r.save();
 							s.forceUpdate();
+						}else{
+							return Optional.empty();
 						}
 						return Optional.of(s);
 					}
 			);
-
-			//Java 8 version which uses lambdas
-			//can't use it now like this because the version
-			//of play and ebean we are using can't handle java 8 features
-//			EntityPersistAdapter.performChange(
-//					obj.relatedSubstance.refuuid,
-//					() ->  JsonSubstanceFactory.getFullSubstance(obj.relatedSubstance),
-//
-//					(s) -> {
-//						if (createAndAddInvertedRelationship(obj, oldSub, s) != null) {
-//							//System.out.println("Forcing update");
-//							s.forceUpdate();
-//						}
-//					}
-//					);
-			
 			
 		}
 	}
