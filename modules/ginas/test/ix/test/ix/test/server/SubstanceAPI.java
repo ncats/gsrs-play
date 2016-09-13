@@ -205,6 +205,12 @@ public class SubstanceAPI {
                 .setQueryParameter("filter","path=null AND version=\'" + version + "\'") //intentionally null
                 .get().get(timeout);
     }
+    
+    
+    public WSResponse fetchAllSubstanceHistory(String uuid){
+        return session.createRequestHolder(API_URL_HISTORY.replace("$UUID$", uuid))
+                .get().get(timeout);
+    }
 
 
     public JsonNode fetchSubstancesSearchJSON() {
