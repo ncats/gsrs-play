@@ -26,7 +26,7 @@ public class ChemUtils {
 			MolAtom ma = mas[i];
 			if (ma.hasValenceError()) {
 				GinasProcessingMessage mes = GinasProcessingMessage
-						.WARNING_MESSAGE("Valance Error on " + ma.getSymbol() + " atom (" + (i + 1) + ") ");
+						.WARNING_MESSAGE("Valence Error on " + ma.getSymbol() + " atom (" + (i + 1) + ") ");
 				gpm.add(mes);
 			}
 		}

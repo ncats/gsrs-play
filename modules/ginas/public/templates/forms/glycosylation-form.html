@@ -45,6 +45,23 @@
                     </modal-form-button>
                 </div>
             </div>
+            <br>
+            <div class="row">
+                <div class="col-md-12">
+                    <div ng-if="parent.protein.glycosylation.created">
+                        <label>Created:</label> {{::parent.protein.glycosylation.created | date: 'medium'}}
+                    </div>
+                    <div ng-if="parent.protein.glycosylation.createdBy">
+                        <label>Created By:</label> {{::parent.protein.glycosylation.createdBy}}
+                    </div>
+                    <div ng-if="parent.protein.glycosylation.lastEdited">
+                        <label>Last Edited:</label> {{::parent.protein.glycosylation.lastEdited | date: 'medium'}}
+                    </div>
+                    <div ng-if="parent.protein.glycosylation.lastEditedBy">
+                        <label>Last Edited By:</label> {{::parent.protein.glycosylation.lastEditedBy}}
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 </div>

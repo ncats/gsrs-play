@@ -2,15 +2,23 @@ package ix.test.ix.test.server;
 
 
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 /**
  * Created by katzelda on 4/5/16.
@@ -24,7 +32,7 @@ public class SubstanceSearch {
 ///ginas/app/img/c37bea80-14ec-4144-8379-60c92d422713.svg?size=200&amp;context=ghtjouloym
     private static final Pattern STRUCTURE_IMG_URL = Pattern.compile("src=.(/ginas/app/img/[^\'\"]+)");
     
-    private static final Pattern ROW_PATTERN = Pattern.compile("(un)?checked\\s+(\\S+(\\s+\\S+)?)\\s+(\\d+)");
+    private static final Pattern ROW_PATTERN = Pattern.compile("[<]label[^>]*[>]([^<]*).*?badge[^>]*[>]([^<]*)", Pattern.DOTALL);
 
     
     private String defaultSearchOrder =null;
@@ -190,49 +198,25 @@ public class SubstanceSearch {
         return results;
     }
 
+    
     private void parseFacets(SearchResult results, HtmlPage html) throws IOException{
+    	Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
 
-
-        Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
-
-        Scanner scanner = new Scanner(html.asText());
-
-        String line;
-        do{
-            line = scanner.nextLine();
-        }while(line !=null && !line.contains("Record Status"));
-        //can't get the Pattern matching to work as expected
-        if(line ==null ){
-            throw new IOException("no facets found");
-        }
-        String facetName = line.trim();
-
-        map.put(facetName, new HashMap<String, Integer>());
-        while(scanner.hasNextLine() && line !=null){
-
-            line = scanner.nextLine();
-            if(line ==null){
-                continue;
-            }
-            String trimmed = line.trim();
-            if(trimmed.isEmpty()){
-                continue;
-            }
-
-            if(trimmed.contains("Substructure Query:")){
-                break;
-            }
-            Matcher rowMatcher = ROW_PATTERN.matcher(trimmed);
-            if(rowMatcher.find()){
-
-                map.get(facetName).put(rowMatcher.group(2), Integer.parseInt(rowMatcher.group(4)));
-            }else{
-
-                facetName = trimmed;
-                map.put(facetName, new HashMap<String, Integer>());
-            }
-
-        }
+    	html.querySelectorAll("div.panel-default")
+    		.parallelStream() //Not necessary, but kinda cool
+    		.filter(n->n.asXml().contains("toggleFacet"))
+    		.forEach(c->{
+    			String facetName = c.querySelector("h3").asText().trim();
+    			Map<String,Integer> counts=
+    				c.querySelectorAll("div.row.list-group-item") //Each facet value
+    				.stream()
+    				.map(d->new String[]{
+    					d.querySelector("label").asText().trim(),
+    					d.querySelector("span.badge").asText().trim()
+    					})
+    				.collect(Collectors.toMap(s->s[0], s->Integer.parseInt(s[1])));
+    			map.put(facetName, counts);
+    		});        
 
         for(Map.Entry<String, Map<String, Integer>> next : map.entrySet()){
             if(!next.getValue().isEmpty()){
@@ -247,12 +231,10 @@ public class SubstanceSearch {
 
     private Set<String> getSubstancesFrom(HtmlPage page){
         Set<String> substances = new LinkedHashSet<>();
-
         Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(page.asXml());
         while(matcher.find()){
             substances.add(matcher.group(1));
         }
-
         return substances;
     }
     
@@ -272,7 +254,6 @@ public class SubstanceSearch {
 
     public static class SearchResult{
         private final Set<String> uuids;
-
         private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
 
         public SearchResult(Set<String> uuids){
@@ -333,26 +314,16 @@ public class SubstanceSearch {
                    return INCREASING.compare(o2, o1);
                 }
             };
-
-
         }
-
-
-
         private static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
             private final Map<T, V> countMap;
-
             private Comparator<V> order;
-
             public SortByValueComparator(Map<T, V> countMap, Comparator<V> order) {
                 this.countMap = countMap;
                 this.order = order;
             }
-
-
             @Override
             public int compare(T s1, T s2) {
-
                 int valueCmp= order.compare(countMap.get(s1), countMap.get(s2));
                 if(valueCmp !=0){
                     return valueCmp;
@@ -362,6 +333,4 @@ public class SubstanceSearch {
             }
         }
     }
-
-
 }

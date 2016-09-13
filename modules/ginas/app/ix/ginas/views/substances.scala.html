@@ -21,12 +21,11 @@ current, rows, total, pages, facets, ctx) {
 }{
     
         
-    <div class= "panel-body">
+    <div class= "panel-body record-container">
         <div class = "row in" ng-show="!gridView" id ="list">
         @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
 
         @for(sub <- substancesList) {
-        
             @sub match {
                 case chem: ChemicalSubstance => {
                     @list.chemlist(chem, ctxId)
@@ -97,8 +96,6 @@ current, rows, total, pages, facets, ctx) {
 
                 }
             }
-
-
         }
         }
         </div>

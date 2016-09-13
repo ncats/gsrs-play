@@ -54,7 +54,6 @@ public class SubstanceFactory extends EntityFactory {
 
 	// Do we still need these?
 	// Yes used in GinasApp
-	static public Model.Finder<UUID, ChemicalSubstance> chemfinder;
 	static public Model.Finder<UUID, ProteinSubstance> protfinder;
 
 	static {
@@ -63,7 +62,6 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static void init() {
 		finder = new Model.Finder(UUID.class, Substance.class);
-		chemfinder = new Model.Finder(UUID.class, ChemicalSubstance.class);
 		protfinder = new Model.Finder(UUID.class, ProteinSubstance.class);
 	}
 
@@ -101,12 +99,11 @@ public class SubstanceFactory extends EntityFactory {
 					.collect(Collectors.toList());
 				
 		
-		
 		Query<Edit> q = EditFactory.finder.where(andAll(Expr.eq("refid", id.toString()),
 												  orAll(kindExpressions.toArray(new Expression[0])),
 												  		Expr.eq("version", version), 
 												  		Expr.isNull("path")));
-		Edit e=q.findUnique();
+		Edit e=q.findUnique(); //AH!
 		try{
 			//Good idea? Maybe, Maybe not.
 			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
@@ -553,5 +550,9 @@ public class SubstanceFactory extends EntityFactory {
 		s.approved = TimeUtil.getCurrentDate();
 		s.approvedBy = user;
 		s.status = Substance.STATUS_APPROVED;
+	}
+	
+	public static List<Edit> getEdits(UUID uuid) {
+		return getEdits(uuid, Substance.getAllClasses());
 	}
 }

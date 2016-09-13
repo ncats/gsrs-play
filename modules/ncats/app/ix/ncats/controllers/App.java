@@ -6,7 +6,9 @@ import java.net.URLEncoder;
 import java.sql.DatabaseMetaData;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 
 import ix.core.util.Java8Util;
@@ -529,18 +531,20 @@ public class App extends Authentication {
     }
 
     public static Facet[] filter (List<Facet> facets, String... names) {
-        if (names == null || names.length == 0)
-            return facets.toArray(new Facet[facets.size()]);
-        
-        List<Facet> filtered = new ArrayList<Facet>();
-        for (String n : names) {
-            for (Facet f : facets){
-                if (n.equals(f.getName())){
-                    filtered.add(f);
-                }
-            }
-        }
-        return filtered.toArray(new Facet[filtered.size()]);
+    	Map<String,Facet> facetMap = facets
+    				.stream()
+    				.collect(Collectors.toMap(Facet::getName, f->f));
+       
+    	return Arrays.stream(names)
+        	.map(fn->facetMap.get(fn))
+        	.filter(Objects::nonNull)
+        	.toArray(len->new Facet[len]);
+    }
+    
+    public static Facet[] filter (List<Facet> facets, Predicate<Facet> keepif) {
+        return facets.stream()
+        				.filter(keepif)
+        				.toArray(len->new Facet[len]);
     }
 
     public static TextIndexer.Facet[] getFacets (final Class<?> cls,

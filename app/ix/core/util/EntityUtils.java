@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,13 +39,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.IgnoredModel;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Backup;
+import ix.core.models.ChangeReason;
 import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
 import ix.utils.LinkedReferenceSet;
@@ -319,6 +323,32 @@ public class EntityUtils {
 		public String getInternalIdField() {
 			return this.ei.getInternalIdField();
 		}
+
+		public Stream<Keyword> streamMethodKeywordFacets() {
+			return this.ei.getKeywordFacetMethods()
+								.stream()
+								.map(m->m.getValue(this._k))
+								.filter(Optional::isPresent)
+								.map(o->(Keyword)o.get());
+		}
+
+		public Optional<String> getChangeReason() {
+			return ei.getChangeReasonFor(_k);
+		}
+		
+		public List<Edit> getEdits(){
+			Optional<Object> opId= this.ei.getNativeIdFor(this._k);
+			if(opId.isPresent()){
+				return EntityFactory.getEdits(this.ei.getNativeIdFor(this._k).get(), 
+					this.ei.getInherittedRootEntityInfo().getTypeAndSubTypes()
+					.stream()
+					.map(em->em.getClazz())
+					.toArray(len->new Class<?>[len]));
+			}else{
+				return new ArrayList<Edit>();
+			}
+		}
+		
 	}
 
 	public static class EntityInfo<T> {
@@ -332,9 +362,11 @@ public class EntityUtils {
 		List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
 
 		List<MethodMeta> methods;
+		List<MethodMeta> keywordFacetMethods;
 
 		List<FieldMeta> uniqueColumnFields;
 
+		MethodOrFieldMeta changeReasonField = null;
 		MethodOrFieldMeta versionField = null;
 		MethodOrFieldMeta validatedField = null;
 		MethodOrFieldMeta idField = null;
@@ -367,6 +399,17 @@ public class EntityUtils {
 
 		public static boolean isPlainOldEntityField(FieldMeta f) {
 			return (!f.isPrimitive() && !f.isArrayOrCollection() && f.isEntityType() && f.getIndexable().recurse());
+		}
+
+		public Optional<String> getChangeReasonFor(T value) {
+			if(this.changeReasonField==null)return Optional.empty();
+			return this.changeReasonField
+						.getValue(value)
+						.map(k->k.toString());
+		}
+
+		public List<MethodMeta> getKeywordFacetMethods() {
+			return this.keywordFacetMethods;
 		}
 
 		Supplier<Set<EntityInfo<? extends T>>> forLater;
@@ -410,8 +453,12 @@ public class EntityUtils {
 				if (f.isDataValidationFlag()){
 					validatedField = f;
 				}
+				if (f.isChangeReason()){
+					this.changeReasonField=f;
+				}
 				return true;
 			}).collect(Collectors.toList());
+			
 			uniqueColumnFields = fields.stream().filter(f -> f.isUniqueColumn()).collect(Collectors.toList());
 
 			methods = Arrays.stream(cls.getMethods()).map(m2 -> new MethodMeta(m2)).peek(m -> {
@@ -425,7 +472,16 @@ public class EntityUtils {
 				if (m.isDataValidationFlag()){
 					validatedField = m;
 				}
+				if (m.isChangeReason()){
+					this.changeReasonField=m;
+				}
 			}).collect(Collectors.toList());
+			
+			this.keywordFacetMethods = methods.stream()
+									.filter(m->m.isGetter())
+									.filter(m->m.getType().isAssignableFrom(Keyword.class))
+									.filter(m->m.getIndexable()!=null)
+									.collect(Collectors.toList());
 
 			seqFields = Stream.concat(fields.stream(), methods.stream())
 					.filter(f -> f.isSequence())
@@ -433,6 +489,7 @@ public class EntityUtils {
 			strFields = Stream.concat(fields.stream(), methods.stream())
 					.filter(f -> f.isStructure())
 					.collect(Collectors.toList());
+			
 
 			fields.removeIf(f -> !f.isTextEnabled());
 
@@ -816,6 +873,7 @@ public class EntityUtils {
 		boolean isSetter = false;
 		boolean isGetter = false;
 		boolean isDataValidatedFlag = false;
+		boolean isChangeReason=false;
 		Class<?> setterType;
 
 		public MethodMeta(Method m) {
@@ -838,6 +896,9 @@ public class EntityUtils {
 			if (m.getAnnotation(DataValidated.class) != null) {
 				this.isDataValidatedFlag = true;
 			}
+			if (m.getAnnotation(ChangeReason.class) != null) {
+				this.isChangeReason = true;
+			}
 			if (indexable != null) {
 				// we only index no arguments methods
 				if (args.length == 0) {
@@ -856,6 +917,7 @@ public class EntityUtils {
 					}
 				}
 			}
+			
 			type = m.getReturnType();
 			if (Collection.class.isAssignableFrom(type)) {
 				isCollection = true;
@@ -863,6 +925,10 @@ public class EntityUtils {
 				isArray = true;
 			}
 			isId = (m.getAnnotation(Id.class) != null);
+		}
+
+		public boolean isChangeReason() {
+			return isChangeReason;
 		}
 
 		public boolean isGetter() {
@@ -1004,6 +1070,7 @@ public class EntityUtils {
 		boolean isStructure = false;
 		boolean isDataVersion = false;
 		boolean isDataValidatedFlag = false;
+		boolean isChangeReason=false;
 
 		Column column;
 
@@ -1085,7 +1152,13 @@ public class EntityUtils {
 			if (f.getAnnotation(DataValidated.class) != null) {
 				this.isDataValidatedFlag = true;
 			}
-
+			if (f.getAnnotation(ChangeReason.class) != null) {
+				this.isChangeReason = true;
+			}
+		}
+		
+		public boolean isChangeReason(){
+			return this.isChangeReason;
 		}
 
 		public boolean isExplicitlyIndexable() {
@@ -1303,13 +1376,14 @@ public class EntityUtils {
 					});
 				});
 				
-				
 				//only Entities are recursed for non-arrays
 				ew.streamFieldsAndValues(EntityInfo::isPlainOldEntityField).forEach(fi -> {
 					path.pushAndPopWith(fi.k().getName(), () -> {
 						next(EntityWrapper.of(fi.v()));
 					});
 				});
+				
+				
 			});
 		}
 	}

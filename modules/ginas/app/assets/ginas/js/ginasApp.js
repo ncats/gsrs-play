@@ -529,8 +529,10 @@
         $scope.searchLimit = "global";
         $scope.loadingSuggest = false;
         $scope.noResults = false;
+        $scope.selectedSort = localStorageService.get('selectedSort') || {value: "Sort By"};
 
         $window.SDFFields = {};
+
 
         $scope.getClass = function (path) {
             var t = $location.path().split('/');
@@ -560,6 +562,8 @@
                     $scope.q ='root_codes_code:' + $scope.q;
                 break;
             }
+
+            //Todo: this only works on the homepage//
 
             var search = "q="+$scope.q;
             $window.location = $window.location.origin + baseurl +"substances?"+ search;
@@ -644,6 +648,72 @@
             var base = $window.location.pathname.split('/v/')[0];
             var newLocation = "/v/" + $scope.versionNumber;
             $window.location.pathname = base + newLocation;
+        };
+
+//We can put this here, but it makes it difficult to expand in the future.
+//The server knows how things can be sorted
+        $scope.sortValues = [
+            { "value": "NaAsc",
+               "display": "Display Name, A-Z"
+            },
+            {
+                "value": "NaDesc",
+                "display": "Display Name, Z-A" },
+            {
+                "value": "RefAsc",
+                "display": "Least References"
+            },
+            {
+                "value": "RefDesc",
+                "display": "Most References"
+            },
+            {
+                "value": "EditAsc",
+                "display": "Oldest Change"
+            },
+            {
+                "value": "EditDesc",
+                "display": "Newest Change"
+            }
+                ];
+
+        $scope.sortSubstances = function(model) {
+            var sort;
+            switch ($scope.selectedSort.value) {
+                case "NaAsc":
+                    sort = "order=^Display%20Name";
+                    break;
+                case "NaDesc":
+                    sort = "order=$Display%20Name";
+                    break;
+                case "RefAsc":
+                    sort = "order=^Reference%20Count";
+                    break;
+                case "RefDesc":
+                    sort = "order=$Reference%20Count";
+                    break;
+                case "EditAsc":
+                    sort = "order=^root_lastEdited";
+                    break;
+                case "EditDesc":
+                    sort = "order=$root_lastEdited";
+                    break;
+            }
+
+            localStorageService.set('selectedSort', $scope.selectedSort);
+            
+            var newurl = $window.location.origin + baseurl +"substances?"
+
+            if($location.$$search.q) {
+                newurl += "q=" + $location.$$search.q + "&";
+            }
+
+            if($location.$$search.facet) {
+                newurl += "facet=" + $location.$$search.facet + "&";
+            }
+            newurl += sort;
+            console.log(newurl);
+            window.location = newurl;
         };
 
         $scope.compare = function () {
@@ -1485,10 +1555,14 @@
                 selected: '='
             },
             link: function (scope, element, attrs) {
-                if(attrs.subclass){
-                    subunitParser.getResidues(attrs.subclass);
+                var sclass = attrs.subclass;
+                if(_.isUndefined(sclass)){
+                	if (_.has(scope.parent, 'protein')) {
+                		sclass="protein";
+                	}else{
+                		sclass="nucleicAcid";
+                	}
                 }
-
                 scope.numbers = true;
                 scope.edit = true;
 
@@ -1537,18 +1611,25 @@
                 if (_.isUndefined(scope.parent)) {
                     APIFetcher.fetch(scope.uuid).then(function (data) {
                         scope.parent = data;
+                        var sclass;
                         if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
                             scope.index = scope.index-0+1;
+                            sclass="protein";
                         } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
                             scope.index = scope.index-0+1;
+							sclass="nucleicAcid";
                         }
-                        scope.parseSubunit();
-
+                        subunitParser.getResidues(sclass).then(function (){
+	                    	scope.parseSubunit();
+                 		});
+                        //scope.parseSubunit();
                     });
                 } else {
-                    scope.parseSubunit();
+                	subunitParser.getResidues(sclass).then(function (){
+	                    scope.parseSubunit();
+                 	});
                 }
 
             },

@@ -3,6 +3,7 @@ package ix.core.models;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -156,6 +157,9 @@ public class UserProfile extends IxModel implements Subject {
         }
     
         public void setPassword(String password){
+        		if(password==null || password.length()<=0){
+        			password=UUID.randomUUID().toString();
+        		}
                 this.salt = AdminFactory.generateSalt();
                 this.hashp = Util.encrypt(password, this.salt);
         }

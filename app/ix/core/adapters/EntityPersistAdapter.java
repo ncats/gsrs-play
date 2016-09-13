@@ -13,7 +13,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.persistence.Entity;
 import javax.persistence.PostLoad;
@@ -39,15 +38,11 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
-import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
-import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.TimeProfiler;
-import ix.utils.Tuple;
-import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -58,11 +53,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         private Counter count = new Counter();
         private ReentrantLock lock = new ReentrantLock();
 
+        private volatile boolean preUpdateWasCalled=false;
+        private volatile boolean postUpdateWasCalled=false;
 
-        private final String refId;
+        private final Key thekey;
 
-        public MyLock(String refId) {
-            this.refId = refId;
+        public MyLock(Key thekey) {
+            this.thekey = thekey;
         }
 
         public boolean isLocked(){
@@ -79,6 +76,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 count.increment();
             }
             lock.lock();
+            preUpdateWasCalled=false;
+            postUpdateWasCalled=false;
+            
         }
 
         public void release(){
@@ -91,14 +91,30 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 if(value ==0){
                     //no more blocking records?
                     //remove ourselves from the map to free memory
-                    EntityPersistAdapter.lockMap.remove(refId);
+                    EntityPersistAdapter.lockMap.remove(thekey);
                 }
             }
+        }
+        
+        public void markPreUpdateCalled(){
+        	preUpdateWasCalled=true;
+        }
+        
+        public void markPostUpdateCalled(){
+        	postUpdateWasCalled=true;
+        }
+        
+        public boolean hasPreUpdateBeenCalled(){
+        	return preUpdateWasCalled;
+        }
+        
+        public boolean hasPostUpdateBeenCalled(){
+        	return postUpdateWasCalled;
         }
     }
 
     private static class Counter{
-        private int count;
+        private int count=0;
 
         public void increment(){
             count++;
@@ -224,11 +240,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
        // Objects.requireNonNull(id);
         Objects.requireNonNull(key);
         Objects.requireNonNull(changeOp);
-
+        
+        
+        
         MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
             @Override
             public MyLock apply(Key key) {
-                return new MyLock(key.toString()); //This should work, but feels wrong
+                return new MyLock(key); //This should work, but feels wrong
             }
         });
 
@@ -262,8 +280,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			}
 			e.kind = saved.getKind();
 			e.newValue = saved.toFullJson();
+			e.comments= ew.getChangeReason().orElse(null);
 			e.save();
-
+			
             return saved;
         }catch(Exception ex){
             ex.printStackTrace();
@@ -273,6 +292,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 popEditForUpdate(key); //When we're all done, release it
             }
             lock.release(); //release the lock
+            
         }
     }
 
@@ -538,15 +558,23 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 		Java8ForOldEbeanHelper.deleteIndexOnBean(this,EntityWrapper.of(bean));
 	}
 	
+	
+	
     @Override
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
+        
+       
         return preUpdateBeanDirect(bean);
     }
     
     public boolean preUpdateBeanDirect(Object bean){
-    	Class clazz = bean.getClass();
-        List<Hook> methods = preUpdateCallback.get(clazz);
+    	EntityWrapper ew = EntityWrapper.of(bean);
+    	 MyLock ml = lockMap.get(ew.getKey());
+         if(ml!=null && ml.hasPreUpdateBeenCalled()){
+         	return true; // true?
+         }
+        List<Hook> methods = preUpdateCallback.get(ew.getClazz());
         if (methods != null) {
             for (Hook m : methods) {
                 try {
@@ -554,25 +582,30 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 }catch (Exception ex) {
                 	ex.printStackTrace();
                     Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+clazz+"]", ex);
+                                 +m.getName()+"["+ew.getKind()+"]", ex);
                     return false;
                 }
             }
         }
         
+        if(ml!=null){
+         	ml.markPreUpdateCalled();
+         }
         return true;
     }
 
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
+    	final Object bean = request.getBean();
     	
     	InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
-        final Object bean = request.getBean();
+        
         final Object oldValues = request.getOldValues();
         it.addPostCommitCall(new Callable(){
 			@Override
 			public Object call() throws Exception {
 				postUpdateBeanDirect(bean,oldValues);
+				
 				return null;
 			}
         });
@@ -582,6 +615,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){
     	EntityWrapper<?> ew= EntityWrapper.of(bean);
+    	MyLock ml = lockMap.get(ew.getKey());
+        if(ml!=null && ml.hasPostUpdateBeenCalled()){
+        	return;
+        }
     	if (ew.ignorePostUpdateHooks()) {
             return;
         }
@@ -596,7 +633,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 							Edit edit = new Edit(ew.getClazz(), key.getIdString());
 							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
 							edit.version = ew.getVersion().orElse(null);
-							
+							edit.comments= ew.getChangeReason().orElse(null);
 							edit.kind = ew.getKind();
 							edit.newValue = ew.toFullJson(); 
 							edit.save();
@@ -639,6 +676,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
         
         IxCache.removeAllChildKeys(ew.getKey().toString());
+        if(ml!=null){
+        	ml.markPostUpdateCalled();
+        }
     } 
 
     @Override

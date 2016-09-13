@@ -54,8 +54,6 @@ public class GinasLoad extends App {
 	static GinasRecordProcessorPlugin ginasRecordProcessorPlugin;
 	static PayloadPlugin payloadPlugin ;
 
-
-
 	static{
 		init();
 	}
@@ -99,30 +97,12 @@ public class GinasLoad extends App {
 		for (int i = 0; i < facets.length; ++i) {
 			decors.add(new GinasFacetDecorator(facets[i]));
 		}
-		GinasFacetDecorator f = new GinasFacetDecorator(new TextIndexer.Facet(
-				"ChemicalSubstance"));
-		f.hidden = true;
-		decors.add(f);
-
 		return decors.toArray(new FacetDecorator[0]);
 	}
 
 	static class GinasFacetDecorator extends FacetDecorator {
 		GinasFacetDecorator(Facet facet) {
 			super(facet, true, 6);
-		}
-
-		@Override
-		public String name() {
-			return super.name().trim();
-		}
-
-		@Override
-		public String label(final int i) {
-			final String label = super.label(i);
-			final String name = super.name();
-
-			return label;
 		}
 	}
 
@@ -282,22 +262,14 @@ public class GinasLoad extends App {
 		final int total = Math.max(ProcessingJobFactory.getCount(), 1);
 		final String key = "jobs/" + Util.sha1(request());
 		if (request().queryString().containsKey("facet") || q != null) {
-			final SearchResult result = getSearchResult(
-					ProcessingJob.class, q, total);
+			final SearchResult result = getSearchResult(ProcessingJob.class, q, total);
 			if (result.finished()) {
 				final String k = key + "/result";
-				return getOrElse(k, new Callable<Result>() {
-					public Result call() throws Exception {
-						Logger.debug("Cache missed: " + k);
-						return createJobResult(result, rows, page);
-					}
-				});
+				return getOrElse(k, ()->createJobResult(result, rows, page));
 			}
-
 			return createJobResult(result, rows, page);
 		} else {
-			return getOrElse(key, new Callable<Result>() {
-				public Result call() throws Exception {
+			return getOrElse(key, ()->{
 					Logger.debug("Cache missed: " + key);
 					TextIndexer.Facet[] facets = filter(
 							getFacets(ProcessingJob.class, 30), ALL_FACETS);
@@ -309,7 +281,6 @@ public class GinasLoad extends App {
 
 					return ok(ix.ginas.views.html.admin.jobs.render(page,
 							nrows, total, pages, decorate(facets), substances));
-				}
 			});
 		}
 	}
@@ -318,73 +289,23 @@ public class GinasLoad extends App {
 			int page) {
 		TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
 
-		List<ProcessingJob> substances = new ArrayList<ProcessingJob>();
+		List<ProcessingJob> jobs = new ArrayList<ProcessingJob>();
 		int[] pages = new int[0];
 		if (result.count() > 0) {
 			rows = Math.min(result.count(), Math.max(1, rows));
 			pages = paging(rows, page, result.count());
 			for (int i = (page - 1) * rows, j = 0; j < rows
 					&& i < result.size(); ++j, ++i) {
-				substances.add((ProcessingJob) result.get(i));
+				jobs.add((ProcessingJob) result.get(i));
 			}
 		}
 
 		return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
-				result.count(), pages, decorate(facets), substances));
+				result.count(), pages, decorate(facets), jobs));
 
 	}
 
 
-	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-	public static Result validateChemicalDuplicates() {
-		String mappingsjson = extractSubstanceJSON();
-		Substance sub = null;
-		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
-
-		try {
-			System.out.println(mappingsjson);
-			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(
-					mappingsjson);
-			JsonNode jn = ex.getNextRecord();
-			sub = GinasUtils.makeSubstance(jn);
-			if (sub instanceof ChemicalSubstance) {
-				messages.addAll(
-						ValidationUtils.validateAndPrepareChemical(
-								(ChemicalSubstance) sub,
-								GinasProcessingStrategy.ACCEPT_APPLY_ALL()								
-								));
-			} else {
-				messages.add(GinasProcessingMessage
-						.ERROR_MESSAGE("Subsance is not a chemical substance"));
-			}
-		} catch (IllegalStateException e) {
-			messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
-		} catch (UnsupportedEncodingException e) {
-			messages.add(GinasProcessingMessage
-					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
-		} catch(Exception e){
-			messages.add(GinasProcessingMessage
-					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
-		}
-		if(GinasProcessingMessage.ALL_VALID(messages)){
-			messages.add(
-					GinasProcessingMessage
-					.SUCCESS_MESSAGE("Structure is valid and unique")
-					);
-		}
-		ObjectMapper om = new ObjectMapper();
-		return Java8Util.ok(om.valueToTree(messages));
-	}
-
-	public static String extractSubstanceJSON() {
-		String mappingsjson = null;
-		try {
-			mappingsjson = request().body().asJson().toString();
-		} catch (Exception e) {
-			DynamicForm requestData = Form.form().bindFromRequest();
-			mappingsjson = requestData.get("substance");
-		}
-		return mappingsjson;
-	}
+	
 
 }

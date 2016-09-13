@@ -1232,3 +1232,36 @@ span#record-count {
     margin-left: 15px;
     margin-top: 15px;
 }
+.list-group-item.row {
+    border: none;
+    padding-bottom: 0;
+    padding-top: 0;
+    margin-top:5px;
+}
+
+.list-group-item.row label{
+	overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 0px;
+    font-weight: normal;
+}
+
+.list-group-item.row .badge {
+    margin-right: -15px;
+}
+
+/*the grid framework adds negative margins here
+  so we compensate with a little padding*/
+.record-container{
+	padding:0px;
+	padding-left:4px;
+	padding-right:4px;
+}
+
+.small-spacer {
+    margin-top: 10px;
+}
+
+.row.striped {
+    border-top: 1px solid #DADADA;
+}

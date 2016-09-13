@@ -22,6 +22,7 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 $templateRequest(url).then(function (html) {
+                    console.log(html);
                     template = angular.element(html);
                     elementResult.append(template);
                     $compile(elementResult)(scope);
@@ -139,6 +140,15 @@
         var factoryResidues;
 
         var factory = this;
+        
+        /**
+         * Returns the *promise* of the CV elements for the
+         * specified residues (NA or AA).
+         *
+         * This can be used to pre-fetch the residues to avoid
+         * using the factory before it is ready.
+         * 
+         */
         factory.getResidues= function(substanceClass){
             var residues;
             var cls;
@@ -147,11 +157,10 @@
             }else {
                 cls = "NUCLEIC_ACID_BASE";
             }
-            CVFields.getCV(cls).then(function (response) {
+            return CVFields.getCV(cls).then(function (response) {
                 factoryResidues = response.data.content[0].terms;
                 return response.data.content[0].terms;
             });
-
         };
 
         factory.cleanSequence = function (sequence) {

@@ -31,9 +31,6 @@
                         @filters(facets, searchFlag)
                     </div>
                 </div>
-
-
-
                 <div class="col-md-9">
                 } else {
                 <div class="col-md-12">
@@ -41,9 +38,9 @@
             @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
                 @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
                     <div
-                        @if(total > 0) {
+                        @if(total > 0){
                             class="alert alert-success alert-dismissible"
-                        } else {
+                        }else{
                             class="alert alert-danger alert-dismissible"
                         }
                     role="alert">
@@ -196,9 +193,7 @@
 	                    	</div>
 	                    </div>
 						<div class="row">	                    	
-	                        <div class = "col-md-9">
-                               
-							   
+        <div class = "col-md-5">
                                <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
@@ -213,17 +208,33 @@
   </ul>
 </div>
 	                        </div>
-	                        <div class= "col-md-3 text-right hidden-xs">
+        <div class="col-md-5  text-left row">
+        <div class="col-md-3">
+        Sort By:
+        </div>
+        <div class="col-md-9">
+            <select
+            class="form-control"
+            ng-model= selectedSort
+            ng-change="sortSubstances();"
+            ng-options="r.display for r in sortValues track by r.display"
+            placeholder ="Sort By"
+            title="Sort By"
+            name="SortBy"
+            id ="SortBy"
+            aria-label="Sort By">
+                <option class= "text-capitalize" value="" selected>Sort By</option>
+            </select>
+         </div>   
+        </div>
+        <div class= "col-md-2 text-right hidden-xs">
 	                            <form class="form" name="grid-select" id = "grid-select">
 	                            <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
 	                            </form>
 	                        </div>
 	                    </div>
 	                </div>
-	                <div class="placeholder-content">
-	                </div>
-	                @content
-
+    <div class="placeholder-content"> @content </div>
 	                <div class="panel-footer">
 	                @if(pages.length > 1) {
 	                    @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
@@ -324,7 +335,6 @@ $(document).ready(function () {
                   window.clearInterval(timer);
               });
          	};
-	   
 	     	timer = window.setInterval(checkStatus, delay);
          	}
    		}

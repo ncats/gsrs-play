@@ -16,25 +16,25 @@
         <i ng-cloak ="" ng-show="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-right"></i>
         <i ng-cloak ="" ng-hide="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')" class="fa fa-caret-down"></i>
     @if(f.raw) {
-      @HtmlFormat.raw(f.name())
+      	@HtmlFormat.raw(f.name())
     } else {
         @f.name()
     }
     </h3>
   </div>
   <div class="panel-body" uib-collapse="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')">
-    <table class="table table-condensed">
+    <ul class="list-group">
       @** move all selected filters upfront **@
       @for(i <- 0 until f.size()) {
         @if(App.hasFacet(f.facet,i)) {
-	<tr>
+	<div class="list-group-item row">
 	  @defining(App.sha1(f.facet,i)) { id =>
-	     <td>
+	    <div class="col-md-1 col-sm-1">
 	       <input type="checkbox" checked="true"
-		      onclick="filterToggle(this)" 
+		     	      onclick="filterToggle(this)" 
 		      aria-label="Toggle @f.facet.getLabel(i)"
 		      id="@id"/>
-	     </td>
+		 </div>
 	     <script>
 	        filters['@id'] = {
 	           checked: @App.hasFacet(f.facet,i),
@@ -42,58 +42,64 @@
 	           value: '@App.encode(f.facet, i)'
 	        };
 	     </script>
-          }
-	 @if(f.raw) {
-            <td>@HtmlFormat.raw(f.label(i))</td>
+	     <div class="col-md-8 col-sm-8" >
+		 @if(f.raw) {
+            <label  for="@id">@HtmlFormat.raw(f.label(i))</label>
          } else {
-            <td class = "text-capitalize">@f.label(i)</td>
+            <label class="text-capitalize" for="@id">@f.label(i)</label>
          }
-	 <td>
+         </div>
+         <div class="col-md-1 col-sm-1" >
            @if(f.raw) {
-             <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
+             <span class="badge pull-right">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
            } else {
-             <span class="badge" style="float:right;">@f.value(i)@if(searchflag){+}</span>
+             <span class="badge pull-right">@f.value(i)@if(searchflag){+}</span>
            }
-	 </td>
-        </tr>
+        </div>
+           }
+        </div>
         }
       }
       @for(i <- 0 until Math.min(f.max, f.size())) {
         @if(!App.hasFacet(f.facet,i)) {
-	<tr>
+	<div class="list-group-item row">
 	  @defining(App.sha1(f.facet,i)) { id =>
-	     <td>
-	       <input type="checkbox" onclick="filterToggle(this)" 
-	       	      aria-label = "Toggle @f.facet.getLabel(i)"
+	  	<div class="col-md-1 col-sm-1">
+	       <input type="checkbox"
+		     	      onclick="filterToggle(this)" 
+		      aria-label="Toggle @f.facet.getLabel(i)"
 		      id="@id"/>
-	     </td>
+		 </div>
 	     <script>
 	        filters['@id'] = {
-	           checked: @App.hasFacet(f.facet, i),
+	           checked: @App.hasFacet(f.facet,i),
                    name: '@App.encode(f.facet)',
 	           value: '@App.encode(f.facet, i)'
 	        };
 	     </script>
-          }
-          @if(f.raw) {
-            <td>@HtmlFormat.raw(f.label(i))</td>
-          } else {
-            <td class = "text-capitalize">@f.label(i)</td>
-          }
-	 <td>
+	     <div class="col-md-8 col-sm-8" >
+		 @if(f.raw) {
+            <label  for="@id">@HtmlFormat.raw(f.label(i))</label>
+         } else {
+            <label class="text-capitalize" for="@id">@f.label(i)</label>
+         }
+         </div>
+        	 <div class="col-md-1  col-sm-1" >
            @if(f.raw) {
-              <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
+             <span class="badge pull-right">@HtmlFormat.raw(f.value(i))@if(searchflag){+}</span>
            } else {
-              <span class="badge" style="float:right;">@f.value(i)@if(searchflag){+}</span>
+             <span class="badge pull-right">@f.value(i)@if(searchflag){+}</span>
            }
-	 </td>
-        </tr>
+           </div>
+           }
+        </div>
         }
       }
-    </table>
+    </ul>
   </div>
 </div>
 }
+
 
 <div class="panel-group">
   @for(f <- facets) {
@@ -106,10 +112,8 @@
 <script>
 function filterToggle (el) {
   filters[el.id].checked = el.checked;
-  /*console.clear();*/
   var facet = "";
   for (var f in filters) {
-    console.log(f+': '+filters[f].checked);
     if (filters[f].checked) {
       if (facet.length > 0) {
          facet += '&';
@@ -117,13 +121,11 @@ function filterToggle (el) {
       facet += "facet="+filters[f].name + '/' + filters[f].value;
     }
   }
-  console.log(el.id+' '+facet);
   var url = '@HtmlFormat.raw(App.url(facets, "page"))';
   if (facet.length > 0) {
     url += url.indexOf('?') < 0 ? '?' : '&';
     url += facet;
   }
-  console.log('>> '+url);
   location.href = url;
 }
 </script>

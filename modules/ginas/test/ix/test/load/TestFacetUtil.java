@@ -5,6 +5,8 @@ import ix.test.ix.test.server.SubstanceSearch;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,10 +21,19 @@ public final class TestFacetUtil {
 
     public static void assertFacetsMatch(Map<String, Map<String, Integer>> expectedFacets, SubstanceSearch.SearchResult actualResults){
         Map<String, Map<String, Integer>> actual = actualResults.getAllFacets();
-
         Map<String, Map<String, Integer>> filteredExpected = filterVisibleFacets(expectedFacets);
 
-        assertEquals(filteredExpected, actual);
+        //Note: we no longer assert that the facets are the same. If we assumed that, then adding
+        //a facet would not be allowed without some deeper changes. Instead, we say
+        //that the filtered set must be a subset
+        
+        Set<Entry<String,Map<String, Integer>>> missing=filteredExpected.entrySet();
+        missing.removeAll(actual.entrySet());
+        missing.removeIf(f->f.getValue()==null);
+        
+        Map<String, Map<String, Integer>> empty=new HashMap<>();
+        
+        assertEquals(empty.entrySet(),missing);
     }
 
     /**
@@ -38,9 +49,8 @@ public final class TestFacetUtil {
     private static Map<String,Map<String,Integer>> filterVisibleFacets(Map<String, Map<String, Integer>> expectedFacets) {
 
         Map<String,Map<String,Integer>> filtered = new HashMap<>();
-        for(String name : GinasApp.CHEMICAL_FACETS){
+        for(String name : GinasApp.ALL_FACETS){
             String translatedName = GinasApp.translateFacetName(name);
-
             filtered.put(translatedName, expectedFacets.get(translatedName));
         }
 

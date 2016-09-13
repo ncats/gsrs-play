@@ -14,6 +14,5 @@ public class StructurallyDiverseSubstance extends Substance {
     @Override
     public void delete(){
     	super.delete();
-    	
     }
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -970,9 +971,25 @@ public class EntityFactory extends Controller {
 	}
     
 	protected static Result edits(Object id, Class<?>... cls) {
+		List<Edit> edits = getEdits(id,cls);
+		
+		if (!edits.isEmpty()) {
+			ObjectMapper mapper = getEntityMapper();
+			return Java8Util.ok(mapper.valueToTree(edits));
+		}
+
+		return notFound(request().uri() + ": No edit history found!");
+	}
+	
+	public static List<Edit> getEdits(Object id, Class<?>... cls) {
 		List<Edit> edits = new ArrayList<Edit>();
 		FetchOptions fe = new FetchOptions();
+//		System.out.println("Kinds are:" +Arrays.stream(cls)
+//											   .map(c->c.getName())
+//											   .reduce((c,t)->c+t).get()
+//				);
 
+		System.out.println(id);
 		Expression[] kindExpressions = Arrays.stream(cls)
 				.map(c -> Expr.eq("kind", c.getName()))
 				.collect(Collectors.toList())
@@ -989,14 +1006,10 @@ public class EntityFactory extends Controller {
 		if (tmpedits != null) {
 			edits.addAll(tmpedits);
 		}
-		
-		if (!edits.isEmpty()) {
-			ObjectMapper mapper = getEntityMapper();
-			return Java8Util.ok(mapper.valueToTree(edits));
-		}
-
-		return notFound(request().uri() + ": No edit history found!");
+		return edits;
 	}
+	
+	
     
     /**
      * Handle generic update to field, without special deserializationHandler
@@ -1054,7 +1067,6 @@ public class EntityFactory extends Controller {
     
     
     //Typically mutates, but doesn't sometimes -- I know, but we delete/create sometimes instead
-    
     public static EntityWrapper calculateAndApplyDiff(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
     	 boolean usePojoPatch=false;
          if(oWrap.getClazz().equals(nWrap.getClazz())){ //only use POJO patch if the entities are the same type
@@ -1097,14 +1109,16 @@ public class EntityFactory extends Controller {
         
         
         final List<Object> removed = new ArrayList<Object>();
+        
         //Apply the changes, grabbing every change along the way
         Stack changeStack=patch.apply(rawOld,c->{
-				//System.out.println("Change IS:" + c);
 				if("remove".equals(c.op)){
 					removed.add(c.oldValue);
 				}
         });
-        
+        if(changeStack.isEmpty()){
+        	throw new IllegalStateException("No change detected");
+        };
         
     	while(!changeStack.isEmpty()){
     		Object v=changeStack.pop();
@@ -1185,7 +1199,8 @@ public class EntityFactory extends Controller {
 	                // This was added because there are times
 	                // when the parent entity isn't actually
 	                // updated at all, at least from the ebean perspective
-	                // so this forces the issue
+	                // so this forces the reindexing, at least
+	                
 	                EntityPersistAdapter.getInstance().deepreindex(newValue);
                 }catch(Exception e){
                 	

@@ -37,13 +37,16 @@ import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.GinasProcessingMessage;
 import ix.core.models.Backup;
 import ix.core.models.BeanViews;
+import ix.core.models.ChangeReason;
 import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
+import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.DateDeserializer;
@@ -53,6 +56,7 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
 
 @Backup
@@ -138,6 +142,7 @@ public class Substance extends GinasCommonData {
 	public Date approved;
 
 	@Indexable(name="Change Reason", suggest=true)
+	@ChangeReason
 	public String changeReason;
 
 
@@ -1032,4 +1037,12 @@ public class Substance extends GinasCommonData {
 				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
 		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
 	}
+	
+	
+	@JsonIgnore
+	public List<Edit> getEdits(){
+		return EntityWrapper.of(this).getEdits();
+	}
+	
+	
 }

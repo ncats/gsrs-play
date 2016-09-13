@@ -31,7 +31,7 @@ GET         /cv/:field                   ix.ginas.controllers.GinasApp.getCVFiel
 GET         /img/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structure(id: String, format: String, size: Int ?= 150, context: String ?= null)
 GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv|fas)>   ix.ginas.controllers.GinasApp.structureExport(id: String, format: String, context: String ?= null)
 GET         /setExport                   ix.ginas.controllers.GinasApp.export(id: String, format: String)
-POST        /register/duplicateCheck     ix.ginas.controllers.GinasLoad.validateChemicalDuplicates
+POST        /register/duplicateCheck     ix.ginas.controllers.GinasFactory.validateChemicalDuplicates
 GET         /_updateIndex/:key           ix.ginas.controllers.GinasApp.updateIndex(key: String)
 
 GET         /admin                       ix.ginas.controllers.GinasApp.admin()
