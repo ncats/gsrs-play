@@ -11,7 +11,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.models.Keyword;
 
-
+/**
+ * This is just a wrapper around a List of {@link Keyword}s with a fake equals method
+ * to trick ebean into always updating the database.  Without this class,
+ * if the contents of the list are changed, ebean doesn't always see that the data
+ * is dirty and we get corrupted data in our database.
+ */
 public class EmbeddedKeywordList implements List<Keyword>, Serializable{
 	@JsonIgnore
 	private List<Keyword> keywords = new ArrayList<Keyword>();
