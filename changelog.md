@@ -35,6 +35,10 @@ Bug Fixes
    This caused a problem, as the software assumes that
    each version of the substance has 1 entry in the history
    table. We no longer allow making a non-change to a record.
+6. Cancelling the persistence of an inverted relationship
+   would persist an Edit for that attempted change, even
+   though none was performed, due to a misreporting by
+   the trigger. The trigger was corrected.
 
 Deeper look
 -----------
@@ -104,6 +108,19 @@ Deeper look
    sensitivities in sub elements, they are not protected from
    double hooks at this time.
 
+4. Calling "performChange" on the EntityPersistAdapter will create
+   an Edit, and save it after the change is performed, as long
+   as the ChangeOperation returns a non-empty Optional. The
+   RelationshipProcessor accidentally returned a non-empty
+   Optional in some cases where no update was done. This
+   has been fixed to return a empty Optional now, but the 
+   performChange method should actually be smart enough not to
+   save the edit unless some save has happened within ChangeOperation.
+   This could be done by moving the actual save operation out 
+   of the ChangeOperation, and instead into the performChange
+   method. This is related to #3 above. If the updates
+   can be simplified to make a single "update" call, without
+   need to deeper processing, this move should be fine.
 
 
 

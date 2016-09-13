@@ -79,7 +79,6 @@ public class RelationshipInvertTest {
         String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
         assertTrue(refUuidA.equals(uuid));
         assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
-        System.out.println("Worked!");
     }
     
     
@@ -245,10 +244,6 @@ public class RelationshipInvertTest {
         JsonNode beforeA = api.fetchSubstanceJsonByUuid(uuidA);
         
         
-       
-        System.out.println("Substance 1:" + uuid);
-        System.out.println("Substance 2:" + uuidA);
-        System.out.println("Actually updating!"); 
        
         //add relationship To
         JsonNode updated=new JsonUtil.JsonNodeBuilder(js)
