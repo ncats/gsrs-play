@@ -3,6 +3,7 @@ package ix.test;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -45,6 +46,7 @@ public final class SubstanceJsonUtil {
 		if(hasReferences){
 			jnb=jnb.add("/references/0/tags/-", Reference.PUBLIC_DOMAIN_REF);
 			jnb=jnb.set("/references/0/publicDomain", true);
+			jnb=jnb.set("/references/0/access", Collections.emptyList());
 		}else{
 			List<String> acc=new ArrayList<String>();
 			acc.add("protected");

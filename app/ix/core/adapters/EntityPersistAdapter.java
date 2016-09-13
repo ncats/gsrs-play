@@ -253,16 +253,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         if(lock.isLocked()){
         	System.out.println("Record " + key + " is locked. Waiting ...");
         }
-        
-        lock.acquire(); //acquire the lock (blocks)
-        
-        EntityWrapper<T> ew = key.fetch().get(); //supplies the object to be edited,
-        										 //you could have a different supplier
-        										 //for this, but it's nice to be sure
-        										 //that the object can't be stale
+
         Edit e=null;
+        lock.acquire(); //acquire the lock (blocks)
         try{
-        	
+            EntityWrapper<T> ew = key.fetch().get(); //supplies the object to be edited,
+            //you could have a different supplier
+            //for this, but it's nice to be sure
+            //that the object can't be stale
             e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
                                                      //existence of an active edit
             								   		 //let's hope it works anyway!

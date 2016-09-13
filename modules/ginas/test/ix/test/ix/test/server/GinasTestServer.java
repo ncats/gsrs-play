@@ -373,6 +373,15 @@ public class GinasTestServer extends ExternalResource{
     public User createNormalUser(String username, String password){
         return createUser(username, password, normalUserRoles);
     }
+    public User createUser(Collection<Role> roles){
+        if(roles.isEmpty()){
+            throw new IllegalArgumentException("can not have empty roles");
+        }
+        userCount++;
+        return createUser(
+                FAKE_USERNAME_PREFIX + userCount,
+                FAKE_PASSWORD_PREFIX + userCount, new ArrayList<>(roles));
+    }
     public User createUser(Role role, Role ... roles){
         userCount++;
         return createUser(

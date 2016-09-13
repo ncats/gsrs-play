@@ -89,5 +89,14 @@ public class GinasProcessingMessage implements ValidationMessage{
 		return this.messageType;
 	}
 
+	@JsonIgnore
+	public boolean isPossibleDuplicate(){
+		return !this.links.isEmpty();
+	}
+
+	public void makeError() {
+		this.messageType=MESSAGE_TYPE.ERROR;
+	}
+
 
 }

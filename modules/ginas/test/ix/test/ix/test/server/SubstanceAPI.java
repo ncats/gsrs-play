@@ -12,11 +12,15 @@ import java.util.function.Function;
 import javax.transaction.NotSupportedException;
 
 import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.GinasProcessingMessage;
 import ix.core.ValidationMessage;
+import ix.core.controllers.EntityFactory;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.test.SubstanceJsonUtil;
 import play.libs.ws.WSRequestHolder;
@@ -110,6 +114,14 @@ public class SubstanceAPI {
 
 
 
+    public <T extends Substance> T fetchSubstanceObjectByUuid(String uuid, Class<T> substancetype){
+        try {
+            return  EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().treeToValue(fetchSubstanceByUuid(uuid).asJson(), substancetype);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("error processing json", e);
+        }
+
+    }
     public ValidationResponse validateSubstance(JsonNode js){
         return new ValidationResponse(session.createRequestHolder(API_URL_VALIDATE).post(js).get(timeout));
     }
@@ -430,7 +442,7 @@ public class SubstanceAPI {
             return response.getStatus();
         }
         public boolean isValid(){
-            return SubstanceJsonUtil.isValid(asJson());
+            return SubstanceJsonUtil.isValid(response.asJson());
         }
 
         public boolean isNull(){
@@ -440,6 +452,7 @@ public class SubstanceAPI {
         public JsonNode asJson(){
             if(js ==null) {
                 js= session.extractJSON(response);
+                System.out.println(js.toString());
             }
             return js;
         }
@@ -455,6 +468,15 @@ public class SubstanceAPI {
             }catch(Exception e){
                 throw new IllegalStateException("error unmarshalling json",e);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "ValidationResponse{" +
+                    "response=" + response +
+                    ", js=" + asJson() +
+                    "\nmessages = " + getMessages() +
+                    '}';
         }
     }
 
