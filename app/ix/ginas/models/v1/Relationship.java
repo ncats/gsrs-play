@@ -39,6 +39,8 @@ public class Relationship extends CommonDataElementOfCollection {
     @Basic(fetch=FetchType.EAGER)
     public String comments;
     
+    
+    
     @JSONEntity(title = "Interaction Type", format = JSONConstants.CV_INTERACTION_TYPE)
     public String interactionType;
 
@@ -115,6 +117,18 @@ public class Relationship extends CommonDataElementOfCollection {
     	String[] types=RELATIONSHIP_SPLIT_REGEX.split(this.type);
     	if(types.length>=2)return true;
     	return false;
+    }
+    
+    public boolean hasComments(){
+    	return ((this.comments!=null) && !this.comments.isEmpty());
+    }
+    
+    public String getComments(){
+    	return comments;
+    }
+    
+    public void setComments(String comments){
+    	this.comments=comments;
     }
     
     public Relationship fetchInverseRelationship(){

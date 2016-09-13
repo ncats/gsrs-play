@@ -15,13 +15,9 @@
         <thead>
             <tr>
                 <th>Related Record</th>
-                @*<th>Name</th>*@
                 <th>Type</th>
                 @if(full){
-                <th>Comments</th>
-                <th>Interaction Type</th>
-                <th>Qualification</th>
-                <th>Amount</th>
+                <th>Details</th>
                 <th>References</th>
                 }
             </tr>
@@ -31,30 +27,58 @@
 
             <tr>
                 <td>
-                @if(r.relatedSubstance != null && r.relatedSubstance.getLinkingID() != null) {
+                	@if(r.relatedSubstance != null && r.relatedSubstance.getLinkingID() != null) {
                     <a href="@ix.ginas.controllers.routes.GinasApp.substance(r.relatedSubstance.getLinkingID())" target="_self">
-                @subref(r.relatedSubstance)
+                		@subref(r.relatedSubstance)
                     </a>
                     }else{
-                    @subref(r.relatedSubstance)
-                }
+                    	@subref(r.relatedSubstance)
+                	}
                 </td>
                 <td>@GinasApp.getCV.getDisplay("RELATIONSHIP_TYPE", r.`type`)</td>
                 @if(full){
-                <td>@r.comments</td>
+                
                 <td>
+                 @if(r.hasComments()) {
+                	<div class="row">
+	                 	<div class="md-col-m6">
+	                		<label>Comments:</label>
+	                	</div>
+	                	<div class="md-col-m6">
+	                		<span class="key-value">@r.comments</span>
+	                	</div>
+                	</div>
+                }
                 @if(r.interactionType != null) {
-                    @r.interactionType
+                	<div class="row">
+	                 	<div class="md-col-m6">
+	                		<label>Interaction Type:</label>
+	                	</div>
+	                	<div class="md-col-m6">
+	                		<span class="key-value">@r.interactionType</span>
+	                	</div>
+                	</div>
                 }
-                </td>
-                <td>
                 @if(r.qualification != null) {
-                    @r.qualification
+                	<div class="row">
+	                 	<div class="md-col-m6">
+	                		<label>Qualification:</label>
+	                	</div>
+	                	<div class="md-col-m6">
+	                		<span class="key-value">@r.qualification</span>
+	                	</div>
+                	</div>
                 }
-                </td>
-                <td>
                 @if(r.amount != null) {
-                    <amount value="@GinasApp.getAsJson(r.amount)"></amount>
+                	<div class="row">
+	                 	<div class="md-col-m6">
+	                		<label>Amount:</label>
+	                	</div>
+	                	<div class="md-col-m6">
+		                	 @r.amount.toString()
+	                		 <amount value="@GinasApp.getAsJson(r.amount)"></amount>
+	                	</div>
+                	</div>
                 }
                 </td>
                 @if(r.getReferences().size > 0){
