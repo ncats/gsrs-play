@@ -383,5 +383,52 @@ public class RelationshipInvertTest {
         assertEquals(1,fetchedA.at("/relationships").size());
         
     }
+    
+    @Test  
+    public void testDontAddRelationshipIfOneLikeItAlreadyExistsAndDontMakeEdit()   throws Exception {
+    	
+        //submit primary
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
+        JsonNode newRelate = js.at("/relationships/0");
+        String uuid = js.get("uuid").asText();
+        String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(js);
+        String[] parts=type1.split("->");
+        
+        newRelate=new JsonUtil.JsonNodeBuilder(newRelate)
+			.set("/relatedSubstance/refuuid",uuid)
+			.set("/relatedSubstance/refPname",js.at("/names/0/name").asText())
+			.set("/type",parts[1] + "->" + parts[0])
+			.ignoreMissing()
+			.build();
+        
+        
+        JsonNode validationResult = api.validateSubstanceJson(js);
+        SubstanceJsonUtil.ensureIsValid(validationResult);
+        ensurePass(api.submitSubstance(js));
+        js =api.fetchSubstanceJsonByUuid(uuid);
+        
+        
+        //submit alternative
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
+        String uuidA = jsA.get("uuid").asText();
+        jsA=new JsonUtil.JsonNodeBuilder(jsA)
+			.add("/relationships/-",newRelate)
+			.ignoreMissing()
+			.build();
+        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        ensurePass(api.submitSubstance(jsA));
+        
+        
+        //check inverse relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+        assertTrue(refUuidA.equals(uuid));
+        assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
+        assertEquals(1,fetchedA.at("/relationships").size());
+        
+        //Shouldn't be any edit history either
+        assertEquals(404,api.fetchAllSubstanceHistory(uuid).getStatus());
+    }
 
 }
