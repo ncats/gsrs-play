@@ -178,6 +178,7 @@ public class GinasApp extends App {
     
     public static final String[] ALL_FACETS = {
         "Record Status",
+        "Validation",
         "Substance Class", 
         "SubstanceStereochemistry", 
         "Molecular Weight",

@@ -63,9 +63,12 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		boolean allowPossibleDuplicates=false;
 		if(		getCurrentUser().hasRole(Role.SuperUpdate) || 
 				getCurrentUser().hasRole(Role.SuperDataEntry) || 
-				getCurrentUser().hasRole(Role.Admin)){
+				getCurrentUser().hasRole(Role.Admin) ||
+				this.method==METHOD_TYPE.BATCH){
 			allowPossibleDuplicates=true;
 		}
+		
+		
 		
 		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
 		if(this.method==METHOD_TYPE.IGNORE){

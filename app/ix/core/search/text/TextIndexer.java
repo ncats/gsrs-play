@@ -2336,11 +2336,16 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 		if (asText) {
 			String text = value.toString();
+			if(text.isEmpty())return;
 			String dim = indexable.name();
-			if ("".equals(dim)){
+			
+			if("".equals(dim)){
 				dim = full;
+				if("".equals(dim)){
+					dim="[no facet]";
+				}	
 			}
-
+			
 			if (indexable.facet() || indexable.taxonomy()) {
 				facetsConfig.setMultiValued(dim, true);
 				facetsConfig.setRequireDimCount(dim, true);

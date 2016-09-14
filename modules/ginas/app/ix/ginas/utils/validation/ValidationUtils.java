@@ -415,7 +415,7 @@ public class ValidationUtils {
 		}
 		if (display == 0) {
 			GinasProcessingMessage mes = GinasProcessingMessage
-					.WARNING_MESSAGE(
+					.INFO_MESSAGE(
 							"Substances should have exactly one (1) display name, Default to using:"
 									+ s.getName()).appliableChange(true);
 			gpm.add(mes);
@@ -447,7 +447,7 @@ public class ValidationUtils {
 								.WARNING_MESSAGE(
 										"Name '"
 												+ n.name
-												+ "' collides with existing name for substance:")
+												+ "' collides (possible duplicate) with existing name for substance:")
 								.addLink(GinasUtils.createSubstanceLink(s2));
 						gpm.add(mes);
 						strat.processMessage(mes);
@@ -498,8 +498,7 @@ public class ValidationUtils {
 		for (Code cd : s.codes) {
 			try {
 				List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
-						.getSubstancesWithExactCode(100, 0, cd.code,
-								cd.codeSystem);
+						.getSubstancesWithExactCode(100, 0, cd.code, cd.codeSystem);
 				if (sr != null && !sr.isEmpty()) {
 					Substance s2 = sr.iterator().next();
 					if (!s2.getUuid().toString().equals(s.getUuid().toString())) {
@@ -507,7 +506,8 @@ public class ValidationUtils {
 								.WARNING_MESSAGE(
 										"Code '"
 												+ cd.code
-												+ "' collides with existing code & codeSystem for substance:")
+												+ "'[" +cd.codeSystem
+												+ "] collides (possible duplicate) with existing code & codeSystem for substance:")
 								. addLink(GinasUtils.createSubstanceLink(s2));
 						gpm.add(mes);
 						strat.processMessage(mes);
@@ -536,7 +536,7 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			}
-			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.WARN)) {
+			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.ALLOW)) {
 				return false;
 			}
 		}
@@ -789,7 +789,7 @@ public class ValidationUtils {
 				}
 			} else if (withDisplay && !withIdealized) {
 				GinasProcessingMessage gpmwarn = GinasProcessingMessage
-						.WARNING_MESSAGE(
+						.INFO_MESSAGE(
 								"No Idealized Structure found, default to using Display Structure")
 						.appliableChange(true);
 				gpm.add(gpmwarn);
@@ -1060,7 +1060,7 @@ public class ValidationUtils {
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.WARNING_MESSAGE(
 								"Protein has no molecular weight, defaulting to calculated value of: "
-										+ tot).appliableChange(true);
+										+ String.format("%.2f", tot)).appliableChange(true);
 				gpm.add(mes);
 				strat.processMessage(mes);
 
@@ -1101,9 +1101,9 @@ public class ValidationUtils {
 							gpm.add(GinasProcessingMessage
 									.WARNING_MESSAGE(
 											"Calculated weight ["
-													+ tot
+													+ String.format("%.2f", tot)
 													+ "] is greater than 5% off of given weight ["
-													+ p.getValue().average + "]")
+													+ String.format("%.2f", p.getValue().average) + "]")
 									.appliableChange(true));
 						}
 						//if it gets this far, break out of the properties

@@ -1238,8 +1238,6 @@ public class EntityUtils {
 			this._id = id;
 		}
 		
-		
-
 		public String getKind() {
 			return this.kind.getName();
 		}

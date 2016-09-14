@@ -49,6 +49,7 @@ import play.mvc.Result;
 
 @NamedResource(name = "substances", type = Substance.class, description = "Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
+	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
 	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
 	static public Model.Finder<UUID, Substance> finder;
 
@@ -218,8 +219,12 @@ public class SubstanceFactory extends EntityFactory {
 
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactCode(int top, int skip, String code, String codeSystem) {
-		return finder.where().and(com.avaje.ebean.Expr.eq("codes.code", code),
-				com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem)).findList();
+		return finder.where(andAll(
+				 com.avaje.ebean.Expr.eq("codes.code", code),
+				 com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
+				 com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
+				))
+				.findList();
 	}
 
 	public static Integer getCount() {

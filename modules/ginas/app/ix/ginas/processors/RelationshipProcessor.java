@@ -53,7 +53,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 						return Optional.of(s);
 					}
 			);
-			
 		}
 	}
 	

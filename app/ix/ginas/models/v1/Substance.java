@@ -729,7 +729,7 @@ public class Substance extends GinasCommonData {
 	 */
 	public Note addValidationNote(GinasProcessingMessage gpm, Reference r){
 		Note n = new Note();
-		n.note=gpm.getMessageType() + ":" + gpm.getMessage();
+		n.note="[Validation]" + gpm.getMessageType() + ":" + gpm.getMessage();
 		if(gpm.hasLinks()){
 			for(Link mes : gpm.links){
 				n.note += "\n" + mes.text;
@@ -1078,10 +1078,42 @@ public class Substance extends GinasCommonData {
 	//TODO: implement this
 	@JsonIgnore
 	public List<GinasProcessingMessage> getValidationMessages(){
-		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
-		return messages;
-		
+		return new ArrayList<GinasProcessingMessage>();
 	}
+	
+	
+	//TODO: make this better, maybe multiple keywords?
+	/**
+	 * Used specifically for faceting, right now it's not
+	 * very useful
+	 * @return
+	 */
+	@Indexable(name="Validation", facet=true)
+	@JsonIgnore
+	public List<String> getValidation(){
+		List<String> validationTypes = new ArrayList<String>();
+		String vprefix="[Validation]";
+		for(Note n: this.notes){
+			if(n.note.startsWith(vprefix)){
+				String vtype = n.note.substring(vprefix.length()).split(":")[0];
+				validationTypes.add(vtype);
+				if(n.note.contains("duplicate") && n.note.contains("name")){
+					validationTypes.add("Name Collision");
+				}
+				if(n.note.contains("duplicate") && n.note.contains("code")){
+					validationTypes.add("Code Collision");
+				}
+				if(n.note.contains("duplicate") && n.note.contains("structure")){
+					validationTypes.add("Structure Collision");
+				}
+			}
+			
+		}
+		return validationTypes;
+	}
+	
+	
+	
 	
 	/**
 	 * Store the validation message on the record 
