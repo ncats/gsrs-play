@@ -30,6 +30,11 @@ import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.IntArrayDeserializer;
 import ix.ginas.models.serialization.IntArraySerializer;
 
+/**
+ * A Chemical Structual Fragment of a {@link Polymer}, typically
+ * it is the repeated portion, aka a Structural Repeat Unit (SRU). {@link Unit}s
+ * but may only be a fragment of an SRU that doesn't repeat.
+ */
 @Entity
 @Table(name="ix_ginas_unit")
 public class Unit extends GinasCommonSubData {

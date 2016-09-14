@@ -37,36 +37,44 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
     private WebClient webClient;
     private  String sessionCookie;
+    private AuthenticationStrategy authenticationStrategy = NullAuthenticationStrategy.INSTANCE;
+
     public BrowserSession(int port) {
         super(port);
         
         webClient = new WebClient();
       //  webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
     }
-
     public BrowserSession(GinasTestServer.User user, int port) {
+        this(user, port, AuthenticationStrategyFactory.getDefault());
+    }
+    public BrowserSession(GinasTestServer.User user, int port, AuthenticationStrategyFactory authenticationStrategyFactory) {
         super(user, port);
-
-        try {
+//
+//        try {
             webClient = new WebClient();
-       //     webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-            HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
-            //there is only 1 form but it isn't named..
-            HtmlForm form = page.getForms().get(0);
+            authenticationStrategy= authenticationStrategyFactory.newInstance(this, webClient);
 
-            form.getInputsByName("username").get(0).setValueAttribute(user.getUserName());
-            form.getInputsByName("password").get(0).setValueAttribute(user.getPassword());
-
-            HtmlPage returnPage = form.getButtonByName("submit").click();
-
-            Cookie cook=webClient.getCookieManager().getCookie("PLAY_SESSION");
-            if(cook==null)throw new IOException("no session established");
-            if(cook!=null){
-            	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
-            }
-        } catch (IOException e) {
-           throw new IllegalStateException("error logging in ", e);
-        }
+            authenticationStrategy.login(user);
+//       //     webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+//            HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
+//            //there is only 1 form but it isn't named..
+//            HtmlForm form = page.getForms().get(0);
+//
+//            form.getInputsByName("username").get(0).setValueAttribute(user.getUserName());
+//            form.getInputsByName("password").get(0).setValueAttribute(user.getPassword());
+//
+//            HtmlPage returnPage = form.getButtonByName("submit").click();
+//
+//
+//            Cookie cook=webClient.getCookieManager().getCookie("PLAY_SESSION");
+//            if(cook==null)throw new IOException("no session established");
+//            if(cook!=null){
+//            	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
+//            }
+//        } catch (IOException e) {
+//           throw new IllegalStateException("error logging in ", e);
+//        }
 
 
     }
@@ -77,10 +85,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
     private WSRequestHolder  url(String url) {
         WSRequestHolder ws = WS.url(url);
-
-        if (sessionCookie != null) {
-            ws.setHeader("Cookie", sessionCookie);
-        }
+        authenticationStrategy.modifyRequest(ws);
         return ws;
     }
 
@@ -118,13 +123,31 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         }
 
 
-        sessionCookie =null;
-
-        webClient.getCookieManager().clearCookies();
+       authenticationStrategy.logout();
         return wsResponse1;
     }
 
     public WSResponse get(URL url) {
         return url(url.toString()).get().get(timeout);
+    }
+
+
+    private static enum NullAuthenticationStrategy implements AuthenticationStrategy{
+        INSTANCE;
+
+        @Override
+        public void login(GinasTestServer.User user) {
+
+        }
+
+        @Override
+        public void logout() {
+
+        }
+
+        @Override
+        public void modifyRequest(WSRequestHolder request) {
+
+        }
     }
 }

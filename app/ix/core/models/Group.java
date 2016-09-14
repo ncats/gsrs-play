@@ -10,6 +10,11 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+/**
+ * A group of users usually
+ * a way to provide access controls
+ * on which groups can view/edit ginas objects.
+ */
 @Entity
 @Table(name="ix_core_group")
 public class Group extends LongBaseModel {

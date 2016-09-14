@@ -37,6 +37,10 @@ import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.utils.Global;
 import ix.utils.Util;
 
+/**
+ * Base class for all Ginas Model objects, contains all fields
+ * common to all including UUID, and audit information.
+ */
 @MappedSuperclass
 public class GinasCommonData extends BaseModel implements GinasAccessControlled, ForceUpdatableModel{
     static public final String REFERENCE = "GInAS Reference";

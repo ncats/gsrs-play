@@ -3,15 +3,26 @@ package ix.test.ix.test.server;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
 import javax.transaction.NotSupportedException;
 
+import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ix.core.GinasProcessingMessage;
+import ix.core.ValidationMessage;
+import ix.core.controllers.EntityFactory;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.test.SubstanceJsonUtil;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 
@@ -42,6 +53,11 @@ public class SubstanceAPI {
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
     private static final String EXPORT_URL="ginas/app/export/$ID$.$FORMAT$";
+
+
+    private static final JsonPointer VALIDATION_MESSAGE_PATH = JsonPointer.valueOf("/validationMessages");
+
+
     private final RestSession session;
 
     private final long timeout = 10_000L;
@@ -98,11 +114,16 @@ public class SubstanceAPI {
 
 
 
-    public WSResponse validateSubstance(JsonNode js){
-        return session.createRequestHolder(API_URL_VALIDATE).post(js).get(timeout);
+    public <T extends Substance> T fetchSubstanceObjectByUuid(String uuid, Class<T> substancetype){
+        try {
+            return  EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().treeToValue(fetchSubstanceByUuid(uuid).asJson(), substancetype);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("error processing json", e);
+        }
+
     }
-    public JsonNode validateSubstanceJson(JsonNode js){
-        return session.extractJSON( validateSubstance(js));
+    public ValidationResponse validateSubstance(JsonNode js){
+        return new ValidationResponse(session.createRequestHolder(API_URL_VALIDATE).post(js).get(timeout));
     }
 
     public WSResponse fetchSubstanceByUuid(String uuid){
@@ -412,5 +433,57 @@ public class SubstanceAPI {
     	return -1;
     }
 
+
+    public final class ValidationResponse{
+        private final WSResponse response;
+
+        private JsonNode js;
+
+
+        public ValidationResponse(WSResponse response) {
+            this.response = response;
+        }
+
+        public int getHttpStatus(){
+            return response.getStatus();
+        }
+        public boolean isValid(){
+            return SubstanceJsonUtil.isValid(response.asJson());
+        }
+
+        public boolean isNull(){
+            return SubstanceJsonUtil.isLiteralNull(asJson());
+        }
+
+        public JsonNode asJson(){
+            if(js ==null) {
+                js= session.extractJSON(response);
+                System.out.println(js.toString());
+            }
+            return js;
+        }
+
+        public List<ValidationMessage> getMessages(){
+            List<ValidationMessage> list = new ArrayList<>();
+            try {
+                for(JsonNode node : asJson().at(VALIDATION_MESSAGE_PATH)){
+                    list.add(new ObjectMapper().treeToValue(node, GinasProcessingMessage.class));
+                }
+
+               return list;
+            }catch(Exception e){
+                throw new IllegalStateException("error unmarshalling json",e);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "ValidationResponse{" +
+                    "response=" + response +
+                    ", js=" + asJson() +
+                    "\nmessages = " + getMessages() +
+                    '}';
+        }
+    }
 
 }

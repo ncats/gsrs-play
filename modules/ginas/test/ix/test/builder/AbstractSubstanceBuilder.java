@@ -1,5 +1,7 @@
 package ix.test.builder;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -209,5 +211,19 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
     public T setUUID(UUID uuid) {
        return andThen(s -> {s.setUuid(uuid);});
     }
-	
+
+    public T setName(String name) {
+       return andThen(s -> {s.names = new ArrayList<>();}).addName(name);
+
+    }
+
+    public T removeUUID(){
+        return andThen( s-> {s.uuid =null;});
+    }
+
+    public T generateNewUUID(){
+        return andThen( s-> {
+            s.uuid =null;
+            s.getOrGenerateUUID();});
+    }
 }

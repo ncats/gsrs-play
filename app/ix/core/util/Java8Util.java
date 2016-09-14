@@ -6,6 +6,8 @@ import play.mvc.Results;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 
 /**
@@ -39,4 +41,16 @@ public final class Java8Util {
         return map.computeIfAbsent( key, k-> new ArrayList<V>());
     }
 
+    /**
+     * Helper method to simplify streaming over Optionals which may be empty.
+     * @param optional
+     * @param <T>
+     * @return
+     */
+    public static <T> Stream<T> optionalStream(Optional<T> optional){
+        if(optional.isPresent()){
+            return Stream.of(optional.get());
+        }
+        return Stream.empty();
+    }
 }

@@ -61,8 +61,11 @@ public class RelationshipInvertTest {
         //submit primary, with dangling relationship
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
+
+
+
         ensurePass(api.submitSubstance(js));
         String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(js);
         String[] parts=type1.split("->");
@@ -70,8 +73,8 @@ public class RelationshipInvertTest {
         //submit the dangled
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
 
         //confirm that the dangled has a relationship to the dangler 
@@ -88,8 +91,8 @@ public class RelationshipInvertTest {
     	 //submit primary, with dangling relationship
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
         ensurePass(api.submitSubstance(js));
         String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(js);
         String[] parts=type1.split("->");
@@ -97,8 +100,8 @@ public class RelationshipInvertTest {
 
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
 
       //confirm that the dangled has a relationship to the dangler 
@@ -138,8 +141,8 @@ public class RelationshipInvertTest {
 			.build();
         
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
         ensurePass(api.submitSubstance(js));
         js =api.fetchSubstanceJsonByUuid(uuid);
         
@@ -147,8 +150,8 @@ public class RelationshipInvertTest {
         //submit alternative
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
 
         
@@ -182,8 +185,8 @@ public class RelationshipInvertTest {
 			.build();
         
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
         ensurePass(api.submitSubstance(js));
         js =api.fetchSubstanceJsonByUuid(uuid);
         
@@ -191,8 +194,8 @@ public class RelationshipInvertTest {
         //submit alternative
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
 
         
@@ -229,8 +232,8 @@ public class RelationshipInvertTest {
 							.build();
         
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+            assertTrue(validationResult.isValid());
         ensurePass(api.submitSubstance(js));
         js =api.fetchSubstanceJsonByUuid(uuid);
         
@@ -238,8 +241,8 @@ public class RelationshipInvertTest {
         //submit alternative
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+            SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+            assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
         JsonNode beforeA = api.fetchSubstanceJsonByUuid(uuidA);
         
@@ -299,8 +302,8 @@ public class RelationshipInvertTest {
 			.build();
         
         String uuid = js.get("uuid").asText();
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
         ensurePass(api.submitSubstance(js));
         js =api.fetchSubstanceJsonByUuid(uuid);
         
@@ -308,8 +311,8 @@ public class RelationshipInvertTest {
         //submit alternative
         JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
         String uuidA = jsA.get("uuid").asText();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
         
         //add relationship
@@ -350,10 +353,10 @@ public class RelationshipInvertTest {
 			.set("/type",parts[1] + "->" + parts[0])
 			.ignoreMissing()
 			.build();
-        
-        
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+
+
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+        assertTrue(validationResult.isValid());
         ensurePass(api.submitSubstance(js));
         js =api.fetchSubstanceJsonByUuid(uuid);
         
@@ -365,8 +368,8 @@ public class RelationshipInvertTest {
 		.add("/relationships/-",newRelate)
 		.ignoreMissing()
 		.build();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
+        SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+        assertTrue(validationResultA.isValid());
         ensurePass(api.submitSubstance(jsA));
         
         

@@ -458,7 +458,6 @@ public class Util {
 	}
 	
 	public static <T> Set<T> combine(Set<T> c1, Set<T> c2){
-		System.out.println("Hurray!");
 		c1.addAll(c2);
 		return c1;
 	}
