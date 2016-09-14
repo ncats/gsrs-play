@@ -269,9 +269,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             												//So should anything with the edit
             												//inside of a post Update hook
             EntityWrapper saved=null;
+            
+            
             //didn't work, according to change operation
+            //Either there was an error, or the decision
+            //to change was cancelled
             if(!op.isPresent()){
-            	System.out.println("Couldn't perform change.");
             	return null; 
             }else{
             	saved = EntityWrapper.of(op.get());

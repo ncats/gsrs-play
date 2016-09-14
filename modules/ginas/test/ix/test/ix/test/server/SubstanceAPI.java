@@ -448,9 +448,9 @@ public class SubstanceAPI {
             return response.getStatus();
         }
         public boolean isValid(){
-            return SubstanceJsonUtil.isValid(response.asJson());
+            return SubstanceJsonUtil.isValid(asJson());
         }
-
+        
         public boolean isNull(){
             return SubstanceJsonUtil.isLiteralNull(asJson());
         }
@@ -458,7 +458,6 @@ public class SubstanceAPI {
         public JsonNode asJson(){
             if(js ==null) {
                 js= session.extractJSON(response);
-                System.out.println(js.toString());
             }
             return js;
         }

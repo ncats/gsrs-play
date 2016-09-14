@@ -27,8 +27,6 @@ public class FacetCountsTest {
     public GinasTestServer ts = new GinasTestServer();
 
 
-
-
     @Test
     public void facetCountsGetUpdatedWhenDataIsLoaded() throws IOException{
         GinasTestServer.User admin = ts.createAdmin("admin2", "adminPass");
@@ -71,7 +69,7 @@ public class FacetCountsTest {
 
             partialFacets.put("GInAS Tag", new HashMap<String,Integer>(){{
 //                put("NOMEN", 9); //Accidentally added before, removed now
-                put("WARNING", 9);
+//                put("WARNING", 9); //Removed due to changing how warnings are stored
                 put("MI", 2);
                 put("WHO-DD", 2);
                 put("INCI", 1);

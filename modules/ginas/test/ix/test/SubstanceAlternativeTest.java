@@ -93,11 +93,12 @@ public class SubstanceAlternativeTest {
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuid = js.get("uuid").asText();
 //        JsonNode validationResult = api.validateSubstanceJson(js); //should have JSON substance builder!
-//        SubstanceJsonUtil.ensureIsValid(validationResult);		   //Oh man! Everyone will think we're so
+//        SubstanceJsonUtil.ensureIsValid(validationResult);		 //Oh man! Everyone will think we're so
 //        ensurePass(api.submitSubstance(js));					   //cool then! I can't even imagine ...
 
         SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
         assertTrue(validationResult.isValid());
+        ensurePass(api.submitSubstance(js));
 
         //submit alternative
         resource = new File("test/testJSON/alternative/PostAlt.json");
@@ -106,6 +107,7 @@ public class SubstanceAlternativeTest {
         String uuidA = jsA.get("uuid").asText();
 
         SubstanceAPI.ValidationResponse responseA = api.validateSubstance(jsA);
+        
         assertTrue(responseA.isValid());
         ensurePass(api.submitSubstance(jsA));
 
@@ -126,7 +128,7 @@ public class SubstanceAlternativeTest {
 //        JsonNode validationResultNew = api.validateSubstanceJson(jsNew);
 //        SubstanceJsonUtil.ensureIsValid(validationResultNew);
 //
-        SubstanceAPI.ValidationResponse validationResultNew = api.validateSubstance(js);
+        SubstanceAPI.ValidationResponse validationResultNew = api.validateSubstance(jsNew);
         assertTrue(validationResultNew.isValid());
 
         ensurePass(api.submitSubstance(jsNew));
@@ -139,7 +141,7 @@ public class SubstanceAlternativeTest {
         String uuidAUpdate = newAVersion.get("uuid").asText();
         System.out.println("These are the relationships:" + newAVersion.get("relationships").size());
 
-        SubstanceAPI.ValidationResponse validationResultAUpdate = api.validateSubstance(js);
+        SubstanceAPI.ValidationResponse validationResultAUpdate = api.validateSubstance(newAVersion);
         assertTrue(validationResultAUpdate.isValid());
 
         ensurePass(api.updateSubstance(newAVersion));
