@@ -7,7 +7,7 @@
     <tr>
                 <td>
                 	<div>
-                		<input class="form-control" style="width:100%; font-width:bold;" readonly value="@n.name" />
+                		<input class="name-form form-control" style="width:100%; font-width:bold;" readonly value="@n.name" />
                 	</div>
                 	@if(n.getLocators(substance).size()>0){
             				<div class="locators"><label>Locators:</label>
@@ -26,19 +26,10 @@
                     <div class="display-name"><i class="fa fa-check" aria-hidden="true"></i>Display Name</div>
                 }
                 </td>
-                @if(n.getReferences.size > 0){
-                <td style="text-align:right;">
-                	<referencesmanager indices substance ="'@substance.getUuid'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
-                </td>
-                }else{
-                	<td>none</td>
-            	}
-            </tr>
-            <tr>
-            	<td class="name-details" colspan="3">
+                <td class="name-details">
             		
 	                @if(n.languages.size()>0){
-	                	<div class="col-md-2 pull-right table-responsive">
+	                	<div class="table-responsive">
 			                <div><label>Language:</label>
 			                @for(l <- n.languages) {
 			                    @GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
@@ -47,7 +38,7 @@
 		                </div>
 	                }
 	                @if(n.domains.size()>0){
-	                	<div class="col-md-2 pull-right  table-responsive">
+	                	<div class="table-responsive">
 			                <div><label>Domain:</label>
 			                @for(d <- n.domains) {
 			                    @GinasApp.getCV.getDisplay("NAME_DOMAIN", d.term) &nbsp;
@@ -56,7 +47,7 @@
 		                </div>
 	                }
 	                @if(n.nameJurisdiction.size()>0){
-	                	<div class="col-md-2 pull-right table-responsive">
+	                	<div class="table-responsive">
 			                <div><label>Jurisdiction:</label>
 			                @for(j <- n.nameJurisdiction) {
 		                    	@GinasApp.getCV.getDisplay("JURISDICTION",j.term) &nbsp;
@@ -65,7 +56,7 @@
 		                </div>
 	                }
 	                @if(n.nameOrgs.size()>0){
-	               		<div class="col-md-2 pull-right  table-responsive">
+	               		<div class="table-responsive">
 			                <div><label>Naming Org:</label>
 			                @for(org <- n.nameOrgs) {
 		                    	@GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
@@ -74,10 +65,18 @@
 		                </div>
 	                }
                 </td>
+                @if(n.getReferences.size > 0){
+                <td style="text-align:right;">
+                	<referencesmanager indices substance ="'@substance.getUuid'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
+                </td>
+                }else{
+                	<td>none</td>
+            	}
             </tr>
-            <tr><td class = "row-spacer '@n.getUuid'" colspan = "3"></td></tr>
+           
+            <tr><td class = "row-spacer '@n.getUuid'" colspan = "4"></td></tr>
         	
-            <tr ng-if="audit == true"><td  colspan = "3">Created by <code>@n.createdBy</code> on <code>@n.created</code> , Edited by <code>@n.lastEditedBy</code> on <code>@n.lastEdited</code></td></tr>
+            <tr ng-if="audit == true"><td  colspan = "4">Created by <code>@n.createdBy</code> on <code>@n.created</code> , Edited by <code>@n.lastEditedBy</code> on <code>@n.lastEdited</code></td></tr>
 }
 
 <button class="btn btn-primary label-offset det" ng-click = "namescollapse = !namescollapse">
@@ -90,6 +89,7 @@
             <tr>
                 <th>Name</th>
                 <th>Type</th>
+                <th>Details</th>
                 <th>References</th>
             </tr>
         </thead>
@@ -102,7 +102,7 @@
         }
         </tbody>
         <tbody ng-if="!allnames">
-        <tr><td colspan="3"> ... </td></tr>
+        <tr><td colspan="4"> ... </td></tr>
         </tbody>
         <tbody ng-if="allnames">
         @for(n <- names) {
