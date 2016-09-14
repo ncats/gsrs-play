@@ -1271,3 +1271,29 @@ span.key-value {
     border: 1px solid #ddd;
     border-radius: 5px;
 }
+
+.name-details{
+	font-size: 8pt;
+	background-color: rgb(249, 249, 249);
+}
+
+.name-table.table > tbody > tr > td{
+	border-top:none;
+}
+.pref-name, .display-name {
+    color: #5cb85c;
+    font-style: italic;
+}
+.row-spacer{
+	border-bottom:1px solid #ddd;
+}
+
+.locators label{
+	font-size:small;
+	color: #5cb85c;
+    font-style: italic;
+}
+.name-type{
+	font-size: small;
+	font-weight: bold;
+}
