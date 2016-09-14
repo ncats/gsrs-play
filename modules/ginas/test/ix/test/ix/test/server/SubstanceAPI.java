@@ -448,7 +448,13 @@ public class SubstanceAPI {
             return response.getStatus();
         }
         public boolean isValid(){
-            return SubstanceJsonUtil.isValid(response.asJson());
+            if(getHttpStatus() !=200){
+                return false;
+            }
+            if(response.getBody().isEmpty()){
+                return false;
+            }
+            return SubstanceJsonUtil.isValid(asJson());
         }
 
         public boolean isNull(){
