@@ -400,8 +400,7 @@ public class RelationshipInvertTest {
 			.build();
         
         
-        JsonNode validationResult = api.validateSubstanceJson(js);
-        SubstanceJsonUtil.ensureIsValid(validationResult);
+        assertTrue(api.validateSubstance(js).isValid());
         ensurePass(api.submitSubstance(js));
         js =api.fetchSubstanceJsonByUuid(uuid);
         
@@ -413,7 +412,7 @@ public class RelationshipInvertTest {
 			.add("/relationships/-",newRelate)
 			.ignoreMissing()
 			.build();
-        JsonNode validationResultA = api.validateSubstanceJson(jsA);
+        assertTrue(api.validateSubstance(jsA).isValid());
         SubstanceJsonUtil.ensureIsValid(validationResultA);
         ensurePass(api.submitSubstance(jsA));
         
