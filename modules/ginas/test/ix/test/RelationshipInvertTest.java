@@ -413,7 +413,6 @@ public class RelationshipInvertTest {
 			.ignoreMissing()
 			.build();
         assertTrue(api.validateSubstance(jsA).isValid());
-        SubstanceJsonUtil.ensureIsValid(validationResultA);
         ensurePass(api.submitSubstance(jsA));
         
         
