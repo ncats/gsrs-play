@@ -243,7 +243,7 @@ public class ChemicalApiTest {
 			List<ValidationMessage> messages = validationResponse.getMessages();
 
 			Optional<ValidationMessage>  desiredWarning = messages.stream()
-															.filter(msg -> msg.getMessageType() == ValidationMessage.MESSAGE_TYPE.WARNING &&  msg.getMessage().contains("Valance Error"))
+															.filter(msg -> msg.getMessageType() == ValidationMessage.MESSAGE_TYPE.WARNING &&  msg.getMessage().contains("Valence Error"))
 															.findAny();
 
 			assertTrue("Pentavalent carbon should issue a warning message", desiredWarning.isPresent());
