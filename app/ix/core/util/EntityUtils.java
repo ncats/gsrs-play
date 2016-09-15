@@ -242,8 +242,12 @@ public class EntityUtils {
 		}
 		
 		public Stream<Tuple<FieldMeta, Object>> streamFieldsAndValues(Predicate<FieldMeta> p) {
-			return ei.getFieldInfo().stream().filter(p).map(f -> new Tuple<>(f, f.getValue(this.getValue())))
-					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
+			Object bean = this.getValue();
+			return ei.getFieldInfo().stream()
+					.filter(p)
+					.map(f -> new Tuple<>(f, f.getValue(bean)))
+					.filter(t -> t.v().isPresent())
+					.map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
 		public List<MethodMeta> getMethodInfo() {
@@ -1288,14 +1292,17 @@ public class EntityUtils {
 		public static Key of(Document doc) throws Exception {
 			 // TODO: This should be moved to somewhere more Abstract, probably
 			String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
-																				
 			EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
-			if (ei.hasLongId()) {
-				Long id = doc.getField(ei.getInternalIdField()).numericValue().longValue();
-				return new Key(ei, id);
-			} else {
-				String id = doc.getField(ei.getInternalIdField()).stringValue();
-				return new Key(ei, id);
+			if(ei.hasIdField()){
+				if (ei.hasLongId()) {
+					Long id = doc.getField(ei.getInternalIdField()).numericValue().longValue();
+					return new Key(ei, id);
+				} else {
+					String id = doc.getField(ei.getInternalIdField()).stringValue();
+					return new Key(ei, id);
+				}
+			}else{
+				throw new NoSuchElementException("Entity:" + kind + " has no ID field");
 			}
 		}
 
