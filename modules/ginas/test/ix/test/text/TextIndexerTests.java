@@ -88,4 +88,5 @@ public class TextIndexerTests {
 			IOUtil.deleteRecursivelyQuitely(newTempFile);
 		}
 	}
+	
 }
