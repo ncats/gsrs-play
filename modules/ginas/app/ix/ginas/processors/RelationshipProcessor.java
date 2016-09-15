@@ -39,7 +39,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			
 			
 			if(otherSubstance ==null){ //probably warn
-				System.out.println("Related record is not in database");
 				return;
 			}
 			EntityPersistAdapter.performChangeOn(
@@ -54,7 +53,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 						return Optional.of(s);
 					}
 			);
-			
 		}
 	}
 	

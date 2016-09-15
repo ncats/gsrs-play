@@ -532,7 +532,8 @@ public class GinasSDFUtils {
 				String path) {
 			sub.addNote(note).addReference(makePathReference(sub, path));
 		}
-
+		
+		
 		public static void SET_STRUCTURE(ChemicalSubstance csub,
 				String molfile, String path) {
 			if (csub.structure == null)

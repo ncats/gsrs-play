@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Set;
 
@@ -40,14 +41,14 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
      * @throws Exception
      */
     private void runRepTests(BrowserSession session) throws IOException, AssertionError{
+    	
+    	
     	SubstanceSearch searcher = new SubstanceSearch(session);
     	SubstanceSearch.SearchResult all = searcher.all();
         assertEquals(90, all.numberOfResults());
-        
-    	
+       
         SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
         assertEquals(17, results.numberOfResults());
-        
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
         
     }
@@ -98,7 +99,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test 
+    @Test  
     public void loadMultipleFiles() throws IOException {
 
         try(BrowserSession session = ts.newBrowserSession(admin)){
@@ -109,7 +110,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
             loader.loadJson(new File("test/testdumps/rep90_part1.ginas"));
 
             loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
-
+			
             runRepTests(session);
         }
     }
@@ -118,20 +119,15 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     @Test 
     public void loadAsAdmin() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
-
             SubstanceLoader loader = new SubstanceLoader(session);
-
             File f = new File("test/testdumps/rep90.ginas");
-
             loader.loadJson(f);
-
-
             runRepTests(session);
         }
     }
     
     
-    @Test 
+    @Test  
     public void substructureSearchOnRep90ShouldReturnDeterministicResults() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -149,7 +145,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     
-    @Test 
+    @Test  
     public void substructureSearchOnRep90ShouldAllowPaging() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -166,7 +162,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         }
     }
     
-    @Test 
+    @Test  
     public void substructureSearchOnRep90ShouldPreserveHighlightingAfterPaging() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
@@ -189,7 +185,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test 
+    @Test  
     public void loadedDataPersistedAcrossRestarts() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)) {
 
@@ -209,7 +205,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
 
     
-    @Test 
+    @Test  
     public void nonAdminCanNotLoad() throws IOException{
         GinasTestServer.User normalUser = ts.createNormalUser("peon", "pass");
 
@@ -226,7 +222,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
     
-    @Test 
+    @Test  
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
         SubstanceSearch searcher = new SubstanceSearch(ts.notLoggedInBrowserSession());
@@ -240,7 +236,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     
     
-    @Test 
+    @Test  
     public void deleteLuceneIndexesButNOTDatabaseShouldReturnZeroResults() throws IOException{
         try(BrowserSession session = ts.newBrowserSession(admin)) {
 

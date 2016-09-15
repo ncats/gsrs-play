@@ -1,14 +1,15 @@
 package ix.test.load;
 
-import ix.ginas.controllers.GinasApp;
-import ix.test.ix.test.server.SubstanceSearch;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+import ix.ginas.controllers.GinasApp;
+import ix.test.ix.test.server.SubstanceSearch;
 
 /**
  * Created by katzelda on 4/29/16.
@@ -27,9 +28,10 @@ public final class TestFacetUtil {
         //a facet would not be allowed without some deeper changes. Instead, we say
         //that the filtered set must be a subset
         
-        Set<Entry<String,Map<String, Integer>>> missing=filteredExpected.entrySet();
+        Set<Entry<String,Map<String, Integer>>> missing=new HashSet<>(filteredExpected.entrySet());
         missing.removeAll(actual.entrySet());
         missing.removeIf(f->f.getValue()==null);
+        
         
         Map<String, Map<String, Integer>> empty=new HashMap<>();
         
@@ -75,7 +77,7 @@ public final class TestFacetUtil {
         }});
         expectedFacets.put( "GInAS Tag", new HashMap<String, Integer>(){{
 //            put("NOMEN", 17); //Note, this was removed, as it was only in the tags by accident
-            put("WARNING", 17);
+//            put("WARNING", 17);
             put("WHO-DD", 6);
             put("MI", 6);
             put("INCI", 2);

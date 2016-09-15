@@ -1,13 +1,10 @@
 package ix.ginas.utils.validation;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import ix.core.AbstractValidator;
 import ix.core.GinasProcessingMessage;
 import ix.core.UserFetcher;
-import ix.core.ValidationMessage;
 import ix.core.ValidationResponse;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
@@ -66,9 +63,12 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		boolean allowPossibleDuplicates=false;
 		if(		getCurrentUser().hasRole(Role.SuperUpdate) || 
 				getCurrentUser().hasRole(Role.SuperDataEntry) || 
-				getCurrentUser().hasRole(Role.Admin)){
+				getCurrentUser().hasRole(Role.Admin) ||
+				this.method==METHOD_TYPE.BATCH){
 			allowPossibleDuplicates=true;
 		}
+		
+		
 		
 		ValidationResponse<Substance> vr=new ValidationResponse<Substance>(objnew);
 		if(this.method==METHOD_TYPE.IGNORE){
@@ -118,7 +118,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 			if(_strategy.handleMessages(objnew, vlad)){
 				vr.setValid();
 			}
-			_strategy.addWarnings(objnew, vlad);
+			_strategy.addProblems(objnew, vlad);
 	
 			
 			
@@ -145,9 +145,6 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		if(!objold.version.equals(objnew.version)){
 			vlad.add(GinasProcessingMessage.ERROR_MESSAGE("Substance version '" + objnew.version +  "', does not match the stored version '" +  objold.version +"', record may have been changed while being updated"));
 		}
-		
-		
-		
 		
 		if (objnew.isPublic() && !objold.isPublic()) {
 			if (!(up.hasRole(Role.Admin) || up.hasRole(Role.SuperUpdate))) {

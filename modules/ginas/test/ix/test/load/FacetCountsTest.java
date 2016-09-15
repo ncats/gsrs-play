@@ -83,8 +83,7 @@ public class FacetCountsTest {
             loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
 
             SubstanceSearch.SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
-
-            assertEquals(17, results2.numberOfResults());
+            assertEquals(17, results2.numberOfResults());            
             TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results2);
         }
     }

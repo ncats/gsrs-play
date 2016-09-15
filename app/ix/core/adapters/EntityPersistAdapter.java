@@ -290,7 +290,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 popEditForUpdate(key); //When we're all done, release it
             }
             lock.release(); //release the lock
-            
         }
     }
 

@@ -39,6 +39,7 @@ Bug Fixes
    would persist an Edit for that attempted change, even
    though none was performed, due to a misreporting by
    the trigger. The trigger was corrected.
+7. Don't fail text indexing on empty strings
 
 Deeper look
 -----------
