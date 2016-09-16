@@ -16,7 +16,9 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.UserFetcher;
 import ix.core.util.EntityUtils.EntityWrapper;
@@ -104,5 +106,17 @@ public class Edit extends BaseModel {
     @JsonIgnore
     public Date getCreatedDate(){
     	return new Date(this.created);
+    }
+    
+    @JsonIgnore
+    public JsonNode getDiff(){
+    	try{
+	    	ObjectMapper om = new ObjectMapper();
+	    	JsonNode js1=om.readTree(oldValue);
+	    	JsonNode js2=om.readTree(newValue);
+	    	return JsonDiff.asJson(js1, js2);
+    	}catch(Exception e){
+    		return null;
+    	}
     }
 }

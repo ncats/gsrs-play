@@ -242,7 +242,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     public void updateAuditInfo(boolean creation, boolean force){
     	Date currentDate = TimeUtil.getCurrentDate();
-    	if(lastEditedBy == null || this.createdBy==null || force){
+    	if(this.lastEditedBy == null || this.createdBy==null || force){
 			Principal p1=UserFetcher.getActingUser();
 	        if(p1!=null){
 	        	if(lastEditedBy== null || force){
@@ -256,13 +256,13 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	        	}
 	        }
 		}
-        if(this.lastEdited ==null){
+        if(this.lastEdited == null){
         	this.lastEdited=currentDate;
         }
-        if(this.created ==null){
+        if(this.created == null){
         	this.created=currentDate;
         }
-        if(this.uuid==null){
+        if(this.uuid == null){
         	this.uuid=UUID.randomUUID();
         }
     }

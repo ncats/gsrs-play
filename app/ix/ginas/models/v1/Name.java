@@ -31,6 +31,7 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.EmbeddedKeywordList;
+import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
@@ -237,6 +238,12 @@ public class Name extends CommonDataElementOfCollection {
     	return displayName;
 	}
     
+    
+    public void addLanguage(String lang){
+    	if(!isLanguage(lang)){
+    		this.languages.add(new Keyword(GinasCommonData.LANGUAGE,lang));
+    	}
+    }
     
     @JsonIgnore
 	public boolean isOfficial() {

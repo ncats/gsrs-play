@@ -83,6 +83,21 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         if(copy.modifications !=null){
             setModifications(copy.modifications);
         }
+        
+        
+        if(copy.lastEdited !=null){
+        	setLastEditedDate(copy.lastEdited);
+        }
+        if(copy.created !=null){
+        	setCreatedDate(copy.created);
+        }
+        
+        if(copy.createdBy !=null){
+        	setCreatedBy(copy.createdBy);
+        }
+        if(copy.lastEditedBy !=null){
+        	setLastEditedBy(copy.lastEditedBy);
+        }
     }
 
     private T setModifications(Modifications modifications) {
@@ -99,12 +114,29 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 
     public T setApproval(Principal approvedBy, Date approved, String approvalID) {
         return andThen(s ->{
-           s.approvalID = approvalID;
+            s.approvalID = approvalID;
             s.approved = approved;
             s.approvedBy = approvedBy;
         });
     }
 
+    public T setCreatedBy(Principal p){
+        return andThen( s->{s.setCreatedBy(p);});
+    }
+    
+    public T setLastEditedBy(Principal p){
+        return andThen( s->{s.setLastEditedBy(p);});
+    }
+    
+    public T setCreatedDate(Date d){
+        return andThen( s->{s.setCreated(d);});
+    }
+    
+    public T setLastEditedDate(Date d){
+        return andThen( s->{s.setLastEdited(d);});
+    }
+    
+    
     public T setVersion(int version){
         return andThen( s->{ s.version = Integer.toString(version);});
     }
@@ -169,6 +201,7 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 	public T addName(String name){
 		return andThen(s->{
 			Name n=new Name(name);
+			n.addLanguage("en");
 			n.addReference(getOrAddFirstReference(s));
 			s.names.add(n);
 		});
