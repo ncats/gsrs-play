@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
@@ -75,7 +76,16 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             synchronized (count){
                 count.increment();
             }
-            lock.lock();
+            while(true)
+                try {
+                    if(lock.tryLock(1, TimeUnit.MINUTES)){
+                        break;
+                    }else{
+                        System.out.println("still waiting for lock with key " + thekey);
+                    }
+                } catch (InterruptedException e) {
+                   throw new RuntimeException(e);
+                }
             preUpdateWasCalled=false;
             postUpdateWasCalled=false;
             
@@ -250,9 +260,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             }
         });
 
-        if(lock.isLocked()){
-        	System.out.println("Record " + key + " is locked. Waiting ...");
-        }
+
 
         Edit e=null;
         lock.acquire(); //acquire the lock (blocks)
