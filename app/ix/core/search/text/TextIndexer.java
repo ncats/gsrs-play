@@ -1418,14 +1418,16 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			getQueryBreakDownFor(query).stream().forEach(oq->{
 				try{
 					FacetsCollector facetCollector2 = new FacetsCollector();
-					List<String> analyzers = EntityUtils.getEntityInfoFor(options.kind)
-												.getTypeAndSubTypes()
-								.stream()
-								.map(e->e.getName())
-								.map(n->ANALYZER_VAL_PREFIX + n)
-								.collect(Collectors.toList());
-					
-					Filter f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
+					Filter f=null;
+					if(options.kind!=null){
+						List<String> analyzers = EntityUtils.getEntityInfoFor(options.kind).getTypeAndSubTypes()
+									.stream()
+									.map(e->e.getName())
+									.map(n->ANALYZER_VAL_PREFIX + n)
+									.collect(Collectors.toList());
+						
+						f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
+					}
 					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
 					LuceneSearchProviderResult res=lsp2.search(searcher, taxon);
 					res.getFacets().getAllDims(options.fdim).forEach(fr->{
@@ -2336,14 +2338,17 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 		if (asText) {
 			String text = value.toString();
-			if(text.isEmpty())return;
+			if(text.isEmpty()){
+				if(indexable.indexEmpty()){
+					text=indexable.emptyString();
+				}else{
+					return;
+				}
+			}
 			String dim = indexable.name();
 			
 			if("".equals(dim)){
 				dim = full;
-				if("".equals(dim)){
-					dim="[no facet]";
-				}	
 			}
 			
 			if (indexable.facet() || indexable.taxonomy()) {

@@ -22,5 +22,7 @@ public @interface Indexable {
     String format () default "%1$.2f"; // how to format the value?
 
     boolean recurse ()  default true; //allow recursion below this
-    
+	boolean indexEmpty() default false; //allow indexing of ""
+	
+	String emptyString() default "<EMTPY>"; //String to use on empty
 }

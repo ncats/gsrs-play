@@ -120,7 +120,7 @@ public abstract class GinasProcessingStrategy {
 				.filter(f->f.isProblem())
 				.collect(Collectors.toList());
 			if(!problems.isEmpty()){
-				cs.addValidationMessages(problems);
+				cs.setValidationMessages(problems);
 			}			
 		}
 	}

@@ -39,7 +39,10 @@ Bug Fixes
    would persist an Edit for that attempted change, even
    though none was performed, due to a misreporting by
    the trigger. The trigger was corrected.
-7. Don't fail text indexing on empty strings
+7. Don't fail text indexing on empty strings. We now
+   allow empty strings to be ignored from indexing
+   or to add them with a special "EMTPY" keyword.
+
 
 Deeper look
 -----------

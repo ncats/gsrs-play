@@ -50,6 +50,7 @@ import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.GinasCommonData;
+import ix.ginas.models.ValidationMessageHolder;
 import ix.ginas.models.serialization.DateDeserializer;
 import ix.ginas.models.serialization.KeywordDeserializer;
 import ix.ginas.models.serialization.KeywordListSerializer;
@@ -65,7 +66,7 @@ import play.Logger;
 @Table(name = "ix_ginas_substance")
 @Inheritance
 @DiscriminatorValue("SUB")
-public class Substance extends GinasCommonData {
+public class Substance extends GinasCommonData implements ValidationMessageHolder {
 	
 
 	public static final String VALIDATION_REFERENCE_TYPE = "VALIDATION_MESSAGE";
@@ -967,7 +968,6 @@ public class Substance extends GinasCommonData {
         return toChemical(new ArrayList<>());
     }
 
-
     /**
      * Create a new {@link Chemical} object for this Substance and report any
      * errors or warnings to the passed in {@link GinasProcessingMessage} parameter.
@@ -1074,8 +1074,10 @@ public class Substance extends GinasCommonData {
 		return EntityWrapper.of(this).getEdits();
 	}
 	
-	
-	//TODO: implement this
+	/**
+	 * This is not yet implemented, so it always returns an empty list.
+	 * @return
+	 */
 	@JsonIgnore
 	public List<GinasProcessingMessage> getValidationMessages(){
 		return new ArrayList<GinasProcessingMessage>();
@@ -1121,7 +1123,8 @@ public class Substance extends GinasCommonData {
 	 * @param gpm
 	 * 
 	 */
-	public void addValidationMessages(List<GinasProcessingMessage> gpm){
+	@Override
+	public void setValidationMessages(List<GinasProcessingMessage> gpm) {
 		Reference r = new Reference();
 		r.docType = VALIDATION_REFERENCE_TYPE;
 		r.citation = "GSRS System-generated Validation messages";

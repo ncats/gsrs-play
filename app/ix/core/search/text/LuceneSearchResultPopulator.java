@@ -62,6 +62,7 @@ class LuceneSearchResultPopulator {
 			}
 			Document doc = searcher.doc(hits.scoreDocs[i + offset].doc); //bad idea
 			try {
+				
 				Key k = Key.of(doc);
 				result.addNamedCallable(new EntityFetcher<>(k));
 			} catch (Exception e) {

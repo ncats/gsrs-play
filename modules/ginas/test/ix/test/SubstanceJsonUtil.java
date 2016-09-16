@@ -101,10 +101,10 @@ public final class SubstanceJsonUtil {
 			throw e;
 		}
 	}
+	
 	public static boolean isValid(JsonNode js){
 		return js.get("valid").asBoolean();
 	}
-
 
     public static String getApprovalStatus(JsonNode js){
         return js.get("status").asText().toLowerCase();

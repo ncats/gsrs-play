@@ -74,9 +74,6 @@ public class Amount extends GinasCommonSubData {
     	if(val.trim().length()<=0){
     		val="<i>empty value</i>";
     	}
-//    	if(type!=null){
-//    		val= type + ": " + val;
-//    	}
     	
     	return val; 
     }
