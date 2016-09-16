@@ -17,7 +17,7 @@ Enhancements
 7. Improved facet overflow handling
 8. Moved Audit information to top of record, 
    collapsed by default.
-
+9. Java API now allows to do see the diff in changes
 
 Bug Fixes
 ---------
@@ -129,6 +129,7 @@ Deeper look
    method. This is related to #3 above. If the updates
    can be simplified to make a single "update" call, without
    need to deeper processing, this move should be fine.
+
 
 
 
