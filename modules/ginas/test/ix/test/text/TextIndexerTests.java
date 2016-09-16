@@ -16,6 +16,9 @@ import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.IOUtil;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
+import org.junit.rules.TemporaryFolder;
+
+import javax.persistence.Id;
 
 /**
  * Tests the TextIndexer on specific tasks, like indexing
@@ -26,7 +29,10 @@ import ix.test.ix.test.server.RestSession;
  */
 public class TextIndexerTests {
 	@Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+    public GinasTestServer ts = new GinasTestServer();
+
+	@Rule
+	public TemporaryFolder tmpDir = new TemporaryFolder();
 
 	public class MySpecialTestClass{
 		@Indexable(facet=true)
@@ -34,59 +40,49 @@ public class TextIndexerTests {
 		
 		@Indexable(facet=true, indexEmpty=true,emptyString="EMPTYONE" )
 		public String emptyIndexable="";
-		
+
+        @Id
+        public String id;
 		public String normalField;
 		
-		public MySpecialTestClass(String searchValue){
-			normalField=searchValue;
+		public MySpecialTestClass(String id, String searchValue){
+
+            this.id = id;
+            normalField=searchValue;
 		}
 		
 	}
 
 	@Test
 	public void testCreateTextIndexerTemporary() throws IOException {
-		try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-		File newTempFile = new File("./test-index");
-		IOUtil.deleteRecursivelyQuitely(newTempFile);
-		newTempFile.mkdirs();
-		TextIndexer ti = TextIndexer.getInstance(newTempFile);
+			TextIndexer.getInstance(tmpDir.getRoot());
 
-		IOUtil.deleteRecursivelyQuitely(newTempFile);
-		}
+
 	}
 	
 	@Test
 	public void testIndexEmptyStringField() throws IOException {
-		try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-			File newTempFile = new File("./test-index" + UUID.randomUUID());
 			String value="VALUEIWILLSEARCHFOR";
-			IOUtil.deleteRecursivelyQuitely(newTempFile);
-			newTempFile.mkdirs();
-			TextIndexer ti = TextIndexer.getInstance(newTempFile);
-			ti.add(EntityWrapper.of(new MySpecialTestClass(value)));
+
+			TextIndexer ti = TextIndexer.getInstance(tmpDir.getRoot());
+			ti.add(EntityWrapper.of(new MySpecialTestClass("id", value)));
 			
 			SearchResult sr= ti.search(value, 2);
 			assertEquals(1,sr.count());
 
-			IOUtil.deleteRecursivelyQuitely(newTempFile);
-		}
 	}
 	
 	@Test
 	public void testIndexEmptyStringWithAllowedEmptyShouldBeSearchable() throws IOException {
-		try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
-			File newTempFile = new File("./test-index" + UUID.randomUUID());
-			String value="VALUEIWILLSEARCHFOR";
-			IOUtil.deleteRecursivelyQuitely(newTempFile);
-			newTempFile.mkdirs();
+					String value="VALUEIWILLSEARCHFOR";
+
 			
-			TextIndexer ti = TextIndexer.getInstance(newTempFile);
-			EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass(value));
+			TextIndexer ti = TextIndexer.getInstance(tmpDir.getRoot());
+			EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
 			ti.add(ew);
 			SearchResult sr= ti.search("EMPTYONE", 2);
 			assertEquals(1,sr.count());
-			IOUtil.deleteRecursivelyQuitely(newTempFile);
-		}
-	}
+    }
+
 	
 }

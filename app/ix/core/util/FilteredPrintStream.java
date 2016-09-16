@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -17,7 +16,7 @@ public class FilteredPrintStream extends PrintStream {
     private AtomicBoolean enabled = new AtomicBoolean(true);
 
     private final PrintStream printStream;
-    private final LinkedList<WriterFilter> filters = new LinkedList<>();
+    private final LinkedList<Filter> filters = new LinkedList<>();
 
 
     public FilteredPrintStream(PrintStream printStream) {
@@ -222,13 +221,13 @@ public class FilteredPrintStream extends PrintStream {
         }
     }
 
-    private synchronized void removeFilter(WriterFilter filter){
+    private synchronized void removeFilter(Filter filter){
         //this is probably always the first filter...
         //but just incase do a remove( obj) instead of a pop
        this.filters.remove(filter);
     }
 
-    public synchronized FilterSession newFilter(WriterFilter filter){
+    public synchronized FilterSession newFilter(Filter filter){
         Objects.requireNonNull(filter);
         this.filters.push(filter);
         return new FilterSessionImpl(filter);
@@ -239,16 +238,16 @@ public class FilteredPrintStream extends PrintStream {
         @Override
         void close();
 
-        WriterFilter getFilter();
+        Filter getFilter();
 
 
     }
 
     private class FilterSessionImpl implements FilterSession{
 
-        private WriterFilter filter;
+        private Filter filter;
 
-        public FilterSessionImpl(WriterFilter filter) {
+        public FilterSessionImpl(Filter filter) {
             this.filter = filter;
         }
 
@@ -258,7 +257,7 @@ public class FilteredPrintStream extends PrintStream {
         }
 
         @Override
-        public WriterFilter getFilter() {
+        public Filter getFilter() {
             return filter;
         }
 
@@ -268,39 +267,33 @@ public class FilteredPrintStream extends PrintStream {
     private interface ThrowingRunnable<T extends Throwable>{
         void run() throws T;
     }
-    public interface WriterFilter extends Predicate<StackTraceElement> {
-        default WriterFilter and(WriterFilter f){
+    @FunctionalInterface
+    public interface Filter {
+
+        /**
+         * Evaluates this predicate on the given argument.
+         *
+         * @param t the input argument
+         * @return {@code true} if the input argument should pass the filter
+         * and get printed out,
+         * otherwise {@code false}
+         */
+        boolean test(StackTraceElement t);
+
+        default Filter and(Filter f){
             return (t)-> test(t) && f.test(t);
         }
 
-        default WriterFilter or(WriterFilter f){
+        default Filter or(Filter f){
             return (t)-> test(t) || f.test(t);
         }
 
-        default WriterFilter not(){
+        default Filter not(){
             return (t)-> !test(t);
         }
     }
 
-    private  static class  MultipleFilterSession implements FilterSession{
 
-        private List<FilterSession> sessions;
-
-        public MultipleFilterSession( List<FilterSession> sessions){
-            this.sessions = new ArrayList<>(sessions);
-        }
-        @Override
-        public void close() {
-            for(FilterSession s : sessions){
-                s.close();
-            }
-        }
-
-        @Override
-        public WriterFilter getFilter() {
-            return null;
-        }
-    }
 
 
 }

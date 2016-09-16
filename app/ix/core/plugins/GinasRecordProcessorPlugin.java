@@ -1,33 +1,29 @@
 package ix.core.plugins;
 
 import ix.core.UserFetcher;
-import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
-import ix.core.models.Structure;
-import ix.core.plugins.StructureProcessorPlugin.PersistRecord;
-import ix.core.plugins.StructureProcessorPlugin.PersistRecordWorker;
 import ix.core.processing.RecordExtractor;
-import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.core.util.BlockingSubmitExecutor;
+import ix.core.util.Filters;
+import ix.core.util.FilteredPrintStream;
 import ix.core.util.TimeUtil;
-import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.Global;
 import ix.utils.TimeProfiler;
 import ix.utils.Util;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import play.Application;
 import play.Logger;
@@ -35,25 +31,9 @@ import play.Play;
 import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
-import scala.collection.JavaConverters;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Inbox;
-import akka.actor.PoisonPill;
-import akka.actor.Props;
-import akka.actor.Terminated;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.routing.Broadcast;
-import akka.routing.FromConfig;
-import akka.routing.RouterConfig;
-import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -331,8 +311,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
         Runnable r= new Runnable() {
             @Override
             public void run() {
+                FilteredPrintStream.Filter filterOutJChem = Filters.filterOutClasses(Pattern.compile("chemaxon\\..*|lychi\\..*"));
 
-                try (RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
+                try (FilteredPrintStream.FilterSession ignoreChemAxonSTDOUT = ConsoleFilterPlugin.getStdOutOutputFilter().newFilter(filterOutJChem);
+                     FilteredPrintStream.FilterSession ignoreChemAxonSTDERR = ConsoleFilterPlugin.getStdErrOutputFilter().newFilter(filterOutJChem);
+
+                     RecordExtractor extractorInstance = job.getExtractor().makeNewExtractor(payload)) {
 
                     Estimate es = extractorInstance.estimateRecordCount(pp.payload);
                     {
