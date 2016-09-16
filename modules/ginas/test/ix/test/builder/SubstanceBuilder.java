@@ -38,6 +38,10 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 	public ChemicalSubstanceBuilder asChemical(){
 		return new ChemicalSubstanceBuilder();
 	}
+	
+	public ProteinSubstanceBuilder asProtein(){
+		return new ProteinSubstanceBuilder();
+	}
 
 	public NucleicAcidSubstanceBuilder asNucleicAcid(){
 		return new NucleicAcidSubstanceBuilder();

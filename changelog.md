@@ -44,6 +44,8 @@ Bug Fixes
    allow empty strings to be ignored from indexing
    or to add them with a special "EMTPY" keyword.
 8. Removed search from protein thumb if no subunits
+9. Added validation rule to proteins, not to allow
+   records with no subunits
 
 
 Deeper look
