@@ -40,6 +40,7 @@ import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
 import ix.core.util.Java8Util;
+import ix.ginas.models.v1.Substance;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.seqaln.SequenceIndexer;
@@ -291,6 +292,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			e.newValue = saved.toFullJson();
 			e.comments= ew.getChangeReason().orElse(null);
 			e.save();
+			System.out.println("Saved:" + e.id);
 			
             return saved;
         }catch(Exception ex){

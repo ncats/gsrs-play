@@ -20,6 +20,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.ValidationMessage;
+import ix.core.ValidationMessage.MESSAGE_TYPE;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.models.v1.ChemicalSubstance;
@@ -47,8 +48,7 @@ public class ProteinValidationTest {
     @Test   
    	public void testProteinWithNoSubunitsShouldFailValidation() throws Exception {
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
-            SubstanceAPI api = new SubstanceAPI(session);
-            
+           SubstanceAPI api = new SubstanceAPI(session);
            new SubstanceBuilder()
         			.asProtein()
         			.setProtein(new Protein())
@@ -56,7 +56,14 @@ public class ProteinValidationTest {
         			.buildJsonAnd(js->{
         				ValidationResponse vr=api.validateSubstance(js);
         				assertFalse(vr.isValid());
-        				 SubstanceJsonUtil.ensureFailure( api.submitSubstance(js));
+        				
+        				Optional<ValidationMessage> ovm=vr.getMessages().stream()
+        					.filter(v->v.getMessage().contains("Subunit"))
+        					.filter(v->v.isError())
+        					.findAny();
+        				assertTrue("Should have validation message rejecting 0 subunits",ovm.isPresent());
+        				
+        				SubstanceJsonUtil.ensureFailure( api.submitSubstance(js));
         			});
         }
    	}

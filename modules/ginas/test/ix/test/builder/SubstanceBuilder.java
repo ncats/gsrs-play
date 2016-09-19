@@ -7,9 +7,11 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.NucleicAcidSubstance;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.JsonSubstanceFactory;
 
@@ -63,6 +65,9 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 		}
 		if(substance instanceof NucleicAcidSubstance){
 			return (B) new NucleicAcidSubstanceBuilder((NucleicAcidSubstance) substance);
+		}
+		if(substance instanceof ProteinSubstance){
+			return (B) new ProteinSubstanceBuilder((ProteinSubstance) substance);
 		}
 
 		return (B) new SubstanceBuilder(substance);

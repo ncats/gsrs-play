@@ -18,7 +18,8 @@ import java.util.List;
 public class JsonSubstanceFactory {
 
     public static Substance makeSubstance(JsonNode tree){
-        return makeSubstance(tree, null);
+        Substance s= makeSubstance(tree, null);
+        return s;
     }
     public static Substance makeSubstance(JsonNode tree, List<GinasProcessingMessage> messages) {
 
