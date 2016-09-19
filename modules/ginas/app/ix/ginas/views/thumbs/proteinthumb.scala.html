@@ -33,10 +33,6 @@
                         <li>
                             <modal-button type= "export" structureid ="'@prot.getUuid()'" format="fas" ></modal-button>
                         </li>
-                        
-                        <li>
-                            <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).getUuid.toString())" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
-                        </li>
                         @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                             <li>
                                 <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))" target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance"> <i class="fa fa-pencil fa-2x success"></i></a>

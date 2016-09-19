@@ -17,6 +17,7 @@ Enhancements
 7. Improved facet overflow handling
 8. Moved Audit information to top of record, 
    collapsed by default.
+9. Java API now allows to do see the diff in changes
 
 Bug Fixes
 ---------
@@ -42,6 +43,9 @@ Bug Fixes
 7. Don't fail text indexing on empty strings. We now
    allow empty strings to be ignored from indexing
    or to add them with a special "EMTPY" keyword.
+8. Removed search from protein thumb if no subunits
+9. Added validation rule to proteins, not to allow
+   records with no subunits
 
 
 Deeper look
@@ -125,6 +129,7 @@ Deeper look
    method. This is related to #3 above. If the updates
    can be simplified to make a single "update" call, without
    need to deeper processing, this move should be fine.
+
 
 
 

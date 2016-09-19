@@ -129,7 +129,14 @@ public class EntityFactory extends Controller {
         // only in the context of a request
                         
         public FetchOptions () {
-        	request().queryString().forEach((param,value)->
+        	Map<String,String[]> vals= new HashMap<>();
+        	try{ //TODO: Use explicit check, rather than exception handling
+        		vals=request().queryString();
+        	}catch(Exception e){
+        		//e.printStackTrace();
+        	}
+        	
+        	vals.forEach((param,value)->
     		parsers.getOrDefault(param.toLowerCase(), s->Logger.trace("unknown option:" + param))
     				.accept(value)
         			);
@@ -984,11 +991,9 @@ public class EntityFactory extends Controller {
 	public static List<Edit> getEdits(Object id, Class<?>... cls) {
 		List<Edit> edits = new ArrayList<Edit>();
 		FetchOptions fe = new FetchOptions();
-//		System.out.println("Kinds are:" +Arrays.stream(cls)
-//											   .map(c->c.getName())
-//											   .reduce((c,t)->c+t).get()
-//				);
-
+		
+		
+		
 		System.out.println(id);
 		Expression[] kindExpressions = Arrays.stream(cls)
 				.map(c -> Expr.eq("kind", c.getName()))

@@ -398,11 +398,12 @@ public class RelationshipInvertTest {
 			.set("/type",parts[1] + "->" + parts[0])
 			.ignoreMissing()
 			.build();
-        
-        
-        assertTrue(api.validateSubstance(js).isValid());
+
+        SubstanceAPI.ValidationResponse validationResponse = api.validateSubstance(js);
+        assertTrue(validationResponse.isValid());
         ensurePass(api.submitSubstance(js));
-        js =api.fetchSubstanceJsonByUuid(uuid);
+
+        api.fetchSubstanceJsonByUuid(uuid);
         
         
         //submit alternative
@@ -412,7 +413,10 @@ public class RelationshipInvertTest {
 			.add("/relationships/-",newRelate)
 			.ignoreMissing()
 			.build();
-        assertTrue(api.validateSubstance(jsA).isValid());
+
+        SubstanceAPI.ValidationResponse validationResponseA = api.validateSubstance(jsA);
+
+        assertTrue(validationResponseA.isValid());
         ensurePass(api.submitSubstance(jsA));
         
         

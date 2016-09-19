@@ -984,7 +984,10 @@ public class ValidationUtils {
 			gpm.add(GinasProcessingMessage
 					.ERROR_MESSAGE("Protein substance must have a protein element"));
 		} else {
-
+			if(cs.protein.subunits.isEmpty() ){
+				gpm.add(GinasProcessingMessage
+						.ERROR_MESSAGE("Protein substance must have at least one Subunit element"));
+			}
 			for (int i = 0; i < cs.protein.subunits.size(); i++) {
 				Subunit su = cs.protein.subunits.get(i);
 				if (su.subunitIndex == null) {
