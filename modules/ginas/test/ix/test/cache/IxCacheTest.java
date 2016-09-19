@@ -1,8 +1,9 @@
 package ix.test.cache;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import org.junit.Test;
 
 import ix.core.models.Role;
 import ix.core.plugins.IxCache;
+import ix.ginas.models.v1.Substance;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.utils.Util;
@@ -53,7 +55,7 @@ public class IxCacheTest {
 					e.printStackTrace();
 				}
 			}).start();
-			Thread.sleep(200);
+			Thread.sleep(10);
 			new Thread(()->{
 				try {
 					myMap.put("second", IxCache.getOrElse("Test", ()->{
@@ -99,7 +101,7 @@ public class IxCacheTest {
 			final int staggeredThreads = 2;
 			for(int i=0;i<staggeredThreads;i++){
 				new Thread(r).start();
-				Thread.sleep(200);
+				Thread.sleep(10);
 			}
 			
 			while(cacheCalls.get()<staggeredThreads){
@@ -137,6 +139,24 @@ public class IxCacheTest {
 			String actualFound3=IxCache.getOrElse("Test", ()->found3);
 			
 			assertEquals(found3,actualFound3);
+			
+		}
+	}
+	
+	@Test 
+	public void modelObjectsShouldNotBePassedThroughToDisk() throws Exception {
+		try (RestSession session = ts.newRestSession(ts.createUser(Role.Admin))) {
+			Substance s = new Substance();
+			
+			Substance actualFound1=IxCache.getOrElse("Test", ()->s);
+			
+			Substance s2=(Substance)IxCache.get("Test");
+			
+			assertEquals(s.uuid,s2.uuid);
+			
+			IxCache.clearCache(); // just clears in-memory cache
+			String actualFound2=IxCache.getOrElse("Test", ()->null);
+			assertNull(actualFound2);
 			
 		}
 	}
