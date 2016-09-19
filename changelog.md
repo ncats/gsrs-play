@@ -18,6 +18,9 @@ Enhancements
 8. Moved Audit information to top of record, 
    collapsed by default.
 9. Java API now allows to do see the diff in changes
+10.Improved performance of cache, by allowing multiple
+   identical requests to use the same fetching process,
+   rather than recalculating every time.
 
 Bug Fixes
 ---------

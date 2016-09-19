@@ -36,7 +36,6 @@ public class IxCacheTest {
 		}
 	}
 	
-	@Ignore
 	@Test 
 	public void fetchSlowGeneratorWith2ThreadsShouldNotCallSecondGenerator() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.createUser(Role.Admin))) {
@@ -78,7 +77,6 @@ public class IxCacheTest {
 		}
 	}
 	
-	@Ignore
 	@Test 
 	public void fetchSlowGeneratorWith2ThreadsShouldNotRecalculate() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.createUser(Role.Admin))) {
