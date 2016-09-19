@@ -77,7 +77,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             synchronized (count){
                 count.increment();
             }
-            while(true)
+            while(true){
                 try {
                     if(lock.tryLock(1, TimeUnit.MINUTES)){
                         break;
@@ -87,6 +87,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 } catch (InterruptedException e) {
                    throw new RuntimeException(e);
                 }
+            }
             preUpdateWasCalled=false;
             postUpdateWasCalled=false;
             

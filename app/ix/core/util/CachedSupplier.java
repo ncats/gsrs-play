@@ -23,7 +23,7 @@ public class CachedSupplier<K> implements Supplier<K>{
 	}
 	
 	@Override
-	public K get() {
+	public synchronized K get() {
 		if(run)return cache;
 		cache=c.get();
 		run=true;
