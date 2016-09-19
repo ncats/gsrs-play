@@ -34,6 +34,10 @@ public class TestExpectToFail {
 
    @Test
    public void checkThatMethodsThatExpectToFailShouldFailJunitIfTheyPass(){
+       //This runs a separate JUnit instance inside this test
+       //so we can verify that Junit fails the test without
+       //breaking our build!
+
        JUnitCore core = new JUnitCore();
 
        AtomicInteger testStarted=new AtomicInteger(0);
