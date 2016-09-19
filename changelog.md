@@ -130,6 +130,7 @@ Deeper look
    can be simplified to make a single "update" call, without
    need to deeper processing, this move should be fine.
 
+5. Added test
 
 
 
