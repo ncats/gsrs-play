@@ -74,19 +74,19 @@
             <div class = "col-md-6">
             	@commonlistdetails(chem)
                 <div class = "row">
-                    <div class = "col-md-2">
+                    <div class = "col-md-4">
                         <h5><strong>Formula:</strong></h5>
                     </div>
-                    <div class = "col-md-10">
+                    <div class = "col-md-8">
                         <h5>@chem.structure.formula</h5>
                     </div>
                 </div>
                 <div class = "row">
-                    <div class = "col-md-2">
+                    <div class = "col-md-4">
                         <h5><strong>Mol Weight:</strong></h5>
                     </div>
-                    <div class = "col-md-10">
-                        <h5>@{"%.3f".format(chem.structure.mwt)}</h5>
+                    <div class = "col-md-8">
+                        <h5>@{"%.2f".format(chem.structure.mwt)}</h5>
                     </div>
                 </div>
                 <div class = "row">
