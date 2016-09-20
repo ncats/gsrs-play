@@ -18,6 +18,8 @@ import ix.core.NamedResource;
                type=Structure.class,
                description="Resource for handling chemical structures")
 public class StructureFactory extends EntityFactory {
+
+    static final Logger.ALogger AccessLogger = Logger.of("access");
     
     public static final Model.Finder<UUID, Structure> finder = 
         new Model.Finder(UUID.class, Structure.class);
@@ -83,6 +85,7 @@ public class StructureFactory extends EntityFactory {
     public static void saveTempStructure(Structure s){
     	//s.save();
     	if(s.id==null)s.id=UUID.randomUUID();
+        AccessLogger.info("searched for:" + s.id + ":" + s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
     	play.cache.Cache.set(s.id.toString(), s);
     }
     
