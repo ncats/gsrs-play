@@ -1,18 +1,18 @@
 package ix.test.cache;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.HashSet;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import ix.core.models.Role;
+import ix.core.models.Session;
 import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.Substance;
 import ix.test.ix.test.server.GinasTestServer;
@@ -156,6 +156,37 @@ public class IxCacheTest {
 			String actualFound2=IxCache.getOrElse("Test", ()->null);
 			assertNull(actualFound2);
 			
+		}
+	}
+	
+	@Test 
+	public void sessionSaveShouldNotInvalidateCache() throws Exception {
+		try (RestSession session = ts.newRestSession(ts.createUser(Role.Admin))) {
+			
+			String ret1=ix.ncats.controllers.App.getOrElse("TestKey", ()->"RET1");
+			
+			Session s = new Session();
+			s.save();
+			
+			String ret2=ix.ncats.controllers.App.getOrElse("TestKey", ()->"RET2");
+			
+			assertEquals(ret1,ret2);
+		}
+	}
+	
+	@Test 
+	public void sessionDeleteShouldNotInvalidateCache() throws Exception {
+		try (RestSession session = ts.newRestSession(ts.createUser(Role.Admin))) {
+			
+			String ret1=ix.ncats.controllers.App.getOrElse("TestKey", ()->"RET1");
+			
+			Session s = new Session();
+			s.save();
+			s.delete();
+			
+			String ret2=ix.ncats.controllers.App.getOrElse("TestKey", ()->"RET2");
+			
+			assertEquals(ret1,ret2);
 		}
 	}
 	

@@ -51,6 +51,11 @@ Bug Fixes
 8. Removed search from protein thumb if no subunits
 9. Added validation rule to proteins, not to allow
    records with no subunits
+10.A new session previously invalidated certain 
+   cache elements. This meant that a search would
+   be relaunched if a new user or new session
+   was activated since the last run. New sessions
+   no longer invalidate the cache.
 
 
 Deeper look

@@ -554,9 +554,7 @@ public class App extends Authentication {
             key.append("."+f);
         try {
             TextIndexer.Facet[] facets = getOrElse
-                (key.toString(), ()  -> {
-                            return filter (getFacets (cls, FACET_DIM), filters);
-                    });
+                (key.toString(), ()  -> filter (getFacets (cls, FACET_DIM), filters));
             return facets;
         }
         catch (Exception ex) {
