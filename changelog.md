@@ -23,6 +23,8 @@ Enhancements
     rather than recalculating every time.
 11. Only allow Super-users to override duplicate warnings
 12. Show molecular weight on list views
+13. Improved look and feel of name list on browse, show
+    code-system with code
 
 Bug Fixes
 ---------

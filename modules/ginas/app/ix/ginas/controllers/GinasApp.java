@@ -391,34 +391,8 @@ public class GinasApp extends App {
         }
     }
     
-    // We can do better than this, I think.
-    // I think there's a better way to display this information
-    public static <T> String namesList(List<Name> list) {
-        int size = list.size();
-        if (size >= 6) {
-            size = 6;
-        }
-        String[] arr = new String[size];
-        for (int i = 0; i < size; i++) {
-            Name n = list.get(i);
-            String name = n.name;
-            arr[i] = name;
-        }
-        return StringUtils.arrayToDelimitedString(arr, "; ");
-
-    }
-
-    public static <T> String codesList(List<Code> list) {
-        int size = list.size();
-        if (size >= 6) {
-            size = 6;
-        }
-        String[] arr = new String[size];
-        for (int i = 0; i < size; i++) {
-            String name = list.get(i).code;
-            arr[i] = name;
-        }
-        return StringUtils.arrayToDelimitedString(arr, "; ");
+    public static <T> List<T> limitList(List<T> list, int max) {
+        return list.stream().limit(max).collect(Collectors.toList());
     }
     
     
@@ -588,7 +562,7 @@ public class GinasApp extends App {
             Executors.newSingleThreadExecutor().submit(()->{
                     try {
                         exporter.exportForEachAndClose(src.getResults());
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
@@ -755,8 +729,7 @@ public class GinasApp extends App {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse(sha1, ()->{
                             SearchOptions options = 
-                            		new SearchOptions(Substance.class, total, 0, FACET_DIM)
-                            			 .parse(params);
+                            		new SearchOptions(Substance.class, total, 0, FACET_DIM).parse(params);
                             instrumentSubstanceSearchOptions (options, params);
                             return cacheKey(getTextIndexer().search(options, q), sha1);
                     });

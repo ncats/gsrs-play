@@ -31,7 +31,9 @@
                         <h5><strong>Names:</strong></h5>
                     </div>
                     <div class = "col-md-10 break-text">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
+                    	@for(n <- ix.ginas.controllers.GinasApp.limitList(sub.names,5)){
+                    		<span title="@n.getName()" class="nowrap-list">@n.getName()</span>
+                    	}
                     </div>
                 </div>
                 }
@@ -41,7 +43,9 @@
                         <h5><strong>Codes:</strong></h5>
                     </div>
                     <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
+                    	@for(c <- ix.ginas.controllers.GinasApp.limitList(sub.codes,5)){
+                    		<h5><span>@c.getCodeSystem():</span><code>@c.getCode()</code></h5>
+                    	}
                     </div>
                 </div>
                 }
