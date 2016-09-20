@@ -3,6 +3,7 @@
 # ~~~~~~~
 199:ix.core.plugins.IxContext
 200:com.edulify.play.hikaricp.HikariCPPlugin
+201:ix.core.plugins.ConsoleFilterPlugin
 #1500:com.typesafe.plugin.CommonsMailerPlugin
 # inxight plugins
 # this plugin must be first!
@@ -16,6 +17,5 @@
 3005:ix.core.plugins.StructureProcessorPlugin
 3010:ix.core.plugins.GinasRecordProcessorPlugin
 
-3011:ix.core.plugins.ConsoleFilterPlugin
 #4000:ix.core.plugins.SchedulerPlugin
 10000:be.objectify.deadbolt.java.DeadboltPlugin
