@@ -126,9 +126,21 @@ import play.mvc.Result;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 
+/**
+ * GinasApp is mostly a utility class for UI-related elements of the ginas project. Typical user-driven
+ * routes direct to here. This includes browsing, searching, and viewing record details. This class also
+ * includes some convenience functions used by the Twirl templates for displaying certain information.
+ * 
+ * @author tyler
+ *
+ */
 public class GinasApp extends App {
 	
-    /**
+	//This is the default search order.
+	//Currently, this is "Newest change first"	
+    private static final String DEFAULT_SEARCH_ORDER = "$lastEdited"; 
+
+	/**
      * Search types used for UI searches. At this time 
      * these types do not extend to API searches.
      * 
@@ -175,7 +187,9 @@ public class GinasApp extends App {
     	}
     }
     
-    
+    //This is the set of facets to show with substances.
+    //currently, this can't be expanded, except in the code
+    //here. 
     public static final String[] ALL_FACETS = {
         "Record Status",
         "Validation",
@@ -721,7 +735,7 @@ public class GinasApp extends App {
         
         //default to "lastEdited" as sort order
         if(order==null || order.length<=0){
-        	order=new String[]{"$lastEdited"};
+        	order=new String[]{DEFAULT_SEARCH_ORDER};
         	params.put("order", order);
         }
         

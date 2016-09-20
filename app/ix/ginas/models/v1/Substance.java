@@ -1069,9 +1069,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	}
 	
 	
+	
 	@JsonIgnore
 	public List<Edit> getEdits(){
-		return EntityWrapper.of(this).getEdits();
+		//this is not entirely necessary, and could be done
+		//more explicitly
+		return EntityWrapper.of(this).getEdits(); 
 	}
 	
 	/**
@@ -1118,7 +1121,9 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	
 	
 	/**
-	 * Store the validation message on the record 
+	 * Store the validation message on the record.
+	 * 
+	 * Currently, these are stored as notes.
 	 * 
 	 * @param gpm
 	 * 
