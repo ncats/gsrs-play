@@ -25,6 +25,8 @@ Enhancements
 12. Show molecular weight on list views
 13. Improved look and feel of name list on browse, show
     code-system with code
+14. Sort list of codes before showing on list view
+
 
 Bug Fixes
 ---------

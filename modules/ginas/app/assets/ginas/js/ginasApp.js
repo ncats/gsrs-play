@@ -1339,11 +1339,62 @@
                     indices = _.sortBy(indices);
                     scope.objreferences = objreferences;
 
+                    
                     _.forEach(indices, function (i) {
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' + _.join(links, ', ') + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' 
+                    			+ _.join(links,",")
+                    			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    element.append(angular.element(templateString));
+                    $compile(templateString)(scope);
+                });
+
+                scope.toggle = function () {
+                    referencesCtrl.toggle(scope, attrs.divid);
+                };
+
+                scope.showActive = function (index) {
+                    referencesCtrl.removeClass();
+                    referencesCtrl.setClass(index);
+                    referencesCtrl.scrollTo();
+                };
+            }
+        };
+    });
+    
+    ginasApp.directive('refCount', function ($compile) {
+        return {
+            scope: {
+                substance: '=',
+                references: '='
+            },
+            require: '^referencesmanager',
+            link: function (scope, element, attrs, referencesCtrl) {
+                var indices = [];
+                var links = [];
+                var objreferences = [];
+
+                referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
+                    _.forEach(scope.references, function (ref) {
+                        objreferences.push(_.find(response, ['uuid', ref.term]));
+                        indices.push(_.indexOf(response, _.find(response, ['uuid', ref.term])) + 1);
+                        // });
+                    });
+                    indices = _.sortBy(indices);
+                    scope.objreferences = objreferences;
+
+                    
+                    _.forEach(indices, function (i) {
+                        var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
+                        links.push(link);
+                    });
+                    
+                    var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' 
+                    			+ "(" + links.length + ")"
+                    			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
