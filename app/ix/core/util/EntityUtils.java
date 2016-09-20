@@ -1,6 +1,7 @@
 package ix.core.util;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -862,7 +864,8 @@ public class EntityUtils {
 	public static class MethodMeta implements MethodOrFieldMeta {
 
 		Method m;
-		Indexable indexable;
+		//Indexable indexable;
+		InstantiatedIndexable instIndexable;
 		boolean textEnabled = false;
 		String indexingName;
 		String name;
@@ -883,7 +886,10 @@ public class EntityUtils {
 		public MethodMeta(Method m) {
 			Class<?>[] args = m.getParameterTypes();
 			this.m = m;
-			indexable = (Indexable) m.getAnnotation(Indexable.class);
+			Indexable indexable = (Indexable) m.getAnnotation(Indexable.class);
+			if(indexable!=null){
+				instIndexable=new InstantiatedIndexable(indexable);
+			}
 			name = m.getName();
 			indexingName = name;
 			if (name.startsWith("get")) {
@@ -1024,8 +1030,8 @@ public class EntityUtils {
 			return this.indexingName;
 		}
 
-		public Indexable getIndexable() {
-			return indexable;
+		public InstantiatedIndexable getIndexable() {
+			return instIndexable;
 		}
 
 		@Override
@@ -1054,9 +1060,89 @@ public class EntityUtils {
 
 	}
 
+	public static class InstantiatedIndexable{
+		Indexable index;
+		Pattern p;
+		public InstantiatedIndexable(Indexable index){
+			this.index=index;
+			p = Pattern.compile(index.pathsep());
+		}
+		public boolean indexed() {
+			return index.indexed();
+		}
+		public boolean sortable() {
+			return index.sortable();
+		}
+		public boolean taxonomy() {
+			return index.taxonomy();
+		}
+		public boolean facet() {
+			return index.facet();
+		}
+		public boolean suggest() {
+			return index.suggest();
+		}
+		public boolean sequence() {
+			return index.sequence();
+		}
+		public boolean structure() {
+			return index.structure();
+		}
+		public boolean fullText() {
+			return index.fullText();
+		}
+		public String pathsep() {
+			return index.pathsep();
+		}
+		public String name() {
+			return index.name();
+		}
+		public long[] ranges() {
+			return index.ranges();
+		}
+		public double[] dranges() {
+			return index.dranges();
+		}
+		public String format() {
+			return index.format();
+		}
+		public boolean recurse() {
+			return index.recurse();
+		}
+		public boolean indexEmpty() {
+			return index.indexEmpty();
+		}
+		public boolean equals(Object obj) {
+			return index.equals(obj);
+		}
+		public String emptyString() {
+			return index.emptyString();
+		}
+		public int hashCode() {
+			return index.hashCode();
+		}
+		public String toString() {
+			return index.toString();
+		}
+		public Class<? extends Annotation> annotationType() {
+			return index.annotationType();
+		}
+		
+		public Pattern getPathSepPattern(){
+			return this.p;
+		}
+		
+		public String[] splitPath(String path){
+			return this.p.split(path);
+		}
+	}
+	
 	public static class FieldMeta implements MethodOrFieldMeta {
 		Field f;
 		Indexable indexable;
+		
+		InstantiatedIndexable instIndexable;
+		
 
 		Class<?> type;
 		String name;
@@ -1124,6 +1210,7 @@ public class EntityUtils {
 				indexable = defaultIndexable;
 				explicitIndexable = false;
 			}
+			instIndexable=new InstantiatedIndexable(indexable);
 
 			int mods = f.getModifiers();
 			if (!indexable.indexed() || Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
@@ -1177,8 +1264,10 @@ public class EntityUtils {
 			return isPrimitive;
 		}
 
-		public Indexable getIndexable() {
-			return indexable;
+		
+
+		public InstantiatedIndexable getIndexable() {
+			return instIndexable;
 		}
 
 		public Optional<Object> getValue(Object entity) {

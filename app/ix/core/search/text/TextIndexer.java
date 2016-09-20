@@ -126,6 +126,7 @@ import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.InstantiatedIndexable;
 import ix.core.util.EntityUtils.Key;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.utils.Global;
@@ -2232,7 +2233,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 	//make the fields for the primitive fields
 	@Override
-	public void create(Consumer<IndexableField> fields, String name, Object value, String full, Indexable indexable) {
+	public void create(Consumer<IndexableField> fields, String name, Object value, String full, InstantiatedIndexable indexable) {
 		// Used to be configurable, now just always NO
 		// for all cases we use.
 		org.apache.lucene.document.Field.Store store = Store.NO;
@@ -2241,7 +2242,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		boolean sorterAdded = false;
 		boolean asText = true;
 		if (value instanceof Long) {
-			// fields.add(new NumericDocValuesField (full, (Long)value));
 			Long lval = (Long) value;
 			fields.accept(new LongField(full, lval, NO));
 			asText = indexable.facet();
@@ -2357,7 +2357,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 				if (indexable.taxonomy()) {
 					facetsConfig.setHierarchical(dim, true);
-					fields.accept(new FacetField(dim, text.split(indexable.pathsep())));
+					fields.accept(new FacetField(dim, indexable.splitPath(text)));
 				} else {
 					fields.accept(new FacetField(dim, text));
 				}
@@ -2388,8 +2388,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			fields.accept(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
 		}
 	}
-	
-
 	
 	/**
 	 * Add the specified field and value pair to the suggests
