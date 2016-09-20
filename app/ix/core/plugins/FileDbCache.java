@@ -3,6 +3,7 @@ package ix.core.plugins;
 import com.sleepycat.je.*;
 
 import ix.core.models.BaseModel;
+import ix.core.util.CachedSupplier;
 import ix.utils.Util;
 import net.sf.ehcache.CacheEntry;
 import net.sf.ehcache.CacheException;
@@ -17,7 +18,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Objects;
-
+import java.util.Optional;
 
 import play.db.ebean.Model;
 
@@ -126,23 +127,42 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         }
     }
 
+    
     static DatabaseEntry getKeyEntry (Object value) {
         return new DatabaseEntry (value.toString().getBytes());
     }
+    
+    public static Optional<Object> getSerializableObect(Element elm){
+    	
+    	Object value =elm.getObjectValue();
+    	
+    	if(elm.isSerializable()){
+    		if(value instanceof Model){
+	    		return Optional.empty();
+	    	}
+    		return Optional.of(value);
+    	}
+    	
+    	if(value instanceof CachedSupplier){
+    		//Warning: forces a real call
+    		Object realValue=((CachedSupplier)value).get();
+    		if(realValue instanceof Serializable){
+    			if(!(realValue instanceof Model)){
+    				return Optional.of(realValue);
+    			}
+    		}
+    	}
+    	return Optional.empty();
+    }
+  
+    
     @Override
     public void write(Element elm) throws CacheException {
-     
-        if(!elm.isSerializable()){
+    	Optional<Object> seralizable=getSerializableObect(elm);
+    	
+        if(!seralizable.isPresent()){
             notSerializableCount++;
-            
             return;
-        }else{
-        	//Ebean models are not seralizable, as much as we would like to 
-        	//believe they are :-[
-        	if(elm.getObjectValue() instanceof Model){
-        		notSerializableCount++;
-        		return;
-        	}
         }
         //System.out.println("Writing key:" + elm.getObjectKey());
         serializableCount++;
@@ -153,25 +173,25 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
         Object value = elm.getObjectValue();
 
+        
+        
         if (key != null) {
             //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
             try {
                 DatabaseEntry dkey = getKeyEntry (key);
                 DatabaseEntry data = new DatabaseEntry
-                        (Util.serialize(elm.getObjectValue()));
+                        (Util.serialize(seralizable.get()));
                 OperationStatus status = db.put(null, dkey, data);
                 if (status != OperationStatus.SUCCESS) {
                     Logger.warn
                             ("** PUT for key " + key + " returns status " + status);
                 }
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 ex.printStackTrace();
                 Logger.error("Can't write cache element: key="
                         +key+" value="+elm.getObjectValue(), ex);
             }
-        }
-        else {
+        }else {
             Logger.warn("Key "+elm.getObjectKey()+" isn't serializable!");
         }
     }

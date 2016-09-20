@@ -43,7 +43,7 @@ public final class TestFacetUtil {
      * code in {@code GinasApp } so this method checks that class to remove any facets
      * that are currently not computed and translates the name accordingly.
      *
-     * This way, we don't have to change our test code everytime we change production code.
+     * This way, we don't have to change our test code every time we change production code.
      *
      * * @param expectedFacets the expected facet counts.
      * @return a new Map where some of the facets might be filtered out.  The original map is not modified.

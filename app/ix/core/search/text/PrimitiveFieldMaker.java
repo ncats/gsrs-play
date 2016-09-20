@@ -6,6 +6,7 @@ import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.IndexableField;
 
 import ix.core.models.Indexable;
+import ix.core.util.EntityUtils.InstantiatedIndexable;
 
 public interface PrimitiveFieldMaker{
 	public void create(
@@ -13,5 +14,5 @@ public interface PrimitiveFieldMaker{
 			String name, 
 			Object value, 
 			String full,
-			Indexable indexable);
+			InstantiatedIndexable indexable);
 }

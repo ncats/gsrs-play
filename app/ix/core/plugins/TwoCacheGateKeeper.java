@@ -1,20 +1,5 @@
 package ix.core.plugins;
 
-import ix.core.CacheStrategy;
-import ix.core.models.BaseModel;
-import ix.utils.Util;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.Statistics;
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
-import play.Logger;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +7,14 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import ix.core.CacheStrategy;
+import ix.core.util.CachedSupplier;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.Statistics;
+import play.Logger;
 
 
 /**
@@ -50,22 +43,22 @@ public class TwoCacheGateKeeper implements GateKeeper {
         this.nonEvictableCache = nonEvictableCache;
 
     }
-    private <T> Callable<T> createRaw(Callable<T> delegate, String key){
+    private <T> CacheGeneratorWrapper<T> createRaw(Callable<T> delegate, String key){
 
         return createRaw(delegate, key, 0);
     }
 
-    private <T> Callable<T> createRaw(Callable<T> delegate, String key, int seconds){
+    private <T> CacheGeneratorWrapper<T> createRaw(Callable<T> delegate, String key, int seconds){
 
         return new CacheGeneratorWrapper<T>(delegate, key, key,seconds);
     }
 
-    private <T> Callable<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey){
+    private <T> CacheGeneratorWrapper<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey){
 
         return createKeyWrapper(delegate, key, adaptedKey, 0);
     }
 
-    private <T> Callable<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds){
+    private <T> CacheGeneratorWrapper<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds){
 
         return new CacheGeneratorWrapper<T>(delegate, key, adaptedKey,seconds);
     }
@@ -116,33 +109,35 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
     }
     /**
-     * Wraps a generateor that creates the actual thing to cache
+     * Wraps a generator that creates the actual thing to cache
      * and puts it in the correct cache with the correct adapted key.
      * @param <T>
      */
-    private class CacheGeneratorWrapper<T> implements Callable<T>{
+    private class CacheGeneratorWrapper<T>{
        private final Callable<T> delegate;
        private final String key, adaptedKey;
-
        private final int seconds;
-
-
-
-
-       private CacheGeneratorWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds) {
+       
+       public CacheGeneratorWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds) {
            this.delegate = delegate;
            this.key = key;
            this.adaptedKey = adaptedKey;
            this.seconds = seconds;
        }
 
-       @Override
-       public T call() throws Exception {
-    	   
-           T t = delegate.call();
+       public CachedSupplier<T> call() {
+           //T t = delegate.call();
            keyMaster.addKey(key, adaptedKey);
-           addToCache(adaptedKey, t, seconds);
-           return t;
+           CachedSupplier<T> memdelegate=CachedSupplier.of(()->{
+        	   try{
+        		   return delegate.call();
+        	   }catch(Exception e){
+        		   e.printStackTrace();
+        		   return null;
+        	   }
+           });
+           addToCache(adaptedKey, memdelegate, seconds);
+           return memdelegate;
        }
    }
 
@@ -163,29 +158,27 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
 
-    private  <T> T getOrElseRaw(String key, Callable<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
-    	
+    private  <T> T getOrElseRaw(String key, CacheGeneratorWrapper<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
     	Element e = evictableCache.get(key);
-    	
     	
         if(e ==null || e.getObjectValue() == null){
             e = nonEvictableCache.get(key);
         }
         
-
         if(e ==null || e.getObjectValue() == null || regeneratePredicate.test(e)){
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
-            return generator.call();
+            return generator.call().get();
         }
+        
         try {
             return (T) getObjectFromElement(e);
         }catch(Exception ex){
             //in case there is a cast problem
             //or some other problem with the cached value
             //re-generate
-            return generator.call();
+            return generator.call().get();
         }
 
     }
@@ -214,20 +207,16 @@ public class TwoCacheGateKeeper implements GateKeeper {
     @Override
     public Object getRaw(String key){
         Element e = getRawElement(key);
-
-        
         return getObjectFromElement(e);
     }
     
     public static Object getObjectFromElement(Element e){
-
         if(e ==null){
             return null;
         }
         Object val=e.getObjectValue();
-        if(val instanceof NonSerializedWrapper){
-        	//return null;
-        	return ((NonSerializedWrapper)val).getObject();
+        if(val instanceof CachedSupplier){
+        	return ((CachedSupplier)val).get();
         }
         return val;
     }
@@ -244,9 +233,10 @@ public class TwoCacheGateKeeper implements GateKeeper {
     @Override
     public void put(String key, Object value, int expiration){
         String adaptedKey = keyMaster.adaptKey(key);
-        addToCache(adaptedKey, value, expiration);
+        addToCache(adaptedKey, CachedSupplier.of(()->value), expiration);
         keyMaster.addKey(key, adaptedKey);
     }
+    
     @Override
     public void putRaw(String key, Object value){
         putRaw(key, value, 0);
@@ -254,30 +244,28 @@ public class TwoCacheGateKeeper implements GateKeeper {
     
     @Override
     public void putRaw(String key, Object value, int expiration){
-        addToCache(key, value, expiration);
+        addToCache(key, CachedSupplier.of(()->value), expiration);
         keyMaster.addKey(key, key);
     }
 
     List<Object> cachedValues = new ArrayList<Object>();
     
     
-    private void addToCache(String adaptedKey, Object value, int expiration) {
-        if(value ==null ){
+    private void addToCache(String adaptedKey, CachedSupplier<?> value, int expiration) {
+        if(value == null){
             return;
         }
-       
-        Object setvalue=value;
+        //Object setvalue=value;
+        Element e=new Element (adaptedKey, value, expiration <= 0, expiration, expiration);
         if(isEvictable(value)){
-        	Element e=new Element(adaptedKey, setvalue, expiration <= 0, expiration, expiration);
         	evictableCache.putWithWriter(e);
         }else{
-            nonEvictableCache.putWithWriter(new Element (adaptedKey, setvalue, expiration <= 0, expiration, expiration));
+        	nonEvictableCache.putWithWriter(e);
         }
     }
 
     @Override
     public List<Statistics> getStatistics() {
-        //TODO how to handle 2 caches?
     	List<Statistics> stats= new ArrayList<Statistics>();
     	stats.add(evictableCache.getStatistics());
     	stats.add(nonEvictableCache.getStatistics());
@@ -285,14 +273,13 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
 
     private static boolean isEvictable(Object o){
-
         if(o ==null){
             //TODO should we throw exception?
             return true;
         }
         CacheStrategy cacheStrat=o.getClass().getAnnotation(CacheStrategy.class);
 
-        if(cacheStrat ==null){
+        if(cacheStrat == null){
             return true;
         }
         return cacheStrat.evictable();
@@ -344,22 +331,4 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
     
     
-    /**
-     * This is a wrapper to stop ehcache from trying to see the size of the value
-     * contained
-     * @author tyler
-     *
-     * @param <K>
-     */
-    @IgnoreSizeOf
-    public class NonSerializedWrapper<K> {
-    	
-    	private transient K realValue;
-    	public NonSerializedWrapper(K value){
-    		this.realValue=value;
-    	}
-    	public K getObject(){
-    		return this.realValue;
-    	}
-    }
 }
