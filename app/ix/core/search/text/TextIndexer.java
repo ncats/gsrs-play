@@ -40,6 +40,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -840,14 +841,14 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		@Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
-				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
-				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+//				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
+//				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+				qtext = transformQueryForExactMatch(qtext);
 			}
 			// add ROOT prefix to all term queries (containing '_') where not
 			// otherwise specified
 			qtext = ROOT_CONTEXT_ADDER.matcher(qtext).replaceAll(ROOT + "_$1");
-			Query q = super.parse(qtext);
-			return q;
+			return super.parse(qtext);
 		}
 	}
 
@@ -2248,8 +2249,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			if (!asText && !name.equals(full))
 				fields.accept(new LongField(name, lval, store));
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
-				fields.accept(new LongField(SORT_PREFIX + full, lval, store));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.LONG);
+				fields.accept(new LongField(f, lval, store));
 				sorterAdded = true;
 			}
 			FacetField ff = getRangeFacet(fname, indexable.ranges(), lval);
@@ -2268,8 +2270,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new IntField(name, ival, store));
 
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.INT);
-				fields.accept(new IntField(SORT_PREFIX + full, ival, store));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.INT);
+				fields.accept(new IntField(f, ival, store));
 				sorterAdded = true;
 			}
 
@@ -2288,8 +2291,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new FloatField(full, fval, NO));
 
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.FLOAT);
-				fields.accept(new FloatField(SORT_PREFIX + full, fval, NO));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.FLOAT);
+				fields.accept(new FloatField(f, fval, NO));
 				sorterAdded = true;
 			}
 
@@ -2308,8 +2312,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new DoubleField(full, dval, NO));
 			}
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.DOUBLE);
-				fields.accept(new DoubleField(SORT_PREFIX + full, dval, NO));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.DOUBLE);
+				fields.accept(new DoubleField(f, dval, NO));
 				sorterAdded = true;
 			}
 
@@ -2326,8 +2331,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			if (!full.equals(name))
 				fields.accept(new LongField(full, date, NO));
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
-				fields.accept(new LongField(SORT_PREFIX + full, date, NO));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.LONG);
+				fields.accept(new LongField(f, date, NO));
 				sorterAdded = true;
 			}
 			asText = indexable.facet();
@@ -2370,11 +2376,12 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				addSuggestedField(dim, text);
 			}
 
+			String exactMatchStr = toExactMatchString(text);
 
 			if (!(value instanceof Number)) {
 				if (!name.equals(full)){
 					// Added exact match
-					fields.accept(new TextField(full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
+					fields.accept(new TextField(full,exactMatchStr, NO));
 				}
 			}
 
@@ -2385,12 +2392,53 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new StringField(SORT_PREFIX + full, text, store));
 			}
 			// Added exact match
-			fields.accept(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
+			fields.accept(new TextField(name, exactMatchStr , store));
 		}
 	}
 	
 
-	
+	private String toExactMatchString(String in){
+		return TextIndexer.START_WORD + replaceSpecialCharsForExactMatch(in) + TextIndexer.STOP_WORD;
+	}
+
+	private String replaceSpecialCharsForExactMatch(String in) {
+
+		String tmp = LEVO_PATTERN.matcher(in).replaceAll(LEVO_WORD);
+
+		tmp = DEXTRO_PATTERN.matcher(tmp).replaceAll(DEXTRO_WORD);
+
+		return tmp;
+
+	}
+
+	/*
+	qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
+				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+	 */
+
+	private static String transformQueryForExactMatch(String in){
+
+		String tmp =  START_PATTERN.matcher(in).replaceAll(TextIndexer.START_WORD);
+		tmp =  STOP_PATTERN.matcher(tmp).replaceAll(TextIndexer.STOP_WORD);
+		tmp =  LEVO_PATTERN.matcher(tmp).replaceAll(TextIndexer.LEVO_WORD);
+
+		tmp =  DEXTRO_PATTERN.matcher(tmp).replaceAll(TextIndexer.DEXTRO_WORD);
+
+
+		return tmp;
+	}
+
+	private static final Pattern START_PATTERN = Pattern.compile(TextIndexer.GIVEN_START_WORD,Pattern.LITERAL );
+	private static final Pattern STOP_PATTERN = Pattern.compile(TextIndexer.GIVEN_STOP_WORD,Pattern.LITERAL );
+
+	private static final Pattern LEVO_PATTERN = Pattern.compile("\\(-\\)-");
+	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(+\\)-");
+
+	private static final String LEVO_WORD = "LEVOROTATION";
+
+	private static final String DEXTRO_WORD = "DEXTROROTATION";
+
+
 	/**
 	 * Add the specified field and value pair to the suggests
 	 * which are used for type-ahead queries.
