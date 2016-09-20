@@ -51,6 +51,7 @@ Bug Fixes
 8. Removed search from protein thumb if no subunits
 9. Added validation rule to proteins, not to allow
    records with no subunits
+10. Added code to log Structure Search request in the access log.
 
 
 Deeper look
