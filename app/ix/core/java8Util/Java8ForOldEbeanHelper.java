@@ -274,6 +274,7 @@ public class Java8ForOldEbeanHelper {
 		}
 	}
 
+	
 	public static void deleteIndexOnBean(EntityPersistAdapter epa, EntityWrapper<?> beanWrapped) throws Exception {
 		if (epa.getTextIndexerPlugin() != null){
 			epa.getTextIndexerPlugin()

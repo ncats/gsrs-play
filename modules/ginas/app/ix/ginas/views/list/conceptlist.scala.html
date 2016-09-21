@@ -26,26 +26,7 @@
                 }
             </div>
             <div class = "col-md-7">
-            	@if(sub.hasNames()){
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Names:</strong></h5>
-                    </div>
-                    <div class = "col-md-10 break-text">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
-                    </div>
-                </div>
-                }
-                @if(sub.hasCodes()){
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5><strong>Codes:</strong></h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
-                    </div>
-                </div>
-                }
+            	@commonlistdetails(sub)
             </div>
             <div class = "col-md-2">
 

@@ -11,6 +11,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_session")
+@Indexable(indexed=false)
 public class Session extends BaseModel {
     @Id public UUID id;
     @OneToOne(cascade=CascadeType.ALL)

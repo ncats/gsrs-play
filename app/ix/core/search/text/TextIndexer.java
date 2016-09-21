@@ -1766,84 +1766,84 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		if(!INDEXING_ENABLED)return;
 		Objects.requireNonNull(ew);
 		try{
-		if(!ew.shouldIndex()){
-			if (DEBUG(2)) {
-				Logger.debug(">>> Not indexable " + ew.getValue());
+			if(!ew.shouldIndex()){
+				if (DEBUG(2)) {
+					Logger.debug(">>> Not indexable " + ew.getValue());
+				}
+				return;
 			}
-			return;
-		}
-		if (DEBUG(2)){
-			Logger.debug(">>> Indexing " + ew.getValue() + "...");
-		}
-
-		CachedSupplier<Boolean> isDeep  = 
-				CachedSupplier.of(()->deepKinds.contains(ew.getKind()));
-		
-		
-		HashMap<String,List<TextField>> fullText = new HashMap<>();
-		Document doc = new Document();
-		
-		Consumer<IndexableField> fieldCollector = f->{
-				if(f instanceof TextField || f instanceof StringField){
-					String text = f.stringValue();
-					if (text != null) {
-						if (DEBUG(2)){
-							Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
-						}
-						TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
-						//tf.set
-						doc.add(tf);
-						if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
-							fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
-								.add(tf);
+			if (DEBUG(2)){
+				Logger.debug(">>> Indexing " + ew.getValue() + "...");
+			}
+	
+			CachedSupplier<Boolean> isDeep  = 
+					CachedSupplier.of(()->deepKinds.contains(ew.getKind()));
+			
+			
+			HashMap<String,List<TextField>> fullText = new HashMap<>();
+			Document doc = new Document();
+			
+			Consumer<IndexableField> fieldCollector = f->{
+					if(f instanceof TextField || f instanceof StringField){
+						String text = f.stringValue();
+						if (text != null) {
+							if (DEBUG(2)){
+								Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+							}
+							TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
+							//tf.set
+							doc.add(tf);
+							if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
+								fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
+									.add(tf);
+							}
 						}
 					}
-				}
-				doc.add(f);
-		};
-		
-		//flag the kind of document
-		
-		
-		ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
-										.withDynamicFieldMaker(this)	
-										.withPrimitiveFieldMaker(this)
-					);
-		
-		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
-			Key key =ew.getKey();
-			if(!key.getIdString().equals("")){  //probably not needed
-				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
-				
-				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
-				StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
-				FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
-				//This is a test of a terrible idea, which just. might. work.
-				fullText.forEach((name,group)->{
-						try{
-							Document fielddoc = new Document();
-							fielddoc.add(toAnalyze);
-							fielddoc.add(docParent);
-							fielddoc.add(docParentFacet);
-							fielddoc.add(new FacetField(ANALYZER_FIELD,name));
-							for(IndexableField f:group){
-									fielddoc.add(f);
+					doc.add(f);
+			};
+			
+			//flag the kind of document
+			
+			
+			ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
+											.withDynamicFieldMaker(this)	
+											.withPrimitiveFieldMaker(this)
+						);
+			
+			if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
+				Key key =ew.getKey();
+				if(!key.getIdString().equals("")){  //probably not needed
+					StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
+					
+					Tuple<String,String> luceneKey = key.asLuceneIdTuple();
+					StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
+					FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
+					//This is a test of a terrible idea, which just. might. work.
+					fullText.forEach((name,group)->{
+							try{
+								Document fielddoc = new Document();
+								fielddoc.add(toAnalyze);
+								fielddoc.add(docParent);
+								fielddoc.add(docParentFacet);
+								fielddoc.add(new FacetField(ANALYZER_FIELD,name));
+								for(IndexableField f:group){
+										fielddoc.add(f);
+								}
+								addDoc(fielddoc);
+							}catch(Exception e){
+								System.out.println("FAILED!" + e.getMessage());
 							}
-							addDoc(fielddoc);
-						}catch(Exception e){
-							System.out.println("FAILED!" + e.getMessage());
-						}
-					});
+						});
+				}
 			}
-		}
-		
-		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
-		
-		// now index
-		addDoc(doc);
-		
-		if (DEBUG(2))
-			Logger.debug("<<< " + ew.getValue());
+			
+			fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
+			
+			// now index
+			addDoc(doc);
+			
+			if (DEBUG(2))
+				Logger.debug("<<< " + ew.getValue());
 		}catch(Exception e){
 			e.printStackTrace();
 			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems");
@@ -1883,8 +1883,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 
 	public void remove(EntityWrapper ew) throws Exception {
-		
-		if (ew.isEntity()) {
+		if (ew.shouldIndex()) {
 			if (ew.hasKey()) {
 				Key key= ew.getKey();
 				Tuple<String,String> docKey=key.asLuceneIdTuple();
@@ -1909,8 +1908,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			} else {
 				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
 			}
-		} else {
-			throw new IllegalArgumentException("Object is not of type Entity");
 		}
 	}
 

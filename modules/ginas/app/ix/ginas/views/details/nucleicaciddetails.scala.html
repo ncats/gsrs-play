@@ -58,7 +58,7 @@
             @if(sub.nucleicAcid.getReferences() != null && sub.nucleicAcid.getReferences().size > 0) {
                     <dt>References</dt>
                     <dd>
-                        <referencesmanager indices substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.nucleicAcid.getReferences())"></referencesmanager>
+                        <referencesmanager ref-count substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.nucleicAcid.getReferences())"></referencesmanager>
                     </dd>
                 <dd class ="'@sub.getUuid()'" colspan="2"></dd>
             }
