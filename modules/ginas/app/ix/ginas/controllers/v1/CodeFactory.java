@@ -1,6 +1,9 @@
 package ix.ginas.controllers.v1;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.io.*;
 
 import play.libs.Json;
@@ -13,6 +16,7 @@ import com.avaje.ebean.*;
 
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
+import ix.utils.Tuple;
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
 
@@ -77,13 +81,36 @@ public class CodeFactory extends EntityFactory {
     public static Result update (UUID uuid, String field) {
         return update (uuid, field, Code.class, finder);
     }
-    public static String getMostRecentCode(String codeSystem, String like){
-    	List<Code> subs=finder.where().and(com.avaje.ebean.Expr.like("code",like), com.avaje.ebean.Expr.eq("codeSystem",codeSystem)).order().desc("code").setMaxRows(1).findList();
-    	if(subs!=null && !subs.isEmpty()){
-    		Logger.info("#####################FOUND CODE:" + subs.get(0).code);
-    		return subs.get(0).code;
+    
+    public static <T> Stream<T> asStream(Iterator<T> sourceIterator) {
+        return asStream(sourceIterator, false);
+    }
+
+    public static <T> Stream<T> asStream(Iterator<T> sourceIterator, boolean parallel) {
+        Iterable<T> iterable = () -> sourceIterator;
+        return StreamSupport.stream(iterable.spliterator(), parallel);
+    }
+    
+    public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix){
+    	Stream<Code> codes=asStream(
+    				finder.where()
+    				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
+    				.findIterate());
+    	
+    
+    	Optional<Tuple<Long,Code>> max=codes
+    		.map(cd-> 
+    			new Tuple<Long,Code>(
+    					new Long(Long.parseLong(cd.code.replace(suffix, "")))
+    					,cd)
+    			)
+    		.max((l1,l2)->(int)(l1.k()-l2.k()));
+    	
+    	if(max.isPresent()){
+    		Logger.info("################# FOUND CODE:" + max.get().v().code);
+    	}else{
+    		Logger.info("################# NO CODE!");
     	}
-    	Logger.info("################# NO CODE!");
-    	return null;
+    	return max;
     }
 }

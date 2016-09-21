@@ -88,7 +88,7 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 	        }
 	        if(!hasCode){
 	        	try{
-		        	Code c=seqGen.addCode(s);
+		        	seqGen.addCode(s);
 		        	//System.out.println("Generating new code:" + c.code);
 	        	}catch(Exception e){
 	        		e.printStackTrace();
