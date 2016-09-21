@@ -60,7 +60,7 @@ Bug Fixes
    be relaunched if a new user or new session
    was activated since the last run. New sessions
    no longer invalidate the cache.
-
+11.Display of structurally diverse icon standardized
 
 Deeper look
 -----------

@@ -514,7 +514,6 @@ public class GinasApp extends App {
 		        		case SUBSTRUCTURE:
 		        			return substructure(qStructure.smiles, rows, page);
 		        		case SIMILARITY:
-		        			
 		        			double thres = Math.max
 		                    (.3, Math.min(1.,Double.parseDouble(cutoff)));
 		        			return similarity(qStructure.smiles, thres, rows, page);
