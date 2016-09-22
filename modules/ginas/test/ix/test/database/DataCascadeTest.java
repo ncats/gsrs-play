@@ -28,7 +28,7 @@ public class DataCascadeTest  {
 	public GinasTestServer ts = new GinasTestServer(9001);
 
     @Test
-    public void EnsureDeletingEditDoesntDeleteUser() {
+    public void ensureDeletingEditDoesntDeleteUser() {
           Edit e=new Edit();
           e.save();
           
@@ -42,7 +42,7 @@ public class DataCascadeTest  {
     }
     
     @Test
-    public void EnsureDeletingCurationDoesntDeleteUser() {
+    public void ensureDeletingCurationDoesntDeleteUser() {
     	  Principal user1=PrincipalFactory.registerIfAbsent(new Principal("user1",null));
     	  user1.save();
     	  

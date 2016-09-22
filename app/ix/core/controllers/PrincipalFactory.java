@@ -83,10 +83,10 @@ public class PrincipalFactory extends EntityFactory {
 
     public static Principal byUserName(String uname) {
         //System.out.println("########## "+ uname);
-        Principal p = justRegisteredCache.get(uname);
+        Principal p = justRegisteredCache.get(uname.toUpperCase());
         if (p != null) return p;
-        p =  finder.where().eq("username", uname).findUnique();
-        if(p!=null)justRegisteredCache.put(p.username, p);
+        p =  finder.where().ieq("username", uname).findUnique();
+        if(p!=null)justRegisteredCache.put(p.username.toUpperCase(), p);
         return p;
     }
 
@@ -100,8 +100,8 @@ public class PrincipalFactory extends EntityFactory {
                 // where the result can be null, and there's still enough
                 // time between registration and being query-able
                 // The hashmap is a temporary measure to fix this.
-                // But still doesn't seem to fix it
-                justRegisteredCache.put(org.username, org);
+                // But still doesn't seem to fix it in every case
+                justRegisteredCache.put(org.username.toUpperCase(), org);
 
                 return org;
             } catch (Exception ex) {
