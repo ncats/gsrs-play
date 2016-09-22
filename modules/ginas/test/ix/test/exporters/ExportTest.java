@@ -3,7 +3,7 @@ package ix.test.exporters;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceLoader;
-import ix.test.ix.test.server.SubstanceSearch;
+import ix.test.ix.test.server.SubstanceSearcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,7 +29,7 @@ public class ExportTest {
 
 
     BrowserSession session;
-    SubstanceSearch searcher;
+    SubstanceSearcher searcher;
 
 
     @Before
@@ -39,7 +39,7 @@ public class ExportTest {
         File f = new File("test/testdumps/rep90.ginas");
         loader.loadJson(f);
 
-        searcher = new SubstanceSearch(session);
+        searcher = new SubstanceSearcher(session);
     }
     @After
     public void tearDown(){
@@ -50,7 +50,7 @@ public class ExportTest {
     @Test
     public void searchAll() throws IOException {
 
-        SubstanceSearch.SearchResult searchResult = searcher.all();
+        SubstanceSearcher.SearchResult searchResult = searcher.all();
         try(InputStream in = searchResult.export("csv");
             BufferedReader reader = new BufferedReader(new InputStreamReader(in))){
 

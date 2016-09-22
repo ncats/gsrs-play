@@ -4,7 +4,6 @@ package ix.test.ix.test.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,9 +22,13 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import play.libs.ws.WSResponse;
 
 /**
+ * Abstracts all the html parsing and ginas specific url knowledge
+ * to make a prorammatic way to query a running ginas instance to search
+ * for substances.
+ *
  * Created by katzelda on 4/5/16.
  */
-public class SubstanceSearch {
+public class SubstanceSearcher {
 
     private final BrowserSession session;
 
@@ -42,7 +45,7 @@ public class SubstanceSearch {
 
     private String defaultSearchOrder =null;
     
-    public SubstanceSearch(BrowserSession session) {
+    public SubstanceSearcher(BrowserSession session) {
         Objects.requireNonNull(session);
 
         this.session = session;
@@ -324,7 +327,7 @@ public class SubstanceSearch {
 
 
         public InputStream export(String format){
-            WSResponse resp = SubstanceSearch.this.session.get("ginas/app/setExport?id="+searchKey + "&format="+format);
+            WSResponse resp = SubstanceSearcher.this.session.get("ginas/app/setExport?id="+searchKey + "&format="+format);
             return resp.getBodyAsStream();
         }
 
