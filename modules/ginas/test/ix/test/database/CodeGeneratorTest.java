@@ -22,7 +22,7 @@ import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import play.Configuration;
 
-public class CodeGenerator {
+public class CodeGeneratorTest {
 	
 	 @Rule
 	 public GinasTestServer ts = new GinasTestServer(()->{
