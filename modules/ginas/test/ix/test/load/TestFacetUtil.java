@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ix.ginas.controllers.GinasApp;
-import ix.test.ix.test.server.SubstanceSearch;
+import ix.test.ix.test.server.SubstanceSearcher;
 
 /**
  * Created by katzelda on 4/29/16.
@@ -20,7 +20,7 @@ public final class TestFacetUtil {
     }
 
 
-    public static void assertFacetsMatch(Map<String, Map<String, Integer>> expectedFacets, SubstanceSearch.SearchResult actualResults){
+    public static void assertFacetsMatch(Map<String, Map<String, Integer>> expectedFacets, SubstanceSearcher.SearchResult actualResults){
         Map<String, Map<String, Integer>> actual = actualResults.getAllFacets();
         Map<String, Map<String, Integer>> filteredExpected = filterVisibleFacets(expectedFacets);
 

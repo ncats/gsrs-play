@@ -19,6 +19,7 @@ public class ExceptionValidationMessage implements ValidationMessage{
 
 	@Override
 	public MESSAGE_TYPE getMessageType() {
+		
 		return MESSAGE_TYPE.ERROR;
 	}
 

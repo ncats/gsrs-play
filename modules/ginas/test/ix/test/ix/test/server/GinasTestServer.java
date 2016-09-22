@@ -70,7 +70,7 @@ import static play.test.Helpers.testServer;
  *
  *     <pre>
  *         @Rule
- *         GinasTestServer ts = new GinasTestServer(9001);
+ *         public GinasTestServer ts = new GinasTestServer(9001);
  *
  *         ...
  *
@@ -148,6 +148,7 @@ public class GinasTestServer extends ExternalResource{
     public URL getHomeUrl() throws IOException{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
+
 
     public static class User{
     	private final String username;

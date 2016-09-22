@@ -6,11 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -22,7 +20,7 @@ import ix.test.ix.test.server.ConfigUtil;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceLoader;
-import ix.test.ix.test.server.SubstanceSearch;
+import ix.test.ix.test.server.SubstanceSearcher;
 import ix.test.util.TestUtil;
 import ix.utils.Util;
 /**
@@ -43,11 +41,11 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     private void runRepTests(BrowserSession session) throws IOException, AssertionError{
     	
     	
-    	SubstanceSearch searcher = new SubstanceSearch(session);
-    	SubstanceSearch.SearchResult all = searcher.all();
+    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	SubstanceSearcher.SearchResult all = searcher.all();
         assertEquals(90, all.numberOfResults());
        
-        SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+        SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
         assertEquals(17, results.numberOfResults());
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
         
@@ -55,12 +53,12 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
-    	SubstanceSearch searcher = new SubstanceSearch(session);
+    	SubstanceSearcher searcher = new SubstanceSearcher(session);
     	searcher.setSearchOrder("Name Count");
-    	SubstanceSearch.SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
+    	SubstanceSearcher.SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
     	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
     	
-    	SubstanceSearch.SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
+    	SubstanceSearcher.SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
     	//System.out.println("Found results size:" + results2.getUuids().toString());
     	assertEquals(1, results2.getUuids().size());
     	String findUUID="445d5a83";
@@ -74,16 +72,16 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
-    	SubstanceSearch searcher = new SubstanceSearch(session);
-    	SubstanceSearch.SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
-    	SubstanceSearch.SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
+    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	SubstanceSearcher.SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
+    	SubstanceSearcher.SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
     	assertTrue("6th page on substructure search should have 2 entries", resultsLater.getUuids().size()==2);
     }
     private void substructureHighlightingShouldShowOnLastPage(BrowserSession session) throws IOException, AssertionError{
-    	SubstanceSearch searcher = new SubstanceSearch(session);
-    	SubstanceSearch.SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
+    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	SubstanceSearcher.SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
-    	Set<String> img_urls=SubstanceSearch.getStructureImagesFrom(lastResults);
+    	Set<String> img_urls= SubstanceSearcher.getStructureImagesFrom(lastResults);
     	assertEquals(1,img_urls.size());
     	RestSession rs=ts.newRestSession(session.getUser());
     	
@@ -225,9 +223,9 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     @Test  
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
-        SubstanceSearch searcher = new SubstanceSearch(ts.notLoggedInBrowserSession());
+        SubstanceSearcher searcher = new SubstanceSearcher(ts.notLoggedInBrowserSession());
 
-        SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+        SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
         assertEquals(0, results.numberOfResults());
 
@@ -259,9 +257,9 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         ts.start();
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
-            SubstanceSearch searcher = new SubstanceSearch(session);
+            SubstanceSearcher searcher = new SubstanceSearcher(session);
 
-            SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+            SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
             assertEquals(0, results.numberOfResults());
             assertTrue(results.getAllFacets().isEmpty());

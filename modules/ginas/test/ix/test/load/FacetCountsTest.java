@@ -3,7 +3,7 @@ package ix.test.load;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceLoader;
-import ix.test.ix.test.server.SubstanceSearch;
+import ix.test.ix.test.server.SubstanceSearcher;
 import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,11 +35,11 @@ public class FacetCountsTest {
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            SubstanceSearch searcher = new SubstanceSearch(session);
+            SubstanceSearcher searcher = new SubstanceSearcher(session);
 
             loader.loadJson(new File("test/testdumps/rep90_part1.ginas"));
 
-            SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+            SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
 
             assertEquals(9, results.numberOfResults());
@@ -80,7 +80,7 @@ public class FacetCountsTest {
 
             loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
 
-            SubstanceSearch.SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
+            SubstanceSearcher.SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
             assertEquals(17, results2.numberOfResults());            
             TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results2);
         }
