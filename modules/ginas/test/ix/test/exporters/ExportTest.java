@@ -1,19 +1,24 @@
 package ix.test.exporters;
 
+import ix.core.CacheStrategy;
+import ix.core.plugins.IxCache;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceLoader;
 import ix.test.ix.test.server.SubstanceSearcher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.*;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -25,11 +30,17 @@ import static org.junit.Assert.*;
 public class ExportTest {
 
     @Rule
-    public GinasTestServer ts = new GinasTestServer();
+    public GinasTestServer ts = new GinasTestServer(new HashMap<String,Object>(){
+    	{
+    		put("ix.cache.maxElementsNonEvictable",4);
+    		
+    	}
+    });
 
 
     BrowserSession session;
     SubstanceSearcher searcher;
+  
 
 
     @Before
@@ -47,9 +58,9 @@ public class ExportTest {
     }
 
 
-    @Test
+    @Test 
     public void searchAll() throws IOException {
-
+    
         SubstanceSearcher.SearchResult searchResult = searcher.all();
         try(InputStream in = searchResult.export("csv");
             BufferedReader reader = new BufferedReader(new InputStreamReader(in))){
@@ -81,4 +92,53 @@ public class ExportTest {
         }
         return uuids;
     }
+
+    @Test 
+    public void searchOne() throws IOException {
+  
+        SubstanceSearcher.SearchResult searchResult = searcher.query("GUIZOTIA ABYSSINICA (L. F.) CASS.");
+        try(InputStream in = searchResult.export("csv");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in))){
+
+            List<String> lines = reader.lines().collect(Collectors.toList());
+            assertEquals( 1, lines.size() -1 ); //1 line of header
+
+            Set<String> uuids = parseUUids(lines);
+
+            assertEquals(searchResult.getUuids(), uuids);
+        }
+
+    }
+    @Test
+    public void searchAllWithFullCache() throws IOException {
+    
+        searchAll(); 
+        for(int i = 0; i<1000;i++)
+        {
+            IxCache.set(String.valueOf(i), new NonEvictable());
+        }
+        System.out.println("testing cache");
+        searchAll();
+
+    }
+    
+    @Test
+    public void searchAllWithFullAfterLotsOfSearchesCache() throws IOException {
+    
+        searchAll(); 
+        for(int i = 0; i<100;i++){
+        	SubstanceSearcher.SearchResult searchResult = searcher.query(UUID.randomUUID().toString());
+        	//System.out.println("Key:" + searchResult.getKey());
+        	
+        }
+
+        searchAll();
+
+    }
+    @CacheStrategy(evictable=false)
+    private static class NonEvictable
+    {
+    	
+    }
+
 }

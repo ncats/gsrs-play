@@ -70,7 +70,7 @@ import static play.test.Helpers.testServer;
  *
  *     <pre>
  *         @Rule
- *         GinasTestServer ts = new GinasTestServer(9001);
+ *         public GinasTestServer ts = new GinasTestServer(9001);
  *
  *         ...
  *

@@ -174,7 +174,8 @@ public class SubstanceSearcher {
 
         String rootUrl = "ginas/app/substances?wait=true";
         if(queryOrNull !=null){
-            rootUrl +="&q=\"" + queryOrNull + "\"";
+        	String encodedQueryOrNull = URLEncoder.encode(queryOrNull,"UTF-8");
+            rootUrl +="&q=\"" + encodedQueryOrNull + "\"";
         }
         if(defaultSearchOrder!=null){
     		rootUrl+="&order=" + defaultSearchOrder;
@@ -189,6 +190,7 @@ public class SubstanceSearcher {
         do {
         	 HtmlPage htmlPage=null;
         	 try{
+        		 
         		 htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
         	 }catch(Exception e){
              	break;
