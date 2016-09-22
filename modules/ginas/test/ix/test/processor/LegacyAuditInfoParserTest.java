@@ -1,6 +1,6 @@
 package ix.test.processor;
 
-import static ix.test.SubstanceJsonUtil.ensurePass;
+import static ix.test.SubstanceJsonUtil.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -9,6 +9,7 @@ import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -27,6 +28,7 @@ import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import play.Configuration;
 
+import play.Play;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -94,11 +96,19 @@ public class LegacyAuditInfoParserTest {
 	 @Test
 	 public void tryForcingApprovedByInLegacyNote() {
 		 
-		 	try( RestSession session = ts.newRestSession(ts.createAdmin("whatever", "whenever"))) {
+		 	try( RestSession session = ts.newRestSession(ts.createAdmin("whatever" + UUID.randomUUID(), "whenever"))) {
 	        	String theName = "Simple Named Concept";
 	        	String forcedApprovedBy = "SOME_BLOKE";
 	            SubstanceAPI api = new SubstanceAPI(session);
-	           
+	            JsonNode jsn2 = new SubstanceBuilder()
+						.addName(theName)
+						.generateNewUUID()
+						.addNote(new Note(new AuditNoteBuilder()
+											.withApprovedBy(forcedApprovedBy)
+											.buildNoteText()))
+						.andThenMutate(s->s.addTagString("FORCE_FAIL"))
+						.buildJson();
+					ensureFailure(api.submitSubstance(jsn2));
 						JsonNode jsn = new SubstanceBuilder()
 							.addName(theName)
 							.generateNewUUID()
@@ -116,11 +126,13 @@ public class LegacyAuditInfoParserTest {
 	 @Test
 	 public void tryForcingModifiedByInLegacyNote() {
 		 
-		 	try( RestSession session = ts.newRestSession(ts.createAdmin("whatever", "whenever"))) {
+		 	try( RestSession session = ts.newRestSession(ts.createAdmin("whatever" + UUID.randomUUID(), "whenever"))) {
 	        	String theName = "Simple Named Concept";
 	        	String forcedApprovedBy = "tylertest";
 	            SubstanceAPI api = new SubstanceAPI(session);
 	           
+	            
+	            
 						JsonNode jsn = new SubstanceBuilder()
 							.addName(theName)
 							.generateNewUUID()
@@ -138,7 +150,7 @@ public class LegacyAuditInfoParserTest {
 	 @Test
 	 public void tryForcingApprovalDateAndApproverInLegacyNote() {
 		 
-		 	try( RestSession session = ts.newRestSession(ts.createAdmin("whatever", "whenever"))) {
+		 	try( RestSession session = ts.newRestSession(ts.createAdmin("whatever" + UUID.randomUUID(), "whenever"))) {
 	        	String theName = "Simple Named Concept";
 	        	String forcedApprovedBy = "tylertest";
 	        	Date d = new Date();

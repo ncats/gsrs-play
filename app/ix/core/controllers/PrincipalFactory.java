@@ -1,7 +1,9 @@
 package ix.core.controllers;
 
 import ix.core.NamedResource;
+import ix.core.adapters.InxightTransaction;
 import ix.core.models.Principal;
+import ix.core.util.EntityUtils.EntityWrapper;
 
 import java.util.Date;
 import java.util.List;
@@ -95,14 +97,6 @@ public class PrincipalFactory extends EntityFactory {
         if (results == null) {
             try {
                 org.save();
-                // For some reason, there is a race condition
-                // that seems to happen only with oracle,
-                // where the result can be null, and there's still enough
-                // time between registration and being query-able
-                // The hashmap is a temporary measure to fix this.
-                // But still doesn't seem to fix it in every case
-                justRegisteredCache.put(org.username.toUpperCase(), org);
-
                 return org;
             } catch (Exception ex) {
                 Logger.trace("Can't register principal: " + org.username, ex);

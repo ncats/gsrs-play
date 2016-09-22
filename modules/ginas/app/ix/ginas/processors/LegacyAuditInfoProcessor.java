@@ -14,6 +14,8 @@ import ix.ginas.models.v1.Note;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
+
+import play.Play;
 public class LegacyAuditInfoProcessor implements EntityProcessor<Substance>{
 	public static final String START_LEGACY_REF="Legacy Info:";
 	
@@ -59,22 +61,27 @@ public class LegacyAuditInfoProcessor implements EntityProcessor<Substance>{
 		}
 	}
 	public void preFlightFormat(Substance obj){
-		String legacy_audit_ref=null;
+		//String legacy_audit_ref=null;
 		
-		for(Note r:obj.notes){
-			if(r.note!=null && r.note.startsWith(START_LEGACY_REF)){
-				legacy_audit_ref=r.note;
-				break;
-			}
-		}
-		
-		if(legacy_audit_ref!=null){
+		obj.notes.stream()
+			.filter(n->(n.note!=null && n.note.startsWith(START_LEGACY_REF)))
+			.map(n->n.note)
+			.findFirst()
+			.ifPresent(legacy_audit_ref->{
+				
 				applyPrincipalIf(CREATED_BY_REGEX,legacy_audit_ref, p -> obj.createdBy=p );
 				applyPrincipalIf(MODIFIED_BY_REGEX,legacy_audit_ref, p -> obj.lastEditedBy=p );
 				applyPrincipalIf(APPROVED_BY_REGEX,legacy_audit_ref, p -> obj.approvedBy=p );
 				applyDateIf(CREATED_DATE_REGEX,legacy_audit_ref, p -> obj.created=p );
 				applyDateIf(MODIFIED_DATE_REGEX,legacy_audit_ref, p -> obj.lastEdited=p );
 				applyDateIf(APPROVED_DATE_REGEX,legacy_audit_ref, p -> obj.approved=p );
+				
+			});
+		//TODO: Refactor somewhere else
+		if(Play.isTest()){
+			if(obj.hasTagString("FORCE_FAIL")){
+				throw new IllegalStateException("FAIL ME");
+			}
 		}
 	}
 
