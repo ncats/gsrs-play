@@ -18,6 +18,7 @@ public interface Exporter<T> extends Closeable{
 					e.printStackTrace();
 				}
 			});
+
 		}finally{
 			IOUtil.closeResource(this);
 		}

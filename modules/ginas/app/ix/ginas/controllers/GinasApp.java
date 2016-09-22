@@ -557,33 +557,17 @@ public class GinasApp extends App {
    
    
     public static Result export (String collectionID, String extension) {
-    	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     	SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
     	
     	try{
 	    		 
-	    	final PipedInputStream pis =               new PipedInputStream ();
+	    	final PipedInputStream pis = new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
 
-            GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
-
-            if(factoryPlugin ==null){
-                System.out.println("FACTORY PLUGIN NULL!!!!!!");
-            }
-
-            SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
-
-            SubstanceExporterFactory factory= factoryPlugin.getExporterFor(params);
-            if(factory ==null){
-                //TODO handle null couldn't find factory for params
-                throw new IllegalArgumentException("could not find suitable factory for " + params);
-            }
-
-            Exporter<Substance> exporter = factory.createNewExporter(pos, params);
-
+            Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
+            final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String fname = "export-" +sdf.format(new Date()) + "." + extension;
-            response().setContentType("application/x-download");
-            response().setHeader("Content-disposition","attachment; filename=" + fname);
 
             Executors.newSingleThreadExecutor().submit(()->{
                     try {
@@ -592,12 +576,32 @@ public class GinasApp extends App {
                         e.printStackTrace();
                     }
                 });
+            response().setContentType("application/x-download");
+            response().setHeader("Content-disposition","attachment; filename=" + fname);
 
 	    	return ok(pis);
     	}catch(Exception e){
     		e.printStackTrace();
     		throw new IllegalStateException(e);
     	}
+    }
+
+    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
+        GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
+
+        if(factoryPlugin ==null){
+            throw new NullPointerException("could not find a factory plugin");
+        }
+
+        SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
+
+        SubstanceExporterFactory factory= factoryPlugin.getExporterFor(params);
+        if(factory ==null){
+            //TODO handle null couldn't find factory for params
+            throw new IllegalArgumentException("could not find suitable factory for " + params);
+        }
+
+        return factory.createNewExporter(pos, params);
     }
 
 

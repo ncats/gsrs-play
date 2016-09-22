@@ -148,6 +148,7 @@ public class GinasTestServer extends ExternalResource{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
 
+
     public static class User{
     	private final String username;
     	private String password;

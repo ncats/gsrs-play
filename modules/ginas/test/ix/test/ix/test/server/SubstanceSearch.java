@@ -3,6 +3,7 @@ package ix.test.ix.test.server;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.Collections;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import play.libs.ws.WSResponse;
 
 /**
  * Created by katzelda on 4/5/16.
@@ -27,14 +29,17 @@ public class SubstanceSearch {
 
     private final BrowserSession session;
 
-    private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9]+)\"");
+    private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9\\-]+)\"");
     private static final Pattern TOTAL_PATTERN = Pattern.compile("[^0-9]([0-9][0-9]*)[^0-9]*h3[^0-9]*pagination");
 ///ginas/app/img/c37bea80-14ec-4144-8379-60c92d422713.svg?size=200&amp;context=ghtjouloym
     private static final Pattern STRUCTURE_IMG_URL = Pattern.compile("src=.(/ginas/app/img/[^\'\"]+)");
     
     private static final Pattern ROW_PATTERN = Pattern.compile("[<]label[^>]*[>]([^<]*).*?badge[^>]*[>]([^<]*)", Pattern.DOTALL);
 
-    
+    //"/ginas/app/api/v1/status/ceb8ca9e14006df02a6d2cee8c38e664640f2036"
+
+    private static final Pattern  SEARCH_KEY_PATTERN = Pattern.compile("ginas/app/api/v1/status/([0-9a-f]+)");
+
     private String defaultSearchOrder =null;
     
     public SubstanceSearch(BrowserSession session) {
@@ -80,14 +85,16 @@ public class SubstanceSearch {
 
         Set<String> substances = new LinkedHashSet<>();
 
-        Set<String> temp;
+        Object[] tmp;
         HtmlPage firstPage=null;
+        String keyString=null;
         do {
             try {
                 HtmlPage htmlPage = getSubstructurePage(smiles,rows,page, wait);
-                temp = getSubstancesFrom(htmlPage);
+                tmp= getSubstancesFrom(htmlPage);
                 if (firstPage == null) {
                     firstPage = htmlPage;
+                    keyString = (String)tmp[0];
                 }
 
                 
@@ -109,20 +116,20 @@ public class SubstanceSearch {
                 }
                 throw e;
             }
-        }while(substances.addAll(temp));
+        }while(substances.addAll( (Set<String>) tmp[1]));
 
-        SearchResult results = new SearchResult(substances);
+        SearchResult results = new SearchResult(keyString, substances);
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);
         }
         return results;
     }
     
-    public HtmlPage getPage(String rootUrl, int page) throws MalformedURLException, IOException{
+    public HtmlPage getPage(String rootUrl, int page) throws IOException{
     	return session.submit(session.newGetRequest(rootUrl + "&page=" + page));
     }
     
-    public HtmlPage getSubstructurePage(String smiles, int rows, int page, boolean wait) throws MalformedURLException, IOException{
+    public HtmlPage getSubstructurePage(String smiles, int rows, int page, boolean wait) throws IOException{
     	// Added "wait" so that it doesn't return before it's
     	// completely ready
     	// This may be a problem, as URLEncoder may over encode some smiles strings
@@ -135,20 +142,37 @@ public class SubstanceSearch {
     }
     
     
-    public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws MalformedURLException, IOException{
+    public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
     	return new SearchResult(getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait)));
     }
-    
-    
-    
+
+    /**
+     * Get the UUIDs of all the loaded substances
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     * @throws IOException if there is a problem parsing the results.
+     */
+    public SearchResult query(String queryString) throws IOException {
+        return performSearch(queryString);
+    }
     /**
      * Get the UUIDs of all the loaded substances
      * @return a Set of UUIDs that match. will never be null but may be empty.
      * @throws IOException if there is a problem parsing the results.
      */
     public SearchResult all() throws IOException {
+        return performSearch(null);
+    }
+    /**
+     * Get the UUIDs of all the loaded substances
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     * @throws IOException if there is a problem parsing the results.
+     */
+    private SearchResult performSearch(String queryOrNull) throws IOException {
 
         String rootUrl = "ginas/app/substances?wait=true";
+        if(queryOrNull !=null){
+            rootUrl +="&q=\"" + queryOrNull + "\"";
+        }
         if(defaultSearchOrder!=null){
     		rootUrl+="&order=" + defaultSearchOrder;
     	}
@@ -158,6 +182,7 @@ public class SubstanceSearch {
 
         Set<String> temp;
         HtmlPage firstPage=null;
+        String keyString = null;
         do {
         	 HtmlPage htmlPage=null;
         	 try{
@@ -166,15 +191,16 @@ public class SubstanceSearch {
              	break;
              }
             //stop if the paging throws an error
-           
-            	temp = getSubstancesFrom(htmlPage);
+           String htmlText = htmlPage.asXml();
+            	temp = getSubstancesFrom(htmlText);
             
             if(firstPage ==null){
                 firstPage = htmlPage;
+                keyString = getKeyFrom(htmlText);
             }
             page++;
 
-            Matcher m=TOTAL_PATTERN.matcher(htmlPage.asXml());
+            Matcher m=TOTAL_PATTERN.matcher(htmlText);
             String total = null;
             if(m.find()){
             	total=m.group(1);
@@ -191,14 +217,22 @@ public class SubstanceSearch {
         
         
         
-        SearchResult results = new SearchResult(substances);
+        SearchResult results = new SearchResult(keyString, substances);
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);
         }
         return results;
     }
 
-    
+    private String getKeyFrom(String htmlText) {
+        Matcher m = SEARCH_KEY_PATTERN.matcher(htmlText);
+        if(!m.find()){
+            throw new IllegalStateException("could not find search key for " + htmlText);
+        }
+        return m.group(1);
+    }
+
+
     private void parseFacets(SearchResult results, HtmlPage html) throws IOException{
     	Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
 
@@ -228,14 +262,23 @@ public class SubstanceSearch {
 
     }
 
-
-    private Set<String> getSubstancesFrom(HtmlPage page){
+    private Set<String> getSubstancesFrom(String html){
         Set<String> substances = new LinkedHashSet<>();
-        Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(page.asXml());
+        Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(html);
         while(matcher.find()){
             substances.add(matcher.group(1));
         }
+
+
         return substances;
+    }
+
+    private Object[] getSubstancesFrom(HtmlPage page){
+        String htmlText = page.asXml();
+        Set<String> substances =  getSubstancesFrom(htmlText);
+
+        return new Object[]{getKeyFrom(htmlText), substances};
+
     }
     
     public static Set<String> getStructureImagesFrom(HtmlPage page){
@@ -252,16 +295,25 @@ public class SubstanceSearch {
     }
 
 
-    public static class SearchResult{
+    public class SearchResult{
         private final Set<String> uuids;
         private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
 
-        public SearchResult(Set<String> uuids){
+        private final String searchKey;
+        public SearchResult(Object[] array){
+            this((String)array[0], (Set<String>) array[1]);
+        }
+        public SearchResult(String searchKey, Set<String> uuids){
             Objects.requireNonNull(uuids);
+            Objects.requireNonNull(searchKey);
+
+            this.searchKey = searchKey;
             this.uuids = Collections.unmodifiableSet(new LinkedHashSet<>(uuids));
 
         }
-
+        public String getKey(){
+            return searchKey;
+        }
         public Set<String> getUuids(){
             return uuids;
         }
@@ -270,6 +322,11 @@ public class SubstanceSearch {
             return uuids.size();
         }
 
+
+        public InputStream export(String format){
+            WSResponse resp = SubstanceSearch.this.session.get("ginas/app/setExport?id="+searchKey + "&format="+format);
+            return resp.getBodyAsStream();
+        }
 
         public Map<String, Integer> getFacet(String facetName){
             return facetMap.get(facetName);
@@ -291,46 +348,48 @@ public class SubstanceSearch {
             return Collections.unmodifiableMap(facetMap);
         }
 
-        enum Order implements Comparator<Integer>{
-            INCREASING{
-                @Override
-                public int compare(Integer o1, Integer o2) {
-                    if(o1 ==null && o2==null){
-                        return 0;
-                    }
-                    if(o2 ==null){
-                        return -1;
-                    }
-                    if(o1 ==null){
-                        return 1;
-                    }
-                    return Integer.compare(o1,o2);
-                }
-            },
-            DECREASING{
-                @Override
-                public int compare(Integer o1, Integer o2) {
-                    //note parameter order is swapped
-                   return INCREASING.compare(o2, o1);
-                }
-            };
-        }
-        private static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
-            private final Map<T, V> countMap;
-            private Comparator<V> order;
-            public SortByValueComparator(Map<T, V> countMap, Comparator<V> order) {
-                this.countMap = countMap;
-                this.order = order;
-            }
+
+    }
+
+    enum Order implements Comparator<Integer>{
+        INCREASING{
             @Override
-            public int compare(T s1, T s2) {
-                int valueCmp= order.compare(countMap.get(s1), countMap.get(s2));
-                if(valueCmp !=0){
-                    return valueCmp;
+            public int compare(Integer o1, Integer o2) {
+                if(o1 ==null && o2==null){
+                    return 0;
                 }
-                //values are equal, sort by key?
-                return s1.compareTo(s2);
+                if(o2 ==null){
+                    return -1;
+                }
+                if(o1 ==null){
+                    return 1;
+                }
+                return Integer.compare(o1,o2);
             }
+        },
+        DECREASING{
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                //note parameter order is swapped
+                return INCREASING.compare(o2, o1);
+            }
+        };
+    }
+    private static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
+        private final Map<T, V> countMap;
+        private Comparator<V> order;
+        public SortByValueComparator(Map<T, V> countMap, Comparator<V> order) {
+            this.countMap = countMap;
+            this.order = order;
+        }
+        @Override
+        public int compare(T s1, T s2) {
+            int valueCmp= order.compare(countMap.get(s1), countMap.get(s2));
+            if(valueCmp !=0){
+                return valueCmp;
+            }
+            //values are equal, sort by key?
+            return s1.compareTo(s2);
         }
     }
 }
