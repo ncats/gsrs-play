@@ -230,7 +230,8 @@ public class SubstanceSearcher {
     private String getKeyFrom(String htmlText) {
         Matcher m = SEARCH_KEY_PATTERN.matcher(htmlText);
         if(!m.find()){
-            throw new IllegalStateException("could not find search key for " + htmlText);
+            //throw new IllegalStateException("could not find search key for " + htmlText);
+            return "";
         }
         return m.group(1);
     }
