@@ -67,7 +67,7 @@
                 </td>
                 @if(n.getReferences.size > 0){
                 <td style="text-align:right;">
-                	<referencesmanager indices substance ="'@substance.getUuid'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
+                	<referencesmanager ref-count substance ="'@substance.getUuid'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
                 </td>
                 }else{
                 	<td>none</td>

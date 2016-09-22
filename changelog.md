@@ -23,6 +23,10 @@ Enhancements
     rather than recalculating every time.
 11. Only allow Super-users to override duplicate warnings
 12. Show molecular weight on list views
+13. Improved look and feel of name list on browse, show
+    code-system with code
+14. Sort list of codes before showing on list view
+
 
 Bug Fixes
 ---------
@@ -51,7 +55,12 @@ Bug Fixes
 8. Removed search from protein thumb if no subunits
 9. Added validation rule to proteins, not to allow
    records with no subunits
-
+10.A new session previously invalidated certain 
+   cache elements. This meant that a search would
+   be relaunched if a new user or new session
+   was activated since the last run. New sessions
+   no longer invalidate the cache.
+11.Display of structurally diverse icon standardized
 
 Deeper look
 -----------

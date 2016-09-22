@@ -1299,3 +1299,9 @@ span.key-value {
 .name-form{
 	font-weight:bold;
 }
+span.nowrap-list {
+    display: block;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

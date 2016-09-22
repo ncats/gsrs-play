@@ -25,7 +25,7 @@
             }
             @if(sub.structurallyDiverse.getReferences() != null && sub.structurallyDiverse.getReferences().size() > 0) {
                 <tr><td>Definition References</td>
-                    <td><referencesmanager indices substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.structurallyDiverse.getReferences())"></referencesmanager></td></tr>
+                    <td><referencesmanager ref-count substance ="'@sub.getUuid()'" divid ="'@sub.getUuid()'" references = "@GinasApp.getAsJson(sub.structurallyDiverse.getReferences())"></referencesmanager></td></tr>
                 <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
             }
         </table>

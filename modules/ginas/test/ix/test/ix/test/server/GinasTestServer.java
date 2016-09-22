@@ -56,6 +56,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static play.test.Helpers.fakeApplication;
 import static play.test.Helpers.testServer;
@@ -310,7 +311,11 @@ public class GinasTestServer extends ExternalResource{
         };
     }
 
-    private void createInitialFakeUsers() {
+    public GinasTestServer(Supplier<Map<String,Object>> sup) {
+    	this(sup.get());
+	}
+
+	private void createInitialFakeUsers() {
         fakeUserGroup= AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
         if(fakeUserGroup ==null){
             fakeUserGroup=new Group("fake");
