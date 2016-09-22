@@ -1,12 +1,16 @@
 package ix.ginas.utils;
 
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
+
 import ix.ginas.controllers.v1.CodeFactory;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
+import ix.utils.Tuple;
 
 public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
-	private long lastNum=1;
+	private AtomicLong lastNum= new AtomicLong(1);
 	private boolean fetched=false;
 	private String codeSystem;
 	
@@ -27,14 +31,13 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
 	@Override
 	public long getNextNumber() {
 		if(!fetched){
-			String code=CodeFactory.getMostRecentCode(codeSystem, "%" + suffix);
-			if(code!=null){
-				lastNum=Long.parseLong(code.replace(suffix, ""));
-				lastNum++;
+			Optional<Tuple<Long,Code>> code=CodeFactory.getHighestValueCode(codeSystem, suffix);
+			if(code.isPresent()){
+				lastNum.set(code.get().k());
 			}
 			fetched=true;
 		}
-		return lastNum++;
+		return lastNum.incrementAndGet();
 	}
 	
 	public Code getCode(){
