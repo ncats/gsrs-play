@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import ix.core.plugins.ConsoleFilterPlugin;
+
 /**
  * Created by katzelda on 9/14/16.
  */
@@ -17,6 +19,13 @@ public class FilteredPrintStream extends PrintStream {
 
     private final PrintStream printStream;
     private final LinkedList<Filter> filters = new LinkedList<>();
+
+    private Consumer<Object> onFilteredOut = null;
+
+    public void setOnFilteredOut(Consumer<Object> onFilteredOut) {
+        this.onFilteredOut = onFilteredOut;
+    }
+
 
 
     public FilteredPrintStream(PrintStream printStream) {
@@ -198,6 +207,7 @@ public class FilteredPrintStream extends PrintStream {
 
                 if(!filters.isEmpty() && !filters.peek().test(new Throwable().getStackTrace()[2])) {
                     //filtered out
+                    
                     return;
                 }
                 r.run();
@@ -211,11 +221,12 @@ public class FilteredPrintStream extends PrintStream {
                 StackTraceElement t = new Throwable().getStackTrace()[2];
                 if(!filters.isEmpty() && !filters.peek().test(t)) {
                         //filtered out
+                        if(onFilteredOut!=null){
+                            onFilteredOut.accept(obj);
+                        }
                         return;
                 }
-
                 consumer.accept(obj);
-
             }
 
         }
@@ -239,14 +250,18 @@ public class FilteredPrintStream extends PrintStream {
         void close();
 
         Filter getFilter();
-
+        
+        default FilterSession withOnSwallowed(Consumer<Object> co){
+            throw new UnsupportedOperationException();
+        }
 
     }
 
     private class FilterSessionImpl implements FilterSession{
 
         private Filter filter;
-
+        private Consumer<Object> old = FilteredPrintStream.this.onFilteredOut;
+        
         public FilterSessionImpl(Filter filter) {
             this.filter = filter;
         }
@@ -254,11 +269,17 @@ public class FilteredPrintStream extends PrintStream {
         @Override
         public void close() {
             removeFilter(filter);
+            FilteredPrintStream.this.setOnFilteredOut(old);
         }
 
         @Override
         public Filter getFilter() {
             return filter;
+        }
+        
+        public FilterSession withOnSwallowed(Consumer<Object> co){
+            FilteredPrintStream.this.setOnFilteredOut(co);
+            return this;
         }
 
 
