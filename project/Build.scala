@@ -129,12 +129,17 @@ public class BuildInfo {
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
   )
 
+  val ixdb = Project("ixdb", file("modules/ixdb"))
+    .settings(commonSettings:_*).settings(
+    libraryDependencies ++= commonDependencies
+  )
+
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions in (Compile, compile) ++= javaBuildOptions,
       javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(build,seqaln).aggregate(build,seqaln)
+  ).dependsOn(build,ixdb,seqaln).aggregate(build,ixdb,seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
