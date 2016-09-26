@@ -42,7 +42,7 @@ public class LegacyAuditInfoProcessor implements EntityProcessor<Substance>{
 	
 	private static void applyPrincipalIf(Pattern p, String s, Consumer<Principal> pconsumer){
 		String pname=getIf(p ,s);
-		if(pname!=null){	
+		if(pname!=null && !pname.isEmpty()){	
 			Principal prince= PrincipalFactory.registerIfAbsent(new Principal(pname,null));
 			pconsumer.accept(prince);
 		}
