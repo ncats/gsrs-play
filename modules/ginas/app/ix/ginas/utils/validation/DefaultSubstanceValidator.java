@@ -61,6 +61,8 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 		//Some users can put in records flagged as possible duplicates
 		//some can't. We change some warnings to errors
 		boolean allowPossibleDuplicates=false;
+		
+		
 		if(		getCurrentUser().hasRole(Role.SuperUpdate) || 
 				getCurrentUser().hasRole(Role.SuperDataEntry) || 
 				getCurrentUser().hasRole(Role.Admin) ||
@@ -106,7 +108,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 			
 			if(vlad!=null){
 				for(GinasProcessingMessage gpm:vlad){
-					if(gpm.isPossibleDuplicate()){
+					if(gpm.isProblem() && gpm.isPossibleDuplicate()){
 						if(!allowPossibleDuplicates){
 							gpm.makeError();
 						}

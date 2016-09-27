@@ -1,5 +1,7 @@
 package ix.core;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import controllers.Default$;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
@@ -9,12 +11,16 @@ import ix.ncats.controllers.auth.Authentication;
 
 public class UserFetcher {
 	
+	public static AtomicBoolean DEFAULT_FORCE = new AtomicBoolean(true);
+	
 	private static final String DEFAULT_USERNAME = "GUEST";
+	
+	
     private static ThreadLocal<Principal> localUser = new ThreadLocal<Principal>();
     
     private static ThreadLocal<Boolean> forceAuditUpdate = new ThreadLocal<Boolean>(){
             @Override protected Boolean initialValue() {
-                return true;
+                return DEFAULT_FORCE.get();
             }
     };
 
@@ -69,6 +75,12 @@ public class UserFetcher {
 		return forceAuditUpdate.get();
 	}
 	
+	public static void globalEnableForceAuditUpdate(){
+		DEFAULT_FORCE.set(true);
+	}
+	public static void globalDisableForceAuditUpdate(){
+		DEFAULT_FORCE.set(false);
+	}
 	
 	
 }

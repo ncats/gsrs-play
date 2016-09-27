@@ -830,7 +830,7 @@ public class EntityFactory extends Controller {
         }
         catch (Throwable ex) {
         	Logger.error("Problem creating record", ex);
-        	System.out.println(ex.getMessage());
+        	System.err.println(ex.getMessage());
         	ex.printStackTrace();
         	tx.rollback(ex);
             return internalServerError ("Problem creating record:" + ex.getMessage());

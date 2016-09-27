@@ -1,15 +1,10 @@
 package ix.test.load;
 
-import ix.ginas.controllers.GinasApp;
 import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceSearch;
 import ix.test.util.TestNamePrinter;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 

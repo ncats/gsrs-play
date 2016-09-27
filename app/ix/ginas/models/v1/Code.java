@@ -1,11 +1,16 @@
 package ix.ginas.models.v1;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
@@ -38,6 +43,7 @@ public class Code extends CommonDataElementOfCollection{
 	@JSONEntity(title = "Code Comments")
     @Lob
     @Basic(fetch=FetchType.EAGER)
+	@Indexable(pathsep="//|")
     public String comments;
 
     @JSONEntity(title = "Code Text")
@@ -67,7 +73,29 @@ public class Code extends CommonDataElementOfCollection{
 	public String toString(){
 		return "Code[" + this.codeSystem + "]:\"" +this.getCode()  +"\"";
 	}
+	
+	private static Pattern splitPattern=Pattern.compile("\\|");
+	
+	@JsonIgnore
+	public String getDisplayCode(){
+		if(this.codeText!=null){
+			String[] parts=splitPattern.split(this.codeText);
+			return parts[parts.length-1];
+		}else if(this.comments!=null){
+			String[] parts=splitPattern.split(this.comments);
+			return parts[parts.length-1];
+		}else{
+			return this.code;
+		}
+	}
     
+	@JsonIgnore
+	public boolean hasSpecialDisplay(){
+		if(this.codeText!=null ||this.comments!=null){
+			return true;
+		}
+		return false;
+	}
     
     
 }

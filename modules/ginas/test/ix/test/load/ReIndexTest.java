@@ -2,14 +2,10 @@ package ix.test.load;
 
 import ix.test.ix.test.server.*;
 import ix.test.util.TestUtil;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -48,9 +44,9 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
 
                 reIndexer.reindex();
 
-                SubstanceSearch searcher = new SubstanceSearch(session);
+                SubstanceSearcher searcher = new SubstanceSearcher(session);
 
-                SubstanceSearch.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+                SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
                 assertEquals(17, results.numberOfResults());
                 TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);

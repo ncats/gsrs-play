@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -234,8 +235,34 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 	public Substance(SubstanceClass subcls) {
 		substanceClass = subcls;
+	}
+	
+	public List<Code> getCodes(){
+		return this.codes;
+	}
+	
+	@JsonIgnore
+	public List<Code> getOrderedCodes(){
 		
-		StringBuilder sb = new StringBuilder();
+		List<Code> nlist = new ArrayList<Code>(this.codes);
+		
+		nlist.sort(new Comparator<Code>(){
+					@Override
+					public int compare(Code c1, Code c2) {
+						if(c1.codeSystem==null){
+							if(c2.codeSystem==null){
+								return 0;
+							}
+							return 1;
+						}
+						if(c2.codeSystem==null)return -1;
+						return c1.codeSystem.compareTo(c2.codeSystem);
+					}
+					
+				}
+		);
+		
+		return nlist;
 	}
 
 	@JsonView(BeanViews.Compact.class)
@@ -258,7 +285,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		return node;
 	}
 	
-
+	
 	@JsonView(BeanViews.Compact.class)
 	@JsonProperty("_references")
 	public JsonNode getJsonReferences() {
@@ -1069,9 +1096,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	}
 	
 	
+	
 	@JsonIgnore
 	public List<Edit> getEdits(){
-		return EntityWrapper.of(this).getEdits();
+		//this is not entirely necessary, and could be done
+		//more explicitly
+		return EntityWrapper.of(this).getEdits(); 
 	}
 	
 	/**
@@ -1118,7 +1148,9 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	
 	
 	/**
-	 * Store the validation message on the record 
+	 * Store the validation message on the record.
+	 * 
+	 * Currently, these are stored as notes.
 	 * 
 	 * @param gpm
 	 * 

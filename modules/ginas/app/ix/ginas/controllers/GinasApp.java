@@ -126,9 +126,21 @@ import play.mvc.Result;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 
+/**
+ * GinasApp is mostly a utility class for UI-related elements of the ginas project. Typical user-driven
+ * routes direct to here. This includes browsing, searching, and viewing record details. This class also
+ * includes some convenience functions used by the Twirl templates for displaying certain information.
+ * 
+ * @author tyler
+ *
+ */
 public class GinasApp extends App {
 	
-    /**
+	//This is the default search order.
+	//Currently, this is "Newest change first"	
+    private static final String DEFAULT_SEARCH_ORDER = "$lastEdited"; 
+
+	/**
      * Search types used for UI searches. At this time 
      * these types do not extend to API searches.
      * 
@@ -175,7 +187,9 @@ public class GinasApp extends App {
     	}
     }
     
-    
+    //This is the set of facets to show with substances.
+    //currently, this can't be expanded, except in the code
+    //here. 
     public static final String[] ALL_FACETS = {
         "Record Status",
         "Validation",
@@ -391,34 +405,8 @@ public class GinasApp extends App {
         }
     }
     
-    // We can do better than this, I think.
-    // I think there's a better way to display this information
-    public static <T> String namesList(List<Name> list) {
-        int size = list.size();
-        if (size >= 6) {
-            size = 6;
-        }
-        String[] arr = new String[size];
-        for (int i = 0; i < size; i++) {
-            Name n = list.get(i);
-            String name = n.name;
-            arr[i] = name;
-        }
-        return StringUtils.arrayToDelimitedString(arr, "; ");
-
-    }
-
-    public static <T> String codesList(List<Code> list) {
-        int size = list.size();
-        if (size >= 6) {
-            size = 6;
-        }
-        String[] arr = new String[size];
-        for (int i = 0; i < size; i++) {
-            String name = list.get(i).code;
-            arr[i] = name;
-        }
-        return StringUtils.arrayToDelimitedString(arr, "; ");
+    public static <T> List<T> limitList(List<T> list, int max) {
+        return list.stream().limit(max).collect(Collectors.toList());
     }
     
     
@@ -526,7 +514,6 @@ public class GinasApp extends App {
 		        		case SUBSTRUCTURE:
 		        			return substructure(qStructure.smiles, rows, page);
 		        		case SIMILARITY:
-		        			
 		        			double thres = Math.max
 		                    (.3, Math.min(1.,Double.parseDouble(cutoff)));
 		        			return similarity(qStructure.smiles, thres, rows, page);
@@ -557,47 +544,51 @@ public class GinasApp extends App {
    
    
     public static Result export (String collectionID, String extension) {
-    	final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     	SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
     	
     	try{
 	    		 
-	    	final PipedInputStream pis =               new PipedInputStream ();
+	    	final PipedInputStream pis = new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
 
-            GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
-
-            if(factoryPlugin ==null){
-                System.out.println("FACTORY PLUGIN NULL!!!!!!");
-            }
-
-            SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
-
-            SubstanceExporterFactory factory= factoryPlugin.getExporterFor(params);
-            if(factory ==null){
-                //TODO handle null couldn't find factory for params
-                throw new IllegalArgumentException("could not find suitable factory for " + params);
-            }
-
-            Exporter<Substance> exporter = factory.createNewExporter(pos, params);
-
+            Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
+            final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String fname = "export-" +sdf.format(new Date()) + "." + extension;
-            response().setContentType("application/x-download");
-            response().setHeader("Content-disposition","attachment; filename=" + fname);
 
             Executors.newSingleThreadExecutor().submit(()->{
                     try {
                         exporter.exportForEachAndClose(src.getResults());
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
+            response().setContentType("application/x-download");
+            response().setHeader("Content-disposition","attachment; filename=" + fname);
 
 	    	return ok(pis);
     	}catch(Exception e){
     		e.printStackTrace();
     		throw new IllegalStateException(e);
     	}
+    }
+
+    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
+        GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
+
+        if(factoryPlugin ==null){
+            throw new NullPointerException("could not find a factory plugin");
+        }
+
+        SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
+
+        SubstanceExporterFactory factory= factoryPlugin.getExporterFor(params);
+        if(factory ==null){
+            //TODO handle null couldn't find factory for params
+            throw new IllegalArgumentException("could not find suitable factory for " + params);
+        }
+
+        return factory.createNewExporter(pos, params);
     }
 
 
@@ -747,7 +738,7 @@ public class GinasApp extends App {
         
         //default to "lastEdited" as sort order
         if(order==null || order.length<=0){
-        	order=new String[]{"$lastEdited"};
+        	order=new String[]{DEFAULT_SEARCH_ORDER};
         	params.put("order", order);
         }
         
@@ -755,8 +746,7 @@ public class GinasApp extends App {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse(sha1, ()->{
                             SearchOptions options = 
-                            		new SearchOptions(Substance.class, total, 0, FACET_DIM)
-                            			 .parse(params);
+                            		new SearchOptions(Substance.class, total, 0, FACET_DIM).parse(params);
                             instrumentSubstanceSearchOptions (options, params);
                             return cacheKey(getTextIndexer().search(options, q), sha1);
                     });

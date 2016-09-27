@@ -40,6 +40,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -841,14 +842,14 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		@Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
-				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
-				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+//				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
+//				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+				qtext = transformQueryForExactMatch(qtext);
 			}
 			// add ROOT prefix to all term queries (containing '_') where not
 			// otherwise specified
 			qtext = ROOT_CONTEXT_ADDER.matcher(qtext).replaceAll(ROOT + "_$1");
-			Query q = super.parse(qtext);
-			return q;
+			return super.parse(qtext);
 		}
 	}
 
@@ -1766,84 +1767,84 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		if(!INDEXING_ENABLED)return;
 		Objects.requireNonNull(ew);
 		try{
-		if(!ew.shouldIndex()){
-			if (DEBUG(2)) {
-				Logger.debug(">>> Not indexable " + ew.getValue());
+			if(!ew.shouldIndex()){
+				if (DEBUG(2)) {
+					Logger.debug(">>> Not indexable " + ew.getValue());
+				}
+				return;
 			}
-			return;
-		}
-		if (DEBUG(2)){
-			Logger.debug(">>> Indexing " + ew.getValue() + "...");
-		}
-
-		CachedSupplier<Boolean> isDeep  = 
-				CachedSupplier.of(()->deepKinds.contains(ew.getKind()));
-		
-		
-		HashMap<String,List<TextField>> fullText = new HashMap<>();
-		Document doc = new Document();
-		
-		Consumer<IndexableField> fieldCollector = f->{
-				if(f instanceof TextField || f instanceof StringField){
-					String text = f.stringValue();
-					if (text != null) {
-						if (DEBUG(2)){
-							Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
-						}
-						TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
-						//tf.set
-						doc.add(tf);
-						if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
-							fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
-								.add(tf);
+			if (DEBUG(2)){
+				Logger.debug(">>> Indexing " + ew.getValue() + "...");
+			}
+	
+			CachedSupplier<Boolean> isDeep  = 
+					CachedSupplier.of(()->deepKinds.contains(ew.getKind()));
+			
+			
+			HashMap<String,List<TextField>> fullText = new HashMap<>();
+			Document doc = new Document();
+			
+			Consumer<IndexableField> fieldCollector = f->{
+					if(f instanceof TextField || f instanceof StringField){
+						String text = f.stringValue();
+						if (text != null) {
+							if (DEBUG(2)){
+								Logger.debug(".." + f.name() + ":" + text + " [" + f.getClass().getName() + "]");
+							}
+							TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
+							//tf.set
+							doc.add(tf);
+							if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
+								fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
+									.add(tf);
+							}
 						}
 					}
-				}
-				doc.add(f);
-		};
-		
-		//flag the kind of document
-		
-		
-		ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
-										.withDynamicFieldMaker(this)	
-										.withPrimitiveFieldMaker(this)
-					);
-		
-		if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
-			Key key =ew.getKey();
-			if(!key.getIdString().equals("")){  //probably not needed
-				StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
-				
-				Tuple<String,String> luceneKey = key.asLuceneIdTuple();
-				StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
-				FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
-				//This is a test of a terrible idea, which just. might. work.
-				fullText.forEach((name,group)->{
-						try{
-							Document fielddoc = new Document();
-							fielddoc.add(toAnalyze);
-							fielddoc.add(docParent);
-							fielddoc.add(docParentFacet);
-							fielddoc.add(new FacetField(ANALYZER_FIELD,name));
-							for(IndexableField f:group){
-									fielddoc.add(f);
+					doc.add(f);
+			};
+			
+			//flag the kind of document
+			
+			
+			ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
+											.withDynamicFieldMaker(this)	
+											.withPrimitiveFieldMaker(this)
+						);
+			
+			if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
+				Key key =ew.getKey();
+				if(!key.getIdString().equals("")){  //probably not needed
+					StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
+					
+					Tuple<String,String> luceneKey = key.asLuceneIdTuple();
+					StringField docParent=new StringField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v(),YES);
+					FacetField  docParentFacet =new FacetField(ANALYZER_VAL_PREFIX+luceneKey.k(),luceneKey.v());
+					//This is a test of a terrible idea, which just. might. work.
+					fullText.forEach((name,group)->{
+							try{
+								Document fielddoc = new Document();
+								fielddoc.add(toAnalyze);
+								fielddoc.add(docParent);
+								fielddoc.add(docParentFacet);
+								fielddoc.add(new FacetField(ANALYZER_FIELD,name));
+								for(IndexableField f:group){
+										fielddoc.add(f);
+								}
+								addDoc(fielddoc);
+							}catch(Exception e){
+								System.out.println("FAILED!" + e.getMessage());
 							}
-							addDoc(fielddoc);
-						}catch(Exception e){
-							System.out.println("FAILED!" + e.getMessage());
-						}
-					});
+						});
+				}
 			}
-		}
-		
-		fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
-		
-		// now index
-		addDoc(doc);
-		
-		if (DEBUG(2))
-			Logger.debug("<<< " + ew.getValue());
+			
+			fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
+			
+			// now index
+			addDoc(doc);
+			
+			if (DEBUG(2))
+				Logger.debug("<<< " + ew.getValue());
 		}catch(Exception e){
 			e.printStackTrace();
 			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems");
@@ -1883,8 +1884,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 
 	public void remove(EntityWrapper ew) throws Exception {
-		
-		if (ew.isEntity()) {
+		if (ew.shouldIndex()) {
 			if (ew.hasKey()) {
 				Key key= ew.getKey();
 				Tuple<String,String> docKey=key.asLuceneIdTuple();
@@ -1909,8 +1909,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			} else {
 				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
 			}
-		} else {
-			throw new IllegalArgumentException("Object is not of type Entity");
 		}
 	}
 
@@ -2248,8 +2246,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			if (!asText && !name.equals(full))
 				fields.accept(new LongField(name, lval, store));
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
-				fields.accept(new LongField(SORT_PREFIX + full, lval, store));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.LONG);
+				fields.accept(new LongField(f, lval, store));
 				sorterAdded = true;
 			}
 			FacetField ff = getRangeFacet(fname, indexable.ranges(), lval);
@@ -2268,8 +2267,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new IntField(name, ival, store));
 
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.INT);
-				fields.accept(new IntField(SORT_PREFIX + full, ival, store));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.INT);
+				fields.accept(new IntField(f, ival, store));
 				sorterAdded = true;
 			}
 
@@ -2288,8 +2288,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new FloatField(full, fval, NO));
 
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.FLOAT);
-				fields.accept(new FloatField(SORT_PREFIX + full, fval, NO));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.FLOAT);
+				fields.accept(new FloatField(f, fval, NO));
 				sorterAdded = true;
 			}
 
@@ -2308,8 +2309,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new DoubleField(full, dval, NO));
 			}
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.DOUBLE);
-				fields.accept(new DoubleField(SORT_PREFIX + full, dval, NO));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.DOUBLE);
+				fields.accept(new DoubleField(f, dval, NO));
 				sorterAdded = true;
 			}
 
@@ -2326,8 +2328,9 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			if (!full.equals(name))
 				fields.accept(new LongField(full, date, NO));
 			if (indexable.sortable()) {
-				sorters.put(SORT_PREFIX + full, SortField.Type.LONG);
-				fields.accept(new LongField(SORT_PREFIX + full, date, NO));
+				String f = SORT_PREFIX + full;
+				sorters.put(f, SortField.Type.LONG);
+				fields.accept(new LongField(f, date, NO));
 				sorterAdded = true;
 			}
 			asText = indexable.facet();
@@ -2370,11 +2373,12 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				addSuggestedField(dim, text);
 			}
 
+			String exactMatchStr = toExactMatchString(text);
 
 			if (!(value instanceof Number)) {
 				if (!name.equals(full)){
 					// Added exact match
-					fields.accept(new TextField(full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
+					fields.accept(new TextField(full,exactMatchStr, NO));
 				}
 			}
 
@@ -2385,10 +2389,53 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				fields.accept(new StringField(SORT_PREFIX + full, text, store));
 			}
 			// Added exact match
-			fields.accept(new TextField(name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
+			fields.accept(new TextField(name, exactMatchStr , store));
 		}
 	}
 	
+
+	private String toExactMatchString(String in){
+		return TextIndexer.START_WORD + replaceSpecialCharsForExactMatch(in) + TextIndexer.STOP_WORD;
+	}
+
+	private String replaceSpecialCharsForExactMatch(String in) {
+
+		String tmp = LEVO_PATTERN.matcher(in).replaceAll(LEVO_WORD);
+
+		tmp = DEXTRO_PATTERN.matcher(tmp).replaceAll(DEXTRO_WORD);
+
+		return tmp;
+
+	}
+
+	/*
+	qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
+				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
+	 */
+
+	private static String transformQueryForExactMatch(String in){
+
+		String tmp =  START_PATTERN.matcher(in).replaceAll(TextIndexer.START_WORD);
+		tmp =  STOP_PATTERN.matcher(tmp).replaceAll(TextIndexer.STOP_WORD);
+		tmp =  LEVO_PATTERN.matcher(tmp).replaceAll(TextIndexer.LEVO_WORD);
+
+		tmp =  DEXTRO_PATTERN.matcher(tmp).replaceAll(TextIndexer.DEXTRO_WORD);
+
+
+		return tmp;
+	}
+
+	private static final Pattern START_PATTERN = Pattern.compile(TextIndexer.GIVEN_START_WORD,Pattern.LITERAL );
+	private static final Pattern STOP_PATTERN = Pattern.compile(TextIndexer.GIVEN_STOP_WORD,Pattern.LITERAL );
+
+	private static final Pattern LEVO_PATTERN = Pattern.compile("\\(-\\)-");
+	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(+\\)-");
+
+	private static final String LEVO_WORD = "LEVOROTATION";
+
+	private static final String DEXTRO_WORD = "DEXTROROTATION";
+
+
 	/**
 	 * Add the specified field and value pair to the suggests
 	 * which are used for type-ahead queries.

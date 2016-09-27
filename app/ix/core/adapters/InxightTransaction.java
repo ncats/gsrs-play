@@ -69,15 +69,18 @@ public class InxightTransaction {
 	private List<Callable> afterCommit=new ArrayList<Callable>();
 	
 	public void addPostCommitCall(Callable c){
-//		if(enhanced){
 			afterCommit.add(c);
-//		}else{
-//			try{
-//				c.call();
-//			}catch(Exception e){
-//				e.printStackTrace();
-//			}
-//		}
+	}
+	public void addPostCommitRun(Runnable r){
+		afterCommit.add(new Callable(){
+
+			@Override
+			public Object call() throws Exception {
+				r.run();
+				return null;
+			}
+			
+		});
 	}
 	
 	public void waitAndDestroy(){
@@ -146,7 +149,7 @@ public class InxightTransaction {
 				try {
 					t.call();	
 				}catch(Exception e){
-					e.printStackTrace();
+					e.printStackTrace(); //keep going
 				}
 			}
 		});

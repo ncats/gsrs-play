@@ -189,6 +189,11 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         andThen = andThen.andThen(s ->{ fun.accept(s); return s;});
         return getThis();
     }
+    
+    public T andThenMutate(Consumer<S> fun){
+        andThen = andThen.andThen(s ->{ fun.accept(s); return s;});
+        return getThis();
+    }
 	
 	public Supplier<S> asSupplier(){
 		return (()->afterCreate().apply(getSupplier().get()));

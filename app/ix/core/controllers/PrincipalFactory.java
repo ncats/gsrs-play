@@ -1,7 +1,9 @@
 package ix.core.controllers;
 
 import ix.core.NamedResource;
+import ix.core.adapters.InxightTransaction;
 import ix.core.models.Principal;
+import ix.core.util.EntityUtils.EntityWrapper;
 
 import java.util.Date;
 import java.util.List;
@@ -13,7 +15,8 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
-
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
@@ -83,10 +86,15 @@ public class PrincipalFactory extends EntityFactory {
 
     public static Principal byUserName(String uname) {
         //System.out.println("########## "+ uname);
-        Principal p = justRegisteredCache.get(uname);
+        Principal p = justRegisteredCache.get(uname.toUpperCase());
         if (p != null) return p;
-        p =  finder.where().eq("username", uname).findUnique();
-        if(p!=null)justRegisteredCache.put(p.username, p);
+        p =  finder.where().ieq("username", uname).findUnique();
+        if(p!=null){
+        	//if not in an active commit, cache
+	        if(Ebean.currentTransaction()==null){ 
+	        	justRegisteredCache.put(p.username.toUpperCase(), p);
+	        }
+        }
         return p;
     }
 
@@ -94,15 +102,16 @@ public class PrincipalFactory extends EntityFactory {
         Principal results = byUserName(org.username);
         if (results == null) {
             try {
+            	Transaction t=Ebean.currentTransaction();
                 org.save();
-                // For some reason, there is a race condition
-                // that seems to happen only with oracle,
-                // where the result can be null, and there's still enough
-                // time between registration and being query-able
-                // The hashmap is a temporary measure to fix this.
-                // But still doesn't seem to fix it
-                justRegisteredCache.put(org.username, org);
-
+                if(t!=null){
+	                InxightTransaction it=InxightTransaction.getTransaction(t);
+	                it.addPostCommitRun(()->
+	                	justRegisteredCache.put(org.username.toUpperCase(), org)
+	                	);
+                }else{
+	                justRegisteredCache.put(org.username.toUpperCase(), org);	
+                }
                 return org;
             } catch (Exception ex) {
                 Logger.trace("Can't register principal: " + org.username, ex);
