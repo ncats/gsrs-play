@@ -5,35 +5,31 @@
 @import ix.core.search.SearchResultContext
 @import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, PolymerSubstance, Substance}
 
-@import ix.ginas.models.v1.StructurallyDiverseSubstance
-
-@import ix.ginas.models.v1.NucleicAcidSubstance
-@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
 @(title: String, kind: String,
-        resetAction: String, 
+        resetAction: String,
         current: Int, rows: Int, total: Int,
-        pages: Array[Int], 
-        facets: Array[FacetDecorator], 
-        ctx : SearchResultContext = null
-        )(header: Html)(content: Html)
+        pages: Array[Int],
+        facets: Array[FacetDecorator],
+        ctx: SearchResultContext = null
+)(header: Html)(content: Html)
 
-    @ginas(title, kind) {
-        @header
-    }{
-        @defining(	ctx!= null && 
-        		  	"Running".equals(ctx.getStatus().toString()) &&
-                	request().getQueryString("q") != null) {searchFlag =>
-    	<div class="row">
+@ginas(title, kind) {
+    @header
+} {
+    @defining(ctx != null &&
+            "Running".equals(ctx.getStatus().toString()) &&
+            request().getQueryString("q") != null) { searchFlag =>
+        <div class="row">
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">
-            <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
-              <i class="fa fa-filter"></i> Show Filters
-            </div>
+                    <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+                        <i class="fa fa-filter"></i> Show Filters
+                    </div>
                     <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
                         <i class="fa fa-filter"></i> Hide Filters
                     </div>
-            		<div uib-collapse="isCollapsed" class="panel-group">
-                        @filters(facets, searchFlag)
+                    <div uib-collapse="isCollapsed" class="panel-group">
+                    @filters(facets, searchFlag)
                     </div>
                 </div>
                 <div class="col-md-9">
@@ -43,9 +39,9 @@
             @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
                 @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
                     <div
-                        @if(total > 0){
-                            class="alert alert-success alert-dismissible"
-                        }else{
+                        @if(total > 0) {
+                            class="alert alert-dismissible"
+                        } else {
                             class="alert alert-danger alert-dismissible"
                         }
                     role="alert">
@@ -56,334 +52,269 @@
                             <span aria-hidden="true"><i class="fa fa-eraser"></i></span>
                         </button>
                         @defining(flash().remove("qStructureID")) { qStructureID =>
-                        @request().getQueryString("type") match {
-			    		    case "sequence" => {
-			    		  	  <span><h4>Sequence Query:&nbsp;
-							  <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
-			     		      </span> <div id="searching"></div>
-			                }
-                            case "Substructure" => {
-                                <span><h4>Substructure Query:&nbsp; <a href="#"
-                                data-toggle="popover"
-                                data-animation="true"
-                                data-placement="bottom"
-                                data-trigger="click hover focus"
-                                data-title=""
-                                data-html="true"
-                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
-                                </span> <div id="searching"></div>
-                            }
-                            case "Similarity" => {
-                                <span><h4>Similarity Query:&nbsp; <a href="#"
-                                data-toggle="popover"
-                                data-animation="true"
-                                data-placement="bottom"
-                                data-trigger="click hover focus"
-                                data-title=""
-                                data-html="true"
-                                data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a> &ge; @request().getQueryString("cutoff")</h4>
-                                </span> <div id="searching"></div>
-                            }
-                            case "Exact" => {
-                                <span><h4>Exact Structure Query:&nbsp; <a href="#"
-                                data-toggle="popover"
-                                data-animation="true"
-                                data-placement="bottom"
-                                data-trigger="click hover focus"
-                                data-title=""
-                                data-html="true"
-                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
-                                </span> <div id="searching"></div>
-                            }
-                            case "Flex" => {
-                                <span><h4>Flex Structure Query:&nbsp; <a href="#"
-                                data-toggle="popover"
-                                data-animation="true"
-                                data-placement="bottom"
-                                data-trigger="click hover focus"
-                                data-title=""
-                                data-html="true"
-                                 data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150,null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
-                                </span> <div id="searching"></div>
-                            }
-                            case _ => {
-                                @if(request().getQueryString("q") != null) {
-                                    <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
-                                } else {
-                                    @for(f <- unspecf) {
-                                        <span><h4>@f.substring(0, f.indexOf('/'))
-                                            :&nbsp;<code>@f.substring(f.indexOf('/') + 1)</code></h4>
-                                        </span>
+                            @request().getQueryString("type") match {
+                                case "sequence" => {
+                                    <span><h4>Sequence Query:&nbsp;
+                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a> </h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Substructure" => {
+                                    <span><h4>Substructure Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Similarity" => {
+                                    <span><h4>Similarity Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Exact" => {
+                                    <span><h4>Exact Structure Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Flex" => {
+                                    <span><h4>Flex Structure Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case _ => {
+                                    @if(ctx != null) {
+                                        @defining(ctx.getFieldFacets()) { searchFacets =>
+                                            @if(searchFacets != null && searchFacets.size() > 0) {
+                                                <div>
+                                                    <h4>Restrict <code>@request().getQueryString("q")</code> to field:</h4>
+                                                    @searchFacets.groupBy(_.getMatchType()).map {
+                                                        case (group, items) => {
+                                                            @group.toString() match {
+                                                                case "FULL" => {
+                                                                    <h5 style="font-style: italic">Exact Match @items.iterator().next().getValue():</h5>
+                                                                }
+                                                                case "CONTAINS" => {
+                                                                    <h5 style="font-style: italic">Contains Exact @items.iterator().next().getValue()</h5>
+                                                                }
+                                                                case "WORD" => {
+                                                                    <h5 style="font-style: italic">Contains All @items.iterator().next().getValue():</h5>
+                                                                }
+                                                                case "WORD_STARTS_WITH" => {
+                                                                    <h5 style="font-style: italic">Contains Partial @items.iterator().next().getValue():</h5>
+                                                                }
+                                                            }
+                                                            <div class = "row">
+                                        @items.map { item =>
+                                                                <div class="col-md-4">
+                                                                    <span>
+                                                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
+                                                @item.getDisplayField()
+                                                                        </a>
+                                                                    </span>
+                                                                    <span class="badge">@item.getCountText()</span>
+                                                                </div>
+                                                            }
+                                                    </div>
+                                                    }
+                                                    }
+                                        </div>
+                                        }
                                     }
                                 }
+
+                                }
                             }
-                        }
                         }
                     </div>
                 }
 
-                  @defining(flash().remove("warning")) { mesg =>
-		             	@if(mesg != null) {
-		             	 <div  class="alert alert-warning alert-dismissible" role="alert">
-		             	 	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-		             	 		<span aria-hidden="true">&times;</span>
-                        	</button>
-	                    	<p class="warning-message">@mesg</p>
-	                    	</div>
-	                 	}
-		          }
-		          @if(ctx !=null){
-                      @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
+                @defining(flash().remove("warning")) { mesg =>
+                    @if(mesg != null) {
+                        <div class="alert alert-warning alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <p class="warning-message">@mesg</p>
+                        </div>
+                    }
+                }
+            }
 
-                          @for(sub <- ctx.getExactMatches()) {
-                              @sub match {
-                                  case chem: ChemicalSubstance => {
-                                      @list.chemlist(chem, ctxId)
-                                  }
-                                  case prot: ProteinSubstance => {
-                                      @list.proteinlist(prot, ctxId)
-                                  }
-                                  case nucl: NucleicAcidSubstance => {
-                                      @list.nucleicacidlist(nucl)
+            @if(total >= 1) {
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class = "col-md-12">
+                            @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class = "col-md-5">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
 
-                                  }
-                                  case mix: MixtureSubstance => {
-                                      @list.mixlist(mix)
-                                  }
-                                  case diverse: StructurallyDiverseSubstance => {
-                                      @list.diverselist(diverse)
+                                        @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
+                                            <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url">@fmt.getDisplayName()</a></li>
+                                        }
+                                        @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url">SD File</a></li>*@
+                                        @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"csv").url">Tab-delimited File</a></li>*@
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-5  text-left row">
+                                <div class="col-md-3">
+                                    Sort By:
+                                </div>
+                                <div class="col-md-9">
+                                    <select
+                                    class="form-control"
+                                    ng-model= selectedSort
+                                    ng-change="sortSubstances();"
+                                    ng-options="r.display for r in sortValues track by r.display"
+                                    placeholder ="Sort By"
+                                    title="Sort By"
+                                    name="SortBy"
+                                    id ="SortBy"
+                                    aria-label="Sort By">
+                                        <option class= "text-capitalize" value="" selected>Sort By</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class= "col-md-2 text-right hidden-xs">
+                                <form class="form" name="grid-select" id = "grid-select">
+                                    <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="placeholder-content"> @content </div>
+                    <div class="panel-footer">
+                    @if(pages.length > 1) {
+                        @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
+                    }
+                    </div>
+                </div>
+            } else {
+                There are no results to show.
+            }
+        </div>
+        </div>
+    }
 
-                                  }
-                                  case polymer: PolymerSubstance => {
-                                      @list.polymerlist(polymer)
+    <script>
+            function dismissQuery() {
+                location.assign('@resetAction');
+            }
 
-                                  }
-                                  case g1ss: SpecifiedSubstanceGroup1Substance => {
-                                      @list.g1sslist(g1ss)
+            $(document).ready(function () {
+                $(function () {
+                    //$('[data-toggle="popover"]').popover();
+                })
+                @if(ctx!= null){
+                var firststatus =@Html(ctx.toJson());
+                firststatus.thisPage =@{current*rows};
+                firststatus.rowsPerPage =@{rows};
+                firststatus.pageTotal =@{total};
 
-                                  }
-                                  case concept: Substance => {
-                                      @list.conceptlist(concept)
 
-                                  }
-                                  case _ => {
-
-                                  }
-                              }
-                          }
-                      }
-
-		          	@defining(ctx.getFieldFacets()) { searchFacets =>
-                  @if(searchFacets!=null && searchFacets.size()>0){
-                           <div
-                        @if(total > 0) {
-                            class="alert alert-success alert-dismissible"
-                        } else {
-                            class="alert alert-danger alert-dismissible"
+                if (!firststatus.finished) {
+                    //Only reload if this page isn't ready yet,
+                    //OR total isn't determined at this time
+                    if (firststatus.count < firststatus.thisPage || !firststatus.total || (firststatus.total != firststatus.pageTotal)) {
+                        firststatus.needsReload = true;
+                        if (firststatus.count < firststatus.thisPage) {
+                            $('.placeholder-content').html('<div>Loading ... </div>' +
+                                    '<div class="progress multi-progress">' +
+                                    '<div id="loading-bar1" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
+                                    '</div>' + +'</div>');
                         }
-                    role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
-                        </button>
-                              <h4>Restrict query to field:</h4>
-                              @searchFacets.groupBy(_.getMatchType()).map {
-                                    case (group, items) => {
-                                        @group.toString() match {
-			    		    				case "FULL" => {
-                                            <h5 style="font-style:italic">Exact Match @items.iterator().next().getValue():</h5>
-                                        	}
-                                        	case "CONTAINS" => {
-                                            <h5 style="font-style:italic">Contains Exact @items.iterator().next().getValue()</h5>
-                                        	}
-                                        	case "WORD" => {
-                                            <h5 style="font-style:italic">Contains All @items.iterator().next().getValue():</h5>
-                                        	}
-                                        	case "WORD_STARTS_WITH" => {
-                                            <h5 style="font-style:italic">Contains Partial @items.iterator().next().getValue():</h5>
-                                        	}
-                                        }
-                                        <div class = "row fieldfacet">
-                                        @items.map { item =>
-                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                         <button class="btn btn-primary" >
-                                                  <div class = "col-md-4">
-                                                  <div class = "row">
+                        $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
+                        var delay = 0;
+                        var checkStatus;
+                        var timer;
 
+                        $('#loading').on('hidden.bs.modal', function (e) {
+                            window.clearInterval(timer);
+                        });
 
-                                                            <span >
-                                                                @item.getDisplayField()
-                                                            </span>
+                        var onDetermined = function () {
 
-                                                        <span class="badge">@item.getCountText()</span>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                            </a>
-                                        }
-                                        </div>
+                            window.clearInterval(timer);
+                            $('#searching').html('');
+                            //$('#loading').modal('hide');
+                            if (firststatus.needsReload) {
+                                $('#searching').html('Reloading search ...');
+                                location.reload(true);
+                            }
+                        };
+
+                        var onLoadedMore = function (data) {
+                            // loading vs searching..
+                            if (data.total) {
+                                if (data.count > firststatus.thisPage || data.finished) {
+                                    if (firststatus.needsReload) {
+                                        location.reload(true);
                                     }
                                 }
-                                            <div class="spacer">&nbsp;</div>
-                    </div>
-                          }
-                          }
-                  }
-            }
+                                var pct = Math.floor(100.0 * data.count / firststatus.thisPage + 0.0);
+                                pct = Math.min(pct, 100);
+                                var loadedPage = Math.floor(data.count / firststatus.rowsPerPage);
+                                var waitPage = Math.floor(firststatus.thisPage / firststatus.rowsPerPage);
 
-			@if(total>=1){
-	            <div class="panel panel-default">
-	                <div class="panel-heading">
-	                    <div class="row">
-	                    	<div class = "col-md-12">
-	                    		@ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
-	                    	</div>
-	                    </div>
-						<div class="row">
-        <div class = "col-md-5">
-                               <div class="btn-group">
-  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu">
+                                $("#loading-bar1").html(pct + "%");
+                                $("#loading-bar1").width(pct + "%");
+                                $("#loading-bar1").attr("aria-valuenow", pct);
+                            } else {
+                                $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... ' + data.count + ' matches');
+                            }
+                        };
 
-      @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()){
-            <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest() ,fmt.getExtension()).url">@fmt.getDisplayName()</a></li>
-        }
-    @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url">SD File</a></li>*@
-    @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"csv").url">Tab-delimited File</a></li>*@
-  </ul>
-</div>
-	                        </div>
-        <div class="col-md-5  text-left row">
-        <div class="col-md-3">
-        Sort By:
-        </div>
-        <div class="col-md-9">
-            <select
-            class="form-control"
-            ng-model= selectedSort
-            ng-change="sortSubstances();"
-            ng-options="r.display for r in sortValues track by r.display"
-            placeholder ="Sort By"
-            title="Sort By"
-            name="SortBy"
-            id ="SortBy"
-            aria-label="Sort By">
-                <option class= "text-capitalize" value="" selected>Sort By</option>
-            </select>
-         </div>
-        </div>
-        <div class= "col-md-2 text-right hidden-xs">
-	                            <form class="form" name="grid-select" id = "grid-select">
-	                            <switch id="enabled" name="enabled" ng-model="gridView" ng-change="toggleGrid()" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
-	                            </form>
-	                        </div>
-	                    </div>
-	                </div>
-    <div class="placeholder-content"> @content </div>
-	                <div class="panel-footer">
-	                @if(pages.length > 1) {
-	                    @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
-	                }
-	                </div>
-	            </div>
-            }else{
-            	There are no results to show.
-            }
-        </div>
-        </div>
-        }
-
-            <script>            <script>
-function dismissQuery () {
-    location.assign('@resetAction');
-}
-
-$(document).ready(function () {
-   $(function () {
-	   //$('[data-toggle="popover"]').popover();
-   })
-   @if(ctx!= null){
-   		var firststatus=@Html(ctx.toJson());
-   		firststatus.thisPage=@{current*rows};
-   		firststatus.rowsPerPage=@{rows};
-   		firststatus.pageTotal=@{total};
-   		
-   		
-   		if(!firststatus.finished){
-   			//Only reload if this page isn't ready yet,
-   			//OR total isn't determined at this time
-   			if(firststatus.count < firststatus.thisPage || !firststatus.total || (firststatus.total!=firststatus.pageTotal)){
-    		 	firststatus.needsReload=true;
-    		 	if(firststatus.count < firststatus.thisPage){
-    		 		$('.placeholder-content').html('<div>Loading ... </div>' +
-	                	'<div class="progress multi-progress">' +
- 		           		   	'<div id="loading-bar1" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
- 		           		   	'</div>'+
- 		           		+'</div>');
-    		 	}
-    		$('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
-    		var delay = 0;
-         	var checkStatus;
-	 	 	var timer;
-
-         	$('#loading').on('hidden.bs.modal', function (e) {
- 	     		window.clearInterval(timer);
-         	});
-         	
-         	var onDetermined = function () {
-         	
-         				   window.clearInterval(timer);
-                       	   $('#searching').html('');	   
-                           //$('#loading').modal('hide');
-                           if(firststatus.needsReload){
-                            	$('#searching').html('Reloading search ...');
-                           		location.reload(true);
-                           }
-         	};
-         	
-         	var onLoadedMore = function (data) {
-         	 			// loading vs searching..
-                       if (data.total) {
-                           if (data.count > firststatus.thisPage || data.finished) {
-                           	 if(firststatus.needsReload){
-  	                         	location.reload(true); 
-  	                         }
-		           		   }
- 		           		   var pct = Math.floor(100.0*data.count/ firststatus.thisPage+0.0);
-						   pct=Math.min(pct,100);
- 		           		   var loadedPage=Math.floor(data.count/firststatus.rowsPerPage);
- 		           		   var waitPage=Math.floor(firststatus.thisPage/firststatus.rowsPerPage);
- 		           		   
- 		           		   $("#loading-bar1").html(pct + "%");
- 		           		   $("#loading-bar1").width(pct + "%");				
- 		           		   $("#loading-bar1").attr("aria-valuenow",pct);								
-                       }else {
-                           $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
-                       }
-             };
-         	
-         	checkStatus = function () {
-	     		if (delay == 0) {
-		        	window.clearInterval(timer);
-					delay = 500;
-	        		timer = window.setInterval(checkStatus, delay);
-	     		}
-         		$.ajax(firststatus.url, {
-	         		dataType: 'json',
-	     		}).done(function(status) {
-               	  if (!firststatus.determined && status.determined) {
-             	    	onDetermined(status); 
-             	  } else {
-              		   	onLoadedMore(status);
-             	  }
-              }).error(function () {
-                  window.clearInterval(timer);
-              });
-         	};
-	     	timer = window.setInterval(checkStatus, delay);
-         	}
-   		}
-   	}
-});
-</script>
+                        checkStatus = function () {
+                            if (delay == 0) {
+                                window.clearInterval(timer);
+                                delay = 500;
+                                timer = window.setInterval(checkStatus, delay);
+                            }
+                            $.ajax(firststatus.url, {
+                                dataType: 'json',
+                            }).done(function (status) {
+                                if (!firststatus.determined && status.determined) {
+                                    onDetermined(status);
+                                } else {
+                                    onLoadedMore(status);
+                                }
+                            }).error(function () {
+                                window.clearInterval(timer);
+                            });
+                        };
+                        timer = window.setInterval(checkStatus, delay);
+                    }
+                }
+                }
+            });
+    </script>
 }

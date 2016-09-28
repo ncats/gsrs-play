@@ -49,8 +49,11 @@
                             <div class="col-md-1">
                             </div>
                             <div class="col-md-4">
-                                <gsrs-input type="text" ng-model="obj.simplifiedStructure"
-                                            field="simplifiedStructure"></gsrs-input>
+                                <gsrs-input type="text"
+                                            ng-model="obj.simplifiedStructure"
+                                            field="simplifiedStructure">
+                                </gsrs-input>
+
                                 <rendered smiles={{obj.simplifiedStructure}}></rendered>
                             </div>
                             <div class="col-md-4">
@@ -70,6 +73,14 @@
 	                                        field="systemCategory"
 	                                        label="System Category">
 	                            </gsrs-input>
+
+        <!--                        This will only work when every code system category has a cv... right now document type doesn't
+                                <gsrs-input type="dropdown"
+                                             ng-model="obj.systemCategory"
+	                                        field="systemCategory"
+	                                        label="System Category"
+                                            filter-function="getCV(referenceobj.domain)">
+                                </gsrs-input>-->
 							</div>
                             <div class="col-md-4">
 	                            <gsrs-input type="text"
