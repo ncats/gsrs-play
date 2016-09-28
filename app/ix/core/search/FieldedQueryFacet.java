@@ -27,7 +27,7 @@ public class FieldedQueryFacet implements Serializable{
 	//TODO: This is super ugly, should be somewhere nice, outside
 	//of the code-base altogether, and loaded in.
 	static{
-		String[] SPECIAL_LOOKUP=("root_approvalID	Approval ID\n" + 
+		String[] SPECIAL_LOOKUP=("root_approvalID	Approval ID\n" +
 			"root_approved	Record Approved\n" + 
 			"root_approvedBy	Record Approved By\n" + 
 			"root_codes_comments	Code Comments\n" + 
@@ -139,6 +139,7 @@ public class FieldedQueryFacet implements Serializable{
 		displayNames=Arrays.stream(SPECIAL_LOOKUP)
 					.map(a->a.split("\t"))
 					.collect(Collectors.toMap(a->a[0], a->a[1]));
+
 				
 	}
 
@@ -248,5 +249,44 @@ public class FieldedQueryFacet implements Serializable{
 	
 	public MATCH_TYPE getMatchType(){
 		return this.matchType;
+	}
+
+
+
+
+	public static String[] displayQuery(String q){
+
+
+		String dispField;
+		String q2;
+		String[] fieldAndQuery = q.split(":");
+		if(fieldAndQuery.length>1){
+			String field = fieldAndQuery[0];
+			field=field.replace("\\ ", " ");
+			q2 = fieldAndQuery[1];
+			dispField=displayNames.get(field);
+			if(dispField==null){
+				dispField=field;
+			}
+
+		}else{
+			dispField="Any Text";
+			q2=q;
+
+		}
+		boolean exact = false;
+		if(q2.startsWith("\"^") && q2.endsWith("$\"")){
+			exact=true;
+			q2=q2.replace("^","");
+			q2=q2.replace("$","");
+
+		}
+		if(exact){
+			return new String[]{dispField, q2, "(exact)"};
+		}else {
+			return new String[]{dispField, q2, "(contains)"};
+		}
+
+
 	}
 }

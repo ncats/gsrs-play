@@ -277,6 +277,10 @@ public class SearchOptions {
 	}
     
     public EntityInfo<?> getKindInfo(){
-    	return EntityUtils.getEntityInfoFor(this.kind);
+    	try{
+            return EntityUtils.getEntityInfoFor(this.kind);
+        }catch(Exception e){
+            return null;
+        }
     }
 }

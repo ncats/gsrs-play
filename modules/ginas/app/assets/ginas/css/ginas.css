@@ -63,7 +63,7 @@ body, html {
 }*/
 
 #content {
-    padding-top: 150px;
+    padding-top: 80px;
 }
 
 .sidebar {
@@ -1304,4 +1304,18 @@ span.nowrap-list {
     white-space: pre;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.query-term {
+    color: #000;
+    background: #e7e7e7;
+    border-radius: 5px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.no-margin{
+    margin-bottom:0;
+}
+.center-text{
+    text-align: center;
 }

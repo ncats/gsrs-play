@@ -1405,37 +1405,38 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			}
 		} // facets is empty
 
-		List<String> sponsoredFields = searchResult.getOptions().getKindInfo().getSponsoredFields();
+		if(searchResult.getOptions().getKindInfo() !=null){
+			List<String> sponsoredFields = searchResult.getOptions().getKindInfo().getSponsoredFields();
 
-		if(searchResult.getQuery()!=null) {
-			try {
-				for (String sp : sponsoredFields) {
-					System.out.println("sp:" + sp);
-					String theQuery = "\"" + toExactMatchString(
-							TextIndexer.replaceSpecialCharsForExactMatch(searchResult.getQuery().trim().replace("\"", ""))).toLowerCase() + "\"";
-					QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
+			if (searchResult.getQuery() != null) {
+				try {
+					for (String sp : sponsoredFields) {
+						System.out.println("sp:" + sp);
+						String theQuery = "\"" + toExactMatchString(
+								TextIndexer.replaceSpecialCharsForExactMatch(searchResult.getQuery().trim().replace("\"", ""))).toLowerCase() + "\"";
+						QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
 
-					Query tq = parser.parse(theQuery);
-					System.out.println(tq);
-					LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq); //special q
-					TopDocs td = lspResult.getTopDocs();
-					System.out.println("Results:" + td.scoreDocs.length);
-					for (int j = 0; j < td.scoreDocs.length; j++) {
-						Document doc = searcher.doc(td.scoreDocs[j].doc);
+						Query tq = parser.parse(theQuery);
+						System.out.println(tq);
+						LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq); //special q
+						TopDocs td = lspResult.getTopDocs();
+						System.out.println("Results:" + td.scoreDocs.length);
+						for (int j = 0; j < td.scoreDocs.length; j++) {
+							Document doc = searcher.doc(td.scoreDocs[j].doc);
 
-						try {
-							Key k = Key.of(doc);
-							searchResult.addSponsoredNamedCallable(new EntityFetcher<>(k));
-						} catch (Exception e) {
-							e.printStackTrace();
-							Logger.error(e.getMessage());
+							try {
+								Key k = Key.of(doc);
+								searchResult.addSponsoredNamedCallable(new EntityFetcher<>(k));
+							} catch (Exception e) {
+								e.printStackTrace();
+								Logger.error(e.getMessage());
+							}
 						}
+
 					}
+				} catch (Exception ex) {
 
 				}
-			}catch(Exception ex)
-			{
-
 			}
 		}
 
