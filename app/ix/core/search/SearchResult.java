@@ -1,13 +1,7 @@
 package ix.core.search;
 
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -262,6 +256,14 @@ public class SearchResult {
         return future;
     }
     
+    public List getSponsoredMatches() {
+        LazyList lazylist = new LazyList(c->c.toString());
+        for(NamedCallable nc: sponsored.values()) {
+            lazylist.addCallable(nc);
+        }
+        return lazylist;
+    }
+
     public List getMatches () {
     	if (result != null) return result; // return if ready
         boolean finished=finished();
@@ -292,7 +294,20 @@ public class SearchResult {
     public long getStopTime () { return stop.get(); }
     public boolean finished () { return stop.get() >= timestamp; }
     
+
+    private Map<String, NamedCallable> sponsored = new HashMap<>();
+
     public void addNamedCallable (NamedCallable c) {
+    	if(!sponsored.containsKey(c.getName()))
+        {
+            matches.addCallable(c);
+    	    processAddition(c);
+        }
+    }
+
+    public void addSponsoredNamedCallable (NamedCallable c) {
+        System.out.println("Sponsored record: " + c.getName());
+        sponsored.put(c.getName(),c);
     	matches.addCallable(c);
     	processAddition(c);
     }
@@ -313,7 +328,7 @@ public class SearchResult {
 
     }
     
-    
+
     public void done () {
         stop.set(TimeUtil.getCurrentTimeMillis());
         notifyListeners(l -> l.searchIsDone());

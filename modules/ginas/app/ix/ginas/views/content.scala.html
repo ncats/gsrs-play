@@ -3,7 +3,12 @@
 @import ix.core.search.FieldedQueryFacet
 @import ix.core.models.Structure
 @import ix.core.search.SearchResultContext
+@import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, PolymerSubstance, Substance}
 
+@import ix.ginas.models.v1.StructurallyDiverseSubstance
+
+@import ix.ginas.models.v1.NucleicAcidSubstance
+@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
 @(title: String, kind: String,
         resetAction: String, 
         current: Int, rows: Int, total: Int,
@@ -17,7 +22,7 @@
     }{
         @defining(	ctx!= null && 
         		  	"Running".equals(ctx.getStatus().toString()) &&
-                	request().getQueryString("q") != null){searchFlag =>
+                	request().getQueryString("q") != null) {searchFlag =>
     	<div class="row">
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">
@@ -44,8 +49,8 @@
                             class="alert alert-danger alert-dismissible"
                         }
                     role="alert">
-                             
-                        <button type="button" class="close" 
+
+                        <button type="button" class="close"
                         onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url')"
                         aria-label="Clear Query">
                             <span aria-hidden="true"><i class="fa fa-eraser"></i></span>
@@ -116,11 +121,11 @@
                         }
                     </div>
                 }
-                
+
                   @defining(flash().remove("warning")) { mesg =>
 		             	@if(mesg != null) {
 		             	 <div  class="alert alert-warning alert-dismissible" role="alert">
-		             	 	<button type="button" class="close" data-dismiss="alert" aria-label="Close"> 
+		             	 	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 		             	 		<span aria-hidden="true">&times;</span>
                         	</button>
 	                    	<p class="warning-message">@mesg</p>
@@ -128,6 +133,46 @@
 	                 	}
 		          }
 		          @if(ctx !=null){
+                      @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
+
+                          @for(sub <- ctx.getExactMatches()) {
+                              @sub match {
+                                  case chem: ChemicalSubstance => {
+                                      @list.chemlist(chem, ctxId)
+                                  }
+                                  case prot: ProteinSubstance => {
+                                      @list.proteinlist(prot, ctxId)
+                                  }
+                                  case nucl: NucleicAcidSubstance => {
+                                      @list.nucleicacidlist(nucl)
+
+                                  }
+                                  case mix: MixtureSubstance => {
+                                      @list.mixlist(mix)
+                                  }
+                                  case diverse: StructurallyDiverseSubstance => {
+                                      @list.diverselist(diverse)
+
+                                  }
+                                  case polymer: PolymerSubstance => {
+                                      @list.polymerlist(polymer)
+
+                                  }
+                                  case g1ss: SpecifiedSubstanceGroup1Substance => {
+                                      @list.g1sslist(g1ss)
+
+                                  }
+                                  case concept: Substance => {
+                                      @list.conceptlist(concept)
+
+                                  }
+                                  case _ => {
+
+                                  }
+                              }
+                          }
+                      }
+
 		          	@defining(ctx.getFieldFacets()) { searchFacets =>
                   @if(searchFacets!=null && searchFacets.size()>0){
                            <div
@@ -159,15 +204,15 @@
                                         <div class = "row fieldfacet">
                                         @items.map { item =>
                                         <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                         <button class="btn btn-primary" >  
+                                         <button class="btn btn-primary" >
                                                   <div class = "col-md-4">
                                                   <div class = "row">
-                                                    
-                                                        
+
+
                                                             <span >
                                                                 @item.getDisplayField()
                                                             </span>
-                                                        
+
                                                         <span class="badge">@item.getCountText()</span>
                                                     </div>
                                                 </div>
@@ -192,7 +237,7 @@
 	                    		@ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
 	                    	</div>
 	                    </div>
-						<div class="row">	                    	
+						<div class="row">
         <div class = "col-md-5">
                                <div class="btn-group">
   <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -225,7 +270,7 @@
             aria-label="Sort By">
                 <option class= "text-capitalize" value="" selected>Sort By</option>
             </select>
-         </div>   
+         </div>
         </div>
         <div class= "col-md-2 text-right hidden-xs">
 	                            <form class="form" name="grid-select" id = "grid-select">
@@ -248,7 +293,7 @@
         </div>
         }
 
-            <script>
+            <script>            <script>
 function dismissQuery () {
     location.assign('@resetAction');
 }

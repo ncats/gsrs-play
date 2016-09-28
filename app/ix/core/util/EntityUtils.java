@@ -22,7 +22,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,6 +58,8 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.db.ebean.Model.Finder;
 
+
+import play.Play;
 /**
  * A utility class, mostly intended to do the grunt work of reflection.
  * 
@@ -367,6 +368,12 @@ public class EntityUtils {
 		List<MethodOrFieldMeta> seqFields = new ArrayList<MethodOrFieldMeta>();
 		List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
 
+		List<String> sponsoredFields = new ArrayList<>();
+
+		public List<String> getSponsoredFields() {
+			return sponsoredFields;
+		}
+
 		List<MethodMeta> methods;
 		List<MethodMeta> keywordFacetMethods;
 
@@ -464,7 +471,7 @@ public class EntityUtils {
 				}
 				return true;
 			}).collect(Collectors.toList());
-			
+
 			uniqueColumnFields = fields.stream().filter(f -> f.isUniqueColumn()).collect(Collectors.toList());
 
 			methods = Arrays.stream(cls.getMethods()).map(m2 -> new MethodMeta(m2)).peek(m -> {
@@ -546,6 +553,29 @@ public class EntityUtils {
 			if (idType != null) {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
+
+
+
+
+
+
+			Map m = (Map)Play.application().configuration().getObject("ix.core.exactsearchfields",null);
+			if(m!=null){
+
+
+
+				m.forEach((k,v)->{
+								if(k.equals(EntityInfo.this.kind)) {
+									List<String> fields = (List<String>) v;
+									for (String f : fields) {
+										sponsoredFields.add(f);
+									}
+								}
+							});
+			}
+
+
+
 		}
 
 		

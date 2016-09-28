@@ -48,6 +48,9 @@ public class SearchResultContext {
     Long stop;
     List<FieldedQueryFacet> fieldFacets=null;
     Collection results = new LinkedBlockingDeque();
+
+    List sponsoredResults = new ArrayList();
+
     String id = Util.randvar (10);
     Integer total;
     String key;
@@ -114,6 +117,12 @@ public class SearchResultContext {
         results = result.getMatches();
         total = result.count();
         this.key=result.getKey();
+
+        sponsoredResults =result.getSponsoredMatches();
+    }
+
+    public List getExactMatches(){
+        return sponsoredResults;
     }
     
     public List<FieldedQueryFacet> getFieldFacets(){

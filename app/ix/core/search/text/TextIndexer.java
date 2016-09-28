@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ix.core.search.*;
 import ix.core.util.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
@@ -117,15 +118,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.models.Indexable;
 import ix.core.plugins.IxCache;
-import ix.core.search.FieldedQueryFacet;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
-import ix.core.search.InxightInfixSuggester;
-import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
-import ix.core.search.SearchResult;
-import ix.core.search.SuggestResult;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.InstantiatedIndexable;
 import ix.core.util.EntityUtils.Key;
@@ -1044,7 +1039,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	// It's
 	
 	public static interface LuceneSearchProvider{
-		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException;
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query q) throws IOException;
 	}
 	public static interface LuceneSearchProviderResult{
 		public TopDocs getTopDocs();
@@ -1072,20 +1067,18 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
 		Sort sorter;
 		Filter filter;
-		Query query;
 		int max;
 		FacetsCollector facetCollector;
 		
-		public BasicLuceneSearchProvider(Sort sorter,Filter filter, Query query, int max, FacetsCollector facetCollector){
+		public BasicLuceneSearchProvider(Sort sorter,Filter filter, int max, FacetsCollector facetCollector){
 			this.sorter=sorter;
 			this.filter=filter;
-			this.query=query;
 			this.max=max;
 			this.facetCollector=facetCollector;
 		}
 
 		@Override
-		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query query) throws IOException {
 			TopDocs hits=null;
 			Facets facets=null;
 			//FacetsCollector.
@@ -1106,20 +1099,22 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		private Facets facets=null;
 		Sort sorter;
 		Filter filter;
-		DrillDownQuery ddq;
 		SearchOptions options;
 		FacetsCollector facetCollector;
 		
-		public DrillSidewaysLuceneSearchProvider(Sort sorter,Filter filter, DrillDownQuery query, SearchOptions options, FacetsCollector facetCollector){
+		public DrillSidewaysLuceneSearchProvider(Sort sorter,Filter filter, SearchOptions options, FacetsCollector facetCollector){
 			this.sorter=sorter;
 			this.filter=filter;
-			this.ddq=query;
 			this.options=options;
 			this.facetCollector=facetCollector;	
 		}
 
 		@Override
-		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon) throws IOException {
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query ddq1) throws IOException {
+			if(!(ddq1 instanceof DrillDownQuery)){
+				throw new IllegalStateException("Query must be drill down query");
+			}
+			DrillDownQuery ddq = (DrillDownQuery)ddq1;
 			DrillSideways sideway = new DrillSideways(searcher, facetsConfig, taxon);
 			DrillSideways.DrillSidewaysResult swResult = sideway.search(ddq, filter, null, options.max(),
 					sorter, false, false);
@@ -1340,7 +1335,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	 * @param searcher
 	 * @param taxon
 	 * @param searchResult
-	 * @param filter
+	 * @param ifilter
 	 * @param query
 	 * @return
 	 * @throws IOException
@@ -1364,7 +1359,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		// then it's put into SearchOptions directly.
 		//
 		// This may change in the future
-		
+
 		Sort sorter = createSorterFromOptions(options);
 		List<Filter> filtersFromOptions = createAndRemoveRangeFiltersFromOptions(options)
 				.values()
@@ -1375,7 +1370,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		options.termFilters.stream()
 			.map(k-> new TermsFilter(new Term(k.getField(), k.getTerm())))
 			.forEach(f->filtersFromOptions.add(f));
-		
+		Query qactual = query;
 			
 		//Collect the range filters into one giant filter.
 		//Specifically, each element of a group of filters is set
@@ -1391,26 +1386,64 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		
 		//no specified facets (normal search)
 		if (options.getFacets().isEmpty()) { 
-			lsp = new BasicLuceneSearchProvider(sorter, filter, query, options.max(), facetCollector);
+			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max(), facetCollector);
 		} else {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			
 			options.getDrillDownsMap().forEach((k,v)->{
 				v.stream().forEach(dp->ddq.add(dp.getDrill(), dp.getPaths()));
 			});
+			qactual=ddq;
 			
 			// sideways
 			if (options.sideway) {
-				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, ddq, options, facetCollector);
+				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options, facetCollector);
 			
 			// drilldown
 			} else { 
-				lsp = new BasicLuceneSearchProvider(sorter, filter, ddq, options.max(), facetCollector);
+				lsp = new BasicLuceneSearchProvider(sorter, filter, options.max(), facetCollector);
 			}
 		} // facets is empty
 
-		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon);
+		List<String> sponsoredFields = searchResult.getOptions().getKindInfo().getSponsoredFields();
+
+		if(searchResult.getQuery()!=null) {
+			try {
+				for (String sp : sponsoredFields) {
+					System.out.println("sp:" + sp);
+					String theQuery = "\"" + toExactMatchString(
+							TextIndexer.replaceSpecialCharsForExactMatch(searchResult.getQuery().trim().replace("\"", ""))).toLowerCase() + "\"";
+					QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
+
+					Query tq = parser.parse(theQuery);
+					System.out.println(tq);
+					LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq); //special q
+					TopDocs td = lspResult.getTopDocs();
+					System.out.println("Results:" + td.scoreDocs.length);
+					for (int j = 0; j < td.scoreDocs.length; j++) {
+						Document doc = searcher.doc(td.scoreDocs[j].doc);
+
+						try {
+							Key k = Key.of(doc);
+							searchResult.addSponsoredNamedCallable(new EntityFetcher<>(k));
+						} catch (Exception e) {
+							e.printStackTrace();
+							Logger.error(e.getMessage());
+						}
+					}
+
+				}
+			}catch(Exception ex)
+			{
+
+			}
+		}
+
+		System.out.println("Actual search is:" + qactual);
+		System.out.println("Actual search class is:" + qactual.getClass());
+		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual);
 		hits=lspResult.getTopDocs();
+		System.out.println("Actually got:" + hits.scoreDocs.length);
 		
 		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
@@ -1430,8 +1463,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 						
 						f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
 					}
-					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, oq.k(), options.max(), facetCollector2);
-					LuceneSearchProviderResult res=lsp2.search(searcher, taxon);
+					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, options.max(), facetCollector2);
+					LuceneSearchProviderResult res=lsp2.search(searcher, taxon,oq.k());
 					res.getFacets().getAllDims(options.fdim).forEach(fr->{
 						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
 							
@@ -2394,11 +2427,11 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	}
 	
 
-	private String toExactMatchString(String in){
+	private static String toExactMatchString(String in){
 		return TextIndexer.START_WORD + replaceSpecialCharsForExactMatch(in) + TextIndexer.STOP_WORD;
 	}
 
-	private String replaceSpecialCharsForExactMatch(String in) {
+	private static String replaceSpecialCharsForExactMatch(String in) {
 
 		String tmp = LEVO_PATTERN.matcher(in).replaceAll(LEVO_WORD);
 
