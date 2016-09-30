@@ -266,6 +266,7 @@ public class SubstanceFactory extends EntityFactory {
 		Class subClass = getClassFromJson(value);
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator
 				.NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().markFailed());
+		
 		return create(subClass, finder, sv);
 	}
 

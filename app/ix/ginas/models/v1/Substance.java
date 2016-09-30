@@ -3,8 +3,10 @@ package ix.ginas.models.v1;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -59,7 +61,9 @@ import ix.ginas.models.serialization.PrincipalDeserializer;
 import ix.ginas.models.serialization.PrincipalSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
+import play.Play;
 
 @Backup
 @JSONEntity(name = "substance", title = "Substance")
@@ -90,6 +94,19 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
 	private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 	
+	private static Map<String,Integer> codeSystemOrder = new HashMap<>();
+	
+	static{
+		//Add specific codes to ordered list
+		List<String> codeSystems=Play.application()
+			.configuration()
+			.getStringList("ix.ginas.codes.order", new ArrayList<String>());
+		int i=0;
+		for(String s:codeSystems){
+			codeSystemOrder.put(s,i++);
+		}
+	}
+	
 	public enum SubstanceClass {
 		chemical, 
 		protein, 
@@ -118,10 +135,10 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		REPRESENTATIVE
 	}
 	
-	@Indexable(facet=true)
+	@Indexable(facet=true, name="Definition Type")
 	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
 	
-	@Indexable(facet=true)
+	@Indexable(facet=true, name="Definition Level")
 	public SubstanceDefinitionLevel definitionLevel = SubstanceDefinitionLevel.COMPLETE;
 	
 	
@@ -256,9 +273,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 							return 1;
 						}
 						if(c2.codeSystem==null)return -1;
+						Integer i1=codeSystemOrder.get(c1.codeSystem);
+						Integer i2=codeSystemOrder.get(c2.codeSystem);
+
+						if(i1!=null && i2!=null){
+							return i1-i2;
+						}
+						if(i1!=null && i2==null)return -1;
+						if(i1==null && i2!=null)return 1;
 						return c1.codeSystem.compareTo(c2.codeSystem);
 					}
-					
 				}
 		);
 		
@@ -415,7 +439,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	public List<Relationship> getActiveMoieties() {
 		List<Relationship> ret = new ArrayList<Relationship>();
 		for (Relationship r : this.relationships) {
-			if (r.type.toLowerCase().contains("active moiety")) {
+			if (r.type.toUpperCase().contains(Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE)) {
 				ret.add(r);
 			}
 		}

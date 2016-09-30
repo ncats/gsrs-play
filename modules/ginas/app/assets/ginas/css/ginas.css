@@ -1301,7 +1301,11 @@ span.key-value {
 }
 span.nowrap-list {
     display: block;
-    white-space: pre;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.minor-option{
+	font-weight:normal !important;
+	font-size:85%;
 }

@@ -50,8 +50,10 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
+import ix.ginas.models.v1.VocabularyTerm;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import play.Logger;
@@ -354,6 +356,10 @@ public class EntityUtils {
 			}else{
 				return new ArrayList<Edit>();
 			}
+		}
+		
+		public Object getValueFromMethod(String name){
+			return this.streamMethodsAndValues(m->m.getMethodName().equals(name)).findFirst().get().v();
 		}
 		
 	}
@@ -813,6 +819,11 @@ public class EntityUtils {
 			return this.hasBackup;
 		}
 
+		public T getInstance() throws Exception{
+			return (T) this.getClazz().newInstance();
+		}
+		
+
 		// HERE BE DRAGONS!!!!
 		// This was one of the (many) ID-generating methods before "The Great Refactoring".
 		// I am still unsure whether the explicit call to a Moiety is at all necessary ...
@@ -1193,6 +1204,11 @@ public class EntityUtils {
 		boolean isChangeReason=false;
 
 		Column column;
+		
+		List<VocabularyTerm> possibleTerms = new ArrayList<VocabularyTerm>();
+		
+		
+		
 
 		public boolean isSequence() {
 			return this.isSequence;
@@ -1350,6 +1366,17 @@ public class EntityUtils {
 		public boolean isNumeric() {
 			return Number.class.isAssignableFrom(this.type);
 		}
+//		
+//		public List<VocabularyTerm> getPossibleTerms(){
+//			
+//			return this.possibleTerms;
+//		}
+//		
+//		//TODO: Implement this
+//		public boolean isControlled(){
+//			return false;
+//		}
+//		
 	}
 
 	public static class Key {

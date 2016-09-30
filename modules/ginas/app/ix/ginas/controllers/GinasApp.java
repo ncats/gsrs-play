@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -64,6 +65,7 @@ import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
@@ -187,36 +189,38 @@ public class GinasApp extends App {
     	}
     }
     
+    
+//    ===============
+//    		Record Status
+//    		Validation
+//    		Stereo Chemistry
+//    		Modifications
+//    		Last Edited
+//    		Last Edited By
+//    		Material Class
+//    		Reference Type
+//    		Validated By
+//    		Last Validated
+   
+    private static CachedSupplier<String[]> facetFetch= CachedSupplier.of(()->{
+		return Play.application().configuration().getStringList("ix.ginas.facets.substance.default", new ArrayList<String>()).toArray(new String[0]);
+	});
+    
+    public static String[] getDefaultFacets(){
+    	return facetFetch.get();
+    }
+    
     //This is the set of facets to show with substances.
     //currently, this can't be expanded, except in the code
     //here. 
-    public static final String[] ALL_FACETS = {
-        "Record Status",
-        "Validation",
-        "Substance Class", 
-        "SubstanceStereochemistry", 
-        "Molecular Weight",
-        "GInAS Tag", 
-        //"CAS",
-        "Relationships",
-        "Sequence Type",
-        "Modifications",
-        "Material Class", 
-        "Material Type",
-        "Family", 
-        "Parts", 
-        "Code System",
-        "Last Edited By",
-        "modified", 	   //"Last Edited Date"
-        "Reference Type",
-        "Approved By",
-        "approved"         //"Approved Date"
-    };
+   
+    
+    
 
     static PayloadPlugin _payload ;
 
     static class SubstanceResultRenderer extends DefaultResultRenderer<Substance> {
-        final String[] facets=ALL_FACETS;
+        final String[] facets=getDefaultFacets();
         SubstanceResultRenderer () {}
         public Result render
             (SearchResultContext context, 
@@ -331,6 +335,9 @@ public class GinasApp extends App {
         if("LyChI_L4".equalsIgnoreCase(n)){
             return "Structure Hash";
         }
+        if("GInAS Tag".equalsIgnoreCase(n)){
+            return "Source Tag";
+        }
         if("Approved By".equalsIgnoreCase(n)){
             return "Validated By";
         }
@@ -348,8 +355,9 @@ public class GinasApp extends App {
 
 
     static class GinasFacetDecorator extends FacetDecorator {
-        GinasFacetDecorator(Facet facet) {
+        private GinasFacetDecorator(Facet facet) {
             super(facet, true, 10);
+            
             boolean isrange=true;
             //look for range filter to sort by value
             //uses regex now
@@ -362,52 +370,104 @@ public class GinasApp extends App {
             if(isrange){
             	facet.sortLabels(false);
             }
+            
         }
+        /**
+         * Return the Display Name for this facet
+         * @return
+         */
         @Override
         public String name() {
             return translateFacetName( super.name());
         }
         
+        /**
+         * Return the label for the facet value
+         * at index i. Returning null signals the UI not
+         * to show this facet.
+         * @param i
+         * @return
+         */
         @Override
         public String label(final int i) {
             final String label = super.label(i);
             final String name = super.name();
             
-            if ("StructurallyDiverse".equalsIgnoreCase(label))
+            if ("StructurallyDiverse".equalsIgnoreCase(label)){
                 return "Structurally Diverse";
-            if ("protein".equalsIgnoreCase(label))
+            }
+            if ("specifiedSubstanceG1".equalsIgnoreCase(label)){
+                return "Group 1 Specified Substance";
+            }
+            if ("protein".equalsIgnoreCase(label)){
                 return "Protein";
-            if ("nucleicAcid".equalsIgnoreCase(label))
+            }
+            if ("nucleicAcid".equalsIgnoreCase(label)){
                 return "Nucleic Acid";
-            if ("polymer".equalsIgnoreCase(label))
+            }
+            if ("polymer".equalsIgnoreCase(label)){
                 return "Polymer";
-            if ("mixture".equalsIgnoreCase(label))
+            }
+            if ("mixture".equalsIgnoreCase(label)){
                 return "Mixture";
-            if ("chemical".equalsIgnoreCase(label))
+            }
+            if ("chemical".equalsIgnoreCase(label)){
                 return "Chemical";
-            if ("concept".equalsIgnoreCase(label))
+            }
+            if ("concept".equalsIgnoreCase(label)){
                 return "Concept";
+            }
+            if(this.name().equalsIgnoreCase("Relationships")){
+	            if (label.equals(Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE)){
+	            	return null;
+	            }
+            }
+            //TODO: Need to figure out CV mechanism in general
             if (label.contains("->")){
-                return GinasApp.getCV().getDisplay("RELATIONSHIP_TYPE", label);
+            	
+                String s1= GinasApp.getCV().getDisplay("RELATIONSHIP_TYPE", label);
+                if(s1.contains("->")){
+                	return s1.split("->")[1] + " of " + s1.split("->")[0];
+                }else{
+                	return s1;
+                }
             }
             
-            if ("EP".equalsIgnoreCase(label))
+            if ("EP".equalsIgnoreCase(label)){
                 return "PH. EUR";
-            if(Substance.STATUS_APPROVED.equalsIgnoreCase(label))
+            }
+            if(Substance.STATUS_APPROVED.equalsIgnoreCase(label)){
                 return "Validated (UNII)";
-            if("non-approved".equalsIgnoreCase(label))
+            }
+            if("non-approved".equalsIgnoreCase(label)){
                 return "Non-Validated";
-            if (name.equalsIgnoreCase("approved")
-                || name.equalsIgnoreCase("modified"))
+            }
+            if (name.equalsIgnoreCase("approved") || name.equalsIgnoreCase("modified")){
                 return label.substring(1); // skip the prefix character
+            }
             
             return label;
         }
     }
     
-    public static <T> List<T> limitList(List<T> list, int max) {
+    public static <T> Collection<T> limitList(Collection<T> list, int max) {
         return list.stream().limit(max).collect(Collectors.toList());
     }
+    
+    public static Collection<List<Code>> getGroupedCodes(List<Code> codes, int max){
+    	LinkedHashMap<String,List<Code>> cmap=codes
+    			.stream()
+    			.collect(Collectors.groupingBy(
+	    			c->c.codeSystem,
+	    			LinkedHashMap::new,
+	    			Collectors.toList()));
+    	if(max>0){
+    		return limitList(cmap.values(),max);
+    	}
+    	
+    	return cmap.values();
+    }
+   
     
     
     
@@ -778,17 +838,14 @@ public class GinasApp extends App {
     static Result _substances(String q, final int rows, final int page)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
-        final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
         
         //final String[] searchFacets = facets;
-        
-        //Special piece to show deprecated records
-        boolean forceq = (request().getQueryString("showDeprecated")==null);
+        boolean forcesql = "true".equals(request().getQueryString("sqlOnly"));
         
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if (forceq || q != null || request().queryString().containsKey("facet")) {
+        if (!forcesql) {
             final SearchResult result = getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
@@ -799,7 +856,7 @@ public class GinasApp extends App {
             }
             return createSubstanceResult(result, rows, page);
             //otherwise, just show the first substances
-        } else {
+        }else{
             return getOrElse(key, () -> {
             	SubstanceResultRenderer srr=new SubstanceResultRenderer();
                         Logger.debug("Cache missed: " + key);
@@ -893,7 +950,7 @@ public class GinasApp extends App {
                 substances.clear();
                 result.copyTo(substances, 0, result.count());
             }
-            TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
+            TextIndexer.Facet[] facets = filter(result.getFacets(), getDefaultFacets());
             System.out.println("Filtered to:" + facets.length + " facets");
 
             return ok(ix.ginas.views.html.substances.render

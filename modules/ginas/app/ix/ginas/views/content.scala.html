@@ -4,6 +4,8 @@
 @import ix.core.models.Structure
 @import ix.core.search.SearchResultContext
 @import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, PolymerSubstance, Substance}
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(title: String, kind: String,
         resetAction: String,
@@ -20,8 +22,11 @@
             "Running".equals(ctx.getStatus().toString()) &&
             request().getQueryString("q") != null) { searchFlag =>
         <div class="row">
+
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">
+
+
                     <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
                         <i class="fa fa-filter"></i> Show Filters
                     </div>
@@ -29,9 +34,25 @@
                         <i class="fa fa-filter"></i> Hide Filters
                     </div>
                     <div uib-collapse="isCollapsed" class="panel-group">
+                    @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                        <div>
+                        <label class="minor-option">
+                            Show Deprecated Records
+                            <input type="checkbox"     ng-model="showDeprecated"
+                                                       ng-change="showDeprecatedChange();"
+                                                       ng-true-value="'true'"
+                                                       ng-false-value="null"
+                                                       title="Show Deprecated"
+                                                       name="ShowDeprecated"
+                                                       id ="ShowDeprecated"
+                                                       aria-label="Show Deprecated">
+                           </label>
+                        </div>
+                    }
                     @filters(facets, searchFlag)
                     </div>
                 </div>
+
                 <div class="col-md-9">
                 } else {
                 <div class="col-md-12">
@@ -170,7 +191,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class = "col-md-5">
+                            <div class = "col-md-3">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
@@ -185,11 +206,13 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-md-5  text-left row">
-                                <div class="col-md-3">
+                            <div class="col-md-7  text-left row">
+                                <div class="col-md-4">
+                                    <div class="pull-right">
                                     Sort By:
+                                    </div>
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-md-8">
                                     <select
                                     class="form-control"
                                     ng-model= selectedSort
