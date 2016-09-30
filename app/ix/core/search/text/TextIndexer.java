@@ -36,11 +36,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -121,9 +119,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.plugins.IxCache;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
 import ix.core.search.SearchOptions.DrillAndPath;
+import ix.core.search.SearchResult;
+import ix.core.search.SuggestResult;
+import ix.core.util.CachedSupplier;
+import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
-import ix.core.util.EntityUtils.InstantiatedIndexable;
 import ix.core.util.EntityUtils.Key;
+import ix.core.util.StopWatch;
+import ix.core.util.TimeUtil;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.utils.Global;
 import ix.utils.Tuple;
@@ -134,7 +137,7 @@ import play.Play;
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMaker, PrimitiveFieldMaker {
+public class TextIndexer implements Closeable, ReIndexListener {
 	public static final String IX_BASE_PACKAGE = "ix";
 	
 	public static final boolean INDEXING_ENABLED = Play.application().configuration().getBoolean("ix.textindex.enabled",true);
@@ -186,7 +189,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	static final String FACETS_CONFIG_FILE = "facet_conf.json";
 	static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
 	static final String SORTER_CONFIG_FILE = "sorter_conf.json";
-	static final String DIM_CLASS = "ix.Class";
+	public static final String DIM_CLASS = "ix.Class";
 
 	static final ThreadLocal<DateFormat> YEAR_DATE_FORMAT = new ThreadLocal<DateFormat>() {
 		@Override
@@ -1129,119 +1132,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		}
 		
 	}
-	
-	// This is not yet fully realized. It works as intended,
-	// but the right design is ideally to have this be a 
-	// BiConsumer that simply does all Field 
-	public class IndexingFieldCreator implements BiConsumer<PathStack, EntityUtils.EntityWrapper>{
-		
-		private Consumer<IndexableField> toAdd= null;
-		private DynamicFieldMaker dynamicFacets = null;
-		private PrimitiveFieldMaker indexPerformer=null;
-		
-	
-		
-		public IndexingFieldCreator(Consumer<IndexableField> toAdd){
-			this.toAdd=toAdd;
-		}
-		public IndexingFieldCreator withDynamicFieldMaker(DynamicFieldMaker dynamicFacets){
-			this.dynamicFacets=dynamicFacets;
-			return this;
-		}
-		public IndexingFieldCreator withPrimitiveFieldMaker(PrimitiveFieldMaker indexPerformer){
-			this.indexPerformer=indexPerformer;
-			return this;
-		}
-		
-		public IndexingFieldCreator(Consumer<IndexableField> toAdd, 
-					DynamicFieldMaker dynamicFacets, 
-					PrimitiveFieldMaker indexPerformer) {
-			this.toAdd = toAdd; 					//where to put the fields
-			this.dynamicFacets = dynamicFacets;			//how to make the Dynamic Facets
-			this.indexPerformer = indexPerformer;		//how to make the 
-		}
-	
-	
-		public void acceptWithGeneric(PathStack path, EntityUtils.EntityWrapper<Object> ew) {
-			if (toAdd != null) {
-				toAdd.accept(new FacetField(DIM_CLASS, ew.getKind()));
-				ew.getId().ifPresent(o -> {
-					if (o instanceof Long) {
-						toAdd.accept(new LongField(ew.getInternalIdField(), (Long) o, YES));  
-					} else {
-						toAdd.accept(new StringField(ew.getInternalIdField(), o.toString(), YES));  //Only Special case
-					}
-					toAdd.accept(new StringField(ew.getIdField(), o.toString(), NO));
-				});
-	
-				// primitive fields only, they should all get indexed
-				ew.streamFieldsAndValues(f -> f.isPrimitive()).forEach(fi -> {
-					path.pushAndPopWith(fi.k().getName(), () -> {
-						indexPerformer.create(toAdd, path.getFirst(), fi.v(), path.toPath(),
-								fi.k().getIndexable());
-					});
-				});
-	
-				ew.getDynamicFacet().ifPresent(fv -> {
-					path.pushAndPopWith(fv.k(), () -> {
-						dynamicFacets.create(toAdd, fv.k(), fv.v(), path.toPath());
-					});
-				});
-				
-				ew.streamMethodKeywordFacets().forEach(kw -> {
-					path.pushAndPopWith(kw.label, () -> {
-						dynamicFacets.create(toAdd, kw.label, kw.getValue(), path.toPath());
-					});
-				});
-	
-				ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
-					path.pushAndPopWith(t.k().getName(), () -> {
-						t.k().forEach(t.v(), (i, o) -> {
-							path.pushAndPopWith(i + "", () -> {
-								indexPerformer.create(toAdd, path.getFirst(), o,
-										path.toPath(), t.k().getIndexable());
-							});
-						});
-					});
-				});// each array / collection
-	
-				ew.streamMethodsAndValues(m -> !m.isArrayOrCollection()).forEach(t -> {
-					path.pushAndPopWith(t.k().getName(), () -> {
-						indexPerformer.create(toAdd, path.getFirst(), t.v(), path.toPath(),
-								t.k().getIndexable());
-					});
-				});// each non-array
-	
-				ew.streamFieldsAndValues(f -> (!f.isPrimitive() && !f.isArrayOrCollection())).forEach(fi -> {
-					path.pushAndPopWith(fi.k().getName(), () -> {
-						if (fi.k().isEntityType()) {
-							if (toAdd != null) {
-								if (fi.k().isExplicitlyIndexable()) {
-									indexPerformer.create(toAdd, path.getFirst(), fi.v(),
-											path.toPath(), fi.k().getIndexable());
-								}
-							}
-						} else { // treat as string
-							if (toAdd != null) {
-								indexPerformer.create(toAdd, path.getFirst(), fi.v(),
-										path.toPath(), fi.k().getIndexable());
-							}
-						}
-					}); // for each field with value
-				}); // foreach non-primitive field
-			}
-		}
-	
-		
-		//Just had some generic problems, so this delegates
-		// TODO: clean up
-		@Override
-		public void accept(PathStack t, EntityUtils.EntityWrapper u) {
-			acceptWithGeneric(t, u);
-		}
-		
-
-	}
 
 	// This is the most important method, everything goes here
 	protected SearchResult search(IndexSearcher searcher, SearchResult searchResult, Query query, Filter filter)
@@ -1390,7 +1280,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 				v.stream().forEach(dp->ddq.add(dp.getDrill(), dp.getPaths()));
 			});
 			qactual=ddq;
-			
+
 			// sideways
 			if (options.sideway) {
 				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options);
@@ -1441,7 +1331,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual,facetCollector);
 		hits=lspResult.getTopDocs();
 		System.out.println("Actually got:" + hits.scoreDocs.length);
-		
+
 		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
 		
@@ -1834,12 +1724,12 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			};
 			
 			//flag the kind of document
-			
-			
-			ew.traverse().execute(new IndexingFieldCreator(fieldCollector)
-											.withDynamicFieldMaker(this)	
-											.withPrimitiveFieldMaker(this)
-						);
+			IndexValueMaker<Object> valueMaker= IndexValueMakerFactory.forClass(ew.getClazz());
+
+			valueMaker.createIndexableValues(ew.getValue(), iv->{
+				this.instrumentIndexableValue(fieldCollector, iv);
+			});
+
 			
 			if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
 				Key key =ew.getKey();
@@ -2249,39 +2139,54 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	
 	
 	//make the fields for the dynamic facets
-	@Override
-	public void create(Consumer<IndexableField> fieldTaker, String name, String value, String path) {
-		facetsConfig.setMultiValued(name, true);
-		facetsConfig.setRequireDimCount(name, true);
-		fieldTaker.accept(new FacetField(name, value));
-		fieldTaker.accept(new TextField(path, TextIndexer.START_WORD + value + TextIndexer.STOP_WORD, NO));
-		addSuggestedField(name,value);
+
+	public void createDynamicField(Consumer<IndexableField> fieldTaker, IndexableValue iv) {
+		facetsConfig.setMultiValued(iv.name(), true);
+		facetsConfig.setRequireDimCount(iv.name(), true);
+		fieldTaker.accept(new FacetField(iv.name(), iv.value().toString()));
+		fieldTaker.accept(new TextField(iv.path(), TextIndexer.START_WORD + iv.value().toString() + TextIndexer.STOP_WORD, NO));
+		addSuggestedField(iv.name(),iv.value().toString());
 		
 	}
 
 	//make the fields for the primitive fields
-	@Override
-	public void create(Consumer<IndexableField> fields, String name, Object value, String full, InstantiatedIndexable indexable) {
+
+	public void instrumentIndexableValue(Consumer<IndexableField> fields, IndexableValue indexableValue) {
+
+		if(indexableValue.isDirectIndexField()){
+			fields.accept(indexableValue.getDirectIndexableField());
+			return;
+		}
+
+		if(indexableValue.isDynamicFacet()){
+			createDynamicField(fields,indexableValue);
+			return;
+		}
+
 		// Used to be configurable, now just always NO
 		// for all cases we use.
 		org.apache.lucene.document.Field.Store store = Store.NO;
 		
-		String fname = indexable.name().isEmpty() ? name : indexable.name();
+		String fname = indexableValue.name();
+		String name = indexableValue.rawName();
+
+		String full = indexableValue.path();
+		Object value = indexableValue.value();
 		boolean sorterAdded = false;
 		boolean asText = true;
 		if (value instanceof Long) {
 			Long lval = (Long) value;
 			fields.accept(new LongField(full, lval, NO));
-			asText = indexable.facet();
+			asText = indexableValue.facet();
 			if (!asText && !name.equals(full))
 				fields.accept(new LongField(name, lval, store));
-			if (indexable.sortable()) {
+			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.LONG);
 				fields.accept(new LongField(f, lval, store));
 				sorterAdded = true;
 			}
-			FacetField ff = getRangeFacet(fname, indexable.ranges(), lval);
+			FacetField ff = getRangeFacet(fname, indexableValue.ranges(), lval);
 			if (ff != null) {
 				facetsConfig.setMultiValued(fname, true);
 				facetsConfig.setRequireDimCount(fname, true);
@@ -2292,18 +2197,18 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			// fields.add(new IntDocValuesField (full, (Integer)value));
 			Integer ival = (Integer) value;
 			fields.accept(new IntField(full, ival, NO));
-			asText = indexable.facet();
+			asText = indexableValue.facet();
 			if (!asText && !name.equals(full))
 				fields.accept(new IntField(name, ival, store));
 
-			if (indexable.sortable()) {
+			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.INT);
 				fields.accept(new IntField(f, ival, store));
 				sorterAdded = true;
 			}
 
-			FacetField ff = getRangeFacet(fname, indexable.ranges(), ival);
+			FacetField ff = getRangeFacet(fname, indexableValue.ranges(), ival);
 			if (ff != null) {
 				facetsConfig.setMultiValued(fname, true);
 				facetsConfig.setRequireDimCount(fname, true);
@@ -2317,14 +2222,14 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			if (!full.equals(name))
 				fields.accept(new FloatField(full, fval, NO));
 
-			if (indexable.sortable()) {
+			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.FLOAT);
 				fields.accept(new FloatField(f, fval, NO));
 				sorterAdded = true;
 			}
 
-			FacetField ff = getRangeFacet(fname, indexable.dranges(), fval, indexable.format());
+			FacetField ff = getRangeFacet(fname, indexableValue.dranges(), fval, indexableValue.format());
 			if (ff != null) {
 				facetsConfig.setMultiValued(fname, true);
 				facetsConfig.setRequireDimCount(fname, true);
@@ -2338,14 +2243,14 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			if (!full.equals(name)) {
 				fields.accept(new DoubleField(full, dval, NO));
 			}
-			if (indexable.sortable()) {
+			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.DOUBLE);
 				fields.accept(new DoubleField(f, dval, NO));
 				sorterAdded = true;
 			}
 
-			FacetField ff = getRangeFacet(fname, indexable.dranges(), dval, indexable.format());
+			FacetField ff = getRangeFacet(fname, indexableValue.dranges(), dval, indexableValue.format());
 			if (ff != null) {
 				facetsConfig.setMultiValued(fname, true);
 				facetsConfig.setRequireDimCount(fname, true);
@@ -2357,13 +2262,13 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			fields.accept(new LongField(name, date, YES));
 			if (!full.equals(name))
 				fields.accept(new LongField(full, date, NO));
-			if (indexable.sortable()) {
+			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.LONG);
 				fields.accept(new LongField(f, date, NO));
 				sorterAdded = true;
 			}
-			asText = indexable.facet();
+			asText = indexableValue.facet();
 			if (asText) {
 				value = YEAR_DATE_FORMAT.get().format(date);
 			}
@@ -2372,31 +2277,31 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		if (asText) {
 			String text = value.toString();
 			if(text.isEmpty()){
-				if(indexable.indexEmpty()){
-					text=indexable.emptyString();
+				if(indexableValue.indexEmpty()){
+					text=indexableValue.emptyString();
 				}else{
 					return;
 				}
 			}
-			String dim = indexable.name();
+			String dim = indexableValue.name();
 			
 			if("".equals(dim)){
 				dim = full;
 			}
 			
-			if (indexable.facet() || indexable.taxonomy()) {
+			if (indexableValue.facet() || indexableValue.taxonomy()) {
 				facetsConfig.setMultiValued(dim, true);
 				facetsConfig.setRequireDimCount(dim, true);
 
-				if (indexable.taxonomy()) {
+				if (indexableValue.taxonomy()) {
 					facetsConfig.setHierarchical(dim, true);
-					fields.accept(new FacetField(dim, indexable.splitPath(text)));
+					fields.accept(new FacetField(dim, indexableValue.splitPath(text)));
 				} else {
 					fields.accept(new FacetField(dim, text));
 				}
 			}
 
-			if (indexable.suggest()) {
+			if (indexableValue.suggest()) {
 				// also index the corresponding text field with the
 				// dimension name
 				fields.accept(new TextField(dim, text, NO));
@@ -2414,7 +2319,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 			// Add specific sort column only if it's not added by some other
 			// mechanism
-			if (indexable.sortable() && !sorterAdded) {
+			if (indexableValue.sortable() && !sorterAdded) {
 				sorters.put(SORT_PREFIX + full, SortField.Type.STRING);
 				fields.accept(new StringField(SORT_PREFIX + full, text, store));
 			}

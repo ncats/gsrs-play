@@ -25,22 +25,26 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	
 	@Override
 	public void prePersist(Relationship obj) {
-		
 		addInverse(obj);
 	}
 	
 	public void addInverse(final Relationship thisRelationship){
-		//System.out.println("Adding inverse relationship");
 		if(thisRelationship.isGenerator() && thisRelationship.isAutomaticInvertable()){
-			//System.out.println("It's a real invertable thing");
 			final Substance thisSubstance=thisRelationship.fetchOwner();
 			final Substance otherSubstance=SubstanceFactory.getFullSubstance(thisRelationship.relatedSubstance); //db fetch
-			
 			
 			
 			if(otherSubstance ==null){ //probably warn
 				return;
 			}
+			
+			Relationship preChangeReference=createAndAddInvertedRelationship(thisRelationship, thisSubstance.asSubstanceReference(), otherSubstance);
+			
+			if(preChangeReference==null){
+				return;
+			}
+			
+			
 			EntityPersistAdapter.performChangeOn(
 					otherSubstance,
 					s -> {
@@ -61,7 +65,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
 			if(newSub==null){
 				//TODO: Look into this
-				//System.out.println("It doesn't exist");
 				obj.relatedSubstance.substanceClass="mention";
 			}else{
 				Relationship r = obj.fetchInverseRelationship();
@@ -73,23 +76,21 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 						return null;
 					}
 				}
-				//System.out.println("Making citation");
 				Reference ref1 = Reference.SYSTEM_GENERATED();
 				ref1.citation="Generated from relationship on:'" + oldSub.refPname + "'"; 
 				r.addReference(ref1.getOrGenerateUUID().toString());
 				
 				newSub.relationships.add(r);
 				newSub.references.add(ref1);
-				//System.out.println("Returning R");
 				return r;
 			}
 		}
-		//System.out.println("It wasn't invertable, I guess");
 		return null;
 	}
 	
 	@Override
 	public void preUpdate(Relationship obj) {
+		
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
 			List<Relationship> rel = finder.where().eq("originatorUuid",
 					obj.getOrGenerateUUID().toString()).findList();
@@ -103,12 +104,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		}
 	}
 	
-	@Override
-	public void postPersist(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	@Override
 	public void preRemove(Relationship obj) {
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
@@ -136,26 +131,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		}
 	}
 
-	@Override
-	public void postRemove(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-
-	@Override
-	public void postUpdate(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void postLoad(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	public static RelationshipProcessor getInstance(){
 		RelationshipProcessor rp =RelationshipProcessor._instance;
 		if(rp==null){

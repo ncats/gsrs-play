@@ -43,14 +43,18 @@
                         <h5><strong>Codes:</strong></h5>
                     </div>
                     <div class = "col-md-10">
-                    	@for(c <- ix.ginas.controllers.GinasApp.limitList(sub.getOrderedCodes(),4)){
-                    		<h5><span>@c.getCodeSystem():</span>
+                    
+                    	
+                    	@for(clist <- ix.ginas.controllers.GinasApp.getGroupedCodes(sub.getOrderedCodes(),4)){
+                    		<h5><span>@clist.get(0).getCodeSystem():</span>
+                    		@for(c <- clist){
                     		@if(c.getUrl()!=null){
                     		<a href="@c.getUrl()" target="_blank">
                     			<code title="@c.getDisplayCode()">@c.getCode()</code>
                     		</a>	
                     		}else{
                     			<code>@c.getCode()</code>
+                    		}
                     		}
                     		</h5>
                     	}

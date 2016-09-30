@@ -1,25 +1,23 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Lob;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
-import ix.core.models.Principal;
-import ix.core.models.Keyword;
-
-import ix.ginas.models.utils.JSONEntity;
+import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.utils.JSONConstants;
-import ix.ginas.models.*;
+import ix.ginas.models.utils.JSONEntity;
 
 
 @JSONEntity(title = "Relationship", isFinal = true)
@@ -27,6 +25,7 @@ import ix.ginas.models.*;
 @Table(name="ix_ginas_relationship")
 public class Relationship extends CommonDataElementOfCollection {
     
+	public static final String ACTIVE_MOIETY_RELATIONSHIP_TYPE="ACTIVE MOIETY";
     private static final String RELATIONSHIP_INV_CONST = "->";
     private static final Pattern RELATIONSHIP_SPLIT_REGEX = Pattern.compile(RELATIONSHIP_INV_CONST);
 
@@ -42,6 +41,7 @@ public class Relationship extends CommonDataElementOfCollection {
     
     
     @JSONEntity(title = "Interaction Type", format = JSONConstants.CV_INTERACTION_TYPE)
+    @Indexable(name="Interaction Type", facet = true)
     public String interactionType;
 
     @JSONEntity(title = "Qualification", format = JSONConstants.CV_QUALIFICATION)
@@ -101,7 +101,7 @@ public class Relationship extends CommonDataElementOfCollection {
     }
     
     /**
-     * Returns true if this relationship is invertable
+     * Returns true if this relationship is invertible
      * @return
      */
     @JsonIgnore
@@ -115,6 +115,8 @@ public class Relationship extends CommonDataElementOfCollection {
     	}
 
     	String[] types=RELATIONSHIP_SPLIT_REGEX.split(this.type);
+    	
+    	
     	if(types.length>=2)return true;
     	return false;
     }

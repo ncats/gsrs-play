@@ -26,11 +26,24 @@ public class CodeGeneratorTest {
 	
 	 @Rule
 	 public GinasTestServer ts = new GinasTestServer(()->{
-		 	Config additionalConfig = ConfigFactory.parseFile(new File("conf/ginas-test.conf"))
+		 String addconf="include \"ginas.conf\"\n" + 
+		 "\n" + 
+		 "ix.core.entityprocessors +={\n" + 
+		 "               \"class\":\"ix.ginas.models.v1.Substance\",\n" + 
+		 "               \"processor\":\"ix.ginas.processors.UniqueCodeGenerator\",\n" + 
+		 "               \"with\":{\n" + 
+		 "               \"codesystem\":\"BDNUM\",\n" + 
+		 "                       \"suffix\":\"AB\",\n" + 
+		 "                       \"length\":10,\n" + 
+		 "                       \"padding\":true\n" + 
+		 "               }\n" + 
+		 "        }";
+		 	Config additionalConfig = ConfigFactory.parseString(addconf)
 		 				.resolve()
 		 				.withOnlyPath("ix.core.entityprocessors");
 		 	return new Configuration(additionalConfig).asMap();
 	 });
+	 
 	 
 	 
 	 

@@ -7,6 +7,7 @@ import be.objectify.deadbolt.java.AbstractDynamicResourceHandler;
 import be.objectify.deadbolt.java.DeadboltHandler;
 import be.objectify.deadbolt.java.DynamicResourceHandler;
 import ix.core.models.Role;
+import ix.core.util.CachedSupplier;
 import play.Logger;
 import play.Play;
 import play.mvc.Http;
@@ -29,29 +30,33 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
     static {
        init();
     }
+    
+	public static class IsAdminHandler extends AbstractDynamicResourceHandler {
+		CachedSupplier<Boolean> isAdminForced = CachedSupplier.of(()->{
+			return Play.application().configuration().getBoolean("ix.admin", false);
+		}) ;
+		
+		public boolean isAllowed(final String name, final String meta, final DeadboltHandler deadboltHandler,
+				final Http.Context context) {
+			if(isAdminForced.get()){
+				return true;
+			}
 
+			Subject subject = deadboltHandler.getSubject(context);
+			
+			DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
+			
+			if (analyzer.hasRole(subject, Role.Admin.toString())) {
+				return true;
+			}
+			return false;
+		}
+	}
+	
     public static void init(){
         HANDLERS = new HashMap<String, DynamicResourceHandler>();
 
-        HANDLERS.put(IS_ADMIN,
-                new AbstractDynamicResourceHandler() {
-                    public boolean isAllowed(final String name,
-                                             final String meta,
-                                             final DeadboltHandler deadboltHandler,
-                                             final Http.Context context) {
-
-                        if(Play.application().configuration().getBoolean("ix.admin", false))return true;
-
-                        Subject subject = deadboltHandler.getSubject(context);
-                        boolean allowed=false;
-                        DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
-
-                        if (analyzer.hasRole(subject, Role.Admin.toString())) {
-                            allowed = true;
-                        }
-                        return allowed;
-                    }
-                });
+        HANDLERS.put(IS_ADMIN, new IsAdminHandler());
         HANDLERS.put(CAN_APPROVE,
                 new SimpleRoleDynamicResourceHandler(
                         Role.Approver
@@ -103,7 +108,6 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                 final String meta,
                 final DeadboltHandler deadboltHandler,
                 final Http.Context context) {
-    			//System.out.println("OK ... let's look then");
     			Subject subject=null;
     			try{
     				subject = deadboltHandler.getSubject(context);
@@ -118,7 +122,6 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				for(Role k:roles){
 					if (analyzer.hasRole(subject, k.toString())) {
 						allowed = true;
-						//System.out.println("Got it");
 						break;
 					}
 				}
@@ -128,41 +131,38 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
     }
     
     
+	// this will be invoked for Dynamic
+	public boolean isAllowed(String name, String meta, DeadboltHandler deadboltHandler, Http.Context context) {
 
-    //this will be invoked for Dynamic
-    public boolean isAllowed(String name,
-                             String meta,
-                             DeadboltHandler deadboltHandler,
-                             Http.Context context) {
-    	//System.out.println("Authorizing:" + name);
-        DynamicResourceHandler handler = HANDLERS.get(name);
-        boolean result = false;
-        if (handler == null) {
-            Logger.error("No handler available for " + name);
-        } else {
-            result = handler.isAllowed(name,
-                    meta,
-                    deadboltHandler,
-                    context);
-        }
-        return result;
-    }
+		//Allow admin to do everything
+		if (HANDLERS.get(IS_ADMIN).isAllowed(name, meta, deadboltHandler, context)){
+			return true;
+		}
+				
+				
+		DynamicResourceHandler handler = HANDLERS.get(name);
 
-    //this will be invoked for custom Pattern checking
+		if (handler != null) {
+			return handler.isAllowed(name, meta, deadboltHandler, context);
+		}else{
+			Logger.error("No handler available for " + name);
+		}
+		return false;
+	}
+
+	
+	//This is not currently used, but this
+    //may be invoked for custom Pattern checking
     public boolean checkPermission(final String permissionValue,
                                    final DeadboltHandler deadboltHandler,
                                    final Http.Context ctx) {
         Subject subject = deadboltHandler.getSubject(ctx);
-        boolean permissionOk = false;
-
+        
         if (subject != null) {
-            List<? extends Permission> permissions = subject.getPermissions();
-            for (Iterator<? extends Permission> iterator = permissions.iterator(); !permissionOk && iterator.hasNext(); ) {
-                Permission permission = iterator.next();
-                permissionOk = permission.getValue().contains(permissionValue);
-            }
+            return subject.getPermissions()
+            	.stream()
+            	.anyMatch(p->p.getValue().contains(permissionValue));
         }
-
-        return permissionOk;
+        return false;
     }
 }

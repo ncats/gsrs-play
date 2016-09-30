@@ -529,7 +529,8 @@
         $scope.searchLimit = "global";
         $scope.loadingSuggest = false;
         $scope.noResults = false;
-        $scope.selectedSort = localStorageService.get('selectedSort') || {value: "Sort By"};
+        
+
 
         $window.SDFFields = {};
 
@@ -650,70 +651,52 @@
             $window.location.pathname = base + newLocation;
         };
 
-//We can put this here, but it makes it difficult to expand in the future.
-//The server knows how things can be sorted
+		//We can put this here, but it makes it difficult to expand in the future.
+		//The server knows how things can be sorted, we need to either ajax
+		//(which can cause latency problems), or we can have it pre-stored 
+		//server-side, and injected.
         $scope.sortValues = [
-            { "value": "NaAsc",
+            {  
+               "value": "^Display Name",
                "display": "Display Name, A-Z"
             },
             {
-                "value": "NaDesc",
-                "display": "Display Name, Z-A" },
+                "value": "$Display Name",
+                "display": "Display Name, Z-A" 
+            },
             {
-                "value": "RefAsc",
+                "value": "^Reference Count",
                 "display": "Least References"
             },
             {
-                "value": "RefDesc",
+                "value": "$Reference Count",
                 "display": "Most References"
             },
             {
-                "value": "EditAsc",
+                "value": "^root_lastEdited",
                 "display": "Oldest Change"
             },
             {
-                "value": "EditDesc",
+                "value": "$root_lastEdited",
                 "display": "Newest Change"
             }
-                ];
+            	];
+            
+        var suppliedOrder = _.find($scope.sortValues, {
+        	value : $location.search()["order"]
+        });
+        $scope.selectedSort = suppliedOrder || {value: "Sort By"};
+        
+        $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
+        
+        $scope.showDeprecatedChange = function(model) {
+    		$location.search("showDeprecated",$scope.showDeprecated);
+            window.location = $location.absUrl();
+        };
 
         $scope.sortSubstances = function(model) {
-            var sort;
-            switch ($scope.selectedSort.value) {
-                case "NaAsc":
-                    sort = "order=^Display%20Name";
-                    break;
-                case "NaDesc":
-                    sort = "order=$Display%20Name";
-                    break;
-                case "RefAsc":
-                    sort = "order=^Reference%20Count";
-                    break;
-                case "RefDesc":
-                    sort = "order=$Reference%20Count";
-                    break;
-                case "EditAsc":
-                    sort = "order=^root_lastEdited";
-                    break;
-                case "EditDesc":
-                    sort = "order=$root_lastEdited";
-                    break;
-            }
-
-            localStorageService.set('selectedSort', $scope.selectedSort);
-            
-            var newurl = $window.location.origin + baseurl +"substances?"
-
-            if($location.$$search.q) {
-                newurl += "q=" + $location.$$search.q + "&";
-            }
-
-            if($location.$$search.facet) {
-                newurl += "facet=" + $location.$$search.facet + "&";
-            }
-            newurl += sort;
-            console.log(newurl);
-            window.location = newurl;
+            $location.search("order",$scope.selectedSort.value);
+            window.location = $location.absUrl();
         };
 
         $scope.compare = function () {

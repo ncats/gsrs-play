@@ -790,6 +790,11 @@ h3.display-name {
     cursor: pointer;
 }
 
+.fieldfacet {
+    background: #EBF6E7 none repeat scroll 0% 0%;
+    padding-left: 10px;
+    margin-left: 0px;
+}
 
 .spacer {
     clear: both;
@@ -1296,7 +1301,7 @@ span.key-value {
 }
 span.nowrap-list {
     display: block;
-    white-space: pre;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -1306,6 +1311,10 @@ span.nowrap-list {
     border-radius: 5px;
     padding-left: 3px;
     padding-right: 3px;
+}
+.minor-option{
+	font-weight:normal !important;
+	font-size:85%;
 }
 
 .no-margin{

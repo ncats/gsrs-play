@@ -12,6 +12,8 @@
 @import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
 
 
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(title: String, kind: String,
         resetAction: String,
@@ -26,6 +28,45 @@
 } {
 
 
+    @defining(ctx != null &&
+            "Running".equals(ctx.getStatus().toString()) &&
+            request().getQueryString("q") != null) { searchFlag =>
+        <div class="row">
+
+            @if(total > 0 && facets.length > 0) {
+                <div class="col-md-3" id="facet-col">
+
+
+                    <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+                        <i class="fa fa-filter"></i> Show Filters
+                    </div>
+                    <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+                        <i class="fa fa-filter"></i> Hide Filters
+                    </div>
+                    <div uib-collapse="isCollapsed" class="panel-group">
+                    @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                        <div>
+                        <label class="minor-option">
+                            Show Deprecated Records
+                            <input type="checkbox"     ng-model="showDeprecated"
+                                                       ng-change="showDeprecatedChange();"
+                                                       ng-true-value="'true'"
+                                                       ng-false-value="null"
+                                                       title="Show Deprecated"
+                                                       name="ShowDeprecated"
+                                                       id ="ShowDeprecated"
+                                                       aria-label="Show Deprecated">
+                           </label>
+                        </div>
+                    }
+                    @filters(facets, searchFlag)
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                } else {
+                <div class="col-md-12">
+                }
             @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
                 @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
 
@@ -129,7 +170,7 @@
                 <div class="col-md-12">
                 }
             @if(total >= 1) {
-            	
+
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
                 	@if(ctx.hasExactMatches()){
                 	<div ng-init="hideall=true" ng-show="hideall">
@@ -177,14 +218,14 @@
 	                    <div>&nbsp;</div>
                         <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
 	                    </div>
-                    	
-					
-					
+
+
+
 					}
                 }
-				
-				
-				
+
+
+
 
 
 
@@ -196,7 +237,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class = "col-md-5">
+                            <div class = "col-md-3">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
@@ -211,11 +252,13 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-md-5  text-left row">
-                                <div class="col-md-3">
+                            <div class="col-md-7  text-left row">
+                                <div class="col-md-4">
+                                    <div class="pull-right">
                                     Sort By:
+                                    </div>
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-md-8">
                                     <select
                                     class="form-control"
                                     ng-model= selectedSort
@@ -351,7 +394,7 @@
                                                 @defining(ctx.getFieldFacets()) { searchFacets =>
                                                 @if(searchFacets != null && searchFacets.size() > 0) {
                                                         <h4>Would you like to restrict the search for <em>@request().getQueryString("q")</em> to field?
-                                                        
+
 
                                                          <div class="dropdown center-text fieldfacet btn-group">
 										                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
@@ -359,12 +402,12 @@
 										                                                Matches
 										                                                </span>
 										                                                <span class="badge">@searchFacets.size()</span>
-										                                        
+
 										                                            <span class="caret"></span>
 										                                        </button>
 										                    <ul class="dropdown-menu" role="menu" >
 										                     @for( es <- ctx.getFieldFacetsMap().entrySet()){
-										                     	
+
 										                     	<li role="presentation"><span class="field-facet-group"><label>
 																@if(es.getKey().toString().equals("FULL")){
 																	Exact Match
@@ -377,9 +420,9 @@
 										                                            <li role="presentation">
 										                                            	<a target="_self" tabindex="-1" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
 										                                            	<span class="field-facet-label">
-										                                                
+
 										                                                @item.getDisplayField()
-										                                                
+
 										                                                </span>
 										                                                <span class="badge pull-right">@item.getCountText()</span>
 										                                                </a>

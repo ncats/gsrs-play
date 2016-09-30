@@ -19,6 +19,7 @@ import ix.ginas.models.v1.Substance;
  *
  */
 public class PublicTagFlagger implements EntityProcessor<Substance>{
+	public static String AUTO_SELECTED="AUTO_SELECTED";
 	
 	public PublicTagFlagger(){}
 
@@ -36,7 +37,7 @@ public class PublicTagFlagger implements EntityProcessor<Substance>{
 				.filter(Reference::isPublicDomain)
 				.findFirst().ifPresent(r->{
 					r.makePublicReleaseReference();
-					r.addTag("AUTO_SELECTED");
+					r.addTag(AUTO_SELECTED);
 				});
 			}
 		}
