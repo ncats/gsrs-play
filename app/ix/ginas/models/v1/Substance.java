@@ -135,10 +135,10 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		REPRESENTATIVE
 	}
 	
-	@Indexable(facet=true)
+	@Indexable(facet=true, name="Definition Type")
 	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
 	
-	@Indexable(facet=true)
+	@Indexable(facet=true, name="Definition Level")
 	public SubstanceDefinitionLevel definitionLevel = SubstanceDefinitionLevel.COMPLETE;
 	
 	
