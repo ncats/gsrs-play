@@ -1305,3 +1305,7 @@ span.nowrap-list {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.minor-option{
+	font-weight:normal !important;
+	font-size:85%;
+}

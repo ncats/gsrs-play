@@ -37,6 +37,7 @@ Enhancements
 19. It is now simpler to remove a facet value from view
     as a developer.
 20. Minor UI improvements
+21. Allow admins to show deprecated records with a checkbox
 
 
 Bug Fixes
@@ -87,6 +88,10 @@ Bug Fixes
 16. Allow admin to see edit / update pieces, as intended.
 17. Non-authenticated redirect now redirects, even if the root
     application path is changed.
+18. Sorting and some other features failed when showing 
+    deprecated records. This was due to lucene/sql naming
+    differences. Now defaulting to always using lucene,
+    even for deprecated records.
 
 Deeper look
 -----------

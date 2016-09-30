@@ -687,6 +687,12 @@
         });
         $scope.selectedSort = suppliedOrder || {value: "Sort By"};
         
+        $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
+        
+        $scope.showDeprecatedChange = function(model) {
+    		$location.search("showDeprecated",$scope.showDeprecated);
+            window.location = $location.absUrl();
+        };
 
         $scope.sortSubstances = function(model) {
             $location.search("order",$scope.selectedSort.value);

@@ -838,17 +838,14 @@ public class GinasApp extends App {
     static Result _substances(String q, final int rows, final int page)
         throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
-        final String user=UserFetcher.getActingUser(true).username;
         final String key = "substances/" + Util.sha1(request());
         
         //final String[] searchFacets = facets;
-        
-        //Special piece to show deprecated records
-        boolean forceq = (request().getQueryString("showDeprecated")==null);
+        boolean forcesql = "true".equals(request().getQueryString("sqlOnly"));
         
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if (forceq || q != null || request().queryString().containsKey("facet")) {
+        if (!forcesql) {
             final SearchResult result = getSubstanceSearchResult (q, total);
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
@@ -859,7 +856,7 @@ public class GinasApp extends App {
             }
             return createSubstanceResult(result, rows, page);
             //otherwise, just show the first substances
-        } else {
+        }else{
             return getOrElse(key, () -> {
             	SubstanceResultRenderer srr=new SubstanceResultRenderer();
                         Logger.debug("Cache missed: " + key);
