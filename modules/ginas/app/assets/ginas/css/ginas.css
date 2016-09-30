@@ -790,11 +790,6 @@ h3.display-name {
     cursor: pointer;
 }
 
-.fieldfacet {
-    background: #EBF6E7 none repeat scroll 0% 0%;
-    padding-left: 10px;
-    margin-left: 0px;
-}
 
 .spacer {
     clear: both;
@@ -1318,4 +1313,20 @@ span.nowrap-list {
 }
 .center-text{
     text-align: center;
+}
+.fieldfacet .dropdown-menu {
+    width: 250px;
+    left: 50%;
+    margin-left: -125px;
+}
+
+.field-facet-group{
+	margin-left:10px;
+}
+
+.inline{
+	display:inline-block;
+}
+.field-facet-label{
+	margin-right:10px;
 }

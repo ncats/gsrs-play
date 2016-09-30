@@ -10,6 +10,9 @@
 
 @import ix.ginas.models.v1.NucleicAcidSubstance
 @import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
+
+
+
 @(title: String, kind: String,
         resetAction: String,
         current: Int, rows: Int, total: Int,
@@ -21,6 +24,8 @@
 @ginas(title, kind) {
     @header
 } {
+
+
             @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
                 @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
 
@@ -84,58 +89,14 @@
                                     </span> <div id="searching"></div>
                                 }
                                 case _ => {
-
-                                            @if(ctx != null) {
-                                                @defining(ctx.getFieldFacets()) { searchFacets =>
-                                                @if(searchFacets != null && searchFacets.size() > 0) {
-
-                                                        <h4>Restrict <em>@request().getQueryString("q")</em> to field:</h4>
-                                                            @searchFacets.groupBy(_.getMatchType()).map {
-                                                                case (group, items) => {
-                                                                    @group.toString() match {
-                                                                        case "FULL" => {
-                                                                            <h5 style="font-style: italic">Exact Match @items.iterator().next().getValue():</h5>
-                                                                        }
-                                                                        case "CONTAINS" => {
-                                                                            <h5 style="font-style: italic">Contains Exact @items.iterator().next().getValue()</h5>
-                                                                        }
-                                                                        case "WORD" => {
-                                                                            <h5 style="font-style: italic">Contains All @items.iterator().next().getValue():</h5>
-                                                                        }
-                                                                        case "WORD_STARTS_WITH" => {
-                                                                            <h5 style="font-style: italic">Contains Partial @items.iterator().next().getValue():</h5>
-                                                                        }
-                                                                    }
-
-                                                                    <div class = "row">
-                                                                        @items.map { item =>
-                                                                            <div class="col-md-4">
-                                                                                <span>
-                                                                                   <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                                                                        @item.getDisplayField()
-                                                                                    </a>
-                                                                                </span>
-                                                                                <span class="badge">@item.getCountText()</span>
-                                                                            </div>
-                                                                        }
-                                                                    </div>
-                                                                }
-                                                            }
-                                                } else {
-                                                            <span class="center-text"><h4 class="no-margin">Searched for:<em>
-                                                            @defining(FieldedQueryFacet.displayQuery(request().getQueryString("q"))) { keyval =>
-                                                                <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
-                                                            }
-                                                            </em></h4></span>
-                                                    <span>&nbsp;</span>
-                                                        }
-                                                }
-                                            }
+                                	<div ng-hide="hideall" ng-cloak>
+										@displayFieldFacets(ctx)
+									</div>
                                 }
                             }
                         }
+                        </div>
                     }
-
                 @defining(flash().remove("warning")) { mesg =>
                     @if(mesg != null) {
                         <div class="alert alert-warning alert-dismissible" role="alert">
@@ -167,12 +128,16 @@
                 } else {
                 <div class="col-md-12">
                 }
-
-
             @if(total >= 1) {
-
+            	
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
-
+                	@if(ctx.hasExactMatches()){
+                	<div ng-init="hideall=true" ng-show="hideall">
+                	@if(ctx.getExactMatches().size()==1){
+                		<h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
+                	}else{
+                		<h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
+                	}
                     @for(sub <- ctx.getExactMatches()) {
                         @sub match {
                             case chem: ChemicalSubstance => {
@@ -209,60 +174,20 @@
                             }
                         }
                     }
-                    <span>&nbsp;</span>
+	                    <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
+	                    </div>
+                    	
+					
+					
+					}
                 }
+				
+				
+				
 
 
 
-
-
-                @if(ctx !=null) {
-                    @defining(ctx.getFieldFacets()) { searchFacets =>
-                        <h4>Restrict query to field:</h4>
-                        @searchFacets.groupBy(_.getMatchType()).map {
-                            case (group, items) => {
-                                @group.toString() match {
-                                    case "FULL" => {
-                                        <h5 style="font-style:italic">Exact Match @items.iterator().next().getValue():</h5>
-                                    }
-                                    case "CONTAINS" => {
-                                        <h5 style="font-style:italic">Contains Exact @items.iterator().next().getValue()</h5>
-                                    }
-                                    case "WORD" => {
-                                        <h5 style="font-style:italic">Contains All @items.iterator().next().getValue():</h5>
-                                    }
-                                    case "WORD_STARTS_WITH" => {
-                                        <h5 style="font-style:italic">Contains Partial @items.iterator().next().getValue():</h5>
-                                    }
-                                }
-
-                                <div class = "row fieldfacet">
-                                    <div class="dropdown">
-                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
-                                            <span class="caret"></span></button>
-                                        <ul class="dropdown-menu">
-                                        @items.map { item =>
-                                            <li><span>
-                                                <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                                @item.getDisplayField()
-                                                </a>
-                                                </span>
-                                                <span class="badge">@item.getCountText()</span>
-                                            </li>
-                                        }
-                                        </ul>
-                                    </div>
-                                </div>
-
-
-
-                            }
-                        }
-                        <div class="spacer">&nbsp;</div>
-                    }
-                }
-
-                <div class="panel panel-default" id="allResults">
+                <div ng-hide="hideall" class="panel panel-default" id="allResults">
                     <div class="panel-heading">
                         <div class="row">
                             <div class = "col-md-12">
@@ -417,5 +342,61 @@
                 }
             });
     </script>
+}
+
+
+@displayFieldFacets(ctx: SearchResultContext) = {
+  							@if(ctx != null) {
+                                                @defining(ctx.getFieldFacets()) { searchFacets =>
+                                                @if(searchFacets != null && searchFacets.size() > 0) {
+                                                        <h4>Would you like to restrict the search for <em>@request().getQueryString("q")</em> to field?
+                                                        
+                                                       <span class="inline">
+                                                         <div class="dropdown center-text fieldfacet">
+										                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+										                                        		<span>
+										                                                Matches
+										                                                </span>
+										                                                <span class="badge">@searchFacets.size()</span>
+										                                        
+										                                            <span class="caret"></span>
+										                                        </button>
+										                    <ul class="dropdown-menu" role="menu" >
+										                     @for( es <- ctx.getFieldFacetsMap().entrySet()){
+										                     	
+										                     	<li role="presentation"><span class="field-facet-group"><label>
+																@if(es.getKey().toString().equals("FULL")){
+																	Exact Match
+																}else{
+																	Contains Match
+																}
+																</label></span>
+																</li>
+																@es.getValue().map { item =>
+										                                            <li role="presentation">
+										                                            	<a target="_self" tabindex="-1" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
+										                                            	<span class="field-facet-label">
+										                                                
+										                                                @item.getDisplayField()
+										                                                
+										                                                </span>
+										                                                <span class="badge pull-right">@item.getCountText()</span>
+										                                                </a>
+										                                            </li>
+										                                        }
+														}
+									                        </ul>
+									                  </div>
+									                  </span>
+									                  </h4>
+                                                } else {
+                                                            <span class="center-text"><h4 class="no-margin">Searched for:<em>
+                                                            @defining(FieldedQueryFacet.displayQuery(request().getQueryString("q"))) { keyval =>
+                                                                <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
+                                                            }
+                                                            </em></h4></span>
+                                                        }
+                                                }
+                                            }
 }
 

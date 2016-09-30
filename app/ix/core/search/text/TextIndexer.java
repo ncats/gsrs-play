@@ -1039,7 +1039,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	// It's
 	
 	public static interface LuceneSearchProvider{
-		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query q) throws IOException;
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query q,FacetsCollector facetCollector) throws IOException;
 	}
 	public static interface LuceneSearchProviderResult{
 		public TopDocs getTopDocs();
@@ -1068,17 +1068,15 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		Sort sorter;
 		Filter filter;
 		int max;
-		FacetsCollector facetCollector;
 		
-		public BasicLuceneSearchProvider(Sort sorter,Filter filter, int max, FacetsCollector facetCollector){
+		public BasicLuceneSearchProvider(Sort sorter,Filter filter, int max){
 			this.sorter=sorter;
 			this.filter=filter;
 			this.max=max;
-			this.facetCollector=facetCollector;
 		}
 
 		@Override
-		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query query) throws IOException {
+		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query query,FacetsCollector facetCollector) throws IOException {
 			TopDocs hits=null;
 			Facets facets=null;
 			//FacetsCollector.
@@ -1100,17 +1098,15 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		Sort sorter;
 		Filter filter;
 		SearchOptions options;
-		FacetsCollector facetCollector;
 		
-		public DrillSidewaysLuceneSearchProvider(Sort sorter,Filter filter, SearchOptions options, FacetsCollector facetCollector){
+		public DrillSidewaysLuceneSearchProvider(Sort sorter,Filter filter, SearchOptions options){
 			this.sorter=sorter;
 			this.filter=filter;
-			this.options=options;
-			this.facetCollector=facetCollector;	
+			this.options=options;	
 		}
 
 		@Override
-		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query ddq1) throws IOException {
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query ddq1,FacetsCollector facetCollector) throws IOException {
 			if(!(ddq1 instanceof DrillDownQuery)){
 				throw new IllegalStateException("Query must be drill down query");
 			}
@@ -1386,7 +1382,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		
 		//no specified facets (normal search)
 		if (options.getFacets().isEmpty()) { 
-			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max(), facetCollector);
+			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
 		} else {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			
@@ -1397,11 +1393,11 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 			
 			// sideways
 			if (options.sideway) {
-				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options, facetCollector);
+				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options);
 			
 			// drilldown
 			} else { 
-				lsp = new BasicLuceneSearchProvider(sorter, filter, options.max(), facetCollector);
+				lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
 			}
 		} // facets is empty
 
@@ -1418,7 +1414,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 						Query tq = parser.parse(theQuery);
 						System.out.println(tq);
-						LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq); //special q
+						LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq,new FacetsCollector()); //special q
 						TopDocs td = lspResult.getTopDocs();
 						System.out.println("Results:" + td.scoreDocs.length);
 						for (int j = 0; j < td.scoreDocs.length; j++) {
@@ -1442,7 +1438,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 
 		System.out.println("Actual search is:" + qactual);
 		System.out.println("Actual search class is:" + qactual.getClass());
-		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual);
+		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual,facetCollector);
 		hits=lspResult.getTopDocs();
 		System.out.println("Actually got:" + hits.scoreDocs.length);
 		
@@ -1464,8 +1460,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 						
 						f = new FieldCacheTermsFilter(FIELD_KIND, analyzers.toArray(new String[0]));
 					}
-					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, options.max(), facetCollector2);
-					LuceneSearchProviderResult res=lsp2.search(searcher, taxon,oq.k());
+					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, options.max());
+					LuceneSearchProviderResult res=lsp2.search(searcher, taxon,oq.k(),facetCollector2);
 					res.getFacets().getAllDims(options.fdim).forEach(fr->{
 						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
 							
