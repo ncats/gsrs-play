@@ -19,85 +19,84 @@ ix.ginas.controllers.routes.GinasApp.substances().url,
 current, rows, total, pages, facets, ctx) {
     @menu()
 }{
-    @defining(ctx.getExactMatches()) { matches =>
 
-    }
+
     <div class= "panel-body record-container">
         <div class = "row in" ng-show="!gridView" id ="list">
         @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
 
-        @for(sub <- substancesList) {
-            @sub match {
-                case chem: ChemicalSubstance => {
-                    @list.chemlist(chem, ctxId)
-                }
-                case prot: ProteinSubstance => {
-                    @list.proteinlist(prot, ctxId)
-                }
-                case nucl: NucleicAcidSubstance => {
-                    @list.nucleicacidlist(nucl)
+            @for(sub <- substancesList) {
+                @sub match {
+                    case chem: ChemicalSubstance => {
+                        @list.chemlist(chem, ctxId)
+                    }
+                    case prot: ProteinSubstance => {
+                        @list.proteinlist(prot, ctxId)
+                    }
+                    case nucl: NucleicAcidSubstance => {
+                        @list.nucleicacidlist(nucl)
 
-                }
-                case mix: MixtureSubstance => {
-                    @list.mixlist(mix)
-                }
-                case diverse: StructurallyDiverseSubstance => {
-                    @list.diverselist(diverse)
+                    }
+                    case mix: MixtureSubstance => {
+                        @list.mixlist(mix)
+                    }
+                    case diverse: StructurallyDiverseSubstance => {
+                        @list.diverselist(diverse)
 
-                }
-                case polymer: PolymerSubstance => {
-                    @list.polymerlist(polymer)
+                    }
+                    case polymer: PolymerSubstance => {
+                        @list.polymerlist(polymer)
 
-                }
-                case g1ss: SpecifiedSubstanceGroup1Substance => {
-                    @list.g1sslist(g1ss)
+                    }
+                    case g1ss: SpecifiedSubstanceGroup1Substance => {
+                        @list.g1sslist(g1ss)
 
-                }
-                case concept: Substance => {
-                    @list.conceptlist(concept)
+                    }
+                    case concept: Substance => {
+                        @list.conceptlist(concept)
 
-                }
-                case _ => {
+                    }
+                    case _ => {
 
+                    }
                 }
             }
-        }
 
         </div>
 
         <div class = "row hidden-xs" ng-if="gridView" id ="grid">
-        @for(sub <- substancesList) {
-            @sub match {
-                case chem: ChemicalSubstance => {
-                    @thumbs.chemthumb(chem, ctxId)
-                }
-                case prot: ProteinSubstance => {
-                    @thumbs.proteinthumb(prot, ctxId)
-                }
-                case nucl: NucleicAcidSubstance => {
-                    @thumbs.nucleicacidthumb(nucl)
-                }
-                case mix: MixtureSubstance => {
-                    @thumbs.mixturethumb(mix)
+            @for(sub <- substancesList) {
+                @sub match {
+                    case chem: ChemicalSubstance => {
+                        @thumbs.chemthumb(chem, ctxId)
+                    }
+                    case prot: ProteinSubstance => {
+                        @thumbs.proteinthumb(prot, ctxId)
+                    }
+                    case nucl: NucleicAcidSubstance => {
+                        @thumbs.nucleicacidthumb(nucl)
+                    }
+                    case mix: MixtureSubstance => {
+                        @thumbs.mixturethumb(mix)
 
-                }
-                case diverse: StructurallyDiverseSubstance => {
-                    @thumbs.diversethumb(diverse)
+                    }
+                    case diverse: StructurallyDiverseSubstance => {
+                        @thumbs.diversethumb(diverse)
 
-                }
-                case polymer: PolymerSubstance => {
-                    @thumbs.polymerthumb(polymer)
+                    }
+                    case polymer: PolymerSubstance => {
+                        @thumbs.polymerthumb(polymer)
 
-                }
-                case concept: Substance => {
-                    @thumbs.conceptthumb(concept)
+                    }
+                    case concept: Substance => {
+                        @thumbs.conceptthumb(concept)
 
-                }
-                case _ => {
+                    }
+                    case _ => {
 
+                    }
                 }
             }
-        }
         }
         </div>
     </div>

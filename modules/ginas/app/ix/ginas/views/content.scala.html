@@ -174,7 +174,8 @@
                             }
                         }
                     }
-	                    <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
+	                    <div>&nbsp;</div>
+                        <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
 	                    </div>
                     	
 					
@@ -351,8 +352,8 @@
                                                 @if(searchFacets != null && searchFacets.size() > 0) {
                                                         <h4>Would you like to restrict the search for <em>@request().getQueryString("q")</em> to field?
                                                         
-                                                       <span class="inline">
-                                                         <div class="dropdown center-text fieldfacet">
+
+                                                         <div class="dropdown center-text fieldfacet btn-group">
 										                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
 										                                        		<span>
 										                                                Matches
@@ -387,7 +388,7 @@
 														}
 									                        </ul>
 									                  </div>
-									                  </span>
+
 									                  </h4>
                                                 } else {
                                                             <span class="center-text"><h4 class="no-margin">Searched for:<em>
