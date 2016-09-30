@@ -21,136 +21,131 @@
 @ginas(title, kind) {
     @header
 } {
-    @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
-        @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
+            @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
+                @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
 
-            <div
-                @if(total > 0) {
+                    <div
+                        @if(total > 0) {
                     class="alert alert-dismissible no-margin center-text"
-                } else {
+                        } else {
                     class="alert alert-danger alert-dismissible no-margin center-text"
-                }
-            role="alert">
+                        }
+                    role="alert">
 
-            @defining(flash().remove("qStructureID")) { qStructureID =>
-                @request().getQueryString("type") match {
-                    case "sequence" => {
-                        <span><h4>Sequence Query:&nbsp;
-                            <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a> </h4>
-                        </span> <div id="searching"></div>
-                    }
-                    case "Substructure" => {
-                        <span><h4>Substructure Query:&nbsp; <a href="#"
-                        data-toggle="popover"
-                        data-animation="true"
-                        data-placement="bottom"
-                        data-trigger="click hover focus"
-                        data-title=""
-                        data-html="true"
-                        data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
-                        </span> <div id="searching"></div>
-                    }
-                    case "Similarity" => {
-                        <span><h4>Similarity Query:&nbsp; <a href="#"
-                        data-toggle="popover"
-                        data-animation="true"
-                        data-placement="bottom"
-                        data-trigger="click hover focus"
-                        data-title=""
-                        data-html="true"
-                        data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a> &ge; @request().getQueryString("cutoff")</h4>
-                        </span> <div id="searching"></div>
-                    }
-                    case "Exact" => {
-                        <span><h4>Exact Structure Query:&nbsp; <a href="#"
-                        data-toggle="popover"
-                        data-animation="true"
-                        data-placement="bottom"
-                        data-trigger="click hover focus"
-                        data-title=""
-                        data-html="true"
-                        data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
-                        </span> <div id="searching"></div>
-                    }
-                    case "Flex" => {
-                        <span><h4>Flex Structure Query:&nbsp; <a href="#"
-                        data-toggle="popover"
-                        data-animation="true"
-                        data-placement="bottom"
-                        data-trigger="click hover focus"
-                        data-title=""
-                        data-html="true"
-                        data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
-                        </span> <div id="searching"></div>
-                    }
-                    case _ => {
-                        @if(ctx != null) {
-                            @defining(ctx.getFieldFacets()) { searchFacets =>
-                                @if(searchFacets != null && searchFacets.size() > 0) {
+                        @defining(flash().remove("qStructureID")) { qStructureID =>
+                            @request().getQueryString("type") match {
+                                case "sequence" => {
+                                    <span><h4>Sequence Query:&nbsp;
+                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a> </h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Substructure" => {
+                                    <span><h4>Substructure Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Similarity" => {
+                                    <span><h4>Similarity Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Exact" => {
+                                    <span><h4>Exact Structure Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case "Flex" => {
+                                    <span><h4>Flex Structure Query:&nbsp; <a href="#"
+                                    data-toggle="popover"
+                                    data-animation="true"
+                                    data-placement="bottom"
+                                    data-trigger="click hover focus"
+                                    data-title=""
+                                    data-html="true"
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    </span> <div id="searching"></div>
+                                }
+                                case _ => {
 
-                                    <h4>Restrict <em>@request().getQueryString("q")</em> to field:</h4>
-                                    @searchFacets.groupBy(_.getMatchType()).map {
-                                        case (group, items) => {
-                                            @group.toString() match {
-                                                case "FULL" => {
+                                            @if(ctx != null) {
+                                                @defining(ctx.getFieldFacets()) { searchFacets =>
+                                                @if(searchFacets != null && searchFacets.size() > 0) {
 
-                                                    <h5 style="font-style: italic">Exact Match @items.iterator().next().getValue():</h5>
-                                                }
-                                                case "CONTAINS" => {
-                                                    <h5 style="font-style: italic">Contains Exact @items.iterator().next().getValue()</h5>
-                                                }
-                                                case "WORD" => {
-                                                    <h5 style="font-style: italic">Contains All @items.iterator().next().getValue():</h5>
-                                                }
-                                                case "WORD_STARTS_WITH" => {
-                                                    <h5 style="font-style: italic">Contains Partial @items.iterator().next().getValue():</h5>
+                                                        <h4>Restrict <em>@request().getQueryString("q")</em> to field:</h4>
+                                                            @searchFacets.groupBy(_.getMatchType()).map {
+                                                                case (group, items) => {
+                                                                    @group.toString() match {
+                                                                        case "FULL" => {
+                                                                            <h5 style="font-style: italic">Exact Match @items.iterator().next().getValue():</h5>
+                                                                        }
+                                                                        case "CONTAINS" => {
+                                                                            <h5 style="font-style: italic">Contains Exact @items.iterator().next().getValue()</h5>
+                                                                        }
+                                                                        case "WORD" => {
+                                                                            <h5 style="font-style: italic">Contains All @items.iterator().next().getValue():</h5>
+                                                                        }
+                                                                        case "WORD_STARTS_WITH" => {
+                                                                            <h5 style="font-style: italic">Contains Partial @items.iterator().next().getValue():</h5>
+                                                                        }
+                                                                    }
+
+                                                                    <div class = "row">
+                                                                        @items.map { item =>
+                                                                            <div class="col-md-4">
+                                                                                <span>
+                                                                                   <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
+                                                                                        @item.getDisplayField()
+                                                                                    </a>
+                                                                                </span>
+                                                                                <span class="badge">@item.getCountText()</span>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            }
+                                                } else {
+                                                            <span class="center-text"><h4 class="no-margin">Searched for:<em>
+                                                            @defining(FieldedQueryFacet.displayQuery(request().getQueryString("q"))) { keyval =>
+                                                                <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
+                                                            }
+                                                            </em></h4></span>
+                                                    <span>&nbsp;</span>
+                                                        }
                                                 }
                                             }
-                                            <div class = "row">
-                                                <div class="dropdown">
-                                                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
-                                                    <span class="caret"></span></button>
-                                                <ul class="dropdown-menu">
-                                                    @items.map { item =>
-                                                        <li><span>
-                                                            <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                                @item.getDisplayField()
-                                                            </a>
-                                                        </span>
-                                                            <span class="badge">@item.getCountText()</span></li>
-                                                    }
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    }
                                 }
-                            } else {
-                                <span class="center-text"><h4 class="no-margin">Searched for:<em>
-
-                                @defining(FieldedQueryFacet.displayQuery(request().getQueryString("q"))) { keyval =>
-                                    <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
-                                }
-                                </em></h4></span>
                             }
                         }
-                        }
+                    }
 
-                        }
-                        }
-                        }
-                    </div>
-            }
-
-            @defining(flash().remove("warning")) { mesg =>
-                @if(mesg != null) {
-                    <div class="alert alert-warning alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <p class="warning-message">@mesg</p>
-                    </div>
+                @defining(flash().remove("warning")) { mesg =>
+                    @if(mesg != null) {
+                        <div class="alert alert-warning alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <p class="warning-message">@mesg</p>
+                        </div>
+                    }
                 }
-            }
             }
     @defining(ctx != null &&
             "Running".equals(ctx.getStatus().toString()) &&
@@ -175,6 +170,97 @@
 
 
             @if(total >= 1) {
+
+                @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
+
+                    @for(sub <- ctx.getExactMatches()) {
+                        @sub match {
+                            case chem: ChemicalSubstance => {
+                                @list.chemlist(chem, ctxId)
+                            }
+                            case prot: ProteinSubstance => {
+                                @list.proteinlist(prot, ctxId)
+                            }
+                            case nucl: NucleicAcidSubstance => {
+                                @list.nucleicacidlist(nucl)
+
+                            }
+                            case mix: MixtureSubstance => {
+                                @list.mixlist(mix)
+                            }
+                            case diverse: StructurallyDiverseSubstance => {
+                                @list.diverselist(diverse)
+
+                            }
+                            case polymer: PolymerSubstance => {
+                                @list.polymerlist(polymer)
+
+                            }
+                            case g1ss: SpecifiedSubstanceGroup1Substance => {
+                                @list.g1sslist(g1ss)
+
+                            }
+                            case concept: Substance => {
+                                @list.conceptlist(concept)
+
+                            }
+                            case _ => {
+
+                            }
+                        }
+                    }
+                    <span>&nbsp;</span>
+                }
+
+
+
+
+
+                @if(ctx !=null) {
+                    @defining(ctx.getFieldFacets()) { searchFacets =>
+                        <h4>Restrict query to field:</h4>
+                        @searchFacets.groupBy(_.getMatchType()).map {
+                            case (group, items) => {
+                                @group.toString() match {
+                                    case "FULL" => {
+                                        <h5 style="font-style:italic">Exact Match @items.iterator().next().getValue():</h5>
+                                    }
+                                    case "CONTAINS" => {
+                                        <h5 style="font-style:italic">Contains Exact @items.iterator().next().getValue()</h5>
+                                    }
+                                    case "WORD" => {
+                                        <h5 style="font-style:italic">Contains All @items.iterator().next().getValue():</h5>
+                                    }
+                                    case "WORD_STARTS_WITH" => {
+                                        <h5 style="font-style:italic">Contains Partial @items.iterator().next().getValue():</h5>
+                                    }
+                                }
+
+                                <div class = "row fieldfacet">
+                                    <div class="dropdown">
+                                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
+                                            <span class="caret"></span></button>
+                                        <ul class="dropdown-menu">
+                                        @items.map { item =>
+                                            <li><span>
+                                                <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
+                                                @item.getDisplayField()
+                                                </a>
+                                                </span>
+                                                <span class="badge">@item.getCountText()</span>
+                                            </li>
+                                        }
+                                        </ul>
+                                    </div>
+                                </div>
+
+
+
+                            }
+                        }
+                        <div class="spacer">&nbsp;</div>
+                    }
+                }
 
                 <div class="panel panel-default" id="allResults">
                     <div class="panel-heading">
@@ -332,3 +418,4 @@
             });
     </script>
 }
+
