@@ -23,8 +23,7 @@ public class UserProfileFactory extends EntityFactory {
 	}
 
 	public static void init(){
-		finder =
-				new Model.Finder(Long.class, UserProfile.class);
+		finder =new Model.Finder(Long.class, UserProfile.class);
 	}
 	
 	public static UserProfile getUserProfileForPrincipal(Principal p){

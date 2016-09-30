@@ -25,7 +25,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	
 	@Override
 	public void prePersist(Relationship obj) {
-		
 		addInverse(obj);
 	}
 	
@@ -90,6 +89,7 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	
 	@Override
 	public void preUpdate(Relationship obj) {
+		
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
 			List<Relationship> rel = finder.where().eq("originatorUuid",
 					obj.getOrGenerateUUID().toString()).findList();
@@ -103,12 +103,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		}
 	}
 	
-	@Override
-	public void postPersist(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	@Override
 	public void preRemove(Relationship obj) {
 		if(obj.isGenerator() && obj.isAutomaticInvertable()){
@@ -136,26 +130,6 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		}
 	}
 
-	@Override
-	public void postRemove(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
-
-	@Override
-	public void postUpdate(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void postLoad(Relationship obj) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	public static RelationshipProcessor getInstance(){
 		RelationshipProcessor rp =RelationshipProcessor._instance;
 		if(rp==null){

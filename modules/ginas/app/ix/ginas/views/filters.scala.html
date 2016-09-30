@@ -24,9 +24,8 @@
   </div>
   <div class="panel-body" uib-collapse="getToggleStatus('@f.name.replace(' ', '-')-iscollapsed')">
     <ul class="list-group">
-      @** move all selected filters upfront **@
       @for(i <- 0 until f.size()) {
-        @if(App.hasFacet(f.facet,i)) {
+        @if(App.hasFacet(f.facet,i) && f.label(i)!=null) {
 	<div class="list-group-item row">
 	  @defining(App.sha1(f.facet,i)) { id =>
 	    <div class="col-md-1 col-sm-1">
@@ -61,7 +60,8 @@
         }
       }
       @for(i <- 0 until Math.min(f.max, f.size())) {
-        @if(!App.hasFacet(f.facet,i)) {
+        @if(!App.hasFacet(f.facet,i) && f.label(i)!=null) {
+        
 	<div class="list-group-item row">
 	  @defining(App.sha1(f.facet,i)) { id =>
 	  	<div class="col-md-1 col-sm-1">

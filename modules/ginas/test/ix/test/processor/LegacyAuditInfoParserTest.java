@@ -133,7 +133,7 @@ public class LegacyAuditInfoParserTest {
 		ix.core.plugins.ConsoleFilterPlugin.runWithSwallowedStdErrFor(r,EntityFactory.class.getName());
 	}
 
-	@Test @Ignore
+	@Test
 	public void tryForcingApprovedByInLegacyNoteAfterFailing() {
 		String theName = "Simple Named Concept";
 		String forcedApprovedBy = "SOME_BLOKE";
@@ -160,7 +160,7 @@ public class LegacyAuditInfoParserTest {
 		ensurePass(api.submitSubstance(jsn));
 		assertEquals(forcedApprovedBy, api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText()).at("/approvedBy").asText());
 	}
-	@Test @Ignore
+	@Test
 	public void tryForcingModifiedByInLegacyNote() {
 		String theName = "Simple Named Concept";
 		String forcedApprovedBy = "tylertest";
@@ -176,7 +176,7 @@ public class LegacyAuditInfoParserTest {
 		assertEquals(forcedApprovedBy, api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText()).at("/lastEditedBy").asText());
 
 	}
-	@Test @Ignore
+	@Test
 	public void tryForcingApprovalDateAndApproverInLegacyNote() {
 
 		String theName = "Simple Named Concept";
@@ -201,7 +201,7 @@ public class LegacyAuditInfoParserTest {
 		assertTrue(Math.abs(d.getTime()-approvedDate.getTime())<1000);
 
 	}
-	@Test @Ignore
+	@Test
 	public void tryForcingApprovalDateAndApproverAndLastEditedInLegacyNoteAfterFailingOnce() {
 
 		String theName = "Simple Named Concept";

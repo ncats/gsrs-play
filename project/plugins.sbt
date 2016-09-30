@@ -35,6 +35,8 @@ libraryDependencies ++= Seq(
   "org.jacoco" % "org.jacoco.report" % "0.7.1.201405082137" % "test"
 )
 
+libraryDependencies += "org.javassist" % "javassist" % "3.20.0-GA"
+
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6" % "test")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
