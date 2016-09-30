@@ -6,6 +6,7 @@ import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import controllers.Default$;
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
@@ -173,6 +174,10 @@ public class GinasTestServer extends ExternalResource{
         public String getEmail() {
             return username + "@example.com";
         }
+
+        public Principal asPrincipal() {
+            return new Principal(username, getEmail());
+        }
     }
 
     /**
@@ -339,8 +344,19 @@ public class GinasTestServer extends ExternalResource{
         return new User(FAKE_USER_3,FAKE_PASSWORD_3);
     }
 
-
-
+    @FunctionalInterface
+    public interface UserAction<E extends Exception>{
+        void doIt() throws E;
+    }
+    public  <E extends Exception> void doAsUser(User user, UserAction<E> action) throws E{
+        Principal oldP = UserFetcher.getActingUser();
+        try{
+            UserFetcher.setLocalThreadUser(user.asPrincipal());
+            action.doIt();
+        }finally{
+            UserFetcher.setLocalThreadUser(oldP);
+        }
+    }
 
 
 

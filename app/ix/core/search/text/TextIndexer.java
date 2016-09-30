@@ -2428,8 +2428,8 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	private static final Pattern START_PATTERN = Pattern.compile(TextIndexer.GIVEN_START_WORD,Pattern.LITERAL );
 	private static final Pattern STOP_PATTERN = Pattern.compile(TextIndexer.GIVEN_STOP_WORD,Pattern.LITERAL );
 
-	private static final Pattern LEVO_PATTERN = Pattern.compile("\\(-\\)-");
-	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(+\\)-");
+	private static final Pattern LEVO_PATTERN = Pattern.compile("\\(-\\)");
+	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(+\\)");
 
 	private static final String LEVO_WORD = "LEVOROTATION";
 
