@@ -2403,7 +2403,6 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 		String tmp = LEVO_PATTERN.matcher(in).replaceAll(LEVO_WORD);
 
 		tmp = DEXTRO_PATTERN.matcher(tmp).replaceAll(DEXTRO_WORD);
-
 		return tmp;
 
 	}
@@ -2429,7 +2428,7 @@ public class TextIndexer implements Closeable, ReIndexListener, DynamicFieldMake
 	private static final Pattern STOP_PATTERN = Pattern.compile(TextIndexer.GIVEN_STOP_WORD,Pattern.LITERAL );
 
 	private static final Pattern LEVO_PATTERN = Pattern.compile("\\(-\\)");
-	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(+\\)");
+	private static final Pattern DEXTRO_PATTERN = Pattern.compile("\\(\\+\\)");
 
 	private static final String LEVO_WORD = "LEVOROTATION";
 

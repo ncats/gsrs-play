@@ -83,7 +83,6 @@ public class GinasGlobal extends Global {
 
 			String username = p ==null ? "GUEST" : p.user.username;
 
-			System.out.println("wrapper user = " + username);
 			AccessLogger.info("{} {} {} {} \"{}\"", username, req.remoteAddress(),
 					real != null ? real : "", req.method(), req.uri());
 	    	return this.delegate.call(ctx);
