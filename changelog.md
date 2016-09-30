@@ -26,6 +26,18 @@ Enhancements
 13. Improved look and feel of name list on browse, show
     code-system with code
 14. Sort list of codes before showing on list view
+15. Allow incomplete proteins to have 0 subunits
+16. Allow for indexing outside of the model, for adding
+    new facets / sorters / suggest fields without having
+    to modify the entity models directly.
+17. Allow for configurable display priority for codes
+    in list view.
+18. Allow configuration of what facets show on UI without
+    need to recompile.
+19. It is now simpler to remove a facet value from view
+    as a developer.
+20. Minor UI improvements
+21. Allow admins to show deprecated records with a checkbox
 
 
 Bug Fixes
@@ -55,12 +67,31 @@ Bug Fixes
 8. Removed search from protein thumb if no subunits
 9. Added validation rule to proteins, not to allow
    records with no subunits
-10.A new session previously invalidated certain 
+10.A new session previously invalidated certain
    cache elements. This meant that a search would
    be relaunched if a new user or new session
    was activated since the last run. New sessions
    no longer invalidate the cache.
-11.Display of structurally diverse icon standardized
+11. Display of structurally diverse icon standardized
+12. Added code to log Structure Search request in the access log.
+13. Upgraded javaassist to remove errors on using certian java 8
+    interface features on dev.
+14. Deadlock could occur in load if, during an update, a 
+    database timeout or other fetching error occurred. This
+    is now fixed.
+15. Attempting to add audit information from a load, which
+    referred to users who don't exist in they system could
+    cause very few records to persist previously, due to a
+    caching error, where a user is stored in a cache after
+    an insert, but is not un-stored if that insert is rolled
+    back.
+16. Allow admin to see edit / update pieces, as intended.
+17. Non-authenticated redirect now redirects, even if the root
+    application path is changed.
+18. Sorting and some other features failed when showing 
+    deprecated records. This was due to lucene/sql naming
+    differences. Now defaulting to always using lucene,
+    even for deprecated records.
 
 Deeper look
 -----------
@@ -144,7 +175,6 @@ Deeper look
    can be simplified to make a single "update" call, without
    need to deeper processing, this move should be fine.
 
-5. Added test
 
 
 

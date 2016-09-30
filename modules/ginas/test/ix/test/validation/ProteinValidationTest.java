@@ -25,6 +25,8 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Protein;
+import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
+import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.test.SubstanceJsonUtil;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.ix.test.server.GinasTestServer;
@@ -58,12 +60,36 @@ public class ProteinValidationTest {
         				assertFalse(vr.isValid());
         				
         				Optional<ValidationMessage> ovm=vr.getMessages().stream()
-        					.filter(v->v.getMessage().contains("Subunit"))
+        					.filter(v->v.getMessage().contains("ubunit"))
         					.filter(v->v.isError())
         					.findAny();
         				assertTrue("Should have validation message rejecting 0 subunits",ovm.isPresent());
         				
         				SubstanceJsonUtil.ensureFailure( api.submitSubstance(js));
+        			});
+        }
+   	}
+    
+    @Test   
+   	public void testIncompleteProteinWithNoSubunitsShouldPassValidation() throws Exception {
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+           SubstanceAPI api = new SubstanceAPI(session);
+           new SubstanceBuilder()
+        			.asProtein()
+        			.setDefinition(SubstanceDefinitionType.PRIMARY, SubstanceDefinitionLevel.INCOMPLETE)
+        			.setProtein(new Protein())
+        			.addName("Just a test")
+        			.buildJsonAnd(js->{
+        				ValidationResponse vr=api.validateSubstance(js);
+        				assertTrue(vr.isValid());
+        				
+        				Optional<ValidationMessage> ovm=vr.getMessages().stream()
+        					.filter(v->v.getMessage().contains("ubunit"))
+        					.filter(v->v.getMessageType()==MESSAGE_TYPE.WARNING)
+        					.findAny();
+        				assertTrue("Should have validation message rejecting 0 subunits",ovm.isPresent());
+        				
+        				SubstanceJsonUtil.ensurePass( api.submitSubstance(js));
         			});
         }
    	}

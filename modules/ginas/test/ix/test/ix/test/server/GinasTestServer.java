@@ -1,5 +1,31 @@
 package ix.test.ix.test.server;
 
+import static play.test.Helpers.fakeApplication;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.rules.ExternalResource;
+import org.w3c.dom.Document;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
@@ -7,6 +33,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import controllers.Default$;
 import ix.core.UserFetcher;
+
+import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
@@ -19,7 +47,6 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.search.text.TextIndexer;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
@@ -29,38 +56,13 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
-import ix.test.ix.test.server.GinasTestServer.User;
 import ix.test.util.TestUtil;
 import net.sf.ehcache.CacheManager;
-import org.apache.commons.io.FileUtils;
-import org.junit.rules.ExternalResource;
-import org.w3c.dom.Document;
 import play.api.Application;
 import play.db.ebean.Model;
 import play.libs.ws.WSCookie;
 import play.libs.ws.WSResponse;
 import play.test.TestServer;
-
-import javax.sql.DataSource;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.*;
-import java.util.function.Supplier;
-
-import static play.test.Helpers.fakeApplication;
-import static play.test.Helpers.testServer;
 
 /**
  * JUnit Rule to handle starting and stopping
@@ -186,6 +188,7 @@ public class GinasTestServer extends ExternalResource{
     public GinasTestServer(){
         this(DEFAULT_PORT);
     }
+
 
     /**
      * Create a new GinasTestServer instance using the default port, with the given additional

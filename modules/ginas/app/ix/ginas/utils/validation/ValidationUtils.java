@@ -41,6 +41,7 @@ import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
@@ -985,8 +986,11 @@ public class ValidationUtils {
 					.ERROR_MESSAGE("Protein substance must have a protein element"));
 		} else {
 			if(cs.protein.subunits.isEmpty() ){
-				gpm.add(GinasProcessingMessage
-						.ERROR_MESSAGE("Protein substance must have at least one Subunit element"));
+				if(SubstanceDefinitionLevel.INCOMPLETE.equals(cs.definitionLevel)){
+					gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Having no subunits is allowed but discouraged for incomplete protein records."));
+				}else{
+					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Complete protein substance must have at least one Subunit element. Please add a subunit, or mark as incomplete."));
+				}
 			}
 			for (int i = 0; i < cs.protein.subunits.size(); i++) {
 				Subunit su = cs.protein.subunits.get(i);

@@ -49,8 +49,11 @@
                             <div class="col-md-1">
                             </div>
                             <div class="col-md-4">
-                                <gsrs-input type="text" ng-model="obj.simplifiedStructure"
-                                            field="simplifiedStructure"></gsrs-input>
+                                <gsrs-input type="text"
+                                            ng-model="obj.simplifiedStructure"
+                                            field="simplifiedStructure">
+                                </gsrs-input>
+
                                 <rendered smiles={{obj.simplifiedStructure}}></rendered>
                             </div>
                             <div class="col-md-4">
@@ -61,51 +64,32 @@
                         </div>
                         <br>
                         <div class="row"
-                             ng-show="obj.systemCategory || obj.systemCategory=='' || obj.regex || obj.regex==''">
+                             ng-show="referenceobj.vocabularyTermType.value === 'ix.ginas.models.v1.CodeSystemControlledVocabulary'">
                             <div class="col-md-1">
                             </div>
                             <div class="col-md-4">
-                            <gsrs-input type="text"
-                                        ng-model="obj.systemCategory"
-                                        field="systemCategory"
-                                        label="System Category">
-                            </gsrs-input>
-</div>
+	                            <gsrs-input type="text"
+	                                        ng-model="obj.systemCategory"
+	                                        field="systemCategory"
+	                                        label="System Category">
+	                            </gsrs-input>
+
+        <!--                        This will only work when every code system category has a cv... right now document type doesn't
+                                <gsrs-input type="dropdown"
+                                             ng-model="obj.systemCategory"
+	                                        field="systemCategory"
+	                                        label="System Category"
+                                            filter-function="getCV(referenceobj.domain)">
+                                </gsrs-input>-->
+							</div>
                             <div class="col-md-4">
-                            <gsrs-input type="text"
-                                        ng-model="obj.regex"
-                                        field="regex"
-                                        label="Format Regex">
-                            </gsrs-input>
-</div>
+	                            <gsrs-input type="text"
+	                                        ng-model="obj.regex"
+	                                        field="regex"
+	                                        label="Format Regex">
+	                            </gsrs-input>
+							</div>
                         </div>
-                       <!-- <div class="row"
-                             ng-if="obj.filters">
-                            <div class="col-md-4">
-                                <gsrs-input type="text"
-                                            ng-model="subject"
-                                            cv="CV_DOMAIN"
-                                            field="subject"
-                                            name="subject">
-                                </gsrs-input>
-                            </div>
-                            <div class="col-md-4">
-                                <gsrs-input type="text"
-                                            ng-model="predicate"
-                                            field="predicate"
-                                            label="predicate">
-                                </gsrs-input>
-                            </div>
-                        </div>-->
-
-
-                        <!--                        <div class="row">
-                                                    <div class="col-md-1 pull-right">
-                                                        <label>Save</label><br>
-                                                        <i class="fa fa-floppy-o fa-2x success" ng-click="addCV(term);"
-                                                           uib-tooltip="Update Term to database"></i>
-                                                    </div>
-                                                </div>-->
                     </div>
                 </ng-form>
             </div>

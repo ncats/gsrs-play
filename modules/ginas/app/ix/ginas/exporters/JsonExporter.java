@@ -1,17 +1,15 @@
 package ix.ginas.exporters;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import ix.core.controllers.EntityFactory;
-import ix.ginas.models.v1.Substance;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Objects;
+
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+import ix.core.controllers.EntityFactory;
+import ix.ginas.models.v1.Substance;
 
 /**
  * Created by katzelda on 8/31/16.

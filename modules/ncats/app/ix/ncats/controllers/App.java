@@ -1406,6 +1406,14 @@ public class App extends Authentication {
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheSummary () {
+    	
+    	Thread.getAllStackTraces().entrySet().stream()
+    		.filter(e->Arrays.stream(e.getValue()).filter(s->s.getClassName().contains("ix.")).findAny().isPresent())
+    		.forEach(c->{
+    		for(StackTraceElement ste: c.getValue()){
+    			System.out.println(c.getKey() + "\t" + ste.toString());
+    		}
+    	});
     	return ok (ix.ncats.views.html.cachestats.render
                    (IxCache.getStatistics()));
     }
@@ -1821,7 +1829,11 @@ public class App extends Authentication {
 	}
 	
 	public static long getNumberOfRunningThreads(){
-		return Thread.getAllStackTraces().keySet().stream()
-		.filter(t-> (t.getState()==Thread.State.RUNNABLE)).count();
+		return Thread.getAllStackTraces()
+				.keySet()
+				.stream()
+				.filter(t-> (t.getState()==Thread.State.RUNNABLE))
+				.count();
 	}
+	
 }

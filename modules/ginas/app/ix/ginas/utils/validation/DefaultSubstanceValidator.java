@@ -24,6 +24,8 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	}
 	METHOD_TYPE method=null;
 	
+	public boolean allowNonTaggedPublicRecords= false;
+	
 	
 	private UserProfile getCurrentUser(){
 		UserProfile up= UserFetcher.getActingUserProfile(true);
@@ -36,6 +38,9 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 	public DefaultSubstanceValidator(GinasProcessingStrategy strategy, METHOD_TYPE method){
 		_strategy=strategy;
 		this.method=method;
+		if(this.method== METHOD_TYPE.BATCH){
+			allowNonTaggedPublicRecords=true;
+		}
 	}
 	
 	public DefaultSubstanceValidator(GinasProcessingStrategy strategy){
@@ -98,7 +103,7 @@ public class DefaultSubstanceValidator extends AbstractValidator<Substance>{
 					.findAny()
 					.isPresent();
 				if (!allowed) {
-					if(this.method!=METHOD_TYPE.BATCH){
+					if(!allowNonTaggedPublicRecords){
 						vlad.add(GinasProcessingMessage
 								.ERROR_MESSAGE("Public records must have a PUBLIC DOMAIN reference with a '"
 										+ Reference.PUBLIC_DOMAIN_REF + "' tag"));

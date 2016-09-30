@@ -1595,7 +1595,18 @@
         return {
             restrict: 'E',
             replace: true,
-            templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html"
+            templateUrl: baseurl + "assets/templates/admin/cv-terms-form.html",
+            link: function (scope) {
+               /* scope.getCV = function (domain) {
+                    if (domain == "CODE_SYSTEM") {
+                        return "CODE_SYSTEM_TYPE";
+                    } else if (domain == "DOCUMENT_TYPE") {
+                        return "";
+                    } else {
+                        return null;
+                    }
+                };*/
+            }
         };
     });
 

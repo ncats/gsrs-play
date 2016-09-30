@@ -2,9 +2,14 @@ package ix.core.search;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -12,6 +17,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
+
 
 import play.mvc.Call;
 
@@ -20,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.CacheStrategy;
 import ix.core.plugins.IxCache;
+import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
 import ix.utils.Util;
 import play.Logger;
 
@@ -48,6 +56,9 @@ public class SearchResultContext {
     Long stop;
     List<FieldedQueryFacet> fieldFacets=null;
     Collection results = new LinkedBlockingDeque();
+
+    List sponsoredResults = new ArrayList();
+
     String id = Util.randvar (10);
     Integer total;
     String key;
@@ -114,10 +125,49 @@ public class SearchResultContext {
         results = result.getMatches();
         total = result.count();
         this.key=result.getKey();
+
+        sponsoredResults =result.getSponsoredMatches();
+    }
+
+    public List getExactMatches(){
+        return sponsoredResults;
     }
     
     public List<FieldedQueryFacet> getFieldFacets(){
     	return fieldFacets;
+    }
+    
+    public boolean hasExactMatches(){
+    	return sponsoredResults.size()>0;
+    }
+    
+    
+    /**
+     * Returns the suggested FieldQueryFacets grouped by match type, 
+     * in order they show in the enum
+     * @return
+     */
+    public LinkedHashMap<FieldedQueryFacet.MATCH_TYPE, List<FieldedQueryFacet>> getFieldFacetsMap(){
+    	Map<MATCH_TYPE,Integer> place= new HashMap<MATCH_TYPE,Integer>();
+    	place.put(MATCH_TYPE.FULL, 0);
+    	place.put(MATCH_TYPE.WORD_STARTS_WITH, 1);
+    	place.put(MATCH_TYPE.WORD, 2);
+    	place.put(MATCH_TYPE.CONTAINS, 3);
+    	place.put(MATCH_TYPE.NO_MATCH, 4);
+    	
+    	LinkedHashMap<FieldedQueryFacet.MATCH_TYPE, List<FieldedQueryFacet>> grouped = new LinkedHashMap<>();
+    	
+    	fieldFacets.stream()
+    			   .collect(Collectors.groupingBy(FieldedQueryFacet::getMatchType,Collectors.toList()))
+    			   .entrySet()
+    			   .stream()
+    			   .sorted((e1,e2)->-(place.get(e2.getKey())-place.get(e1.getKey())))
+    			   .peek(e->System.out.println(e.getKey()))
+    			   .forEach(e1->{
+    				   grouped.put(e1.getKey(), e1.getValue());
+    			   });
+    	return grouped;
+    	
     }
 
     public String getId () { return id; }

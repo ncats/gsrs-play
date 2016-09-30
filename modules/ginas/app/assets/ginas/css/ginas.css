@@ -63,7 +63,7 @@ body, html {
 }*/
 
 #content {
-    padding-top: 150px;
+    padding-top: 80px;
 }
 
 .sidebar {
@@ -1301,7 +1301,41 @@ span.key-value {
 }
 span.nowrap-list {
     display: block;
-    white-space: pre;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.query-term {
+    color: #000;
+    background: #e7e7e7;
+    border-radius: 5px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+.minor-option{
+	font-weight:normal !important;
+	font-size:85%;
+}
+
+.no-margin{
+    margin-bottom:0;
+}
+.center-text{
+    text-align: center;
+}
+.fieldfacet .dropdown-menu {
+    width: 250px;
+    left: 50%;
+    margin-left: -125px;
+}
+
+.field-facet-group{
+	margin-left:10px;
+}
+
+.inline{
+	display:inline-block;
+}
+.field-facet-label{
+	margin-right:10px;
 }

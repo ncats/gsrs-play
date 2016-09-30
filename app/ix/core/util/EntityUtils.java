@@ -22,7 +22,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,14 +50,18 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
+import ix.ginas.models.v1.VocabularyTerm;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import play.Logger;
 import play.db.ebean.Model;
 import play.db.ebean.Model.Finder;
 
+
+import play.Play;
 /**
  * A utility class, mostly intended to do the grunt work of reflection.
  * 
@@ -355,6 +358,10 @@ public class EntityUtils {
 			}
 		}
 		
+		public Object getValueFromMethod(String name){
+			return this.streamMethodsAndValues(m->m.getMethodName().equals(name)).findFirst().get().v();
+		}
+		
 	}
 
 	public static class EntityInfo<T> {
@@ -366,6 +373,12 @@ public class EntityUtils {
 		Table table;
 		List<MethodOrFieldMeta> seqFields = new ArrayList<MethodOrFieldMeta>();
 		List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
+
+		List<String> sponsoredFields = new ArrayList<>();
+
+		public List<String> getSponsoredFields() {
+			return sponsoredFields;
+		}
 
 		List<MethodMeta> methods;
 		List<MethodMeta> keywordFacetMethods;
@@ -464,7 +477,7 @@ public class EntityUtils {
 				}
 				return true;
 			}).collect(Collectors.toList());
-			
+
 			uniqueColumnFields = fields.stream().filter(f -> f.isUniqueColumn()).collect(Collectors.toList());
 
 			methods = Arrays.stream(cls.getMethods()).map(m2 -> new MethodMeta(m2)).peek(m -> {
@@ -546,6 +559,29 @@ public class EntityUtils {
 			if (idType != null) {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
+
+
+
+
+
+
+			Map m = (Map)Play.application().configuration().getObject("ix.core.exactsearchfields",null);
+			if(m!=null){
+
+
+
+				m.forEach((k,v)->{
+								if(k.equals(EntityInfo.this.kind)) {
+									List<String> fields = (List<String>) v;
+									for (String f : fields) {
+										sponsoredFields.add(f);
+									}
+								}
+							});
+			}
+
+
+
 		}
 
 		
@@ -782,6 +818,11 @@ public class EntityUtils {
 		public boolean hasBackup() {
 			return this.hasBackup;
 		}
+
+		public T getInstance() throws Exception{
+			return (T) this.getClazz().newInstance();
+		}
+		
 
 		// HERE BE DRAGONS!!!!
 		// This was one of the (many) ID-generating methods before "The Great Refactoring".
@@ -1163,6 +1204,11 @@ public class EntityUtils {
 		boolean isChangeReason=false;
 
 		Column column;
+		
+		List<VocabularyTerm> possibleTerms = new ArrayList<VocabularyTerm>();
+		
+		
+		
 
 		public boolean isSequence() {
 			return this.isSequence;
@@ -1320,6 +1366,17 @@ public class EntityUtils {
 		public boolean isNumeric() {
 			return Number.class.isAssignableFrom(this.type);
 		}
+//		
+//		public List<VocabularyTerm> getPossibleTerms(){
+//			
+//			return this.possibleTerms;
+//		}
+//		
+//		//TODO: Implement this
+//		public boolean isControlled(){
+//			return false;
+//		}
+//		
 	}
 
 	public static class Key {
