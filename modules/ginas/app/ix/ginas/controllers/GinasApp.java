@@ -1734,7 +1734,10 @@ public class GinasApp extends App {
 
 
     public static boolean isSingleSignOn(){
-        return Play.application().configuration().getBoolean("ix.authentication.trustheader", false);
+    	boolean isTrustHeaders=Play.application().configuration().getBoolean("ix.authentication.trustheader", false);
+    	boolean allowNonAuth=Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated", true);
+    	
+        return isTrustHeaders && !allowNonAuth;
     }
 
     private static class SubstanceReIndexListener implements ReIndexListener {

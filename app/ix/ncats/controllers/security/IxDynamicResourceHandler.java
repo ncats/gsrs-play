@@ -111,6 +111,10 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				final DeadboltHandler deadboltHandler,
 				final Http.Context context) {
 			try{
+				DynamicResourceHandler adminHandle =HANDLERS.get(IS_ADMIN);
+				if (adminHandle.isAllowed(name, meta, deadboltHandler, context)){
+					return true;
+				}
 				Subject subject=deadboltHandler.getSubject(context);
 				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
 
@@ -126,15 +130,8 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 
 	// this will be invoked for Dynamic
 	public boolean isAllowed(String name, String meta, DeadboltHandler deadboltHandler, Http.Context context) {
-		DynamicResourceHandler adminHandle =HANDLERS.get(IS_ADMIN);
-		if (adminHandle.isAllowed(name, meta, deadboltHandler, context)){
-			return true;
-		}
-
-
-
 		DynamicResourceHandler handler = HANDLERS.get(name);
-
+		
 		if (handler != null) {
 			return handler.isAllowed(name, meta, deadboltHandler, context);
 		}else{
