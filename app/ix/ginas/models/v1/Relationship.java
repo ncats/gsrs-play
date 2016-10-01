@@ -88,6 +88,17 @@ public class Relationship extends CommonDataElementOfCollection {
 		//System.out.println("Persisted");
     }
    
+    
+    /**
+     * Returns true if this relationship should be inverted. That is, it is invertible,
+     * and it is not the product of an earlier inversion.
+     * @return
+     */
+    @JsonIgnore
+    public boolean shouldBeInverted(){
+    	return this.isGenerator() && this.isAutomaticInvertable();
+    }
+    
     /**
      * Returns true if this relationship is made directly, and not from another relationship
      * @return
