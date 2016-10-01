@@ -774,7 +774,9 @@ public class GinasApp extends App {
         options.longRangeFacets.add(editedRange);
         options.longRangeFacets.add(approvedRange);
         
+        
         if(params!=null){
+        	
         	String[] dep =params.get("showDeprecated");
         	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
         		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
@@ -793,6 +795,7 @@ public class GinasApp extends App {
         final Map<String, String[]> params = App.getRequestQuery();
         
         final String sha1 = App.getKeyForCurrentRequest();
+        
         String[] order = params.get("order");
         
         
@@ -852,14 +855,14 @@ public class GinasApp extends App {
                          + result.finished());
             if (result.finished()) {
                 final String k = key + "/result"; 
+                
                 return getOrElse(k, ()->createSubstanceResult(result, rows, page));
             }
             return createSubstanceResult(result, rows, page);
             //otherwise, just show the first substances
         }else{
             return getOrElse(key, () -> {
-            	SubstanceResultRenderer srr=new SubstanceResultRenderer();
-                        Logger.debug("Cache missed: " + key);
+            			SubstanceResultRenderer srr=new SubstanceResultRenderer();
                         List<Facet> defFacets=getSubstanceFacets (30,request().queryString());
                         int nrows   = Math.max(Math.min(total,  rows), 1);
                         int[] pages = paging(nrows, page, total);
@@ -951,7 +954,7 @@ public class GinasApp extends App {
                 result.copyTo(substances, 0, result.count());
             }
             TextIndexer.Facet[] facets = filter(result.getFacets(), getDefaultFacets());
-            System.out.println("Filtered to:" + facets.length + " facets");
+            
 
             return ok(ix.ginas.views.html.substances.render
                     (1, result.count(), result.count(), new int[0],

@@ -293,7 +293,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			e.newValue = saved.toFullJson();
 			e.comments= ew.getChangeReason().orElse(null);
 			e.save();
-			System.out.println("Saved:" + e.id);
 			
             return saved;
         }catch(Exception ex){

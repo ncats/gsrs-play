@@ -594,7 +594,9 @@ public class App extends Authentication {
         if (query.get("facet") != null) {
             for (String f : query.get("facet"))
                 qfacets.add(f);
+        
         }
+        
         
         final boolean hasFacets = q != null
             && q.indexOf('/') > 0 && q.indexOf("\"") < 0;
@@ -616,6 +618,11 @@ public class App extends Authentication {
             for (String f : query.get("order"))
                 args.add(f);
         }
+        
+        args.add("dep" + query.get("showDeprecated"));
+        
+        
+        
         Collections.sort(args);
         return Util.sha1(args.toArray(new String[0]));
     }
@@ -1082,6 +1089,7 @@ public class App extends Authentication {
                  ex.printStackTrace();
              }
          }else {
+        	 
              String key = signature (query, getRequestQuery ());
              return key;
          }
