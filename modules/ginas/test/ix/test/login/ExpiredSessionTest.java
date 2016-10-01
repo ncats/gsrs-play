@@ -21,7 +21,7 @@ import static ix.test.login.LoginUtil.*;
  */
 public class ExpiredSessionTest {
 
-    public static final String URL = "ginas/app/wizard?kind=chemical";
+    public static final String URL = "ginas/app"; //changed to home page, so that no 401 or other errros occur
 
     @Rule
     public TestNamePrinter printer = new TestNamePrinter();

@@ -294,7 +294,7 @@ public class GinasApp extends App {
 
 
     public static Result error(int code, String mesg) {
-        return ok(ix.ginas.views.html.error.render(code, mesg));
+        return status(code,ix.ginas.views.html.error.render(code, mesg));
     }
     
     public static Result lastUnicorn(String name) {

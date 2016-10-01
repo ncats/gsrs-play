@@ -12,6 +12,7 @@ import play.Logger;
 import play.Play;
 import play.mvc.Http;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -19,23 +20,23 @@ import java.util.Map;
 
 
 public class IxDynamicResourceHandler implements DynamicResourceHandler {
-    public static final String CAN_APPROVE = "canApprove";
-    public static final String CAN_REGISTER = "canRegister";
-    public static final String CAN_UPDATE = "canUpdate";
-    public static final String CAN_SEARCH = "canSearch";
-    public static final String IS_ADMIN = "isAdmin";
-    public static final String IS_USER_PRESENT = "isUserPresent";
-    private static Map<String, DynamicResourceHandler> HANDLERS;
+	public static final String CAN_APPROVE = "canApprove";
+	public static final String CAN_REGISTER = "canRegister";
+	public static final String CAN_UPDATE = "canUpdate";
+	public static final String CAN_SEARCH = "canSearch";
+	public static final String IS_ADMIN = "isAdmin";
+	public static final String IS_USER_PRESENT = "isUserPresent";
+	private static Map<String, DynamicResourceHandler> HANDLERS;
 
-    static {
-       init();
-    }
-    
+	static {
+		init();
+	}
+
 	public static class IsAdminHandler extends AbstractDynamicResourceHandler {
 		CachedSupplier<Boolean> isAdminForced = CachedSupplier.of(()->{
 			return Play.application().configuration().getBoolean("ix.admin", false);
 		}) ;
-		
+
 		public boolean isAllowed(final String name, final String meta, final DeadboltHandler deadboltHandler,
 				final Http.Context context) {
 			if(isAdminForced.get()){
@@ -43,103 +44,95 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 			}
 
 			Subject subject = deadboltHandler.getSubject(context);
-			
-			DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
-			
-			if (analyzer.hasRole(subject, Role.Admin.toString())) {
-				return true;
+			if (subject != null &&(subject.getIdentifier() != null || !subject.getIdentifier().equals(""))) {
+				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
+
+				if (analyzer.hasRole(subject, Role.Admin.toString())) {
+					return true;
+				}
 			}
 			return false;
 		}
 	}
-	
-    public static void init(){
-        HANDLERS = new HashMap<String, DynamicResourceHandler>();
 
-        HANDLERS.put(IS_ADMIN, new IsAdminHandler());
-        HANDLERS.put(CAN_APPROVE,
-                new SimpleRoleDynamicResourceHandler(
-                        Role.Approver
-                ));
-        HANDLERS.put(CAN_REGISTER,
-                new SimpleRoleDynamicResourceHandler(
-                        Role.DataEntry,
-                        Role.SuperDataEntry
-                ));
-        HANDLERS.put(CAN_UPDATE,
-                new SimpleRoleDynamicResourceHandler(
-                        Role.Updater,
-                        Role.SuperUpdate
-                ));
-        HANDLERS.put(CAN_SEARCH,  new AbstractDynamicResourceHandler() {
-            public boolean isAllowed(final String name,
-                                     final String meta,
-                                     final DeadboltHandler deadboltHandler,
-                                     final Http.Context ctx){
-                return true;
-            }
+	public static void init(){
+		HANDLERS = new HashMap<String, DynamicResourceHandler>();
 
-        });
+		HANDLERS.put(IS_ADMIN, new IsAdminHandler());
+		HANDLERS.put(CAN_APPROVE,
+				new SimpleRoleDynamicResourceHandler(
+						Role.Approver
+						));
+		HANDLERS.put(CAN_REGISTER,
+				new SimpleRoleDynamicResourceHandler(
+						Role.DataEntry,
+						Role.SuperDataEntry
+						));
+		HANDLERS.put(CAN_UPDATE,
+				new SimpleRoleDynamicResourceHandler(
+						Role.Updater,
+						Role.SuperUpdate
+						));
+		HANDLERS.put(CAN_SEARCH,  new AbstractDynamicResourceHandler() {
+			public boolean isAllowed(final String name,
+					final String meta,
+					final DeadboltHandler deadboltHandler,
+					final Http.Context ctx){
+				return true;
+			}
 
-        HANDLERS.put(IS_USER_PRESENT,
-                new AbstractDynamicResourceHandler() {
-                    public boolean isAllowed(final String name,
-                                             final String meta,
-                                             final DeadboltHandler deadboltHandler,
-                                             final Http.Context context) {
-                        Subject subject = deadboltHandler.getSubject(context);
-                        boolean allowed=false;
-                        if (subject != null &&(subject.getIdentifier() != null || !subject.getIdentifier().equals(""))) {
-                            allowed = true;
-                        }
-                        return allowed;
-                    }
-                });
+		});
 
-
-    }
-    
-    public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{
-    	Role[] roles;
-    	public SimpleRoleDynamicResourceHandler(Role... kind){
-    		roles=kind;
-    	}
-    	public boolean isAllowed(final String name,
-                final String meta,
-                final DeadboltHandler deadboltHandler,
-                final Http.Context context) {
-    			Subject subject=null;
-    			try{
-    				subject = deadboltHandler.getSubject(context);
-    				
-    			}catch(Exception e){
-    				e.printStackTrace();
-    			}
+		HANDLERS.put(IS_USER_PRESENT,
+				new AbstractDynamicResourceHandler() {
+			public boolean isAllowed(final String name,
+					final String meta,
+					final DeadboltHandler deadboltHandler,
+					final Http.Context context) {
+				Subject subject = deadboltHandler.getSubject(context);
 				boolean allowed=false;
-				
-				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
-				
-				for(Role k:roles){
-					if (analyzer.hasRole(subject, k.toString())) {
-						allowed = true;
-						break;
-					}
+				if (subject != null &&(subject.getIdentifier() != null || !subject.getIdentifier().equals(""))) {
+					allowed = true;
 				}
 				return allowed;
+			}
+		});
+
+
+	}
+
+	public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{
+		Role[] roles;
+		public SimpleRoleDynamicResourceHandler(Role... kind){
+			roles=kind;
 		}
-    	
-    }
-    
-    
+		public boolean isAllowed(final String name,
+				final String meta,
+				final DeadboltHandler deadboltHandler,
+				final Http.Context context) {
+			try{
+				Subject subject=deadboltHandler.getSubject(context);
+				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
+
+				return Arrays.stream(roles).anyMatch(r->analyzer.hasRole(subject, r.toString()));
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			return false;
+		}
+
+	}
+
+
 	// this will be invoked for Dynamic
 	public boolean isAllowed(String name, String meta, DeadboltHandler deadboltHandler, Http.Context context) {
-
-		//Allow admin to do everything
-		if (HANDLERS.get(IS_ADMIN).isAllowed(name, meta, deadboltHandler, context)){
+		DynamicResourceHandler adminHandle =HANDLERS.get(IS_ADMIN);
+		if (adminHandle.isAllowed(name, meta, deadboltHandler, context)){
 			return true;
 		}
-				
-				
+
+
+
 		DynamicResourceHandler handler = HANDLERS.get(name);
 
 		if (handler != null) {
@@ -150,19 +143,18 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 		return false;
 	}
 
-	
+
 	//This is not currently used, but this
-    //may be invoked for custom Pattern checking
-    public boolean checkPermission(final String permissionValue,
-                                   final DeadboltHandler deadboltHandler,
-                                   final Http.Context ctx) {
-        Subject subject = deadboltHandler.getSubject(ctx);
-        
-        if (subject != null) {
-            return subject.getPermissions()
-            	.stream()
-            	.anyMatch(p->p.getValue().contains(permissionValue));
-        }
-        return false;
-    }
+	//may be invoked for custom Pattern checking
+	public boolean checkPermission(final String permissionValue,
+			final DeadboltHandler deadboltHandler,
+			final Http.Context ctx) {
+		Subject subject = deadboltHandler.getSubject(ctx);
+		if (subject != null) {
+			return subject.getPermissions()
+					.stream()
+					.anyMatch(p->p.getValue().contains(permissionValue));
+		}
+		return false;
+	}
 }

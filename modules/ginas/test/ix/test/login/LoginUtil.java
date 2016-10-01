@@ -20,7 +20,7 @@ public final class LoginUtil {
     }
 
     public static void ensureNotLoggedIn(WSResponse response){
-        ensureLoggedInAs(response, "null");
+    	ensureLoggedInAs(response, "null");
     }
     public static void ensureLoggedInAs(WSResponse response, GinasTestServer.User user){
         ensureLoggedInAs(response, user.getUserName());
