@@ -16,6 +16,11 @@ public class Tuple<K,V>{
 		return v;
 	}
 	
+	
+	public static <K,V> Tuple<K,V> of(K k, V v){
+		return new Tuple<K,V>(k,v);
+		
+	}
 	public static<K,V> BiFunction<K,V,Tuple<K,V>> map(){
 		return (k,v)->{
 			return new Tuple<K,V>(k,v);
