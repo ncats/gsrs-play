@@ -1,9 +1,14 @@
 package ix.test.entitywrapper;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+
+import javax.persistence.Entity;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +51,43 @@ public class EntityWrapperTest {
 		}catch(Throwable e){
 			e.printStackTrace();
 			throw e;
+		}
+	}
+	
+	@Entity
+	public static class Inception{
+		@Indexable(indexed=true)
+		public String lookHere="Look here";
+		public Inception inc=this;
+		
+		public Child realChild = new Child();
+		public Child nullChild = null;
+		
+	}
+	
+	@Entity
+	public static class Child{
+		
+	}
+	
+	@Test
+	public void testRecurseDoesNotGetIntoInfiniteLoop() throws Exception {
+		try {
+			Inception inc = new Inception();
+			Set<String> expectedVisited = new HashSet<String>();
+			expectedVisited.add("root_");
+			expectedVisited.add("root_realChild");
+			Set<String> pathsVisited = new HashSet<String>();
+
+			EntityWrapper.of(inc).traverse().execute((p, ew) -> {
+				assertTrue(expectedVisited.contains(p.toPath()));
+				pathsVisited.add(p.toPath());
+			});
+
+			assertEquals(expectedVisited, pathsVisited);
+		} catch (Throwable t) {
+			t.printStackTrace();
+			throw t;
 		}
 	}
 }
