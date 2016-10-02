@@ -21,19 +21,19 @@ public class UniqueStack<K> implements ExecutionStack<K>{
 	}
 	
 	public void push(K k){
-		if(!contains(k)){
-			set.add(k);
-			list.add(k);
-		}
+		set.add(k);
+		list.add(k);
 	}
 
 	@Override
 	public void pushAndPopWith(K obj, Runnable r) {
-		push(obj);
-		try{
-			r.run();
-		}finally{
-			pop();	
+		if(!this.contains(obj)){
+			push(obj);
+			try{
+				r.run();
+			}finally{
+				pop();	
+			}
 		}
 	}
 

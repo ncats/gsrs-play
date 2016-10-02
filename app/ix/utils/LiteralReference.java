@@ -26,4 +26,8 @@ public class LiteralReference<K>{
 	public static <K> LiteralReference<K> of(K k) {
 		return new LiteralReference<K>(k);
 	}
+	
+	public String toString(){
+		return "Ref to:" + o.toString();
+	}
 }

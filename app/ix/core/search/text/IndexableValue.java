@@ -91,7 +91,7 @@ public interface IndexableValue {
 	
 	public static IndexableValue simpleFacetStringValue(String name, String value){
 		
-		return new IndexableValueFromRaw(name,value);
+		return new IndexableValueFromRaw(name,value).dynamic();
 	}
 	public static IndexableValue simpleFacetLongValue(String name, long value, long[] ranges){
 		

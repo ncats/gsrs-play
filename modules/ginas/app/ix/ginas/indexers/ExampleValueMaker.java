@@ -63,7 +63,6 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 		addSSSRCountFacet(s,consumer);
 		addCarbonNonCarbonWeightRatioFacet(s,consumer);
 		
-		
 	}
 	/**
 	 * Calculate the field(s) for the Moiety Type facet
@@ -168,6 +167,7 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 					,carbonRatio));
 		}
 	}
+	
 	
 	
 	

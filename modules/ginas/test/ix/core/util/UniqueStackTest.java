@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -87,6 +88,24 @@ public class UniqueStackTest {
 		l.stream().forEach(s->{
 			assertTrue(!ustack.contains(s));
 		});
+			
+	}
+	
+	@Test
+	public void pushAndPopWithSameValueNestedShouldOnlyCallOnce(){
+		UniqueStack<String> ustack = new UniqueStack<>();
+		
+		AtomicInteger ai = new AtomicInteger(0);
+		
+		ustack.pushAndPopWith("TEST", ()->{
+			ai.incrementAndGet();
+			ustack.pushAndPopWith("TEST", ()->{
+				ai.incrementAndGet();
+			});
+		});
+		
+		assertEquals(2,ai.get());
+		
 			
 	}
 
