@@ -2,27 +2,54 @@ package ix.core.search.text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
+import play.Logger;
 import play.Play;
 
 public class IndexValueMakerFactory {
 	public static boolean initialized=false;
 	
-	static Map<String,IndexValueMaker> registry = new HashMap<>();
+	static ConcurrentHashMap<String,IndexValueMaker> registry = new ConcurrentHashMap<>();
+	static Map<String,List<IndexValueMaker>> componentRegistry = new ConcurrentHashMap<>();
 	
 	public static <T> IndexValueMaker<T> forClass(Class<T> c){
-		if(!initialized)initialize();
+		if(!initialized)init();
 		return registry.computeIfAbsent(c.getName(), k->{
-			return new ReflectingIndexValueMaker<T>();
+			IndexValueMaker<T> ivdef= new ReflectingIndexValueMaker<T>();
+			Optional<IndexValueMaker> oivm=componentRegistry.getOrDefault(k, new ArrayList<IndexValueMaker>())
+							 .stream()
+							 .reduce((iv1,iv2)->iv1.and(iv2));
+			if(oivm.isPresent()){
+				return ivdef.and(oivm.get());
+			}else{
+				return ivdef;
+			}
 		});
 	}
 	
+	public static boolean isRegisteredFor(Class<?> cls, Class<? extends IndexValueMaker> clsIvm){
+		return componentRegistry
+			.get(cls.getName())
+			.stream()
+			.anyMatch(iv->iv.getClass().equals(clsIvm));
+	}
 	
-	public static void initialize(){
+	public static List<IndexValueMaker> getIndexValueMakersForClass(Class<?> cls){
+		return componentRegistry
+				.getOrDefault(cls.getName(), new ArrayList<IndexValueMaker>());
+		
+	}
+	
+	
+	public static void init(){
 		registry.clear();
+		componentRegistry.clear();
 		initialized=true;
 		Play.application()
 		.configuration()
@@ -32,7 +59,9 @@ public class IndexValueMakerFactory {
 		.forEach(m->{
 			try{
 				EntityInfo<?> eiClass=EntityUtils.getEntityInfoFor(m.get("class").toString());
-				EntityInfo<? extends IndexValueMaker> eiIndexer=(EntityInfo<? extends IndexValueMaker>)EntityUtils.getEntityInfoFor(m.get("indexer").toString());
+				EntityInfo<? extends IndexValueMaker> eiIndexer=
+						(EntityInfo<? extends IndexValueMaker>)
+						EntityUtils.getEntityInfoFor(m.get("indexer").toString());
 				registerIndexer(eiClass.getClazz(),eiIndexer.getInstance());
 			}catch(Exception e){
 				e.printStackTrace();
@@ -45,9 +74,10 @@ public class IndexValueMakerFactory {
 		eiClass.getTypeAndSubTypes()
 		.stream()
 		.forEach(ei->{
-			System.out.println("Registering for:" + ei.getName() +" :" + ivm.getClass());
-			IndexValueMaker<T> ivnew=registry.computeIfAbsent(ei.getName(),k-> new ReflectingIndexValueMaker<T>()).and(ivm);
-			registry.put(ei.getName(),ivnew);
+			Logger.info("Registering for:" + ei.getName() +" :" + ivm.getClass());
+			componentRegistry
+				.computeIfAbsent(ei.getName(),k-> new ArrayList<IndexValueMaker>())
+				.add(ivm);
 		});
 	}
 }

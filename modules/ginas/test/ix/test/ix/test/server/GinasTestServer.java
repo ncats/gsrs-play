@@ -47,6 +47,7 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.text.IndexValueMakerFactory;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
@@ -488,6 +489,7 @@ public class GinasTestServer extends ExternalResource{
         GinasFactory.init();
 
         GinasApp.init();
+        IndexValueMakerFactory.init();
         //our APIs
        // SubstanceLoader.init();
     }
