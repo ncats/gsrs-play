@@ -72,12 +72,12 @@ public class IndexValueMakerFactory {
 	public static <T> void registerIndexer(Class<T> cls, IndexValueMaker<T> ivm){
 		EntityInfo<T> eiClass=EntityUtils.getEntityInfoFor(cls);
 		eiClass.getTypeAndSubTypes()
-		.stream()
-		.forEach(ei->{
-			Logger.info("Registering for:" + ei.getName() +" :" + ivm.getClass());
-			componentRegistry
-				.computeIfAbsent(ei.getName(),k-> new ArrayList<IndexValueMaker>())
-				.add(ivm);
-		});
+			.stream()
+			.forEach(ei->{
+				Logger.info("Registering for:" + ei.getName() +" :" + ivm.getClass());
+				componentRegistry
+					.computeIfAbsent(ei.getName(),k-> new ArrayList<IndexValueMaker>())
+					.add(ivm);
+			});
 	}
 }

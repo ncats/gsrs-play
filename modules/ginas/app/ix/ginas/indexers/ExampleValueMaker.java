@@ -53,7 +53,7 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 	
 	
 	
-	private static final String CHILD_SUBSTANCE_RELATIONSHIP = "CHILD SUBSTANCE";
+	public static final String CHILD_SUBSTANCE_RELATIONSHIP = "CHILD SUBSTANCE";
 
 	//This is the method which does the work
 	@Override

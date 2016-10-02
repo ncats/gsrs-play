@@ -662,6 +662,11 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		return null;
 	}
 	
+	/**
+	 * Returns this substance as a SubstanceReference
+	 * for linking.
+	 * @return
+	 */
 	public SubstanceReference asSubstanceReference(){
 		SubstanceReference subref=new SubstanceReference();
 		subref.refPname=this.getName();

@@ -91,6 +91,8 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 		}
 	}
 	
+	
+	
 	public void testIndexableValuesHasFacet(T t, String facetName, Object facetValue ){
 		testIndexableValuesMatchCriteria(t, s->{
 			boolean match =s.anyMatch(iv->{
