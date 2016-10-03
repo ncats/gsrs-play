@@ -499,8 +499,7 @@ public class GinasApp extends App {
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
                 return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType + ((wait!=null)?"&wait=" + wait:""));
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 ex.printStackTrace();
                 return _internalServerError (ex);
             }
@@ -585,7 +584,7 @@ public class GinasApp extends App {
 		        			return substructure(qStructure.smiles,  rows, page);
 		        	}
         		}catch(Exception e){
-        			e.printStackTrace();
+        			Logger.error(e.getMessage(),e);
         		}
         		return notFound(ix.ginas.views.html.error.render
                         (400, "Invalid search parameters: type=\""
@@ -597,7 +596,7 @@ public class GinasApp extends App {
         		return _substances (q, rows, page);
         	}
         }catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.error(ex.getMessage(), ex);
             return _internalServerError(ex);
         }
     }
@@ -628,7 +627,7 @@ public class GinasApp extends App {
 
 	    	return ok(pis);
     	}catch(Exception e){
-    		e.printStackTrace();
+    		Logger.error(e.getMessage(),e);
     		throw new IllegalStateException(e);
     	}
     }
@@ -704,7 +703,6 @@ public class GinasApp extends App {
             return App.fetchResult (context, rows, page, new SubstanceResultRenderer ());
         }
         catch (Exception ex) {
-            ex.printStackTrace();
             Logger.error("Can't perform sequence search", ex);
         }
         
@@ -822,7 +820,6 @@ public class GinasApp extends App {
                                        result.count()));
             return result;
         }catch (Exception ex) {
-            ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
         return null;    

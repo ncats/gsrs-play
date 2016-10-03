@@ -58,8 +58,7 @@ public class SearchResult {
     }
 
     public void setRank (final Map<String, Integer> idRank) {
-    	System.out.println("Setting rank");
-        Objects.requireNonNull(idRank);
+    	Objects.requireNonNull(idRank);
         
         idComparator = (id1,id2) ->{
             Integer r1 = idRank.get(id1), r2 = idRank.get(id2);
@@ -306,7 +305,7 @@ public class SearchResult {
     }
 
     public void addSponsoredNamedCallable (NamedCallable c) {
-        System.out.println("Sponsored record: " + c.getName());
+        //System.out.println("Sponsored record: " + c.getName());
         sponsored.put(c.getName(),c);
     	matches.addCallable(c);
     	processAddition(c);

@@ -104,7 +104,7 @@ public class UniqueStackTest {
 			});
 		});
 		
-		assertEquals(2,ai.get());
+		assertEquals(1,ai.get());
 		
 			
 	}

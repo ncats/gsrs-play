@@ -2098,8 +2098,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			closeAndIgnore(taxonDir);
 
 		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-			System.out.println("#########$##$#$ ERROR");
 			ex.printStackTrace();
 			Logger.trace("Closing index", ex);
 		} finally {
