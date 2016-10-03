@@ -332,7 +332,6 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
 
 	@Override
 	public void forceUpdate() {
-		System.out.println("Forcing an update on structure");
 		lastEdited=new Date();
 		super.update();
 	}

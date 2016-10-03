@@ -105,7 +105,7 @@ public class LuceneSearchTest {
 
 
 	@Test
-	public void exactNormalNameSearchWhenLeptosIndexedTooShouldNotReturnLepto() throws Exception {
+	public void exactNormalNameSearchWhenlevosIndexedTooShouldNotReturnLevo() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
@@ -143,14 +143,14 @@ public class LuceneSearchTest {
 	}
 
 	@Test
-	public void exactLeptoNameSearchWhenLeptosIndexedTooShouldOnlyReturnLepto() throws Exception {
+	public void exactLevoNameSearchWhenLevosIndexedTooShouldOnlyReturnLevo() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
 		try( RestSession session = ts.newRestSession(user)) {
 
 			String ibuprofen = "IBUPROFEN";
-			String lepto = "(-)-"+ibuprofen;
+			String levo = "(-)-"+ibuprofen;
 
 			SubstanceAPI api = new SubstanceAPI(session);
 
@@ -161,7 +161,7 @@ public class LuceneSearchTest {
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
-					.addName(lepto)
+					.addName(levo)
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
@@ -171,13 +171,13 @@ public class LuceneSearchTest {
 			try(BrowserSession browserSession = ts.newBrowserSession(user)){
 				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
 
-				SubstanceSearcher.SearchResult r = searcher.exactSearch(lepto);
+				SubstanceSearcher.SearchResult r = searcher.exactSearch(levo);
 				assertEquals(1, r.getUuids().size());
 
 				ts.doAsUser(user, () -> {
 					Substance s = r.getSubstances().findFirst().get();
 
-					assertEquals(lepto, s.getName());
+					assertEquals(levo, s.getName());
 				});
 			}
 
@@ -185,14 +185,14 @@ public class LuceneSearchTest {
 	}
 
 	@Test
-	public void exactDextroNameSearchWhenLeptosIndexedTooShouldOnlyReturnDextro() throws Exception {
+	public void exactDextroNameSearchWhenLevosIndexedTooShouldOnlyReturnDextro() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
 		try (RestSession session = ts.newRestSession(user)) {
 
 			String ibuprofen = "IBUPROFEN";
-			String lepto = "(-)-" + ibuprofen;
+			String levo = "(-)-" + ibuprofen;
 			String dextro = "(+)-" + ibuprofen;
 
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -203,7 +203,7 @@ public class LuceneSearchTest {
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
-					.addName(lepto)
+					.addName(levo)
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
@@ -227,14 +227,14 @@ public class LuceneSearchTest {
 	}
 
 	@Test
-	public void normalNameSearchWhenLeptosAndDetrosIndexedTooShouldOnlyReturnAll3() throws Exception{
+	public void normalNameSearchWhenlevosAndDetrosIndexedTooShouldOnlyReturnAll3() throws Exception{
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
 		try (RestSession session = ts.newRestSession(user)) {
 
 			String ibuprofen = "IBUPROFEN";
-			String lepto = "(-)-" + ibuprofen;
+			String levo = "(-)-" + ibuprofen;
 			String dextro = "(+)-" + ibuprofen;
 
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -245,7 +245,7 @@ public class LuceneSearchTest {
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
-					.addName(lepto)
+					.addName(levo)
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
@@ -263,7 +263,7 @@ public class LuceneSearchTest {
 									.map(s -> s.getName())
 									.collect(Collectors.toSet());
 
-					Set<String> expected = setOf(ibuprofen, lepto, dextro);
+					Set<String> expected = setOf(ibuprofen, levo, dextro);
 					assertEquals(expected, actual);
 				});
 			}

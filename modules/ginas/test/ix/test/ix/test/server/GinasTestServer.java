@@ -48,10 +48,12 @@ import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.text.IndexValueMakerFactory;
+import ix.core.util.EntityUtils;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.ValidationUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
@@ -490,6 +492,8 @@ public class GinasTestServer extends ExternalResource{
 
         GinasApp.init();
         IndexValueMakerFactory.init();
+        EntityUtils.init();
+        Substance.init();
         //our APIs
        // SubstanceLoader.init();
     }

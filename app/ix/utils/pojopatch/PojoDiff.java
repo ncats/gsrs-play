@@ -717,7 +717,6 @@ public class PojoDiff {
 				if(isUnwrappedField(m)){
 					Map<String,Getter> subGetters=getGetters(m.getType());
 					for(Entry<String,Getter> ent:subGetters.entrySet()){
-						System.out.println("Registered:" + ent.getKey());
 						getterMap.computeIfAbsent(ent.getKey(),  k-> new UnwrappedDelegateFieldGetter(m,ent.getValue()));
 					}
 				}
@@ -774,7 +773,6 @@ public class PojoDiff {
 				if(isUnwrappedField(m)){
 					Map<String,Setter> subSetters=getSetters(m.getType());
 					for(Entry<String,Setter> ent:subSetters.entrySet()){
-						System.out.println("Registering setter:" + ent.getKey());
 						setterMap.computeIfAbsent(ent.getKey(), k-> new UnwrappedDelegateFieldSetter(m,ent.getValue()));
 					}
 				}

@@ -103,20 +103,5 @@ public class FDANameNormalizer implements EntityProcessor<Name>{
 	public void preUpdate(Name obj) {
 		prePersist(obj);
 	}
-
-	@Override
-	public void postPersist(Name obj) {}
-
-	@Override
-	public void preRemove(Name obj) {}
-
-	@Override
-	public void postRemove(Name obj) {}
-
-	@Override
-	public void postUpdate(Name obj) {}
-
-	@Override
-	public void postLoad(Name obj) {}
 	
 }

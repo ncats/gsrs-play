@@ -21,8 +21,10 @@ public class UniqueStack<K> implements ExecutionStack<K>{
 	}
 	
 	public void push(K k){
+		if(!this.contains(k)){
 		set.add(k);
 		list.add(k);
+		}
 	}
 
 	@Override

@@ -1,13 +1,14 @@
 package ix.core.models;
 
-import java.util.Date;
 import java.util.UUID;
-import java.util.List;
-import java.util.ArrayList;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import ix.core.util.TimeUtil;
-import play.db.ebean.Model;
-import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_session")

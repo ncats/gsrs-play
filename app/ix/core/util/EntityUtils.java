@@ -74,6 +74,10 @@ public class EntityUtils {
 
 	private final static Map<String, EntityInfo<?>> infoCache = new ConcurrentHashMap<String, EntityInfo<?>>();
 
+	
+	public static void init(){
+		infoCache.clear();
+	}
 	@Indexable // put default indexable things here
 	static final class DefaultIndexable {
 

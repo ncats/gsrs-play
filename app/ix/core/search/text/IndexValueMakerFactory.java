@@ -1,7 +1,6 @@
 package ix.core.search.text;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +17,7 @@ public class IndexValueMakerFactory {
 	static ConcurrentHashMap<String,IndexValueMaker> registry = new ConcurrentHashMap<>();
 	static Map<String,List<IndexValueMaker>> componentRegistry = new ConcurrentHashMap<>();
 	
+	@SuppressWarnings("unchecked")
 	public static <T> IndexValueMaker<T> forClass(Class<T> c){
 		if(!initialized)init();
 		return registry.computeIfAbsent(c.getName(), k->{
@@ -47,6 +47,7 @@ public class IndexValueMakerFactory {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public static void init(){
 		registry.clear();
 		componentRegistry.clear();

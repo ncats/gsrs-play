@@ -177,7 +177,6 @@ public class SearchResultContext {
     			   .entrySet()
     			   .stream()
     			   .sorted((e1,e2)->-(place.get(e2.getKey())-place.get(e1.getKey())))
-    			   .peek(e->System.out.println(e.getKey()))
     			   .forEach(e1->{
     				   grouped.put(e1.getKey(), e1.getValue());
     			   });
