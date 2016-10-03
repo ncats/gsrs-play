@@ -464,7 +464,6 @@ public class SubstanceAPI {
         public JsonNode asJson(){
             if(js ==null) {
                 js= session.extractJSON(response);
-                System.out.println(js.toString());
             }
             return js;
         }

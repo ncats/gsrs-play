@@ -32,7 +32,7 @@ public class ExportTest {
     @Rule
     public GinasTestServer ts = new GinasTestServer(new HashMap<String,Object>(){
     	{
-    		put("ix.cache.maxElementsNonEvictable",4);
+    		put("ix.cache.maxElementsNonEvictable",10);
     		
     	}
     });
@@ -115,7 +115,8 @@ public class ExportTest {
         searchAll(); 
         for(int i = 0; i<1000;i++)
         {
-            IxCache.set(String.valueOf(i), new NonEvictable());
+          //  System.out.println("cache Size = " + IxCache.getStatistics().size());
+            IxCache.set(Integer.toString(i), new NonEvictable());
         }
         System.out.println("testing cache");
         searchAll();
@@ -127,7 +128,7 @@ public class ExportTest {
     
         searchAll(); 
         for(int i = 0; i<100;i++){
-        	SubstanceSearcher.SearchResult searchResult = searcher.query(UUID.randomUUID().toString());
+        	SubstanceSearcher.SearchResult searchResult = searcher.query(UUID.randomUUID());
         	//System.out.println("Key:" + searchResult.getKey());
         	
         }
@@ -136,7 +137,7 @@ public class ExportTest {
 
     }
     @CacheStrategy(evictable=false)
-    private static class NonEvictable
+    public static class NonEvictable implements Serializable
     {
     	
     }

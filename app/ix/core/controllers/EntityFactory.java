@@ -1152,7 +1152,7 @@ public class EntityFactory extends Controller {
         		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
         			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
         			if(toDelete instanceof Model){
-        				System.out.println("deleting:" + ((Model)toDelete));
+        				Logger.warn("deleting:" + ((Model)toDelete));
         				((Model)toDelete).delete();
         			}
             	}
@@ -1227,7 +1227,6 @@ public class EntityFactory extends Controller {
             return Java8Util.ok (savedVersion.toJson(mapper));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
-            System.out.println(ex.getMessage());
             ex.printStackTrace();
             
             //Ebean.rollbackTransaction();

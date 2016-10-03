@@ -294,7 +294,7 @@ public class GinasApp extends App {
 
 
     public static Result error(int code, String mesg) {
-        return ok(ix.ginas.views.html.error.render(code, mesg));
+        return status(code,ix.ginas.views.html.error.render(code, mesg));
     }
     
     public static Result lastUnicorn(String name) {
@@ -499,8 +499,7 @@ public class GinasApp extends App {
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
                 return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType + ((wait!=null)?"&wait=" + wait:""));
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 ex.printStackTrace();
                 return _internalServerError (ex);
             }
@@ -585,7 +584,7 @@ public class GinasApp extends App {
 		        			return substructure(qStructure.smiles,  rows, page);
 		        	}
         		}catch(Exception e){
-        			e.printStackTrace();
+        			Logger.error(e.getMessage(),e);
         		}
         		return notFound(ix.ginas.views.html.error.render
                         (400, "Invalid search parameters: type=\""
@@ -597,7 +596,7 @@ public class GinasApp extends App {
         		return _substances (q, rows, page);
         	}
         }catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.error(ex.getMessage(), ex);
             return _internalServerError(ex);
         }
     }
@@ -628,7 +627,7 @@ public class GinasApp extends App {
 
 	    	return ok(pis);
     	}catch(Exception e){
-    		e.printStackTrace();
+    		Logger.error(e.getMessage(),e);
     		throw new IllegalStateException(e);
     	}
     }
@@ -704,7 +703,6 @@ public class GinasApp extends App {
             return App.fetchResult (context, rows, page, new SubstanceResultRenderer ());
         }
         catch (Exception ex) {
-            ex.printStackTrace();
             Logger.error("Can't perform sequence search", ex);
         }
         
@@ -774,7 +772,9 @@ public class GinasApp extends App {
         options.longRangeFacets.add(editedRange);
         options.longRangeFacets.add(approvedRange);
         
+        
         if(params!=null){
+        	
         	String[] dep =params.get("showDeprecated");
         	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
         		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
@@ -793,6 +793,7 @@ public class GinasApp extends App {
         final Map<String, String[]> params = App.getRequestQuery();
         
         final String sha1 = App.getKeyForCurrentRequest();
+        
         String[] order = params.get("order");
         
         
@@ -819,7 +820,6 @@ public class GinasApp extends App {
                                        result.count()));
             return result;
         }catch (Exception ex) {
-            ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
         return null;    
@@ -852,14 +852,14 @@ public class GinasApp extends App {
                          + result.finished());
             if (result.finished()) {
                 final String k = key + "/result"; 
+                
                 return getOrElse(k, ()->createSubstanceResult(result, rows, page));
             }
             return createSubstanceResult(result, rows, page);
             //otherwise, just show the first substances
         }else{
             return getOrElse(key, () -> {
-            	SubstanceResultRenderer srr=new SubstanceResultRenderer();
-                        Logger.debug("Cache missed: " + key);
+            			SubstanceResultRenderer srr=new SubstanceResultRenderer();
                         List<Facet> defFacets=getSubstanceFacets (30,request().queryString());
                         int nrows   = Math.max(Math.min(total,  rows), 1);
                         int[] pages = paging(nrows, page, total);
@@ -951,7 +951,7 @@ public class GinasApp extends App {
                 result.copyTo(substances, 0, result.count());
             }
             TextIndexer.Facet[] facets = filter(result.getFacets(), getDefaultFacets());
-            System.out.println("Filtered to:" + facets.length + " facets");
+            
 
             return ok(ix.ginas.views.html.substances.render
                     (1, result.count(), result.count(), new int[0],
@@ -1731,7 +1731,10 @@ public class GinasApp extends App {
 
 
     public static boolean isSingleSignOn(){
-        return Play.application().configuration().getBoolean("ix.authentication.trustheader", false);
+    	boolean isTrustHeaders=Play.application().configuration().getBoolean("ix.authentication.trustheader", false);
+    	boolean allowNonAuth=Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated", true);
+    	
+        return isTrustHeaders && !allowNonAuth;
     }
 
     private static class SubstanceReIndexListener implements ReIndexListener {

@@ -5,10 +5,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import ix.core.controllers.EntityFactory;
+import ix.core.search.SearchResultContext;
+import ix.ginas.models.v1.Substance;
+import ix.test.ix.seqaln.SequenceSearchAPI;
+import ix.test.ix.test.server.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -16,9 +21,6 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 
 public class LuceneSearchTest {
@@ -27,14 +29,9 @@ public class LuceneSearchTest {
     public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+    public GinasTestServer ts = new GinasTestServer();
 	
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-    };
+
     
     @Test    
    	public void testTwoWordLuceneNameSearchShouldReturn() throws Exception {
@@ -96,12 +93,194 @@ public class LuceneSearchTest {
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
+			try(BrowserSession browserSession = ts.newBrowserSession(ts.getFakeUser1())){
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.exactSearch(aspirin);
+				assertEquals(1, r.getUuids().size());
+			}
+
         }
     }
-    
-    
-    
-    @Test   
+
+
+	@Test
+	public void exactNormalNameSearchWhenlevosIndexedTooShouldNotReturnLevo() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try( RestSession session = ts.newRestSession(user)) {
+
+			String ibuprofen = "IBUPROFEN";
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+
+			new SubstanceBuilder()
+					.addName(ibuprofen)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName("(-)-"+ibuprofen)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			try(BrowserSession browserSession = ts.newBrowserSession(user)){
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.exactSearch(ibuprofen);
+				assertEquals(1, r.getUuids().size());
+
+				ts.doAsUser(user, () -> {
+					SearchResultContext src = SearchResultContext.getSearchResultContextForKey(r.getKey());
+
+					Substance s = r.getSubstances().findFirst().get();
+
+					assertEquals(ibuprofen, s.getName());
+				});
+			}
+
+		}
+	}
+
+	@Test
+	public void exactLevoNameSearchWhenLevosIndexedTooShouldOnlyReturnLevo() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try( RestSession session = ts.newRestSession(user)) {
+
+			String ibuprofen = "IBUPROFEN";
+			String levo = "(-)-"+ibuprofen;
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+
+			new SubstanceBuilder()
+					.addName(ibuprofen)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName(levo)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName("(+)-"+ibuprofen)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			try(BrowserSession browserSession = ts.newBrowserSession(user)){
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.exactSearch(levo);
+				assertEquals(1, r.getUuids().size());
+
+				ts.doAsUser(user, () -> {
+					Substance s = r.getSubstances().findFirst().get();
+
+					assertEquals(levo, s.getName());
+				});
+			}
+
+		}
+	}
+
+	@Test
+	public void exactDextroNameSearchWhenLevosIndexedTooShouldOnlyReturnDextro() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			String ibuprofen = "IBUPROFEN";
+			String levo = "(-)-" + ibuprofen;
+			String dextro = "(+)-" + ibuprofen;
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+			new SubstanceBuilder()
+					.addName(ibuprofen)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName(levo)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName(dextro)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.exactSearch(dextro);
+				assertEquals(1, r.getUuids().size());
+
+				ts.doAsUser(user, () -> {
+					Substance s = r.getSubstances().findFirst().get();
+
+					assertEquals(dextro, s.getName());
+				});
+			}
+
+		}
+	}
+
+	@Test
+	public void normalNameSearchWhenlevosAndDetrosIndexedTooShouldOnlyReturnAll3() throws Exception{
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			String ibuprofen = "IBUPROFEN";
+			String levo = "(-)-" + ibuprofen;
+			String dextro = "(+)-" + ibuprofen;
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+			new SubstanceBuilder()
+					.addName(ibuprofen)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName(levo)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName(dextro)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.nameSearch(dextro);
+				assertEquals(3, r.getUuids().size());
+
+				ts.doAsUser(user, () -> {
+					Set<String> actual = r.getSubstances()
+									.map(s -> s.getName())
+									.collect(Collectors.toSet());
+
+					Set<String> expected = setOf(ibuprofen, levo, dextro);
+					assertEquals(expected, actual);
+				});
+			}
+
+		}
+	}
+
+	private Set<String> setOf(String... values) {
+		Set<String> set = new HashSet<>(values.length);
+		for(String v : values){
+			set.add(v);
+		}
+		return set;
+	}
+
+
+	@Test
    	public void testSearchForQuotedPhraseShouldReturnOnlyRecordWithThatOrder() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -141,6 +320,14 @@ public class LuceneSearchTest {
             
             String html=api.getTextSearchHTML(q);
             assertRecordCount(html, 1);
+
+			try(BrowserSession browserSession = ts.newBrowserSession(ts.getFakeUser1())){
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.nameSearch(aspirin);
+				assertEquals(1, r.getUuids().size());
+			}
+
         }catch(Throwable e){
         	e.printStackTrace();
         	throw e;

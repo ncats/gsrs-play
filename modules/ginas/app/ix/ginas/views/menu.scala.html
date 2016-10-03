@@ -100,12 +100,14 @@
                     }
                 }
 
-                @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li>
-                        <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login"
-                        id ="login-button" target="_self">
-                            Login</a>
-                    </li>
+ 				@if(!ix.ginas.controllers.GinasApp.isSingleSignOn()) {
+	                @subjectNotPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
+	                    <li>
+	                        <a class="btn btn-default navbar-btn" ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login"
+	                        id ="login-button" target="_self">
+	                            Login</a>
+	                    </li>
+	                }
                 }
             </ul>
         </div>

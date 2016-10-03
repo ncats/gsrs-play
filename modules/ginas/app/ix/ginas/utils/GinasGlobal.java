@@ -12,6 +12,7 @@ import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.fda.FdaAuthenticator;
 import ix.ncats.controllers.auth.Authentication;
+import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.utils.Global;
 import play.Application;
 import play.Logger;
@@ -53,7 +54,6 @@ public class GinasGlobal extends Global {
 			String real = req.getHeader("X-Real-IP");
 
             UserProfile p = authenticator.authenticate(AuthenticationCredentials.create(ctx));
-            
             String uri=req.uri();
             char[] cs = uri.toCharArray();
             
@@ -123,7 +123,7 @@ public class GinasGlobal extends Global {
 		}
 		startRunners.clear();
 		isRunning=true;
-		
+		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
     }
 	@Override
 	public void onStop(Application app){

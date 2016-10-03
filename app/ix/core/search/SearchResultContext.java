@@ -129,14 +129,28 @@ public class SearchResultContext {
         sponsoredResults =result.getSponsoredMatches();
     }
 
+    /**
+     * Returns the set of records which matched a predefined 
+     * set of fields directly
+     * @return
+     */
+    @JsonIgnore
     public List getExactMatches(){
         return sponsoredResults;
     }
     
+    /**
+     * Returns query narrowing suggestions and their counts
+     * @return
+     */
     public List<FieldedQueryFacet> getFieldFacets(){
     	return fieldFacets;
     }
     
+    /**
+     * Returns true if getExactMatches() would return a list of size >0
+     * @return
+     */
     public boolean hasExactMatches(){
     	return sponsoredResults.size()>0;
     }
@@ -144,9 +158,10 @@ public class SearchResultContext {
     
     /**
      * Returns the suggested FieldQueryFacets grouped by match type, 
-     * in order they show in the enum
+     * in order they show in easy grouping
      * @return
      */
+    @JsonIgnore
     public LinkedHashMap<FieldedQueryFacet.MATCH_TYPE, List<FieldedQueryFacet>> getFieldFacetsMap(){
     	Map<MATCH_TYPE,Integer> place= new HashMap<MATCH_TYPE,Integer>();
     	place.put(MATCH_TYPE.FULL, 0);
@@ -162,7 +177,6 @@ public class SearchResultContext {
     			   .entrySet()
     			   .stream()
     			   .sorted((e1,e2)->-(place.get(e2.getKey())-place.get(e1.getKey())))
-    			   .peek(e->System.out.println(e.getKey()))
     			   .forEach(e1->{
     				   grouped.put(e1.getKey(), e1.getValue());
     			   });

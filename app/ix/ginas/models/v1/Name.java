@@ -270,5 +270,9 @@ public class Name extends CommonDataElementOfCollection {
 	public String toString(){
 		return "Name:\"" +this.getName()  +"\"";
 	}
+
+	public void setName(String name) {
+		this.name=name;
+	}
 	
 }

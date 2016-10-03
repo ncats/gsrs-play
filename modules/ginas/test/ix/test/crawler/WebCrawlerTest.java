@@ -187,7 +187,7 @@ public class WebCrawlerTest {
             if(statusCode ==401){
                 _401Links.add(url);
             }else if(statusCode == 404){
-            	System.out.println(url + "\t" + path.size());
+            	System.out.println("404\t" + url + "\t" + path.size());
             	_404Paths.add(new ArrayList<URL>(path));
             }else if(statusCode >= 500){
             	_InternalErrorPaths.add(new ArrayList<URL>(path));

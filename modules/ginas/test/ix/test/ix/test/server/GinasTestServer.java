@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import controllers.Default$;
+import ix.core.UserFetcher;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
@@ -45,10 +47,13 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.text.IndexValueMakerFactory;
+import ix.core.util.EntityUtils;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
 import ix.ginas.controllers.GinasLoad;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.ValidationUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
@@ -174,6 +179,10 @@ public class GinasTestServer extends ExternalResource{
         public String getEmail() {
             return username + "@example.com";
         }
+
+        public Principal asPrincipal() {
+            return new Principal(username, getEmail());
+        }
     }
 
     /**
@@ -182,7 +191,7 @@ public class GinasTestServer extends ExternalResource{
     public GinasTestServer(){
         this(DEFAULT_PORT);
     }
-    
+
 
     /**
      * Create a new GinasTestServer instance using the default port, with the given additional
@@ -341,8 +350,19 @@ public class GinasTestServer extends ExternalResource{
         return new User(FAKE_USER_3,FAKE_PASSWORD_3);
     }
 
-
-
+    @FunctionalInterface
+    public interface UserAction<E extends Exception>{
+        void doIt() throws E;
+    }
+    public  <E extends Exception> void doAsUser(User user, UserAction<E> action) throws E{
+        Principal oldP = UserFetcher.getActingUser();
+        try{
+            UserFetcher.setLocalThreadUser(user.asPrincipal());
+            action.doIt();
+        }finally{
+            UserFetcher.setLocalThreadUser(oldP);
+        }
+    }
 
 
 
@@ -471,6 +491,9 @@ public class GinasTestServer extends ExternalResource{
         GinasFactory.init();
 
         GinasApp.init();
+        IndexValueMakerFactory.init();
+        EntityUtils.init();
+        Substance.init();
         //our APIs
        // SubstanceLoader.init();
     }

@@ -594,7 +594,9 @@ public class App extends Authentication {
         if (query.get("facet") != null) {
             for (String f : query.get("facet"))
                 qfacets.add(f);
+        
         }
+        
         
         final boolean hasFacets = q != null
             && q.indexOf('/') > 0 && q.indexOf("\"") < 0;
@@ -616,6 +618,11 @@ public class App extends Authentication {
             for (String f : query.get("order"))
                 args.add(f);
         }
+        
+        args.add("dep" + query.get("showDeprecated"));
+        
+        
+        
         Collections.sort(args);
         return Util.sha1(args.toArray(new String[0]));
     }
@@ -1082,6 +1089,7 @@ public class App extends Authentication {
                  ex.printStackTrace();
              }
          }else {
+        	 
              String key = signature (query, getRequestQuery ());
              return key;
          }
@@ -1407,13 +1415,7 @@ public class App extends Authentication {
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheSummary () {
     	
-    	Thread.getAllStackTraces().entrySet().stream()
-    		.filter(e->Arrays.stream(e.getValue()).filter(s->s.getClassName().contains("ix.")).findAny().isPresent())
-    		.forEach(c->{
-    		for(StackTraceElement ste: c.getValue()){
-    			System.out.println(c.getKey() + "\t" + ste.toString());
-    		}
-    	});
+    	Util.printAllExecutingStackTraces();
     	return ok (ix.ncats.views.html.cachestats.render
                    (IxCache.getStatistics()));
     }

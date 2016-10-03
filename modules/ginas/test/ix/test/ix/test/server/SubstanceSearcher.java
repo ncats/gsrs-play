@@ -5,20 +5,16 @@ package ix.test.ix.test.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import ix.core.search.SearchResultContext;
+import ix.ginas.models.v1.Substance;
 import play.libs.ws.WSResponse;
 
 /**
@@ -148,7 +144,26 @@ public class SubstanceSearcher {
     public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
     	return new SearchResult(getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait)));
     }
-
+    public SearchResult nameSearch(String query) throws IOException{
+        return query("root_names_name:\"" + query + "\"");
+    }
+    public SearchResult exactNameSearch(String query) throws IOException{
+        return query("root_names_name:\"^" + query + "$\"");
+    }
+    public SearchResult codeSearch(String query) throws IOException{
+        return query("root_codes_code:\"" + query + "\"");
+    }
+    public SearchResult exactSearch(String query) throws IOException{
+        return query("^"+query + "$");
+    }
+    /**
+     * Get the UUIDs of all the loaded substances
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     * @throws IOException if there is a problem parsing the results.
+     */
+    public SearchResult query(UUID uuid) throws IOException {
+        return query(uuid.toString());
+    }
     /**
      * Get the UUIDs of all the loaded substances
      * @return a Set of UUIDs that match. will never be null but may be empty.
@@ -329,6 +344,14 @@ public class SubstanceSearcher {
         }
 
 
+        public Stream<Substance> getSubstances(){
+            System.out.println("search key = " + searchKey);
+            SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
+
+            return src.getResults().stream()
+                                .map( o -> (Substance) o);
+
+        }
         public InputStream export(String format){
             WSResponse resp = SubstanceSearcher.this.session.get("ginas/app/setExport?id="+searchKey + "&format="+format);
             return resp.getBodyAsStream();

@@ -4,6 +4,11 @@
 @ginas("g-srs", "null") {
     @menu()
 }{
+@if(flash.containsKey("warning")) {
+            <div class="alert-message warning">
+                <strong>@flash.get("warning")</strong>
+            </div>
+}
 <h1 class ="danger">@code error</h1>
     <div class = "alert alert-danger"><h1>@message</h1></div>
 }

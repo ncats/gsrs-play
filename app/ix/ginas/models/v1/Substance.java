@@ -72,7 +72,7 @@ import play.Play;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData implements ValidationMessageHolder {
-	
+
 
 	public static final String VALIDATION_REFERENCE_TYPE = "VALIDATION_MESSAGE";
 
@@ -80,11 +80,11 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 	public static final boolean REMOVE_INVALID_RELATIONSHIPS = false;
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
-	
+
 	private static final String DOC_TYPE_PROPERTY_IMPORT = "PROPERTY_IMPORT";
 	public static final String ALTERNATE_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
 	public static final String PRIMARY_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
-	
+
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH_IMPORT";
 	public static final String STATUS_APPROVED = "approved";
 	public static final String STATUS_PENDING = "pending";
@@ -93,20 +93,26 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 	private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
 	private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
-	
+
 	private static Map<String,Integer> codeSystemOrder = new HashMap<>();
-	
+
 	static{
+		init();
+	}
+
+	public static void init(){
 		//Add specific codes to ordered list
 		List<String> codeSystems=Play.application()
-			.configuration()
-			.getStringList("ix.ginas.codes.order", new ArrayList<String>());
+				.configuration()
+				.getStringList("ix.ginas.codes.order", new ArrayList<String>());
 		int i=0;
 		for(String s:codeSystems){
 			codeSystemOrder.put(s,i++);
 		}
 	}
-	
+
+
+
 	public enum SubstanceClass {
 		chemical, 
 		protein, 
@@ -122,7 +128,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		concept, 
 		reference
 	}
-	
+
 	public enum SubstanceDefinitionType{
 		PRIMARY,
 		ALTERNATIVE
@@ -134,27 +140,27 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		INVALID,
 		REPRESENTATIVE
 	}
-	
+
 	@Indexable(facet=true, name="Definition Type")
 	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
-	
+
 	@Indexable(facet=true, name="Definition Level")
 	public SubstanceDefinitionLevel definitionLevel = SubstanceDefinitionLevel.COMPLETE;
-	
-	
+
+
 	@JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
 	@Indexable(suggest = true, facet = true, name = "Substance Class")
 	@Column(name = "class")
 	public SubstanceClass substanceClass;
 
-	
+
 	@Indexable(suggest = true, facet = true, name = "Record Status")
 	public String status = STATUS_PENDING;
-	
+
 	@DataVersion
 	public String version = "1";
-	
-	
+
+
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	@JsonSerialize(using = PrincipalSerializer.class)
 	@JsonDeserialize(using = PrincipalDeserializer.class)
@@ -217,75 +223,75 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	// TODO in original schema, this field is missing its items: String
 	@JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
 	@JsonSerialize(using = KeywordListSerializer.class)
-    @JsonDeserialize(contentUsing = KeywordDeserializer.TagDeserializer.class)
+	@JsonDeserialize(contentUsing = KeywordDeserializer.TagDeserializer.class)
 	@ManyToMany(cascade = CascadeType.ALL)
-    @JsonView(BeanViews.Full.class)
-    @JoinTable(name = "ix_ginas_substance_tags")
+	@JsonView(BeanViews.Full.class)
+	@JoinTable(name = "ix_ginas_substance_tags")
 	public List<Keyword> tags = new ArrayList<Keyword>();
-	
+
 	public void addTag(Keyword tag){
 		for(Keyword k:tags){
 			if(k.getValue().equals(tag.getValue()))return;
 		}
 		tags.add(tag);
 	}
-	
+
 	public void addTagString(String tag){
 		this.addTag(new Keyword(GinasCommonData.TAG,tag));
 	}
-	
+
 	public boolean hasTagString(String tag){
 		for(Keyword k:tags){
 			if(k.getValue().equals(tag))return true;
 		}
 		return false;
 	}
-	
+
 
 	@Transient
 	protected transient ObjectMapper mapper = new ObjectMapper();
 
 	public Substance() {
 		this(SubstanceClass.concept);
-		
+
 	}
 
 	public Substance(SubstanceClass subcls) {
 		substanceClass = subcls;
 	}
-	
+
 	public List<Code> getCodes(){
 		return this.codes;
 	}
-	
+
 	@JsonIgnore
 	public List<Code> getOrderedCodes(){
-		
-		List<Code> nlist = new ArrayList<Code>(this.codes);
-		
-		nlist.sort(new Comparator<Code>(){
-					@Override
-					public int compare(Code c1, Code c2) {
-						if(c1.codeSystem==null){
-							if(c2.codeSystem==null){
-								return 0;
-							}
-							return 1;
-						}
-						if(c2.codeSystem==null)return -1;
-						Integer i1=codeSystemOrder.get(c1.codeSystem);
-						Integer i2=codeSystemOrder.get(c2.codeSystem);
 
-						if(i1!=null && i2!=null){
-							return i1-i2;
-						}
-						if(i1!=null && i2==null)return -1;
-						if(i1==null && i2!=null)return 1;
-						return c1.codeSystem.compareTo(c2.codeSystem);
+		List<Code> nlist = new ArrayList<Code>(this.codes);
+
+		nlist.sort(new Comparator<Code>(){
+			@Override
+			public int compare(Code c1, Code c2) {
+				if(c1.codeSystem==null){
+					if(c2.codeSystem==null){
+						return 0;
 					}
+					return 1;
 				}
-		);
-		
+				if(c2.codeSystem==null)return -1;
+				Integer i1=codeSystemOrder.get(c1.codeSystem);
+				Integer i2=codeSystemOrder.get(c2.codeSystem);
+
+				if(i1!=null && i2!=null){
+					return i1-i2;
+				}
+				if(i1!=null && i2==null)return -1;
+				if(i1==null && i2!=null)return 1;
+				return c1.codeSystem.compareTo(c2.codeSystem);
+			}
+		}
+				);
+
 		return nlist;
 	}
 
@@ -308,8 +314,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return node;
 	}
-	
-	
+
+
 	@JsonView(BeanViews.Compact.class)
 	@JsonProperty("_references")
 	public JsonNode getJsonReferences() {
@@ -482,7 +488,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	public List<Name> getAllNames() {
 		return names;
 	}
-	
+
 	@PrePersist
 	@PreUpdate
 	public void fixstatus(){
@@ -509,12 +515,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 		if (!remove.isEmpty()) {
 
-				for (Relationship rel : remove)
-					relationships.remove(rel);
+			for (Relationship rel : remove)
+				relationships.remove(rel);
 			Logger.warn("Substance " + approvalID + " has " + remove.size()
-					+ " invalid relationship(s)!");
+			+ " invalid relationship(s)!");
 		}
-		
+
 	}
 
 	@JsonIgnore
@@ -536,7 +542,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return false;
 	}
-	
+
 	@JsonIgnore
 	public boolean isPrimaryDefinition() {
 		return this.definitionType==SubstanceDefinitionType.PRIMARY;
@@ -562,12 +568,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		return null;
 	}
 
-	
+
 	public String getApprovalID() {
 		return approvalID;
 	}
-	
-	
+
+
 	@JsonIgnore
 	@DataValidated
 	public boolean isValidated(){
@@ -577,7 +583,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	//probably should be turned off
 	@JsonProperty("_approvalIDDisplay")
 	public String getApprovalIDDisplay() {
-		
+
 		if (approvalID != null)
 			return approvalID;
 		SubstanceReference subRef = getParentSubstanceReference();
@@ -587,19 +593,19 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		if(this.isAlternativeDefinition()){
 			SubstanceReference subRef2 = this.getPrimaryDefinitionReference();
 			if(subRef2!=null){
-				
+
 				if(subRef2.approvalID!=null){
 					return subRef2.approvalID;
 				}
 			}
 		}
-		
+
 		if(!isValidated()){
 			return this.status + " record";
 		}
 		return "NO APPROVAL ID";
 	}
-	
+
 	@JsonIgnore
 	public String getBestId() {
 		if (approvalID != null)
@@ -618,7 +624,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return this.uuid.toString();
 	}
-	
+
 
 	@JsonIgnore
 	public List<SubstanceReference> getChildConceptReferences() {
@@ -630,7 +636,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return subConcepts;
 	}
-	
+
 	@JsonIgnore
 	public List<SubstanceReference> getAlternativeDefinitionReferences() {
 		List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
@@ -651,7 +657,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return subConcepts;
 	}
-	
+
 	@JsonIgnore
 	public SubstanceReference getPrimaryDefinitionReference() {
 		for (Relationship r : relationships) {
@@ -661,7 +667,12 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return null;
 	}
-	
+
+	/**
+	 * Returns this substance as a SubstanceReference
+	 * for linking.
+	 * @return
+	 */
 	public SubstanceReference asSubstanceReference(){
 		SubstanceReference subref=new SubstanceReference();
 		subref.refPname=this.getName();
@@ -669,7 +680,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		subref.approvalID=this.approvalID;
 		return subref;
 	}
-	
+
 	@JsonIgnore
 	public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
 		for(Relationship sref:getAlternativeDefinitionRelationships()){
@@ -677,7 +688,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 				return true;
 			}
 		}
-		
+
 		Relationship r = new Relationship();
 		r.relatedSubstance=sub.asSubstanceReference();
 		r.type=ALTERNATE_SUBSTANCE_REL;
@@ -730,7 +741,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		return ret;
 	}
 
-	
+
 	public Modifications getModifications() {
 		return modifications;
 	}
@@ -770,7 +781,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		this.notes.add(n);
 		return n;
 	}
-	
+
 	/**
 	 * Temporary measure to persist validation messages without the use
 	 * of a data model change
@@ -791,16 +802,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		this.notes.add(n);
 		return n;
 	}
-	
 
-	
-	
+
+
+
 	public Note addNote(String note) {
 		Note n = new Note();
 		n.note=note;
 		return n;
 	}
-	
+
 
 	@JsonIgnore
 	public String getDisplayStatus(){
@@ -809,17 +820,17 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return status;
 	}
-	
+
 	@JsonIgnore
-	 public String getLinkingID(){
-	        if(approvalID!=null){
-	                return approvalID;
-	        }
-			UUID uuid = getUuid();
-	        if(uuid!=null){
-	                return uuid.toString().split("-")[0];
-	        }
-	        return getName();
+	public String getLinkingID(){
+		if(approvalID!=null){
+			return approvalID;
+		}
+		UUID uuid = getUuid();
+		if(uuid!=null){
+			return uuid.toString().split("-")[0];
+		}
+		return getName();
 	}
 
 	@PreUpdate
@@ -828,16 +839,16 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		try{
 			i = Integer.parseInt(this.version);
 		}catch(Exception e){
-			
+
 		}
 		i++;
 		this.version=i+"";
 	}
-	
+
 	public List<Note> getNotes(){
 		return this.notes;
 	}
-	
+
 	/**
 	 * These are the simple notes that we actually want to disaply,
 	 * not the long complicated ones.
@@ -854,10 +865,10 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return displayNotes;
 	}
-	
+
 	@JsonIgnore
 	public List<SubstanceReference> getDependsOnSubstanceReferences(){
-		
+
 		List<SubstanceReference> srefs=new ArrayList<SubstanceReference>();
 		Modifications m=this.getModifications();
 		if(m!=null){
@@ -876,8 +887,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return srefs;
 	}
-	
-	
+
+
 	public static Class<?>[] getAllClasses() {
 		return new Class<?>[]{
 			Substance.class,
@@ -890,25 +901,25 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 			SpecifiedSubstanceGroup1Substance.class
 		};
 	}
-	
+
 	@Override
 	public Class<?>[] fetchEquivalentClasses(){
 		return getAllClasses();
 	}
-	
-	
+
+
 	public int hashCode(){
 		return (this.getUuid() + this.version).hashCode();
 	}
 	public boolean equals(Object o){
 		if(o == null)return false;
 		if(!(o instanceof Substance))return false;
-		
+
 		String thisID= (this.getUuid() + this.version);
 		String thatID= (((Substance)o).getUuid() + ((Substance)o).version);
 		return thisID.equals(thatID);
 	}
-	
+
 	@JsonIgnore
 	@Indexable(facet=true, name="Modifications")
 	public List<String> getModifiedCategory(){
@@ -929,9 +940,9 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return mods;
 	}
-	
-	
-	
+
+
+
 	@JsonIgnore
 	@Indexable(facet=true)
 	public String getSubstanceDeprecated(){
@@ -947,17 +958,17 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	public List<Keyword> removeTagString(String tag) {
 		List<Keyword> removed = new ArrayList<Keyword>();
 
-        Iterator<Keyword> iter = tags.iterator();
-        while(iter.hasNext()){
-            Keyword k = iter.next();
-            if(k.getValue().equals(tag)){
-                iter.remove();
-                removed.add(k);
-            }
-        }
+		Iterator<Keyword> iter = tags.iterator();
+		while(iter.hasNext()){
+			Keyword k = iter.next();
+			if(k.getValue().equals(tag)){
+				iter.remove();
+				removed.add(k);
+			}
+		}
 		return removed;
 	}
-	
+
 	/**
 	 * Returns references which are associated with the act of
 	 * making the record "public".
@@ -975,19 +986,19 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		}
 		return rlist;
 	}
-	
+
 	@JsonIgnore
 	@Indexable(facet = true, name = "Name Count", sortable=true)
 	public int getNameCount(){
 		return names.size();
 	}
-	
+
 	@JsonIgnore
 	@Indexable(facet = true, name = "Reference Count", sortable=true)
 	public int getReferenceCount(){
 		return names.size();
 	}
-	
+
 	@JsonIgnore
 	public boolean hasCodes(){
 		return !this.codes.isEmpty();
@@ -996,138 +1007,138 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	public boolean hasNames(){
 		return !this.names.isEmpty();
 	}
-	
+
 	@JsonIgnore
 	public boolean hasRelationships(){
 		return !this.relationships.isEmpty();
 	}
-	
-	
-	
-	
 
-    /**
-     * Create a new {@link Chemical} object for this Substance and ignore
-     * any errors or warnings.
-     *
-     * @return a new {@link Chemical} object, should never be null.
-     *
-     */
-    @JsonIgnore
-    @Transient
-    public Chemical toChemical() {
-        return toChemical(new ArrayList<>());
-    }
 
-    /**
-     * Create a new {@link Chemical} object for this Substance and report any
-     * errors or warnings to the passed in {@link GinasProcessingMessage} parameter.
-     *
-     * @param messages the list of {@link GinasProcessingMessage}s to add
-     *                 errors/warnings to if there are problems.
-     * @return a new {@link Chemical} object, should never be null.
-     *
-     * @throws NullPointerException if messages is null
-     */
-    @JsonIgnore
-    @Transient
-    public Chemical toChemical(List<GinasProcessingMessage> messages) {
-        Objects.requireNonNull(messages);
-        Chemical c = getChemicalImpl(messages);
 
-        if (c.getDim() < 2) {
-            c.clean2D();
-        }
-        if (approvalID != null) {
-            c.setProperty("APPROVAL_ID", approvalID);
-        }
-        c.setProperty("NAME", getName());
-        c.setName(getName());
-        StringBuilder sb = new StringBuilder();
 
-        for (Name n : getOfficialNames()) {
-            String name = n.name;
-            sb.append(name + "\n");
 
-            for (String loc : n.getLocators(this)) {
-                sb.append(name + " [" + loc + "]\n");
-            }
+	/**
+	 * Create a new {@link Chemical} object for this Substance and ignore
+	 * any errors or warnings.
+	 *
+	 * @return a new {@link Chemical} object, should never be null.
+	 *
+	 */
+	@JsonIgnore
+	@Transient
+	public Chemical toChemical() {
+		return toChemical(new ArrayList<>());
+	}
 
-        }
-        if (sb.length() > 0) {
-            c.setProperty("OFFICIAL_NAMES", sb.toString());
-        }
-        // clear builder
-        sb.setLength(0);
-        for (Name n : getNonOfficialNames()) {
-            String name = n.name;
-            sb.append(name + "\n");
+	/**
+	 * Create a new {@link Chemical} object for this Substance and report any
+	 * errors or warnings to the passed in {@link GinasProcessingMessage} parameter.
+	 *
+	 * @param messages the list of {@link GinasProcessingMessage}s to add
+	 *                 errors/warnings to if there are problems.
+	 * @return a new {@link Chemical} object, should never be null.
+	 *
+	 * @throws NullPointerException if messages is null
+	 */
+	@JsonIgnore
+	@Transient
+	public Chemical toChemical(List<GinasProcessingMessage> messages) {
+		Objects.requireNonNull(messages);
+		Chemical c = getChemicalImpl(messages);
 
-            for (String loc : n.getLocators(this)) {
-                sb.append(name + " [" + loc + "]\n");
-            }
-        }
-        if (sb.length() > 0) {
-            c.setProperty("NON_OFFICIAL_NAMES", sb.toString());
-        }
-        // clear builder
-        sb.setLength(0);
+		if (c.getDim() < 2) {
+			c.clean2D();
+		}
+		if (approvalID != null) {
+			c.setProperty("APPROVAL_ID", approvalID);
+		}
+		c.setProperty("NAME", getName());
+		c.setName(getName());
+		StringBuilder sb = new StringBuilder();
 
-        for (Code cd : codes) {
-            String codesset = c.getProperty(cd.codeSystem);
+		for (Name n : getOfficialNames()) {
+			String name = n.name;
+			sb.append(name + "\n");
 
-            StringBuilder codeBuilder;
-            if (codesset == null || codesset.trim().equals("")) {
-                codeBuilder = new StringBuilder();
-            } else {
-                codeBuilder = new StringBuilder(codesset).append('\n');
-            }
-            codeBuilder.append(cd.code);
-            if (!"PRIMARY".equals(cd.type)) {
-                codeBuilder.append(" [").append(cd.type).append("]");
-            }
-            c.setProperty(cd.codeSystem, codeBuilder.toString());
-        }
-        for (GinasProcessingMessage gpm : messages) {
-            String codesset = c.getProperty("EXPORT-WARNINGS");
+			for (String loc : n.getLocators(this)) {
+				sb.append(name + " [" + loc + "]\n");
+			}
 
-            StringBuilder codeBuilder;
-            if (codesset == null || codesset.trim().equals("")) {
-                codeBuilder = new StringBuilder();
-            } else {
-                codeBuilder = new StringBuilder(codesset).append('\n');
-            }
-            codeBuilder.append(gpm.message);
-            c.setProperty("EXPORT-WARNINGS", codeBuilder.toString());
-        }
-        return c;
-    }
+		}
+		if (sb.length() > 0) {
+			c.setProperty("OFFICIAL_NAMES", sb.toString());
+		}
+		// clear builder
+		sb.setLength(0);
+		for (Name n : getNonOfficialNames()) {
+			String name = n.name;
+			sb.append(name + "\n");
 
-    /**
-     * Create a new {@link Chemical} object for this Substance.
-     * By default, this will create an empty Chemical, subclasses
-     * that are actually Chemicals should override this method
-     * to return something meaningful.
-     *
-     * @param messages the list of {@link GinasProcessingMessage}s to add
-     *                 errors/warnings to if there are problems.
-     * @return a new {@link Chemical} object, should never be null.
-     */
+			for (String loc : n.getLocators(this)) {
+				sb.append(name + " [" + loc + "]\n");
+			}
+		}
+		if (sb.length() > 0) {
+			c.setProperty("NON_OFFICIAL_NAMES", sb.toString());
+		}
+		// clear builder
+		sb.setLength(0);
+
+		for (Code cd : codes) {
+			String codesset = c.getProperty(cd.codeSystem);
+
+			StringBuilder codeBuilder;
+			if (codesset == null || codesset.trim().equals("")) {
+				codeBuilder = new StringBuilder();
+			} else {
+				codeBuilder = new StringBuilder(codesset).append('\n');
+			}
+			codeBuilder.append(cd.code);
+			if (!"PRIMARY".equals(cd.type)) {
+				codeBuilder.append(" [").append(cd.type).append("]");
+			}
+			c.setProperty(cd.codeSystem, codeBuilder.toString());
+		}
+		for (GinasProcessingMessage gpm : messages) {
+			String codesset = c.getProperty("EXPORT-WARNINGS");
+
+			StringBuilder codeBuilder;
+			if (codesset == null || codesset.trim().equals("")) {
+				codeBuilder = new StringBuilder();
+			} else {
+				codeBuilder = new StringBuilder(codesset).append('\n');
+			}
+			codeBuilder.append(gpm.message);
+			c.setProperty("EXPORT-WARNINGS", codeBuilder.toString());
+		}
+		return c;
+	}
+
+	/**
+	 * Create a new {@link Chemical} object for this Substance.
+	 * By default, this will create an empty Chemical, subclasses
+	 * that are actually Chemicals should override this method
+	 * to return something meaningful.
+	 *
+	 * @param messages the list of {@link GinasProcessingMessage}s to add
+	 *                 errors/warnings to if there are problems.
+	 * @return a new {@link Chemical} object, should never be null.
+	 */
 	protected Chemical getChemicalImpl(List<GinasProcessingMessage> messages) {
 		messages.add(GinasProcessingMessage
 				.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
 		return DEFAULT_READER_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
 	}
-	
-	
-	
+
+
+
 	@JsonIgnore
 	public List<Edit> getEdits(){
 		//this is not entirely necessary, and could be done
 		//more explicitly
 		return EntityWrapper.of(this).getEdits(); 
 	}
-	
+
 	/**
 	 * This is not yet implemented, so it always returns an empty list.
 	 * @return
@@ -1136,8 +1147,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	public List<GinasProcessingMessage> getValidationMessages(){
 		return new ArrayList<GinasProcessingMessage>();
 	}
-	
-	
+
+
 	//TODO: make this better, maybe multiple keywords?
 	/**
 	 * Used specifically for faceting, right now it's not
@@ -1163,14 +1174,14 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 					validationTypes.add("Structure Collision");
 				}
 			}
-			
+
 		}
 		return validationTypes;
 	}
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * Store the validation message on the record.
 	 * 
@@ -1194,5 +1205,5 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 			}
 		}
 	}
-	
+
 }

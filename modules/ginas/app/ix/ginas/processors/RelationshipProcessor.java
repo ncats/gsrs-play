@@ -14,6 +14,8 @@ import ix.ginas.models.v1.SubstanceReference;
 import play.db.ebean.Model;
 
 public class RelationshipProcessor implements EntityProcessor<Relationship>{
+	private static final String MENTION = "mention";
+
 	public Model.Finder<UUID, Relationship> finder;
 	
 	private static RelationshipProcessor _instance = null;
@@ -29,7 +31,7 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	}
 	
 	public void addInverse(final Relationship thisRelationship){
-		if(thisRelationship.isGenerator() && thisRelationship.isAutomaticInvertable()){
+		if(thisRelationship.shouldBeInverted()){
 			final Substance thisSubstance=thisRelationship.fetchOwner();
 			final Substance otherSubstance=SubstanceFactory.getFullSubstance(thisRelationship.relatedSubstance); //db fetch
 			
@@ -37,10 +39,12 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 			if(otherSubstance ==null){ //probably warn
 				return;
 			}
-			
-			Relationship preChangeReference=createAndAddInvertedRelationship(thisRelationship, thisSubstance.asSubstanceReference(), otherSubstance);
-			
-			if(preChangeReference==null){
+			try{
+				if(!canCreateInverstFor(thisRelationship, thisSubstance.asSubstanceReference(), otherSubstance)){
+					return;
+				}
+			}catch(Exception e){
+				e.printStackTrace();
 				return;
 			}
 			
@@ -62,10 +66,10 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 	
 	public Relationship createAndAddInvertedRelationship(Relationship obj, SubstanceReference oldSub, Substance newSub){
 		//doesn't exist yet
-		if(obj.isGenerator() && obj.isAutomaticInvertable()){
+		if(obj.shouldBeInverted()){
 			if(newSub==null){
 				//TODO: Look into this
-				obj.relatedSubstance.substanceClass="mention";
+				obj.relatedSubstance.substanceClass=MENTION;
 			}else{
 				Relationship r = obj.fetchInverseRelationship();
 				r.originatorUuid=obj.getOrGenerateUUID().toString();
@@ -87,11 +91,43 @@ public class RelationshipProcessor implements EntityProcessor<Relationship>{
 		}
 		return null;
 	}
+
+	/**
+	 * Test to see if the given relationship can be inverted and created for the
+	 * other substance. Specifically, it tests that the relationship is:
+	 * 
+	 * <ol>
+	 * <li>New</li>
+	 * <li>Not otherwise automatically inverted</li>
+	 * <li>Invertible</li>
+	 * <li>That the inverted relationship doesn't already exist on target substance</li>
+	 * </ol>
+	 * 
+	 * 
+	 * @param obj
+	 * @param oldSub
+	 * @param newSub
+	 * @return
+	 */
+	public boolean canCreateInverstFor(Relationship obj, SubstanceReference oldSub, Substance newSub){
+		if(obj.shouldBeInverted()){
+			if(newSub!=null){
+				Relationship r = obj.fetchInverseRelationship();
+				for(Relationship rOld:newSub.relationships){
+					if(r.type.equals(rOld.type) && oldSub.refuuid.equals(rOld.relatedSubstance.refuuid)){
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	@Override
 	public void preUpdate(Relationship obj) {
 		
-		if(obj.isGenerator() && obj.isAutomaticInvertable()){
+		if(obj.shouldBeInverted()){
 			List<Relationship> rel = finder.where().eq("originatorUuid",
 					obj.getOrGenerateUUID().toString()).findList();
 			for(Relationship r1 : rel){

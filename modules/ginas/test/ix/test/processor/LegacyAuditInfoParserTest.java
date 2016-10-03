@@ -1,30 +1,24 @@
 package ix.test.processor;
 
-import static ix.test.SubstanceJsonUtil.*;
-import static org.junit.Assert.*;
+import static ix.test.SubstanceJsonUtil.ensureFailure;
+import static ix.test.SubstanceJsonUtil.ensurePass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
-import ix.core.plugins.IxCache;
-import ix.core.util.StopWatch;
 import ix.ginas.models.v1.Note;
 import ix.ginas.processors.LegacyAuditInfoProcessor;
 import ix.test.builder.SubstanceBuilder;
@@ -32,10 +26,6 @@ import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import play.Configuration;
-
-import play.Play;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 public class LegacyAuditInfoParserTest {
 	private static final String FORCE_FAIL_TAG = "FORCE_FAIL";

@@ -6,6 +6,7 @@ public class IndexableValueFromRaw implements IndexableValue{
 	String name;
 	Object value;
 	boolean dynamic=false;
+	boolean facet=false;
 	
 	long[] range = new long[]{};
 	double[] drange = new double[]{};
@@ -33,9 +34,15 @@ public class IndexableValueFromRaw implements IndexableValue{
 	}
 	
 	@Override
+	public boolean facet(){
+		return this.facet;
+	}
+	
+	@Override
 	public long[] ranges(){
 		return range;
 	}
+
 	
 	@Override
 	public double[] dranges(){
@@ -44,6 +51,7 @@ public class IndexableValueFromRaw implements IndexableValue{
 	
 	public void setDynamic(){
 		this.dynamic=true;
+		this.facet=true;
 	}
 	
 	

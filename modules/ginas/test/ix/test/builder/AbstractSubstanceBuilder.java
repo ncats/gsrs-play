@@ -136,6 +136,15 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         return andThen( s->{s.setLastEdited(d);});
     }
     
+    public T addReflexiveActiveMoietyRelationship(){
+    	return andThen( s->{ 
+    		Relationship r = new Relationship();
+    		r.type=Relationship.ACTIVE_MOIETY_RELATIONSHIP_TYPE;
+    		r.relatedSubstance=s.asSubstanceReference();
+    		s.relationships.add(r);
+    	});
+    }
+    
     
     public T setVersion(int version){
         return andThen( s->{ s.version = Integer.toString(version);});

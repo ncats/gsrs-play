@@ -293,7 +293,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			e.newValue = saved.toFullJson();
 			e.comments= ew.getChangeReason().orElse(null);
 			e.save();
-			System.out.println("Saved:" + e.id);
 			
             return saved;
         }catch(Exception ex){
@@ -493,8 +492,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             for (Hook m : methods) {
                 try {
                     m.invoke(bean);
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                 	ex.printStackTrace();
 					Logger.trace("Can't invoke method "
 					        +clazz+"["+m.getName()+"]", ex);
@@ -592,9 +590,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     m.invoke(bean);
                 }catch (Exception ex) {
                 	ex.printStackTrace();
-                    Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+ew.getKind()+"]", ex);
-                    return false;
+                    Logger.trace("Can't invoke method "+m.getName()+"["+ew.getKind()+"]", ex);
+                    throw new IllegalStateException(ex);
                 }
             }
         }

@@ -416,11 +416,11 @@ public class Authentication extends Controller {
             long current = TimeUtil.getCurrentTimeMillis();
             if ((current - session.accessed) > TIMEOUT) {
                 Logger.debug("Session " + session.id + " expired!");
+                flash("warning", "Your session has expired!");
                 flush(session);
+                return null;
             } else {
                 session.accessed = current;
-                //commented out for now
-                //Logger.debug("Session " + session.id + " expires at " + new java.util.Date(current + TIMEOUT));
             }
         } else {
             session().clear();

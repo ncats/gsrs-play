@@ -56,7 +56,7 @@ public class RelationshipInvertTest {
     }
 
     
-    @Test  
+    @Test   
     public void addSubstanceWithRelationshipThenAddRelatedSubstanceShouldResultInBirectionalRelationship()   throws Exception {
         //submit primary, with dangling relationship
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
@@ -85,7 +85,7 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test  
+    @Test   
     public void removeSourceRelationshipShouldRemoveInvertedRelationship()   throws Exception {
     	
     	 //submit primary, with dangling relationship
@@ -130,7 +130,7 @@ public class RelationshipInvertTest {
     
     @Test  
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationship()   throws Exception {
-    	
+    	try{
         //submit primary
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
         JsonNode newRelate = js.at("/relationships/0");
@@ -168,11 +168,14 @@ public class RelationshipInvertTest {
         String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
         assertTrue(refUuidA.equals(uuid));
         assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
-    	
+    	}catch(Throwable t){
+    		t.printStackTrace();
+    		throw t;
+    	}
     	
     }
     
-    @Test  
+    @Test   
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndIncrementVersion()   throws Exception {
     	
         //submit primary
@@ -217,7 +220,7 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test
+    @Test 
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {
     	try{
     		//This is very hard to read right now. A substanceBuilder would make this easy.
@@ -269,7 +272,6 @@ public class RelationshipInvertTest {
         assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
     	assertEquals("2",fetchedA.at("/version").asText());
     	
-    	System.out.println("This part breaks?");
     	
     	//This part is broken?
     	//Doesn't even return? 
@@ -289,7 +291,7 @@ public class RelationshipInvertTest {
     }
     
     
-    @Test 
+    @Test  
     public void testAddRelationshipAfterAddingEachSubstanceThenRemovingInvertedRelationshipShouldFail()   throws Exception {
     	
         //submit primary
@@ -337,7 +339,7 @@ public class RelationshipInvertTest {
     	
     }
     
-    @Test  
+    @Test   
     public void testDontAddRelationshipIfOneLikeItAlreadyExists()   throws Exception {
     	
         //submit primary
@@ -382,7 +384,7 @@ public class RelationshipInvertTest {
         
     }
     
-    @Test  
+    @Test   
     public void testDontAddRelationshipIfOneLikeItAlreadyExistsAndDontMakeEdit()   throws Exception {
     	
         //submit primary
