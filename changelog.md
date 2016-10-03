@@ -41,6 +41,8 @@ Enhancements
 22. Searches which match an exact field that's flagged as special
     come up first, before everything else.
 23. Field suggestions view updated to be simpler
+24. Alignment on sequence search display enhanced
+25. Include runTests scripts for windows / unix
 
 
 Bug Fixes
