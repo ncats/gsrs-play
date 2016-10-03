@@ -20,6 +20,10 @@ body, html {
     padding-top: 0px;
 }
 
+.panel-group{
+    margin-bottom: 20px;
+}
+
 #left-menu{
     padding-top: .7%;
     height: 50px;
@@ -788,12 +792,6 @@ h3.display-name {
 
 .list-item .struc-thumb {
     cursor: pointer;
-}
-
-.fieldfacet {
-    background: #EBF6E7 none repeat scroll 0% 0%;
-    padding-left: 10px;
-    margin-left: 0px;
 }
 
 .spacer {

@@ -153,9 +153,9 @@
                 	@if(ctx.hasExactMatches()){
                 	<div ng-init="hideall=true" ng-show="hideall">
                 	@if(ctx.getExactMatches().size()==1){
-                		<h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
+                		<h4 class="no-margin center-text">There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
                 	}else{
-                		<h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
+                		<h4 class="no-margin center-text">Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
                 	}
                     @for(sub <- ctx.getExactMatches()) {
                         @sub match {
