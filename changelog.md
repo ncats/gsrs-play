@@ -38,6 +38,9 @@ Enhancements
     as a developer.
 20. Minor UI improvements
 21. Allow admins to show deprecated records with a checkbox
+22. Searches which match an exact field that's flagged as special
+    come up first, before everything else.
+23. Field suggestions view updated to be simpler
 
 
 Bug Fixes
