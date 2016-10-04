@@ -1,17 +1,9 @@
 package ix.test.crawler;
 
-import com.gargoylesoftware.htmlunit.WebResponse;
-import ix.core.plugins.IxCache;
-import ix.core.util.StopWatch;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceLoader;
-import org.junit.*;
-import play.libs.ws.WSResponse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOError;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -20,7 +12,23 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import ix.core.plugins.ConsoleFilterPlugin;
+import ix.core.plugins.IxCache;
+import ix.core.util.FilteredPrintStream.FilterSession;
+import ix.core.util.Filters;
+import ix.core.util.LoggingFinder;
+import ix.core.util.StopWatch;
+import ix.test.ix.test.server.BrowserSession;
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.SubstanceLoader;
+import ix.utils.Util;
+import play.libs.ws.WSResponse;
 
 /**
  * Created by katzelda on 6/29/16.
@@ -57,6 +65,7 @@ public class WebCrawlerTest {
 
 
     @Test
+    @Ignore
     public void crawl() throws Exception{
 
 
@@ -75,6 +84,7 @@ public class WebCrawlerTest {
 
 
     @Test
+    @Ignore
     public void restrictedForbiddenLinksNotDiscoverableWhenUnAuthenticated() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
@@ -86,6 +96,7 @@ public class WebCrawlerTest {
     }
 
     @Test
+    @Ignore
     public void nothingRestrictedForAdmin() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.newBrowserSession(admin)) {
@@ -99,7 +110,7 @@ public class WebCrawlerTest {
 
     }
     @Test
-    @Ignore
+    
     /*
      * This should work, but does not right now. Waiting on issue #920
      */
@@ -110,10 +121,18 @@ public class WebCrawlerTest {
             URL url = ts.getHomeUrl();
 
             crawler.crawl(url);
+            
+            
             if(!spy.get404Paths().isEmpty()){
             	System.err.println("404 links:");
-            	System.err.println(spy.get404Paths().toString());
+            	spy.get404Paths().stream().forEach(l->{
+            		System.err.println("Path to 404:");
+            		l.stream().forEach(href->{
+            			System.err.println("\t+" + href.toString());
+            		});
+            	});
             }
+           
             assertTrue(spy.get404Paths().isEmpty());
             
         }
@@ -121,6 +140,7 @@ public class WebCrawlerTest {
     }
     
     @Test
+    @Ignore
     public void findNoInternalServerErrorsOnCrawl() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
@@ -139,6 +159,7 @@ public class WebCrawlerTest {
     }
 
     @Test
+    @Ignore
     public void restrictedLinksAreAccessibleFromAdmin() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {

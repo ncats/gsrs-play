@@ -13,7 +13,9 @@
 	Primary Definition&nbsp;</button>
 <div class="col-md-12 table-responsive" uib-collapse = "primarycollapse">
 						@if(SubstanceFactory.getFullSubstance(sref) != null) {
-                            @subref(sref)
+                            <div class="col-md-3">
+			                	@subref(sref)
+			                </div>
                         }else{
                             <div class="col-md-3 text-center thumb-col">
                                 <div class="panel panel-default">
