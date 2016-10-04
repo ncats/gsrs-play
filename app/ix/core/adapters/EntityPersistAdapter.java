@@ -165,7 +165,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     private static StructureIndexerPlugin strucProcessPlugin;
     private static SequenceIndexerPlugin seqProcessPlugin;
     
+    public static boolean isReindexing=false;
+    
     private static ConcurrentHashMap<Key, Integer> alreadyLoaded;
+    
     
     public static EntityPersistAdapter getInstance(){
     	return _instance;
@@ -784,10 +787,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         	if(ew.hasKey()){
 	        	Key key=ew.getKey();
 	            if(key!=null) {
-	            	if(alreadyLoaded.containsKey(key)){
-	                    return;
-	                }
-	                alreadyLoaded.put(key, 0);
+	            	//TODO: Investigate this
+	            	if(isReindexing){
+		            	if(alreadyLoaded.containsKey(key)){
+		            		return;
+		                }
+		                alreadyLoaded.put(key, 0);
+	            	}
 	            }
 	            if(deleteFirst) {
 	                deleteIndexOnBean(ew.getValue());
@@ -796,10 +802,16 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         	}
         } catch (Exception e) {
             Logger.error("Problem reindexing entity:" ,e);
+            e.printStackTrace();
         }
     }
 
+    public static void startReindexing(){
+    	isReindexing=true;
+    	alreadyLoaded.clear();
+    }
     public static void doneReindexing(){
+    	isReindexing=false;
         alreadyLoaded.clear();
     }
 

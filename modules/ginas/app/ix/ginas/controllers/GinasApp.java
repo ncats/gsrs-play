@@ -500,7 +500,7 @@ public class GinasApp extends App {
                 (payload.id.toString(), 16, 1);
                 return redirect (call.url()+"&type=sequence" + "&identity=" + ident + "&identityType=" + identType + ((wait!=null)?"&wait=" + wait:""));
             }catch (Exception ex) {
-                ex.printStackTrace();
+                Logger.error("Sequence search failed", ex);
                 return _internalServerError (ex);
             }
         }
@@ -535,7 +535,7 @@ public class GinasApp extends App {
 				return redirect(
 						call.url() + "&type=" + type[0] + "&cutoff=" + co + ((wait != null) ? "&wait=" + wait : ""));
 			} catch (Exception ex) {
-				ex.printStackTrace();
+				Logger.error("Structure search call error",ex);
 				return _internalServerError(ex);
 			}
 		}
@@ -998,7 +998,7 @@ public class GinasApp extends App {
 			}
 			return _substances(hash, rows, page);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("lychi match error",e);
 		}
 		return internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform flex search: " + query));
 	}
@@ -1769,6 +1769,7 @@ public class GinasApp extends App {
             currentRecordsIndexed=0;
 
             recordsIndexedLastUpdate=0;
+            EntityPersistAdapter.startReindexing();
         }
 
         public StringBuilder getMessage() {

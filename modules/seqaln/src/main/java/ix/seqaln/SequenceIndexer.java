@@ -171,7 +171,7 @@ public class SequenceIndexer {
                    double iden, 
                    double global,
                    double sub) {
-            this.segment = segment;
+        	this.segment = segment;
             this.query = query;
             this.target = target;
             this.alignment = alignment;

@@ -1,9 +1,0 @@
-#
-# NTD
-#
-GET        /index                       ix.ntd.controllers.NTDFactory.index
-GET        /auth                        ix.ntd.controllers.NTDApp.authenticate
-POST       /index                       ix.ntd.controllers.NTDLoad.parse
-
-->         /             ix.ncats.Routes
-->         /             ix.Routes

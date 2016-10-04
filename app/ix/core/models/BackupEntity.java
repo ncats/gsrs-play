@@ -1,7 +1,5 @@
 package ix.core.models;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -88,6 +86,7 @@ public class BackupEntity extends IxModel{
 		Object inst=em.readValue(getBytes(), cls);
 		return inst;
 	}
+	
 	@JsonIgnore
 	public void setInstantiated(BaseModel o) throws Exception{
 		kind=o.getClass().getName();

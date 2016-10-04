@@ -791,36 +791,6 @@ public class App extends Authentication {
         }
     }
 
-    public static Result rendertest () {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream ();
-            int size = 400;
-            SVGGraphics2D svg = new SVGGraphics2D
-                (bos, new Dimension (size, size));
-            svg.startExport();
-            Chemical chem = new Jchemical ();
-            chem.load("c1ccncc1", Chemical.FORMAT_SMILES);
-            chem.clean2D();
-            
-            ChemicalRenderer cr = new NchemicalRenderer();
-
-            BufferedImage bi = cr.createImage(chem, 200);
-            //ImageIO.write(bi, "png", bos); 
-
-            cr.renderChem(svg, chem, size, size, false);
-            svg.endExport();
-            svg.dispose();
-            
-            response().setContentType("image/svg+xml");
-            //response().setContentType("image/png");
-            return ok(bos.toByteArray());
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ex.getMessage());
-        }
-    }
-
     public static byte[] render (Molecule mol, String format,
                                  int size, int[] amap) throws Exception{
         return render(mol,format,size,amap,null);
@@ -996,7 +966,6 @@ public class App extends Authentication {
             }catch (Exception ex) {
                 Logger.error("Can't generate image for structure "
                              +id+" format="+format+" size="+size, ex);
-                ex.printStackTrace();
                 return internalServerError
                     ("Unable to retrieve image for structure "+id);
             }
@@ -1036,7 +1005,6 @@ public class App extends Authentication {
             catch (Exception ex) {
                 Logger.error("Can't convert format "+format+" for structure "
                              +id, ex);
-                ex.printStackTrace();
                 return internalServerError
                     ("Unable to convert structure "+id+" to format "+format);
             }
@@ -1086,7 +1054,7 @@ public class App extends Authentication {
                  return key;
                  
              }catch (Exception ex) {
-                 ex.printStackTrace();
+                 Logger.error("Error creating key for request" , ex);
              }
          }else {
         	 

@@ -1,9 +1,0 @@
-@import ix.ncats.controllers.App
-
-@(key: String)
-
-@defining(App.getSearchContext(key)) { ctx =>
-  @if(ctx != null) {
-    @_targetcarousel(ctx)
-  }
-}

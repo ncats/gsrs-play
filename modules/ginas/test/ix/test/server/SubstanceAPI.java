@@ -12,8 +12,8 @@ import java.util.function.Function;
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ix.core.GinasProcessingMessage;
 import ix.core.ValidationMessage;
 import ix.core.controllers.EntityFactory;
@@ -29,6 +29,7 @@ import play.libs.ws.WSResponse;
 public class SubstanceAPI {
 
     private static final String API_URL_VALIDATE = "ginas/app/api/v1/substances/@validate";
+    private static final String API_URL_SUGGEST = "ginas/app/api/v1/suggest";
     private static final String API_URL_SUBMIT_SUBSTANCE = "ginas/app/api/v1/substances";
     private static final String API_URL_SUBMIT_CV = "ginas/app/api/v1/vocabularies";
     private static final String API_URL_FETCH = "ginas/app/api/v1/substances($UUID$)?view=full";
@@ -185,7 +186,18 @@ public class SubstanceAPI {
     public String getSubstructureMatchHTML(String smiles){
     	WSResponse wsr= getSubstructureMatch(smiles);
     	return wsr.getBody();
+  
     }
+    
+    public JsonNode getSuggestPrefixJson(String uuid){
+        return session.extractJSON( getSuggestPrefix(uuid));
+    }
+    
+    public WSResponse getSuggestPrefix(String term){
+    	 return session.createRequestHolder(API_URL_SUGGEST)
+         			.setQueryParameter("q", term).get().get(timeout);
+    }
+    //API_URL_SUGGEST
     
     public WSResponse getSequenceSearch(String seq, CutoffType cot, double cutoff){
     	return session.createRequestHolder(UI_URL_SUBSTANCE_SEARCH_SEQ)

@@ -151,7 +151,6 @@ public class ReIndexService {
         public void run() {
             try {
                 Object instantiated = oreal.getInstantiated();
-
                 EntityPersistAdapter.getInstance().deepreindex(instantiated, deleteFirst);
                 listener.recordReIndexed(instantiated);
 
