@@ -105,12 +105,16 @@
         </table>
         @if(sub.structurallyDiverse.hybridSpeciesMaternalOrganism != null) {
             Hybrid Maternal Organism:
+            <div class="col-md-3">
            @properties.subref(sub.structurallyDiverse.hybridSpeciesMaternalOrganism)
+           </div>
         }
 
         @if(sub.structurallyDiverse.hybridSpeciesPaternalOrganism != null) {
             Hybrid Paternal Organism:
+             <div class="col-md-3">
            @properties.subref(sub.structurallyDiverse.hybridSpeciesPaternalOrganism)
+           </div>
         }
         </div>
         <div class="col-md-12" ng-if="audit == true">

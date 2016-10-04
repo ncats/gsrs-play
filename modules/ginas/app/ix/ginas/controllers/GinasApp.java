@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -245,6 +246,19 @@ public class GinasApp extends App {
 
     public static void init(){
         _payload = Play.application().plugin(PayloadPlugin.class);
+        try{
+			//Add specific codes to ordered list
+			List<String> codeSystems=Play.application()
+					.configuration()
+					.getStringList("ix.ginas.codes.order", new ArrayList<String>());
+			int i=0;
+			codeSystemOrder.clear();
+			for(String s:codeSystems){
+				codeSystemOrder.put(s,i++);
+			}
+		}catch(Throwable t){
+			t.printStackTrace();
+		}
     }
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
@@ -268,6 +282,7 @@ public class GinasApp extends App {
         ));
     }
 
+    
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result updatePrincipal(Long id) {
         Administration.updateUser(id);
@@ -466,6 +481,17 @@ public class GinasApp extends App {
     	}
     	
     	return cmap.values();
+    }
+    
+    /**
+     * Get a Collection of lists of codes, ordered by preference set in
+     * configuration.
+     * @param s
+     * @param max
+     * @return
+     */
+    public static Collection<List<Code>> getOrderedGroupedCodes(Substance s, int max){
+    	return getGroupedCodes(s.getOrderedCodes(codeSystemOrder),max);
     }
    
     
@@ -1849,5 +1875,12 @@ public class GinasApp extends App {
 
             LOG.error("error reindexing", t);
         }
+    }
+    
+    private static Map<String,Integer> codeSystemOrder = new HashMap<>();
+
+    
+    public static Map<String,Integer> getCodeSystemOrder(){
+    	return codeSystemOrder;
     }
 }

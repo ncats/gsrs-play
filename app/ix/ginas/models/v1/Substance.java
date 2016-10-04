@@ -94,22 +94,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	private static ChemicalFactory DEFAULT_READER_FACTORY = new JchemicalReader();
 	private static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
 
-	private static Map<String,Integer> codeSystemOrder = new HashMap<>();
-
-	static{
-		init();
-	}
-
-	public static void init(){
-		//Add specific codes to ordered list
-		List<String> codeSystems=Play.application()
-				.configuration()
-				.getStringList("ix.ginas.codes.order", new ArrayList<String>());
-		int i=0;
-		for(String s:codeSystems){
-			codeSystemOrder.put(s,i++);
-		}
-	}
+	
 
 
 
@@ -265,7 +250,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	}
 
 	@JsonIgnore
-	public List<Code> getOrderedCodes(){
+	public List<Code> getOrderedCodes(Map<String, Integer> codeSystemOrder){
 
 		List<Code> nlist = new ArrayList<Code>(this.codes);
 

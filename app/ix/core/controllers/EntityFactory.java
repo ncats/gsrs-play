@@ -992,9 +992,6 @@ public class EntityFactory extends Controller {
 		List<Edit> edits = new ArrayList<Edit>();
 		FetchOptions fe = new FetchOptions();
 		
-		
-		
-		System.out.println(id);
 		Expression[] kindExpressions = Arrays.stream(cls)
 				.map(c -> Expr.eq("kind", c.getName()))
 				.collect(Collectors.toList())

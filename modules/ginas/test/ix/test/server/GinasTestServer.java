@@ -490,7 +490,6 @@ public class GinasTestServer extends ExternalResource{
         GinasApp.init();
         IndexValueMakerFactory.init();
         EntityUtils.init();
-        Substance.init();
         //our APIs
        // SubstanceLoader.init();
     }
