@@ -10,14 +10,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import ix.core.plugins.ConsoleFilterPlugin;
 import ix.core.search.SearchResultContext;
 import ix.core.util.ExpectFailureChecker.ExpectedToFail;
 import ix.ginas.models.v1.Substance;
@@ -29,7 +30,6 @@ import ix.test.ix.test.server.SubstanceAPI;
 import ix.test.ix.test.server.SubstanceReIndexer;
 import ix.test.ix.test.server.SubstanceSearcher;
 import ix.test.util.TestNamePrinter;
-import ix.utils.Util;
 
 public class LuceneSearchTest {
 	
@@ -260,7 +260,9 @@ public class LuceneSearchTest {
 	
 	
 	
-	@Test @ExpectedToFail
+	
+	
+	@Test @ExpectedToFail @Ignore
 	public void ensureSuggestFieldDisappearsAfterNameRemoved() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
@@ -298,6 +300,7 @@ public class LuceneSearchTest {
 		}
 	}
 
+	
 	@Test
 	public void ensureSuggestFieldDisappearsAfterNameRemovedAndReindexed() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
@@ -448,6 +451,59 @@ public class LuceneSearchTest {
 					assertEquals("Post-reindex Name search for " + search + " should return 1 result",1, r.getUuids().size());
 				}
 			}
+			
+		}
+	}
+	
+	@Test
+	public void ensureUpdatingARecordThreeTimesIsStillSearchable() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			Consumer<String> searchFor = (s)->{
+				try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+					
+						SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+						SubstanceSearcher.SearchResult r = searcher.nameSearch(s);
+						assertEquals("Search for " + s + " should return 1 result",1, r.getUuids().size());
+				}catch(Exception e){
+					throw new IllegalStateException(e);
+				}
+			};
+			
+			SubstanceAPI api = new SubstanceAPI(session);
+			JsonNode submit=new SubstanceBuilder()
+					.addName("START1")
+					.generateNewUUID()
+					.buildJson();
+				ensurePass(api.submitSubstance(submit));
+			
+			
+			SubstanceBuilder
+				.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+				.andThenMutate(s->s.names.get(0).name="START2")
+				.buildJsonAnd(s->{
+					ensurePass(api.updateSubstance(s));
+					searchFor.accept("START2");
+				});
+			
+			SubstanceBuilder
+				.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+				.andThenMutate(s->s.names.get(0).name="START3")
+				.buildJsonAnd(s->{
+					ensurePass(api.updateSubstance(s));
+					searchFor.accept("START3");
+				});
+			
+			SubstanceBuilder
+			.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+			.andThenMutate(s->s.names.get(0).name="START4")
+			.buildJsonAnd(s->{
+				ensurePass(api.updateSubstance(s));
+				searchFor.accept("START4");
+			});
 			
 		}
 	}
