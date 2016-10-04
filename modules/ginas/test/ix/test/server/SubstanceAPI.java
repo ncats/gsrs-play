@@ -1,4 +1,4 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,8 +9,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-import javax.transaction.NotSupportedException;
-
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.GinasProcessingMessage;
 import ix.core.ValidationMessage;
 import ix.core.controllers.EntityFactory;
-import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.test.SubstanceJsonUtil;

@@ -1,20 +1,15 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebClientOptions;
 import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
 
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.util.Cookie;
 
 import ix.utils.Util;
 
-import org.apache.http.impl.client.HttpClientBuilder;
 import play.libs.ws.WS;
-import play.libs.ws.WSCookie;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 

@@ -1,4 +1,4 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.test.SubstanceJsonUtil;

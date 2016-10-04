@@ -1,6 +1,6 @@
-package ix.test.ix;
+package ix.test;
 
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;

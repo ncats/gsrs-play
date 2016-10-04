@@ -1,4 +1,4 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;

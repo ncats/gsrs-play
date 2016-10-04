@@ -1,4 +1,4 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;

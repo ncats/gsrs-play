@@ -1,8 +1,7 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.util.TimeUtil;
-import play.api.mvc.Controller;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;

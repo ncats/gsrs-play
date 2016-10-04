@@ -1,12 +1,10 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import com.gargoylesoftware.htmlunit.FormEncodingType;
 import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.KeyDataPair;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import org.apache.lucene.analysis.miscellaneous.PatternAnalyzer;
 
 import java.io.File;
 import java.io.FileNotFoundException;

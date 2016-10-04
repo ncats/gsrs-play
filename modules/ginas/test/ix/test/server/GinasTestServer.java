@@ -1,4 +1,4 @@
-package ix.test.ix.test.server;
+package ix.test.server;
 
 import static play.test.Helpers.fakeApplication;
 
@@ -30,11 +30,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import controllers.Default$;
 import ix.core.UserFetcher;
 
-import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
