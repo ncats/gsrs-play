@@ -1,17 +1,14 @@
 package ix.test.crawler;
 
-import com.gargoylesoftware.htmlunit.WebResponse;
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceLoader;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.SubstanceLoader;
 import org.junit.*;
 import play.libs.ws.WSResponse;
 
 import java.io.File;
-import java.io.IOError;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
