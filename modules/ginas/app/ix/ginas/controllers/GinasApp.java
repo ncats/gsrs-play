@@ -252,7 +252,7 @@ public class GinasApp extends App {
 					.configuration()
 					.getStringList("ix.ginas.codes.order", new ArrayList<String>());
 			int i=0;
-			codeSystemOrder.clear();
+			codeSystemOrder= new HashMap<String, Integer>();
 			for(String s:codeSystems){
 				codeSystemOrder.put(s,i++);
 			}

@@ -264,6 +264,26 @@ public class PayloadPlugin extends Plugin {
         
         return payload;
     }
+    
+    public Payload getPayloadForFile (File f, PayloadPersistType persistType)
+            throws IOException {
+            
+            Payload payload = null;
+            try {
+            	
+                payload = createPayload (f.getName(),
+                                         "",
+                                         new FileInputStream (f),
+                                         persistType);
+            }catch (Throwable t) {
+                Logger.trace("Can't save payload", t);
+            }
+            
+            return payload;
+        }
+        
+    
+    
     /**
      * By defualt, 
      * @param field

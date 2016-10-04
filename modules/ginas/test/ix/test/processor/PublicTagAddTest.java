@@ -53,14 +53,14 @@ public class PublicTagAddTest {
 	User u;
 
 	@Before
-	public void allowForcedAudit() {
+	public void setup() {
 		u=ts.createAdmin("madeUp", "SomePassword");
 		session = ts.newRestSession(u);
 		api = new SubstanceAPI(session);
 	}
 
 	@After
-	public void disableForcedAudit() {
+	public void breakdown() {
 		session.close();
 	}
 		
@@ -80,9 +80,7 @@ public class PublicTagAddTest {
 				Exporter<Substance> export = jef.createNewExporter(new FileOutputStream(f), null);
 				export.export(sub);
 				export.close();
-
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			SubstanceLoader sl = new SubstanceLoader(ts.newBrowserSession(u));
