@@ -1,7 +1,0 @@
-#
-# NCATS Reach
-#
-GET     /employee/ldap ix.ncats.controllers.reach.EmployeeFactory.ldap
-POST    /employee/list ix.ncats.controllers.reach.EmployeeFactory.list
-GET     /project/index  ix.ncats.controllers.reach.ProjectForm.index
-POST    /project/create ix.ncats.controllers.reach.ProjectForm.newProject

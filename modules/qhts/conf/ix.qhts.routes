@@ -1,8 +1,0 @@
-#
-# qHTS resources
-#
-GET	/test1	ix.qhts.controllers.QhtsFactory.test1
-GET	/test2	ix.qhts.controllers.QhtsFactory.test2
-GET	/test3	ix.qhts.controllers.QhtsFactory.test3
-
-->	/	ix.ncats.Routes
