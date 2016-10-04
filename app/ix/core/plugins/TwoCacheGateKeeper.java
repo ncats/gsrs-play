@@ -132,7 +132,6 @@ public class TwoCacheGateKeeper implements GateKeeper {
         	   try{
         		   return delegate.call();
         	   }catch(Exception e){
-        		   e.printStackTrace();
         		   return null;
         	   }
            });

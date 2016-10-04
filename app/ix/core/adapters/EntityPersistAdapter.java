@@ -785,7 +785,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 	        	Key key=ew.getKey();
 	            if(key!=null) {
 	            	if(alreadyLoaded.containsKey(key)){
-	                    return;
+	            		return;
 	                }
 	                alreadyLoaded.put(key, 0);
 	            }
@@ -796,9 +796,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         	}
         } catch (Exception e) {
             Logger.error("Problem reindexing entity:" ,e);
+            e.printStackTrace();
         }
     }
 
+    public static void startReindexing(){
+    	alreadyLoaded.clear();
+    }
     public static void doneReindexing(){
         alreadyLoaded.clear();
     }

@@ -1757,6 +1757,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			
 			fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 			
+			
+			//System.out.println("Adding index for:" + ew.getKind());
 			// now index
 			addDoc(doc);
 			

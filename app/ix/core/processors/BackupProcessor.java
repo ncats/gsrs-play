@@ -44,7 +44,7 @@ public class BackupProcessor implements EntityProcessor<BaseModel>{
 		try{
 			BackupEntity be=BackupFactory.getByRefId(obj.fetchGlobalId());
 			be.setInstantiated(obj);
-			be.update();
+			be.save();
 		}catch(Exception e){
 			e.printStackTrace();
 		}

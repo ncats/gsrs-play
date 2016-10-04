@@ -345,7 +345,6 @@ public class SubstanceSearcher {
 
 
         public Stream<Substance> getSubstances(){
-            System.out.println("search key = " + searchKey);
             SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
 
             return src.getResults().stream()
