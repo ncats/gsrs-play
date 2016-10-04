@@ -5,20 +5,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import ix.core.controllers.EntityFactory;
 import ix.core.search.SearchResultContext;
 import ix.ginas.models.v1.Substance;
-import ix.test.ix.seqaln.SequenceSearchAPI;
-import ix.test.ix.test.server.*;
+import ix.test.server.*;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 import ix.test.builder.SubstanceBuilder;
 import ix.test.util.TestNamePrinter;
