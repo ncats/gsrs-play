@@ -65,7 +65,6 @@ public class WebCrawlerTest {
 
 
     @Test
-    @Ignore
     public void crawl() throws Exception{
 
 
@@ -84,7 +83,6 @@ public class WebCrawlerTest {
 
 
     @Test
-    @Ignore
     public void restrictedForbiddenLinksNotDiscoverableWhenUnAuthenticated() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
@@ -96,7 +94,6 @@ public class WebCrawlerTest {
     }
 
     @Test
-    @Ignore
     public void nothingRestrictedForAdmin() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.newBrowserSession(admin)) {
@@ -110,10 +107,6 @@ public class WebCrawlerTest {
 
     }
     @Test
-    
-    /*
-     * This should work, but does not right now. Waiting on issue #920
-     */
     public void findNo404sOnCrawl() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
@@ -140,7 +133,6 @@ public class WebCrawlerTest {
     }
     
     @Test
-    @Ignore
     public void findNoInternalServerErrorsOnCrawl() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
@@ -159,7 +151,6 @@ public class WebCrawlerTest {
     }
 
     @Test
-    @Ignore
     public void restrictedLinksAreAccessibleFromAdmin() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
