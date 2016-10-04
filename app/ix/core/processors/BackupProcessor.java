@@ -7,25 +7,6 @@ import ix.core.models.BackupEntity;
 import ix.core.models.BaseModel;
 
 public class BackupProcessor implements EntityProcessor<BaseModel>{
-
-	@Override
-	public void prePersist(BaseModel obj) {
-		
-	}
-
-	
-
-	@Override
-	public void preRemove(BaseModel obj) {
-		
-	}
-
-	
-
-	@Override
-	public void preUpdate(BaseModel obj) {
-		
-	}
 	
 	@Override
 	public void postPersist(BaseModel obj) {
@@ -56,10 +37,6 @@ public class BackupProcessor implements EntityProcessor<BaseModel>{
 		
 	}
 
-	@Override
-	public void postLoad(BaseModel obj) {
-		
-	}
 
 	private static BackupProcessor _processor=new BackupProcessor();
 	public static BackupProcessor getInstance(){

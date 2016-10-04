@@ -5,6 +5,7 @@ import com.hazelcast.nio.IOUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 public interface Exporter<T> extends Closeable{
 	void export(T obj) throws IOException;
@@ -22,7 +23,8 @@ public interface Exporter<T> extends Closeable{
 		}finally{
 			IOUtil.closeResource(this);
 		}
-}
+	}
+	
 	default void exportForEachAndClose(Iterable<T> it) throws IOException{
 		exportForEachAndClose(it.iterator());
 	}
