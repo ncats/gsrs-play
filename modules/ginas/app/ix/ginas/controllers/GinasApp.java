@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -111,7 +112,6 @@ import ix.ncats.controllers.crud.Administration;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
-import ix.utils.Tuple;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
 import play.Logger;
@@ -143,8 +143,8 @@ public class GinasApp extends App {
     
     static Map<String, ResultRenderer<?>> listRenderers = new HashMap<>();
     static Map<String, ResultRenderer<?>> thumbRenderers = new HashMap<>();
-    
 
+    static ExecutorService EXPORT_EXECUTOR_SERVICE = Executors.newFixedThreadPool(8);
 	/**
      * Search types used for UI searches. At this time 
      * these types do not extend to API searches.
@@ -706,7 +706,8 @@ public class GinasApp extends App {
             final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String fname = "export-" +sdf.format(new Date()) + "." + extension;
 
-            Executors.newSingleThreadExecutor().submit(()->{
+
+            EXPORT_EXECUTOR_SERVICE.submit(()->{
                     try {
                         exporter.exportForEachAndClose(src.getResults());
                     } catch (Exception e) {
