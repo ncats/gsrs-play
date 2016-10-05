@@ -7,6 +7,7 @@ import java.io.PipedOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,8 +23,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -74,6 +73,7 @@ import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.SubstanceExporterFactory;
+import ix.core.util.ModelUtils;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -111,6 +111,7 @@ import ix.ncats.controllers.crud.Administration;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.Tuple;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
 import play.Logger;
@@ -1989,6 +1990,14 @@ public class GinasApp extends App {
     	}catch(Throwable e){
     		return Html.apply("<div class=\"col-md-3 thumb-col\">" + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
     	}
+    }
+    
+    
+    public static String siteShorthand(int subunitIndex, BitSet residues){
+    	return residues.stream()
+    		.mapToObj(i->new Site(subunitIndex,i+1))
+    		.collect(ModelUtils.toShorthand());
+    	
     }
     
 }

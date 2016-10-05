@@ -6,8 +6,21 @@ import static org.apache.lucene.document.Field.Store.YES;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -23,7 +36,11 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
@@ -164,13 +181,20 @@ public class SequenceIndexer {
         public final double global;
         public final double sub;
 
+        BitSet bsq;
+        BitSet bst;
+        
         Alignment (SEG segment,
-                   String query, String target,
+                   String query, 
+                   String target,
                    String alignment, 
                    int score, 
                    double iden, 
                    double global,
-                   double sub) {
+                   double sub,
+                   BitSet qsites,
+                   BitSet tsites
+                   ) {
         	this.segment = segment;
             this.query = query;
             this.target = target;
@@ -179,6 +203,8 @@ public class SequenceIndexer {
             this.iden = iden;
             this.global = global;
             this.sub=sub;
+            bsq=qsites;
+            bst=tsites;
         }
         
         public int compareTo (Alignment aln) {
@@ -198,6 +224,24 @@ public class SequenceIndexer {
                 +String.format("%1$.3f", iden)
                 +"\n[alignment]\n"+alignment;
         }
+        
+        /**
+         * Returns a bitset of the indexes where a match was
+         * found for the target sequence
+         * @return
+         */
+        public BitSet targetSites(){
+        	return bst;
+        }
+        
+        /**
+         * Returns a bitset of the indexes where a match was
+         * found for the query sequence
+         * @return
+         */
+        public BitSet querySites(){
+        	return bsq;
+        }
     }
     
     public static class Result {
@@ -216,6 +260,8 @@ public class SequenceIndexer {
             this.query = query;
             this.target = target;
         }
+        
+        
     }
 
     static final Result POISON_RESULT = new Result ();
@@ -701,6 +747,9 @@ public class SequenceIndexer {
         StringBuilder qq = new StringBuilder ();
         int i = q.length();
         int j = s.length();
+        BitSet qsites = new BitSet();
+        BitSet tsites = new BitSet();
+        
         while (i > 0 && j > 0) {
             char a = q.charAt(i-1);
             char b = s.charAt(j-1);
@@ -714,6 +763,8 @@ public class SequenceIndexer {
                 qq.insert(0, matched ? '|' : ' ');
                 --i;
                 --j;
+                qsites.set(i+seg.qi);
+                tsites.set(j+seg.ti);
             }
             else if (i > 0 && M[i][j] == M[i-1][j] + gap) {
                 qa.insert(0, a);
@@ -764,15 +815,24 @@ public class SequenceIndexer {
 		//
 		double sub=iden*score/(double)query.length();
 		
+		String rangeq=String.format("%1$5d - %2$d", seg.qi+1,seg.qj);
+		String ranget=String.format("%1$5d - %2$d", seg.ti+1,seg.tj);
+		
+		int diff=ranget.length()-rangeq.length();
+		String pad="         ".substring(0, Math.abs(diff)+1);
+		rangeq+=(diff>0)?pad:" ";
+		ranget+=(diff<0)?pad:" ";
 		
         return new Alignment (seg, qa.toString(), qs.toString(),
-                              qa+String.format("%1$5d - %2$d", seg.qi, seg.qj)
+                              qa+rangeq +"[Query]"
                               +"\n"+qq+"\n"
-                              +qs+String.format("%1$5d - %2$d", seg.ti,seg.tj),
+                              +qs+ranget + "[Target]",
                               score, 
                               iden,
                               glob,
-                              sub
+                              sub,
+                              qsites,
+                              tsites
         		
         		);
     }
