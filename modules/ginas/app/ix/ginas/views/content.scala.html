@@ -180,7 +180,7 @@
                                     </button>
                                     <ul ng-if="showExport" class="dropdown-menu">
                                         @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
-                                            <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url">@fmt.getDisplayName()</a></li>
+                                            <li><a href="#" ng-click="downloadFile('@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url')">@fmt.getDisplayName()</a></li>
                                         }
                                     </ul>
                                 </div>
