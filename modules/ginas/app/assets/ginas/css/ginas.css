@@ -30,6 +30,10 @@ body, html {
     padding-top: .4%;
 }
 
+.list-detail-value{
+	margin-left:20px;
+}
+
 #logo{
     height: 35px;
 }
@@ -139,13 +143,9 @@ div.box .on {
 
 }
 
-#grid {
-    background-color: #F8F8F8;
-}
 
 .grid {
     margin-top: 15px;
-    background-color: #F8F8F8;
 }
 
 .list-item {
@@ -1314,4 +1314,15 @@ span.nowrap-list {
 }
 .field-facet-label{
 	margin-right:10px;
+}
+.placeholder-content{
+	background-color: #F8F8F8; 
+}
+
+.list-detail-value{
+	float:right;
+}
+
+.tooltip{
+	margin-top:-15px !important;
 }
