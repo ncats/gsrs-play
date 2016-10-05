@@ -5,14 +5,8 @@
 @import ix.ncats.controllers.security.IxDynamicResourceHandler
 
 @(sub: SpecifiedSubstanceGroup1Substance)
-
-<div class="panel panel-default sub-list">
-
-    @commonlistheader(sub)
-    <div class= "panel-body list-item">
-        <div class = "row">
-            <div class = "col-md-3">
-                <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="Group 1 Specified Substance" src="@routes.Assets.at("ginas/images/chemical.svg")"  />
+@commonlist(sub) {
+				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="Group 1 Specified Substance" src="@routes.Assets.at("ginas/images/chemical.svg")"  />
                 @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <div class = "row">
                         <div class = "col-md-12 text-center">
@@ -26,10 +20,8 @@
                         </div>
                     </div>
                 }
-            </div>
-            <div class = "col-md-7">
-            	@commonlistdetails(sub)
-                <div class = "row">
+}{
+               <div class = "row">
                     <div class = "col-md-3">
                         <h5><strong>Components:</strong></h5>
                     </div>
@@ -37,12 +29,5 @@
                     <span class = "label label-primary label-rounded">@sub.specifiedSubstance.size()</span>
                     </div>
                 </div>
-                
-            </div>
-
-            <div class = "col-md-2">
-            @commonliststatus(sub)
-            </div>
-        </div>
-    </div>
-</div>
+} {
+}

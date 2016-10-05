@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,20 +13,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import ix.utils.UUIDUtil;
-import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +36,6 @@ import chemaxon.struc.MolAtom;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import ix.core.GinasProcessingMessage;
-import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
@@ -90,7 +86,6 @@ import ix.ginas.models.v1.Linkage;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
 import ix.ginas.models.v1.Moiety;
-import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.NucleicAcid;
 import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.PolymerSubstance;
@@ -116,12 +111,12 @@ import ix.ncats.controllers.crud.Administration;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.UUIDUtil;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.data.DynamicForm;
 import play.data.Form;
-import play.db.ebean.Model;
 import play.db.ebean.Model.Finder;
 import play.mvc.BodyParser;
 import play.mvc.Call;
@@ -139,9 +134,15 @@ import tripod.chem.indexer.StructureIndexer;
  */
 public class GinasApp extends App {
 	
+	private static final String CAN_T_DISPLAY_RECORD = "Can't display record:";
+
 	//This is the default search order.
 	//Currently, this is "Newest change first"	
-    private static final String DEFAULT_SEARCH_ORDER = "$lastEdited"; 
+    private static final String DEFAULT_SEARCH_ORDER = "$lastEdited";
+    
+    static Map<String, ResultRenderer<?>> listRenderers = new HashMap<>();
+    static Map<String, ResultRenderer<?>> thumbRenderers = new HashMap<>();
+    
 
 	/**
      * Search types used for UI searches. At this time 
@@ -259,6 +260,69 @@ public class GinasApp extends App {
 		}catch(Throwable t){
 			t.printStackTrace();
 		}
+        
+        listRenderers.put(Substance.class.getName(),
+    		(t,ct)->{
+    			return ix.ginas.views.html.list.conceptlist.render((Substance)t);
+    		});
+        listRenderers.put(ChemicalSubstance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.chemlist.render((ChemicalSubstance)t,ct.getId());
+        		});
+        listRenderers.put(ProteinSubstance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.proteinlist.render((ProteinSubstance)t,ct.getId());
+        		});
+        listRenderers.put(NucleicAcidSubstance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.nucleicacidlist.render((NucleicAcidSubstance)t,ct.getId());
+        		});
+        listRenderers.put(PolymerSubstance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.polymerlist.render((PolymerSubstance)t,ct.getId());
+        		});
+        listRenderers.put(MixtureSubstance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.mixlist.render((MixtureSubstance)t);
+        		});
+        listRenderers.put(StructurallyDiverseSubstance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.diverselist.render((StructurallyDiverseSubstance)t);
+        		});
+        listRenderers.put(SpecifiedSubstanceGroup1Substance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.g1sslist.render((SpecifiedSubstanceGroup1Substance)t);
+        		});
+        
+        thumbRenderers.put(Substance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.thumbs.conceptthumb.render((Substance)t);
+        		});
+        thumbRenderers.put(ChemicalSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.chemthumb.render((ChemicalSubstance)t,ct.getId());
+            		});
+        thumbRenderers.put(ProteinSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.proteinthumb.render((ProteinSubstance)t,ct.getId());
+            		});
+        thumbRenderers.put(NucleicAcidSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.nucleicacidthumb.render((NucleicAcidSubstance)t,ct.getId());
+            		});
+        thumbRenderers.put(PolymerSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.polymerthumb.render((PolymerSubstance)t,ct.getId());
+            		});
+        thumbRenderers.put(MixtureSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.mixturethumb.render((MixtureSubstance)t);
+            		});
+        thumbRenderers.put(StructurallyDiverseSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.diversethumb.render((StructurallyDiverseSubstance)t);
+            		});
+        
     }
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
@@ -1883,4 +1947,48 @@ public class GinasApp extends App {
     public static Map<String,Integer> getCodeSystemOrder(){
     	return codeSystemOrder;
     }
+    
+    
+    
+    
+    /**
+     * Get the HTML for the list view of a given type. 
+     * @param o
+     * @param ctx
+     * @return
+     */
+    public static <T> Html getListContentFor(T o, SearchResultContext ctx){
+    	ResultRenderer<T> render= (ResultRenderer<T>) listRenderers.computeIfAbsent(EntityWrapper.of(o).getKind(),k->{
+    		return (t,ct)->{
+    			//default to substance concept
+    			return ix.ginas.views.html.list.conceptlist.render((Substance)t);
+    		};
+    	});
+    	try{
+    		return render.render((T)o, ctx);
+    	}catch(Throwable e){
+    		return ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage());
+    	}
+    }
+    
+    /**
+     * Get the HTML for the grid view of a given type. 
+     * @param o
+     * @param ctx
+     * @return
+     */
+    public static <T> Html getGridContentFor(T o, SearchResultContext ctx){
+    	ResultRenderer<T> render= (ResultRenderer<T>) thumbRenderers.computeIfAbsent(EntityWrapper.of(o).getKind(),k->{
+    		return (t,ct)->{
+    			//default to substance concept
+    			return ix.ginas.views.html.thumbs.conceptthumb.render((Substance)t);
+    		};
+    	});
+    	try{
+    		return render.render((T)o, ctx);
+    	}catch(Throwable e){
+    		return Html.apply("<div class=\"col-md-3 thumb-col\">" + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
+    	}
+    }
+    
 }

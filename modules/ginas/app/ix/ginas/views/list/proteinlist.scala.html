@@ -8,13 +8,8 @@
 
 @(prot: ProteinSubstance, ctx: String = null)
 
-<div class="panel panel-default prot-list" >
-
-    @commonlistheader(prot)
-    <div class= "panel-body list-item">
-        <div class = "row">
-            <div class = "col-md-3 text-center">
-                <img alt ="Protein" aria-label="Protein" class="struc-thumb img-responsive" id="" ng-click="toggle()" ng-src="@routes.Assets.at("ginas/images/protein.svg")"/>
+@commonlist(prot) {
+				<img alt ="Protein" aria-label="Protein" class="struc-thumb img-responsive" id="" ng-click="toggle()" ng-src="@routes.Assets.at("ginas/images/protein.svg")"/>
                 <div class = "row">
                     <div class = "col-md-12">
                         <ul class= "list-inline list-unstyled tools">
@@ -48,10 +43,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class = "col-md-6">
-                @commonlistdetails(prot)
-                <div class = "row">
+} {
+               <div class = "row">
                     <div class = "col-md-3">
                         <h5><strong>Subunits:</strong></h5>
                     </div>
@@ -59,16 +52,8 @@
                         <span class = "badge">@prot.protein.getSubunits().size()</span>
                     </div>
                 </div>
-                
-            </div>
-
-
-
-            <div class = "col-md-2">
-            @commonliststatus(prot)
-            </div>
-        </div>
-	    @if(ctx != null) {
+} {
+	@if(ctx != null) {
         <div class = "row">
               <div class = "col-md-12">
 		  @for(subunit <- prot.protein.subunits) {
@@ -89,5 +74,4 @@
               </div>
             </div>
 	}
-    </div>
-</div>
+}

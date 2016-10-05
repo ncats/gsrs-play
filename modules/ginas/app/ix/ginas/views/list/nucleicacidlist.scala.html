@@ -6,12 +6,8 @@
 
 @(nuc: NucleicAcidSubstance, ctx: String = null)
 
-<div class="panel panel-default nuc-list" >
-    @commonlistheader(nuc)
-    <div class= "panel-body list-item">
-        <div class = "row">
-            <div class = "col-md-3 text-center">
-                <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="nucleic acid" src="@routes.Assets.at("ginas/images/nucleic-acid.svg")"  />
+@commonlist(nuc) {
+				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="nucleic acid" src="@routes.Assets.at("ginas/images/nucleic-acid.svg")"  />
                 <div class = "row">
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
@@ -33,10 +29,8 @@
                         </ul>
                     </div>
                 </div>
-            </div>
-            <div class = "col-md-6">
-				@commonlistdetails(nuc)
-                <div class = "row">
+} {
+               <div class = "row">
                     <div class = "col-md-3">
                         <h5><strong>Subunits:</strong></h5>
                     </div>
@@ -44,32 +38,5 @@
                         <span class = "badge">@nuc.nucleicAcid.getSubunits().size()</span>
                     </div>
                 </div>
-            </div>
-
-
-            <div class = "col-md-2">
-            @commonliststatus(nuc)
-            </div>
-        </div>
-@*	@if(ctx != null) {
-        <div ng-show="bigview" class = "revealable row">
-            <div ng-show="initialized">
-              <div class = "col-md-12">
-		  @for(subunit <- nuc.nucleicAcid.subunits) {
-		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
-  		         @if(r != null) {
-			 <br>
-			 <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>
-			     <pre ng-click="toggle()" class = "struc-thumb img-responsive">
-@{"identity = %.3f".format(r.alignments(0).iden)}
-@r.alignments(0).alignment
-</pre>
-		      	  }
-		      }
-		  }
-              </div>
-            </div>
-        </div>
-	}*@
-    </div>
-</div>
+} {
+}
