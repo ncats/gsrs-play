@@ -8,7 +8,8 @@
 
 
 @commonlist(chem) {
-@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
+				<div class="badge-wrapper">
+				@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
                     <span class="label label-primary label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
                 @if(chem.structure.stereoChemistry == Structure.Stereo.ABSOLUTE) {
@@ -26,6 +27,7 @@
                 @if(chem.structure.stereoChemistry == Structure.Stereo.UNKNOWN) {
                     <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
+                </div>
 
                 <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
                     <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>

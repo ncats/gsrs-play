@@ -1326,3 +1326,6 @@ span.nowrap-list {
 .tooltip{
 	margin-top:-15px !important;
 }
+.badge-wrapper{
+	text-align:left;
+}
