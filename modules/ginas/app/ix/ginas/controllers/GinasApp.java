@@ -1993,7 +1993,7 @@ public class GinasApp extends App {
     		Logger.error(e.getMessage(),e);
     		return Html.apply("<div class=\"col-md-3 thumb-col\">" + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
     	}
-    
+    }
     
     public static String siteShorthand(int subunitIndex, BitSet residues){
     	return residues.stream()
