@@ -1952,6 +1952,7 @@ public class GinasApp extends App {
     
     
     
+
     /**
      * Get the HTML for the list view of a given type. 
      * @param o
@@ -1968,6 +1969,7 @@ public class GinasApp extends App {
     	try{
     		return render.render((T)o, ctx);
     	}catch(Throwable e){
+    		Logger.error(e.getMessage(),e);
     		return ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage());
     	}
     }
@@ -1988,9 +1990,9 @@ public class GinasApp extends App {
     	try{
     		return render.render((T)o, ctx);
     	}catch(Throwable e){
+    		Logger.error(e.getMessage(),e);
     		return Html.apply("<div class=\"col-md-3 thumb-col\">" + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
     	}
-    }
     
     
     public static String siteShorthand(int subunitIndex, BitSet residues){
