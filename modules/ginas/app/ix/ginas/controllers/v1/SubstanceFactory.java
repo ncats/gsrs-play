@@ -366,63 +366,7 @@ public class SubstanceFactory extends EntityFactory {
 		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
 		return dupeList;
 	}
-	// TODO
-	/*
-	 * This filter isn't quite sufficient for what we need, though it's a good
-	 * start
-	 * 
-	 * 
-	 * 
-	 */
-	// public static class UserGroupAccessSubstanceFilter<Substance> extends
-	// Predicate {
-	//
-	//
-	// UserProfile profile = UserFetcher.getActingUserProfile(true);
-	// Principal user = profile != null ? profile.user : null;
-	// boolean hasAdmin = false;
-	// Set<Group> groups=null;
-	//
-	// public UserGroupAccessSubstanceFilter(){
-	// if(profile!=null){
-	// groups=new HashSet<Group>(profile.getGroups());
-	// }
-	// if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
-	// hasAdmin=true;
-	// }
-	// if(groups==null){
-	// groups=new HashSet<Group>();
-	// }
-	// }
-	//
-	// public boolean accept(Substance sub) {
-	// if(hasAdmin)return true;
-	// //System.out.println("looking for access");
-	// //Group group = (Group) grp;
-	// Substance substance = (Substance) sub;
-	// Set<Group> accessG = substance.getAccess();
-	//
-	// if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
-	// return true;
-	// }
-	// //System.out.println("Group 1:" + accessG);
-	// //System.out.println("Group 2:" + groups);
-	// if(Collections.disjoint(accessG, groups)){
-	// //System.out.println("Won't show:" + sub.getName());
-	// return false;
-	// }
-	// return true;
-	// }
-	//
-	// }
-	// public static class AcceptAllFilter extends EntityFilter<Substance> {
-	//
-	// @Override
-	// public boolean accept(Substance sub) {
-	// return true;
-	// }
-	//
-	// }
+	
 
 	public static SequenceIndexer getSeqIndexer() {
 		return EntityPersistAdapter.getSequenceIndexer();

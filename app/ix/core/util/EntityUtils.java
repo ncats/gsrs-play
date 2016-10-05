@@ -74,6 +74,10 @@ public class EntityUtils {
 
 	private final static Map<String, EntityInfo<?>> infoCache = new ConcurrentHashMap<String, EntityInfo<?>>();
 
+	
+	public static void init(){
+		infoCache.clear();
+	}
 	@Indexable // put default indexable things here
 	static final class DefaultIndexable {
 
@@ -156,7 +160,7 @@ public class EntityUtils {
 		public String toFullJson() {
 			return EntityMapper.FULL_ENTITY_MAPPER().toJson(getValue());
 		}
-		
+
 		public JsonNode toFullJsonNode() {
 			return EntityMapper.FULL_ENTITY_MAPPER().valueToTree(getValue());
 		}
@@ -206,7 +210,7 @@ public class EntityUtils {
 				return false;
 			}
 		}
-		
+
 		public boolean shouldIndex() {
 			return ei.shouldIndex();
 		}
@@ -237,15 +241,15 @@ public class EntityUtils {
 
 		//TODO: move
 		public static Predicate<FieldMeta> isCollection = (f -> f.isArrayOrCollection());
-		
+
 		public Stream<Tuple<FieldMeta, List<Tuple<Integer,Object>>>> streamCollectedFieldsAndValues(Predicate<FieldMeta> p) {
-			
+
 			return streamFieldsAndValues(isCollection.and(p))
 					.map(fi->new Tuple<FieldMeta,List<Tuple<Integer,Object>>>(fi.k(), //It's so easy that a child could do it!
 							fi.k().valuesList(fi.v()) // list
 							));
 		}
-		
+
 		public Stream<Tuple<FieldMeta, Object>> streamFieldsAndValues(Predicate<FieldMeta> p) {
 			Object bean = this.getValue();
 			return ei.getFieldInfo().stream()
@@ -335,33 +339,33 @@ public class EntityUtils {
 
 		public Stream<Keyword> streamMethodKeywordFacets() {
 			return this.ei.getKeywordFacetMethods()
-								.stream()
-								.map(m->m.getValue(this._k))
-								.filter(Optional::isPresent)
-								.map(o->(Keyword)o.get());
+					.stream()
+					.map(m->m.getValue(this._k))
+					.filter(Optional::isPresent)
+					.map(o->(Keyword)o.get());
 		}
 
 		public Optional<String> getChangeReason() {
 			return ei.getChangeReasonFor(_k);
 		}
-		
+
 		public List<Edit> getEdits(){
 			Optional<Object> opId= this.ei.getNativeIdFor(this._k);
 			if(opId.isPresent()){
 				return EntityFactory.getEdits(this.ei.getNativeIdFor(this._k).get(), 
-					this.ei.getInherittedRootEntityInfo().getTypeAndSubTypes()
-					.stream()
-					.map(em->em.getClazz())
-					.toArray(len->new Class<?>[len]));
+						this.ei.getInherittedRootEntityInfo().getTypeAndSubTypes()
+						.stream()
+						.map(em->em.getClazz())
+						.toArray(len->new Class<?>[len]));
 			}else{
 				return new ArrayList<Edit>();
 			}
 		}
-		
+
 		public Object getValueFromMethod(String name){
 			return this.streamMethodsAndValues(m->m.getMethodName().equals(name)).findFirst().get().v();
 		}
-		
+
 	}
 
 	public static class EntityInfo<T> {
@@ -423,8 +427,8 @@ public class EntityUtils {
 		public Optional<String> getChangeReasonFor(T value) {
 			if(this.changeReasonField==null)return Optional.empty();
 			return this.changeReasonField
-						.getValue(value)
-						.map(k->k.toString());
+					.getValue(value)
+					.map(k->k.toString());
 		}
 
 		public List<MethodMeta> getKeywordFacetMethods() {
@@ -432,14 +436,14 @@ public class EntityUtils {
 		}
 
 		Supplier<Set<EntityInfo<? extends T>>> forLater;
-		
-		
+
+
 		public EntityInfo(Class<T> cls) {
 			Objects.requireNonNull(cls);
 
 			this.cls = cls;
 			this.hasBackup = (cls.getAnnotation(Backup.class) != null);
-			
+
 			this.isIgnoredModel = (cls.getAnnotation(IgnoredModel.class) != null);
 			this.indexable = (Indexable) cls.getAnnotation(Indexable.class);
 			this.table = (Table) cls.getAnnotation(Table.class);
@@ -495,12 +499,12 @@ public class EntityUtils {
 					this.changeReasonField=m;
 				}
 			}).collect(Collectors.toList());
-			
+
 			this.keywordFacetMethods = methods.stream()
-									.filter(m->m.isGetter())
-									.filter(m->m.getType().isAssignableFrom(Keyword.class))
-									.filter(m->m.getIndexable()!=null)
-									.collect(Collectors.toList());
+					.filter(m->m.isGetter())
+					.filter(m->m.getType().isAssignableFrom(Keyword.class))
+					.filter(m->m.getIndexable()!=null)
+					.collect(Collectors.toList());
 
 			seqFields = Stream.concat(fields.stream(), methods.stream())
 					.filter(f -> f.isSequence())
@@ -508,7 +512,7 @@ public class EntityUtils {
 			strFields = Stream.concat(fields.stream(), methods.stream())
 					.filter(f -> f.isStructure())
 					.collect(Collectors.toList());
-			
+
 
 			fields.removeIf(f -> !f.isTextEnabled());
 
@@ -525,15 +529,15 @@ public class EntityUtils {
 			if (idField != null) {
 				ebeanIdMethodName = getBeanName(idField.getName());
 				methods.stream().filter(m -> (m != idField)).filter(m -> m.isGetter())
-						.filter(m -> m.getMethodName().equalsIgnoreCase("get" + ebeanIdMethodName)).findAny()
-						.ifPresent(m -> {
-							ebeanIdMethod = m;
-						});
+				.filter(m -> m.getMethodName().equalsIgnoreCase("get" + ebeanIdMethodName)).findAny()
+				.ifPresent(m -> {
+					ebeanIdMethod = m;
+				});
 				methods.stream().filter(m -> (m != idField)).filter(m -> m.isSetter())
-						.filter(m -> m.getMethodName().equalsIgnoreCase("set" + ebeanIdMethodName)).findAny()
-						.ifPresent(m -> {
-							ebeanIdMethodSetter = m;
-						});
+				.filter(m -> m.getMethodName().equalsIgnoreCase("set" + ebeanIdMethodName)).findAny()
+				.ifPresent(m -> {
+					ebeanIdMethodSetter = m;
+				});
 
 				idType = idField.getType();
 
@@ -554,7 +558,7 @@ public class EntityUtils {
 				return releventClasses;
 			};
 			forLater = CachedSupplier.of(forLater); //make it Memoized
-													//(vaaawwwy memoized)
+			//(vaaawwwy memoized)
 
 			if (idType != null) {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
@@ -571,21 +575,21 @@ public class EntityUtils {
 
 
 				m.forEach((k,v)->{
-								if(k.equals(EntityInfo.this.kind)) {
-									List<String> fields = (List<String>) v;
-									for (String f : fields) {
-										sponsoredFields.add(f);
-									}
-								}
-							});
+					if(k.equals(EntityInfo.this.kind)) {
+						List<String> fields = (List<String>) v;
+						for (String f : fields) {
+							sponsoredFields.add(f);
+						}
+					}
+				});
 			}
 
 
 
 		}
 
-		
-		
+
+
 		public EntityInfo<?> getInherittedRootEntityInfo() {
 			return ancestorInherit;
 		}
@@ -822,7 +826,7 @@ public class EntityUtils {
 		public T getInstance() throws Exception{
 			return (T) this.getClazz().newInstance();
 		}
-		
+
 
 		// HERE BE DRAGONS!!!!
 		// This was one of the (many) ID-generating methods before "The Great Refactoring".
@@ -872,10 +876,10 @@ public class EntityUtils {
 		public boolean isSequence();
 		public boolean isStructure();
 
-		
+
 		// Below are convenience functions that aren't so 
 		// convenient.
-		
+
 		// this is a little weird, in that this is meant to consume
 		// the very value the ValueMaker already created
 		default void forEach(Object value, BiConsumer<Integer, Object> bic) {
@@ -896,10 +900,10 @@ public class EntityUtils {
 			int[] idx = { 0 };
 			return s.map(o -> new Tuple<Integer,Object>(idx[0]++, o));
 		}
-		
-		
-		
-		
+
+
+
+
 	}
 
 	public static class MethodMeta implements MethodOrFieldMeta {
@@ -968,7 +972,7 @@ public class EntityUtils {
 					}
 				}
 			}
-			
+
 			type = m.getReturnType();
 			if (Collection.class.isAssignableFrom(type)) {
 				isCollection = true;
@@ -1035,8 +1039,8 @@ public class EntityUtils {
 		public boolean isDataVersion() {
 			return false;
 		}
-		
-		
+
+
 
 		@Override
 		public Optional<Object> getValue(Object entity) {
@@ -1168,22 +1172,22 @@ public class EntityUtils {
 		public Class<? extends Annotation> annotationType() {
 			return index.annotationType();
 		}
-		
+
 		public Pattern getPathSepPattern(){
 			return this.p;
 		}
-		
+
 		public String[] splitPath(String path){
 			return this.p.split(path);
 		}
 	}
-	
+
 	public static class FieldMeta implements MethodOrFieldMeta {
 		Field f;
 		Indexable indexable;
-		
+
 		InstantiatedIndexable instIndexable;
-		
+
 
 		Class<?> type;
 		String name;
@@ -1204,11 +1208,11 @@ public class EntityUtils {
 		boolean isChangeReason=false;
 
 		Column column;
-		
+
 		List<VocabularyTerm> possibleTerms = new ArrayList<VocabularyTerm>();
-		
-		
-		
+
+
+
 
 		public boolean isSequence() {
 			return this.isSequence;
@@ -1293,7 +1297,7 @@ public class EntityUtils {
 				this.isChangeReason = true;
 			}
 		}
-		
+
 		public boolean isChangeReason(){
 			return this.isChangeReason;
 		}
@@ -1310,7 +1314,7 @@ public class EntityUtils {
 			return isPrimitive;
 		}
 
-		
+
 
 		public InstantiatedIndexable getIndexable() {
 			return instIndexable;
@@ -1366,17 +1370,17 @@ public class EntityUtils {
 		public boolean isNumeric() {
 			return Number.class.isAssignableFrom(this.type);
 		}
-//		
-//		public List<VocabularyTerm> getPossibleTerms(){
-//			
-//			return this.possibleTerms;
-//		}
-//		
-//		//TODO: Implement this
-//		public boolean isControlled(){
-//			return false;
-//		}
-//		
+		//		
+		//		public List<VocabularyTerm> getPossibleTerms(){
+		//			
+		//			return this.possibleTerms;
+		//		}
+		//		
+		//		//TODO: Implement this
+		//		public boolean isControlled(){
+		//			return false;
+		//		}
+		//		
 	}
 
 	public static class Key {
@@ -1387,7 +1391,7 @@ public class EntityUtils {
 			this.kind = k;
 			this._id = id;
 		}
-		
+
 		public String getKind() {
 			return this.kind.getName();
 		}
@@ -1408,7 +1412,7 @@ public class EntityUtils {
 		public String toString() {
 			return kind.getName() + ID_FIELD_NATIVE_SUFFIX + ":" + getIdString();
 		}
-		
+
 		/**
 		 * Returns null if not present
 		 * @return
@@ -1416,15 +1420,15 @@ public class EntityUtils {
 		private Object nativeFetch(){
 			return kind.getFinder().byId(this.getIdNative());
 		}
-		
-		
+
+
 		// fetches from finder
 		public Optional<EntityWrapper> fetch() {
 			Object o=nativeFetch();
 			if(o==null)return Optional.empty();
 			return Optional.of(EntityWrapper.of(o));
 		}
-		
+
 
 		public Tuple<String, String> asLuceneIdTuple() {
 			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
@@ -1436,7 +1440,7 @@ public class EntityUtils {
 
 		// For lucene document
 		public static Key of(Document doc) throws Exception {
-			 // TODO: This should be moved to somewhere more Abstract, probably
+			// TODO: This should be moved to somewhere more Abstract, probably
 			String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
 			EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
 			if(ei.hasIdField()){
@@ -1461,24 +1465,24 @@ public class EntityUtils {
 		@Override
 		public int hashCode() {
 			return this.toString().hashCode(); // Probably something that can be
-												// better
+			// better
 		}
-		
+
 		@Override
 		public boolean equals(Object k) {
 			if (k == null || !(k instanceof Key)) {
 				return false;
 			} else {
 				return this.toString().equals(k.toString()); // Probably
-																// something
-																// better that
-																// could be done
+				// something
+				// better that
+				// could be done
 			}
 		}
 
 
 
-		
+
 
 	}
 
@@ -1487,9 +1491,9 @@ public class EntityUtils {
 		private PathStack path;
 		private BiConsumer<PathStack, EntityWrapper> listens = null;
 		LinkedReferenceSet<Object> prevEntities; // protect against infinite
-											     // recursion
+		// recursion
 		EntityWrapper estart; // seed
-		
+
 		public EntityTraverser() {
 			path = new PathStack();
 			prevEntities = new LinkedReferenceSet<Object>();
@@ -1504,38 +1508,42 @@ public class EntityUtils {
 			this.listens = listens;
 			next(estart);
 		}
-		
+
 		private void next(EntityWrapper<?> ew) {
-			if (this.listens != null)
-				listens.accept(path, ew); // actual call happens here!
 			instrument(ew);
 		}
 
 		// not thread safe at all. Never call this directly
 		private void instrument(EntityWrapper<?> ew) {
-			prevEntities.pushAndPopWith(ew.getValue(), () -> {
-				
-				//ALL collections and arrays are recursed
-				//it doesn't matter if they are entities or not
-				ew.streamFieldsAndValues(f -> f.isArrayOrCollection()).forEach(fi -> {
-					path.pushAndPopWith(fi.k().getName(), () -> {
-						fi.k().forEach(fi.v(), (i, o) -> {
-							path.pushAndPopWith(String.valueOf(i), () -> {
-								next(EntityWrapper.of(o));
+			if(!prevEntities.contains(ew.getValue())){
+				if (this.listens != null){
+					listens.accept(path, ew); // listener caller
+				}
+
+				prevEntities.pushAndPopWith(ew.getValue(), () -> {
+
+					//ALL collections and arrays are recursed
+					//it doesn't matter if they are entities or not
+					ew.streamFieldsAndValues(f -> f.isArrayOrCollection()).forEach(fi -> {
+						path.pushAndPopWith(fi.k().getName(), () -> {
+							fi.k().forEach(fi.v(), (i, o) -> {
+								path.pushAndPopWith(String.valueOf(i), () -> {
+									next(EntityWrapper.of(o));
+								});
 							});
 						});
 					});
-				});
-				
-				//only Entities are recursed for non-arrays
-				ew.streamFieldsAndValues(EntityInfo::isPlainOldEntityField).forEach(fi -> {
-					path.pushAndPopWith(fi.k().getName(), () -> {
-						next(EntityWrapper.of(fi.v()));
+
+					//only Entities are recursed for non-arrays
+					ew.streamFieldsAndValues(EntityInfo::isPlainOldEntityField).forEach(fi -> {
+						path.pushAndPopWith(fi.k().getName(), () -> {
+							next(EntityWrapper.of(fi.v()));
+						});
 					});
+
+
 				});
-				
-				
-			});
+			}
 		}
 	}
 

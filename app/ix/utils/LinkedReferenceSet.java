@@ -1,40 +1,31 @@
 package ix.utils;
 
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.stream.Stream;
+
+import ix.core.util.UniqueStack;
 
 public class LinkedReferenceSet<K> implements ExecutionStack<K>{
-	LinkedList<LiteralReference<K>> list = new LinkedList<LiteralReference<K>>();
-	HashSet<LiteralReference<K>> set = new HashSet<LiteralReference<K>>();
+	UniqueStack<LiteralReference<K>> internalStack = new UniqueStack<LiteralReference<K>>();
+	
 	
 	public boolean contains(K k){
-		return set.contains(k);
+		return internalStack.contains(LiteralReference.of(k));
 	}
 	
-	private K pop(){
-		LiteralReference<K> lr = list.pop();
-		set.remove(lr);
-		return lr.o;
-	}
-	private void push(K k){
-		if(!contains(k)){
-			LiteralReference<K> lr = new LiteralReference<K>(k);
-			list.add(lr);
-		}
-	}
-
+	
 	@Override
 	public void pushAndPopWith(K obj, Runnable r) {
-		push(obj);
-		try{
-			r.run();
-		}finally{
-			pop();	
-		}
+		internalStack.pushAndPopWith(LiteralReference.of(obj), r);
 	}
 
 	@Override
 	public K getFirst() {
-		return list.peek().o;
+		return internalStack.getFirst().get();
 	}
+	
+	public Stream<K> asStream(){
+		return internalStack.asStream().map(l->l.get());
+	}
+	
+	
 }

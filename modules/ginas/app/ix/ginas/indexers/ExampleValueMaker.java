@@ -42,10 +42,10 @@ import ix.ginas.models.v1.Substance;
  */
 public class ExampleValueMaker implements IndexValueMaker<Substance>{
 
-	private static final String MOIETY_TYPE_FACET="Moiety Type";
-	private static final String RELATIONSHIP_COUNT_FACET="Relationship Count";
-	private static final String SSSR_FACET="Simple Ring Count";
-	private static final String CARBON_RATIO="Carbon Mass Ratio";
+	public static final String MOIETY_TYPE_FACET="Moiety Type";
+	public static final String RELATIONSHIP_COUNT_FACET="Relationship Count";
+	public static final String SSSR_FACET="Simple Ring Count";
+	public static final String CARBON_RATIO="Carbon Mass Ratio";
 	
 	private static long[] relationshipCountBuckets = new long[]{1,3,5,7};
 	private static long[] sssrCount = new long[]{0,1,3,5,7};
@@ -53,7 +53,7 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 	
 	
 	
-	private static final String CHILD_SUBSTANCE_RELATIONSHIP = "CHILD SUBSTANCE";
+	public static final String CHILD_SUBSTANCE_RELATIONSHIP = "CHILD SUBSTANCE";
 
 	//This is the method which does the work
 	@Override
@@ -62,7 +62,6 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 		addRelationshipCountFacet(s,consumer);
 		addSSSRCountFacet(s,consumer);
 		addCarbonNonCarbonWeightRatioFacet(s,consumer);
-		
 		
 	}
 	/**
@@ -168,6 +167,7 @@ public class ExampleValueMaker implements IndexValueMaker<Substance>{
 					,carbonRatio));
 		}
 	}
+	
 	
 	
 	

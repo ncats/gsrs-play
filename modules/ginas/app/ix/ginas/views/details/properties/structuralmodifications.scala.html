@@ -1,6 +1,6 @@
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.StructuralModification
-
+@import ix.ginas.controllers.v1.SubstanceFactory
 
 @(mods: List[StructuralModification])
 <div class = "row">
@@ -59,8 +59,17 @@
                     </td>
 
                     <td>
+                    
                     @if(m.molecularFragment != null) {
-                        <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())" target="_self">@m.molecularFragment.getLinkingID()</a>
+                    	@defining(SubstanceFactory.getFullSubstance(m.molecularFragment)) { ref =>
+	                    	@if(ref!=null){
+	                        <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())" target="_self">@m.molecularFragment.getLinkingID()</a>
+	                        }else{
+	                        <div>@m.molecularFragment.getLinkingID()</div>
+	                        <div><em><small>(not in database)</small></em></div>
+	                        
+	                        }
+                        }
                     }
                     </td>
                 </tr>

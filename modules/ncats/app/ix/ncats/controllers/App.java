@@ -594,7 +594,9 @@ public class App extends Authentication {
         if (query.get("facet") != null) {
             for (String f : query.get("facet"))
                 qfacets.add(f);
+        
         }
+        
         
         final boolean hasFacets = q != null
             && q.indexOf('/') > 0 && q.indexOf("\"") < 0;
@@ -616,6 +618,11 @@ public class App extends Authentication {
             for (String f : query.get("order"))
                 args.add(f);
         }
+        
+        args.add("dep" + query.get("showDeprecated"));
+        
+        
+        
         Collections.sort(args);
         return Util.sha1(args.toArray(new String[0]));
     }
@@ -781,36 +788,6 @@ public class App extends Authentication {
             Logger.error("Not a valid molecule:\n"+value, ex);
             ex.printStackTrace();
             return badRequest ("Not a valid molecule: "+value);
-        }
-    }
-
-    public static Result rendertest () {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream ();
-            int size = 400;
-            SVGGraphics2D svg = new SVGGraphics2D
-                (bos, new Dimension (size, size));
-            svg.startExport();
-            Chemical chem = new Jchemical ();
-            chem.load("c1ccncc1", Chemical.FORMAT_SMILES);
-            chem.clean2D();
-            
-            ChemicalRenderer cr = new NchemicalRenderer();
-
-            BufferedImage bi = cr.createImage(chem, 200);
-            //ImageIO.write(bi, "png", bos); 
-
-            cr.renderChem(svg, chem, size, size, false);
-            svg.endExport();
-            svg.dispose();
-            
-            response().setContentType("image/svg+xml");
-            //response().setContentType("image/png");
-            return ok(bos.toByteArray());
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ex.getMessage());
         }
     }
 
@@ -989,7 +966,6 @@ public class App extends Authentication {
             }catch (Exception ex) {
                 Logger.error("Can't generate image for structure "
                              +id+" format="+format+" size="+size, ex);
-                ex.printStackTrace();
                 return internalServerError
                     ("Unable to retrieve image for structure "+id);
             }
@@ -1029,7 +1005,6 @@ public class App extends Authentication {
             catch (Exception ex) {
                 Logger.error("Can't convert format "+format+" for structure "
                              +id, ex);
-                ex.printStackTrace();
                 return internalServerError
                     ("Unable to convert structure "+id+" to format "+format);
             }
@@ -1079,9 +1054,10 @@ public class App extends Authentication {
                  return key;
                  
              }catch (Exception ex) {
-                 ex.printStackTrace();
+                 Logger.error("Error creating key for request" , ex);
              }
          }else {
+        	 
              String key = signature (query, getRequestQuery ());
              return key;
          }
@@ -1407,13 +1383,7 @@ public class App extends Authentication {
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result cacheSummary () {
     	
-    	Thread.getAllStackTraces().entrySet().stream()
-    		.filter(e->Arrays.stream(e.getValue()).filter(s->s.getClassName().contains("ix.")).findAny().isPresent())
-    		.forEach(c->{
-    		for(StackTraceElement ste: c.getValue()){
-    			System.out.println(c.getKey() + "\t" + ste.toString());
-    		}
-    	});
+    	Util.printAllExecutingStackTraces();
     	return ok (ix.ncats.views.html.cachestats.render
                    (IxCache.getStatistics()));
     }

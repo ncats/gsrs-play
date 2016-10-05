@@ -13,7 +13,9 @@
         <div class="row">
             <h5>Any of these components may be present:</h5>
             @for(c <- comp) {
-                            @subref(c.substance)
+            	<div class="col-md-3">
+                @subref(c.substance)
+                </div>
             }
 		</div>
 	}
@@ -23,7 +25,9 @@
         <div class="row">
             <h5>One of these components may be present:</h5>
             @for(c <- comp) {
-                    @subref(c.substance)
+                <div class="col-md-3">
+                @subref(c.substance)
+                </div>
             }
         </div>
     }
@@ -32,7 +36,9 @@
         <div class="row">
             <h5>All of the following components <i>must</i> be present:</h5>
             @for(c <- comp) {
-                    @subref(c.substance)
+                <div class="col-md-3">
+                @subref(c.substance)
+                </div>
             }
         </div>
     }

@@ -3,6 +3,7 @@
 body {
     position: relative;
     background-color: #F8F8F8;
+    padding-top: 75px;
 }
 
 body, html {
@@ -29,6 +30,10 @@ body, html {
     padding-top: .4%;
 }
 
+.list-detail-value{
+	margin-left:20px;
+}
+
 #logo{
     height: 35px;
 }
@@ -37,33 +42,8 @@ body, html {
     padding-top: 3%;
 }
 
-/*
-#logo-banner {
-    height: 80px;
-    padding: 0px;
-    position: fixed;
-    right: 0;
-    left: 0;
-    z-index: 999;
-    background-color: #ffffff;
-}
-*/
-
-/*
-#main-banner {
-    height: 100%;
-    position: fixed;
-    right: 0;
-    left: 0;
-    z-index: 999;
-}*/
-/*
-#gsrs-menu{
-    position: fixed;
-}*/
-
 #content {
-    padding-top: 80px;
+    padding-top: 20px;
 }
 
 .sidebar {
@@ -163,13 +143,9 @@ div.box .on {
 
 }
 
-#grid {
-    background-color: #F8F8F8;
-}
 
 .grid {
     margin-top: 15px;
-    background-color: #F8F8F8;
 }
 
 .list-item {
@@ -1338,4 +1314,18 @@ span.nowrap-list {
 }
 .field-facet-label{
 	margin-right:10px;
+}
+.placeholder-content{
+	background-color: #F8F8F8; 
+}
+
+.list-detail-value{
+	float:right;
+}
+
+.tooltip{
+	margin-top:-15px !important;
+}
+.badge-wrapper{
+	text-align:left;
 }

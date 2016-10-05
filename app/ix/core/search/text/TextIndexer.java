@@ -708,6 +708,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 		// load saved lookups
 		lookups = new ConcurrentHashMap<String, SuggestLookup>();
+		
 		for (File f : suggestDir.listFiles()) {
 			if (f.isDirectory()) {
 				try {
@@ -718,6 +719,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				}
 			}
 		}
+		
 		Logger.info("## " + suggestDir + ": " + lookups.size() + " lookups loaded!");
 
 		sorters = loadSorters(new File(dir, SORTER_CONFIG_FILE));
@@ -1297,16 +1299,13 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			if (searchResult.getQuery() != null) {
 				try {
 					for (String sp : sponsoredFields) {
-						System.out.println("sp:" + sp);
 						String theQuery = "\"" + toExactMatchString(
 								TextIndexer.replaceSpecialCharsForExactMatch(searchResult.getQuery().trim().replace("\"", ""))).toLowerCase() + "\"";
 						QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
 
 						Query tq = parser.parse(theQuery);
-						System.out.println(tq);
 						LuceneSearchProviderResult lspResult = lsp.search(searcher, taxon, tq,new FacetsCollector()); //special q
 						TopDocs td = lspResult.getTopDocs();
-						System.out.println("Results:" + td.scoreDocs.length);
 						for (int j = 0; j < td.scoreDocs.length; j++) {
 							Document doc = searcher.doc(td.scoreDocs[j].doc);
 
@@ -1326,12 +1325,10 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 		}
 
-		System.out.println("Actual search is:" + qactual);
-		System.out.println("Actual search class is:" + qactual.getClass());
+		
 		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual,facetCollector);
 		hits=lspResult.getTopDocs();
-		System.out.println("Actually got:" + hits.scoreDocs.length);
-
+		
 		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
 		
@@ -1760,6 +1757,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			
 			fieldCollector.accept(new StringField(FIELD_KIND, ew.getKind(), YES));
 			
+			
+			//System.out.println("Adding index for:" + ew.getKind());
 			// now index
 			addDoc(doc);
 			
@@ -2101,8 +2100,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			closeAndIgnore(taxonDir);
 
 		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-			System.out.println("#########$##$#$ ERROR");
 			ex.printStackTrace();
 			Logger.trace("Closing index", ex);
 		} finally {

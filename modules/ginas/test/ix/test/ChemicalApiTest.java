@@ -429,10 +429,8 @@ public class ChemicalApiTest {
 		ensurePass(api.submitSubstance(entered));
 		JsonNode fetched=api.fetchSubstanceJsonByUuid(uuid);
 		String version = fetched.get("version").asText();
-		System.out.println("version: " + version);
 		JsonNode structure = fetched.at("/structure");
 		String molFile = structure.get("molfile").asText();
-		System.out.println("molfile: " + molFile);
 		assertFalse(molFile.contains("26.8442  -11.9754    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0"));
 		assertEquals(version, "1");
 
@@ -446,7 +444,6 @@ public class ChemicalApiTest {
 		ensurePass(api.updateSubstance(updated1));
 		JsonNode fetched2nd=api.fetchSubstanceJsonByUuid(uuid);
 		String version2 = fetched2nd.get("version").asText();
-		System.out.println("version: " + version2);
 		JsonNode structure2ndfetch = fetched2nd.at("/structure");
 		String molFile2ndfetch = structure2ndfetch.get("molfile").asText();
 		assertEquals(version2, "2");
@@ -461,7 +458,6 @@ public class ChemicalApiTest {
 		ensurePass(api.updateSubstance(updated2));
 		JsonNode fetched3rd=api.fetchSubstanceJsonByUuid(uuid);
 		String version3 = fetched3rd.get("version").asText();
-		System.out.println("version: " + version3);
 		JsonNode structure3rdfetch = fetched3rd.at("/structure");
 		String molFile3rdfetch = structure3rdfetch.get("molfile").asText();
 		assertTrue(molFile3rdfetch.contains("26.8331  -11.1982    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0"));
@@ -476,7 +472,6 @@ public class ChemicalApiTest {
 	 */
 	@Test  
 	public void testCanonicalMolForms() throws Exception {
-		
 		
 		try (Stream<String> stream = Files.lines(molformfile.toPath())) {
 

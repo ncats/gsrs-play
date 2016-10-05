@@ -1,6 +1,13 @@
 @import play.Play;
 @(message: String)
 
+@if(flash.containsKey("warning")) {
+            <div class="alert-message warning">
+                <strong>@flash.get("warning")</strong>
+            </div>
+}
+<div class = "alert"><h4>@message</h4></div>
+
 <div class = "alert"><h4>@message</h4></div>
 
 @if(message.equalsIgnoreCase("No User Present")) {

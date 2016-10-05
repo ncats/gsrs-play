@@ -6,16 +6,10 @@
 
 @(chem: ChemicalSubstance, ctx: String = null)
 
-<div class="panel panel-default prot-list">
 
-    @commonlistheader(chem)
-
-    <div class= "panel-body list-item">
-
-
-        <div class = "row">
-            <div class = "col-md-3">
-                @if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
+@commonlist(chem) {
+				<div class="badge-wrapper">
+				@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
                     <span class="label label-primary label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
                 @if(chem.structure.stereoChemistry == Structure.Stereo.ABSOLUTE) {
@@ -33,6 +27,7 @@
                 @if(chem.structure.stereoChemistry == Structure.Stereo.UNKNOWN) {
                     <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
+                </div>
 
                 <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
                     <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>
@@ -70,9 +65,7 @@
                         </ul>
                     </div>
                 </div>
-            </div>
-            <div class = "col-md-6">
-            	@commonlistdetails(chem)
+}{
                 <div class = "row">
                     <div class = "col-md-4">
                         <h5><strong>Formula:</strong></h5>
@@ -89,14 +82,6 @@
                         <h5>@{"%.2f".format(chem.structure.mwt)}</h5>
                     </div>
                 </div>
-                
-                
-            </div>
-
-            <div class = "col-md-2">
-            @commonliststatus(chem)
-                </div>
-        </div>
+}{
         <div class="@chem.approvalID" ng-click="showLarge('@chem.structure.id', '@chem.approvalID')"></div>
-    </div>
-</div> <!--END panel panel-primary-->
+}

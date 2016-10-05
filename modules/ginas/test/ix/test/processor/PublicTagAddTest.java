@@ -53,17 +53,39 @@ public class PublicTagAddTest {
 	User u;
 
 	@Before
-	public void allowForcedAudit() {
+	public void setup() {
 		u=ts.createAdmin("madeUp", "SomePassword");
 		session = ts.newRestSession(u);
 		api = new SubstanceAPI(session);
 	}
 
 	@After
-	public void disableForcedAudit() {
+	public void breakdown() {
 		session.close();
 	}
 		
+	
+	/**
+	 * Gets the substance stream as a temporary GSRS json dump file
+	 * @param substances
+	 * @return
+	 * @throws IOException
+	 */
+	public static File asLoadFile(Stream<Substance> substances) throws IOException{
+		JsonExporterFactory jef = new JsonExporterFactory();
+
+		File f = File.createTempFile("test", "gsrs");
+		f.deleteOnExit();
+		try {
+			Exporter<Substance> export = jef.createNewExporter(new FileOutputStream(f), null);
+			export.exportForEachAndClose(substances.iterator());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return f;
+		
+	}
+	
 	@Test
 	public void ensureMissingPublicTagGetsAddedWithProcessor() throws IOException {
 		try {
@@ -73,21 +95,8 @@ public class PublicTagAddTest {
 				});
 			}).generateNewUUID().build();
 
-			JsonExporterFactory jef = new JsonExporterFactory();
-
-			File f = File.createTempFile("test", "gsrs");
-			try {
-				Exporter<Substance> export = jef.createNewExporter(new FileOutputStream(f), null);
-				export.export(sub);
-				export.close();
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			SubstanceLoader sl = new SubstanceLoader(ts.newBrowserSession(u));
-			sl.loadJson(f);
-			f.deleteOnExit();
+			sl.loadJson(asLoadFile(Stream.of(sub)));
 
 			JsonNode jsn = api.fetchSubstanceJsonByUuid(sub.getUuid().toString());
 			long publicRefs= StreamSupport.stream(jsn.at("/references").spliterator(),false)

@@ -629,8 +629,7 @@ public class ValidationUtils {
 												+ su.subunitIndex + "]:");
 								Link l = new Link();
 								Call call = ix.ginas.controllers.routes.GinasApp
-										.substances(payload.id.toString(), 16,
-												1);
+										.substances(payload.id.toString(), 16,1);
 								l.href = call.url() + "&type=sequence";
 								l.text = "Perform similarity search on subunit ["
 										+ su.subunitIndex + "]";

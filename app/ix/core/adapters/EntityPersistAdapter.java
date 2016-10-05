@@ -165,7 +165,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     private static StructureIndexerPlugin strucProcessPlugin;
     private static SequenceIndexerPlugin seqProcessPlugin;
     
+    public static boolean isReindexing=false;
+    
     private static ConcurrentHashMap<Key, Integer> alreadyLoaded;
+    
     
     public static EntityPersistAdapter getInstance(){
     	return _instance;
@@ -293,7 +296,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 			e.newValue = saved.toFullJson();
 			e.comments= ew.getChangeReason().orElse(null);
 			e.save();
-			System.out.println("Saved:" + e.id);
 			
             return saved;
         }catch(Exception ex){
@@ -493,8 +495,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
             for (Hook m : methods) {
                 try {
                     m.invoke(bean);
-                }
-                catch (Exception ex) {
+                }catch (Exception ex) {
                 	ex.printStackTrace();
 					Logger.trace("Can't invoke method "
 					        +clazz+"["+m.getName()+"]", ex);
@@ -592,9 +593,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     m.invoke(bean);
                 }catch (Exception ex) {
                 	ex.printStackTrace();
-                    Logger.trace("Can't invoke method "
-                                 +m.getName()+"["+ew.getKind()+"]", ex);
-                    return false;
+                    Logger.trace("Can't invoke method "+m.getName()+"["+ew.getKind()+"]", ex);
+                    throw new IllegalStateException(ex);
                 }
             }
         }
@@ -787,10 +787,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         	if(ew.hasKey()){
 	        	Key key=ew.getKey();
 	            if(key!=null) {
-	            	if(alreadyLoaded.containsKey(key)){
-	                    return;
-	                }
-	                alreadyLoaded.put(key, 0);
+	            	//TODO: Investigate this
+	            	if(isReindexing){
+		            	if(alreadyLoaded.containsKey(key)){
+		            		return;
+		                }
+		                alreadyLoaded.put(key, 0);
+	            	}
 	            }
 	            if(deleteFirst) {
 	                deleteIndexOnBean(ew.getValue());
@@ -799,10 +802,16 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         	}
         } catch (Exception e) {
             Logger.error("Problem reindexing entity:" ,e);
+            e.printStackTrace();
         }
     }
 
+    public static void startReindexing(){
+    	isReindexing=true;
+    	alreadyLoaded.clear();
+    }
     public static void doneReindexing(){
+    	isReindexing=false;
         alreadyLoaded.clear();
     }
 

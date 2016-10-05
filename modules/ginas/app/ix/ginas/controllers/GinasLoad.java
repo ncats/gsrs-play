@@ -142,7 +142,7 @@ public class GinasLoad extends App {
 						String id = ginasRecordProcessorPlugin
 								.submit(payload,
 										ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
-										persister);
+										persister).key;
 						return redirect(ix.ginas.controllers.routes.GinasLoad
 								.monitorProcess(id));
 					
@@ -223,7 +223,7 @@ public class GinasLoad extends App {
 
 		String id = ginasRecordProcessorPlugin.submit(sdpayload,
 				ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.class,
-				ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
+				ix.ginas.utils.GinasUtils.GinasSubstancePersister.class).key;
 		return redirect(ix.ginas.controllers.routes.GinasLoad
 				.monitorProcess(id));
 

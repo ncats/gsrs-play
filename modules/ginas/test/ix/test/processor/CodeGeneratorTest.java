@@ -3,7 +3,6 @@ package ix.test.processor;
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +13,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-import ix.core.util.ExpectFailureChecker.ExpectedToFail;
 import ix.core.util.StopWatch;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.ix.test.server.GinasTestServer;

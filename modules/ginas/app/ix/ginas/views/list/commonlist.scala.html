@@ -1,0 +1,26 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.Substance
+@import be.objectify.deadbolt.java.views.html._
+@import ix.ncats.controllers.security.IxDynamicResourceHandler
+@(sub: Substance)(contentThumb: Html)(contentDetails: Html)(contentFooter: Html)
+
+<div class="panel panel-default sub-list">
+    <div class="@sub.getApprovalIDDisplay()"></div>
+    @commonlistheader(sub)
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3 text-center">
+                @contentThumb
+            </div>
+            <div class = "col-md-6">
+            	@commonlistdetails(sub)
+            	@contentDetails
+            </div>
+            <div class = "col-md-3">
+                @commonliststatus(sub)
+            </div>
+        </div>
+        @contentFooter
+        @additionalListDetails(sub)
+    </div>
+</div>

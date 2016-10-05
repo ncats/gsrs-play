@@ -28,9 +28,7 @@
             <tr>
                 <td>
                 	@if(r.relatedSubstance != null && r.relatedSubstance.getLinkingID() != null) {
-                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(r.relatedSubstance.getLinkingID())" target="_self">
-                		@subref(r.relatedSubstance)
-                    </a>
+	                    @subref(r.relatedSubstance)
                     }else{
                     	@subref(r.relatedSubstance)
                 	}

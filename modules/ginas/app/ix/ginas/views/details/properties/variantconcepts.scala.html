@@ -14,7 +14,9 @@
 <div class="col-md-12" uib-collapse = "variantscollapse">
         @for(sref <- sub.getChildConceptReferences()) {
 						@if(SubstanceFactory.getFullSubstance(sref) != null) {
-                            @subref(sref)
+                            <div class="col-md-3">
+			                	@subref(sref)
+			                </div>
                         }else{
                             <div class="col-md-3 text-center thumb-col">
                                 <div class="panel panel-default">

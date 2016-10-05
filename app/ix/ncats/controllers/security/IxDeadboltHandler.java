@@ -1,5 +1,7 @@
 package ix.ncats.controllers.security;
 
+import java.util.function.BiFunction;
+
 import be.objectify.deadbolt.core.models.Subject;
 import be.objectify.deadbolt.java.AbstractDeadboltHandler;
 import be.objectify.deadbolt.java.DynamicResourceHandler;
@@ -10,6 +12,8 @@ import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
+import play.mvc.Content;
+import ix.utils.*;
 
 
 public class IxDeadboltHandler extends AbstractDeadboltHandler {
@@ -32,7 +36,7 @@ public class IxDeadboltHandler extends AbstractDeadboltHandler {
     /**
      * This is a convenience method to test if a session meets one of the dynamic permission rules.
      * 
-     * This method assumed that there is an accessible Http.Context from Play!'s controller class,
+     * This method assumed that there is an accessible Http.Context from Play!'s controller class,  
      * if that is not the case, the behavior is not defined.
      * 
      * @param permission
@@ -52,9 +56,23 @@ public class IxDeadboltHandler extends AbstractDeadboltHandler {
             @Override
             public Result apply() throws Throwable {
                 String message = Authentication.getUserProfile() != null ? "Not Authorized" : "No User Present";
-                
-                return unauthorized(ix.core.views.html.response.render(message));
+                return resultMaker.apply(401,message);
             }
         });
     }
+    
+    private static Result getErrorContentFor(int status, String error){
+    	return status(status,ix.core.views.html.response.render(error));
+    }
+    
+    private static BiFunction<Integer,String,Result> resultMaker = IxDeadboltHandler::getErrorContentFor;
+    
+    /**
+     * Set the error message renderer to the provided function
+     * @param rMaker
+     */
+    public static void setErrorResultProvider(BiFunction<Integer,String,Result> rMaker){
+    	resultMaker=rMaker;
+    }
+    
 }

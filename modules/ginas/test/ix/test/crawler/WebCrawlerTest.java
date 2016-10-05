@@ -1,17 +1,9 @@
 package ix.test.crawler;
 
-import com.gargoylesoftware.htmlunit.WebResponse;
-import ix.core.plugins.IxCache;
-import ix.core.util.StopWatch;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceLoader;
-import org.junit.*;
-import play.libs.ws.WSResponse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOError;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -20,7 +12,17 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import ix.core.plugins.IxCache;
+import ix.core.util.StopWatch;
+import ix.test.ix.test.server.BrowserSession;
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.SubstanceLoader;
+import play.libs.ws.WSResponse;
 
 /**
  * Created by katzelda on 6/29/16.
@@ -51,7 +53,6 @@ public class WebCrawlerTest {
             File f = new File("test/testdumps/rep90.ginas");
 
             loader.loadJson(f);
-
         }
     }
 
@@ -99,10 +100,6 @@ public class WebCrawlerTest {
 
     }
     @Test
-    @Ignore
-    /*
-     * This should work, but does not right now. Waiting on issue #920
-     */
     public void findNo404sOnCrawl() throws Exception {
         WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.notLoggedInBrowserSession()) {
@@ -110,10 +107,18 @@ public class WebCrawlerTest {
             URL url = ts.getHomeUrl();
 
             crawler.crawl(url);
+            
+            
             if(!spy.get404Paths().isEmpty()){
             	System.err.println("404 links:");
-            	System.err.println(spy.get404Paths().toString());
+            	spy.get404Paths().stream().forEach(l->{
+            		System.err.println("Path to 404:");
+            		l.stream().forEach(href->{
+            			System.err.println("\t+" + href.toString());
+            		});
+            	});
             }
+           
             assertTrue(spy.get404Paths().isEmpty());
             
         }
@@ -187,7 +192,7 @@ public class WebCrawlerTest {
             if(statusCode ==401){
                 _401Links.add(url);
             }else if(statusCode == 404){
-            	System.out.println(url + "\t" + path.size());
+            	System.out.println("404\t" + url + "\t" + path.size());
             	_404Paths.add(new ArrayList<URL>(path));
             }else if(statusCode >= 500){
             	_InternalErrorPaths.add(new ArrayList<URL>(path));
@@ -214,7 +219,6 @@ public class WebCrawlerTest {
         public boolean shouldVisit(URL url) {
             return true;
         }
-
         public void visited(URL url, int statusCode, String statusMessage, List<URL> path) {
             if(statusCode == 200 || statusCode == 201){
                 visitValidURL(url);
@@ -222,9 +226,8 @@ public class WebCrawlerTest {
                 visitErrorURL(url, statusCode, statusMessage, path);
             }
         }
-
+        
         protected void visitValidURL(URL url){
-
         }
 
         protected void visitErrorURL(URL url, int statusCode, String statusMessage, List<URL> path){

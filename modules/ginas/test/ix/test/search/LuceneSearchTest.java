@@ -5,21 +5,30 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import ix.core.controllers.EntityFactory;
-import ix.core.search.SearchResultContext;
-import ix.ginas.models.v1.Substance;
-import ix.test.ix.seqaln.SequenceSearchAPI;
-import ix.test.ix.test.server.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import ix.core.search.SearchResultContext;
+import ix.core.util.ExpectFailureChecker.ExpectedToFail;
+import ix.ginas.models.v1.Substance;
 import ix.test.builder.SubstanceBuilder;
+import ix.test.ix.test.server.BrowserSession;
+import ix.test.ix.test.server.GinasTestServer;
+import ix.test.ix.test.server.RestSession;
+import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.ix.test.server.SubstanceReIndexer;
+import ix.test.ix.test.server.SubstanceSearcher;
 import ix.test.util.TestNamePrinter;
 
 public class LuceneSearchTest {
@@ -104,7 +113,7 @@ public class LuceneSearchTest {
 
 
 	@Test
-	public void exactNormalNameSearchWhenLeptosIndexedTooShouldNotReturnLepto() throws Exception {
+	public void exactNormalNameSearchWhenlevosIndexedTooShouldNotReturnLevo() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
@@ -142,14 +151,14 @@ public class LuceneSearchTest {
 	}
 
 	@Test
-	public void exactLeptoNameSearchWhenLeptosIndexedTooShouldOnlyReturnLepto() throws Exception {
+	public void exactLevoNameSearchWhenLevosIndexedTooShouldOnlyReturnLevo() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
 		try( RestSession session = ts.newRestSession(user)) {
 
 			String ibuprofen = "IBUPROFEN";
-			String lepto = "(-)-"+ibuprofen;
+			String levo = "(-)-"+ibuprofen;
 
 			SubstanceAPI api = new SubstanceAPI(session);
 
@@ -160,7 +169,7 @@ public class LuceneSearchTest {
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
-					.addName(lepto)
+					.addName(levo)
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
@@ -170,13 +179,13 @@ public class LuceneSearchTest {
 			try(BrowserSession browserSession = ts.newBrowserSession(user)){
 				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
 
-				SubstanceSearcher.SearchResult r = searcher.exactSearch(lepto);
+				SubstanceSearcher.SearchResult r = searcher.exactSearch(levo);
 				assertEquals(1, r.getUuids().size());
 
 				ts.doAsUser(user, () -> {
 					Substance s = r.getSubstances().findFirst().get();
 
-					assertEquals(lepto, s.getName());
+					assertEquals(levo, s.getName());
 				});
 			}
 
@@ -184,14 +193,14 @@ public class LuceneSearchTest {
 	}
 
 	@Test
-	public void exactDextroNameSearchWhenLeptosIndexedTooShouldOnlyReturnDextro() throws Exception {
+	public void exactDextroNameSearchWhenLevosIndexedTooShouldOnlyReturnDextro() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
 		try (RestSession session = ts.newRestSession(user)) {
 
 			String ibuprofen = "IBUPROFEN";
-			String lepto = "(-)-" + ibuprofen;
+			String levo = "(-)-" + ibuprofen;
 			String dextro = "(+)-" + ibuprofen;
 
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -202,7 +211,7 @@ public class LuceneSearchTest {
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
-					.addName(lepto)
+					.addName(levo)
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
@@ -224,16 +233,292 @@ public class LuceneSearchTest {
 
 		}
 	}
+	
+	@Test
+	public void ensureSuggestFieldWorks() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			String pre = "IBUP";
+			String ib2 = "IBUPROFEN";
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+			new SubstanceBuilder()
+					.addName(ib2)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			JsonNode suggest = api.getSuggestPrefixJson(pre);
+			assertEquals(1,suggest.at("/Name").size());
+			assertEquals(ib2, suggest.at("/Name/0/key").asText());
+			
+		}
+	}
+	
+	
+	
+	
+	
+	@Test @ExpectedToFail @Ignore
+	public void ensureSuggestFieldDisappearsAfterNameRemoved() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			String pre = "IBUP";
+			String ib2 = "IBUPROFEN";
+			String name2 = "ASPIRIN";
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+			JsonNode submit=new SubstanceBuilder()
+					.addName(ib2)
+					.generateNewUUID()
+					.buildJson();
+			ensurePass(api.submitSubstance(submit));
+			
+
+			JsonNode suggestBefore = api.getSuggestPrefixJson(pre);
+			assertEquals(1,suggestBefore.at("/Name").size());
+			assertEquals(ib2, suggestBefore.at("/Name/0/key").asText());
+			
+			JsonNode update= SubstanceBuilder
+					.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+					.andThenMutate(s->s.names.get(0).name=name2)
+					.buildJson();
+			
+			ensurePass(api.updateSubstance(update));
+			
+			JsonNode suggestLater = api.getSuggestPrefixJson(pre);
+			assertTrue(suggestLater.at("/Name").isMissingNode());
+			
+			
+		}
+	}
+
+	
+	@Test
+	public void ensureSuggestFieldDisappearsAfterNameRemovedAndReindexed() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			String pre1 = "IBUP";
+			String pre2 = "ASP";
+			String ib2 = "IBUPROFEN";
+			String name2 = "ASPIRIN";
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+			JsonNode submit=new SubstanceBuilder()
+					.addName(ib2)
+					.generateNewUUID()
+					.buildJson();
+			ensurePass(api.submitSubstance(submit));
+			
+
+			JsonNode suggestBefore = api.getSuggestPrefixJson(pre1);
+			assertEquals(1,suggestBefore.at("/Name").size());
+			assertEquals(ib2, suggestBefore.at("/Name/0/key").asText());
+			
+			JsonNode update= SubstanceBuilder
+					.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+					.andThenMutate(s->s.names.get(0).name=name2)
+					.buildJson();
+			
+			ensurePass(api.updateSubstance(update));
+			
+			try (BrowserSession browserSession = ts.newBrowserSession(ts.createAdmin("adminguy", "admin"))) {
+				new SubstanceReIndexer(browserSession).reindex();
+			}
+			
+			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
+			
+			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
+			assertEquals(1,suggestLater.at("/Name").size());
+			assertEquals(name2, suggestLater.at("/Name/0/key").asText());
+			
+			
+		}
+	}
+	
+	@Test
+	public void ensureSuggestFieldDisappearsAfterNameRemovedAndNewSubstanceAddedAndReindexed() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			String pre1 = "IBUP";
+			String pre2 = "ASP";
+			String ib2 = "IBUPROFEN";
+			String name2 = "ASPIRIN";
+
+			SubstanceAPI api = new SubstanceAPI(session);
+
+			JsonNode submit=new SubstanceBuilder()
+					.addName(ib2)
+					.generateNewUUID()
+					.buildJson();
+			ensurePass(api.submitSubstance(submit));
+			
+
+			JsonNode suggestBefore = api.getSuggestPrefixJson(pre1);
+			assertEquals(1,suggestBefore.at("/Name").size());
+			assertEquals(ib2, suggestBefore.at("/Name/0/key").asText());
+			
+			JsonNode update= SubstanceBuilder
+					.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+					.andThenMutate(s->s.names.get(0).name=name2)
+					.buildJson();
+			
+			ensurePass(api.updateSubstance(update));
+			
+			new SubstanceBuilder()
+			.addName("Just another name")
+			.generateNewUUID()
+			.buildJsonAnd(s->ensurePass(api.submitSubstance(s)));
+			
+			try (BrowserSession browserSession = ts.newBrowserSession(ts.createAdmin("adminguy", "admin"))) {
+				new SubstanceReIndexer(browserSession).reindex();
+			}
+			
+			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
+			
+			
+			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
+			
+			try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+				SubstanceSearcher.SearchResult r = searcher.nameSearch(name2);
+				assertEquals("Name search should return 1 result",1, r.getUuids().size());
+			}
+			
+			assertEquals(1,suggestLater.at("/Name").size());
+			assertEquals(name2, suggestLater.at("/Name/0/key").asText());
+			
+			
+		}
+	}
+	
 
 	@Test
-	public void normalNameSearchWhenLeptosAndDetrosIndexedTooShouldOnlyReturnAll3() throws Exception {
+	public void ensureUpdating2RecordsAndReindexingResultsIn2SubstancesInSearch() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			List<String> toSearch = new ArrayList<>();
+			
+			SubstanceAPI api = new SubstanceAPI(session);
+			for(int i=0;i<2;i++){
+				String name = "ABC" + i;
+				toSearch.add(name);
+				JsonNode submit=new SubstanceBuilder()
+					.addName(name)
+					.generateNewUUID()
+					.buildJson();
+				ensurePass(api.submitSubstance(submit));
+				SubstanceBuilder
+				.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+				.andThenMutate(s->s.names.get(0).name=name + " changed")
+				.buildJsonAnd(s->ensurePass(api.updateSubstance(s)));
+			}
+			
+			try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+				for(String search:toSearch){
+					SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+					SubstanceSearcher.SearchResult r = searcher.nameSearch(search);
+					assertEquals("Pre-reindex Name search for " + search + " should return 1 result",1, r.getUuids().size());
+				}
+			}
+			
+			try (BrowserSession browserSession = ts.newBrowserSession(ts.createAdmin("adminguy", "admin"))) {
+				new SubstanceReIndexer(browserSession).reindex();
+			}
+			
+			
+			try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+				for(String search:toSearch){
+					SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+					SubstanceSearcher.SearchResult r = searcher.nameSearch(search);
+					assertEquals("Post-reindex Name search for " + search + " should return 1 result",1, r.getUuids().size());
+				}
+			}
+			
+		}
+	}
+	
+	@Test
+	public void ensureUpdatingARecordThreeTimesIsStillSearchable() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try (RestSession session = ts.newRestSession(user)) {
+
+			Consumer<String> searchFor = (s)->{
+				try (BrowserSession browserSession = ts.newBrowserSession(user)) {
+					
+						SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+						SubstanceSearcher.SearchResult r = searcher.nameSearch(s);
+						assertEquals("Search for " + s + " should return 1 result",1, r.getUuids().size());
+				}catch(Exception e){
+					throw new IllegalStateException(e);
+				}
+			};
+			
+			SubstanceAPI api = new SubstanceAPI(session);
+			JsonNode submit=new SubstanceBuilder()
+					.addName("START1")
+					.generateNewUUID()
+					.buildJson();
+				ensurePass(api.submitSubstance(submit));
+			
+			
+			SubstanceBuilder
+				.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+				.andThenMutate(s->s.names.get(0).name="START2")
+				.buildJsonAnd(s->{
+					ensurePass(api.updateSubstance(s));
+					searchFor.accept("START2");
+				});
+			
+			SubstanceBuilder
+				.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+				.andThenMutate(s->s.names.get(0).name="START3")
+				.buildJsonAnd(s->{
+					ensurePass(api.updateSubstance(s));
+					searchFor.accept("START3");
+				});
+			
+			SubstanceBuilder
+			.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+			.andThenMutate(s->s.names.get(0).name="START4")
+			.buildJsonAnd(s->{
+				ensurePass(api.updateSubstance(s));
+				searchFor.accept("START4");
+			});
+			
+		}
+	}
+
+	
+	
+	@Test
+	public void normalNameSearchWhenlevosAndDextrosIndexedTooShouldOnlyReturnAll3() throws Exception{
 		GinasTestServer.User user = ts.getFakeUser1();
 
 
 		try (RestSession session = ts.newRestSession(user)) {
 
 			String ibuprofen = "IBUPROFEN";
-			String lepto = "(-)-" + ibuprofen;
+			String levo = "(-)-" + ibuprofen;
 			String dextro = "(+)-" + ibuprofen;
 
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -244,7 +529,7 @@ public class LuceneSearchTest {
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
-					.addName(lepto)
+					.addName(levo)
 					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder()
@@ -262,7 +547,7 @@ public class LuceneSearchTest {
 									.map(s -> s.getName())
 									.collect(Collectors.toSet());
 
-					Set<String> expected = setOf(ibuprofen, lepto, dextro);
+					Set<String> expected = setOf(ibuprofen, levo, dextro);
 					assertEquals(expected, actual);
 				});
 			}

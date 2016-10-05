@@ -58,7 +58,7 @@ public class PolymerApiTest {
         	 SubstanceAPI api = new SubstanceAPI(session);
              ensurePass(api.submitSubstance(entered));
              JsonNode roundTrip=api.fetchSubstanceJsonByUuid(entered.at("/uuid").asText());
-             System.out.println("Amount is:");
+             
              assertEquals("123.0",roundTrip.at("/polymer/monomers/0/amount/average").toString());
              assertEquals("1123.0",roundTrip.at("/polymer/monomers/0/amount/high").toString());
              assertEquals("22.0",roundTrip.at("/polymer/monomers/0/amount/low").toString());

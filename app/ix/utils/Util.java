@@ -84,6 +84,16 @@ public class Util {
     	return sb.toString();
     }
     
+    public static void printAllExecutingStackTraces(){
+    	Thread.getAllStackTraces().entrySet().stream()
+		.filter(e->Arrays.stream(e.getValue()).filter(s->s.getClassName().contains("ix.")).findAny().isPresent())
+		.forEach(c->{
+			for(StackTraceElement ste: c.getValue()){
+				System.out.println(c.getKey() + "\t" + ste.toString());
+			}
+		});
+    }
+    
     public static void printExecutionStackTrace(){
     	System.out.println(getExecutionPath());
     }
@@ -510,4 +520,6 @@ public class Util {
 
 		return sbSource.toString();
 	}
+
+
 }

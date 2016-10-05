@@ -2,11 +2,11 @@
 @import ix.ginas.models.v1.{ChemicalSubstance, SubstanceReference}
 @(sub: SubstanceReference)
     @defining(SubstanceFactory.getFullSubstance(sub)) { ref =>
-        <div class="col-md-3 text-center thumb-col">
+        <div class="text-center thumb-col">
             		  @if(ref != null) {
-            		  	@ref.approvalID
+            		  	<div><code><a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@ref.approvalID</a></code></div>
             		  }else{
-            		    <i>Substance not yet imported</i> <br />
+            		   <div><code>@sub.approvalID</code></i></div>
             		  }
                     @if(ref != null) {
 						@if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
@@ -40,19 +40,22 @@
 	                                } 
 	                            }
 	                           }else{
-	                            	<i class="fa fa-question-circle fa-4x "></i>
-	                            }
+	                            	
+	                           }
 
                 	 @if(ref != null) {
 	                	@*
 	                	This is making the route via the substance reference, rather than the expanded substance.
 	                	This has not been very well standardized so far. 
 	                	*@
+	                	<div>
 	                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">@sub.refPname</a>
-	                    
+	                    </div>
                     } else {
-	                  
-	                	@sub.refPname
+	                	<div>
+	                	<div>@sub.refPname</div>
+	                	<div><em>(not present in database)</em></div>
+	                	</div>
 	                }
                 </div>
     }

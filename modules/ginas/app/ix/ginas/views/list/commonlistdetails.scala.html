@@ -45,15 +45,15 @@
                     <div class = "col-md-10">
                     
                     	
-                    	@for(clist <- ix.ginas.controllers.GinasApp.getGroupedCodes(sub.getOrderedCodes(),4)){
+                    	@for(clist <- ix.ginas.controllers.GinasApp.getOrderedGroupedCodes(sub,4)){
                     		<h5><span>@clist.get(0).getCodeSystem():</span>
                     		@for(c <- clist){
                     		@if(c.getUrl()!=null){
                     		<a href="@c.getUrl()" target="_blank">
-                    			<code title="@c.getDisplayCode()">@c.getCode()</code>
+                    			<span title="@c.getDisplayCode()"><em>@c.getCode()</em> <i class="fa fa-external-link-square" aria-hidden="true"></i></span>
                     		</a>	
                     		}else{
-                    			<code>@c.getCode()</code>
+                    			<span><em>@c.getCode()</em></span>
                     		}
                     		}
                     		</h5>
