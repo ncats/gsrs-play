@@ -254,24 +254,47 @@ public class Java8ForOldEbeanHelper {
 		}
 
 		if (ew.isEntity()) {
-			Key k = ew.getKey();
-
-			ew.streamStructureFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
-				try {
-					epa.getStructureIndexer().add(k.getIdString(), str.toString());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
-			
-			ew.streamSequenceFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
-				try {
-					epa.getSequenceIndexer().add(k.getIdString(), str.toString());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
+			makeStructureIndexesForBean(epa,ew);
+			makeSequenceIndexesForBean(epa,ew);
 		}
+	}
+	
+	
+	public static void makeSequenceIndexesForBean(EntityPersistAdapter epa, EntityWrapper<?> ew){
+		Key k = ew.getKey();
+
+		ew.streamSequenceFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
+			try {
+				epa.getSequenceIndexer().add(k.getIdString(), str.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
+	public static void makeStructureIndexesForBean(EntityPersistAdapter epa, EntityWrapper<?> ew){
+		Key k = ew.getKey();
+
+		ew.streamStructureFieldAndValues(d->true).map(p->p.v()).filter(s->s instanceof String).forEach(str->{
+			try {
+				epa.getStructureIndexer().add(k.getIdString(), str.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
+	
+	public static void removeStructureIndexesForBean(EntityPersistAdapter epa, EntityWrapper<?> ew){
+		Key key = ew.getKey();
+		ew.getEntityInfo().getStructureFieldInfo().stream().findAny().ifPresent(s -> {
+			tryTaskAtMost(() -> epa.getStructureIndexer().remove(null,key.getIdString()), t -> t.printStackTrace(), 2);
+		});
+	}
+	public static void removeSequenceIndexesForBean(EntityPersistAdapter epa, EntityWrapper<?> ew){
+		Key key = ew.getKey();
+		ew.getEntityInfo().getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
+			tryTaskAtMost(() -> epa.getSequenceIndexer().remove(key.getIdString()), t -> t.printStackTrace(), 2);
+			
+		});
 	}
 
 	
@@ -283,15 +306,8 @@ public class Java8ForOldEbeanHelper {
 		}
 		
 		if (beanWrapped.isEntity() && beanWrapped.hasKey()) {
-			Key key = beanWrapped.getKey();
-			beanWrapped.getEntityInfo().getSequenceFieldInfo().stream().findAny().ifPresent(s -> {
-				tryTaskAtMost(() -> epa.getSequenceIndexer().remove(key.getIdString()), t -> t.printStackTrace(), 2);
-				
-			});
-			
-			beanWrapped.getEntityInfo().getStructureFieldInfo().stream().findAny().ifPresent(s -> {
-				tryTaskAtMost(() -> epa.getStructureIndexer().remove(key.getIdString()), t -> t.printStackTrace(), 2);
-			});
+			removeSequenceIndexesForBean(epa,beanWrapped);
+			removeStructureIndexesForBean(epa,beanWrapped);
 		}
 	}
 

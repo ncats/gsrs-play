@@ -29,7 +29,8 @@ import ix.utils.Util;
 public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
-    @Rule
+    public static final String TEST_TESTDUMPS_REP90_GINAS = "test/testdumps/rep90.ginas";
+	@Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     
@@ -38,7 +39,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
      * @param session
      * @throws Exception
      */
-    private void runRepTests(BrowserSession session) throws IOException, AssertionError{
+    public static void runRepTests(BrowserSession session) throws IOException, AssertionError{
     	
     	
     	SubstanceSearcher searcher = new SubstanceSearcher(session);
@@ -118,7 +119,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     public void loadAsAdmin() throws IOException {
         try(BrowserSession session = ts.newBrowserSession(admin)){
             SubstanceLoader loader = new SubstanceLoader(session);
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
             loader.loadJson(f);
             runRepTests(session);
         }
@@ -131,7 +132,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
             loader.loadJson(f);
 
@@ -149,7 +150,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
             loader.loadJson(f);
 
@@ -166,7 +167,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
             loader.loadJson(f);
 
@@ -189,7 +190,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
             loader.loadJson(f);
 
@@ -211,7 +212,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
             expectedException.expectMessage("401 Unauthorized");
             loader.loadJson(f);
@@ -240,7 +241,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            File f = new File("test/testdumps/rep90.ginas");
+            File f = new File(TEST_TESTDUMPS_REP90_GINAS);
 
             loader.loadJson(f);
 

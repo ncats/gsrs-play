@@ -54,6 +54,7 @@ public class Statistics implements Serializable{
 		}
 		
 		public boolean _isDone(){
+			if(totalRecords==null)return false;
 			if(totalFailedAndPersisted()>=totalRecords.getCount() && totalRecords.getType()==Estimate.TYPE.EXACT){
 				return true;
 			}

@@ -667,6 +667,7 @@
         var suppliedOrder = _.find($scope.sortValues, {
         	value : $location.search()["order"]
         });
+        
         $scope.selectedSort = suppliedOrder || {value: "Sort By"};
         
         $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
@@ -681,8 +682,12 @@
             window.location = $location.absUrl();
         };
 
+
+        $scope.downloadFile = function(url) {
+            window.location = url;
+        };
+        
         $scope.compare = function () {
-            //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
             $scope.left = angular.toJson($scope.substance.$$flattenSubstance());
             $scope.right = angular.toJson(angular.copy($window.loadjson));
             $scope.substancesEqual = angular.equals($scope.right, $scope.left);

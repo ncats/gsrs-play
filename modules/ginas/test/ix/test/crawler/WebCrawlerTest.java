@@ -22,19 +22,13 @@ import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import ix.core.plugins.ConsoleFilterPlugin;
 import ix.core.plugins.IxCache;
-import ix.core.util.FilteredPrintStream.FilterSession;
-import ix.core.util.Filters;
-import ix.core.util.LoggingFinder;
 import ix.core.util.StopWatch;
 import ix.test.ix.test.server.BrowserSession;
 import ix.test.ix.test.server.GinasTestServer;
 import ix.test.ix.test.server.SubstanceLoader;
-import ix.utils.Util;
 import play.libs.ws.WSResponse;
 
 /**
@@ -66,7 +60,6 @@ public class WebCrawlerTest {
             File f = new File("test/testdumps/rep90.ginas");
 
             loader.loadJson(f);
-
         }
     }
 
@@ -233,7 +226,6 @@ public class WebCrawlerTest {
         public boolean shouldVisit(URL url) {
             return true;
         }
-
         public void visited(URL url, int statusCode, String statusMessage, List<URL> path) {
             if(statusCode == 200 || statusCode == 201){
                 visitValidURL(url);
@@ -241,9 +233,8 @@ public class WebCrawlerTest {
                 visitErrorURL(url, statusCode, statusMessage, path);
             }
         }
-
+        
         protected void visitValidURL(URL url){
-
         }
 
         protected void visitErrorURL(URL url, int statusCode, String statusMessage, List<URL> path){

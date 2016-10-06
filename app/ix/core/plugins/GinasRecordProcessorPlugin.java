@@ -282,7 +282,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
 
 
-    public String submit(final Payload payload, Class<?> extractor, Class<?> persister) {
+    public PayloadProcessor submit(final Payload payload, Class<?> extractor, Class<?> persister) {
         // first see if this payload has already processed..
     	
     	
@@ -375,7 +375,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         ForkJoinPool.commonPool().submit(r);
 
 
-        return pp.key;
+        return pp;
     }
 
     private PersistRecordWorkerFactory getPersistRecordWorkerFactory() {

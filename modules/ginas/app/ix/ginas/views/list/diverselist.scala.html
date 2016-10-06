@@ -7,12 +7,8 @@
 
 @(sub: StructurallyDiverseSubstance)
 
-<div class="panel panel-default sub-list">
-    @commonlistheader(sub)
-    <div class= "panel-body list-item">
-        <div class = "row">
-            <div class = "col-md-3 text-center">
-                    <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt ="structurally diverse" src="@routes.Assets.at("ginas/images/structurally-diverse.svg")" />
+@commonlist(sub) {
+				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt ="structurally diverse" src="@routes.Assets.at("ginas/images/structurally-diverse.svg")" />
                 @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <div class = "row">
                         <div class = "col-md-12 text-center">
@@ -25,10 +21,8 @@
                         </div>
                     </div>
                 }
-            </div>
-            <div class = "col-md-7">
-           		@commonlistdetails(sub)
-                @if(sub.structurallyDiverse.part.size() > 0){
+}{
+               @if(sub.structurallyDiverse.part.size() > 0){
                     <div class = "row">
                         <div class = "col-md-3">
                             <h5><strong>Part:</strong></h5>
@@ -37,11 +31,6 @@
                             <span class = "label label-primary label-rounded">@sub.structurallyDiverse.getDisplayParts()</span>
                         </div>
                     </div>
-                }
-            </div>
-            <div class = "col-md-2">
-            @commonliststatus(sub)
-            </div>
-        </div>
-    </div>
-</div>
+               }
+} {
+}
