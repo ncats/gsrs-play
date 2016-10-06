@@ -6,6 +6,8 @@ import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceSearcher;
+import play.libs.ws.WSResponse;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -72,6 +74,18 @@ public class ExportTest {
 
             assertEquals(searchResult.getUuids(), uuids);
         }
+
+    }
+    
+    @Test 
+    public void exportBogusShouldBeAnError() throws IOException {
+    	System.out.println("Ensuring error");
+    	WSResponse resp = session.get("ginas/app/setExport?id="+"BOGUS" + "&format=csv");
+    	
+    	int status = resp.getStatus();
+    	assertTrue("Expected failure code, got:" + status, status != 200 && status != 201);
+    	
+    	
 
     }
 

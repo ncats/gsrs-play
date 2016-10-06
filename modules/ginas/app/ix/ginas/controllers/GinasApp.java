@@ -698,6 +698,7 @@ public class GinasApp extends App {
     	SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
     	
     	try{
+    		Objects.requireNonNull(src, "Invalid search result identifier for export");
 	    		 
 	    	final PipedInputStream pis = new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
