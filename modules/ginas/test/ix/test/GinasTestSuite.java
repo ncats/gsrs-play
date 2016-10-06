@@ -1,4 +1,4 @@
-package ix.test.ix.test;
+package ix.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

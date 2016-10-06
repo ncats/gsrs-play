@@ -1,6 +1,6 @@
 package ix.test.load;
 
-import ix.test.ix.test.server.*;
+import ix.test.server.*;
 import ix.test.util.TestUtil;
 import org.junit.Test;
 

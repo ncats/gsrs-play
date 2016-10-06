@@ -9,7 +9,7 @@ import org.junit.Test;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import ix.test.util.TestNamePrinter;
 
 public class PrincipalTest {

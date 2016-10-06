@@ -7,9 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil.JsonNodeBuilder;
 

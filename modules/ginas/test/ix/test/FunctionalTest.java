@@ -1,8 +1,8 @@
 package ix.test;
 
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
 import ix.test.util.TestNamePrinter;
 
 import org.junit.Ignore;

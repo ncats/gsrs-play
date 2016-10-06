@@ -15,7 +15,7 @@ import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 
 public class ConsoleFilterPluginTest {
 	@Rule

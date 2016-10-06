@@ -17,7 +17,7 @@ import ix.core.java8Util.Java8ForOldEbeanHelper;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import tripod.chem.indexer.StructureIndexer;
 import tripod.chem.indexer.StructureIndexer.Result;
 import tripod.chem.indexer.StructureIndexer.ResultEnumeration;

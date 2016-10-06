@@ -1,9 +1,9 @@
 package ix.test.load;
 
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceLoader;
-import ix.test.ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.SubstanceLoader;
+import ix.test.server.SubstanceSearcher;
 import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;

@@ -15,8 +15,8 @@ import ix.core.models.Role;
 import ix.core.models.Session;
 import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.Substance;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
 import ix.utils.Util;
 
 public class IxCacheTest {

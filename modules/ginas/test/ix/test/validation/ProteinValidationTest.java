@@ -29,10 +29,10 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.test.SubstanceJsonUtil;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
-import ix.test.ix.test.server.SubstanceAPI.ValidationResponse;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
+import ix.test.server.SubstanceAPI.ValidationResponse;
 import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
 

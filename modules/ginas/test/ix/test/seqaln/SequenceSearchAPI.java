@@ -1,11 +1,11 @@
-package ix.test.ix.seqaln;
+package ix.test.seqaln;
 
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlPreformattedText;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import ix.test.ix.test.server.BrowserSession;
+import ix.test.server.BrowserSession;
 import ix.test.util.TestNamePrinter;
 import play.twirl.api.Html;
 

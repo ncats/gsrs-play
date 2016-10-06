@@ -11,7 +11,7 @@ import java.util.UUID;
 
 import ix.ginas.models.v1.*;
 
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import org.junit.Rule;
 import org.junit.Test;
 

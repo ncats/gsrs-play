@@ -15,6 +15,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -97,6 +98,13 @@ public class Edit extends BaseModel {
             ? Global.getNamespace()+"/edits/"+id+"/$newValue" : null;
     }
     
+
+    @JsonProperty("diff")
+    public String getDiffLink () {
+        return newValue != null
+                ? Global.getNamespace()+"/edits/"+id+"/$diff" : null;
+    }
+
     @Override
     public String fetchGlobalId(){
     	if(this.id==null)return null;

@@ -1,4 +1,4 @@
-package ix.test.ix.test;
+package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,9 +9,9 @@ import ix.ginas.models.v1.ChemicalSubstance;
 import ix.test.SubstanceJsonUtil;
 import ix.test.builder.ChemicalSubstanceBuilder;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -20,7 +20,7 @@ import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexValueMakerFactory;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.ReflectingIndexValueMaker;
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import play.Configuration;
 
 

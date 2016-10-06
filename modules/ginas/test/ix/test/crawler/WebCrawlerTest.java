@@ -26,9 +26,9 @@ import org.junit.Test;
 
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceLoader;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.SubstanceLoader;
 import play.libs.ws.WSResponse;
 
 /**

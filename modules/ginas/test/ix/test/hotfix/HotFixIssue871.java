@@ -1,8 +1,8 @@
 package ix.test.hotfix;
 
 import static org.junit.Assert.assertEquals;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.SubstanceLoader;
+import ix.test.server.BrowserSession;
+import ix.test.server.SubstanceLoader;
 import ix.test.load.AbstractLoadDataSetTest;
 
 import java.io.File;

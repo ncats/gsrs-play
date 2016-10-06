@@ -1,10 +1,11 @@
-package ix.test.ix.seqaln;
+package ix.test.seqaln;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.List;
 
+import ix.test.seqaln.SequenceSearchAPI;
 import ix.test.util.TestNamePrinter;
 import org.junit.After;
 import org.junit.Before;
@@ -12,10 +13,10 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import ix.test.SubstanceJsonUtil;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import play.libs.ws.WSResponse;
 import util.json.JsonUtil;
 

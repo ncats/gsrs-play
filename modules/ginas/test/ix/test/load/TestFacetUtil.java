@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ix.ginas.controllers.GinasApp;
-import ix.test.ix.test.server.SubstanceSearcher;
+import ix.test.server.SubstanceSearcher;
 
 /**
  * Created by katzelda on 4/29/16.

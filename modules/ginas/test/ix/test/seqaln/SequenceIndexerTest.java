@@ -1,4 +1,4 @@
-package ix.test.ix.seqaln;
+package ix.test.seqaln;
 
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;

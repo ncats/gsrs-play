@@ -1,6 +1,6 @@
 package ix.test.login;
 
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import play.libs.ws.WSResponse;
 
 import java.util.regex.Matcher;
