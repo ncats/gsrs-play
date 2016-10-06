@@ -9,6 +9,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ix.ginas.exporters.SubstanceExporterFactory;
 import play.Application;
@@ -27,6 +29,8 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
 
     private Map<String, SubstanceExporterFactory.OutputFormat> extensionMap = new LinkedHashMap<>();
 
+    private ExecutorService executor;
+
     private final Application app;
 
     public GinasSubstanceExporterFactoryPlugin(Application app) {
@@ -42,6 +46,8 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
     public void onStart() {
         exporters.clear();
         extensionMap.clear();
+
+        executor = Executors.newFixedThreadPool(8);
 
         for(String clazz :app.configuration().getStringList("ix.ginas.exportFactories",new ArrayList<String>())){
             try{
@@ -63,6 +69,8 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
     public void onStop() {
         exporters.clear();
         extensionMap.clear();
+
+        executor.shutdownNow();
     }
 
     /**
@@ -143,5 +151,9 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
             list.addAll(factory.getSupportedFormats());
         }
         return list;
+    }
+
+    public void submit(Runnable r) {
+        executor.submit(r);
     }
 }

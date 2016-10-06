@@ -144,7 +144,7 @@ public class GinasApp extends App {
     static Map<String, ResultRenderer<?>> listRenderers = new HashMap<>();
     static Map<String, ResultRenderer<?>> thumbRenderers = new HashMap<>();
 
-    static ExecutorService EXPORT_EXECUTOR_SERVICE = Executors.newFixedThreadPool(8);
+
 	/**
      * Search types used for UI searches. At this time 
      * these types do not extend to API searches.
@@ -702,12 +702,18 @@ public class GinasApp extends App {
 	    	final PipedInputStream pis = new PipedInputStream ();
 	    	final PipedOutputStream pos = new PipedOutputStream (pis);
 
-            Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
+            GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
+
+            if(factoryPlugin ==null){
+                throw new NullPointerException("could not find a factory plugin");
+            }
+            Exporter<Substance> exporter = getSubstanceExporterFor(factoryPlugin, extension, pos);
             final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String fname = "export-" +sdf.format(new Date()) + "." + extension;
 
 
-            EXPORT_EXECUTOR_SERVICE.submit(()->{
+
+            factoryPlugin.submit(()->{
                     try {
                         exporter.exportForEachAndClose(src.getResults());
                     } catch (Exception e) {
@@ -724,12 +730,8 @@ public class GinasApp extends App {
     	}
     }
 
-    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
-        GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
+    private static Exporter<Substance> getSubstanceExporterFor(GinasSubstanceExporterFactoryPlugin factoryPlugin, String extension, PipedOutputStream pos) throws IOException {
 
-        if(factoryPlugin ==null){
-            throw new NullPointerException("could not find a factory plugin");
-        }
 
         SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
 
