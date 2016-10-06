@@ -28,6 +28,7 @@ import ix.test.ix.test.server.GinasTestServer.User;
 import ix.test.ix.test.server.RestSession;
 import ix.test.ix.test.server.SubstanceAPI;
 import ix.test.ix.test.server.SubstanceLoader;
+import org.junit.rules.TemporaryFolder;
 import play.Configuration;
 
 public class PublicTagAddTest {
@@ -46,7 +47,9 @@ public class PublicTagAddTest {
 		 	return new Configuration(additionalConfig).asMap();
 	 });
 	 
-	 
+
+	@Rule
+	public TemporaryFolder tmpDir = new TemporaryFolder();
 
 	RestSession session;
 	SubstanceAPI api;
@@ -71,11 +74,10 @@ public class PublicTagAddTest {
 	 * @return
 	 * @throws IOException
 	 */
-	public static File asLoadFile(Stream<Substance> substances) throws IOException{
+	public File asLoadFile(Stream<Substance> substances) throws IOException{
 		JsonExporterFactory jef = new JsonExporterFactory();
 
-		File f = File.createTempFile("test", "gsrs");
-		f.deleteOnExit();
+		File f =tmpDir.newFile();
 		try {
 			Exporter<Substance> export = jef.createNewExporter(new FileOutputStream(f), null);
 			export.exportForEachAndClose(substances.iterator());
