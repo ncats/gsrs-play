@@ -15,12 +15,12 @@ import org.junit.rules.ExpectedException;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.ConfigUtil;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceLoader;
-import ix.test.ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSession;
+import ix.test.server.ConfigUtil;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceLoader;
+import ix.test.server.SubstanceSearcher;
 import ix.test.util.TestUtil;
 import ix.utils.Util;
 /**

@@ -397,12 +397,8 @@
                                         @es.getValue().map { item =>
                                                             <li role="presentation">
                                                                 <a target="_self" tabindex="-1" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                                                <span class="field-facet-label">
-
-                                                                @item.getDisplayField()
-
-                                                                </span>
-                                                                <span class="badge pull-right">@item.getCountText()</span>
+                                                                    <span class="badge pull-right">@item.getCountText()</span>
+                                                                    <span class="field-facet-label ">@item.getDisplayField()</span>
                                                                 </a>
                                                             </li>
                                                         }
