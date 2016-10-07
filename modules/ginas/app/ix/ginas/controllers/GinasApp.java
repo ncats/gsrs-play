@@ -847,6 +847,9 @@ public class GinasApp extends App {
 
 		Objects.requireNonNull(tstream, "Invalid stream");
 
+        if(!factoryPlugin.isReady()){
+            throw new IllegalStateException("export thread pool is full");
+        }
 
 		final VisiblePipedInputStream pis = new VisiblePipedInputStream();
 		final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
@@ -873,6 +876,11 @@ public class GinasApp extends App {
 				}catch(Exception e){
 					Logger.error("Error closing exporter:" + e.getMessage(),e);
 				}
+                try{
+                    pos.close();
+                }catch(Exception e){
+                    Logger.error("Error closing POS:" + e.getMessage(),e);
+                }
 			}
 		});
 
