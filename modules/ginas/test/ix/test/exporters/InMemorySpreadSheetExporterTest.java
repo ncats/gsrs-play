@@ -1,22 +1,20 @@
 package ix.test.exporters;
 
-import ix.ginas.exporters.CsvSpreadSheet;
-import ix.ginas.exporters.CsvSpreadsheetBuilder;
-import ix.ginas.exporters.Spreadsheet;
-import ix.test.AbstractGinasTest;
-
-import org.apache.commons.io.IOUtils;
-import org.h2.tools.Csv;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import ix.ginas.exporters.CsvSpreadsheetBuilder;
+import ix.ginas.exporters.Spreadsheet;
+import ix.test.AbstractGinasTest;
 /**
  * Created by katzelda on 8/22/16.
  */
