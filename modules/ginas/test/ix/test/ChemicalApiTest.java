@@ -40,11 +40,8 @@ import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import util.json.JsonUtil;
 
-public class ChemicalApiTest {
+public class ChemicalApiTest extends AbstractGinasTest {
 
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);

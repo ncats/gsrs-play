@@ -11,10 +11,7 @@ import java.util.HashMap;
 /**
  * Created by katzelda on 5/2/16.
  */
-public class ChangeConfigConstructorTest {
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
+public class ChangeConfigConstructorTest extends AbstractGinasTest {
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(new HashMap<String, Object>() {

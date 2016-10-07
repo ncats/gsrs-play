@@ -354,6 +354,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         Objects.requireNonNull(messages);
         Chemical c;
         String mfile = molfile;
+        Objects.requireNonNull(molfile);
         c = DEFAULT_READER_FACTORY.createChemical(mfile, Chemical.FORMAT_SDF);
         if (stereoChemistry != null)
             c.setProperty("STEREOCHEMISTRY", stereoChemistry.toString());

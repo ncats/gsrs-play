@@ -40,7 +40,7 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
  * Created by katzelda on 9/9/16.
  */
 @RunWith(Parameterized.class)
-public class SubmitDuplicateStructureTest {
+public class SubmitDuplicateStructureTest extends AbstractGinasTest {
 
 
     @Parameterized.Parameters(name = "{0}")

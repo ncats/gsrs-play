@@ -16,10 +16,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import play.test.WithApplication;
 
-public class FunctionalTest {
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
+public class FunctionalTest  extends AbstractGinasTest {
 
     @Rule
     public GinasTestServer ts = new GinasTestServer();

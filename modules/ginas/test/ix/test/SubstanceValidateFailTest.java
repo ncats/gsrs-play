@@ -29,7 +29,7 @@ import util.json.JsonUtil;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
-public class SubstanceValidateFailTest{
+public class SubstanceValidateFailTest extends AbstractGinasTest {
 
     File resource;
 

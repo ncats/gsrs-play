@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import ix.core.search.SearchResultContext;
@@ -314,6 +315,59 @@ public class SubstanceSearcher {
 
         return substances;
     }
+    
+    public class WebExportRequest{
+    	private String format;
+    	private String key;
+    	private long timeout;
+    	
+    	public WebExportRequest(){
+    		
+    	}
+    	public WebExportRequest(String key, String format, long timeout){
+    		this.format=format;
+    		this.key=key;
+    		this.timeout=timeout;
+    	}
+    	
+    	public WebExportRequest setTimeout(long t){
+    		this.timeout=t;
+    		return this;
+    	}
+    	public WebExportRequest setKey(String key){
+    		this.key=key;
+    		return this;
+    	}
+    	public WebExportRequest setFormat(String format){
+    		this.format=format;
+    		return this;
+    	}
+    	
+    	public InputStream getInputStream(){
+    		return getWSResponse()
+    			.getBodyAsStream();
+    	}
+    	public WSResponse getWSResponse(){
+    		String url=getMeta().at("/url").asText();
+    		System.out.println("URL IS:"+url);
+    		return SubstanceSearcher.this.session.get(url, timeout);
+    	}
+    	
+    	public JsonNode getMeta(){
+        	WSResponse resp = SubstanceSearcher.this.session.get("ginas/app/setExport?id="+key + "&format="+format, timeout);
+            return resp.asJson();
+        }
+    	
+    	public boolean isReady(){
+    		return getMeta().at("/isReady").asBoolean();
+    	}
+    }
+    
+    
+    public WebExportRequest getExport(String format, String key){
+    	return new WebExportRequest(key,format,SubstanceSearcher.this.session.timeout);
+    }
+    
 
 
     public class SearchResult{
@@ -352,9 +406,10 @@ public class SubstanceSearcher {
 
         }
         public InputStream export(String format){
-            WSResponse resp = SubstanceSearcher.this.session.get("ginas/app/setExport?id="+searchKey + "&format="+format);
-            return resp.getBodyAsStream();
+            return getExport(format,searchKey).getInputStream();
         }
+        
+        
 
         public Map<String, Integer> getFacet(String facetName){
             return facetMap.get(facetName);

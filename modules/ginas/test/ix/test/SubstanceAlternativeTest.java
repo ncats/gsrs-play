@@ -21,10 +21,8 @@ import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
 
-public class SubstanceAlternativeTest {
+public class SubstanceAlternativeTest extends AbstractGinasTest {
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     File resource ;
     

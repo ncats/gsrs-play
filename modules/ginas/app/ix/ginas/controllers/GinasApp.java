@@ -18,12 +18,18 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +48,7 @@ import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
@@ -693,37 +700,181 @@ public class GinasApp extends App {
     }
    
    
-    public static Result export (String collectionID, String extension) {
-
-    	SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
-    	
+    /**
+     *  May contain special streams for use in tests / caching or example downloads
+     * 
+     *  
+     */
+    private static Map<String, Supplier<Stream<Substance>>> specialStreams = new ConcurrentHashMap<>();
+    
+    
+    /**
+     * Register a supplier to a stream for a given collection ID. This can be used to
+     * specify an explicit collection for reporting, 
+     * 
+     *  
+     * @param collectionId "key" value to be stored to fetch this stream
+     * @param supplier a supplier of the stream
+     */
+    public static void registerSpecialStream(String collectionId, Supplier<Stream<Substance>> supplier){
+    	specialStreams.put(collectionId, supplier);
+    }
+    
+    
+    /**
+     * Differed method for generating a export. This returns a JSONode of the meta data
+     * surrounding a would-be export request. 
+     * @param collectionID
+     * @param extension
+     * @return
+     */
+    public static Result generateExportFileUrl(String collectionID, String extension) {
+    	ObjectNode on=EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
+    	on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension).url().toString());
+    	on.put("isReady", threadPool.getActiveCount()<threadPool.getMaximumPoolSize());
+    	on.put("isCached", false);
     	try{
-    		Objects.requireNonNull(src, "Invalid search result identifier for export");
-	    		 
-	    	final PipedInputStream pis = new PipedInputStream ();
-	    	final PipedOutputStream pos = new PipedOutputStream (pis);
-
-            Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
-            final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            String fname = "export-" +sdf.format(new Date()) + "." + extension;
-
-            Executors.newSingleThreadExecutor().submit(()->{
-                    try {
-                        exporter.exportForEachAndClose(src.getResults());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-            response().setContentType("application/x-download");
-            response().setHeader("Content-disposition","attachment; filename=" + fname);
-
-	    	return ok(pis);
+    		//make sure it's present
+    		getExportStream(collectionID);
+    		on.put("isPresent", true);
     	}catch(Exception e){
     		Logger.error(e.getMessage(),e);
-    		throw new IllegalStateException(e);
+    		on.put("isPresent", false);
+    		on.put("isReady", false);
+    	}
+    	return ok(on);
+    }
+    
+    /**
+     * Return a stream for the given collectionID, or throw a NoSuchElementException
+     * if none is found
+     * @param collectionID
+     * @return
+     */
+    public static Stream<Substance> getExportStream(String collectionID) throws NoSuchElementException{
+    	Supplier<Stream<Substance>> sstream=specialStreams.getOrDefault(collectionID, ()->{
+    		SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
+    		if(src==null){
+    			throw new NoSuchElementException("No search result context by that key");
+    		}
+    		return src.getResults().stream();
+    	});
+    	return sstream.get();
+    }
+    
+    
+    /**
+     * Direct method, given collection ID, to return a File-Download result.
+     * 
+     * @param collectionID The id of the collection (typically the SearchResultContext key)
+     * @param extension The format extension (e.g. sdf, csv, etc) 
+     * @return
+     */
+    public static Result export (String collectionID, String extension) {
+
+    	try{
+    		return export(getExportStream(collectionID),extension);
+    	}catch(Exception e){
+    		Logger.error(e.getMessage(),e);
+    		return error(404,e.getMessage());
     	}
     }
+    
+    private static ThreadPoolExecutor threadPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
+    
+    
+    /**
+     * PipiedInputStream that allows probing into whether it's closed
+     * yet or not.
+     * @author tyler
+     *
+     */
+    public static class VisiblePipedInputStream extends PipedInputStream{
+    	private boolean isClosed=false;
+		@Override
+		public void close() throws IOException {
+            isClosed = true;
+            super.close();
+        }
+		public boolean isClosed(){
+			return isClosed;
+		}
+    }
+    
+    /**
+     * PipiedOutputStream that allows probing into whether it's closed
+     * yet or not.
+     * @author tyler
+     *
+     */
+    public static class VisiblePipedOutputStream extends PipedOutputStream{
+    	private boolean isClosed=false;
+    	
+    	public VisiblePipedOutputStream(PipedInputStream pis) throws IOException{
+    		super(pis);
+    	}
+    	
+		@Override
+		public void close() throws IOException {
+            isClosed = true;
+            super.close();
+        }
+		public boolean isClosed(){
+			return isClosed;
+		}
+    }
+    
+    /**
+     * Directly export the provided stream, using an exporter that matches extension
+     * @param tstream
+     * @param extension
+     * @return
+     * @throws Exception
+     */
+	public static Result export(Stream<Substance> tstream, String extension) throws Exception {
 
+		Objects.requireNonNull(tstream, "Invalid stream");
+
+		if(threadPool.getActiveCount()>=threadPool.getMaximumPoolSize()){
+			return ok("");
+		}
+		
+		
+		final VisiblePipedInputStream pis = new VisiblePipedInputStream();
+		final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
+
+		Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
+		final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String fname = "export-" + sdf.format(new Date()) + "." + extension;
+
+		threadPool.submit(() -> {
+			try {
+				tstream.forEach(s->{
+					try{
+						exporter.export(s);
+					}catch(Exception e){
+						Logger.error("Erorr exporting:" + e.getMessage(),e);
+					}
+				});
+				//exporter.exportForEachAndClose(tstream.iterator());
+			} catch (Exception e) {
+				Logger.error("Erorr exporting:" + e.getMessage(),e);
+			} finally{
+				try{
+					exporter.close();
+				}catch(Exception e){
+					Logger.error("Error closing exporter:" + e.getMessage(),e);
+				}
+			}
+		});
+		
+		response().setContentType("application/x-download");
+		response().setHeader("Content-disposition", "attachment; filename=" + fname);
+		return ok(pis);
+    }
+
+	
+	
     private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
         GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
 

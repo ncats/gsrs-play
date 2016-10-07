@@ -12,10 +12,8 @@ import static org.junit.Assert.*;
 /**
  * Created by katzelda on 5/2/16.
  */
-public class ChangeConfigTest {
+public class ChangeConfigTest extends AbstractGinasTest {
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer();

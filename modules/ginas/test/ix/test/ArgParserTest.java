@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 /**
  * Created by katzelda on 5/27/16.
  */
-public class ArgParserTest {
+public class ArgParserTest extends AbstractGinasTest {
 
     @Test
     public void singleArgumentNoWhitespace(){

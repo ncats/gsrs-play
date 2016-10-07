@@ -28,10 +28,8 @@ import util.json.Changes;
 import util.json.JsonUtil;
 import util.json.JsonUtil.JsonNodeBuilder;
 
-public class RelationshipInvertTest {
+public class RelationshipInvertTest extends AbstractGinasTest {
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
 
     File invrelate1 =  new File("test/testJSON/invrelate1.json");

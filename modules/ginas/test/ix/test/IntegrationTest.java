@@ -28,12 +28,9 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class IntegrationTest {
+public class IntegrationTest extends AbstractGinasTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
-
-	@Rule
-	public TestNamePrinter printer = new TestNamePrinter();
 
 	@Rule
 	public GinasTestServer ts = new GinasTestServer();

@@ -2,6 +2,7 @@ package ix.test.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.util.TimeUtil;
+import ix.utils.Util;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
@@ -118,6 +119,10 @@ public class RestSession extends AbstractSession<Void>{
         return extractJSON(get(path));
     }
 
+    
+    public String getSha1For(String path){
+    	return Util.sha1(get(path).getBody());
+    }
 
 
     public WSResponse whoAmI(){

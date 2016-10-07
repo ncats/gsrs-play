@@ -682,9 +682,36 @@
         };
 
 
-        $scope.downloadFile = function(url) {
-            window.location = url;
-        };
+	//Perpare an export file for download
+        $scope.downloadFile = function (url) {
+		$http.get(url)
+		  .then(function(response) {
+      			var dl = response.data;
+			if(dl){
+				if(dl.isReady){
+					window.location.href=dl.url;
+				}else if(dl.isPresent){ //busy
+					$scope.exportUnavailableWarning();
+				}else{ //unknown result set
+					$scope.exportUnavailableWarning();  
+				}
+			}else{
+				$scope.exportUnavailableWarning();
+			}
+		});
+
+
+    	};
+
+	$scope.exportUnavailableWarning = function(){
+	        $scope.modalInstance = $uibModal.open({
+                        templateUrl: baseurl + "assets/templates/modals/export-warning.html",
+                        scope: $scope
+                });
+	};
+
+
+
         
         $scope.compare = function () {
             //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));

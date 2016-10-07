@@ -26,12 +26,9 @@ import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-public class ApprovalWorkflowTest {
+public class ApprovalWorkflowTest  extends AbstractGinasTest {
 	public final static String VALID_APPROVAL_ID="0000000000";
 	public final static String INVALID_APPROVAL_ID="0000000001";
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);

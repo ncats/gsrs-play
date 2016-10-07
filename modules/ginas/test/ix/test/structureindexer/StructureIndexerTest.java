@@ -3,8 +3,10 @@ package ix.test.structureindexer;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -16,6 +18,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.java8Util.Java8ForOldEbeanHelper;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.utils.StreamUtil;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import tripod.chem.indexer.StructureIndexer;
@@ -32,22 +35,8 @@ public class StructureIndexerTest {
 		structureIndexer=EntityPersistAdapter.getInstance().getStructureIndexer();
 	}
 	
-	public static Stream<Result> asStream(ResultEnumeration rn){
-		//CollectionUtils.toIterator(enumeration)
-		Iterator<Result> ir;
-		ir=new Iterator<Result>(){
-			@Override
-			public boolean hasNext() {
-				return rn.hasMoreElements();
-			}
-
-			@Override
-			public Result next() {
-				return rn.nextElement();
-			}
-		};
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(ir, Spliterator.IMMUTABLE), false);
-		
+	public static Stream<Result> ofResultEnumeration(ResultEnumeration rn){
+		return StreamUtil.forGenerator(()->rn.hasMoreElements()?Optional.of(rn.nextElement()):Optional.empty());		
 	}
 	
 	@Test
@@ -57,7 +46,7 @@ public class StructureIndexerTest {
 		structureIndexer.add(id, structure);
 		structureIndexer.add(id, structure);
 		
-		assertEquals(2,asStream(structureIndexer.substructure(structure, 10)).count());		
+		assertEquals(2,ofResultEnumeration(structureIndexer.substructure(structure, 10)).count());		
 	}
 	
 	@Test
@@ -67,7 +56,7 @@ public class StructureIndexerTest {
 		structureIndexer.add(id, structure);
 		structureIndexer.add(id, structure);
 		structureIndexer.remove(null,id);
-		assertEquals(0,asStream(structureIndexer.substructure(structure, 10)).count());		
+		assertEquals(0,ofResultEnumeration(structureIndexer.substructure(structure, 10)).count());		
 	}
 	
 	@Test
@@ -82,9 +71,9 @@ public class StructureIndexerTest {
 				.build();
 		
 		Java8ForOldEbeanHelper.makeStructureIndexesForBean(EntityPersistAdapter.getInstance(), EntityWrapper.of(cs));
-		assertEquals(1,asStream(structureIndexer.substructure(structure, 10)).count());		
+		assertEquals(1,ofResultEnumeration(structureIndexer.substructure(structure, 10)).count());		
 		Java8ForOldEbeanHelper.removeStructureIndexesForBean(EntityPersistAdapter.getInstance(), EntityWrapper.of(cs));
-		assertEquals(0,asStream(structureIndexer.substructure(structure, 10)).count());
+		assertEquals(0,ofResultEnumeration(structureIndexer.substructure(structure, 10)).count());
 		
 		
 	}

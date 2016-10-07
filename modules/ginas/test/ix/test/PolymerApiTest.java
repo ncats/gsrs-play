@@ -33,11 +33,8 @@ import ix.test.server.SubstanceAPI;
 import ix.utils.Util;
 import util.json.JsonUtil;
 
-public class PolymerApiTest {
+public class PolymerApiTest extends AbstractGinasTest {
 
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);

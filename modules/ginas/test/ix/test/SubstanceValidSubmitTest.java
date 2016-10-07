@@ -31,13 +31,7 @@ import util.json.JsonUtil;
 import static ix.test.SubstanceJsonUtil.*;
 
 @RunWith(Parameterized.class)
-public class SubstanceValidSubmitTest {
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-
-
+public class SubstanceValidSubmitTest extends AbstractGinasTest {
 
     @Parameterized.Parameters(name="{1}")
         static public Collection<Object[]> findFiles(){

@@ -15,7 +15,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.BeanViews;
 
-public class JSONViewTest{
+public class JSONViewTest  extends AbstractGinasTest {
 
 	public static class TestJsonView{
 		 	@Lob

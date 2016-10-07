@@ -44,20 +44,12 @@ import util.json.JsonUtil;
  * 
  * @author peryeata
  *
- *         TODO: [done] add references (add/remove) check [done] add checks for
- *         access control of edits for non-logged in users [done] add names
- *         (add/remove) check [done] add names reordering check [done] add other
- *         editor changing something add codes (add/remove) check add chemical
- *         access (add/remove) check add access reordering check add what would
- *         look like a "copy" operation check [mostly done] refactor
+ * 
  *
  */
-public class EditingWorkflowTest {
+public class EditingWorkflowTest extends AbstractGinasTest {
 
 	final File resource = new File("test/testJSON/toedit.json");
-
-	@Rule
-	public TestNamePrinter printer = new TestNamePrinter();
 
 	@Rule
 	public GinasTestServer ts = new GinasTestServer(9001);

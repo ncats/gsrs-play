@@ -75,6 +75,10 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     }
     @Override
     public WSResponse get(String path){
+        return get(path, timeout);
+    }
+    
+    public WSResponse get(String path, long timeout){
         return url(constructUrlFor(path)).get().get(timeout);
     }
 
@@ -92,6 +96,8 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     	HtmlPage html=submit(ws);
     	return Util.sha1(html.asXml());
     }
+        
+    
 
     public WebRequest newPostRequest(String path) throws MalformedURLException {
         return new WebRequest(new URL(constructUrlFor(path)), HttpMethod.POST);

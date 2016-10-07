@@ -19,13 +19,10 @@ import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
 import ix.test.SubstanceJsonUtil;
 
-public class ProteinTest {
-	//
+public class ProteinTest extends AbstractGinasTest {
 
 	final File resource = new File("test/testJSON/toedit.json");
 
-	@Rule
-	public TestNamePrinter printer = new TestNamePrinter();
 
 	@Rule
 	public GinasTestServer ts = new GinasTestServer();

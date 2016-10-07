@@ -17,13 +17,11 @@ import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
 
-public class ChangeSubstanceClassTest {
+public class ChangeSubstanceClassTest extends AbstractGinasTest {
 
 
     final File resource=new File("test/testJSON/toedit.json");
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
