@@ -8,9 +8,9 @@ import com.typesafe.config.ConfigParseOptions;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
-import ix.test.ix.test.server.ControlledVocab;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
+import ix.test.server.ControlledVocab;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
 import ix.test.util.TestNamePrinter;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -28,12 +28,9 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class IntegrationTest {
+public class IntegrationTest extends AbstractGinasTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
-
-	@Rule
-	public TestNamePrinter printer = new TestNamePrinter();
 
 	@Rule
 	public GinasTestServer ts = new GinasTestServer();

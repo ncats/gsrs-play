@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.SiteContainer;
 
-public class NucleicAcidFunctionsTest {
+public class NucleicAcidFunctionsTest extends AbstractGinasTest {
 
 	@Test
     public void siteShorthandRoundTripTest() throws Exception{

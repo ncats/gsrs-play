@@ -22,9 +22,9 @@ import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Note;
 import ix.ginas.processors.LegacyAuditInfoProcessor;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import play.Configuration;
 
 public class LegacyAuditInfoParserTest {

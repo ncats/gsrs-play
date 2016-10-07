@@ -15,6 +15,15 @@ import java.util.stream.Stream;
 
 import ix.ginas.models.v1.Site;
 
+/**
+ * Collection of utility methods that are Model-specific,
+ * but which can not, or should not exist on the Models
+ * themselves.
+ * 
+ * 
+ * @author peryeata
+ *
+ */
 public class ModelUtils {
 	/**
 	 * Collect a set of Sites as shorthand notation  

@@ -1,6 +1,6 @@
 package ix.test.crawler;
 
-import ix.test.ix.test.server.BrowserSession;
+import ix.test.server.BrowserSession;
 import play.libs.ws.WSResponse;
 
 import java.util.*;

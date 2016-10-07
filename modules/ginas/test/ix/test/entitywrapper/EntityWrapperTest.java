@@ -17,8 +17,8 @@ import ix.core.models.Indexable;
 import ix.core.models.Role;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.FieldMeta;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
 
 public class EntityWrapperTest {
 	@Rule

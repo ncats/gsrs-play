@@ -2,7 +2,7 @@ package ix.test.builder;
 
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.test.ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer;
 import org.junit.Rule;
 import org.junit.Test;
 

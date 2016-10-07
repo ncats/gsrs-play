@@ -54,8 +54,8 @@
                                                        title="Show Deprecated"
                                                        name="ShowDeprecated"
                                                        id ="ShowDeprecated"
-                                                       aria-label="Show Deprecated">
-                           </label>
+                                                       aria-label="Show Deprecated" />
+                        </label>
                         </div>
                     }
                     @filters(facets, searchFlag)
@@ -128,9 +128,9 @@
                                     </span> <div id="searching"></div>
                                 }
                                 case _ => {
-                                	<div ng-hide="hideall" ng-cloak>
-										@displayFieldFacets(ctx)
-									</div>
+                                    <div ng-hide="hideall" ng-cloak>
+                                        @displayFieldFacets(ctx)
+                                    </div>
                                 }
                             }
                         }
@@ -149,32 +149,22 @@
             }
  
             @if(total >= 1 && ctx!=null) {
-			
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
-                	@if(ctx.hasExactMatches()){
-                	<div ng-init="hideall=true" ng-show="hideall">
-                	@if(ctx.getExactMatches().size()==1){
-                		<h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
-                	}else{
-                		<h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
-                	}
-                    @for(sub <- ctx.getExactMatches()) {
-                        @GinasApp.getListContentFor(sub,ctx)
-                    }
-	                    <div>&nbsp;</div>
+                    @if(ctx.hasExactMatches()){
+	                    <div ng-init="hideall=true" ng-show="hideall">
+	                    @if(ctx.getExactMatches().size()==1){
+	                        <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
+	                    }else{
+	                        <h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
+	                    }
+	                    @for(sub <- ctx.getExactMatches()) {
+	                        @GinasApp.getListContentFor(sub,ctx)
+	                    }
+                        <div>&nbsp;</div>
                         <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
-	                    </div>
-
-
-
-					}
+                        </div>
+                    }
                 }
-
-
-
-
-
-
                 <div ng-hide="hideall" class="panel panel-default" id="allResults">
                     <div class="panel-heading">
                         <div class="row">
@@ -185,16 +175,13 @@
                         <div class="row">
                             <div class = "col-md-3">
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-download" uib-tooltip="Download Results"></i>&nbsp; <span class="caret"></span>
+                                    <button ng-click="showExport=true" type="button" uib-tooltip="Download Results" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fa fa-download" ></i>&nbsp; <span class="caret"></span>
                                     </button>
-                                    <ul class="dropdown-menu">
-
+                                    <ul ng-if="showExport" class="dropdown-menu">
                                         @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
-                                            <li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url">@fmt.getDisplayName()</a></li>
+                                            <li><a href="#" ng-click="downloadFile('@ix.ginas.controllers.routes.GinasApp.generateExportFileUrl(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url')">@fmt.getDisplayName()</a></li>
                                         }
-                                        @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"sdf").url">SD File</a></li>*@
-                                        @*<li><a target="_self" ng-href="@ix.ginas.controllers.routes.GinasApp.export(ix.ncats.controllers.App.getKeyForCurrentRequest(),"csv").url">Tab-delimited File</a></li>*@
                                     </ul>
                                 </div>
                             </div>
@@ -244,11 +231,13 @@
             function dismissQuery() {
                 location.assign('@resetAction');
             }
-
             $(document).ready(function () {
                 $(function () {
                     $('[data-toggle="popover"]').popover();
-                })
+                });
+
+
+
                 @if(ctx!= null){
                 var firststatus =@Html(ctx.toJson());
                 firststatus.thisPage =@{current*rows};
@@ -344,16 +333,12 @@
 
                                  <div class="dropdown center-text fieldfacet btn-group">
                                                         <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                                                                <span>
-                                                                Matches
-                                                                </span>
+                                                                <span>Matches</span>
                                                                 <span class="badge">@searchFacets.size()</span>
-
-                                                            <span class="caret"></span>
+                                                                <span class="caret"></span>
                                                         </button>
                                     <ul class="dropdown-menu" role="menu" >
                                      @for( es <- ctx.getFieldFacetsMap().entrySet()){
-
                                         <li role="presentation"><span class="field-facet-group"><label>
                                         @if(es.getKey().toString().equals("FULL")){
                                             Exact Match
@@ -365,16 +350,12 @@
                                         @es.getValue().map { item =>
                                                             <li role="presentation">
                                                                 <a target="_self" tabindex="-1" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.toLuceneQuery()'>
-                                                                <span class="field-facet-label">
-
-                                                                @item.getDisplayField()
-
-                                                                </span>
-                                                                <span class="badge pull-right">@item.getCountText()</span>
+                                                                    <span class="badge pull-right">@item.getCountText()</span>
+                                                                    <span class="field-facet-label">@item.getDisplayField()</span>
                                                                 </a>
                                                             </li>
                                                         }
-                                	}
+                                    }
                                     </ul>
                               </div>
 
@@ -382,8 +363,8 @@
                         } else {
                                     <span class="center-text"><h4 class="no-margin">Searched for:<em>
                                     @defining(FieldedQueryFacet.displayQuery(request().getQueryString("q"))) { keyval =>
-                                    	@if(keyval!=null){
-                                        	<b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
+                                        @if(keyval!=null){
+                                            <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
                                         }
                                     }
                                     </em></h4></span>
@@ -391,4 +372,3 @@
                         }
                     }
 }
-

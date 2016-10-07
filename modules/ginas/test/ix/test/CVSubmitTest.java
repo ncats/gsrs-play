@@ -1,29 +1,17 @@
 package ix.test;
-import static org.junit.Assert.assertTrue;
-
-import ix.test.util.TestNamePrinter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 
-public class CVSubmitTest {
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-    ;
-        
-        
+public class CVSubmitTest extends AbstractGinasTest {
 
         @Rule
         public GinasTestServer ts = new GinasTestServer();

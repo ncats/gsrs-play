@@ -7,9 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil.JsonNodeBuilder;
 
@@ -26,12 +26,9 @@ import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-public class ApprovalWorkflowTest {
+public class ApprovalWorkflowTest  extends AbstractGinasTest {
 	public final static String VALID_APPROVAL_ID="0000000000";
 	public final static String INVALID_APPROVAL_ID="0000000001";
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);

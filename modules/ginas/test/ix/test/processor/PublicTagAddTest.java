@@ -23,11 +23,11 @@ import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.processors.PublicTagFlagger;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.GinasTestServer.User;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
-import ix.test.ix.test.server.SubstanceLoader;
+import ix.test.server.GinasTestServer;
+import ix.test.server.GinasTestServer.User;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
+import ix.test.server.SubstanceLoader;
 import org.junit.rules.TemporaryFolder;
 import play.Configuration;
 

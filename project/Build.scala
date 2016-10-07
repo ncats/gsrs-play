@@ -149,31 +149,6 @@ public class BuildInfo {
         //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
   ).dependsOn(core).aggregate(core)
 
-  val marvin = Project("marvin", file("modules/marvin"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-    libraryDependencies ++= commonDependencies
-  ).dependsOn(ncats).aggregate(ncats)
-  
-  // needs to specify on the commandline during development and dist
-  //  sbt -Dconfig.file=modules/granite/conf/granite.conf granite/run
-  val granite = Project("granite", file("modules/granite"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-      //javaOptions in Runtime += "-Dconfig.resource=granite.conf"
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val idg = Project("idg", file("modules/idg"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-    libraryDependencies ++= commonDependencies,
-      libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
-      libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-      //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
-  ).dependsOn(marvin).aggregate(marvin)
-
   val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
     .settings(commonSettings: _*).settings(
     libraryDependencies ++= commonDependencies,
@@ -205,66 +180,4 @@ public class BuildInfo {
     javaOptions in Test += ginasTestOptions,
     cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ginasEvo).aggregate(ginasEvo)
-
-
-  val hcs = Project("hcs", file("modules/hcs"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val moldev = Project("moldev", file("modules/moldev"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      libraryDependencies += "org.apache.poi" % "poi" % "3.13",
-        javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-    ).dependsOn(ncats).aggregate(ncats)
-
-  val srs = Project("srs", file("modules/srs"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val reach = Project("reach", file("modules/reach"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      libraryDependencies +="org.webjars" % "highcharts" % "4.0.4",
-      libraryDependencies +="org.webjars" % "highslide" % "4.1.13",
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
-  val qhts = Project("qhts", file("modules/qhts"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(marvin).aggregate(marvin)
-
-  val tox21 = Project("tox21", file("modules/tox21"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(qhts).aggregate(qhts)
-
-  val ntd = Project("ntd", file("modules/ntd"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-      //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
-    ).dependsOn(ncats).aggregate(ncats)
-
-  val cbc = Project("cbc", file("modules/cbc"))
-    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
-      javacOptions in (Compile, compile) ++= javaBuildOptions,
-      javacOptions in (doc) ++= javaDocOptions
-  ).dependsOn(ncats).aggregate(ncats)
-
 }

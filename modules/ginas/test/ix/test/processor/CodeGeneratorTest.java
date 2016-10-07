@@ -15,9 +15,9 @@ import com.typesafe.config.ConfigFactory;
 
 import ix.core.util.StopWatch;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import play.Configuration;
 
 public class CodeGeneratorTest {

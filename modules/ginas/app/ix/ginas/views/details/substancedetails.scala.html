@@ -20,6 +20,9 @@
                     <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
                         {{_.startCase('@sub.substanceClass')}} Details</a></li>
 
+                    <li role="presentation"><a href="#audit" prevent-default="" ng-click="scrollTo('audit')">
+                        Audit Information </a></li>
+
                     @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                         <li role="presentation" ><a href="#altrelationships" prevent-default="" ng-click="scrollTo('altrelationships')">
                             Alt Definitions <span class="badge pull-right">@sub.getAlternativeDefinitionRelationships().size()</span></a></li>
@@ -71,8 +74,8 @@
                     }
                     <li role="presentation"><a href="#refs" prevent-default="" ng-click="scrollTo('refs')">
                         References <span class="badge pull-right">@sub.references.size()</span></a></li>
-                    <li role="presentation"><a href="#audit" prevent-default="" ng-click="scrollTo('audit')">
-                        Audit Information </a></li>
+                    <li role="presentation"><a href="#history" prevent-default="" ng-click="scrollTo('history')">
+                        History </a></li>
                 </ul>
             </nav>
         </div>
@@ -90,7 +93,7 @@
                                 <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-model-options="{ getterSetter: true }" ng-change = "redirectVersion()">
                                     <option ngCloak ng-repeat="v in getRange(1, '@sub.version');">{{v}}</option></select>
                             </code><br/>
-                            <div>View audit details:  <input type="checkbox" ng-model="audit"></div>
+                        <div>View audit details:  <input type="checkbox" ng-model="audit"></div>
                         </div>
                         <div class = "col-md-3 pull-right">
                             <h5>Substance ID:</h5>
@@ -257,11 +260,13 @@
 	                            		<div class="col-md-2">
 	                            			<h4>Editor</h4>
 	                            		</div>
-	                            		<div class="col-md-4">
+	                            		<div class="col-md-3">
 	                            			<h4>Change Date</h4>
 	                            		</div>
-	                            		<div class="col-md-2">
+	                            		<div class="col-md-1">
 	                            		</div>
+                                        <div class="col-md-1">
+                                        </div>
 	                            </div>
 	                            @for(edit<-sub.getEdits()){
 	                            	<div class="row striped">
@@ -274,13 +279,15 @@
 	                            		<div class="col-md-2">
 	                            			@edit.editor
 	                            		</div>
-	                            		<div class="col-md-4">
+	                            		<div class="col-md-3">
 	                            			@edit.getCreatedDate()
 	                            		</div>
-	                            		<div class="col-md-2">
+	                            		<div class="col-md-1">
 	                            			<div><a href="@ix.ginas.controllers.routes.GinasApp.substanceVersion(GinasApp.getId(sub), edit.version)" target="_self">View</a></div>
-	                            			@*<div><a href="#">Compare</a></div>*@
 	                            		</div>
+                                        <div class="col-md-1">
+                                            <div><a href="@edit.getDiffLink()" target="_blank">Compare</a></div>
+                                        </div>
 	                            	</div>
 	                            }
                             </div>

@@ -392,25 +392,7 @@
         };
         return suggest;
     });
-
-    ginasApp.service('substanceRetriever', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances/search?q=";
-        var substanceRet = {
-            getSubstances: function (name) {
-              //  var promise = $http.get(url, {params: {"filter": "names.name='" + name.toUpperCase() + "'"}, cache: true}, {
-                var promise = $http.get(url + "root_names_name='" + name + "'", {cache: true}, {
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).then(function (response) {
-                    return response.data;
-                });
-                return promise;
-            }
-        };
-        return substanceRet;
-    }]);
-
+    
     ginasApp.service('substanceSearch', function ($http, $q) {
         var options = {};
         var url = baseurl + "api/v1/substances/search?q=";
@@ -699,6 +681,38 @@
             window.location = $location.absUrl();
         };
 
+
+	//Perpare an export file for download
+        $scope.downloadFile = function (url) {
+		$http.get(url)
+		  .then(function(response) {
+      			var dl = response.data;
+			if(dl){
+				if(dl.isReady){
+					window.location.href=dl.url;
+				}else if(dl.isPresent){ //busy
+					$scope.exportUnavailableWarning();
+				}else{ //unknown result set
+					$scope.exportUnavailableWarning();  
+				}
+			}else{
+				$scope.exportUnavailableWarning();
+			}
+		});
+
+
+    	};
+
+	$scope.exportUnavailableWarning = function(){
+	        $scope.modalInstance = $uibModal.open({
+                        templateUrl: baseurl + "assets/templates/modals/export-warning.html",
+                        scope: $scope
+                });
+	};
+
+
+
+        
         $scope.compare = function () {
             //$scope.left = angular.toJson(Substance.$$flattenSubstance(angular.copy($scope.substance)));
             $scope.left = angular.toJson($scope.substance.$$flattenSubstance());

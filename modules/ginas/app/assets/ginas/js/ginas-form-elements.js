@@ -142,12 +142,13 @@
         };
         return CV;
     });
+
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances/search?q=";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
            // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
-            return $http.get(url + "root_names_name='" + name + "'", {cache: true}, {
+            return $http.get(url + "root_names_name=\"^" + name + "$\"", {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -772,7 +773,7 @@
     });
 
 
-    ginasFormElements.directive('substanceChooserSelector', function ($templateRequest, $compile, toggler, substanceFactory, spinnerService, CVFields) {
+    ginasFormElements.directive('substanceChooserSelector', function ($templateRequest, $compile, toggler, substanceFactory, spinnerService, CVFields, typeaheadService) {
         return {
             replace: true,
             restrict: 'E',
@@ -806,6 +807,11 @@
                         template = angular.element('<substance-viewer data = data obj =referenceobj format= "subref"></substance-viewer>');
                         toggler.refresh(scope, scope.formname, template);
                     });
+                };
+
+                scope.getSuggestions = function(query){
+                    var ret = typeaheadService.search(query);
+                    return ret;
                 };
 
                 scope.createSubref = function (selectedItem) {

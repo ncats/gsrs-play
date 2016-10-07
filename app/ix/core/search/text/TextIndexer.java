@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +44,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import ix.core.search.*;
-import ix.core.util.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -117,7 +116,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.plugins.IxCache;
+import ix.core.search.EntityFetcher;
+import ix.core.search.FieldedQueryFacet;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
+import ix.core.search.InxightInfixSuggester;
+import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
@@ -387,9 +390,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 			public Addition(String text, long weight) {
 				this.text = text;
-				this.weight = new AtomicLong(weight);
+				this.weight = new AtomicLong(weight);	
 			}
-
 			public void incrementWeight() {
 				weight.incrementAndGet();
 			}
@@ -466,6 +468,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				Addition add = additionIterator.next();
 				BytesRef ref = new BytesRef(add.text);
 				add.addToWeight(lookup.getWeightFor(ref));
+				//lookup.
 				lookup.update(ref, null, add.weight.get(), ref);
 				additionIterator.remove();
 			}
@@ -842,8 +845,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		@Override
 		public Query parse(String qtext) throws ParseException {
 			if (qtext != null) {
-//				qtext = qtext.replace(TextIndexer.GIVEN_START_WORD, TextIndexer.START_WORD);
-//				qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD, TextIndexer.STOP_WORD);
 				qtext = transformQueryForExactMatch(qtext);
 			}
 			// add ROOT prefix to all term queries (containing '_') where not
@@ -887,7 +888,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					subset.stream()
 						.map(o->EntityWrapper.of(o).getKey().getIdString())
 						.map(Util.toIndexedTuple())		//Yes, I mean for this to be a function call, not a function
-						.collect(Collectors.toMap(Tuple::v, Tuple::k));
+						.collect(Collectors.toMap(Tuple::v, Tuple::k, (a,b)->a)); //collect, clobber duplicates
 					searchResult.setRank(rank);
 				}
 			} else if (options.kind != null) {

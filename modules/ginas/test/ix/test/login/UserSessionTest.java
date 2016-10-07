@@ -1,10 +1,10 @@
 package ix.test.login;
 
 import ix.core.models.Role;
-import ix.test.ix.test.server.AbstractSession;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
+import ix.test.server.AbstractSession;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
 import ix.test.util.MultiThreadInteracter;
 import ix.test.util.TestNamePrinter;
 import org.junit.Before;

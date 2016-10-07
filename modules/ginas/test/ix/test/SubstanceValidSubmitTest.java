@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
-import ix.test.ix.test.server.SubstanceAPI;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 import org.junit.After;
 import org.junit.Before;
@@ -31,13 +31,7 @@ import util.json.JsonUtil;
 import static ix.test.SubstanceJsonUtil.*;
 
 @RunWith(Parameterized.class)
-public class SubstanceValidSubmitTest {
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-
-
+public class SubstanceValidSubmitTest extends AbstractGinasTest {
 
     @Parameterized.Parameters(name="{1}")
         static public Collection<Object[]> findFiles(){

@@ -14,8 +14,8 @@ import ix.core.search.SearchResult;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.IOUtil;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.RestSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
 import org.junit.rules.TemporaryFolder;
 
 import javax.persistence.Id;

@@ -228,7 +228,7 @@ public class SequenceIndexer {
         /**
          * Returns a bitset of the indexes where a match was
          * found for the target sequence
-         * @return
+         * @return Bitset of the matching target sites. 1-indexed.
          */
         public BitSet targetSites(){
         	return bst;
@@ -237,7 +237,7 @@ public class SequenceIndexer {
         /**
          * Returns a bitset of the indexes where a match was
          * found for the query sequence
-         * @return
+         * @return Bitset of the matching query sites. 1-indexed.
          */
         public BitSet querySites(){
         	return bsq;

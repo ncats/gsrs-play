@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.regex.Pattern;
 
 /**
  * Created by katzelda on 4/12/16.
@@ -53,12 +54,10 @@ public class TestUtil {
                     throws IOException{
 
                 FileVisitResult fvr= super.postVisitDirectory(dir, exc);
-                File dirfile=dir.toFile();
                 try{
-                    //System.out.println("Deleting:" + dirfile);
                     Files.delete(dir);
                 }catch(IOException e){
-                    System.out.println("unable to delete:" + e.getMessage());
+                    System.err.println("unable to delete:" + e.getMessage());
                 }
                 return fvr;
             }
@@ -67,11 +66,12 @@ public class TestUtil {
     }
     public static void assertContains(String within,String find){
     	String rep=within;
-    	if(rep.length()>20){
-    		rep=rep.substring(0, 20) + " ... {" + (within.length()-20) +"}" ;
+    	if(rep.length()>30){
+    		rep=rep.substring(0, 30) + " ... {" + (within.length()-20) +" more characters}" ;
     	}
     	assertTrue("Should have found:'" + find + "' in '" + rep + "'" ,within.contains(find));
     }
+    
     
     
 }

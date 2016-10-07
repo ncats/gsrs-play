@@ -1,5 +1,12 @@
 package ix.test.crawler;
 
+import ix.core.plugins.IxCache;
+import ix.core.util.StopWatch;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.SubstanceLoader;
+import org.junit.*;
+import play.libs.ws.WSResponse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -19,9 +26,9 @@ import org.junit.Test;
 
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
-import ix.test.ix.test.server.BrowserSession;
-import ix.test.ix.test.server.GinasTestServer;
-import ix.test.ix.test.server.SubstanceLoader;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.SubstanceLoader;
 import play.libs.ws.WSResponse;
 
 /**
@@ -107,8 +114,8 @@ public class WebCrawlerTest {
             URL url = ts.getHomeUrl();
 
             crawler.crawl(url);
-            
-            
+
+
             if(!spy.get404Paths().isEmpty()){
             	System.err.println("404 links:");
             	spy.get404Paths().stream().forEach(l->{
@@ -118,7 +125,7 @@ public class WebCrawlerTest {
             		});
             	});
             }
-           
+
             assertTrue(spy.get404Paths().isEmpty());
             
         }
