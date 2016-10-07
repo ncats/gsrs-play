@@ -145,7 +145,7 @@ public class SubstanceSearcher {
     	return new SearchResult(getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait)));
     }
     public SearchResult nameSearch(String query) throws IOException{
-        return query("root_names_name:\"" + query + "\"");
+       return query("root_names_name:\"" + query + "\"");
     }
     public SearchResult exactNameSearch(String query) throws IOException{
         return query("root_names_name:\"^" + query + "$\"");
@@ -189,14 +189,20 @@ public class SubstanceSearcher {
 
         String rootUrl = "ginas/app/substances?wait=true";
         if(queryOrNull !=null){
-        	String encodedQueryOrNull = URLEncoder.encode(queryOrNull,"UTF-8");
-            rootUrl +="&q=\"" + encodedQueryOrNull + "\"";
+            String encodedQuery = encodeQuery(queryOrNull);
+            if(isQuoted(encodedQuery)){
+                rootUrl += "&q=" + encodeQuery(queryOrNull);
+            }else {
+                rootUrl += "&q=\"" + encodeQuery(queryOrNull) +"\"";
+            }
+
         }
         if(defaultSearchOrder!=null){
     		rootUrl+="&order=" + defaultSearchOrder;
     	}
         int page=1;
 
+     //   System.out.println("query url is " + rootUrl);
         Set<String> substances = new LinkedHashSet<>();
 
         Set<String> temp;
@@ -244,6 +250,45 @@ public class SubstanceSearcher {
         return results;
     }
 
+    private String encodeQuery(String s) throws IOException{
+        if(s ==null || s.isEmpty()){
+            return s;
+        }
+
+        String query = s;
+        int colonIndex = s.indexOf(':');
+        if(colonIndex != -1){
+            query = s.substring(colonIndex+1);
+        }
+//    System.out.println("s = " + s);
+//        System.out.println("query = " + query);
+        boolean isQuoted = '"' == query.charAt(0) && '"' == query.charAt(query.length()-1);
+//        System.out.println("isQuoted = " + isQuoted);
+        String encodedQuery = URLEncoder.encode(query,"UTF-8");
+
+
+//        System.out.println("encoded = " + encodedQuery);
+        if(colonIndex ==-1){
+            return encodedQuery;
+        }
+        return s.substring(0, colonIndex+1) + encodedQuery;
+    }
+
+    private boolean isQuoted(String s){
+        if(s ==null || s.isEmpty()){
+            return false;
+        }
+
+        String query = s;
+        int colonIndex = s.indexOf(':');
+        if(colonIndex != -1){
+            query = s.substring(colonIndex+1);
+        }
+        boolean t =  '"' == query.charAt(0) && '"' == query.charAt(query.length()-1);
+//        System.out.println("s = " + s + "  query = "  + query);
+//        System.out.println("is quotes = " + t);
+        return t;
+    }
     private String getKeyFrom(String htmlText) {
         Matcher m = SEARCH_KEY_PATTERN.matcher(htmlText);
         if(!m.find()){
@@ -306,7 +351,7 @@ public class SubstanceSearcher {
         Set<String> substances = new LinkedHashSet<>();
 
         String txt=page.asXml();
-        System.out.println(txt);
+//        System.out.println(txt);
         Matcher matcher = STRUCTURE_IMG_URL.matcher(txt);
         while(matcher.find()){
             substances.add(matcher.group(1));
