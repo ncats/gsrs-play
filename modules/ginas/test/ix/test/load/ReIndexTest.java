@@ -1,14 +1,18 @@
 package ix.test.load;
 
-import ix.test.server.*;
-import ix.test.util.TestUtil;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+import ix.test.server.BrowserSession;
+import ix.test.server.ConfigUtil;
+import ix.test.server.SubstanceLoader;
+import ix.test.server.SubstanceReIndexer;
+import ix.test.server.SubstanceSearcher;
+import ix.test.util.TestUtil;
 
 /**
  * Created by katzelda on 4/12/16.

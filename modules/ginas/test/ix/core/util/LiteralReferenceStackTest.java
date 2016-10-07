@@ -7,9 +7,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
 
+import ix.test.AbstractGinasTest;
 import ix.utils.LinkedReferenceSet;
 
-public class LiteralReferenceStackTest {
+public class LiteralReferenceStackTest extends AbstractGinasTest{
 	public static class MockThing{
 		int i=0;
 		MockThing(int i){

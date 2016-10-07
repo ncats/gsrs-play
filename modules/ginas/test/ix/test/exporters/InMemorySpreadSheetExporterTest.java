@@ -3,6 +3,8 @@ package ix.test.exporters;
 import ix.ginas.exporters.CsvSpreadSheet;
 import ix.ginas.exporters.CsvSpreadsheetBuilder;
 import ix.ginas.exporters.Spreadsheet;
+import ix.test.AbstractGinasTest;
+
 import org.apache.commons.io.IOUtils;
 import org.h2.tools.Csv;
 import org.junit.Before;
@@ -18,7 +20,7 @@ import static org.junit.Assert.*;
 /**
  * Created by katzelda on 8/22/16.
  */
-public class InMemorySpreadSheetExporterTest {
+public class InMemorySpreadSheetExporterTest  extends AbstractGinasTest {
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder();
 

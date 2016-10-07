@@ -1,6 +1,6 @@
 package ix.test.processor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,6 +22,7 @@ import ix.ginas.exporters.JsonExporterFactory;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.processors.PublicTagFlagger;
+import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.GinasTestServer.User;
@@ -31,25 +32,26 @@ import ix.test.server.SubstanceLoader;
 import org.junit.rules.TemporaryFolder;
 import play.Configuration;
 
-public class PublicTagAddTest {
-
-	 @Rule
-	 public GinasTestServer ts = new GinasTestServer(()->{
-		 	String addconf="include \"ginas.conf\"\n" + 
-				 "\n" + 
-				 "ix.core.entityprocessors +={\n" + 
-				 "               \"class\":\"ix.ginas.models.v1.Substance\",\n" + 
-				 "               \"processor\":\"ix.ginas.processors.PublicTagFlagger\",\n" + 
-				 "        }";
-		 	Config additionalConfig = ConfigFactory.parseString(addconf)
-		 				.resolve()
-		 				.withOnlyPath("ix.core.entityprocessors");
-		 	return new Configuration(additionalConfig).asMap();
-	 });
-	 
+public class PublicTagAddTest extends AbstractGinasServerTest{
 
 	@Rule
 	public TemporaryFolder tmpDir = new TemporaryFolder();
+
+	@Override
+	public GinasTestServer createGinasTestServer(){
+		return new GinasTestServer(()->{
+			String addconf="include \"ginas.conf\"\n" + 
+					"\n" + 
+					"ix.core.entityprocessors +={\n" + 
+					"               \"class\":\"ix.ginas.models.v1.Substance\",\n" + 
+					"               \"processor\":\"ix.ginas.processors.PublicTagFlagger\",\n" + 
+					"        }";
+			Config additionalConfig = ConfigFactory.parseString(addconf)
+					.resolve()
+					.withOnlyPath("ix.core.entityprocessors");
+			return new Configuration(additionalConfig).asMap();
+		});
+	}
 
 	RestSession session;
 	SubstanceAPI api;
@@ -66,8 +68,8 @@ public class PublicTagAddTest {
 	public void breakdown() {
 		session.close();
 	}
-		
-	
+
+
 	/**
 	 * Gets the substance stream as a temporary GSRS json dump file
 	 * @param substances
@@ -85,9 +87,9 @@ public class PublicTagAddTest {
 			e.printStackTrace();
 		}
 		return f;
-		
+
 	}
-	
+
 	@Test
 	public void ensureMissingPublicTagGetsAddedWithProcessor() throws IOException {
 		try {
@@ -102,23 +104,23 @@ public class PublicTagAddTest {
 
 			JsonNode jsn = api.fetchSubstanceJsonByUuid(sub.getUuid().toString());
 			long publicRefs= StreamSupport.stream(jsn.at("/references").spliterator(),false)
-				.filter(js->{
-					JsonNode jsl=js.at("/tags");
-					if(!jsl.isMissingNode()){
-						boolean hasPub=false;
-						boolean hasAuto=false;
-						for(JsonNode tag: jsl){
-							if(tag.asText().equals(Reference.PUBLIC_DOMAIN_REF)){
-								hasPub=true;
+					.filter(js->{
+						JsonNode jsl=js.at("/tags");
+						if(!jsl.isMissingNode()){
+							boolean hasPub=false;
+							boolean hasAuto=false;
+							for(JsonNode tag: jsl){
+								if(tag.asText().equals(Reference.PUBLIC_DOMAIN_REF)){
+									hasPub=true;
+								}
+								if(tag.asText().equals(PublicTagFlagger.AUTO_SELECTED)){
+									hasAuto=true;
+								}
 							}
-							if(tag.asText().equals(PublicTagFlagger.AUTO_SELECTED)){
-								hasAuto=true;
-							}
+							return hasPub&&hasAuto;
 						}
-						return hasPub&&hasAuto;
-					}
-					return false;
-				}).count();
+						return false;
+					}).count();
 			assertEquals(1,publicRefs);
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -126,5 +128,5 @@ public class PublicTagAddTest {
 		}
 
 	}
-	 
+
 }

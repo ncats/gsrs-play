@@ -1,8 +1,7 @@
 package ix.test;
 
-import static ix.test.SubstanceJsonUtil.ensureFailure;
 import static ix.test.SubstanceJsonUtil.ensurePass;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -15,17 +14,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
-import ix.test.SubstanceJsonUtil;
 
-public class ProteinTest extends AbstractGinasTest {
+public class ProteinTest extends AbstractGinasServerTest {
 
 	final File resource = new File("test/testJSON/toedit.json");
 
-
-	@Rule
-	public GinasTestServer ts = new GinasTestServer();
 
 	private GinasTestServer.User fakeUser1, fakeUser2;
 

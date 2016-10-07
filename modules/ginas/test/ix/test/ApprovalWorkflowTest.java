@@ -1,19 +1,11 @@
 package ix.test;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import ix.test.server.GinasTestServer;
-import ix.test.server.RestSession;
-import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
-import util.json.JsonUtil.JsonNodeBuilder;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,23 +14,13 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
+import util.json.JsonUtil.JsonNodeBuilder;
 
-public class ApprovalWorkflowTest  extends AbstractGinasTest {
+public class ApprovalWorkflowTest  extends AbstractGinasServerTest {
 	public final static String VALID_APPROVAL_ID="0000000000";
 	public final static String INVALID_APPROVAL_ID="0000000001";
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
-
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-    };
     
 	@Test
 	public void testApprovalRoundTrip() throws Exception {

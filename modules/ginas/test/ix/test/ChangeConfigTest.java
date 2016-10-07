@@ -1,22 +1,17 @@
 package ix.test;
 
-import ix.test.server.GinasTestServer;
-import ix.test.util.TestNamePrinter;
-import org.junit.Rule;
-import org.junit.Test;
-import play.api.Configuration;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+
+import play.api.Configuration;
 /**
  * Created by katzelda on 5/2/16.
  */
-public class ChangeConfigTest extends AbstractGinasTest {
-
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
+public class ChangeConfigTest extends AbstractGinasServerTest {
 
     @Test
     public void unchanged(){

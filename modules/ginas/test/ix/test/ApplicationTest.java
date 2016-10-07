@@ -22,9 +22,6 @@ import static org.fest.assertions.Assertions.assertThat;
 */
 public class ApplicationTest extends AbstractGinasTest{
 
-    
-
-
     @Test
     public void createPrincipal() {
           Principal pri = new Principal("testuser", "");

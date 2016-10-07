@@ -9,33 +9,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import play.libs.ws.WSResponse;
+import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
-public class SubstanceValidateFailTest extends AbstractGinasTest {
+public class SubstanceValidateFailTest extends AbstractGinasServerTest {
 
     File resource;
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
-
 
     @Rule
     public TestNamePrinter printer = new TestNamePrinter().setPrintEnd(true);

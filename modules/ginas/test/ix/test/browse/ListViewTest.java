@@ -17,12 +17,13 @@ import org.junit.Test;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Substance;
+import ix.test.AbstractGinasTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 
-public class ListViewTest {
+public class ListViewTest  extends AbstractGinasTest {
 	static List<String> codeOrder = new ArrayList<String>();
 	static{
 		codeOrder.add("ZZZZ");

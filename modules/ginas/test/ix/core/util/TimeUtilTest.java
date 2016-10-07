@@ -1,17 +1,20 @@
 package ix.core.util;
 
-import org.junit.Rule;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.Test;
+
+import ix.test.AbstractGinasTest;
 
 /**
  * Created by katzelda on 3/24/16.
  */
-public class TimeUtilTest {
+public class TimeUtilTest extends AbstractGinasTest{
 
     @Rule
     public TimeTraveller timeTraveller = new TimeTraveller();

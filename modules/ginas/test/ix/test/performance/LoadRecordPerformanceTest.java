@@ -2,34 +2,16 @@ package ix.test.performance;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 import ix.core.util.StopWatch;
+import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
 
-public class LoadRecordPerformanceTest {
-	
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
-	
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-    };
-    
+public class LoadRecordPerformanceTest extends AbstractGinasServerTest{
+	    
     @Test    
    	public void add2000SimpleConcepts() throws Exception {
         //JsonNode entered = parseJsonFile(resource);

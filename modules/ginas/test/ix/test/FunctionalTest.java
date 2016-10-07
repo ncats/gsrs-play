@@ -1,37 +1,20 @@
 package ix.test;
 
 
-import ix.test.server.GinasTestServer;
-import ix.test.server.RestSession;
-import ix.test.util.TestNamePrinter;
+import static ix.test.util.TestUtil.assertContains;
 
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static ix.test.util.TestUtil.*;
 
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
-import play.test.WithApplication;
+import ix.test.server.RestSession;
 
-public class FunctionalTest  extends AbstractGinasTest {
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
-
-
+public class FunctionalTest  extends AbstractGinasServerTest {
 
     @Test
     public void loggedInUserHasLogout()   throws Exception {
         try(RestSession session = ts.newRestSession(ts.getFakeUser1())){
              String content = session.get("ginas/app").getBody();
-
              assertContains(content,"logout");
-
          }
-
     }
 
    @Test

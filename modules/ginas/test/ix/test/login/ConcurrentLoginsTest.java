@@ -1,6 +1,7 @@
 package ix.test.login;
 
 import chemaxon.nfunk.jep.function.Abs;
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.AbstractSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
@@ -21,13 +22,7 @@ import java.util.Random;
  * Created by katzelda on 3/23/16.
  */
 @RunWith(Parameterized.class)
-public class ConcurrentLoginsTest {
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+public class ConcurrentLoginsTest extends AbstractGinasServerTest{
 
 
     @Parameterized.Parameters

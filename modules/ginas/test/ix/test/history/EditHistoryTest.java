@@ -1,50 +1,28 @@
 package ix.test.history;
 
-import static org.junit.Assert.*;
-
-import static ix.test.SubstanceJsonUtil.ensureFailure;
 import static ix.test.SubstanceJsonUtil.ensurePass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.models.Role;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;
+import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
-import util.json.JsonUtilTest;
 
-public class EditHistoryTest {
+public class EditHistoryTest  extends AbstractGinasServerTest {
 	public final static String INVALID_APPROVAL_ID="0000000001";
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
-
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
-        }
-    };
     
     
     @Test

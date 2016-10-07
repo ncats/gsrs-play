@@ -1,7 +1,6 @@
 package ix.test.builder;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -13,9 +12,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
-import ix.ginas.models.v1.*;
-
-import javax.management.relation.Relation;
+import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.Modifications;
+import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Note;
+import ix.ginas.models.v1.Property;
+import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Substance;
 
 public abstract class AbstractSubstanceBuilder<S extends Substance, T extends AbstractSubstanceBuilder<S,T>>{
 	

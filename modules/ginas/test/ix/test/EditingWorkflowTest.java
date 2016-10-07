@@ -47,12 +47,9 @@ import util.json.JsonUtil;
  * 
  *
  */
-public class EditingWorkflowTest extends AbstractGinasTest {
+public class EditingWorkflowTest extends AbstractGinasServerTest {
 
 	final File resource = new File("test/testJSON/toedit.json");
-
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(9001);
 
 	private GinasTestServer.User fakeUser1, fakeUser2;
 

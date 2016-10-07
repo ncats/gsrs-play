@@ -1,9 +1,14 @@
 package ix.test.seqaln;
 
-import ix.seqaln.SequenceIndexer;
-import ix.seqaln.SequenceIndexer.CutoffType;
-import net.sf.ehcache.CacheManager;
-import org.h2.schema.Sequence;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -13,17 +18,15 @@ import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.test.AbstractGinasTest;
+import net.sf.ehcache.CacheManager;
 
 /**
  * Created by katzelda on 3/30/16.
  */
-public class SequenceIndexerTest {
+public class SequenceIndexerTest extends AbstractGinasTest{
 
 
     private static final double DELTA = 0.001D;

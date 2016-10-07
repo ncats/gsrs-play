@@ -2,7 +2,6 @@ package ix.test.database;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -10,6 +9,7 @@ import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Curation;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 
 
@@ -19,13 +19,8 @@ import ix.test.server.GinasTestServer;
 * as expected in the database
 *
 */
-public class DataCascadeTest  {
+public class DataCascadeTest   extends AbstractGinasServerTest {
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-	public GinasTestServer ts = new GinasTestServer(9001);
 
     @Test
     public void ensureDeletingEditDoesntDeleteUser() {
