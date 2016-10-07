@@ -844,11 +844,6 @@ public class GinasApp extends App {
 
 		Objects.requireNonNull(tstream, "Invalid stream");
 
-		if(threadPool.getActiveCount()>=threadPool.getMaximumPoolSize()){
-			return ok("");
-		}
-
-
 		final VisiblePipedInputStream pis = new VisiblePipedInputStream();
 		final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
 

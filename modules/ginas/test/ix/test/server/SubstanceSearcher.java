@@ -394,7 +394,6 @@ public class SubstanceSearcher {
     	}
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
-    		System.out.println("URL IS:"+url);
     		return SubstanceSearcher.this.session.get(url, timeout);
     	}
     	
