@@ -30,6 +30,7 @@ import javax.persistence.Id;
  */
 public class TextIndexerTest extends AbstractGinasServerTest{
 	
+	@Rule
 	public TemporaryFolder tmpDir = new TemporaryFolder();
 
 	public class MySpecialTestClass{

@@ -265,8 +265,8 @@
 	                            		</div>
 	                            		<div class="col-md-1">
 	                            		</div>
-                                        <div class="col-md-1">
-                                        </div>
+                                       @* <div class="col-md-1">
+                                        </div>*@
 	                            </div>
 	                            @for(edit<-sub.getEdits()){
 	                            	<div class="row striped">
@@ -285,9 +285,9 @@
 	                            		<div class="col-md-1">
 	                            			<div><a href="@ix.ginas.controllers.routes.GinasApp.substanceVersion(GinasApp.getId(sub), edit.version)" target="_self">View</a></div>
 	                            		</div>
-                                        <div class="col-md-1">
+                                       @* <div class="col-md-1">
                                             <div><a href="@edit.getDiffLink()" target="_blank">Compare</a></div>
-                                        </div>
+                                        </div>*@
 	                            	</div>
 	                            }
                             </div>

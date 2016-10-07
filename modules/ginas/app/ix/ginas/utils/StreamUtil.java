@@ -1,5 +1,6 @@
 package ix.ginas.utils;
 
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Spliterator;
@@ -48,6 +49,12 @@ public class StreamUtil {
 	public static <T> Stream<T> forNullableGenerator(Supplier<T> sup){
 		return forGenerator(()->{
 			return Optional.ofNullable(sup.get());
+		});
+	}
+	
+	public static <T> Stream<T> forEnumeration(Enumeration<T> enumeration){
+		return forNullableGenerator(()->{
+			return (enumeration.hasMoreElements())?enumeration.nextElement():null;
 		});
 	}
 }
