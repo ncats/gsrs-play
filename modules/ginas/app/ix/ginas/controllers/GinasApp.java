@@ -22,6 +22,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -150,7 +151,7 @@ public class GinasApp extends App {
     
     static Map<String, ResultRenderer<?>> listRenderers = new HashMap<>();
     static Map<String, ResultRenderer<?>> thumbRenderers = new HashMap<>();
-    
+
 
 	/**
      * Search types used for UI searches. At this time 
@@ -702,28 +703,28 @@ public class GinasApp extends App {
    
     /**
      *  May contain special streams for use in tests / caching or example downloads
-     * 
-     *  
+     *
+     *
      */
     private static Map<String, Supplier<Stream<Substance>>> specialStreams = new ConcurrentHashMap<>();
-    
-    
+
+
     /**
      * Register a supplier to a stream for a given collection ID. This can be used to
-     * specify an explicit collection for reporting, 
-     * 
-     *  
+     * specify an explicit collection for reporting,
+     *
+     *
      * @param collectionId "key" value to be stored to fetch this stream
      * @param supplier a supplier of the stream
      */
     public static void registerSpecialStream(String collectionId, Supplier<Stream<Substance>> supplier){
     	specialStreams.put(collectionId, supplier);
     }
-    
-    
+
+
     /**
      * Differed method for generating a export. This returns a JSONode of the meta data
-     * surrounding a would-be export request. 
+     * surrounding a would-be export request.
      * @param collectionID
      * @param extension
      * @return
@@ -744,7 +745,7 @@ public class GinasApp extends App {
     	}
     	return ok(on);
     }
-    
+
     /**
      * Return a stream for the given collectionID, or throw a NoSuchElementException
      * if none is found
@@ -761,13 +762,13 @@ public class GinasApp extends App {
     	});
     	return sstream.get();
     }
-    
-    
+
+
     /**
      * Direct method, given collection ID, to return a File-Download result.
-     * 
+     *
      * @param collectionID The id of the collection (typically the SearchResultContext key)
-     * @param extension The format extension (e.g. sdf, csv, etc) 
+     * @param extension The format extension (e.g. sdf, csv, etc)
      * @return
      */
     public static Result export (String collectionID, String extension) {
@@ -779,10 +780,10 @@ public class GinasApp extends App {
     		return error(404,e.getMessage());
     	}
     }
-    
+
     private static ThreadPoolExecutor threadPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
-    
-    
+
+
     /**
      * PipiedInputStream that allows probing into whether it's closed
      * yet or not.
@@ -800,7 +801,7 @@ public class GinasApp extends App {
 			return isClosed;
 		}
     }
-    
+
     /**
      * PipiedOutputStream that allows probing into whether it's closed
      * yet or not.
@@ -809,11 +810,11 @@ public class GinasApp extends App {
      */
     public static class VisiblePipedOutputStream extends PipedOutputStream{
     	private boolean isClosed=false;
-    	
+
     	public VisiblePipedOutputStream(PipedInputStream pis) throws IOException{
     		super(pis);
     	}
-    	
+
 		@Override
 		public void close() throws IOException {
             isClosed = true;
@@ -823,7 +824,7 @@ public class GinasApp extends App {
 			return isClosed;
 		}
     }
-    
+
     /**
      * Directly export the provided stream, using an exporter that matches extension
      * @param tstream
@@ -838,8 +839,8 @@ public class GinasApp extends App {
 		if(threadPool.getActiveCount()>=threadPool.getMaximumPoolSize()){
 			return ok("");
 		}
-		
-		
+
+
 		final VisiblePipedInputStream pis = new VisiblePipedInputStream();
 		final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
 
@@ -867,14 +868,14 @@ public class GinasApp extends App {
 				}
 			}
 		});
-		
+
 		response().setContentType("application/x-download");
 		response().setHeader("Content-disposition", "attachment; filename=" + fname);
 		return ok(pis);
     }
 
-	
-	
+
+
     private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
         GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
 
@@ -2146,7 +2147,7 @@ public class GinasApp extends App {
     		return Html.apply("<div class=\"col-md-3 thumb-col\">" + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
     	}
     }
-    
+
     public static String siteShorthand(int subunitIndex, BitSet residues){
     	return residues.stream()
     		.mapToObj(i->new Site(subunitIndex,i+1))

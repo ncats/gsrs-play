@@ -10,6 +10,7 @@ import java.util.stream.StreamSupport;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,10 +29,13 @@ import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import ix.test.server.SubstanceLoader;
+import org.junit.rules.TemporaryFolder;
 import play.Configuration;
 
 public class PublicTagAddTest extends AbstractGinasServerTest{
 
+	@Rule
+	public TemporaryFolder tmpDir = new TemporaryFolder();
 
 	@Override
 	public GinasTestServer createGinasTestServer(){
@@ -48,7 +52,6 @@ public class PublicTagAddTest extends AbstractGinasServerTest{
 			return new Configuration(additionalConfig).asMap();
 		});
 	}
-
 
 	RestSession session;
 	SubstanceAPI api;
@@ -73,11 +76,10 @@ public class PublicTagAddTest extends AbstractGinasServerTest{
 	 * @return
 	 * @throws IOException
 	 */
-	public static File asLoadFile(Stream<Substance> substances) throws IOException{
+	public File asLoadFile(Stream<Substance> substances) throws IOException{
 		JsonExporterFactory jef = new JsonExporterFactory();
 
-		File f = File.createTempFile("test", "gsrs");
-		f.deleteOnExit();
+		File f =tmpDir.newFile();
 		try {
 			Exporter<Substance> export = jef.createNewExporter(new FileOutputStream(f), null);
 			export.exportForEachAndClose(substances.iterator());

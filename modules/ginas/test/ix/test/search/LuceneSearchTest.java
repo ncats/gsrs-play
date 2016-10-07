@@ -133,11 +133,56 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
 				assertEquals(1, r.getUuids().size());
 
 				ts.doAsUser(user, () -> {
-					SearchResultContext src = SearchResultContext.getSearchResultContextForKey(r.getKey());
-
 					Substance s = r.getSubstances().findFirst().get();
 
 					assertEquals(ibuprofen, s.getName());
+				});
+			}
+
+		}
+	}
+
+	@Test
+	public void prefixSearch() throws Exception {
+		GinasTestServer.User user = ts.getFakeUser1();
+
+
+		try( RestSession session = ts.newRestSession(user)) {
+
+			String prefix = "fooLong";
+			SubstanceAPI api = new SubstanceAPI(session);
+
+
+
+			new SubstanceBuilder()
+					.addName(prefix +"bar")
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName(prefix+"baz")
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			new SubstanceBuilder()
+					.addName("notA"+prefix)
+					.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+
+			try(BrowserSession browserSession = ts.newBrowserSession(user)){
+				SubstanceSearcher searcher = new SubstanceSearcher(browserSession);
+
+				SubstanceSearcher.SearchResult r = searcher.nameSearch(prefix);
+				//assertEquals(3, r.getUuids().size());
+				System.out.println("===========");
+				SubstanceSearcher.SearchResult r2 = searcher.nameSearch(prefix+"*");
+				assertEquals(2, r2.getUuids().size());
+
+				ts.doAsUser(user, () -> {
+
+					long count = r2.getSubstances()
+										.map(Substance::getName)
+										.filter(n -> n.startsWith(prefix))
+										.count();
+
+					assertEquals(2, count);
 				});
 			}
 
@@ -802,7 +847,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
             String html=api.fetchSubstancesUISearchHTML(null,null,"^Display Name");
             String rhtml=api.fetchSubstancesUISearchHTML(null,null,"$Display Name");
             int rows=16;
-            
+
+			//System.out.println(html);
             //Collections.reverse(addedName);
             addedName.stream().limit(rows).forEachOrdered(n->
             	assertTrue("Sorting alphabetical should show:" + n ,html.contains(n))
