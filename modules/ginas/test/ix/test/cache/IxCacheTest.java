@@ -10,11 +10,11 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.core.models.Session;
 import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.Substance;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.RestSession;
 import ix.utils.Util;
 

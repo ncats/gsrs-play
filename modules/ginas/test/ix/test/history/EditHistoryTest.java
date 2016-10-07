@@ -13,10 +13,10 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
-import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;

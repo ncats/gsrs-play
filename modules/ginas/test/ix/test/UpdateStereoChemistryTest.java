@@ -1,6 +1,8 @@
 package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import ix.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;

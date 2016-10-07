@@ -17,6 +17,7 @@ import org.junit.runner.Description;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.AbstractGinasServerTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.controllers.GinasApp;

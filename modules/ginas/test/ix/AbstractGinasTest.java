@@ -1,4 +1,4 @@
-package ix.test;
+package ix;
 
 import org.junit.Rule;
 

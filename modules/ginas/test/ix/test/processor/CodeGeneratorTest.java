@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.AbstractGinasServerTest;
 import ix.core.util.StopWatch;
-import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;

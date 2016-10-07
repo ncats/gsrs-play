@@ -8,8 +8,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.AbstractSession;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;

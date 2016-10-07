@@ -1,5 +1,6 @@
 package ix.test;
 
+import ix.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 import ix.test.util.TestNamePrinter;
 import org.junit.Rule;
@@ -11,15 +12,17 @@ import java.util.HashMap;
 /**
  * Created by katzelda on 5/2/16.
  */
-public class ChangeConfigConstructorTest extends AbstractGinasTest {
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(new HashMap<String, Object>() {
-        {
-            put("new.field", "true");
-            put("new.field2", "true");
-        }
-    });
+public class ChangeConfigConstructorTest extends AbstractGinasServerTest {
+    
+    @Override
+    public GinasTestServer createGinasTestServer(){
+    	return new GinasTestServer(new HashMap<String, Object>() {
+            {
+                put("new.field", "true");
+                put("new.field2", "true");
+            }
+        });
+    }
 
     @Test
     public void addManyNewItemsToConfigMap() {

@@ -17,11 +17,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.AbstractGinasServerTest;
 import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Note;
 import ix.ginas.processors.LegacyAuditInfoProcessor;
-import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;

@@ -19,10 +19,10 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.AbstractGinasServerTest;
 import ix.core.search.SearchResultContext;
 import ix.core.util.ExpectFailureChecker.ExpectedToFail;
 import ix.ginas.models.v1.Substance;
-import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;

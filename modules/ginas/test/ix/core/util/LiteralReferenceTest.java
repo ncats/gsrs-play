@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
 
-import ix.test.AbstractGinasTest;
+import ix.AbstractGinasTest;
 import ix.utils.LiteralReference;
 
 public class LiteralReferenceTest extends AbstractGinasTest{

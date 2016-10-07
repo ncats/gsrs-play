@@ -215,6 +215,7 @@ public class SubstanceSearcher {
         		 
         		 htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
         	 }catch(Exception e){
+//                 e.printStackTrace();
              	break;
              }
             //stop if the paging throws an error
@@ -352,7 +353,6 @@ public class SubstanceSearcher {
         Set<String> substances = new LinkedHashSet<>();
 
         String txt=page.asXml();
-//        System.out.println(txt);
         Matcher matcher = STRUCTURE_IMG_URL.matcher(txt);
         while(matcher.find()){
             substances.add(matcher.group(1));

@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import ix.test.AbstractGinasServerTest;
+import ix.AbstractGinasServerTest;
 import ix.test.SubstanceJsonUtil;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;

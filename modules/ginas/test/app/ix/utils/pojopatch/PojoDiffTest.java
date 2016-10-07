@@ -1,6 +1,8 @@
 package app.ix.utils.pojopatch;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,18 +11,19 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.UUID;
 
-import ix.ginas.models.v1.*;
-
-import ix.test.server.GinasTestServer;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
+import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Parameter;
+import ix.ginas.models.v1.Property;
+import ix.ginas.models.v1.Substance;
 import ix.utils.pojopatch.Change;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -28,10 +31,8 @@ import ix.utils.pojopatch.PojoPatch;
 /**
  * Created by katzelda on 3/7/16.
  */
-public class PojoDiffTest {
+public class PojoDiffTest extends AbstractGinasServerTest{
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
     
     private List<UUID> uuids = new ArrayList<>();
     private int uuidIndex=0;

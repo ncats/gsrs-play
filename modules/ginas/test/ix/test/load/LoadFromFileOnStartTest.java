@@ -7,22 +7,25 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import ix.test.AbstractGinasTest;
+import ix.AbstractGinasServerTest;
+import ix.AbstractGinasTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 
-public class LoadFromFileOnStartTest extends AbstractGinasTest{
+public class LoadFromFileOnStartTest extends AbstractGinasServerTest{
 
-
-	 @Rule
-	 public GinasTestServer ts = new GinasTestServer(new HashMap<String,Object>(){
-		 {
-		 	put("ix.ginas.load.file",LoadDataSetTest.TEST_TESTDUMPS_REP90_GINAS);
-		 }
-	 });
+	 
+	 @Override
+	 public GinasTestServer createGinasTestServer(){
+		 return new GinasTestServer(new HashMap<String,Object>(){
+			 {
+				 	put("ix.ginas.load.file",LoadDataSetTest.TEST_TESTDUMPS_REP90_GINAS);
+				 }
+			 });
+	 }
 	 
 	 
 

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigParseOptions;
+
+import ix.AbstractGinasServerTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;

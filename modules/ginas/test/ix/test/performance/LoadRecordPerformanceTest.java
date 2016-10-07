@@ -4,8 +4,8 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.util.StopWatch;
-import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;

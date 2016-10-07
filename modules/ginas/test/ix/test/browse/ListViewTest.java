@@ -11,19 +11,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Rule;
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Substance;
-import ix.test.AbstractGinasTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 
-public class ListViewTest  extends AbstractGinasTest {
+public class ListViewTest  extends AbstractGinasServerTest {
 	static List<String> codeOrder = new ArrayList<String>();
 	static{
 		codeOrder.add("ZZZZ");
@@ -32,16 +31,18 @@ public class ListViewTest  extends AbstractGinasTest {
 	}
 	
 	
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(new HashMap<String,Object>(){
-		{
-			this.put("ix.ginas.codes.order", codeOrder);
-		}
-	});
-	
+	@Override
+	public GinasTestServer createGinasTestServer(){
+		return new GinasTestServer(new HashMap<String,Object>(){
+			{
+				this.put("ix.ginas.codes.order", codeOrder);
+			}
+		});
+	}
 
 	@Test
 	public void nonAmplifiedCodeSystemsShowInAlphabeticalOrder() throws Exception {
+		
 		// JsonNode entered = parseJsonFile(resource);
 		try (RestSession session = ts.newRestSession(ts.getFakeUser1())) {
 			String theName = "ANYTHING";
