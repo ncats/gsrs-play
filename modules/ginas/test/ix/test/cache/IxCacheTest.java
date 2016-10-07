@@ -8,20 +8,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import ix.core.models.Role;
 import ix.core.models.Session;
 import ix.core.plugins.IxCache;
 import ix.ginas.models.v1.Substance;
-import ix.test.server.GinasTestServer;
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.RestSession;
 import ix.utils.Util;
 
-public class IxCacheTest {
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(9001);
+public class IxCacheTest  extends AbstractGinasServerTest {
+	
+	
 	@Test 
 	public void testFetchFromCacheWithSameKeyReturnsFirstCachedValue() throws Exception {
 		try (RestSession session = ts.newRestSession(ts.createUser(Role.Admin))) {

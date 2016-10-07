@@ -11,10 +11,7 @@ import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 
-public class CVSubmitTest extends AbstractGinasTest {
-
-        @Rule
-        public GinasTestServer ts = new GinasTestServer();
+public class CVSubmitTest extends AbstractGinasServerTest {
 
 
         private SubstanceAPI api;

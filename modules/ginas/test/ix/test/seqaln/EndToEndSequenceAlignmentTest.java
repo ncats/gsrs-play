@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import ix.test.AbstractGinasServerTest;
 import ix.test.SubstanceJsonUtil;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
@@ -23,16 +24,10 @@ import util.json.JsonUtil;
 /**
  * Created by katzelda on 3/30/16.
  */
-public class EndToEndSequenceAlignmentTest {
+public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
     File folder=new File("test/testJSON/pass");
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
-
+    
     private BrowserSession session;
 
     @Before

@@ -9,13 +9,12 @@ import org.junit.Test;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
+import ix.test.AbstractGinasTest;
 import ix.test.server.GinasTestServer;
 import ix.test.util.TestNamePrinter;
 
-public class PrincipalTest {
+public class PrincipalTest  extends AbstractGinasTest {
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
     @Rule
 	public GinasTestServer ts = new GinasTestServer(9001);

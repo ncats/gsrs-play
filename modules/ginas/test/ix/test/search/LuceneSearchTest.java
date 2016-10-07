@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -14,9 +13,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import ix.core.search.SearchResultContext;
-import ix.ginas.models.v1.Substance;
-import ix.test.server.*;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,18 +22,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.search.SearchResultContext;
 import ix.core.util.ExpectFailureChecker.ExpectedToFail;
 import ix.ginas.models.v1.Substance;
+import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
+import ix.test.server.SubstanceReIndexer;
+import ix.test.server.SubstanceSearcher;
 import ix.test.util.TestNamePrinter;
 
-public class LuceneSearchTest {
+public class LuceneSearchTest extends AbstractGinasServerTest{
 	
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
-	
-
     
     @Test    
    	public void testTwoWordLuceneNameSearchShouldReturn() throws Exception {

@@ -1,12 +1,5 @@
 package ix.test.crawler;
 
-import ix.core.plugins.IxCache;
-import ix.core.util.StopWatch;
-import ix.test.server.BrowserSession;
-import ix.test.server.GinasTestServer;
-import ix.test.server.SubstanceLoader;
-import org.junit.*;
-import play.libs.ws.WSResponse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +19,7 @@ import org.junit.Test;
 
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
+import ix.test.AbstractGinasTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.SubstanceLoader;
@@ -34,7 +28,7 @@ import play.libs.ws.WSResponse;
 /**
  * Created by katzelda on 6/29/16.
  */
-public class WebCrawlerTest {
+public class WebCrawlerTest  extends AbstractGinasTest {
 
     @ClassRule
     public static GinasTestServer ts = new GinasTestServer();

@@ -1,38 +1,25 @@
 package ix.test.login;
 
+import static ix.test.login.LoginUtil.ensureLoggedInAs;
+import static ix.test.login.LoginUtil.ensureNotLoggedIn;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import ix.core.models.Role;
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.AbstractSession;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
-import ix.test.util.MultiThreadInteracter;
-import ix.test.util.TestNamePrinter;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 import play.libs.ws.WSResponse;
-
-import java.util.Collections;
-import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static ix.test.login.LoginUtil.*;
-import static org.junit.Assert.*;
 /**
  * Created by katzelda on 3/14/16.
  */
-public class UserSessionTest {
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(Collections.singletonMap("ix.admin", false));
-
+public class UserSessionTest extends AbstractGinasServerTest{
+    
     private GinasTestServer.User luke;
 
     @Before

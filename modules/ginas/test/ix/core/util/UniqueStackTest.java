@@ -10,7 +10,9 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-public class UniqueStackTest {
+import ix.test.AbstractGinasTest;
+
+public class UniqueStackTest  extends AbstractGinasTest{
 	
 	@Test
 	public void testUniqueStackIsEmptyAfterAddingAndRemoving(){

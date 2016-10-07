@@ -15,11 +15,10 @@ import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 
-public class ConsoleFilterPluginTest {
-	@Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
+public class ConsoleFilterPluginTest extends AbstractGinasServerTest{
 	
 	@Test
 	public void testConsoleLocalThreadFilterOnlyPrintsLocalThreadOutput() throws Exception {

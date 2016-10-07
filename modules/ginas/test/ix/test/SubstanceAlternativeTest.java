@@ -8,27 +8,21 @@ import java.io.File;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
 import util.json.JsonUtil;
 
-public class SubstanceAlternativeTest extends AbstractGinasTest {
+public class SubstanceAlternativeTest extends AbstractGinasServerTest {
 
 
     File resource ;
     
-    
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
     private SubstanceAPI api;
     private RestSession session;
 

@@ -1,33 +1,25 @@
 package ix.test.login;
 
+import static ix.test.login.LoginUtil.ensureLoggedInAs;
+import static ix.test.login.LoginUtil.ensureNotLoggedIn;
+
+import java.util.concurrent.TimeUnit;
+
+import org.junit.Rule;
+import org.junit.Test;
+
 import ix.core.util.TimeTraveller;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authentication;
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
-import ix.test.server.RestSession;
-import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
-import org.junit.Rule;
-import org.junit.Test;
-import play.libs.ws.WSResponse;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-import static ix.test.login.LoginUtil.*;
 /**
  * Created by katzelda on 3/24/16.
  */
-public class ExpiredSessionTest {
+public class ExpiredSessionTest extends AbstractGinasServerTest{
 
     public static final String URL = "ginas/app"; //changed to home page, so that no 401 or other errros occur
-
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
 
     @Rule
     public TimeTraveller timeTraveller = new TimeTraveller( TimeUtil.toDate(1955, 11, 5));

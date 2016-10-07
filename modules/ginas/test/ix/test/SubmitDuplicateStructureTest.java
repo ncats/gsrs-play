@@ -40,7 +40,8 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
  * Created by katzelda on 9/9/16.
  */
 @RunWith(Parameterized.class)
-public class SubmitDuplicateStructureTest extends AbstractGinasTest {
+public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
+
 
 
     @Parameterized.Parameters(name = "{0}")
@@ -62,8 +63,6 @@ public class SubmitDuplicateStructureTest extends AbstractGinasTest {
         }
         return list;
     }
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
 
     private SubstanceAPI api;
     private RestSession session;

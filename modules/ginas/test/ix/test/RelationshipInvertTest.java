@@ -1,42 +1,33 @@
 package ix.test;
 
-import static ix.test.SubstanceJsonUtil.ensurePass;
 import static ix.test.SubstanceJsonUtil.ensureFailure;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertNull;
+import static ix.test.SubstanceJsonUtil.ensurePass;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
-import ix.test.util.TestNamePrinter;
 import util.json.Change;
 import util.json.ChangeFilter;
 import util.json.Changes;
 import util.json.JsonUtil;
 import util.json.JsonUtil.JsonNodeBuilder;
 
-public class RelationshipInvertTest extends AbstractGinasTest {
+public class RelationshipInvertTest extends AbstractGinasServerTest {
 
 
 
     File invrelate1 =  new File("test/testJSON/invrelate1.json");
     File invrelate2 =  new File("test/testJSON/invrelate2.json");
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
     private SubstanceAPI api;
     private RestSession session;
 

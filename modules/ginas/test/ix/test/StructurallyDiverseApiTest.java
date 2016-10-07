@@ -34,19 +34,10 @@ import ix.test.server.SubstanceAPI;
 import ix.utils.Util;
 import util.json.JsonUtil;
 
-public class StructurallyDiverseApiTest extends AbstractGinasTest {
+public class StructurallyDiverseApiTest extends AbstractGinasServerTest {
 
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
     final File resource=new File("test/testJSON/strucDivWithRefs.json");
 	
-    @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-    };
     
     @Test
    	public void testStructurallyDiverseReferencesShowOnJSON() throws Exception {

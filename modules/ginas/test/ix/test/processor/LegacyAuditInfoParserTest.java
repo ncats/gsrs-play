@@ -21,23 +21,28 @@ import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Note;
 import ix.ginas.processors.LegacyAuditInfoProcessor;
+import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import play.Configuration;
 
-public class LegacyAuditInfoParserTest {
+public class LegacyAuditInfoParserTest extends AbstractGinasServerTest{
+	
 	private static final String FORCE_FAIL_TAG = "FORCE_FAIL";
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(()->{
-		Config additionalConfig = ConfigFactory.parseFile(new File("conf/ginas-legacy-audit.conf"))
-				.resolve()
-				.withOnlyPath("ix.core.entityprocessors");
-		return new Configuration(additionalConfig).asMap();
-	});
 
 
+	@Override
+	public GinasTestServer createGinasTestServer(){
+		return new GinasTestServer(()->{
+			Config additionalConfig = ConfigFactory.parseFile(new File("conf/ginas-legacy-audit.conf"))
+					.resolve()
+					.withOnlyPath("ix.core.entityprocessors");
+			return new Configuration(additionalConfig).asMap();
+		});
+	}
+	
 	RestSession session;
 	SubstanceAPI api;
 

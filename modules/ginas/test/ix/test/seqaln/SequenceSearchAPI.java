@@ -1,14 +1,5 @@
 package ix.test.seqaln;
 
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlPreformattedText;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import ix.test.server.BrowserSession;
-import ix.test.util.TestNamePrinter;
-import play.twirl.api.Html;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,19 +8,21 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.Rule;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlPreformattedText;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
+
+import ix.test.AbstractGinasTest;
+import ix.test.server.BrowserSession;
 
 /**
  * Created by katzelda on 3/30/16.
  */
-public class SequenceSearchAPI {
+public class SequenceSearchAPI extends AbstractGinasTest{
 	
-	@Rule
-    public TestRule watcher = new TestNamePrinter().setPrintEnd(true);
-
+	
     private static final Pattern IDENTITY_PRE_PATTERN = Pattern.compile("identity = (\\d+(\\.\\d+)?)");
 ///ginas/app/substance/4cf9ca84
     private static final Pattern PARTIAL_UUID_PATTERN = Pattern.compile("/ginas/app/substance/(\\S+)");

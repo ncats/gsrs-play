@@ -1,12 +1,14 @@
 package ix.core.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
 
+import ix.test.AbstractGinasTest;
 import ix.utils.LiteralReference;
 
-public class LiteralReferenceTest {
+public class LiteralReferenceTest extends AbstractGinasTest{
 	
 	public static class MockThing{
 		int i=0;

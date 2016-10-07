@@ -12,39 +12,24 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import ix.core.ValidationMessage;
-import ix.test.util.TestNamePrinter;
-
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import ix.core.chem.Chem;
+import ix.core.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.test.builder.AbstractSubstanceBuilder;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import util.json.JsonUtil;
 
-public class ChemicalApiTest extends AbstractGinasTest {
+public class ChemicalApiTest extends AbstractGinasServerTest {
 
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
 	
 	final File resource=new File("test/testJSON/racemic-unicode.json");
 	final File chemicalResource=new File("test/testJSON/editChemical.json");

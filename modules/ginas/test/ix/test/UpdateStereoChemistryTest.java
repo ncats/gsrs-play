@@ -15,16 +15,10 @@ import java.io.File;
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertEquals;
 
-public class UpdateStereoChemistryTest {
+public class UpdateStereoChemistryTest  extends AbstractGinasServerTest {
     final File chemicalResource=new File("test/testJSON/editChemical.json");
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer(9001);
-
-
+    
     private GinasTestServer.User fakeUser1;
 
     @Before

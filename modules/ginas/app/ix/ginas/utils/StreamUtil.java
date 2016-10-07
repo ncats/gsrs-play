@@ -28,16 +28,26 @@ public class StreamUtil {
 			public synchronized T next() {
 				if(!initialized)initialize();
 				Optional<T> n=next;
-				next=sup.get();
+				cacheNext();
 				return n.get();
 			}
 			
+			public synchronized void cacheNext() {
+				next=sup.get();
+			}
+			
 			private void initialize(){
-				next=Optional.empty();
-				next();
+				cacheNext();
 				initialized=true;
 			}
 		};
 		return ofIterator(ir);
+	}
+	
+	
+	public static <T> Stream<T> forNullableGenerator(Supplier<T> sup){
+		return forGenerator(()->{
+			return Optional.ofNullable(sup.get());
+		});
 	}
 }

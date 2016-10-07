@@ -1,18 +1,17 @@
 package ix.test.load;
 
-import ix.test.server.GinasTestServer;
-import ix.test.util.TestNamePrinter;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 
-import static org.junit.Assert.assertEquals;
+import ix.test.AbstractGinasTest;
+import ix.test.server.GinasTestServer;
+import ix.test.util.TestNamePrinter;
 
 /**
  * Created by katzelda on 4/13/16.
  */
-public abstract class AbstractLoadDataSetTest {
-
+public abstract class AbstractLoadDataSetTest extends AbstractGinasTest{
 
 
     public GinasTestServer ts = new GinasTestServer();

@@ -1,6 +1,8 @@
 package ix.test.exporters;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,14 +28,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.CacheStrategy;
 import ix.core.models.Role;
-import ix.core.plugins.ConsoleFilterPlugin;
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
 import ix.ginas.controllers.GinasApp;
@@ -47,14 +45,13 @@ import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceSearcher;
 import ix.test.server.SubstanceSearcher.WebExportRequest;
 import ix.test.util.TestUtil;
-import play.libs.ws.WSResponse;
-import play.mvc.*;
+import play.mvc.Http;
 
 
 /**
  * Created by katzelda on 9/20/16.
  */
-public class ExportTest extends AbstractGinasTest {
+public class ExportTest  extends AbstractGinasTest {
 
 	@ClassRule
 	public static GinasTestServer ts = new GinasTestServer(new HashMap<String, Object>() {

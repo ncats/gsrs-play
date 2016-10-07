@@ -1,30 +1,26 @@
 package ix.test.load;
 
-import ix.test.server.BrowserSession;
-import ix.test.server.GinasTestServer;
-import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceSearcher;
-import ix.test.util.TestNamePrinter;
-import org.junit.Rule;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+
+import ix.test.AbstractGinasServerTest;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.SubstanceLoader;
+import ix.test.server.SubstanceSearcher;
 
 /**
  * Created by katzelda on 4/29/16.
  */
-public class FacetCountsTest {
+public class FacetCountsTest extends AbstractGinasServerTest{
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
 
 
     @Test

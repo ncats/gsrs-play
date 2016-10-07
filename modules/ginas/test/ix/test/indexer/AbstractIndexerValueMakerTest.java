@@ -20,6 +20,7 @@ import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexValueMakerFactory;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.ReflectingIndexValueMaker;
+import ix.test.AbstractGinasTest;
 import ix.test.server.GinasTestServer;
 import play.Configuration;
 
@@ -35,7 +36,7 @@ import play.Configuration;
  * @param <U>
  */
 @Ignore
-public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>>{
+public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasTest{
 
 	@Rule
 	public GinasTestServer ts = new GinasTestServer(()->{

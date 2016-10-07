@@ -1,24 +1,23 @@
 package ix.test.builder;
 
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.test.server.GinasTestServer;
-import org.junit.Rule;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Substance;
+import ix.test.AbstractGinasServerTest;
 /**
  * Created by katzelda on 9/6/16.
  */
-public class SubstanceBuilderTest {
+public class SubstanceBuilderTest  extends AbstractGinasServerTest {
 
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
 
     @Test
     public void setName(){
