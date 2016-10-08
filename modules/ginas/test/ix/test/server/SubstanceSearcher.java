@@ -16,6 +16,9 @@ import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import ix.core.search.SearchResultContext;
 import ix.ginas.models.v1.Substance;
+import ix.test.query.builder.SimpleQueryBuilder;
+import ix.test.query.builder.SubstanceCondition;
+import ix.test.server.BrowserSession.WrappedWebRequest;
 import play.libs.ws.WSResponse;
 
 /**
@@ -34,8 +37,6 @@ public class SubstanceSearcher {
 ///ginas/app/img/c37bea80-14ec-4144-8379-60c92d422713.svg?size=200&amp;context=ghtjouloym
     private static final Pattern STRUCTURE_IMG_URL = Pattern.compile("src=.(/ginas/app/img/[^\'\"]+)");
     
-    private static final Pattern ROW_PATTERN = Pattern.compile("[<]label[^>]*[>]([^<]*).*?badge[^>]*[>]([^<]*)", Pattern.DOTALL);
-
     //"/ginas/app/api/v1/status/ceb8ca9e14006df02a6d2cee8c38e664640f2036"
 
     private static final Pattern  SEARCH_KEY_PATTERN = Pattern.compile("ginas/app/api/v1/status/([0-9a-f]+)");
@@ -125,38 +126,78 @@ public class SubstanceSearcher {
         return results;
     }
     
-    public HtmlPage getPage(String rootUrl, int page) throws IOException{
-    	return session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+    public HtmlPage getPage(WrappedWebRequest wwr, int page) throws IOException{
+    	return session.submit(wwr.setQueryParameter("page", page+"").get());
     }
     
     public HtmlPage getSubstructurePage(String smiles, int rows, int page, boolean wait) throws IOException{
     	// Added "wait" so that it doesn't return before it's
     	// completely ready
     	// This may be a problem, as URLEncoder may over encode some smiles strings
-    	String rootUrl = "ginas/app/substances?type=Substructure&q="+URLEncoder.encode(smiles, "UTF-8") + "&wait=" + wait + "&rows=" + rows;
+    	WrappedWebRequest root=session.newGetRequest("ginas/app/substances")
+    		.addQueryParameter("type", "Substructure")
+    		.addQueryParameter("q", URLEncoder.encode(smiles, "UTF-8"))
+    		.addQueryParameter("wait", wait+"")
+    		.addQueryParameter("rows", rows+"");
     	
     	if(defaultSearchOrder!=null){
-    		rootUrl+="&order=" + defaultSearchOrder;
+    		root=root.addQueryParameter("order",defaultSearchOrder);
     	}
-    	return getPage(rootUrl, page);
+    	return getPage(root, page);
     }
     
     
     public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
     	return new SearchResult(getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait)));
     }
+    
     public SearchResult nameSearch(String query) throws IOException{
-       return query("root_names_name:\"" + query + "\"");
+    	String q = new SimpleQueryBuilder()
+    			.where()
+    			.condition(SubstanceCondition.name(query).phrase())
+    			.build();
+    	return query(q);
     }
+    
+    /**
+     * Performs a name search, trusting that the query term is
+     * formatted exactly as it needs to be, with any included
+     * quotes or wildcard characters
+     * @param query
+     * @return
+     * @throws IOException
+     */
+    public SearchResult nameRawSearch(String query) throws IOException{
+    	String q = new SimpleQueryBuilder()
+    			.where()
+    			.condition(SubstanceCondition.name(query).raw())
+    			.build();
+    	return query(q);
+    }
+    
     public SearchResult exactNameSearch(String query) throws IOException{
-        return query("root_names_name:\"^" + query + "$\"");
+    	String q = new SimpleQueryBuilder()
+    			.where()
+    			.condition(SubstanceCondition.name(query).exact())
+    			.build();
+        return query(q);
     }
     public SearchResult codeSearch(String query) throws IOException{
-        return query("root_codes_code:\"" + query + "\"");
+    	String q = new SimpleQueryBuilder()
+    			.where()
+    			.condition(SubstanceCondition.code(query).phrase())
+    			.build();
+        return query(q);
     }
     public SearchResult exactSearch(String query) throws IOException{
-        return query("^"+query + "$");
+    	String q = new SimpleQueryBuilder()
+    			.where()
+    			.globalMatchesExact(query)
+    			.build();
+        return query(q);
     }
+    
+    
     /**
      * Get the UUIDs of all the loaded substances
      * @return a Set of UUIDs that match. will never be null but may be empty.
@@ -173,6 +214,7 @@ public class SubstanceSearcher {
     public SearchResult query(String queryString) throws IOException {
         return performSearch(queryString);
     }
+    
     /**
      * Get the UUIDs of all the loaded substances
      * @return a Set of UUIDs that match. will never be null but may be empty.
@@ -188,18 +230,15 @@ public class SubstanceSearcher {
      */
     private SearchResult performSearch(String queryOrNull) throws IOException {
 
-        String rootUrl = "ginas/app/substances?wait=true";
+        WrappedWebRequest req=session.newGetRequest("ginas/app/substances")
+        	.addQueryParameter("wait", "true");
+        	
         if(queryOrNull !=null){
-            String encodedQuery = encodeQuery(queryOrNull);
-            if(isQuoted(encodedQuery)){
-                rootUrl += "&q=" + encodeQuery(queryOrNull);
-            }else {
-                rootUrl += "&q=\"" + encodeQuery(queryOrNull) +"\"";
-            }
-
+        	req=req.addQueryParameter("q", queryOrNull);
         }
+        
         if(defaultSearchOrder!=null){
-    		rootUrl+="&order=" + defaultSearchOrder;
+        	req=req.addQueryParameter("order", defaultSearchOrder);
     	}
         int page=1;
 
@@ -212,13 +251,12 @@ public class SubstanceSearcher {
         do {
         	 HtmlPage htmlPage=null;
         	 try{
-        		 
-        		 htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
+        		 htmlPage = session.submit(req.setQueryParameter("page", page+"").get());
         	 }catch(Exception e){
              	break;
              }
             //stop if the paging throws an error
-           String htmlText = htmlPage.asXml();
+            String htmlText = htmlPage.asXml();
             	temp = getSubstancesFrom(htmlText);
             
             if(firstPage ==null){
@@ -251,45 +289,6 @@ public class SubstanceSearcher {
         return results;
     }
 
-    private String encodeQuery(String s) throws IOException{
-        if(s ==null || s.isEmpty()){
-            return s;
-        }
-
-        String query = s;
-        int colonIndex = s.indexOf(':');
-        if(colonIndex != -1){
-            query = s.substring(colonIndex+1);
-        }
-//    System.out.println("s = " + s);
-//        System.out.println("query = " + query);
-        boolean isQuoted = '"' == query.charAt(0) && '"' == query.charAt(query.length()-1);
-//        System.out.println("isQuoted = " + isQuoted);
-        String encodedQuery = URLEncoder.encode(query,"UTF-8");
-
-
-//        System.out.println("encoded = " + encodedQuery);
-        if(colonIndex ==-1){
-            return encodedQuery;
-        }
-        return s.substring(0, colonIndex+1) + encodedQuery;
-    }
-
-    private boolean isQuoted(String s){
-        if(s ==null || s.isEmpty()){
-            return false;
-        }
-
-        String query = s;
-        int colonIndex = s.indexOf(':');
-        if(colonIndex != -1){
-            query = s.substring(colonIndex+1);
-        }
-        boolean t =  '"' == query.charAt(0) && '"' == query.charAt(query.length()-1);
-//        System.out.println("s = " + s + "  query = "  + query);
-//        System.out.println("is quotes = " + t);
-        return t;
-    }
     private String getKeyFrom(String htmlText) {
         Matcher m = SEARCH_KEY_PATTERN.matcher(htmlText);
         if(!m.find()){
@@ -425,7 +424,13 @@ public class SubstanceSearcher {
         }
         public SearchResult(String searchKey, Set<String> uuids){
             Objects.requireNonNull(uuids);
-            Objects.requireNonNull(searchKey);
+            try{
+            	Objects.requireNonNull(searchKey);
+            }catch(Exception e){
+            	e.printStackTrace();
+            	throw e;
+            	
+            }
 
             this.searchKey = searchKey;
             this.uuids = Collections.unmodifiableSet(new LinkedHashSet<>(uuids));

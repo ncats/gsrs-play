@@ -133,7 +133,7 @@ public class EntityUtils {
 	 */
 	public static class EntityWrapper<T> {
 		private T _k;
-		EntityInfo<T> ei;
+		private EntityInfo<T> ei;
 
 		public static <T> EntityWrapper<T> of(T bean) {
 			Objects.requireNonNull(bean);

@@ -53,7 +53,7 @@ public class SubstanceLoader {
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
-            WebRequest request = session.newGetRequest(monitorUrl);
+            WebRequest request = session.newGetRequest(monitorUrl).get();
             HtmlPage monitorPage = session.submit(request);
 
            // System.out.println(monitorPage.asXml());

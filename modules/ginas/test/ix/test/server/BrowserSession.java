@@ -1,24 +1,24 @@
 package ix.test.server;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebRequest;
-
-
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
-import ix.utils.Util;
-
-import play.libs.ws.WS;
-import play.libs.ws.WSRequestHolder;
-import play.libs.ws.WSResponse;
+import static play.mvc.Http.Status.OK;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-import static play.mvc.Http.Status.OK;
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
+
+import ix.utils.Util;
+import play.libs.ws.WS;
+import play.libs.ws.WSRequestHolder;
+import play.libs.ws.WSResponse;
 
 /**
  * Mimics a Session
@@ -88,8 +88,67 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         return ws;
     }
 
-    public WebRequest newGetRequest(String path) throws MalformedURLException {
-        return new WebRequest(new URL(constructUrlFor(path)), HttpMethod.GET);
+    public static class WrappedWebRequest{
+    	private WebRequest wq;
+    	public WrappedWebRequest(WebRequest wq){
+    		this.wq=wq;
+    	}
+    	/**
+    	 * Add the name / value pair encoded into to the URL, <b>without</b> clobbering
+    	 * any previous value that was present under that name. For example, adding
+    	 * the pair <code>"test":"value1"</code>, and then adding the pair <code>"test":"value2"</code>
+    	 * would result in a url like the following:
+    	 * 
+    	 * <p>
+    	 * <code>
+    	 * path/to/resource?test=value1&test=value2
+    	 * </code>
+    	 * </p>
+    	 * 
+    	 * Use {@link #setQueryParameter(String, String)} to clobber the values
+    	 * 
+    	 * 
+    	 */
+    	public WrappedWebRequest addQueryParameter(String name, String value){
+    		List<NameValuePair> mylist=wq.getRequestParameters()
+    									.stream()
+    									.collect(Collectors.toList());
+    		mylist.add(new NameValuePair(name, value));
+    		wq.setRequestParameters(mylist);
+    		return this;
+    	}
+    	
+    	/**
+    	 * Add the name / value pair encoded into to the URL, <b>with</b> clobbering
+    	 * any previous value that was present under that name. For example, adding
+    	 * the pair <code>"test":"value1"</code>, and then adding the pair <code>"test":"value2"</code>
+    	 * would result in a url like the following:
+    	 * 
+    	 * <p>
+    	 * <code>
+    	 * path/to/resource?test=value2
+    	 * </code>
+    	 * </p>
+    	 * Use {@link #addQueryParameter(String, String)} to append the values instead
+    	 * 
+    	 * 
+    	 */
+    	public WrappedWebRequest setQueryParameter(String name, String value){
+    		List<NameValuePair> mylist=wq.getRequestParameters()
+    						.stream()
+    						.filter(nv->!nv.getName().equals(name))
+    						.collect(Collectors.toList());
+    		mylist.add(new NameValuePair(name, value));
+    		wq.setRequestParameters(mylist);
+    		return this;
+    	}
+    	public WebRequest get(){
+    		wq.setCharset("UTF-8");
+    		return wq;
+    	}
+    }
+    public WrappedWebRequest newGetRequest(String path) throws MalformedURLException {
+        return new WrappedWebRequest(new WebRequest(new URL(constructUrlFor(path)), HttpMethod.GET));
     }
     
     public String sha1ofResponse(WebRequest ws) throws IOException{
