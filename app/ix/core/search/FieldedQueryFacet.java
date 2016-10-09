@@ -1,10 +1,22 @@
 package ix.core.search;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 
 import ix.core.FieldNameDecorator;
 import ix.core.factories.FieldNameDecoratorFactory;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.EntityUtils;
+import play.Logger;
 import play.Play;
 
 
@@ -120,11 +132,50 @@ public class FieldedQueryFacet implements Serializable{
 	public MATCH_TYPE getMatchType(){
 		return this.matchType;
 	}
+	
+	
+	
+	
+	
+	
+	
 
 	// TODO: better parsing, and move this to its own 
 	// resource
+	// Doesn't handle booleans, for example.
 	public static String[] displayQuery(String kind, String q){
 		if(q==null)return null;
+		Supplier<FieldNameDecorator> fnd=()->{ 
+			try{
+				return FieldNameDecoratorFactory
+						.getInstance(Play.application())
+						.getSingleResourceFor(EntityUtils.getEntityInfoFor(kind));
+			}catch(Exception e){
+				return f->f;
+			}
+		};
+		
+		
+		
+		
+		try{
+			Query qu=Play.application()
+					.plugin(TextIndexerPlugin.class)
+					.getIndexer()
+					.parseQuery(q);
+			
+			Set<Term> sterms = new HashSet<Term>();
+			if(qu instanceof PhraseQuery || 
+			   qu instanceof TermQuery){
+				qu.extractTerms(sterms);
+			}
+			System.out.println("Found:"+sterms.stream().peek(System.out::println).count()+" terms");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+
+		
+		
 
 		String dispField;
 		String q2;
@@ -133,11 +184,9 @@ public class FieldedQueryFacet implements Serializable{
 			String field = fieldAndQuery[0];
 			field=field.replace("\\ ", " ");
 			q2 = fieldAndQuery[1];
-			FieldNameDecorator fnd;
 			try {
-				fnd = FieldNameDecoratorFactory.getInstance(Play.application()).getSingleResourceFor(EntityUtils.getEntityInfoFor(kind));
-				dispField=fnd.getDisplayName(field);
-			} catch (ClassNotFoundException e) {
+				dispField=fnd.get().getDisplayName(field);
+			} catch (Exception e) {
 				e.printStackTrace();
 				dispField=field;
 			}
@@ -145,6 +194,7 @@ public class FieldedQueryFacet implements Serializable{
 			dispField="Any Text";
 			q2=q;
 		}
+		
 		boolean exact = false;
 		if(q2.startsWith("\"^") && q2.endsWith("$\"")){
 			exact=true;

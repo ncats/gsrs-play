@@ -1958,7 +1958,8 @@ public class GinasApp extends App {
                     try {
                         new ReIndexService(5, 10)
                                 .reindexAll(new MultiReIndexListener(listener,
-                                                                    Play.application().plugin(TextIndexerPlugin.class).getIndexer()));
+                                                 Play.application().plugin(TextIndexerPlugin.class).getIndexer(),
+                                                 EntityPersistAdapter.getInstance()));
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -2011,9 +2012,7 @@ public class GinasApp extends App {
             recordsToIndex = "?";
             currentlyRunning = true;
             currentRecordsIndexed=0;
-
             recordsIndexedLastUpdate=0;
-            EntityPersistAdapter.startReindexing();
         }
 
         public StringBuilder getMessage() {
@@ -2031,8 +2030,6 @@ public class GinasApp extends App {
             }
             updateMessage();
             currentlyRunning = false;
-
-            EntityPersistAdapter.doneReindexing();
 
             StringBuilder doneMessage = new StringBuilder(100);
 

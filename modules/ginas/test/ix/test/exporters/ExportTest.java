@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import ix.core.CacheStrategy;
@@ -35,10 +33,9 @@ import ix.core.models.Role;
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
 import ix.ginas.controllers.GinasApp;
-import ix.test.AbstractGinasTest;
+import ix.test.AbstractGinasClassServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.BrowserSession;
-import ix.test.server.GinasTestServer;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceLoader;
@@ -51,20 +48,13 @@ import play.mvc.Http;
 /**
  * Created by katzelda on 9/20/16.
  */
-public class ExportTest  extends AbstractGinasTest {
-
-	@ClassRule
-	public static GinasTestServer ts = new GinasTestServer(new HashMap<String, Object>() {
-		{
-			put("ix.cache.maxElementsNonEvictable", 10);
-
-		}
-	});
+public class ExportTest  extends AbstractGinasClassServerTest {
 
 	@Before
 	public void clearCache() {
+		ts.modifyConfig("ix.cache.maxElementsNonEvictable", 10);
+		ts.restart();
 		IxCache.clearCache();
-		
 	}
 
 	static BrowserSession session;

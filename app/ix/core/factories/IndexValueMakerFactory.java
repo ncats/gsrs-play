@@ -38,10 +38,7 @@ public class IndexValueMakerFactory extends AccumlatingInternalMapEntityResource
 	
 	@Override
 	public void initialize(Application app) {
-		app.configuration()
-		.getList("ix.core.indexValueMakers", new ArrayList<Object>())
-		.stream()
-		.map(o->(Map)o)
+		getStandardResourceStream(app,"ix.core.indexValueMakers")
 		.forEach(m->{
 			try{
 				EntityInfo<? extends IndexValueMaker> eiIndexer=

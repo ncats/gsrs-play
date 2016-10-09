@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
+import ix.test.AbstractGinasClassServerTest;
 import ix.test.AbstractGinasTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
@@ -28,10 +29,7 @@ import play.libs.ws.WSResponse;
 /**
  * Created by katzelda on 6/29/16.
  */
-public class WebCrawlerTest  extends AbstractGinasTest {
-
-    @ClassRule
-    public static GinasTestServer ts = new GinasTestServer();
+public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
     private static GinasTestServer.User admin;
 

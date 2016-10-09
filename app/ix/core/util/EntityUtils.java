@@ -2,6 +2,8 @@ package ix.core.util;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,6 +31,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
+import javax.persistence.PostUpdate;
+import javax.persistence.PrePersist;
+import javax.persistence.PreRemove;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.apache.lucene.document.Document;
@@ -39,9 +48,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.FieldNameDecorator;
 import ix.core.IgnoredModel;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.factories.FieldNameDecoratorFactory;
+import ix.core.factories.SpecialFieldFactory;
 import ix.core.models.Backup;
 import ix.core.models.ChangeReason;
 import ix.core.models.DataValidated;
@@ -71,7 +84,7 @@ public class EntityUtils {
 
 	private final static Map<String, EntityInfo<?>> infoCache = new ConcurrentHashMap<String, EntityInfo<?>>();
 
-	
+
 	public static void init(){
 		infoCache.clear();
 	}
@@ -211,7 +224,7 @@ public class EntityUtils {
 		public boolean shouldIndex() {
 			return ei.shouldIndex();
 		}
-		
+
 		public Optional<MethodOrFieldMeta> getIdFieldInfo() {
 			return ei.getIDFieldInfo();
 		}
@@ -233,7 +246,7 @@ public class EntityUtils {
 		}
 
 		public List<FieldMeta> getFieldInfo() {
-			return ei.getFieldInfo();
+			return ei.getTextIndexableFields();
 		}
 
 		//TODO: move
@@ -249,7 +262,7 @@ public class EntityUtils {
 
 		public Stream<Tuple<FieldMeta, Object>> streamFieldsAndValues(Predicate<FieldMeta> p) {
 			Object bean = this.getValue();
-			return ei.getFieldInfo().stream()
+			return ei.getTextIndexableFields().stream()
 					.filter(p)
 					.map(f -> new Tuple<>(f, f.getValue(bean)))
 					.filter(t -> t.v().isPresent())
@@ -257,11 +270,11 @@ public class EntityUtils {
 		}
 
 		public List<MethodMeta> getMethodInfo() {
-			return ei.getMethodInfo();
+			return ei.getTextIndexableMethods();
 		}
 
 		public Stream<Tuple<MethodMeta, Object>> streamMethodsAndValues(Predicate<MethodMeta> p) {
-			return ei.getMethodInfo().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+			return ei.getTextIndexableMethods().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
 					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
 		}
 
@@ -292,7 +305,7 @@ public class EntityUtils {
 		public boolean hasIdField() {
 			return ei.hasIdField();
 		}
-		
+
 		public EntityInfo<T> getEntityInfo() {
 			return this.ei;
 		}
@@ -375,11 +388,10 @@ public class EntityUtils {
 		private List<MethodOrFieldMeta> seqFields = new ArrayList<MethodOrFieldMeta>();
 		private List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
 
-		private List<String> sponsoredFields = new ArrayList<>();
-
-		
-
 		private List<MethodMeta> methods;
+
+		private List<MethodMeta> textMethods;
+
 		private List<MethodMeta> keywordFacetMethods;
 
 		private List<FieldMeta> uniqueColumnFields;
@@ -414,16 +426,27 @@ public class EntityUtils {
 
 		private boolean hasBackup = false;
 		private EntityInfo<?> ancestorInherit;
-		
-		
+
+
 
 		private Supplier<Set<EntityInfo<? extends T>>> forLater;
 
-		
+		//Some simple factory helper methods
 		public List<String> getSponsoredFields() {
-			return sponsoredFields;
+			return SpecialFieldFactory
+					.getInstance(Play.application())
+					.getRegisteredResourcesFor(this);
 		}
-		
+
+		public FieldNameDecorator getFieldNameDecorator() {
+			return FieldNameDecoratorFactory
+					.getInstance(Play.application())
+					.getSingleResourceFor(this);
+		}
+
+
+
+
 		public static boolean isPlainOldEntityField(FieldMeta f) {
 			return (!f.isPrimitive() && !f.isArrayOrCollection() && f.isEntityType() && f.getIndexable().recurse());
 		}
@@ -548,7 +571,7 @@ public class EntityUtils {
 				}
 			}
 
-			methods.removeIf(m -> !m.isTextEnabled());
+			textMethods=methods.stream().filter(m -> m.isTextEnabled()).collect(Collectors.toList());
 
 			//needs deferred
 			forLater = ()->{
@@ -559,6 +582,7 @@ public class EntityUtils {
 				releventClasses.add(this);
 				return releventClasses;
 			};
+
 			forLater = CachedSupplier.of(forLater); //make it Memoized
 			//(vaaawwwy memoized)
 
@@ -566,17 +590,6 @@ public class EntityUtils {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
 
-			Map m = (Map)Play.application().configuration().getObject("ix.core.exactsearchfields",null);
-			if(m!=null){
-				m.forEach((k,v)->{
-					if(k.equals(EntityInfo.this.kind)) {
-						List<String> fields = (List<String>) v;
-						for (String f : fields) {
-							sponsoredFields.add(f);
-						}
-					}
-				});
-			}
 		}
 
 
@@ -707,11 +720,15 @@ public class EntityUtils {
 			return this.strFields;
 		}
 
-		public List<FieldMeta> getFieldInfo() {
+		public List<FieldMeta> getTextIndexableFields() {
 			return this.fields;
 		}
 
-		public List<MethodMeta> getMethodInfo() {
+		public List<MethodMeta> getTextIndexableMethods() {
+			return this.textMethods;
+		}
+
+		public List<MethodMeta> getMethods() {
 			return this.methods;
 		}
 
@@ -818,7 +835,7 @@ public class EntityUtils {
 			return (T) this.getClazz().newInstance();
 		}
 
-		
+
 
 		// HERE BE DRAGONS!!!!
 		// This was one of the (many) ID-generating methods before "The Great Refactoring".
@@ -855,6 +872,7 @@ public class EntityUtils {
 	}
 
 	public static interface MethodOrFieldMeta{
+
 		public Optional<Object> getValue(Object entity);
 		public boolean isNumeric();
 		public Class<?> getType();
@@ -900,25 +918,82 @@ public class EntityUtils {
 
 	public static class MethodMeta implements MethodOrFieldMeta {
 
-		Method m;
+		static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+
+		private Method m;
 		//Indexable indexable;
-		InstantiatedIndexable instIndexable;
-		boolean textEnabled = false;
-		String indexingName;
-		String name;
-		boolean isStructure = false;
-		boolean isSequence = false;
-		Class<?> type;
+		private InstantiatedIndexable instIndexable;
+		private boolean textEnabled = false;
+		private String indexingName;
+		private String name;
+		private boolean isStructure = false;
+		private boolean isSequence = false;
+		private Class<?> type;
 
-		boolean isArray = false;
-		boolean isCollection = false;
-		boolean isId = false;
+		private boolean isArray = false;
+		private boolean isCollection = false;
+		private boolean isId = false;
 
-		boolean isSetter = false;
-		boolean isGetter = false;
-		boolean isDataValidatedFlag = false;
-		boolean isChangeReason=false;
-		Class<?> setterType;
+		private boolean isSetter = false;
+		private boolean isGetter = false;
+		private boolean isDataValidatedFlag = false;
+		private boolean isChangeReason=false;
+		private Class<?> setterType;
+
+		private Set<Class<?>> hookTypes= new HashSet<Class<?>>();
+
+		private void addHookIf(Class annot){
+			if (m.getAnnotation(annot) != null) {
+				hookTypes.add(annot);
+			}
+		}
+
+		private static class MethodHandleHook implements Hook {
+
+			private final String name;
+			private final MethodHandle methodHandle;
+
+			public MethodHandleHook(String name, MethodHandle methodHandle) {
+				this.name = name;
+				this.methodHandle = methodHandle;
+			}
+
+			@Override
+			public void invoke(Object o) throws Exception {
+				try {
+					methodHandle.invoke(o);
+				} catch (Throwable t) {
+					throw new Exception(t.getMessage(), t);
+				}
+			}
+
+			@Override
+			public String getName() {
+				return name;
+			}
+		}
+
+		private CachedSupplier<Hook> hook=CachedSupplier.of(()->createMethodHook());
+
+
+		public boolean hasHooks(){
+			return !hookTypes.isEmpty();
+		}
+		public Hook getMethodHook(){
+			return hook.get();
+		}
+
+		private Hook createMethodHook(){
+			try {
+				return new MethodHandleHook(m.getName(), LOOKUP.unreflect(m));
+			} catch (IllegalAccessException e) {
+				return null;
+			}
+		}
+
+		public Set<Class<?>> getHookTypes(){
+			return hookTypes;
+		}
 
 		public MethodMeta(Method m) {
 			Class<?>[] args = m.getParameterTypes();
@@ -946,6 +1021,14 @@ public class EntityUtils {
 			if (m.getAnnotation(ChangeReason.class) != null) {
 				this.isChangeReason = true;
 			}
+			addHookIf(PrePersist.class);
+			addHookIf(PostPersist.class);
+			addHookIf(PreUpdate.class);
+			addHookIf(PostUpdate.class);
+			addHookIf(PreRemove.class);
+			addHookIf(PostRemove.class);
+			addHookIf(PostLoad.class);
+
 			if (indexable != null) {
 				// we only index no arguments methods
 				if (args.length == 0) {
@@ -1175,36 +1258,31 @@ public class EntityUtils {
 	}
 
 	public static class FieldMeta implements MethodOrFieldMeta {
-		Field f;
-		Indexable indexable;
+		private Field f;
+		private Indexable indexable;
 
-		InstantiatedIndexable instIndexable;
-
-
-		Class<?> type;
-		String name;
-
-		boolean textEnabled = true;
-		boolean isID = false;
-		boolean explicitIndexable = true;
-		boolean isPrimitive;
-		boolean isArray;
-		boolean isCollection;
-		boolean isEntityType;
-		boolean isDynaLabel = false;
-		boolean isDynaValue = false;
-		boolean isSequence = false;
-		boolean isStructure = false;
-		boolean isDataVersion = false;
-		boolean isDataValidatedFlag = false;
-		boolean isChangeReason=false;
-
-		Column column;
-
-		List<VocabularyTerm> possibleTerms = new ArrayList<VocabularyTerm>();
+		private InstantiatedIndexable instIndexable;
 
 
+		private Class<?> type;
+		private String name;
 
+		private boolean textEnabled = true;
+		private boolean isID = false;
+		private boolean explicitIndexable = true;
+		private boolean isPrimitive;
+		private boolean isArray;
+		private boolean isCollection;
+		private boolean isEntityType;
+		private boolean isDynaLabel = false;
+		private boolean isDynaValue = false;
+		private boolean isSequence = false;
+		private boolean isStructure = false;
+		private boolean isDataVersion = false;
+		private boolean isDataValidatedFlag = false;
+		private boolean isChangeReason=false;
+
+		private Column column;
 
 		public boolean isSequence() {
 			return this.isSequence;
@@ -1531,6 +1609,11 @@ public class EntityUtils {
 			}
 		}
 	}
-	
-	
+	public static interface Hook{
+		public void invoke(Object o) throws Exception;
+		default String getName(){
+			return "Unnamed hook";
+		}
+	}
+
 }

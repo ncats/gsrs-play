@@ -3,7 +3,9 @@ package ix.core.factories;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import ix.core.util.EntityUtils.EntityInfo;
 import play.Application;
@@ -42,6 +44,15 @@ public abstract class InternalMapEntityResourceFactory<T> implements EntityResou
 		return null;
 	}
 	
+	
+	public static Stream<Map> getStandardResourceStream(Application app, String path){
+		return app.configuration()
+		.getList(path,new ArrayList<Object>())
+		.stream()
+		.filter(Objects::nonNull)
+		.filter(o->o instanceof Map)
+		.map(o->(Map)o);
+	}
 	
 
 }

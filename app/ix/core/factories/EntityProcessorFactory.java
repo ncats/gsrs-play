@@ -6,11 +6,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import ix.core.EntityProcessor;
+import ix.core.processors.ReflectionEntityProcessor;
+import ix.core.util.EntityUtils.EntityInfo;
 import ix.utils.Tuple;
 import play.Application;
 import play.Logger;
 
-public class EntityProcessorFactory extends InternalMapEntityResourceFactory<EntityProcessor>{
+public class EntityProcessorFactory extends AccumlatingInternalMapEntityResourceFactory<EntityProcessor>{
 
 	private static EntityProcessorFactory _instance = null;  
 	
@@ -56,15 +58,11 @@ public class EntityProcessorFactory extends InternalMapEntityResourceFactory<Ent
 		return new EntityProcessorFactory(app);
 	}
 
+	
 
 	@Override
 	public void initialize(Application app) {
-		app.configuration()
-		.getList("ix.core.entityprocessors",new ArrayList<Object>())
-		.stream()
-		.filter(Objects::nonNull)
-		.filter(o->o instanceof Map)
-		.map(o->(Map)o)
+		getStandardResourceStream(app,"ix.core.entityprocessors")
 		.map(m->new EntityProcessorConfig((String)m.get("class"), (String)m.get("processor")).with((Map)m.get("with")))
 		.map(epc->{
 			try{
@@ -83,5 +81,15 @@ public class EntityProcessorFactory extends InternalMapEntityResourceFactory<Ent
 				Logger.warn("Unable to register processor:" + e.getMessage());
 			}
 		});
+	}
+	
+	@Override 
+	public EntityProcessor getDefaultResourceFor(EntityInfo<?> ei){
+		return new ReflectionEntityProcessor(ei);
+	}
+	
+	@Override
+	public EntityProcessor accumulate(EntityProcessor t1, EntityProcessor t2) {
+		return t1.combine(t2);
 	}
 }

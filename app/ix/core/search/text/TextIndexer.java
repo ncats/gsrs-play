@@ -1384,6 +1384,18 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		return hits;
 	}
 	
+	public IxQueryParser getQueryParser(String def){
+		return new IxQueryParser(def, indexAnalyzer);
+	}
+	
+	public IxQueryParser getQueryParser(){
+		return getQueryParser(this.FULL_TEXT_FIELD);
+	}
+	
+	public Query parseQuery(String q) throws Exception{
+		Query q1=getQueryParser().parse(q);
+		return withSearcher(s -> q1.rewrite(s.getIndexReader()));
+	}
 	
 	/**
 	 * Prepare a given query to be more specified by restricting it to the field
