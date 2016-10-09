@@ -41,7 +41,7 @@ public class TestNamePrinter extends TestWatcher{
     private PrintStream out;
 
     private boolean printStart = true;
-    private boolean printEnd = false;
+    private boolean printEnd = true;
 
     /**
      * Write the test names to {@code System.out}.
@@ -66,14 +66,15 @@ public class TestNamePrinter extends TestWatcher{
     @Override
     protected void starting(Description description) {
         if(printStart) {
-            out.println("Starting test: " + description.getMethodName());
+        	
+            out.println("Starting test: " + description.getClassName() + " . " + description.getMethodName());
         }
     }
 
     @Override
-    protected void finished(Description description) {
+    protected void succeeded(Description description) {
         if(printEnd) {
-            out.println("Ending test: " + getClass().getCanonicalName() + " . " + description.getMethodName());
+            out.println("Success test : " + description.getClassName() + " . " + description.getMethodName());
         }
     }
 
@@ -94,4 +95,12 @@ public class TestNamePrinter extends TestWatcher{
         this.printEnd = printEnd;
         return this;
     }
+    
+    @Override
+    protected void failed(Throwable e, Description description) {
+    	 if(printEnd) {
+             out.println("Failed test  : " +description.getClassName() + " . " + description.getMethodName());
+         }
+    }
+    
 }

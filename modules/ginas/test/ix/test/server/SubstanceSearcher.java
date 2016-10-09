@@ -136,7 +136,7 @@ public class SubstanceSearcher {
     	// This may be a problem, as URLEncoder may over encode some smiles strings
     	WrappedWebRequest root=session.newGetRequest("ginas/app/substances")
     		.addQueryParameter("type", "Substructure")
-    		.addQueryParameter("q", URLEncoder.encode(smiles, "UTF-8"))
+    		.addQueryParameter("q", smiles)
     		.addQueryParameter("wait", wait+"")
     		.addQueryParameter("rows", rows+"");
     	

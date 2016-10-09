@@ -459,7 +459,6 @@ public class GinasTestServer extends ExternalResource{
         cacheManager.removalAll();
         cacheManager.shutdown();
         start();
-        System.out.println("Started server");
    }
 
     private void initializeControllers() {

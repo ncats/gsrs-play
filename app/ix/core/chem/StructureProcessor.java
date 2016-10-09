@@ -106,6 +106,8 @@ public class StructureProcessor {
             instrument (struc, components, mh.getMolecule(), standardize);
         }
         catch (Exception ex) {
+        	System.err.println("Trouble reading structure:");
+        	System.err.println(mol);
             throw new IllegalArgumentException (ex);
         }
         return struc;
