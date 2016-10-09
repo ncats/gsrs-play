@@ -1,7 +1,14 @@
 package ix.core.search;
 
 import java.lang.ref.SoftReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -12,14 +19,12 @@ import java.util.function.Consumer;
 import ix.core.CacheStrategy;
 import ix.core.search.LazyList.NamedCallable;
 import ix.core.search.text.TextIndexer.Facet;
-import ix.core.util.TimeUtil;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.TimeUtil;
 import play.Logger;
 
 @CacheStrategy(evictable=false)
 public class SearchResult {
-	
-
 
     /**
      * Returns a list of FieldFacets which help to explain why and how

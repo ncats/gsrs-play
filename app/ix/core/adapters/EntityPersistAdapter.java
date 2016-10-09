@@ -1,9 +1,6 @@
 package ix.core.adapters;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,6 +10,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.persistence.Entity;
@@ -29,6 +27,7 @@ import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.factories.EntityProcessorFactory;
 import ix.core.java8Util.Java8ForOldEbeanHelper;
 import ix.core.models.Backup;
 import ix.core.models.Edit;
@@ -39,12 +38,12 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.processors.BackupProcessor;
-import ix.core.util.Java8Util;
-import ix.ginas.models.v1.Substance;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
+import ix.core.util.Java8Util;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.TimeProfiler;
+import play.Application;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -143,8 +142,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
 
 	private static EntityPersistAdapter _instance =null;
 	
+	private Application application;
 	
-
+	
     private Map<Class<?>, List<Hook>> preInsertCallback = new ConcurrentHashMap<>();
     private Map<Class<?>, List<Hook>> postInsertCallback = new ConcurrentHashMap<>();
     private Map<Class<?>, List<Hook>> preUpdateCallback = new ConcurrentHashMap<>();
@@ -152,8 +152,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     private Map<Class<?>, List<Hook>> preDeleteCallback = new ConcurrentHashMap<>();
     private Map<Class<?>, List<Hook>> postDeleteCallback = new ConcurrentHashMap<>();
     private Map<Class<?>, List<Hook>> postLoadCallback = new ConcurrentHashMap<>();
-    
-    private Map<Class<?>, List<EntityProcessor>> extraProcessors=new HashMap<>();
     
     
     //Do we need both?
@@ -328,51 +326,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     }
 
     public EntityPersistAdapter () {
-    	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
-    	if(ls!=null){
-    		for(Object o:ls){
-    			if(o instanceof Map){ //TODO: This can be parsed with a little less strangeness
-	    			Map m = (Map)o;
-	    			String entityClass=(String) m.get("class");
-	    			String processorClass=(String) m.get("processor");
-	    			Map params=(Map) m.get("with");
-	    			String debug="Setting up processors for [" + entityClass + "] ... ";
-	    			try {
-	    				
-						Class<?> entityCls = Class.forName(entityClass);
-						Class<?> processorCls = Class.forName(processorClass);
-						
-						EntityProcessor ep=null;
-						if(params!=null){
-							try{
-								Constructor c=processorCls.getConstructor(Map.class);
-								ep= (EntityProcessor) c.newInstance(params);
-							}catch(Exception e){
-								e.printStackTrace();
-								Logger.warn("No Map constructor for " + processorClass);
-							}
-						}
-						if(ep==null){
-							ep = (EntityProcessor) processorCls.newInstance();
-						}
-						List<EntityProcessor> eplist=extraProcessors.get(entityCls);
-						if(eplist==null){
-							eplist=new ArrayList<EntityProcessor>();
-							extraProcessors.put(entityCls, eplist);
-						}
-						eplist.add(ep);
-						Logger.info(debug + "done");
-					} catch (Exception e) {
-						Logger.info(debug + "failed");
-						e.printStackTrace();
-					}
-	    			
-	    			
-	    			
-    			}
-    			
-    		}
-    	}
+    	this(Play.application());
+    }
+    
+    public EntityPersistAdapter (Application app){
+    	this.application=app;
     	_instance=this;
     }
     
@@ -435,15 +393,18 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                 Java8ForOldEbeanHelper.register (PostLoad.class, cls, m, postLoadCallback);
             }
         }
-        for(Map.Entry<Class<?>,List<EntityProcessor>> entry : extraProcessors.entrySet()){
-            Class<?> c = entry.getKey();
-        	if(c.isAssignableFrom(cls)){
-        		for(EntityProcessor ep :entry.getValue()){
-        			Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
-        			addEntityProcessor(cls,ep);
-        		}
-        	}
-        }
+        
+        EntityProcessorFactory
+        	.getInstance(this.application)
+        	.getRegisteredResourcesFor(cls)
+        	.forEach(new Consumer<EntityProcessor>(){
+				@Override
+				public void accept(EntityProcessor ep) {
+					Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
+					addEntityProcessor(cls,ep);
+				}
+        	});
+        
         if(cls.isAnnotationPresent(Backup.class)){
         	addEntityProcessor(cls,BackupProcessor.getInstance());
         }
@@ -451,9 +412,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         return registered;
     }
     
-    private void addEntityProcessor(Class cls, EntityProcessor ep){
-
-
+    private void addEntityProcessor(Class<?> cls, EntityProcessor<?> ep){
         Java8ForOldEbeanHelper.addPrePersistEntityProcessor(cls, preInsertCallback, ep);
         Java8ForOldEbeanHelper.addPostPersistEntityProcessor(cls, postInsertCallback, ep);
         Java8ForOldEbeanHelper.addPreUpdateEntityProcessor(cls, preUpdateCallback, ep);
@@ -461,7 +420,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         Java8ForOldEbeanHelper.addPreRemoveEntityProcessor(cls, preDeleteCallback, ep);
         Java8ForOldEbeanHelper.addPostRemoveEntityProcessor(cls, postDeleteCallback, ep);
         Java8ForOldEbeanHelper.addPostLoadEntityProcessor(cls, postLoadCallback, ep);
-
     }
     
 
@@ -476,8 +434,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
         }
     }
     
-    
-    //public static long persistcount=0;
     @Override
     public boolean preInsert (BeanPersistRequest<?> request) {
     	

@@ -115,6 +115,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.FieldNameDecorator;
+import ix.core.factories.FieldNameDecoratorFactory;
+import ix.core.factories.IndexValueMakerFactory;
 import ix.core.plugins.IxCache;
 import ix.core.search.EntityFetcher;
 import ix.core.search.FieldedQueryFacet;
@@ -126,6 +129,7 @@ import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.StopWatch;
@@ -1333,14 +1337,20 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
 		
-		//Beginning of an idea
-		if(USE_ANALYSIS){
+		if(USE_ANALYSIS && options.kind!=null){
+			EntityInfo<?> entityMeta= EntityUtils.getEntityInfoFor(options.kind);
+			
+			FieldNameDecorator fnd=FieldNameDecoratorFactory
+										.getInstance(Play.application())
+										.getSingleResourceFor(entityMeta);
+			
 			getQueryBreakDownFor(query).stream().forEach(oq->{
 				try{
 					FacetsCollector facetCollector2 = new FacetsCollector();
 					Filter f=null;
 					if(options.kind!=null){
-						List<String> analyzers = EntityUtils.getEntityInfoFor(options.kind).getTypeAndSubTypes()
+						EntityUtils.getEntityInfoFor(options.kind);
+						List<String> analyzers = entityMeta.getTypeAndSubTypes()
 									.stream()
 									.map(e->e.getName())
 									.map(n->ANALYZER_VAL_PREFIX + n)
@@ -1360,11 +1370,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 												.withExplicitCount(lv.value.intValue())
 												.withExplicitQuery(newQuery)
 												.withExplicitMatchType(oq.v())
+												.withExplicitDisplayField(fnd.getDisplayName(lv.label))
 												);
 								});
 						}
 					});
-				}catch(Exception e){e.printStackTrace();}
+				}catch(Exception e){
+					Logger.warn("Error analyzing query:" + e.getMessage(), e);
+				}
 			});
 		} //End of Idea
 		
@@ -1722,7 +1735,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			};
 			
 			//flag the kind of document
-			IndexValueMaker<Object> valueMaker= IndexValueMakerFactory.forClass(ew.getClazz());
+			IndexValueMaker<Object> valueMaker= IndexValueMakerFactory
+										.getInstance(Play.application())
+										.getSingleResourceFor(ew.getEntityInfo());
 
 			valueMaker.createIndexableValues(ew.getValue(), iv->{
 				this.instrumentIndexableValue(fieldCollector, iv);

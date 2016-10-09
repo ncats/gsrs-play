@@ -50,18 +50,15 @@ import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
-import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
 import ix.ginas.models.v1.VocabularyTerm;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.db.ebean.Model.Finder;
-
-
-import play.Play;
 /**
  * A utility class, mostly intended to do the grunt work of reflection.
  * 
@@ -214,7 +211,7 @@ public class EntityUtils {
 		public boolean shouldIndex() {
 			return ei.shouldIndex();
 		}
-
+		
 		public Optional<MethodOrFieldMeta> getIdFieldInfo() {
 			return ei.getIDFieldInfo();
 		}
@@ -295,7 +292,7 @@ public class EntityUtils {
 		public boolean hasIdField() {
 			return ei.hasIdField();
 		}
-
+		
 		public EntityInfo<T> getEntityInfo() {
 			return this.ei;
 		}
@@ -369,57 +366,64 @@ public class EntityUtils {
 	}
 
 	public static class EntityInfo<T> {
-		final Class<T> cls;
-		final String kind;
-		final DynamicFacet dyna;
-		final Indexable indexable;
+		private final Class<T> cls;
+		private final String kind;
+		private final DynamicFacet dyna;
+		private final Indexable indexable;
 		private List<FieldMeta> fields;
-		Table table;
-		List<MethodOrFieldMeta> seqFields = new ArrayList<MethodOrFieldMeta>();
-		List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
+		private Table table;
+		private List<MethodOrFieldMeta> seqFields = new ArrayList<MethodOrFieldMeta>();
+		private List<MethodOrFieldMeta> strFields = new ArrayList<MethodOrFieldMeta>();;
 
-		List<String> sponsoredFields = new ArrayList<>();
+		private List<String> sponsoredFields = new ArrayList<>();
 
+		
+
+		private List<MethodMeta> methods;
+		private List<MethodMeta> keywordFacetMethods;
+
+		private List<FieldMeta> uniqueColumnFields;
+
+		private MethodOrFieldMeta changeReasonField = null;
+		private MethodOrFieldMeta versionField = null;
+		private MethodOrFieldMeta validatedField = null;
+		private MethodOrFieldMeta idField = null;
+
+		private MethodOrFieldMeta ebeanIdMethod = null;
+
+		private MethodMeta ebeanIdMethodSetter = null;
+
+		private FieldMeta dynamicLabelField = null;
+		private FieldMeta dynamicValueField = null;
+
+		private volatile boolean isEntity = false;
+		private volatile boolean shouldIndex = true;
+		private volatile boolean shouldDoPostUpdateHooks = true;
+		private volatile boolean hasUniqueColumns = false;
+		private String ebeanIdMethodName = null;
+
+		private String tableName = null;
+
+		private Class<?> idType = null;
+
+		private Model.Finder<?, T> nativeVerySpecificfinder;
+
+		private boolean isIdNumeric = false;
+		private Inheritance inherits;
+		private boolean isIgnoredModel = false;
+
+		private boolean hasBackup = false;
+		private EntityInfo<?> ancestorInherit;
+		
+		
+
+		private Supplier<Set<EntityInfo<? extends T>>> forLater;
+
+		
 		public List<String> getSponsoredFields() {
 			return sponsoredFields;
 		}
-
-		List<MethodMeta> methods;
-		List<MethodMeta> keywordFacetMethods;
-
-		List<FieldMeta> uniqueColumnFields;
-
-		MethodOrFieldMeta changeReasonField = null;
-		MethodOrFieldMeta versionField = null;
-		MethodOrFieldMeta validatedField = null;
-		MethodOrFieldMeta idField = null;
-
-		MethodOrFieldMeta ebeanIdMethod = null;
-
-		MethodMeta ebeanIdMethodSetter = null;
-
-		FieldMeta dynamicLabelField = null;
-		FieldMeta dynamicValueField = null;
-
-		volatile boolean isEntity = false;
-		volatile boolean shouldIndex = true;
-		volatile boolean shouldDoPostUpdateHooks = true;
-		volatile boolean hasUniqueColumns = false;
-		String ebeanIdMethodName = null;
-
-		String tableName = null;
-
-		Class<?> idType = null;
-
-		Model.Finder<?, T> nativeVerySpecificfinder;
-
-		boolean isIdNumeric = false;
-		Inheritance inherits;
-		boolean isIgnoredModel = false;
-
-		boolean hasBackup = false;
-		EntityInfo<?> ancestorInherit;
-
+		
 		public static boolean isPlainOldEntityField(FieldMeta f) {
 			return (!f.isPrimitive() && !f.isArrayOrCollection() && f.isEntityType() && f.getIndexable().recurse());
 		}
@@ -434,8 +438,6 @@ public class EntityUtils {
 		public List<MethodMeta> getKeywordFacetMethods() {
 			return this.keywordFacetMethods;
 		}
-
-		Supplier<Set<EntityInfo<? extends T>>> forLater;
 
 
 		public EntityInfo(Class<T> cls) {
@@ -564,16 +566,8 @@ public class EntityUtils {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
 
-
-
-
-
-
 			Map m = (Map)Play.application().configuration().getObject("ix.core.exactsearchfields",null);
 			if(m!=null){
-
-
-
 				m.forEach((k,v)->{
 					if(k.equals(EntityInfo.this.kind)) {
 						List<String> fields = (List<String>) v;
@@ -583,9 +577,6 @@ public class EntityUtils {
 					}
 				});
 			}
-
-
-
 		}
 
 
@@ -827,6 +818,7 @@ public class EntityUtils {
 			return (T) this.getClazz().newInstance();
 		}
 
+		
 
 		// HERE BE DRAGONS!!!!
 		// This was one of the (many) ID-generating methods before "The Great Refactoring".
@@ -1480,13 +1472,9 @@ public class EntityUtils {
 			}
 		}
 
-
-
-
-
 	}
 
-	//Not sure how this should be paramaterized
+	//Not sure how this should be parameterized
 	public static class EntityTraverser {
 		private PathStack path;
 		private BiConsumer<PathStack, EntityWrapper> listens = null;
@@ -1521,7 +1509,6 @@ public class EntityUtils {
 				}
 
 				prevEntities.pushAndPopWith(ew.getValue(), () -> {
-
 					//ALL collections and arrays are recursed
 					//it doesn't matter if they are entities or not
 					ew.streamFieldsAndValues(f -> f.isArrayOrCollection()).forEach(fi -> {
@@ -1540,11 +1527,10 @@ public class EntityUtils {
 							next(EntityWrapper.of(fi.v()));
 						});
 					});
-
-
 				});
 			}
 		}
 	}
-
+	
+	
 }

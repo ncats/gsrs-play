@@ -10,19 +10,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.core.factories.IndexValueMakerFactory;
 import ix.core.search.text.IndexValueMaker;
-import ix.core.search.text.IndexValueMakerFactory;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.ReflectingIndexValueMaker;
-import ix.test.AbstractGinasTest;
+import ix.core.util.EntityUtils;
+import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 import play.Configuration;
+import play.Play;
 
 
 /**
@@ -36,24 +37,24 @@ import play.Configuration;
  * @param <U>
  */
 @Ignore
-public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasTest{
+public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasServerTest{
 
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(()->{
-		
-		String addconf="include \"ginas.conf\"\n" + 
-				"\n" + 
-				"ix.core.indexValueMakers +={\n" + 
-				"		\"class\":\"" + getEntityClass().getName() + "\",\n" + 
-				"		\"indexer\":\"" +getIndexMakerClass().getName() + "\"\n" + 
-				"	}";
-		Config additionalConfig = ConfigFactory.parseString(addconf)
-				.resolve()
-				.withOnlyPath("ix.core.indexValueMakers");
-		return new Configuration(additionalConfig).asMap();
-	});
 	
-	
+	public GinasTestServer createGinasTestServer(){
+		return new GinasTestServer(()->{
+			
+			String addconf="include \"ginas.conf\"\n" + 
+					"\n" + 
+					"ix.core.indexValueMakers +={\n" + 
+					"		\"class\":\"" + getEntityClass().getName() + "\",\n" + 
+					"		\"indexer\":\"" +getIndexMakerClass().getName() + "\"\n" + 
+					"	}";
+			Config additionalConfig = ConfigFactory.parseString(addconf)
+					.resolve()
+					.withOnlyPath("ix.core.indexValueMakers");
+			return new Configuration(additionalConfig).asMap();
+		});
+	}
 
 
 	public abstract Class<? extends T> getEntityClass();
@@ -68,12 +69,14 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 	
 	@Test
 	public void testIndexMakerIsRegisteredForEntity(){
-		List<Class<?>> ivm =IndexValueMakerFactory.getIndexValueMakersForClass(getEntityClass())
+		IndexValueMakerFactory ivmf=IndexValueMakerFactory.getInstance(Play.application());
+		List<Class<?>> ivm =ivmf
+							.getRegisteredResourcesFor(getEntityClass())
 							.stream()
 							.map(iv->iv.getClass())
 							.collect(Collectors.toList());
 		assertTrue("Could not find: " +getEntityClass().toString() + " in:" + ivm.toString(), ivm.contains(getIndexMakerClass()));
-		assertTrue(IndexValueMakerFactory.isRegisteredFor(getEntityClass(), getIndexMakerClass()));
+		assertTrue(ivmf.isRegisteredFor(EntityUtils.getEntityInfoFor(getEntityClass()), getIndexMakerClass()));
 	}
 
 
@@ -91,7 +94,6 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 			throw tt;
 		}
 	}
-	
 	
 	
 	public void testIndexableValuesHasFacet(T t, String facetName, Object facetValue ){
