@@ -5,11 +5,11 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Rule;
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Curation;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 
 

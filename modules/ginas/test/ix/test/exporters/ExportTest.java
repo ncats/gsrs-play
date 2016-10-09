@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,13 +29,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ix.AbstractGinasClassServerTest;
 import ix.core.CacheStrategy;
 import ix.core.models.Role;
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
 import ix.ginas.controllers.GinasApp;
-import ix.test.AbstractGinasClassServerTest;
 import ix.test.builder.SubstanceBuilder;
+import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
@@ -137,10 +139,17 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 		return uuids;
 	}
 
+	
 	@Test 
 	public void searchOne() throws IOException {
-
-		SubstanceSearcher.SearchResult searchResult = searcher.query("GUIZOTIA ABYSSINICA (L. F.) CASS.");
+		
+		String q=new SimpleQueryBuilder()
+						.where()
+						.globalMatchesPhrase("GUIZOTIA ABYSSINICA (L. F.) CASS.")
+						.build();
+		
+		
+		SubstanceSearcher.SearchResult searchResult = searcher.query(q);
 		try (InputStream in = searchResult.export("csv");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
@@ -231,9 +240,8 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 					return new SubstanceBuilder().addName(givenName).build();
 				}).limit(2);
 			});
-			
-			
-			
+
+
 			for(int i=0;i<numberSlowExports;i++){
 				new Thread(()->{
 					try{

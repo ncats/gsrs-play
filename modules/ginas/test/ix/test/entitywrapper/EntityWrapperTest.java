@@ -13,19 +13,17 @@ import javax.persistence.Entity;
 import org.junit.Rule;
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
+import ix.AbstractGinasTest;
 import ix.core.models.Indexable;
 import ix.core.models.Role;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.FieldMeta;
-import ix.test.AbstractGinasTest;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 
-public class EntityWrapperTest extends AbstractGinasTest {
+public class EntityWrapperTest extends AbstractGinasServerTest {
 	
-	
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(9001);
 	
 	public static class TestIndexed{
 		

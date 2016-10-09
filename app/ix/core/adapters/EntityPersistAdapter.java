@@ -1,6 +1,5 @@
 package ix.core.adapters;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -231,14 +230,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     	return performChange(wrapped.getKey(),changeOp);
     }
     
-    //This should do 2 things
-    // #1, It should lock the object from being updated, blocking if necessary
-    // #2, It should create and save the versioned Edit
-    //
-    //  This accepts a change operation, which should do the actual saving and changing
-    
-    
-    // Returns the thing
     public static <T> EntityWrapper performChange(Key key, ChangeOperation<T> changeOp){
        // Objects.requireNonNull(id);
         Objects.requireNonNull(key);
@@ -594,27 +585,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
 	}
 
 	@Override
-	public void recordReIndexed(Object o) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void recordReIndexed(Object o) {}
 
 	@Override
-	public void error(Throwable t) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void error(Throwable t) {}
 
 	@Override
-	public void totalRecordsToIndex(int total) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void totalRecordsToIndex(int total) {}
 
 	@Override
-	public void countSkipped(int numSkipped) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void countSkipped(int numSkipped) {}
 
 }

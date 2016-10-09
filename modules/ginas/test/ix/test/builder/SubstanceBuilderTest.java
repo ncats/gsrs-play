@@ -10,9 +10,9 @@ import java.util.UUID;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.test.AbstractGinasServerTest;
 /**
  * Created by katzelda on 9/6/16.
  */

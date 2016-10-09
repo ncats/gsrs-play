@@ -14,13 +14,11 @@ import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
+import ix.AbstractGinasClassServerTest;
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
-import ix.test.AbstractGinasClassServerTest;
-import ix.test.AbstractGinasTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.SubstanceLoader;

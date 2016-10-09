@@ -18,9 +18,9 @@ import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
+import ix.AbstractGinasTest;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
-import ix.test.AbstractGinasTest;
 import net.sf.ehcache.CacheManager;
 
 /**

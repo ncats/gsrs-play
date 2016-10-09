@@ -39,6 +39,7 @@ import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import ix.core.util.CachedSupplier;
 import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Play;
@@ -52,7 +53,7 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
-    public static long TIME_RESOLUTION_MS=Play.application().configuration().getLong("ix.tokenexpiretime",(long)(3600*1000*24));
+    public static CachedSupplier<Long> TIME_RESOLUTION_MS=CachedSupplier.of(()->Play.application().configuration().getLong("ix.tokenexpiretime",(long)(3600*1000*24)));
 
 
     private static int BUFFER_SIZE = 8192; //8K
@@ -320,7 +321,7 @@ public class Util {
         return (long) Math.floor(TIMESTAMP/getTimeResolutionMS());
     }
     public static long getTimeResolutionMS(){
-    	return TIME_RESOLUTION_MS;
+    	return TIME_RESOLUTION_MS.get().longValue();
     }
     
     

@@ -15,12 +15,12 @@ import org.junit.Test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.AbstractGinasServerTest;
 import ix.core.factories.IndexValueMakerFactory;
 import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.ReflectingIndexValueMaker;
 import ix.core.util.EntityUtils;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 import play.Configuration;
 import play.Play;
@@ -39,7 +39,7 @@ import play.Play;
 @Ignore
 public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasServerTest{
 
-	
+	@Override
 	public GinasTestServer createGinasTestServer(){
 		return new GinasTestServer(()->{
 			

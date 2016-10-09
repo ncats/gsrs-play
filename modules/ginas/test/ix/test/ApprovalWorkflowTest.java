@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.ginas.models.v1.Substance;
 import ix.test.server.RestSession;

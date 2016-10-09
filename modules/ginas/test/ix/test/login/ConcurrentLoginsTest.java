@@ -1,7 +1,6 @@
 package ix.test.login;
 
-import chemaxon.nfunk.jep.function.Abs;
-import ix.test.AbstractGinasServerTest;
+import ix.AbstractGinasServerTest;
 import ix.test.server.AbstractSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;

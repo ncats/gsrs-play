@@ -9,12 +9,12 @@ import java.util.UUID;
 import org.junit.Rule;
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Indexable;
 import ix.core.search.SearchResult;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.IOUtil;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import org.junit.rules.TemporaryFolder;
@@ -30,6 +30,7 @@ import javax.persistence.Id;
  */
 public class TextIndexerTest extends AbstractGinasServerTest{
 	
+	@Rule
 	public TemporaryFolder tmpDir = new TemporaryFolder();
 
 	public class MySpecialTestClass{

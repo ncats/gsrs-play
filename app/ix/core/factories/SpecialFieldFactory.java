@@ -21,17 +21,12 @@ public class SpecialFieldFactory extends InternalMapEntityResourceFactory<String
 
 	@Override
 	public void initialize(Application app) {
-		System.out.println("initializing");
-		
 		getStandardResourceStream(app,IX_CORE_EXACTSEARCHFIELDS)
 			.forEach(m->{
-				System.out.println("Found:" + m.toString());
 				String cls=m.get("class").toString();
 				List<String> fields=(List<String>) m.get("fields");
-				System.out.println("Found fields:" + fields.toString());
 				fields.stream().forEach(exact->{
 					try {
-						System.out.println("Registering:" + cls + " and " + exact);
 						register(cls, exact, true);
 					} catch (Exception e) {
 						Logger.error("Error registering exact field \"" + exact + "\" for:\"" + cls +"\"", e);

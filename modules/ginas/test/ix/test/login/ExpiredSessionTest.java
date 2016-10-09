@@ -8,10 +8,10 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.util.TimeTraveller;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authentication;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 /**

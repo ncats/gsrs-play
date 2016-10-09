@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import ix.test.AbstractGinasServerTest;
+import ix.AbstractGinasServerTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.SubstanceLoader;
@@ -19,9 +19,6 @@ import ix.test.server.SubstanceSearcher;
  * Created by katzelda on 4/29/16.
  */
 public class FacetCountsTest extends AbstractGinasServerTest{
-
-
-
 
     @Test
     public void facetCountsGetUpdatedWhenDataIsLoaded() throws IOException{

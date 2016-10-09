@@ -2,6 +2,8 @@ package ix.test;
 
 import org.junit.Test;
 
+import ix.AbstractGinasTest;
+
 import java.util.Arrays;
 
 import static org.junit.Assert.*;

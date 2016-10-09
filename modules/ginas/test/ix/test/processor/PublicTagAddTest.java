@@ -17,12 +17,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.AbstractGinasServerTest;
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.JsonExporterFactory;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.processors.PublicTagFlagger;
-import ix.test.AbstractGinasServerTest;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.GinasTestServer.User;

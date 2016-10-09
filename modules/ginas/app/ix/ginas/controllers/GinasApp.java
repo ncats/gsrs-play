@@ -153,6 +153,7 @@ public class GinasApp extends App {
     static Map<String, ResultRenderer<?>> thumbRenderers = new HashMap<>();
 
 
+    private static GinasSubstanceExporterFactoryPlugin factoryPlugin;
 	/**
      * Search types used for UI searches. At this time 
      * these types do not extend to API searches.
@@ -269,7 +270,9 @@ public class GinasApp extends App {
 		}catch(Throwable t){
 			t.printStackTrace();
 		}
-        
+
+        factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
+
         listRenderers.put(Substance.class.getName(),
     		(t,ct)->{
     			return ix.ginas.views.html.list.conceptlist.render((Substance)t);
@@ -438,6 +441,7 @@ public class GinasApp extends App {
     static FacetDecorator[] decorate(Facet... facets) {
         return Arrays.stream(facets)
         			  .map(GinasFacetDecorator::new)
+                      .filter(fd->!fd.isHidden())
         			  .toArray(len-> new FacetDecorator[len]);
     }
 
@@ -458,7 +462,7 @@ public class GinasApp extends App {
             if(isrange){
             	facet.sortLabels(false);
             }
-            
+
         }
         /**
          * Return the Display Name for this facet
@@ -535,6 +539,13 @@ public class GinasApp extends App {
             }
             
             return label;
+        }
+
+        public boolean isHidden(){
+            for(int i=0;i<this.size();i++){
+                if(this.label(i)!=null)return false;
+            }
+            return true;
         }
     }
     
@@ -732,7 +743,8 @@ public class GinasApp extends App {
     public static Result generateExportFileUrl(String collectionID, String extension) {
     	ObjectNode on=EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
     	on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension).url().toString());
-    	on.put("isReady", threadPool.getActiveCount()<threadPool.getMaximumPoolSize());
+
+        on.put("isReady", factoryPlugin.isReady());
     	on.put("isCached", false);
     	try{
     		//make sure it's present
@@ -781,7 +793,6 @@ public class GinasApp extends App {
     	}
     }
 
-    private static ThreadPoolExecutor threadPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(8);
 
 
     /**
@@ -836,10 +847,9 @@ public class GinasApp extends App {
 
 		Objects.requireNonNull(tstream, "Invalid stream");
 
-		if(threadPool.getActiveCount()>=threadPool.getMaximumPoolSize()){
-			return ok("");
-		}
-
+        if(!factoryPlugin.isReady()){
+            throw new IllegalStateException("export thread pool is full");
+        }
 
 		final VisiblePipedInputStream pis = new VisiblePipedInputStream();
 		final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
@@ -848,7 +858,7 @@ public class GinasApp extends App {
 		final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String fname = "export-" + sdf.format(new Date()) + "." + extension;
 
-		threadPool.submit(() -> {
+        factoryPlugin.submit(() -> {
 			try {
 				tstream.forEach(s->{
 					try{
@@ -866,6 +876,11 @@ public class GinasApp extends App {
 				}catch(Exception e){
 					Logger.error("Error closing exporter:" + e.getMessage(),e);
 				}
+                try{
+                    pos.close();
+                }catch(Exception e){
+                    Logger.error("Error closing POS:" + e.getMessage(),e);
+                }
 			}
 		});
 
@@ -877,7 +892,6 @@ public class GinasApp extends App {
 
 
     private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
-        GinasSubstanceExporterFactoryPlugin factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
 
         if(factoryPlugin ==null){
             throw new NullPointerException("could not find a factory plugin");

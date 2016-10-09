@@ -1,34 +1,28 @@
 package app.ix.utils.pojopatch;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.diff.JsonDiff;
-import ix.ginas.models.v1.GinasChemicalStructure;
-import ix.ginas.models.v1.Moiety;
-import ix.test.server.GinasTestServer;
-import ix.test.util.TestNamePrinter;
-import ix.utils.pojopatch.PojoDiff;
-import ix.utils.pojopatch.PojoPatch;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.diff.JsonDiff;
+
+import ix.AbstractGinasServerTest;
+import ix.ginas.models.v1.GinasChemicalStructure;
+import ix.ginas.models.v1.Moiety;
+import ix.utils.pojopatch.PojoDiff;
+import ix.utils.pojopatch.PojoPatch;
 
 /**
  * Created by katzelda on 5/13/16.
  */
-public class MoietyDiffTest {
+public class MoietyDiffTest extends AbstractGinasServerTest{
 
     ObjectMapper mapper = new ObjectMapper();
 
-    @Rule
-    public TestNamePrinter printer = new TestNamePrinter();
-
-    @Rule
-    public GinasTestServer ts = new GinasTestServer();
 
     @Test
     public void changeNestedField() throws Exception{

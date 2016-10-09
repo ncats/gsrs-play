@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.core.plugins.ConsoleFilterPlugin;
 import ix.ginas.models.v1.NameOrg;

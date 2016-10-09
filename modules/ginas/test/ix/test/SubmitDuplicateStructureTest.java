@@ -2,6 +2,8 @@ package ix.test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.AbstractGinasServerTest;
 import ix.core.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;

@@ -18,8 +18,6 @@ import ix.test.util.TestUtil;
  * Created by katzelda on 4/12/16.
  */
 public class ReIndexTest extends AbstractLoadDataSetTest{
-    //http://localhost:9000/dev/ginas/app/_updateIndex/_monitor
-
 
     @Test
     public void reindexAfterDeleteShouldRestoreSearch()throws IOException {
@@ -27,7 +25,7 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
 
                 SubstanceLoader loader = new SubstanceLoader(session);
 
-                File f = new File("test/testdumps/rep90.ginas");
+                File f = new File(LoadDataSetTest.TEST_TESTDUMPS_REP90_GINAS);
 
                 loader.loadJson(f);
 

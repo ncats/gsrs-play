@@ -1,5 +1,6 @@
 package ix.test;
 import ix.core.models.Role;
+import ix.AbstractGinasTest;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
@@ -15,18 +16,19 @@ import static org.fest.assertions.Assertions.assertThat;
 
 
 /**
-*
-* Simple (JUnit) tests that can call all parts of a play app.
-* If you are interested in mocking a whole application, see the wiki for more details.
-*
-*/
-public class ApplicationTest extends AbstractGinasTest{
+ * A few basic tests to ensure that the models are instantiated as 
+ * expected, with some basic logic honored
+ * @author tyler
+ *
+ */
+public class BasicModelTests extends AbstractGinasTest{
 
     @Test
     public void createPrincipal() {
           Principal pri = new Principal("testuser", "");
                 assertThat(pri.username).isNotNull();
                 assertThat(pri.username).isEqualTo("testuser");
+                assertThat(pri.email).isEqualTo("");
     }
 
 

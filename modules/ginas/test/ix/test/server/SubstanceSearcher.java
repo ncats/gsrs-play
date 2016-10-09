@@ -253,6 +253,7 @@ public class SubstanceSearcher {
         	 try{
         		 htmlPage = session.submit(req.setQueryParameter("page", page+"").get());
         	 }catch(Exception e){
+//                 e.printStackTrace();
              	break;
              }
             //stop if the paging throws an error
@@ -351,7 +352,6 @@ public class SubstanceSearcher {
         Set<String> substances = new LinkedHashSet<>();
 
         String txt=page.asXml();
-//        System.out.println(txt);
         Matcher matcher = STRUCTURE_IMG_URL.matcher(txt);
         while(matcher.find()){
             substances.add(matcher.group(1));
@@ -393,7 +393,6 @@ public class SubstanceSearcher {
     	}
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
-    		System.out.println("URL IS:"+url);
     		return SubstanceSearcher.this.session.get(url, timeout);
     	}
     	
