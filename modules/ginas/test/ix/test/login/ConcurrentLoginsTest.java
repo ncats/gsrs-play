@@ -1,21 +1,21 @@
 package ix.test.login;
 
+import static ix.test.login.LoginUtil.ensureLoggedInAs;
+import static ix.test.login.LoginUtil.ensureNotLoggedIn;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import ix.AbstractGinasServerTest;
 import ix.test.server.AbstractSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.util.MultiThreadInteracter;
-import ix.test.util.TestNamePrinter;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import static ix.test.login.LoginUtil.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 /**
  * Created by katzelda on 3/23/16.
@@ -206,8 +206,6 @@ public class ConcurrentLoginsTest extends AbstractGinasServerTest{
 
     @Test
     public void manyLoggedInAndNotLoggedInUsersViewSubstancesMultiThreadedConcurrently(){
-
-
 
         MultiThreadInteracter.Builder builder = new MultiThreadInteracter.Builder();
         int numLoggedInUsers = 5;

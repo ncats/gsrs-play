@@ -21,7 +21,7 @@ public class LoadFromFileOnStartTest extends AbstractGinasServerTest{
 	 @Override
 	 public GinasTestServer createGinasTestServer(){
 		 return new GinasTestServer(new HashMap<String,Object>(){
-			 {
+			 	 {
 				 	put("ix.ginas.load.file",LoadDataSetTest.TEST_TESTDUMPS_REP90_GINAS);
 				 }
 			 });
@@ -47,9 +47,7 @@ public class LoadFromFileOnStartTest extends AbstractGinasServerTest{
 		
 	@Test
 	public void ensureLoadingrep90FromConfFileLoadsSameData() throws Exception {
-		
 		try(BrowserSession session = ts.newBrowserSession(u)){
-			Thread.sleep(1000);
 			LoadDataSetTest.runRepTests(session);
 		}catch(Exception e){
 			e.printStackTrace();

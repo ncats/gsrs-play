@@ -99,6 +99,7 @@ public class TestNamePrinter extends TestWatcher{
     @Override
     protected void failed(Throwable e, Description description) {
     	 if(printEnd) {
+    		 e.printStackTrace();
              out.println("Failed test  : " +description.getClassName() + " . " + description.getMethodName());
          }
     }

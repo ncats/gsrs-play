@@ -86,7 +86,6 @@ public class SubstanceLoader {
         }
 
         url = matcher.group(1);
-        System.out.println("monitor URL = " + url);
         return url;
     }
 }

@@ -1205,8 +1205,7 @@ public class EntityFactory extends Controller {
 	                
 	                EntityPersistAdapter.getInstance().deepreindex(newValue);
                 }catch(Exception e){
-                	
-                	e.printStackTrace();
+                	Logger.error("Error updating entity", e);
                 }finally{
                 	tx.end();
                 }

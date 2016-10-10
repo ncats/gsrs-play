@@ -16,6 +16,7 @@ import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
 import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
+import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import com.avaje.ebean.event.BeanPersistAdapter;
@@ -483,7 +484,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     @Override
     public boolean preDelete (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-        operate(bean,Java8ForOldEbeanHelper.processorCallableFor(PostRemove.class),true);
+        operate(bean,Java8ForOldEbeanHelper.processorCallableFor(PreRemove.class),true);
         return true;
     }
 
@@ -521,7 +522,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
  				function.apply(bean, ep).call();
  			}
  		} catch (Exception ex) {
- 			ex.printStackTrace();
  			Logger.trace("Error invoking Entity Processor:" + ex.getMessage(), ex);
  			if(fail){
  				throw new IllegalStateException(ex);

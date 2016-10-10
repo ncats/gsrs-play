@@ -17,7 +17,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import ix.AbstractGinasServerTest;
+import ix.AbstractGinasClassServerTest;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
@@ -25,7 +25,7 @@ import util.json.JsonUtil;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
-public class SubstanceValidateFailTest extends AbstractGinasServerTest {
+public class SubstanceValidateFailTest extends AbstractGinasClassServerTest {
 
     File resource;
 
