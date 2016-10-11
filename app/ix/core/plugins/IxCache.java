@@ -2,8 +2,9 @@ package ix.core.plugins;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.Key;
+import ix.utils.CallableUtil.TypedCallable;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Application;
@@ -52,7 +54,7 @@ public class IxCache extends Plugin {
         int debugLevel = context.getDebugLevel();
         
         int maxElements = app.configuration()
-            .getInt(CACHE_MAX_ELEMENTS, DEFAULT_MAX_ELEMENTS);
+        		.getInt(CACHE_MAX_ELEMENTS, DEFAULT_MAX_ELEMENTS);
 
         int notEvictableMaxElements = app.configuration()
                 .getInt(CACHE_MAX_NOT_EVICTABLE_ELEMENTS, DEFAULT_MAX_ELEMENTS);
@@ -66,7 +68,40 @@ public class IxCache extends Plugin {
         GateKeeper gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
                 .debugLevel(debugLevel)
                 .useNonEvictableCache(notEvictableMaxElements,timeToLive,timeToIdle)
-                .cacheAdapter( new FileDbCache(context.cache(), "inMemCache"))
+                .cacheAdapter(new FileDbCache(context.cache(), "inMemCache"))
+                .keyMaster(new KeyMaster(){
+
+					@Override
+					public Set<String> getAllAdaptedKeys(String baseKey) {
+						return Stream.of(baseKey).collect(Collectors.toSet());
+					}
+
+					@Override
+					public void addKey(String baseKey, String adaptKey) {
+						
+					}
+
+					@Override
+					public void removeKey(String baseKey, String adaptKey) {
+						
+					}
+
+					@Override
+					public String adaptKey(String baseKey) {
+						return baseKey;
+					}
+
+					@Override
+					public String unAdaptKey(String adaptedKey) {
+						return adaptedKey;
+					}
+
+					@Override
+					public void removeAll() {
+						
+					}
+                	
+                })
                 .build()
                 .create();
         _instance = new IxCache(gateKeeper);
@@ -112,7 +147,7 @@ public class IxCache extends Plugin {
      * apply generator if the evictableCache was created before epoch
      */
     public static <T> T getOrElse (long epoch,
-                                   String key, Callable<T> generator)
+                                   String key, TypedCallable<T> generator)
         throws Exception {
 
         checkInitialized();
@@ -121,13 +156,13 @@ public class IxCache extends Plugin {
 
     }
     
-    public static <T> T getOrElse (String key, Callable<T> generator)
+    public static <T> T getOrElse (String key, TypedCallable<T> generator)
         throws Exception {
     	return getOrElse(key,generator,0);
     }
     
     // mimic play.Cache 
-    public static <T> T getOrElse (String key, Callable<T> generator,
+    public static <T> T getOrElse (String key, TypedCallable<T> generator,
                                    int seconds) throws Exception {
         checkInitialized();
         return _instance.gateKeeper.getOrElse(key,  generator,seconds);
@@ -138,7 +173,7 @@ public class IxCache extends Plugin {
         _instance.gateKeeper.clear();
     }
     
-    public static <T> T getOrElseRaw (String key, Callable<T> generator,
+    public static <T> T getOrElseRaw (String key, TypedCallable<T> generator,
             int seconds) throws Exception {
 
         checkInitialized();
@@ -207,7 +242,7 @@ public class IxCache extends Plugin {
 
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getOrElseTemp(String key, Callable<T> generator) throws Exception{
+	public static <T> T getOrElseTemp(String key, TypedCallable<T> generator) throws Exception{
 		Object o=getTemp(key);
 		if(o==null){
 			o=generator.call();
@@ -268,6 +303,7 @@ public class IxCache extends Plugin {
 	 * 
 	 */
 	public static void markChange() {
+		//System.err.println(Util.getExecutionPath());
 		_instance.notifyChange(System.currentTimeMillis());
 	}
 	
@@ -287,7 +323,14 @@ public class IxCache extends Plugin {
 	}
 	
 	public static boolean mightBeDirtySince(long t){
+		
 		return _instance.hasBeenNotifiedSince(t);
 	}
+	
+	public static IxCache getInstance(){
+		return _instance;
+	}
+	
+	
 	
 }

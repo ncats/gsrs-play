@@ -62,7 +62,6 @@ public class SubstanceLoader {
             if(matcher.find()){
                 status = matcher.group(1);
             }
-            System.out.println(status);
 
         }while(!"COMPLETE".equals(status));
     }

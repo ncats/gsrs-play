@@ -41,6 +41,7 @@ import java.sql.Connection;
 
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Global;
 import ix.utils.Util;
 import tripod.chem.indexer.StructureIndexer;
@@ -742,7 +743,7 @@ public class App extends Authentication {
         return result;
     }
 
-    public static Result getEtag (String key, Callable<Result> callable)
+    public static Result getEtag (String key, TypedCallable<Result> callable)
         throws Exception {
         String ifNoneMatch = request().getHeader("If-None-Match");
         if (ifNoneMatch != null
@@ -753,13 +754,13 @@ public class App extends Authentication {
         return getOrElse (key, callable);
     }
     
-    public static <T> T getOrElse(String key, Callable<T> callable)
+    public static <T> T getOrElse(String key, TypedCallable<T> callable)
         throws Exception {
         return getOrElse (getTextIndexer().lastModified(), key, callable);
     }
 
     public static <T> T getOrElse (long modified,
-                                   String key, Callable<T> callable)
+                                   String key, TypedCallable<T> callable)
     throws Exception {
         return IxCache.getOrElse(modified, key, callable);
     }

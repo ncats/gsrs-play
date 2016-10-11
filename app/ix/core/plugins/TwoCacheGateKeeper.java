@@ -1,15 +1,18 @@
 package ix.core.plugins;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import ix.core.CacheStrategy;
 import ix.core.util.CachedSupplier;
+import ix.utils.CallableUtil.TypedCallable;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -22,6 +25,7 @@ import play.Logger;
  */
 public class TwoCacheGateKeeper implements GateKeeper {
 
+	private Map<String, MyElement> temporaryCache = new ConcurrentHashMap<String,MyElement>();
 
     private final KeyMaster keyMaster;
     private final Ehcache evictableCache;
@@ -43,26 +47,21 @@ public class TwoCacheGateKeeper implements GateKeeper {
         this.nonEvictableCache = nonEvictableCache;
 
     }
-    private <T> CacheGeneratorWrapper<T> createRaw(Callable<T> delegate, String key){
 
-        return createRaw(delegate, key, 0);
-    }
-
-    private <T> CacheGeneratorWrapper<T> createRaw(Callable<T> delegate, String key, int seconds){
-
+    private <T> CacheGeneratorWrapper<T> createRaw(TypedCallable<T> delegate, String key, int seconds){
         return new CacheGeneratorWrapper<T>(delegate, key, key,seconds);
     }
 
-    private <T> CacheGeneratorWrapper<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey){
-
-        return createKeyWrapper(delegate, key, adaptedKey, 0);
+    private <T> CacheGeneratorWrapper<T> createKeyWrapper(TypedCallable<T> delegate, String key, String adaptedKey, int seconds){
+        return new CacheGeneratorWrapper<T>(delegate, key, adaptedKey,seconds);
     }
-
-    private <T> CacheGeneratorWrapper<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds){
-
+    
+    private <T> CacheGeneratorWrapper<T> createKeyWrapper(TypedCallable<T> delegate, String key, int seconds){
+    	String adaptedKey = keyMaster.adaptKey(key);
         return new CacheGeneratorWrapper<T>(delegate, key, adaptedKey,seconds);
     }
 
+   
     @Override
     public void clear() {
         keyMaster.removeAll();
@@ -77,6 +76,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
 
     private boolean removeRaw(String adaptedKey) {
+    	temporaryCache.remove(adaptedKey);
         if(evictableCache.removeWithWriter(adaptedKey)){
             return true;
         }
@@ -114,11 +114,11 @@ public class TwoCacheGateKeeper implements GateKeeper {
      * @param <T>
      */
     private class CacheGeneratorWrapper<T>{
-       private final Callable<T> delegate;
+       private final TypedCallable<T> delegate;
        private final String key, adaptedKey;
        private final int seconds;
        
-       public CacheGeneratorWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds) {
+       public CacheGeneratorWrapper(TypedCallable<T> delegate, String key, String adaptedKey, int seconds) {
            this.delegate = delegate;
            this.key = key;
            this.adaptedKey = adaptedKey;
@@ -128,26 +128,38 @@ public class TwoCacheGateKeeper implements GateKeeper {
        public CachedSupplier<T> call() {
            //T t = delegate.call();
            keyMaster.addKey(key, adaptedKey);
+           
            CachedSupplier<T> memdelegate=CachedSupplier.of(()->{
         	   try{
-        		   return delegate.call();
+        		   T ret= delegate.call();
+        		   if(ret==null){
+        			  removeRaw(adaptedKey);
+        		   }
+        		   return ret;
         	   }catch(Exception e){
+        		   removeRaw(adaptedKey);
         		   return null;
         	   }
            });
-           addToCache(adaptedKey, memdelegate, seconds);
+           
+           Class<?> type=delegate.getType();
+           addToCache(adaptedKey, memdelegate, seconds, type);
+           
+           
            return memdelegate;
        }
    }
+    
+   
 
 
 
     @Override
-    public <T> T getSinceOrElse(String key, long creationTime, Callable<T> generator) throws Exception{
+    public <T> T getSinceOrElse(String key, long creationTime, TypedCallable<T> generator) throws Exception{
         return getSinceOrElse(key, creationTime, generator, 0);
     }
     @Override
-    public <T> T getSinceOrElse(String key, long creationTime, Callable<T> generator, int seconds) throws Exception{
+    public <T> T getSinceOrElse(String key, long creationTime, TypedCallable<T> generator, int seconds) throws Exception{
     	String adaptedKey = keyMaster.adaptKey(key);
         return getOrElseRaw(adaptedKey,
                 createKeyWrapper(generator, key, adaptedKey, seconds),
@@ -158,17 +170,14 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
     private  <T> T getOrElseRaw(String key, CacheGeneratorWrapper<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
-    	Element e = evictableCache.get(key);
+    	Element e = getRawElement(key);
     	
-        if(e ==null || e.getObjectValue() == null){
-            e = nonEvictableCache.get(key);
-        }
-        
-        if(e ==null || e.getObjectValue() == null || regeneratePredicate.test(e)){
+        if(e ==null || regeneratePredicate.test(e)){
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
-            return generator.call().get();
+            generator.call().get(); //force caching of supplier
+            e=getRawElement(key);
         }
         
         try {
@@ -177,13 +186,14 @@ public class TwoCacheGateKeeper implements GateKeeper {
             //in case there is a cast problem
             //or some other problem with the cached value
             //re-generate
-            return generator.call().get();
+        	generator.call().get();
+        	return (T) getObjectFromElement(getRawElement(key));
         }
 
     }
 
     @Override
-    public <T> T getOrElseRaw(String key, Callable<T> generator, int seconds) throws Exception{
+    public <T> T getOrElseRaw(String key, TypedCallable<T> generator, int seconds) throws Exception{
        return getOrElseRaw(key,
                createRaw(generator,key, seconds),
                (e)->false);
@@ -197,9 +207,19 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
     public Element getRawElement(String key){
-        Element e = evictableCache.get(key);
-        if(e ==null || e.getObjectValue()==null){
-            e = nonEvictableCache.get(key);
+    	Element e = this.temporaryCache.get(key);
+    	if(e!=null){	
+    		return e;
+    	}
+    	
+        e = evictableCache.get(key);
+        if(e ==null || e.getObjectValue()==null || getObjectFromElement(e)==null){
+        	e = nonEvictableCache.get(key);
+        	if(e==null || e.getObjectValue()==null || getObjectFromElement(e)==null){
+        		return null;
+        	}else{
+        		return e;
+        	}
         }
         return e;
     }
@@ -209,19 +229,34 @@ public class TwoCacheGateKeeper implements GateKeeper {
         return getObjectFromElement(e);
     }
     
-    public static Object getObjectFromElement(Element e){
+    public Object getObjectFromElement(Element e){
         if(e ==null){
             return null;
         }
-        Object val=e.getObjectValue();
-        if(val instanceof CachedSupplier){
-        	return ((CachedSupplier)val).get();
+        Object avalue=e.getObjectValue();
+        Object retValue=avalue;
+        if(avalue instanceof CachedSupplier){
+        	retValue=((CachedSupplier)avalue).get();	
         }
-        return val;
+        
+        //Takes care of those non-determinately Evictable things
+        if(e instanceof MyElement){
+        	MyElement polElm=(MyElement)e;
+        	if(polElm.getEvictionType() == EvictionType.UNKNOWN){
+        		EvictionType et=getEvictionPolicy(retValue.getClass());
+        		if(et==EvictionType.UNKNOWN){
+        			et=EvictionType.EVICTABLE;
+        		}
+        		polElm.setEvictionType(et);
+        		addElementToCache(polElm);
+        		this.temporaryCache.remove(polElm.getObjectKey().toString());
+        	}
+        }
+        return retValue;
     }
 
     @Override
-    public <T> T getOrElse(String key, Callable<T> generator, int seconds) throws Exception{
+    public <T> T getOrElse(String key, TypedCallable<T> generator, int seconds) throws Exception{
         String adaptedKey = keyMaster.adaptKey(key);
 
         return getOrElseRaw(adaptedKey,
@@ -231,9 +266,8 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
     @Override
     public void put(String key, Object value, int expiration){
-        String adaptedKey = keyMaster.adaptKey(key);
-        addToCache(adaptedKey, CachedSupplier.of(()->value), expiration);
-        keyMaster.addKey(key, adaptedKey);
+    	CacheGeneratorWrapper cgw = createKeyWrapper(TypedCallable.of(value),key,expiration);
+    	cgw.call();
     }
     
     @Override
@@ -243,23 +277,83 @@ public class TwoCacheGateKeeper implements GateKeeper {
     
     @Override
     public void putRaw(String key, Object value, int expiration){
-        addToCache(key, CachedSupplier.of(()->value), expiration);
-        keyMaster.addKey(key, key);
+    	CacheGeneratorWrapper cgw = createRaw(TypedCallable.of(value),key,expiration);
+    	cgw.call();
     }
+    
+    public static class MyElement extends Element{
+    	/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		public EvictionType evictionType=EvictionType.EVICTABLE;
+		public MyElement(Object key, Object value, Boolean eternal, Integer timeToIdleSeconds,
+				Integer timeToLiveSeconds) {
+			super(key, value, eternal, timeToIdleSeconds, timeToLiveSeconds);
+			// TODO Auto-generated constructor stub
+		}
 
-    List<Object> cachedValues = new ArrayList<Object>();
+		public MyElement(Object key, Object value, long version, long creationTime, long lastAccessTime, long hitCount,
+				boolean cacheDefaultLifespan, int timeToLive, int timeToIdle, long lastUpdateTime) {
+			super(key, value, version, creationTime, lastAccessTime, hitCount, cacheDefaultLifespan, timeToLive, timeToIdle,
+					lastUpdateTime);
+			// TODO Auto-generated constructor stub
+		}
+
+		public MyElement(Object key, Object value, long version, long creationTime, long lastAccessTime,
+				long lastUpdateTime, long hitCount) {
+			super(key, value, version, creationTime, lastAccessTime, lastUpdateTime, hitCount);
+			// TODO Auto-generated constructor stub
+		}
+
+		public MyElement(Object key, Object value, long version) {
+			super(key, value, version);
+			// TODO Auto-generated constructor stub
+		}
+
+		public MyElement(Object key, Object value) {
+			super(key, value);
+			// TODO Auto-generated constructor stub
+		}
+
+		public MyElement(Serializable key, Serializable value, long version) {
+			super(key, value, version);
+			// TODO Auto-generated constructor stub
+		}
+
+		public MyElement(Serializable key, Serializable value) {
+			super(key, value);
+			// TODO Auto-generated constructor stub
+		}
+		public EvictionType getEvictionType(){
+			return evictionType;
+		}
+		public void setEvictionType(EvictionType et){
+			evictionType=et;
+		}
+    	
+    }
     
-    
-    private void addToCache(String adaptedKey, CachedSupplier<?> value, int expiration) {
+    private void addToCache(String adaptedKey, CachedSupplier<?> value, int expiration, Class<?> type) {
         if(value == null){
             return;
         }
-        //Object setvalue=value;
-        Element e=new Element (adaptedKey, value, expiration <= 0, expiration, expiration);
-        if(isEvictable(value)){
-        	evictableCache.putWithWriter(e);
-        }else{
-        	nonEvictableCache.putWithWriter(e);
+        MyElement e=new MyElement (adaptedKey, value, expiration <= 0, expiration, expiration);
+        e.setEvictionType(getEvictionPolicy(type));
+        addElementToCache(e);
+    }
+    
+    private void addElementToCache(MyElement e){
+        switch(e.getEvictionType()){
+			case EVICTABLE:
+				evictableCache.putWithWriter(e);
+				break;
+			case UNEVICTABLE:
+				nonEvictableCache.putWithWriter(e);
+				break;
+			case UNKNOWN:
+				temporaryCache.put(e.getObjectKey().toString(), e);
+				break;
         }
     }
 
@@ -270,28 +364,35 @@ public class TwoCacheGateKeeper implements GateKeeper {
     	stats.add(nonEvictableCache.getStatistics());
         return stats;
     }
+    
+    //private Map<String, CacheStrategy> cacheStrategies = new ConcurrentHashMap<>();
+    
+    private static enum EvictionType{
+    	EVICTABLE,
+    	UNEVICTABLE,
+    	UNKNOWN
+    }
 
-    private static boolean isEvictable(Object o){
-        if(o ==null){
-            //TODO should we throw exception?
-            return true;
+    private EvictionType getEvictionPolicy(Class<?> cls){
+        if(cls ==null){
+            return EvictionType.EVICTABLE;
         }
-        CacheStrategy cacheStrat=o.getClass().getAnnotation(CacheStrategy.class);
+        if(cls.equals(Object.class)){
+        	return EvictionType.UNKNOWN;
+        }
+        CacheStrategy cacheStrat=cls.getAnnotation(CacheStrategy.class);
 
         if(cacheStrat == null){
-            return true;
+            return EvictionType.EVICTABLE;
         }
-        return cacheStrat.evictable();
+        return cacheStrat.evictable()?EvictionType.EVICTABLE:EvictionType.UNEVICTABLE;
 
     }
 
     @Override
     public boolean contains(String key){
         String adaptedKey = keyMaster.adaptKey(key);
-        Element e = evictableCache.get(adaptedKey);
-        if(e ==null){
-            e = nonEvictableCache.get(adaptedKey);
-        }
+        Element e=this.getRawElement(adaptedKey);
         return e !=null;
     }
 
@@ -301,12 +402,12 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
 
     @Override
-    public <T> T getOrElseRaw(String key, Callable<T> generator) throws Exception {
+    public <T> T getOrElseRaw(String key, TypedCallable<T> generator) throws Exception {
         return getOrElseRaw(key, generator, 0);
     }
 
     @Override
-    public <T> T getOrElse(String key, Callable<T> generator) throws Exception {
+    public <T> T getOrElse(String key, TypedCallable<T> generator) throws Exception {
         return getOrElse(key, generator, 0);
     }
 

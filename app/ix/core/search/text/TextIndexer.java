@@ -1777,7 +1777,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 								}
 								addDoc(fielddoc);
 							}catch(Exception e){
-								System.out.println("FAILED!" + e.getMessage());
+								Logger.error("Analyzing index failed", e);
 							}
 						});
 				}
@@ -1843,7 +1843,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
 				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
-				markChange();
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();

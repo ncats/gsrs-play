@@ -1,8 +1,5 @@
 package ix.core.plugins;
 
-import ix.core.UserFetcher;
-import ix.utils.Util;
-
 import java.util.Set;
 
 /**
@@ -21,17 +18,10 @@ public interface KeyMaster {
     }
 
 
-    default String adaptKey(String baseKey) {
-        final String user = UserFetcher.getActingUser(true).username;
-        return "!" + baseKey + "#" + Util.sha1(user);
-    }
+    public String adaptKey(String baseKey);
 
-    default String unAdaptKey(String adaptedKey) {
-        if (!adaptedKey.startsWith("!")) {
-            return adaptedKey;
-        }
-        return adaptedKey.substring(1, adaptedKey.lastIndexOf('#'));
-    }
+    public String unAdaptKey(String adaptedKey);
 
     void removeAll();
+    
 }

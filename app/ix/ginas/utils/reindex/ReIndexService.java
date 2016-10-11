@@ -9,6 +9,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.CloseableIterator;
 import ix.core.util.IOUtil;
+import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 
@@ -60,30 +61,30 @@ public class ReIndexService {
     }
 
     public void reindexAll(ReIndexListener listener){
-    	System.out.println("$$$$$$$$$$$$$$");
-    	System.out.println("SHUTTING DOWN");
+    	
+    	Logger.info("SHUTTING DOWN");
         listener.newReindex();
         //Util.debugSpin(3000);
         File ginasIx = new File(Play.application().configuration().getString("ix.home"));
 
-        System.out.println("#################### Deleting everything");
-        System.out.println("stopping seq indexer");
+        Logger.info("#################### Deleting indexes");
+        Logger.info("#################### stopping seq indexer");
         Play.application().plugin(SequenceIndexerPlugin.class).onStop();
-        System.out.println("stopping structure indexer");
+         Logger.info("stopping structure indexer");
         Play.application().plugin(StructureIndexerPlugin.class).onStop();
 
         TextIndexerPlugin.prepareTestRestart();
-        System.out.println("stopping text indexer");
+         Logger.info("stopping text indexer");
         Play.application().plugin(TextIndexerPlugin.class).onStop();
-        System.out.println("deleting sequence dir");
+         Logger.info("deleting sequence dir");
         IOUtil.deleteRecursivelyQuitely(new File(ginasIx, "sequence"));
-        System.out.println("deleting structure dir");
+         Logger.info("deleting structure dir");
         File structureDir = new File(ginasIx, "structure");
         IOUtil.deleteRecursivelyQuitely(structureDir);
-        System.out.println("deleting text indexer storage root dir");
+         Logger.info("deleting text indexer storage root dir");
         IOUtil.deleteRecursivelyQuitely(TextIndexerPlugin.getStorageRootDir());
 
-        System.out.println("deleting ginas ix dir");
+         Logger.info("deleting ginas ix dir");
         try {
 			IOUtil.printDirectoryStructure(ginasIx);
 		} catch (IOException e1) {
@@ -100,7 +101,7 @@ public class ReIndexService {
 
 
         listener.totalRecordsToIndex(finder.findRowCount());
-        System.out.println("#################### Deleted everything");
+         Logger.info("#################### Deleted everything");
         
         //QueryIterator must be in try-wtih-resource
         //so it is properly closed if it errors out early.

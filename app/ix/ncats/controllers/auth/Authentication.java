@@ -396,11 +396,7 @@ public class Authentication extends Controller {
         if (id != null) {
             try {
                 session = IxCache.getOrElseRaw
-                        (id, new Callable<Session>() {
-                            public Session call() throws Exception {
-                                return _sessions.byId(UUID.fromString(id));
-                            }
-                        }, 0);
+                        (id, ()->_sessions.byId(UUID.fromString(id)), 0);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
