@@ -11,14 +11,17 @@ import java.util.function.Supplier;
  * @param <T>
  */
 public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
-	Supplier<T> c;
-	T cache;
-	boolean run=false;
+	private Supplier<T> c;
+	private T cache;
+	private boolean run=false;
 	
 	public CachedSupplier(Supplier<T> c){
 		this.c=c;
 	}
 	
+	/**
+	 * Delegates to {@link #get()}
+	 */
 	public T call(){
 		return get();
 	}
@@ -31,7 +34,7 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 		return cache;
 	}
 	
-	public static <K> CachedSupplier<K> of(Supplier<K> supplier){
-		return new CachedSupplier<K>(supplier);
+	public static <T> CachedSupplier<T> of(Supplier<T> supplier){
+		return new CachedSupplier<T>(supplier);
 	}
 }

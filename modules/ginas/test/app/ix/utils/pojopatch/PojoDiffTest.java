@@ -17,21 +17,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import ix.AbstractGinasServerTest;
+import ix.AbstractGinasTest;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.Substance;
-import ix.utils.pojopatch.Change;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
 /**
  * Created by katzelda on 3/7/16.
  */
-public class PojoDiffTest extends AbstractGinasServerTest{
+public class PojoDiffTest extends AbstractGinasTest{
 
     
     private List<UUID> uuids = new ArrayList<>();
@@ -83,14 +82,12 @@ public class PojoDiffTest extends AbstractGinasServerTest{
     @Test
     public void setField() throws Exception {
         Author old = new Author();
-
         old.id = 12345L;
 
         assertNull(old.lastname);
 
         Author update = new Author();
         update.id = 12345L;
-
         update.lastname = "Jones";
 
         PojoPatch patch = PojoDiff.getDiff(old, update);
@@ -554,9 +551,9 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 
 
         PojoPatch<Property> patch = PojoDiff.getDiff(oldp, newp);
-        for(Change c:patch.getChanges()){
-        	System.out.println("Changed:" + c.toString());
-        }
+//        for(Change c:patch.getChanges()){
+//        	System.out.println("Changed:" + c.toString());
+//        }
 
         patch.apply(oldp);
 

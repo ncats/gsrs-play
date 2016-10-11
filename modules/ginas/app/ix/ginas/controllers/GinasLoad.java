@@ -24,6 +24,7 @@ import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Util;
 
 import java.io.UnsupportedEncodingException;
@@ -269,7 +270,7 @@ public class GinasLoad extends App {
 			}
 			return createJobResult(result, rows, page);
 		} else {
-			return getOrElse(key, ()->{
+			return getOrElse(key, TypedCallable.of(()->{
 					Logger.debug("Cache missed: " + key);
 					TextIndexer.Facet[] facets = filter(
 							getFacets(ProcessingJob.class, 30), ALL_FACETS);
@@ -281,7 +282,7 @@ public class GinasLoad extends App {
 
 					return ok(ix.ginas.views.html.admin.jobs.render(page,
 							nrows, total, pages, decorate(facets), substances));
-			});
+			}, Result.class));
 		}
 	}
 

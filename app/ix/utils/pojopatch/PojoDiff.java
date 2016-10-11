@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -79,7 +80,7 @@ public class PojoDiff {
 	public static class JsonObjectPatch<T> implements PojoPatch<T>{
 		private JsonPatch jp;
 		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
-		public Stack apply(T old, ChangeEventListener ... changeListener) throws Exception{
+		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
 			return applyPatch(old,jp,changeListener);
 		}
 		@Override
@@ -88,22 +89,22 @@ public class PojoDiff {
 		}
 	}
 	
-	public static class LazyObjectPatch implements PojoPatch{
-		private Object oldV;
-		private Object newV;
+	public static class LazyObjectPatch<T> implements PojoPatch<T>{
+		private T oldV;
+		private T newV;
 		JsonNode jp;
-		public LazyObjectPatch(Object oldV, Object newV){
+		public LazyObjectPatch(T oldV, T newV){
 			this.oldV=oldV;
 			this.newV=newV;
 		}
-		public Stack apply(Object old, ChangeEventListener ... changeListener) throws Exception{
+		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
 			if(jp==null){
 				jp=getJsonDiff(oldV,newV);
 			}
 			if(old==oldV){
 				return applyChanges(oldV,newV, jp,changeListener);
 			}else{
-				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
+				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp)).apply(old);
 			}
 		}
 		@Override
@@ -119,9 +120,13 @@ public class PojoDiff {
 	}
 	
 	private static class JsonSimpleNodeChange{
+		@JsonProperty
 		public String op;
+		@JsonProperty
 		public String path;
+		@JsonProperty
 		public String from;
+		@JsonProperty
 		public boolean report=true;
 		
 		public JsonSimpleNodeChange(String op, String path, String from){
@@ -130,16 +135,17 @@ public class PojoDiff {
 			this.from=from;
 		}
 		
+		public JsonNode asJsonNode(){
+			return _mapper.valueToTree(this);
+		}
+		
+		@SuppressWarnings("unused")
 		public static JsonSimpleNodeChange MOVE_OP(String from, String to){
 			return new JsonSimpleNodeChange("move",to, from);
 		}
 		public static JsonSimpleNodeChange COPY_OP(String from, String to){
 			return new JsonSimpleNodeChange("copy",to, from);
 		}
-		public JsonNode asJsonNode(){
-			return _mapper.valueToTree(this);
-		}
-
 		public static JsonSimpleNodeChange REMOVE_OP(String path) {
 			return new JsonSimpleNodeChange("remove",path,null);
 		}
@@ -149,23 +155,23 @@ public class PojoDiff {
 		}
 	}
 	
-	public static class EnhancedObjectPatch implements PojoPatch{
-		private Object oldV;
-		private Object newV;
+	public static class EnhancedObjectPatch<T> implements PojoPatch<T>{
+		private T oldV;
+		private T newV;
 		JsonNode jp;
-		public EnhancedObjectPatch(Object oldV, Object newV){
+		public EnhancedObjectPatch(T oldV, T newV){
 			this.oldV=oldV;
 			this.newV=newV;
 		}
 		
-		public Stack apply(Object old, ChangeEventListener ... changeListener) throws Exception{
+		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
 			if(jp==null){
 				jp=getEnhancedJsonDiff(oldV,newV,null);
 			}
 			if(old==oldV){
 				return applyChanges(oldV,newV, jp,changeListener);
 			}else{
-				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
+				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp)).apply(old);
 			}
 		}
 		@Override
@@ -191,35 +197,44 @@ public class PojoDiff {
 		}
 	}
 	
-	private static void sortDiff(JsonNode jp){
-		List<JsonNode> diffs = new ArrayList<JsonNode>();
-		for(JsonNode diff:jp){
-			diffs.add(diff);
-		}
-		Collections.sort(diffs, new Comparator<JsonNode>(){
-			@Override
-			public int compare(JsonNode o1, JsonNode o2) {
-				String path=o1.at("/path").asText();
-				String op=o1.at("/op").asText();
-				
-				
-				return 0;
-			}
-		});
-	}
 	
 	
-	public static <T> PojoPatch getDiff(T oldValue, T newValue){
+	
+	public static <T> PojoPatch<T> getDiff(T oldValue, T newValue){
 		//return new EnhancedObjectPatch(oldValue,newValue);
-		return new EnhancedObjectPatch(oldValue,newValue);
+		return new EnhancedObjectPatch<T>(oldValue,newValue);
 	}
 	
-	public static <T> PojoPatch getEnhancedDiff(T oldValue, T newValue){
-		return new EnhancedObjectPatch(oldValue,newValue);
+	/**
+	 * Mutates the first object to be the same as the second, returning
+	 * a unique {@link java.util.Stack} of the changed objects, in the order
+	 * that they were changed. 
+	 * 
+	 * This is the same as calling:
+	 * 
+	 * <p>
+	 * <code>
+	 * 		PojoDiff.getDiff(oldValue,newValue).apply(oldValue);
+	 * </code>
+	 * </p>
+	 * @param oldValue The starting value, to be mutated
+	 * @param newValue The ending value, which the first value should look like
+	 * @return A unique {@link java.util.Stack} of the changed objects, in the order
+	 * that they were changed.
+	 * @throws Exception
+	 */
+	public static <T> Stack<?> mutateTo(T oldValue, T newValue) throws Exception{
+		//return new EnhancedObjectPatch(oldValue,newValue);
+		return getDiff(oldValue,newValue).apply(oldValue);
 	}
 	
-	public static PojoPatch fromJsonPatch(JsonPatch jp) throws IOException{
-		return new JsonObjectPatch(jp);
+	
+	public static <T> PojoPatch<T> getEnhancedDiff(T oldValue, T newValue){
+		return new EnhancedObjectPatch<T>(oldValue,newValue);
+	}
+	
+	public static <T> PojoPatch<T> fromJsonPatch(JsonPatch jp, Class<T> type) throws IOException{
+		return new JsonObjectPatch<T>(jp);
 	}
 	
 	private static String getID(JsonNode o){
@@ -351,17 +366,6 @@ public class PojoDiff {
 		});
 
 	}
-	private static ArrayNode canonicalizeDiff(JsonNode diffs){
-		List<JsonNode> mynodes=new ArrayList<JsonNode>();
-		for(JsonNode jsn:diffs){
-			mynodes.add(jsn);
-		}
-		canonicalizeDiff(mynodes);
-		ArrayNode arr=(new ObjectMapper()).createArrayNode();
-		arr.addAll(mynodes);
-		return arr;
-	}
-	
 	
 	
 	public static JsonNode getEnhancedJsonDiff(Object oldValue, Object newValue, JsonNode[] oldAndNewValue){
@@ -414,7 +418,6 @@ public class PojoDiff {
 			i++;
 			
 		}
-		int j=0;
 		for(JsonNode jsn:diff){
 			String path=jsn.at("/path").asText();
 			path=path.replaceAll("[$][^_]*[_]", "").replaceAll("/_[0]*([0-9][0-9]*)","/$1");
@@ -428,7 +431,6 @@ public class PojoDiff {
 				cdiffs[pos]=jsn;
 			}
 			
-			j++;
 		}
 		ArrayNode an=(new ObjectMapper()).createArrayNode();
 		for(JsonNode jsn:cdiffs){
@@ -442,11 +444,12 @@ public class PojoDiff {
 		//return normalDiff;
 	}
 	
-	private static <T> Stack applyPatch(T oldValue, JsonPatch jp, ChangeEventListener ... changeListener) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
+	private static <T> Stack<?> applyPatch(T oldValue, JsonPatch jp, ChangeEventListener ... changeListener) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
 		ObjectMapper mapper = _mapper;
 		JsonNode oldNode=mapper.valueToTree(oldValue);
 		JsonNode newNode=jp.apply(oldNode);
-		//cat to T should be safe...
+		//cast to T should be safe...
+		@SuppressWarnings("unchecked")
 		T newValue =  (T) mapper.treeToValue(newNode,oldValue.getClass());
 		return applyChanges(oldValue,newValue,null);
 	}
@@ -478,10 +481,10 @@ public class PojoDiff {
 	 * 
 	 */
 	private static String toStandardPath(String path){
-		
 		return path.replaceAll("([$][^_]*)([_][0-9]*)", "$2");
 	}
-	private static <T> Stack applyChanges(T oldValue, T newValue, JsonNode jsonpatch,ChangeEventListener ... changeListener){
+	
+	private static <T> Stack<?> applyChanges(T oldValue, T newValue, JsonNode jsonpatch,ChangeEventListener ... changeListener){
 			LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
 			if(jsonpatch==null){
 				ObjectMapper mapper = _mapper;
@@ -546,8 +549,8 @@ public class PojoDiff {
         			String npath=toAdd.get("path").asText();
         			
         			
-        			PojoPatch patch =PojoDiff.getDiff(oldv, newv);
-        			Stack changeStack;
+        			PojoPatch<Object> patch =PojoDiff.getDiff(oldv, newv);
+        			Stack<?> changeStack;
 					try {
 						//System.out.println("Applying subpatch");
 						changeStack = patch.apply(oldv,changeListener);
@@ -640,43 +643,30 @@ public class PojoDiff {
         	
         	return changeStack;
 	}
-	private static class TypeRegistry{
-		private Class cls;
+	
+	private static class TypeRegistry<T>{
+		private Class<T> cls;
 		Map<String,Getter> getters;
 		Map<String,Setter> setters;
 		
-		public TypeRegistry(Class cls){
+		public TypeRegistry(Class<T> cls){
 			this.cls=cls;
 			getters=getGetters(cls);
 			setters=getSetters(cls);
 		}
 		
+		@SuppressWarnings("unused")
+		public Class<T> getType(){
+			return cls;
+		}
+		
 		public Setter getSetter(String prop){
 			final Setter oset=setters.get(prop);
 			return oset;
-//			
-//			return new Setter(){
-//
-//				@Override
-//				public Object set(Object instance, Object set) {
-//					if(set != null && set instanceof EmbeddedKeywordList){
-//						System.out.println("###############Changing an embedded kwl");
-//						set = new EmbeddedKeywordList((EmbeddedKeywordList)set);
-//					}
-//					return oset.set(instance, set);
-//				}
-//
-//				@Override
-//				public boolean isIgnored() {return false;}
-//				
-//			};
 		}
 		
 		
-		public static Map<String,Getter> getGetters(Class cls){
-			// You may wonder why this is concurrent. That's because it's
-			// written to use putIfAbsent, which exists in java 8,
-			// but not Maps in java 7. It is only default in ConcurrentHashMap
+		public static <T> Map<String,Getter> getGetters(Class<T> cls){
 			
 			ConcurrentHashMap<String,Getter> getterMap = new ConcurrentHashMap<String,Getter>();
 			
@@ -734,7 +724,7 @@ public class PojoDiff {
 			return getterMap;
 		}
 		
-		public static Map<String,Setter> getSetters(Class cls){
+		public static <T> Map<String,Setter> getSetters(Class<T> cls){
 			ConcurrentHashMap<String,Setter> setterMap = new ConcurrentHashMap<String,Setter>();
 			
 			for(Method m: cls.getMethods()){
@@ -876,17 +866,22 @@ public class PojoDiff {
 		
 		public static interface Getter{
 			public Object get(Object instance);
-			public boolean isIgnored();
+			default boolean isIgnored(){
+				return false;
+			}
 		}
 		public static interface Setter{
 			public Object set(Object instance, Object set);
-			public boolean isIgnored();
+			default boolean isIgnored(){
+				return false;
+			}
 		}
 		public static class MapSetter implements Setter{
 			private String key;
 			public MapSetter(String key){
 				this.key=key;
 			}
+			@SuppressWarnings({ "rawtypes", "unchecked" })
 			@Override
 			public Object set(Object instance, Object set) {
 				if(instance instanceof Map){
@@ -1048,8 +1043,7 @@ public class PojoDiff {
 					//System.out.println("Setting:" + m + " to " + value.getClass() + value + " on " +delegateInstance);
 					Object ret=g.set(delegateInstance,value);;
 					if(g instanceof FieldSetter){
-						Object onow=((FieldSetter)g).m.get(delegateInstance);
-						//System.out.println("And now it's:" + onow);
+						((FieldSetter)g).m.get(delegateInstance);
 					}
 					return  ret;
 				}catch(Exception e){
@@ -1063,19 +1057,18 @@ public class PojoDiff {
 	}
 	
 	private static class Manipulator {
-		private static Map<String, TypeRegistry> registries= new HashMap<String,TypeRegistry>();
+		private static Map<String, TypeRegistry<?>> registries= new ConcurrentHashMap<>();
 		
-		public static void addClassToRegistry(Class cls){
-			if(registries.get(cls.getName())==null){
-				registries.put(cls.getName(), new TypeRegistry(cls));
-			}
+		@SuppressWarnings("unchecked")
+		public static <T> TypeRegistry<T> getClassRegistry(Class<T> cls){
+			return (TypeRegistry<T>)registries.computeIfAbsent(cls.getName(), k->new TypeRegistry<T>(cls));
 		}
-		private static int getObjectWithID(Collection c, String id){
+		private static <T> int getObjectWithID(Collection<T> c, String id){
 			int i=0;
 
-			for(Object o:c){
+			for(T o:c){
 				try {
-					EntityWrapper ew = EntityWrapper.of(o);
+					EntityWrapper<T> ew = EntityWrapper.of(o);
 					if(ew.hasKey() && id.equals(ew.getKey().getIdString())){
 						return i;
 					}
@@ -1087,10 +1080,10 @@ public class PojoDiff {
 			return -1;
 		}
 		
-		private static int getCollectionPostion(Collection col, String prop){
+		private static <T> int getCollectionPostion(Collection<T> col, String prop){
 			return getCollectionPostion(col, prop,false);
 		}
-		private static int getCollectionPostion(Collection col, String prop, boolean allowpseudo){
+		private static <T> int getCollectionPostion(Collection<T> col, String prop, boolean allowpseudo){
 			int c=-1;
 			if(allowpseudo && prop.equals("-")){
 				//System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
@@ -1116,31 +1109,33 @@ public class PojoDiff {
 
 			return c;
 		}
-		private static Object getObjectDirect(Object o, String prop){
-			addClassToRegistry(o.getClass());
-			TypeRegistry tr=registries.get(o.getClass().getName());
+		
+		
+		private static <T> Object getObjectDirect(T o, String prop){
+			@SuppressWarnings("unchecked")
+			TypeRegistry<T> tr=getClassRegistry((Class<T>)o.getClass());
 			
 			if(o instanceof Collection){
-				final int c=getCollectionPostion((Collection)o,prop,true);
+				@SuppressWarnings("unchecked")
+				Collection<Object> col = (Collection<Object>)o;
+				final int c=getCollectionPostion(col,prop,true);
 				if(c == -1){
 					throw new IllegalStateException("Element '" + prop + "' does not exist in collection : " + o);
 				}
-				if(((Collection)o).size()<c){
-					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + ((Collection)o).size());
+				if(col.size()<c){
+					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + col.size());
 				}
-				int i=0;
-				if(o instanceof List){
+				if(col instanceof List){
 					//random access
-					return ((List)o).get(c);
+					return ((List<Object>)col).get(c);
 				}
-				for(Object f:(Collection)o){
-					if(i==c){
-						return f;
-					}
-					i++;
+				Optional<Object> op =col.stream().skip(c).findFirst();
+				if(op.isPresent()){
+					return op.get();
 				}
 			}
 			if(o instanceof Map){
+				@SuppressWarnings("rawtypes")
 				Map m=(Map)o;
 				return m.get(prop);
 			}
@@ -1152,124 +1147,85 @@ public class PojoDiff {
 				throw new IllegalArgumentException("No getter for '" + prop + "' in " + o.getClass().getName() );
 			}
 		}
-		private static TypeRegistry.Setter getSetterDirect(Object o, final String prop){
-			addClassToRegistry(o.getClass());
-			TypeRegistry tr=registries.get(o.getClass().getName());
+		private static <T> TypeRegistry.Setter getSetterDirect(T t, final String prop){
 			
-			if(o instanceof Collection){
-				
-				Collection col = (Collection)o;
-				//System.out.println("size:" + col.size());
+			@SuppressWarnings("unchecked")
+			TypeRegistry<T> tr=getClassRegistry((Class<T>)t.getClass());
+			
+			if(t instanceof Collection){
+				Collection<?> col = (Collection<?>)t;
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
 				
 				final int c=getCollectionPostion(col,prop);
-				if(o instanceof List){
-					return new TypeRegistry.Setter(){
-						@Override
-						public Object set(Object instance, Object set) {
-							List asList=((List)instance);
+				
+				if(col instanceof List){
+					return (instance, set)->{
+							@SuppressWarnings("unchecked")
+							List<Object> asList=((List<Object>)instance);
 							Object old=asList.get(c);
 							asList.set(c, set);
 							return old;
-						}
-						@Override
-						public boolean isIgnored() {return false;}
 					};
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
-					final Object old=col.toArray()[c];
-					return new TypeRegistry.Setter(){
-
-						@Override
-						public Object set(Object instance, Object set) {
-							Collection c1=(Collection)instance;
-							List l = new ArrayList(c1);
+					final Object old=col.stream().skip(c).findFirst().get();
+					return (instance, set)->{
+							@SuppressWarnings("unchecked")
+							Collection<Object> c1=(Collection<Object>)instance;
+							List<Object> l = new ArrayList<Object>(c1); //defensive copy
 							c1.clear();
-							for(Object o:l){
-								if((o==old) || o.equals(old)){
+							for(Object obj:l){
+								if((obj==old) || obj.equals(old)){
 									c1.add(set);
 								}else{
-									if(c1.contains(o)){
-										c1.add(new Object(){});
+									if(c1.contains(obj)){
+										c1.add(new Object(){}); //placeholder
 									}
-									c1.add(o);
+									c1.add(obj);
 								}
 							}
 							return old;
-						}
-						@Override
-						public boolean isIgnored() {return false;}
-						
-						
-						
-					};
+						};
 				}
 				
 			}
-			if(o instanceof Map){
+			if(t instanceof Map){
 				return new TypeRegistry.MapSetter(prop);
 			}
 			return tr.getSetter(prop);
 		}
-		private static TypeRegistry.Setter getRemoverDirect(Object o, final String prop){
-			addClassToRegistry(o.getClass());
-			TypeRegistry tr=registries.get(o.getClass().getName());
-			
+		@SuppressWarnings("unchecked")
+		private static <T> TypeRegistry.Setter getRemoverDirect(T o, final String prop){
 			if(o instanceof Collection){
-				Collection col = (Collection)o;
+				Collection<Object> col = (Collection<Object>)o;
 				if(prop.equals("-")){
 					throw new IllegalStateException("'-'  not yet implemented");
 				}
 				final int c=getCollectionPostion(col,prop);
-				if(o instanceof List){
-					return new TypeRegistry.Setter(){
-
-						@Override
-						public Object set(Object instance, Object set) {
-							return ((List)instance).remove(c);
-						}
-						@Override
-						public boolean isIgnored() {return false;}
-						
-					};
+				if(col instanceof List){
+					return (instance, set)->((List<Object>)instance).remove(c);
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
-					final Object old=col.toArray()[c];
-					return new TypeRegistry.Setter(){
-
-						@Override
-						public Object set(Object instance, Object set) {
-							((Collection)instance).remove(old);
+					final Object old=col.stream().skip(c).findFirst().get();
+					return (instance, set)->{
+							((Collection<Object>)instance).remove(old);
 							return old;
-						}
-						@Override
-						public boolean isIgnored() {return false;}
-						
-					};
+						};
 				}
-				
 			}
 			final TypeRegistry.Setter setter = getSetterDirect(o,prop);
 			if(setter!=null){
-				return new TypeRegistry.Setter(){
-					@Override
-					public Object set(Object instance, Object set) {
-						return setter.set(instance, null);
-					}
-					@Override
-					public boolean isIgnored() {return false;}
-				};
+				return (instance, set)->setter.set(instance, null);
 			}
 			return null;
 		}
-		private static TypeRegistry.Setter getAdderDirect(Object o, final String prop){
-			addClassToRegistry(o.getClass());
-			TypeRegistry tr=registries.get(o.getClass().getName());
+		private static <T> TypeRegistry.Setter getAdderDirect(T o, final String prop){
 			
 			if(o instanceof Collection){
-				Collection col = (Collection)o;
+				@SuppressWarnings("unchecked")
+				Collection<Object> col = (Collection<Object>)o;
 				
 				int cind=getCollectionPostion(col,prop,true);
 				
@@ -1279,54 +1235,44 @@ public class PojoDiff {
 				
 				final int c=cind;
 				if(o instanceof List){
-					return new TypeRegistry.Setter(){
-						@Override
-						public Object set(Object instance, Object set) {
-							List asList = (List)instance;
+					return (instance, set)->{
+							@SuppressWarnings("unchecked")
+							List<Object> asList = (List<Object>)instance;
 							if(c<0){
 								asList.add(set);
 							}else{
 								asList.add(c, set);
 							}
 							return null;
-						}
-						@Override
-						public boolean isIgnored() {return false;}
-					};
+						};
 				}else{
 					//System.err.println("Setters for non-list collections are experimental");
 					//final Object old=col.toArray()[c];
-					return new TypeRegistry.Setter(){
-
-						@Override
-						public Object set(Object instance, Object set) {
+					return (instance, set)->{
+							@SuppressWarnings("unchecked")
+							Collection<Object> coll = (Collection<Object>)instance;
 							if(c<0){
-								((Collection)instance).add(set);
+								coll.add(set);
 							}else{
-								List<Object> tempGuy = new ArrayList<Object>(((Collection)instance));
-								((Collection)instance).removeAll(tempGuy);
+								List<Object> temporary = new ArrayList<Object>(coll);
+								coll.clear();
 								for(int i=0;i<=c;i++){
-									((Collection)instance).add(tempGuy.get(i));
+									coll.add(temporary.get(i));
 								}
-								((Collection)instance).add(set);
-								for(int i=c+1;i<tempGuy.size();i++){
-									((Collection)instance).add(tempGuy.get(i));
+								coll.add(set);
+								for(int i=c+1;i<temporary.size();i++){
+									coll.add(temporary.get(i));
 								}
-								
 							}
 							return null;
-						}
-						@Override
-						public boolean isIgnored() {return false;}
-						
-					};
+						};
 				}
 				
 			}
 			
 			return getSetterDirect(o,prop);
 		}
-		public static Object getObjectAt(Object src, String objPointer, Collection chainChange){
+		public static Object getObjectAt(Object src, String objPointer, Collection<Object> chainChange){
 			//System.out.println(objPointer);
 			if(chainChange!=null) {
 				chainChange.add(src);

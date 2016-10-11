@@ -555,7 +555,7 @@ public class App extends Authentication {
             key.append("."+f);
         try {
             TextIndexer.Facet[] facets = getOrElse
-                (key.toString(), ()  -> filter (getFacets (cls, FACET_DIM), filters));
+                (key.toString(), TypedCallable.of(()  -> filter (getFacets (cls, FACET_DIM), filters), TextIndexer.Facet[].class));
             return facets;
         }
         catch (Exception ex) {
@@ -639,19 +639,19 @@ public class App extends Authentication {
         return null;
     }
         
-    public static SearchResult getSearchFacets (final Class kind) {
+    public static SearchResult getSearchFacets (final Class<?> kind) {
         return getSearchFacets (kind, 100);
     }
     
-    public static SearchResult getSearchFacets (final Class kind,
+    public static SearchResult getSearchFacets (final Class<?> kind,
                                                 final int fdim) {
         final String sha1 = Util.sha1(kind.getName()+"/"+fdim);
         try {
-            return getOrElse (sha1,  ()  -> {
+            return getOrElse (sha1,  TypedCallable.of(() -> {
                         SearchResult result = SearchFactory.search
                             (kind, null, 0, 0, fdim, null);
                         return cacheKey (result, sha1);
-                    });
+                    },SearchResult.class));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -756,6 +756,7 @@ public class App extends Authentication {
     
     public static <T> T getOrElse(String key, TypedCallable<T> callable)
         throws Exception {
+    	
         return getOrElse (getTextIndexer().lastModified(), key, callable);
     }
 
@@ -774,7 +775,7 @@ public class App extends Authentication {
         try {
         	
             response().setContentType("image/svg+xml");
-            byte[] resp = getOrElse (0l, key, () ->{
+            byte[] resp = getOrElse (0l, key, TypedCallable.of(() ->{
                         MolHandler mh = new MolHandler (value);
                         Molecule mol = mh.getMolecule();
                         if (mol.getDim() < 2) {
@@ -782,7 +783,7 @@ public class App extends Authentication {
                         }
                         Logger.info("ok");
                         return render (mol, "svg", size, null);
-                    });
+                    },byte[].class));
             return ok(resp);
         }
         catch (Exception ex) {
@@ -953,13 +954,13 @@ public class App extends Authentication {
                 + ":" + atomMap;
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
-                byte[] result = getOrElse (key, () -> {
+                byte[] result = getOrElse (key, TypedCallable.of(() -> {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
                                 return render (struc, format, size, amap);
                             }
                             return null;
-                        });
+                        }, byte[].class));
                 if (result != null) {
                     response().setContentType(mime);
                     return ok(result);
@@ -1105,10 +1106,10 @@ public class App extends Authentication {
         try {
             final String key = "batch/"+Util.sha1(q);
             Logger.debug("batch: q="+q+" rows="+rows);
-            return getOrElse (key, () ->{
+            return getOrElse (key, TypedCallable.of(() ->{
                         processor.setResults(rows, tokenizer.tokenize(q));
                         return processor.getContext();
-                });
+                }, SearchResultContext.class));
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform batch search", ex);
@@ -1122,11 +1123,11 @@ public class App extends Authentication {
             final String key = App.getKeyForCurrentRequest();
             return getOrElse
                 (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
-                  () -> {
+                  TypedCallable.of(() -> {
                          processor.setResults
                              (rows, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct));
                          return processor.getContext();
-                 });
+                 },SearchResultContext.class));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1144,14 +1145,14 @@ public class App extends Authentication {
                          +" rows="+rows+" page="+page+" key="+key);
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
-                 key, ()->{
+                 key, TypedCallable.of(()->{
                              processor.setResults
                                  (rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
                              ctx.setKey(key);
                              Logger.debug("## cache missed: "+key+" => "+ctx);
                              return ctx;
-                     });
+                     },SearchResultContext.class));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1173,7 +1174,7 @@ public class App extends Authentication {
             //final String key = "similarity/"+getKey (query + request().getQueryString("order"), threshold);
             return getOrElse
                 (EntityPersistAdapter.getStructureIndexer().lastModified(),
-                 key, ()->{
+                 key, TypedCallable.of(()->{
                              processor.setResults
                                  (rows, 
                                EntityPersistAdapter.getStructureIndexer().similarity(query, threshold, 0)
@@ -1181,7 +1182,7 @@ public class App extends Authentication {
                              SearchResultContext ctx = processor.getContext();
                              ctx.setKey(key);
                              return ctx;
-                     });
+                     },SearchResultContext.class));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1251,7 +1252,7 @@ public class App extends Authentication {
          */
       
         final SearchResult result = 
-        		getOrElse(key,  () -> {
+        		getOrElse(key,  TypedCallable.of(() -> {
                         Collection results = context.getResults();
                         if (results.isEmpty()) {
                             return null;
@@ -1266,7 +1267,7 @@ public class App extends Authentication {
                         // make an alias for the context.id to this search
                         // result
                         return cacheKey (searchResult, context.getId());
-                });
+                }, SearchResult.class));
         
         
        
@@ -1331,10 +1332,10 @@ public class App extends Authentication {
                 
 
                 // result is cached
-				return getOrElse(result.getStopTime(), k, () -> {
+				return getOrElse(result.getStopTime(), k, TypedCallable.of(() -> {
 					Logger.debug("Cache misses: " + k + " count=" + _count + " rows=" + _rows + " page=" + _page);
 					return renderer.render(context, _page, _rows, _count, _pages, facets, results);
-				});
+				},Result.class));
             }
         }
         
@@ -1509,13 +1510,13 @@ public class App extends Authentication {
     public static Result enantiomer (final String id) {
         final String key = "enantiomer/"+id;
         try {
-            Structure[] strucs = getOrElse (key, () -> {
+            Structure[] strucs = getOrElse (key, TypedCallable.of(() -> {
                         Structure struc = StructureFactory.getStructure(id);
                         if (struc != null) {
                             return EnantiomerGenerator.enantiomersAsArray (struc);
                         }
                         return null;
-                });
+                }, Structure[].class));
             if (strucs != null) {
                 ObjectMapper mapper = EntityFactory.getEntityMapper();
                 return Java8Util.ok (mapper.valueToTree(strucs));
@@ -1648,7 +1649,7 @@ public class App extends Authentication {
         final String key = "resolve/"+name;
         
         try {
-            return getOrElse (key, ()->_resolve (name));
+            return getOrElse (key, TypedCallable.of(()->_resolve (name), Result.class));
         }catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't resolve \""+name+"\"!", ex);

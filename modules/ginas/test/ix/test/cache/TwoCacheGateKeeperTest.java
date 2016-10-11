@@ -49,7 +49,20 @@ public class TwoCacheGateKeeperTest extends AbstractGinasTest {
 		DIRECT_OBJECT,
 		STATIC_WRAPPED,
 		SIMPLE_LAMBDA,
-		EXPLICIT_TYPED,
+		EXPLICIT_TYPED;
+		public <T> TypedCallable<T> makeTypedCallable(T t){
+			switch(this){
+				case EXPLICIT_TYPED:
+					return TypedCallable.of(()->t, (Class<T>)t.getClass());
+				case SIMPLE_LAMBDA:
+					return ()->t;
+				case STATIC_WRAPPED:
+					return TypedCallable.of(t);
+				default:
+					throw new IllegalArgumentException("Unsupported Type:" + this);
+			}
+		}
+		
 	}
 	
 	private TypedCallableMaker typedCallableMaker;
@@ -173,32 +186,29 @@ public class TwoCacheGateKeeperTest extends AbstractGinasTest {
 		}
 		assertNull(getFromCache("TEST"));
 	}
-	
-	public <T> TypedCallable<T> makeTypedCallable(T t){
-		switch(typedCallableMaker){
-		case EXPLICIT_TYPED:
-			return TypedCallable.of(()->t, t.getClass());
-		case SIMPLE_LAMBDA:
-			return ()->t;
-		case STATIC_WRAPPED:
-			return TypedCallable.of(t);
-		default:
-			throw new IllegalArgumentException("Unsupported Type:" + typedCallableMaker);
+	@Test
+	public void addingPureObjectWillEventuallyEvictEvictableThings() throws Exception {
+		Evictable e = new Evictable();
+		putIntoCache("TEST",e);
+		for (int n = 0; n < maxElements*10; n++) {
+			putIntoCache("TEST" + n, new Object());
 		}
+		assertNull(getFromCache("TEST"));
 	}
+	
 
 	public <T> void putIntoCache(String key, T t) throws Exception{
-		if(typedCallableMaker!=TypedCallableMaker.DIRECT_OBJECT){
-			if(useRaw){
-				T t2=gateKeeper.getOrElseRaw(key, makeTypedCallable(t));
-			}else{
-				T t2=gateKeeper.getOrElse(key, makeTypedCallable(t));
-			}
-		}else{
+		if(typedCallableMaker==TypedCallableMaker.DIRECT_OBJECT){
 			if(useRaw){
 				gateKeeper.putRaw(key, t);
 			}else{
 				gateKeeper.put(key,t);
+			}
+		}else{
+			if(useRaw){
+				gateKeeper.getOrElseRaw(key, typedCallableMaker.makeTypedCallable(t));
+			}else{
+				gateKeeper.getOrElse(key, typedCallableMaker.makeTypedCallable(t));
 			}
 		}
 	}

@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import ix.core.CacheStrategy;
@@ -25,7 +27,7 @@ import play.Logger;
  */
 public class TwoCacheGateKeeper implements GateKeeper {
 
-	private Map<String, MyElement> temporaryCache = new ConcurrentHashMap<String,MyElement>();
+	private Map<String, ConfigurableCacheElement> temporaryCache = new ConcurrentHashMap<String,ConfigurableCacheElement>();
 
     private final KeyMaster keyMaster;
     private final Ehcache evictableCache;
@@ -97,11 +99,14 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public Stream<Element> elements(int top, int skip) {
-        Stream<String> stream = Stream.concat(
-                evictableCache.getKeys().stream(),
-                nonEvictableCache.getKeys().stream());
+    	Stream<String> s1=evictableCache.getKeys().stream().map(k->k.toString());
+    	Stream<String> s2=nonEvictableCache.getKeys().stream().map(k->k.toString());
+    	Stream<String> s3=this.temporaryCache.keySet().stream();
+    	
+        Stream<String> stream = Stream.concat(Stream.concat(s1,s2),s3);
 
         return stream.skip(skip)
                 .limit(top)
@@ -128,23 +133,28 @@ public class TwoCacheGateKeeper implements GateKeeper {
        public CachedSupplier<T> call() {
            //T t = delegate.call();
            keyMaster.addKey(key, adaptedKey);
+           Class<?> type=delegate.getType();
            
-           CachedSupplier<T> memdelegate=CachedSupplier.of(()->{
+           final EvictionType originalType=getEvictionPolicy(type);
+           
+           CachedSupplier<T> memdelegate=ListeningCachedSupplier.of(()->{
         	   try{
         		   T ret= delegate.call();
-        		   if(ret==null){
-        			  removeRaw(adaptedKey);
-        		   }
         		   return ret;
         	   }catch(Exception e){
-        		   removeRaw(adaptedKey);
         		   return null;
         	   }
+           }, ret->{
+        	   if(ret==null){
+     			  removeRaw(adaptedKey);
+     		   }else{
+     			  if(originalType==EvictionType.UNKNOWN){
+     				 refreshElementAtWith(adaptedKey,ret.getClass());
+     			  }
+     		   }
            });
            
-           Class<?> type=delegate.getType();
            addToCache(adaptedKey, memdelegate, seconds, type);
-           
            
            return memdelegate;
        }
@@ -169,15 +179,15 @@ public class TwoCacheGateKeeper implements GateKeeper {
 
 
 
-    private  <T> T getOrElseRaw(String key, CacheGeneratorWrapper<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
+    @SuppressWarnings("unchecked")
+	private  <T> T getOrElseRaw(String key, CacheGeneratorWrapper<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
     	Element e = getRawElement(key);
     	
         if(e ==null || regeneratePredicate.test(e)){
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
-            generator.call().get(); //force caching of supplier
-            e=getRawElement(key);
+            return generator.call().get();
         }
         
         try {
@@ -186,8 +196,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
             //in case there is a cast problem
             //or some other problem with the cached value
             //re-generate
-        	generator.call().get();
-        	return (T) getObjectFromElement(getRawElement(key));
+        	return generator.call().get();
         }
 
     }
@@ -229,30 +238,42 @@ public class TwoCacheGateKeeper implements GateKeeper {
         return getObjectFromElement(e);
     }
     
-    public Object getObjectFromElement(Element e){
+    @SuppressWarnings("unchecked")
+	private Object getObjectFromElement(Element e){
         if(e ==null){
             return null;
         }
         Object avalue=e.getObjectValue();
         Object retValue=avalue;
         if(avalue instanceof CachedSupplier){
-        	retValue=((CachedSupplier)avalue).get();	
-        }
-        
-        //Takes care of those non-determinately Evictable things
-        if(e instanceof MyElement){
-        	MyElement polElm=(MyElement)e;
-        	if(polElm.getEvictionType() == EvictionType.UNKNOWN){
-        		EvictionType et=getEvictionPolicy(retValue.getClass());
-        		if(et==EvictionType.UNKNOWN){
-        			et=EvictionType.EVICTABLE;
-        		}
-        		polElm.setEvictionType(et);
-        		addElementToCache(polElm);
-        		this.temporaryCache.remove(polElm.getObjectKey().toString());
-        	}
+        	retValue=((CachedSupplier<Object>)avalue).get();	
         }
         return retValue;
+    }
+    
+    private void refreshElementAtWith(String adaptedKey, Class<?> type){
+    	ConfigurableCacheElement elm = (ConfigurableCacheElement)this.getRawElement(adaptedKey);
+    	refreshElementWith(elm, type);
+    }
+    
+    private void refreshElementWith(ConfigurableCacheElement e, Class<?> type){
+    	if(e==null){
+    		return;
+    	}
+		ConfigurableCacheElement polElm = (ConfigurableCacheElement) e;
+		if (polElm.getEvictionType() == EvictionType.UNKNOWN) {
+			EvictionType et = getEvictionPolicy(type);
+			if (et == EvictionType.UNKNOWN) {
+				et = EvictionType.EVICTABLE;
+			}
+			polElm.setEvictionType(et);
+			resortElement(polElm);
+		}
+    }
+    
+    private void resortElement(ConfigurableCacheElement polElm){
+    	addElementToCache(polElm);
+		this.temporaryCache.remove(polElm.getObjectKey().toString());
     }
 
     @Override
@@ -267,7 +288,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
     @Override
     public void put(String key, Object value, int expiration){
     	CacheGeneratorWrapper cgw = createKeyWrapper(TypedCallable.of(value),key,expiration);
-    	cgw.call();
+    	cgw.call().get();
     }
     
     @Override
@@ -277,53 +298,46 @@ public class TwoCacheGateKeeper implements GateKeeper {
     
     @Override
     public void putRaw(String key, Object value, int expiration){
-    	CacheGeneratorWrapper cgw = createRaw(TypedCallable.of(value),key,expiration);
-    	cgw.call();
+    	CacheGeneratorWrapper<Object> cgw = createRaw(TypedCallable.of(value),key,expiration);
+    	cgw.call().get();
     }
     
-    public static class MyElement extends Element{
+    public static class ConfigurableCacheElement extends Element{
     	/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
 		public EvictionType evictionType=EvictionType.EVICTABLE;
-		public MyElement(Object key, Object value, Boolean eternal, Integer timeToIdleSeconds,
+		public ConfigurableCacheElement(Object key, Object value, Boolean eternal, Integer timeToIdleSeconds,
 				Integer timeToLiveSeconds) {
 			super(key, value, eternal, timeToIdleSeconds, timeToLiveSeconds);
-			// TODO Auto-generated constructor stub
 		}
 
-		public MyElement(Object key, Object value, long version, long creationTime, long lastAccessTime, long hitCount,
+		public ConfigurableCacheElement(Object key, Object value, long version, long creationTime, long lastAccessTime, long hitCount,
 				boolean cacheDefaultLifespan, int timeToLive, int timeToIdle, long lastUpdateTime) {
 			super(key, value, version, creationTime, lastAccessTime, hitCount, cacheDefaultLifespan, timeToLive, timeToIdle,
 					lastUpdateTime);
-			// TODO Auto-generated constructor stub
 		}
 
-		public MyElement(Object key, Object value, long version, long creationTime, long lastAccessTime,
+		public ConfigurableCacheElement(Object key, Object value, long version, long creationTime, long lastAccessTime,
 				long lastUpdateTime, long hitCount) {
 			super(key, value, version, creationTime, lastAccessTime, lastUpdateTime, hitCount);
-			// TODO Auto-generated constructor stub
 		}
 
-		public MyElement(Object key, Object value, long version) {
+		public ConfigurableCacheElement(Object key, Object value, long version) {
 			super(key, value, version);
-			// TODO Auto-generated constructor stub
 		}
 
-		public MyElement(Object key, Object value) {
+		public ConfigurableCacheElement(Object key, Object value) {
 			super(key, value);
-			// TODO Auto-generated constructor stub
 		}
 
-		public MyElement(Serializable key, Serializable value, long version) {
+		public ConfigurableCacheElement(Serializable key, Serializable value, long version) {
 			super(key, value, version);
-			// TODO Auto-generated constructor stub
 		}
 
-		public MyElement(Serializable key, Serializable value) {
+		public ConfigurableCacheElement(Serializable key, Serializable value) {
 			super(key, value);
-			// TODO Auto-generated constructor stub
 		}
 		public EvictionType getEvictionType(){
 			return evictionType;
@@ -334,16 +348,17 @@ public class TwoCacheGateKeeper implements GateKeeper {
     	
     }
     
-    private void addToCache(String adaptedKey, CachedSupplier<?> value, int expiration, Class<?> type) {
+    private ConfigurableCacheElement addToCache(String adaptedKey, CachedSupplier<?> value, int expiration, Class<?> type) {
         if(value == null){
-            return;
+            return null;
         }
-        MyElement e=new MyElement (adaptedKey, value, expiration <= 0, expiration, expiration);
+        ConfigurableCacheElement e=new ConfigurableCacheElement (adaptedKey, value, expiration <= 0, expiration, expiration);
         e.setEvictionType(getEvictionPolicy(type));
         addElementToCache(e);
+        return e;
     }
     
-    private void addElementToCache(MyElement e){
+    private void addElementToCache(ConfigurableCacheElement e){
         switch(e.getEvictionType()){
 			case EVICTABLE:
 				evictableCache.putWithWriter(e);
@@ -430,5 +445,18 @@ public class TwoCacheGateKeeper implements GateKeeper {
         }
     }
     
+    
+    private static class ListeningCachedSupplier<T> extends CachedSupplier<T>{
+		public ListeningCachedSupplier(Supplier<T> supplier,Consumer<T> whenFirstCalled) {
+			super(()->{
+				T ret=supplier.get();
+				whenFirstCalled.accept(ret);
+				return ret;
+			});
+		}
+		public static <T> ListeningCachedSupplier<T> of(Supplier<T> supplier,Consumer<T> whenFirstCalled){
+			return new ListeningCachedSupplier<T>(supplier,whenFirstCalled);
+		}
+    }
     
 }

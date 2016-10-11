@@ -119,6 +119,7 @@ import ix.ncats.controllers.crud.Administration;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Tuple;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
@@ -1063,12 +1064,12 @@ public class GinasApp extends App {
         
         try {
             long start = System.currentTimeMillis();
-            SearchResult result = getOrElse(sha1, ()->{
+            SearchResult result = getOrElse(sha1, TypedCallable.of(()->{
                             SearchOptions options = 
                             		new SearchOptions(Substance.class, total, 0, FACET_DIM).parse(params);
                             instrumentSubstanceSearchOptions (options, params);
                             return cacheKey(getTextIndexer().search(options, q), sha1);
-                    });
+                    },SearchResult.class));
             Logger.debug(sha1 + " => " + result);
             
             double elapsed = (System.currentTimeMillis() - start)*1e-3;
@@ -1111,7 +1112,7 @@ public class GinasApp extends App {
             if (result.finished()) {
                 final String k = key + "/result"; 
                 
-                return getOrElse(k, ()->createSubstanceResult(result, rows, page));
+                return getOrElse(k, TypedCallable.of(()->createSubstanceResult(result, rows, page),Result.class));
             }
             return createSubstanceResult(result, rows, page);
             //otherwise, just show the first substances

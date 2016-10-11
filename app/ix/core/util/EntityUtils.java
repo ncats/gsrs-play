@@ -418,7 +418,7 @@ public class EntityUtils {
 
 		private Class<?> idType = null;
 
-		private Model.Finder<?, T> nativeVerySpecificfinder;
+		private CachedSupplier<Model.Finder<?, T>> nativeVerySpecificfinder;
 
 		private boolean isIdNumeric = false;
 		private Inheritance inherits;
@@ -567,7 +567,7 @@ public class EntityUtils {
 				idType = idField.getType();
 
 				if (idField != null) {
-					nativeVerySpecificfinder = new Model.Finder(idType, this.cls);
+					nativeVerySpecificfinder = CachedSupplier.of(()->new Model.Finder(idType, this.cls));
 				}
 			}
 
@@ -645,7 +645,8 @@ public class EntityUtils {
 		}
 
 		public Model.Finder getNativeSpecificFinder() {
-			return this.nativeVerySpecificfinder;
+			if(this.nativeVerySpecificfinder==null)return null;
+			return this.nativeVerySpecificfinder.get();
 		}
 
 		public Object formatIdToNative(String id) {
