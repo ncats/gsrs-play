@@ -14,11 +14,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -26,9 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -520,6 +516,23 @@ public class Util {
 		sbSourceLower = null;
 
 		return sbSource.toString();
+	}
+	
+	
+	public static <T> Comparator<T> comparitor(Stream<T> order){
+		return comparitor(t->t, order);
+	}
+	
+	public static <T, V> Comparator<V> comparitor(Function<V,T> namer,Stream<T> order){
+		Map<T,Integer> mapOrder=order.map(toIndexedTuple())
+								     .collect(Collectors.toMap(t->t.v(), t->t.k()));
+		return (a,b)->{
+			T k1=namer.apply(a);
+			T k2=namer.apply(b);
+			Integer i1=mapOrder.getOrDefault(k1, Integer.MAX_VALUE);
+			Integer i2=mapOrder.getOrDefault(k2, Integer.MAX_VALUE);
+			return Integer.compare(i1, i2);
+		};
 	}
 
 

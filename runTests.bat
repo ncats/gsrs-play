@@ -1,6 +1,7 @@
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly app.ix.utils.pojopatch.MoietyDiffTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly app.ix.utils.pojopatch.PojoDiffTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.AbstractGinasClassServerTest"
+sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.core.util.ComparatorMakerTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.core.util.LiteralReferenceStackTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.core.util.LiteralReferenceTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.core.util.StreamUtilitiesTest"

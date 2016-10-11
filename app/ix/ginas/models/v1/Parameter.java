@@ -61,9 +61,11 @@ public class Parameter extends GinasCommonSubData {
         this.value = value;
     }
 
+    public int hashCode(){
+    	return (this.name+"").hashCode();
+    }
 
     public boolean equals(Object o){
-
 		if(!super.equals(o))return false;
     	if(o==null)return false;
     	if(o instanceof Parameter){
@@ -78,6 +80,6 @@ public class Parameter extends GinasCommonSubData {
     }
     
     public String toString(){
-    	return getUuid() + "  " +  name + "," + type + "," + (value ==null ? "null amount" : value.toString());
+    	return "Property=(" + getUuid() + ")  [" +  name + "]";
     }
 }

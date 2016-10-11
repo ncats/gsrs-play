@@ -41,7 +41,7 @@ import ix.core.util.EntityUtils.EntityWrapper;
  * ease-of-use of JSON serialization, JSONPatch and JSONDiff to objects themselves.
  * 
  * Specifically, the intended use is eventually to apply a JSONPatch directly to a
- * source object, as if it had been serialized to JSON, applied, and then de-serialized 
+ * source object, as if it had been serialized to JSON, applied, and then deserialized 
  * back. That naive direct approach is not always sufficient, as the specific objects
  * meant to be patched may have additional information that is needed for tracking (e.g.
  * ebean enrichment) which will be lost.
@@ -67,6 +67,8 @@ import ix.core.util.EntityUtils.EntityWrapper;
  *      the ambiguous '/-' JSONPointer notation, which may mean different things
  *      depending on context
  * 
+ * 
+ * 
  *  [ ]=No fix attempted
  *  [?]=Possibly fixed, untested
  *  [/]=Probably fixed, a little tested
@@ -79,7 +81,11 @@ public class PojoDiff {
 	
 	public static class JsonObjectPatch<T> implements PojoPatch<T>{
 		private JsonPatch jp;
-		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
+		private Class<T> cls;
+		public JsonObjectPatch(JsonPatch jp, Class<T> cls){
+			this.cls=cls;
+			this.jp=jp;
+		}
 		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
 			return applyPatch(old,jp,changeListener);
 		}
@@ -104,7 +110,7 @@ public class PojoDiff {
 			if(old==oldV){
 				return applyChanges(oldV,newV, jp,changeListener);
 			}else{
-				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp)).apply(old);
+				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp), (Class<T>) oldV.getClass()).apply(old);
 			}
 		}
 		@Override
@@ -171,7 +177,7 @@ public class PojoDiff {
 			if(old==oldV){
 				return applyChanges(oldV,newV, jp,changeListener);
 			}else{
-				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp)).apply(old);
+				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp), (Class<T>)old.getClass()).apply(old);
 			}
 		}
 		@Override
@@ -199,7 +205,15 @@ public class PojoDiff {
 	
 	
 	
-	
+	/**
+	 * Return a {@link ix.utils.pojopatch.PojoPatch} which captures the 
+	 * differences between the provided objects. This can be used
+	 * to mutate an object from the old form to a new form.
+	 *  
+	 * @param oldValue Original value for the diff
+	 * @param newValue New value for the diff
+	 * @return {@link ix.utils.pojopatch.PojoPatch} of diff
+	 */
 	public static <T> PojoPatch<T> getDiff(T oldValue, T newValue){
 		//return new EnhancedObjectPatch(oldValue,newValue);
 		return new EnhancedObjectPatch<T>(oldValue,newValue);
@@ -234,7 +248,7 @@ public class PojoDiff {
 	}
 	
 	public static <T> PojoPatch<T> fromJsonPatch(JsonPatch jp, Class<T> type) throws IOException{
-		return new JsonObjectPatch<T>(jp);
+		return new JsonObjectPatch<T>(jp, type);
 	}
 	
 	private static String getID(JsonNode o){
@@ -255,15 +269,7 @@ public class PojoDiff {
 		}
 		return null;
 	}
-	/**
-	 *
-	 *	Okay, it don't work. Need to reevaluate.
-	 *
-	 *	
-	 * 
-	 * 
-	 * 
-	 **/
+	
 	
 	private static ObjectNode mappify(ObjectNode m2){
 		ObjectMapper om=new ObjectMapper();
