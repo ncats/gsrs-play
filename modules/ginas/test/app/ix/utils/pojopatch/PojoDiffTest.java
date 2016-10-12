@@ -658,22 +658,49 @@ public class PojoDiffTest extends AbstractGinasTest{
 
     @Test
     public void removeMultipleFromSet() throws Exception{
-        Property old = new Property();
-
-        old.addReference(getUUID(0));
-        old.addReference(getUUID(1));
-        old.addReference(getUUID(2));
-
-        Property newProp = new Property();
-
-        newProp.addReference(getUUID(1));
-
-
-        old=getChanged(old, newProp);
-
-        jsonMatches(newProp, old);
-
+    	int totalInSet =10;
+    	
+    	for(int i=1;i<totalInSet;i++){
+    		for(int j=0;j<i;j++){
+		        Property old = new Property();
+		        for(int k=0;k<i;k++){
+		        	old.addReference(getUUID(k));
+		        }
+		
+		        Property newProp = new Property();
+		        
+		        newProp.addReference(getUUID(j));
+		
+		        old=getChanged(old, newProp);
+		
+		        jsonMatches(newProp, old);
+    		}
+    	}
     }
+    
+    @Test
+    public void removeOneFromSet() throws Exception{
+    	int totalInSet =10;
+    	
+    	for(int i=1;i<totalInSet;i++){
+    		for(int j=0;j<i;j++){
+		        Property old = new Property();
+		        Property newProp = new Property();
+		        
+		        for(int k=0;k<i;k++){
+		        	old.addReference(getUUID(k));
+		        	if(k!=j){
+		        		newProp.addReference(getUUID(k));
+		        	}
+		        }
+		
+		        old=getChanged(old, newProp);
+		
+		        jsonMatches(newProp, old);
+    		}
+    	}
+    }
+    
 
 
 
