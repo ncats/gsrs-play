@@ -80,6 +80,6 @@ public class Parameter extends GinasCommonSubData {
     }
     
     public String toString(){
-    	return "Property=(" + getUuid() + ")  [" +  name + "]";
+    	return "Property Parameter=(" + getUuid() + ")  [" +  name + "]";
     }
 }

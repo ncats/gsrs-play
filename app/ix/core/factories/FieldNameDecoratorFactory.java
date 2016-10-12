@@ -1,6 +1,7 @@
 package ix.core.factories;
 
 import ix.core.FieldNameDecorator;
+import ix.core.search.text.TextIndexer;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.ginas.models.v1.Substance;
@@ -33,7 +34,9 @@ public class FieldNameDecoratorFactory extends AccumlatingInternalMapEntityResou
 
 	@Override
 	public FieldNameDecorator getDefaultResourceFor(EntityInfo<?> ei) {
-		return f->f;
+		return f->{
+			return (f.equals(TextIndexer.FULL_TEXT_FIELD()))?"Global Search":f;
+		};
 	}
 
 	@Override

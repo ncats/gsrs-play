@@ -3,10 +3,19 @@ package ix.core.search;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.MultiTermQueryWrapperFilter;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
@@ -15,8 +24,9 @@ import org.apache.lucene.search.TermQuery;
 import ix.core.FieldNameDecorator;
 import ix.core.factories.FieldNameDecoratorFactory;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
-import play.Logger;
+import ix.core.util.EntityUtils.EntityInfo;
 import play.Play;
 
 
@@ -137,7 +147,66 @@ public class FieldedQueryFacet implements Serializable{
 	
 	
 	
+	public static class StringManipulator{
+		String s;
+		public StringManipulator(String s){
+			this.s=s;
+		}
+		
+		public void op(Function<String,String> op){
+			s=op.apply(s);
+		}
+	}
 	
+	
+	public static Query parseQuery(String q) throws ParseException{
+		return Play.application()
+				.plugin(TextIndexerPlugin.class)
+				.getIndexer()
+				.getQueryParser()
+				.parse(q);
+	}
+	
+	public static void printQueryBreakDown(Query q, String indent) throws ParseException{
+		if(q instanceof TermQuery){
+			Term tq= ((TermQuery)q).getTerm();
+			System.out.println(indent + tq.field() + "='" + tq.text() + "' (contains)");
+		}else if(q instanceof PhraseQuery){
+			Term[] ts=((PhraseQuery)q).getTerms();
+			String field = ts[0].field();
+			String text  = Stream.of(ts).map(t->t.text())
+						 .collect(Collectors.joining(" "));
+			System.out.println(indent + field + "='" + text + "' (phrase)");
+		}else if(q instanceof BooleanQuery){
+			BooleanQuery bq = (BooleanQuery)q;
+			for(BooleanClause sq:bq.clauses()){
+				String combine = (sq.isRequired())?"AND":"OR";
+				if(sq.getOccur() == Occur.MUST_NOT){
+					combine+= " NOT";
+				}
+				System.out.println(indent + combine);
+				printQueryBreakDown(sq.getQuery(), indent + "\t");
+			}
+		}else if(q instanceof PrefixQuery){
+			PrefixQuery pq=(PrefixQuery)q;
+			Term prefix = pq.getPrefix();
+			System.out.println(indent + prefix.field() + "='" + prefix.text() + "*' (prefix)");
+		}else if(q instanceof ConstantScoreQuery){
+			ConstantScoreQuery csq = (ConstantScoreQuery)q;
+			Filter f = csq.getFilter();
+			Query sq = csq.getQuery();
+			
+			if(f!=null){
+				sq=parseQuery(f.toString());
+			}
+			if(sq!=null){
+				printQueryBreakDown(sq, indent);
+			}
+		}else{
+			System.out.println(indent + "<unknow query>" + q.getClass());
+		}
+		
+	}
 	
 
 	// TODO: better parsing, and move this to its own 
@@ -145,15 +214,20 @@ public class FieldedQueryFacet implements Serializable{
 	// Doesn't handle booleans, for example.
 	public static String[] displayQuery(String kind, String q){
 		if(q==null)return null;
-		Supplier<FieldNameDecorator> fnd=()->{ 
-			try{
-				return FieldNameDecoratorFactory
-						.getInstance(Play.application())
-						.getSingleResourceFor(EntityUtils.getEntityInfoFor(kind));
-			}catch(Exception e){
-				return f->f;
-			}
-		};
+		
+		
+		Supplier<FieldNameDecorator> fnd=CachedSupplier.of(()->{ 
+				try{
+					EntityInfo<?> emeta=EntityUtils.getEntityInfoFor(kind);
+					return FieldNameDecoratorFactory
+							.getInstance(Play.application())
+							.getSingleResourceFor(emeta);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				return (FieldNameDecorator)(f->f);
+				
+		});
 		
 		
 		
@@ -165,11 +239,23 @@ public class FieldedQueryFacet implements Serializable{
 					.parseQuery(q);
 			
 			Set<Term> sterms = new HashSet<Term>();
-			if(qu instanceof PhraseQuery || 
-			   qu instanceof TermQuery){
-				qu.extractTerms(sterms);
-			}
-			System.out.println("Found:"+sterms.stream().peek(System.out::println).count()+" terms");
+			String aq=qu.toString();
+			StringManipulator oq=new StringManipulator(aq);
+			
+			FieldNameDecorator fnder =  fnd.get();
+			
+			sterms.stream()
+				.map(t->t.field())								
+				.distinct()
+				.forEach(f->{
+					String nf = fnder.getDisplayName(f);
+					oq.op(s->s.replace(f + ":", nf + ":"));
+				});
+			System.out.println("original:" + q);
+			System.out.println("simplified:" + aq);
+			System.out.println("displayForm:" + oq.s);
+			printQueryBreakDown(qu,"");
+			
 		}catch(Exception e){
 			e.printStackTrace();
 		}

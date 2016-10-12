@@ -16,6 +16,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +33,7 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import ix.core.controllers.EntityFactory;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.utils.Util;
 
 
 /**
@@ -78,6 +81,11 @@ import ix.core.util.EntityUtils.EntityWrapper;
 
 public class PojoDiff {
 	public static ObjectMapper _mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+	
+	public static Function<Object, Optional<String>> IDGetter = (o)->{
+		EntityWrapper<?> ew = EntityWrapper.of(o);
+		return ew.getOptionalKey().map(k->k.getIdString());
+	};
 	
 	public static class JsonObjectPatch<T> implements PojoPatch<T>{
 		private JsonPatch jp;
@@ -323,10 +331,19 @@ public class PojoDiff {
 	}
 	
 	public static void canonicalizeDiff(List<JsonNode> diffs){
-		Collections.sort(diffs,new Comparator<JsonNode>(){
-
-			@Override
-			public int compare(JsonNode o1, JsonNode o2) {
+		Function<String,String> mapper = path->{
+			String npath=path.replaceAll("_([0-9][0-9]*)", "#$1!");
+			String[] paths=npath.split("#");
+			String newpath="";
+			for(int i=1;i<paths.length;i++){
+					int k=Integer.parseInt(paths[i].split("!")[0]);
+					String np=String.format("%05d", k);
+					newpath+=np;
+			}
+			return newpath;
+		};
+		
+		Collections.sort(diffs,(JsonNode o1, JsonNode o2) -> {
 				String path1=o1.at("/path").asText();
 				String op1=o1.at("/op").asText();
 				
@@ -339,37 +356,16 @@ public class PojoDiff {
 					return diff;
 				}
 				//System.out.println(path1);
+				String adaptedPath1 =mapper.apply(path1);
+				String adaptedPath2 =mapper.apply(path2);
 				
-				path1=path1.replaceAll("/_([0-9][0-9]*)", "/#$1!");
-				path2=path2.replaceAll("/_([0-9][0-9]*)", "/#$1!");
-				//System.out.println("now:" + path1);
-				String newpath1="";
-				String newpath2="";
-				String[] paths1=path1.split("#");
-				String[] paths2=path2.split("#");
-				for(int i=1;i<paths1.length;i++){
-					//if(paths1[i].startsWith("#")){
-						int k=Integer.parseInt(paths1[i].split("!")[0]);
-						String np=String.format("%05d", k);
-						newpath1+=np;
-					//}
-				}
-				for(int i=1;i<paths2.length;i++){
-					//if(paths2[i].startsWith("#")){
-						int k=Integer.parseInt(paths2[i].split("!")[0]);
-						String np=String.format("%05d", k);
-						newpath2+=np;
-					//}
-				}
-				
-				int d=newpath1.compareTo(newpath2);
+				int d=adaptedPath1.compareTo(adaptedPath2);
 				if(op1.equals("remove")){
 					d=-d;
 				}
 				
 				return d;
-			}
-		});
+			});
 
 	}
 	
@@ -1069,21 +1065,27 @@ public class PojoDiff {
 		public static <T> TypeRegistry<T> getClassRegistry(Class<T> cls){
 			return (TypeRegistry<T>)registries.computeIfAbsent(cls.getName(), k->new TypeRegistry<T>(cls));
 		}
-		private static <T> int getObjectWithID(Collection<T> c, String id){
-			int i=0;
-
-			for(T o:c){
-				try {
-					EntityWrapper<T> ew = EntityWrapper.of(o);
-					if(ew.hasKey() && id.equals(ew.getKey().getIdString())){
-						return i;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				i++;
+		
+		private static <T> int findFirstPositionMatching(Collection<T> c, Predicate<T> keep){
+			Optional<Integer> position = c.stream()
+										 .map(Util.toIndexedTuple())
+										 .filter(t->keep.test(t.v()))
+										 .findFirst()
+										 .map(t->t.k());
+			if(position.isPresent()){
+				return position.get();
 			}
 			return -1;
+		}
+		
+		private static <T> int getObjectWithID(Collection<T> c, String id){
+			return findFirstPositionMatching(c, (t)-> {
+				Optional<String> ido=IDGetter.apply(t);
+				if(!ido.isPresent()){
+					return false;
+				}
+				return ido.get().equals(id);
+			});
 		}
 		
 		private static <T> int getCollectionPostion(Collection<T> col, String prop){

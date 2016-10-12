@@ -166,6 +166,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	static final String ROOT = "root";
 	
 	
+	public static String FULL_TEXT_FIELD(){
+		return FULL_TEXT_FIELD;
+	}
 
 	public void deleteAll() {
 		try {
@@ -1394,6 +1397,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	
 	public Query parseQuery(String q) throws Exception{
 		Query q1=getQueryParser().parse(q);
+		//return q1;
 		return withSearcher(s -> q1.rewrite(s.getIndexReader()));
 	}
 	
