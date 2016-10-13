@@ -2259,7 +2259,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			long date = ((Date) value).getTime();
 			fields.accept(new LongField(name, date, YES));
 			if (!full.equals(name))
-				fields.accept(new LongField(full, date, NO));
+				fields.accept(new LongField(full, date, YES));
 			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.LONG);

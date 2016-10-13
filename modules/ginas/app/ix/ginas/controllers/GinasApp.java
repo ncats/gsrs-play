@@ -69,19 +69,16 @@ import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
-import ix.core.util.CachedSupplier;
-import ix.core.util.EntityUtils;
+import ix.core.util.*;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.Java8Util;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.SubstanceExporterFactory;
-import ix.core.util.ModelUtils;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -416,9 +413,9 @@ public class GinasApp extends App {
     public static String translateFacetName(String n){
         if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
             return "Stereochemistry";
-        if ("modified".equalsIgnoreCase(n))
+        if ("root_lastEdited".equalsIgnoreCase(n))
             return "Last Edited";
-        if ("approved".equalsIgnoreCase(n))
+        if ("root_approved".equalsIgnoreCase(n))
             return "Last Validated";
         if("LyChI_L4".equalsIgnoreCase(n)){
             return "Structure Hash";
@@ -531,7 +528,7 @@ public class GinasApp extends App {
             if("non-approved".equalsIgnoreCase(label)){
                 return "Non-Validated";
             }
-            if (name.equalsIgnoreCase("approved") || name.equalsIgnoreCase("modified")){
+            if (name.equalsIgnoreCase("root_approved") || name.equalsIgnoreCase("root_lastEdited")){
                 return label.substring(1); // skip the prefix character
             }
             
@@ -965,11 +962,13 @@ public class GinasApp extends App {
 
     public static void instrumentSubstanceSearchOptions(SearchOptions options, Map<String, String[]> params) {
         SearchOptions.FacetLongRange editedRange =
-            new SearchOptions.FacetLongRange ("modified");
+            new SearchOptions.FacetLongRange ("root_lastEdited");
         SearchOptions.FacetLongRange approvedRange =
-            new SearchOptions.FacetLongRange ("approved");
+            new SearchOptions.FacetLongRange ("root_approved");
 
-        Calendar now = Calendar.getInstance();
+       Calendar now = Calendar.getInstance();
+        now.setTimeInMillis(TimeUtil.getCurrentTimeMillis());
+
         Calendar cal = (Calendar)now.clone();
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
