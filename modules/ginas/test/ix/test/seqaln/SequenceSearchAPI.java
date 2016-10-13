@@ -14,7 +14,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlPreformattedText;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 
-import ix.test.AbstractGinasTest;
+import ix.AbstractGinasTest;
 import ix.test.server.BrowserSession;
 
 /**

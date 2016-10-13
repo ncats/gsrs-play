@@ -29,7 +29,15 @@ import ix.utils.Util;
 public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
 
-    public static final String TEST_TESTDUMPS_REP90_GINAS = "test/testdumps/rep90.ginas";
+    private static final String TEST_TESTDUMPS_REP90_PART2_GINAS = "test/testdumps/rep90_part2.ginas";
+
+
+	private static final String TEST_TESTDUMPS_REP90_PART1_GINAS = "test/testdumps/rep90_part1.ginas";
+
+
+	public static final String TEST_TESTDUMPS_REP90_GINAS = "test/testdumps/rep90.ginas";
+    
+    
 	@Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -106,9 +114,9 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
             SubstanceLoader loader = new SubstanceLoader(session);
 
 
-            loader.loadJson(new File("test/testdumps/rep90_part1.ginas"));
+            loader.loadJson(new File(TEST_TESTDUMPS_REP90_PART1_GINAS));
 
-            loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
+            loader.loadJson(new File(TEST_TESTDUMPS_REP90_PART2_GINAS));
 			
             runRepTests(session);
         }

@@ -7,12 +7,12 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.ValidationMessage;
 import ix.core.ValidationMessage.MESSAGE_TYPE;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
-import ix.test.AbstractGinasServerTest;
 import ix.test.SubstanceJsonUtil;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.RestSession;

@@ -17,6 +17,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import ix.AbstractGinasServerTest;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;

@@ -9,7 +9,7 @@ import java.util.Date;
 import org.junit.Rule;
 import org.junit.Test;
 
-import ix.test.AbstractGinasTest;
+import ix.AbstractGinasTest;
 
 /**
  * Created by katzelda on 3/24/16.

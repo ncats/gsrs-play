@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.AbstractGinasTest;
 import ix.ginas.models.v1.Site;
 import ix.ginas.models.v1.SiteContainer;
 

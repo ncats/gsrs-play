@@ -12,9 +12,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import ix.AbstractGinasTest;
 import ix.ginas.exporters.CsvSpreadsheetBuilder;
 import ix.ginas.exporters.Spreadsheet;
-import ix.test.AbstractGinasTest;
 /**
  * Created by katzelda on 8/22/16.
  */

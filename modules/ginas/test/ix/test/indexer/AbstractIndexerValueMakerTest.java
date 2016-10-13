@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -16,11 +17,11 @@ import org.junit.Test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import ix.AbstractGinasServerTest;
 import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexValueMakerFactory;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.ReflectingIndexValueMaker;
-import ix.test.AbstractGinasTest;
 import ix.test.server.GinasTestServer;
 import play.Configuration;
 
@@ -36,24 +37,24 @@ import play.Configuration;
  * @param <U>
  */
 @Ignore
-public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasTest{
-
-	@Rule
-	public GinasTestServer ts = new GinasTestServer(()->{
-		
-		String addconf="include \"ginas.conf\"\n" + 
-				"\n" + 
-				"ix.core.indexValueMakers +={\n" + 
-				"		\"class\":\"" + getEntityClass().getName() + "\",\n" + 
-				"		\"indexer\":\"" +getIndexMakerClass().getName() + "\"\n" + 
-				"	}";
-		Config additionalConfig = ConfigFactory.parseString(addconf)
-				.resolve()
-				.withOnlyPath("ix.core.indexValueMakers");
-		return new Configuration(additionalConfig).asMap();
-	});
+public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasServerTest{
 	
-	
+	@Override
+	public GinasTestServer createGinasTestServer(){
+		return new GinasTestServer(()->{
+			
+			String addconf="include \"ginas.conf\"\n" + 
+					"\n" + 
+					"ix.core.indexValueMakers +={\n" + 
+					"		\"class\":\"" + getEntityClass().getName() + "\",\n" + 
+					"		\"indexer\":\"" +getIndexMakerClass().getName() + "\"\n" + 
+					"	}";
+			Config additionalConfig = ConfigFactory.parseString(addconf)
+					.resolve()
+					.withOnlyPath("ix.core.indexValueMakers");
+			return new Configuration(additionalConfig).asMap();
+		});
+	}
 
 
 	public abstract Class<? extends T> getEntityClass();

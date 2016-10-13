@@ -5,6 +5,7 @@ import static ix.test.util.TestUtil.assertContains;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.test.server.RestSession;
 
 public class FunctionalTest  extends AbstractGinasServerTest {

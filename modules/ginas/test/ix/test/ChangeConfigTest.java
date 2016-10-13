@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import play.api.Configuration;
 /**
  * Created by katzelda on 5/2/16.
