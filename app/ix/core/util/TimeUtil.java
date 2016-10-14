@@ -1,5 +1,6 @@
 package ix.core.util;
 
+import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +42,11 @@ public final class TimeUtil {
     public static void setCurrentTime(long timeMillis){
     	setCurrentTime(timeMillis,TimeUnit.MILLISECONDS);
     }
-
+    /**
+     * Sets the time to the given Date.  Ater this call, calling {@link #getCurrentDate()} and other similar methods
+     * will return a Date object equal to this one.
+     * @param date - the date to set to can not be null.
+     */
     public static void setCurrentTime(Date date){
         setCurrentTime(date.getTime());
     }
@@ -70,5 +75,60 @@ public final class TimeUtil {
         c.set(year, month - 1, day);
 
         return c.getTime();
+    }
+
+    public static LocalDate getCurrentLocalDate(){
+        return asLocalDate(getCurrentDate());
+    }
+    public static LocalDateTime getCurrentLocalDateTime(){
+        return asLocalDateTime(getCurrentDate());
+    }
+
+    /**
+     * Calls {@link #asLocalDate(Date, ZoneId)} with the system default time zone.
+     */
+    public static LocalDate asLocalDate(java.util.Date date) {
+        return asLocalDate(date, ZoneId.systemDefault());
+    }
+
+    /**
+     * Creates {@link LocalDate} from {@code java.util.Date} or it's subclasses. Null-safe.
+     */
+    public static LocalDate asLocalDate(java.util.Date date, ZoneId zone) {
+        if (date == null)
+            return null;
+
+        if (date instanceof java.sql.Date)
+            return ((java.sql.Date) date).toLocalDate();
+        else
+            return Instant.ofEpochMilli(date.getTime()).atZone(zone).toLocalDate();
+    }
+
+    /**
+     * Calls {@link #asLocalDateTime(Date, ZoneId)} with the system default time zone.
+     */
+    public static LocalDateTime asLocalDateTime(java.util.Date date) {
+        return asLocalDateTime(date, ZoneId.systemDefault());
+    }
+
+    /**
+     * Creates {@link LocalDateTime} from {@code java.util.Date} or it's subclasses. Null-safe.
+     */
+    public static LocalDateTime asLocalDateTime(java.util.Date date, ZoneId zone) {
+        if (date == null)
+            return null;
+
+        if (date instanceof java.sql.Timestamp)
+            return ((java.sql.Timestamp) date).toLocalDateTime();
+        else
+            return Instant.ofEpochMilli(date.getTime()).atZone(zone).toLocalDateTime();
+    }
+
+    public static long toMillis(LocalDateTime localDateTime){
+        return toMillis(localDateTime, ZoneId.systemDefault());
+    }
+
+    public static long toMillis(LocalDateTime localDateTime, ZoneId zone){
+        return localDateTime.atZone(zone).toInstant().toEpochMilli();
     }
 }
