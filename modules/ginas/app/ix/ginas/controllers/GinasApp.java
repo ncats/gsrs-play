@@ -1077,6 +1077,7 @@ public class GinasApp extends App {
                                        result.count()));
             return result;
         }catch (Exception ex) {
+            ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
         return null;    
