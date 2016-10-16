@@ -262,7 +262,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			assertEquals(ib2, suggestBefore.at("/Name/0/key").asText());
 
 			JsonNode update = SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
-					.andThenMutate(s -> s.names.get(0).name = name2).buildJson();
+					.andThenMutate(s -> s.names.get(0).name = name2)
+					.buildJson();
 
 			ensurePass(api.updateSubstance(update));
 
@@ -301,6 +302,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 									.generateNewUUID()
 									.buildJsonAnd(s -> ensurePass(api.submitSubstance(s)));
 
+			
 			
 			reindex();
 

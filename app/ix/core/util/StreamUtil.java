@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.core.util;
 
 import java.util.Enumeration;
 import java.util.Iterator;

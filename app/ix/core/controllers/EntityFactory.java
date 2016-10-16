@@ -8,16 +8,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -43,8 +44,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.DefaultValidator;
 import ix.core.ExceptionValidationMessage;
-import ix.core.IgnoredModel;
-import ix.core.SingleParent;
 import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
@@ -52,12 +51,20 @@ import ix.core.adapters.InxightTransaction;
 import ix.core.models.BeanViews;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
-import ix.core.models.ForceUpdatableModel;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
+import ix.core.util.EntityUtils.MethodOrFieldMeta;
+import ix.core.util.PojoPointer.ArrayPath;
+import ix.core.util.PojoPointer.FilterPath;
+import ix.core.util.PojoPointer.IdentityPath;
+import ix.core.util.PojoPointer.ObjectPath;
 import ix.core.util.Java8Util;
+import ix.core.util.PojoPointer;
 import ix.utils.Global;
+import ix.utils.Tuple;
 import ix.utils.Util;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -72,20 +79,12 @@ import play.mvc.Results;
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
-
-    static TextIndexerPlugin textIndexerPlugin;
+    static CachedSupplier<TextIndexerPlugin> textIndexerPlugin = CachedSupplier.of(()->{
+    	return Play.application().plugin(TextIndexerPlugin.class);
+    });
     
-    static{
-    	init();
-    }
-    
-    
-    public static void init(){
-        textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
-    }
-
     static TextIndexer getTextIndexer(){
-        return textIndexerPlugin.getIndexer();
+        return textIndexerPlugin.get().getIndexer();
     }
 
     
@@ -334,7 +333,7 @@ public class EntityFactory extends Controller {
             etag.total = finder.findRowCount();
         else {
             Model.Finder<Long, ETag> eFinder = 
-                new Model.Finder(Long.class, ETag.class);
+                new Model.Finder<Long, ETag>(Long.class, ETag.class);
             List<ETag> etags = eFinder
                 .where().eq("sha1", etag.sha1)
                 .orderBy("modified desc").setMaxRows(1).findList();
@@ -381,16 +380,16 @@ public class EntityFactory extends Controller {
     
     
     static public EntityMapper getEntityMapper () {
-        List<Class> views = new ArrayList<Class>();
+        List<Class<?>> views = new ArrayList<Class<?>>();
 
         Map<String, String[]> params = request().queryString();
         String[] args = params.get("view");
         if (args != null) {
         	
-            Class[] classes = BeanViews.class.getClasses();
+            Class<?>[] classes = BeanViews.class.getClasses();
             for (String a : args) {
                 int matches = 0;
-                for (Class c : classes) {
+                for (Class<?> c : classes) {
                     if (a.equalsIgnoreCase(c.getSimpleName())) {
                         views.add(c);
                         ++matches;
@@ -403,8 +402,6 @@ public class EntityFactory extends Controller {
         }else {
             views.add(BeanViews.Compact.class);
         }
-        EntityMapper em=new EntityMapper (views.toArray(new Class[0]));
-        
         
         return new EntityMapper (views.toArray(new Class[0]));
     }
@@ -470,8 +467,7 @@ public class EntityFactory extends Controller {
         if (cons.isEmpty()) {
             Logger.warn("Can't filter by example because JSON"
                         +" doesn't contain any primitive field!");
-        }
-        else {
+        }else {
             results = finder.where()
                 .allEq(cons)
                 //.orderBy("id asc")
@@ -572,26 +568,40 @@ public class EntityFactory extends Controller {
         }
     }
     
+    public static class ErrorResponse{
+    	public int status;
+    	public String message;
+    	public ErrorResponse(int status, String message){
+    		this.status=status;
+    		this.message=message;
+    	}
+    }
+    
     
     //Prime canididate for rewrite with EntityWrapper
-    protected static <T> Result field (Object inst, String field) {
-        /*
-        Query<T> query = finder.query();
-        int depth = 0;
-        if (field != null) {
-            StringBuilder path = new StringBuilder ();
-            for (String p : field.split("[\\(0-9\\)\\/]+")) {
-                if (path.length() > 0) path.append('.');
-                path.append(p);
-                ++depth;
-            }
-            if (depth > 1) {
-                Logger.debug
-                    (request().uri()+": field="+field+" => path="+path);
-                query = query.fetch(path.toString());
-            }
+    protected static Result field (Object inst, String field) {
+    	//return fieldOld(inst,field);
+    	
+    	Object o = atFieldSerialized(inst,PojoPointer.fromUriPath(field));
+    	if(o instanceof JsonNode){
+        	return ok((JsonNode)o);
+        }else{
+        	return ok(o.toString());
         }
-        */
+    }
+    
+    
+    protected static Object atFieldSerialized (Object inst, PojoPointer cpath) {
+    	EntityWrapper ew=EntityWrapper.of(inst).at(cpath).get();
+    	if(cpath.isLeafRaw()){
+    		return ew.getValue();
+    	}else{
+    		return ew.toFullJsonNode();
+    	}
+    }
+    
+    protected static <T> Result fieldOld (Object inst, String field) {
+        
         String[] paths = field.split("/");
         Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
         StringBuilder uri = new StringBuilder ();
@@ -603,7 +613,7 @@ public class EntityFactory extends Controller {
         
         for (; i < paths.length && obj != null; ++i) {
             String pname = paths[i]; // field name
-            Integer pindex = null; // field index if field is a list
+            Integer pindex = null;   // field index if field is a list
             
             Matcher matcher = regex.matcher(pname);
             if (matcher.find()) {
@@ -624,7 +634,6 @@ public class EntityFactory extends Controller {
                  * TODO: check for JsonProperty annotation!
                  */                
                 f = obj.getClass().getField(pname);
-                String fname = f.getName();
                 Class<?> ftype = f.getType();
                 
                 Object val = f.get(obj);
@@ -687,8 +696,7 @@ public class EntityFactory extends Controller {
                             }
                             obj = val;
                             break; // don't 
-                        }
-                        catch (Exception e) {
+                        }catch (Exception e) {
                         }
                     }
                 }
@@ -770,6 +778,7 @@ public class EntityFactory extends Controller {
         }
         return Java8Util.ok (node);
     }
+    
     @Transactional
     protected static <K, T extends Model> 
         Result create (Class<T> type, Model.Finder<K, T> finder) {
@@ -895,7 +904,7 @@ public class EntityFactory extends Controller {
             
             
             //gets the value (if exists)
-            Optional<EntityWrapper> oldValue = getCurrentValue(inst);
+            Optional<EntityWrapper<?>> oldValue = getCurrentValue(inst);
             
             ValidationResponse<T> vr;
             
@@ -1028,6 +1037,8 @@ public class EntityFactory extends Controller {
                 return update (id,field,type,finder, null, null);
     }
     
+    
+    
     // This expects an update of the full record to be done using "/path/*"
     // or "/path/_"
     //
@@ -1038,14 +1049,27 @@ public class EntityFactory extends Controller {
     // never being determined via ebean. Need to disable it.
     //
     @Deprecated
-    protected static <K, T extends Model> Result update 
-        (K id, String field, Class<T> type, Model.Finder<K, T> finder,
+    protected static <K, T extends Model, V extends T> Result update 
+        (K id, String field, Class<V> type, Model.Finder<K, T> finder,
          DeserializationProblemHandler deserializationHandler, Validator<T> validator) {
+    	
     	return forbidden ("Update field methods not available at this time");
-    } // update ()
+    }
     
-    public interface EntityCallable{
-        void call(Object m, String path);
+    
+    @Deprecated
+    protected static <T> Result updateField 
+        (Key k, PojoPointer path, JsonNode replace, Validator<T> validator) {
+    	
+//    	EntityWrapper ewOld = k.fetch().get();
+//    	
+//    	Object o = atFieldSerialized(ewOld.getValue(),path);
+//    	if(o instanceof JsonNode){
+//    		
+//    	}
+    	
+    	
+    	return forbidden ("Update field methods not available at this time");
     }
     
     
@@ -1124,37 +1148,25 @@ public class EntityFactory extends Controller {
         
     	while(!changeStack.isEmpty()){
     		Object v=changeStack.pop();
-    		if(!EntityWrapper.of(v).isIgnoredModel()){
-        		if(v instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
-        			//System.out.println("Force update for:" + v);
-            		((ForceUpdatableModel)v).forceUpdate();
-            	}else if(v instanceof Model){
-            		//System.out.println("Regular update for:" + v);
-            		((Model)v).update();
-            	}else{
-            		//System.out.println("Nothing to do for:" + v);
-            	}
+    		EntityWrapper ewchanged=EntityWrapper.of(v);
+    		if(!ewchanged.isIgnoredModel()){
+    			ewchanged.update();
     		}
     	}
 
     	//explicitly delete deleted things
-    	
     	//This should ONLY delete objects which "belong"
     	//to something. That is, have a @SingleParent annotation
     	//inside
     	
-    	// TODO: Move to EntityInfo
-    	for(Object toDelete : removed){
-    		if(toDelete !=null){
-        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
-        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
-        			if(toDelete instanceof Model){
-        				Logger.warn("deleting:" + ((Model)toDelete));
-        				((Model)toDelete).delete();
-        			}
-            	}
-    		}
-    	}
+    	removed.stream()
+    		   .filter(Objects::nonNull)
+    		   .map(o->EntityWrapper.of(o))
+    		   .filter(ew->ew.isExplicitDeletable())
+    		   .forEach(ew->{
+    			   Logger.warn("deleting:" + ((Model)ew.getValue()));
+    			   ew.delete();
+    		   });
     }
 
     /*
@@ -1162,7 +1174,7 @@ public class EntityFactory extends Controller {
      * then we just need to store the old JSON, and the new.
      * 
      */
-    protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
+    protected static <T> Result updateEntity (JsonNode json, Class<? extends T> type, Validator<T> validator ) {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
     	
@@ -1178,17 +1190,18 @@ public class EntityFactory extends Controller {
             		.orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
             
             //validation response holder
-            ValidationResponse[] vr = new ValidationResponse[]{null};
+            List<ValidationResponse<T>> vrlist = new ArrayList<>();
             
             
             //Do we still need this???
             //EditHistory eh = new EditHistory (json.toString());
             
-            EntityWrapper savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
-            	EntityWrapper og= EntityWrapper.of(ov);
+            EntityWrapper<T> savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
+            	EntityWrapper<T> og= EntityWrapper.of((T)ov);
 
-                vr[0]=validator.validate(newValue,og.getValue());
-                if(!vr[0].isValid()){
+            	ValidationResponse<T> vrr=validator.validate((T)newValue,(T)og.getValue());
+            	vrlist.add(vrr);
+                if(!vrr.isValid()){
                 	return Optional.empty();
                 }
                 EntityWrapper entityThatWasSaved=null;
@@ -1212,11 +1225,12 @@ public class EntityFactory extends Controller {
                 return Optional.ofNullable(entityThatWasSaved);
             });
             
-            if(vr[0]==null){
+            
+            if(vrlist.isEmpty()){
             	return badRequest("Validation Response could not be generated");
-            }else if(!vr[0].isValid()){
-	            return badRequest(prepareValidationResponse(vr[0],false));
-	        }else if(savedVersion == null){ //Couldn't happen for some reason
+            }else if(!vrlist.get(0).isValid()){
+	            return badRequest(prepareValidationResponse(vrlist.get(0),false));
+	        }else if(savedVersion == null){ 				 //Couldn't happen for some reason
 	        	return internalServerError ("unsuccessful"); //TODO: make this follow a better contract
 	        }
             
@@ -1224,15 +1238,13 @@ public class EntityFactory extends Controller {
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             ex.printStackTrace();
-            
-            //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
     }
 
     
     // This could become a nice method.
-    private static Optional<EntityWrapper> getCurrentValue(Object value){
+    private static Optional<EntityWrapper<?>> getCurrentValue(Object value){
     	if(EntityWrapper.of(value).hasKey()){
     		return EntityWrapper.of(value).getKey().fetch();
     	}else{

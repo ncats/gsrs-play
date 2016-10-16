@@ -99,8 +99,4 @@ public class ControlledVocabulary extends IxModel {
     public String getVocabularyTermType() {
         return vocabularyTermType;
     }
-    
-    
-
-
 }

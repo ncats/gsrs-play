@@ -48,18 +48,11 @@ public class Keyword extends Value {
     }
     
     public String toString(){
-    	String ret=this.getClass().getName() + " ";
-    	if(GinasCommonData.REFERENCE.equals(this.label)){
-    		ret+= this.label;
-    	}else if(this.label !=null && this.label.contains("LyChI_L")){
-    		ret+= this.label;
+    	String ret="Keyword ";
+    	if(this.label==null){
+    		return ret +  "NO_LABEL:" + this.term;
     	}else{
-	    	if(this.label==null){
-	    		ret+= "NO_LABEL:" + this.term;
-	    	}else{
-	    		ret+= this.label + ":" + this.term;
-	    	}
+    		return ret +  this.label  + ":" + this.term;
     	}
-    	return ret;
     }
 }

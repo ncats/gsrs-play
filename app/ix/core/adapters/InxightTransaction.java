@@ -22,15 +22,7 @@ public class InxightTransaction {
 	private static ConcurrentHashMap<Transaction, InxightTransaction> _instances=
 			new ConcurrentHashMap<Transaction, InxightTransaction>();
 
-	public static ExecutorService es;
 	
-	static{
-		init();
-	}
-	
-	public static void init(){
-		es=Executors.newCachedThreadPool();
-	}
 	public static InxightTransaction getTransaction(Transaction t){
 		
 		InxightTransaction it=_instances.get(t);
@@ -82,31 +74,6 @@ public class InxightTransaction {
 			
 		});
 	}
-	
-	public void waitAndDestroy(){
-		Runnable r= new Runnable(){
-
-			@Override
-			public void run() {
-				while(true){
-					if(!t.isActive()){
-						break;
-					}else{
-						try {
-							Thread.sleep(1);
-						} catch (InterruptedException e) {
-							
-						}
-					}
-				}
-				destroy();
-			}
-			
-		};
-		
-		es.submit(r);
-	}
-	
 
 	public static InxightTransaction beginTransaction(){
 		return new InxightTransaction(Ebean.beginTransaction());

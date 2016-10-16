@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ public class PojoDiffTest extends AbstractGinasTest{
     public static enum PatchType{
     	MUTATE_DIRECT,
     	MUTATE_USING_DIFF,
+    	APPLY_DIFF_TO_CLONE,
     	RETURN_EXPECTED;
     	
     	public <T> T applyChange(T o1, T o2) throws Exception{
@@ -77,6 +79,13 @@ public class PojoDiffTest extends AbstractGinasTest{
 				{
 					return o2;
 				}
+			case APPLY_DIFF_TO_CLONE:
+				{
+					PojoPatch<T> patch = PojoDiff.getDiff(o1, o2);
+					T clone=EntityWrapper.of(o1).getClone();
+					patch.apply(clone);
+					return clone;
+				}
 			default:
 				throw new IllegalArgumentException("Uknown option:" + this);
     	
@@ -86,9 +95,7 @@ public class PojoDiffTest extends AbstractGinasTest{
     
     @Parameterized.Parameters(name = "{0}")
 	public static List<Object[]> params(){
-
 		List<Object[]> list = new ArrayList<>();
-		
 		for(PatchType type: PatchType.values()){
 			list.add(new Object[]{type+" serailize nether",type,false,false});
 			list.add(new Object[]{type+" serailize both",type,true,true});
@@ -257,7 +264,6 @@ public class PojoDiffTest extends AbstractGinasTest{
         update.setParameters(updatedParams);
 
         prop=getChanged(prop, update);
-        
         
         assertEquals(updatedParams,prop.getParameters());
         
@@ -701,8 +707,38 @@ public class PojoDiffTest extends AbstractGinasTest{
     	}
     }
     
-
-
-
+    
+    @Test
+    public void testRepetitivelyApplyAddingPatchAdds() throws Exception{
+    	String adding="test";
+    	List<String> mylist1 = new ArrayList<String>();
+    	mylist1.add(adding);
+    	List<String> mylist2 = new ArrayList<String>();
+    	List<String> expected = new ArrayList<String>();
+    	
+    	PojoPatch<List<String>> pp=PojoDiff.getDiff(mylist2, mylist1);
+    	
+    	for(int i=0;i<10;i++){
+    		pp.apply(mylist2);
+    		expected.add(adding);
+    		assertEquals(expected,mylist2);
+    	}
+    }
+    
+    @Test
+    public void testSortingPatchWorks() throws Exception{
+    	
+    	List<String> mylist1 = new ArrayList<String>();
+    	
+    	
+    	for(int i=0;i<100;i++){
+    		mylist1.add("Testing:" + i);
+    	}
+    	List<String> mylist2 = new ArrayList<String>(mylist1);
+    	Collections.shuffle(mylist1);
+    	mylist1=getChanged(mylist1, mylist2);
+    	assertEquals(mylist2,mylist1);
+    		
+    }
 
 }

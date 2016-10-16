@@ -6,7 +6,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -18,6 +17,7 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -95,41 +95,16 @@ public class PojoDiff {
 			this.jp=jp;
 		}
 		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
-			return applyPatch(old,jp,changeListener);
+			
+			JsonNode oldjson=EntityWrapper.of(old)
+					                      .toFullJsonNode();
+			JsonNode newjson=jp.apply(oldjson);
+			T ntarget=EntityWrapper.of(old).getEntityInfo().fromJsonNode(newjson);
+			return new EnhancedObjectPatch(old,ntarget).apply(old, changeListener);
 		}
 		@Override
 		public List<Change> getChanges() {
-			return new ArrayList<Change>();
-		}
-	}
-	
-	public static class LazyObjectPatch<T> implements PojoPatch<T>{
-		private T oldV;
-		private T newV;
-		JsonNode jp;
-		public LazyObjectPatch(T oldV, T newV){
-			this.oldV=oldV;
-			this.newV=newV;
-		}
-		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
-			if(jp==null){
-				jp=getJsonDiff(oldV,newV);
-			}
-			if(old==oldV){
-				return applyChanges(oldV,newV, jp,changeListener);
-			}else{
-				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp), (Class<T>) oldV.getClass()).apply(old);
-			}
-		}
-		@Override
-		public List<Change> getChanges() {
-			List<Change> changes= new
-					ArrayList<Change>();
-			JsonNode jsnp = getJsonDiff(oldV,newV);
-			for(JsonNode jsn:jsnp){
-				changes.add(new Change(jsn));
-			}
-			return changes;
+			throw new UnsupportedOperationException("change list not yet supported");
 		}
 	}
 	
@@ -172,30 +147,54 @@ public class PojoDiff {
 	public static class EnhancedObjectPatch<T> implements PojoPatch<T>{
 		private T oldV;
 		private T newV;
-		JsonNode jp;
+		private JsonNode jps;
+		private JsonNode[] oldAndNew = new JsonNode[2];
+		
+		private JsonPatch plainOldJsonPatch=null;
+		
+		
 		public EnhancedObjectPatch(T oldV, T newV){
 			this.oldV=oldV;
 			this.newV=newV;
 		}
 		
 		public Stack<?> apply(T old, ChangeEventListener ... changeListener) throws Exception{
-			if(jp==null){
-				jp=getEnhancedJsonDiff(oldV,newV,null);
-			}
 			if(old==oldV){
-				return applyChanges(oldV,newV, jp,changeListener);
+				return applyChanges(oldV, newV, getJsonPatch(),changeListener);
 			}else{
-				return new JsonObjectPatch<T>(JsonPatch.fromJson(jp), (Class<T>)old.getClass()).apply(old);
+				//This is weird, but it actually serializes the original old and new
+				//gets the JsonPatch, serializes this target, then applies
+				//the patch to this new target, then deserializes.
+				//At this point, you have the correct object, but not via mutating the original.
+				//To do this, you need to then apply a traditional EnhancedObjectPatch
+				//using the original supplied object, and this new target.
+				JsonPatch temp= getPlainOldJsonPatch();
+				EntityWrapper<T> newOld = EntityWrapper.of(old);
+				JsonNode json=newOld.toFullJsonNode();
+				T newtarget=newOld.getEntityInfo().fromJsonNode(temp.apply(json));
+				return new EnhancedObjectPatch<T>(old, newtarget).apply(old);
 			}
 		}
+		
+		private JsonNode getJsonPatch(){
+			if(jps==null){
+				jps=getEnhancedJsonDiff(oldV,newV,oldAndNew);
+			}
+			return jps;
+		}
+		
+		private JsonPatch getPlainOldJsonPatch(){
+			if(plainOldJsonPatch==null){
+				plainOldJsonPatch=	JsonDiff.asJsonPatch(EntityWrapper.of(oldV).toFullJsonNode(), EntityWrapper.of(newV).toFullJsonNode());
+			}
+			return plainOldJsonPatch;
+		}
+		
 		@Override
 		public List<Change> getChanges() {
-			List<Change> changes= new
-					ArrayList<Change>();
-			JsonNode[] oldAndNew = new JsonNode[2];
-			JsonNode jsnp = getEnhancedJsonDiff(oldV,newV,oldAndNew);
+			List<Change> changes= new ArrayList<Change>();
 			
-			for(JsonNode jsn:jsnp){
+			for(JsonNode jsn:getJsonPatch()){
 				Change c=new Change(jsn);
 				try{
 					String path=jsn.at("/path").asText();
@@ -204,7 +203,6 @@ public class PojoDiff {
 				}catch(Exception e){
 					e.printStackTrace();
 				}
-				
 				changes.add(c);
 			}
 			return changes;
@@ -293,22 +291,7 @@ public class PojoDiff {
 			//System.out.println("Value is:" + o);
 			if(o.isArray()){
 				ArrayNode arr=((ArrayNode)o);
-				
-				ObjectNode mnew=om.createObjectNode();
-				//Map mnew = new HashMap();
-				for(int i=0;i<arr.size();i++){
-					JsonNode o2=arr.get(i);
-					String id=getID(o2);
-					String ind=String.format("%05d", i);
-					if(id!=null){
-						mnew.set("$" + id + "_" + ind, o2);
-					}else{
-						mnew.set("_" + ind, o2);
-					}
-					if(o2.isObject()){
-						mappify((ObjectNode)o2);
-					}
-				}
+				ObjectNode mnew=mappify(arr);
 				m2.put(key, mnew);
 			}else if(o.isObject()){
 				mappify((ObjectNode)o);
@@ -317,15 +300,39 @@ public class PojoDiff {
 		return m2;
 	}
 	
+	private static ObjectNode mappify(ArrayNode o){
+		ObjectMapper om=new ObjectMapper();
+		ArrayNode arr=((ArrayNode)o);
+		
+		ObjectNode mnew=om.createObjectNode();
+		//Map mnew = new HashMap();
+		for(int i=0;i<arr.size();i++){
+			JsonNode o2=arr.get(i);
+			String id=getID(o2);
+			String ind=String.format("%05d", i);
+			if(id!=null){
+				mnew.set("$" + id + "_" + ind, o2);
+			}else{
+				mnew.set("_" + ind, o2);
+			}
+			if(o2.isObject()){
+				mappify((ObjectNode)o2);
+			}
+		}
+		return mnew;
+	}
+	
 	
 	private static JsonNode mappifyJson(JsonNode js1){
 		try {
-			JsonNode mapped=mappify((ObjectNode)js1.deepCopy());
-			return mapped;
+			if(js1.isArray()){
+				return mappify((ArrayNode)js1.deepCopy());
+			}else{
+				return mappify((ObjectNode)js1.deepCopy());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 		
 		return js1;
 	}
@@ -404,27 +411,24 @@ public class PojoDiff {
 		
 		JsonNode[] cdiffs= new JsonNode[normalDiff.size()];
 		HashMap<String,Integer> positions = new HashMap<String,Integer>();
-		int i=0;
 		
-		for(JsonNode jsn:normalDiff){
-			String path=jsn.at("/path").asText();
-			path=path.replaceAll("[$][^_]*[_]", "").replaceAll("/_[0]*([0-9][0-9]*)","/$1");
-			if(path.endsWith("/-")){
-				int s=js1.at(path.replaceAll("/-$", "")).size();
-				path=path.replaceAll("/-$", "/"+s+"");
-			}
-			String op=jsn.at("/op").asText();
-			
-			//System.out.println("old:" +jsn);
-			positions.put(op + path, i);
-			i++;
-			
-		}
+		Stream.of(normalDiff)
+		      .map(Util.toIndexedTuple())
+		      .forEach(jsnt->{
+		    	  	String path=jsnt.v().at("/path").asText();
+					path=path.replaceAll("[$][^_]*[_]", "").replaceAll("/_[0]*([0-9][0-9]*)","/$1");
+					if(path.endsWith("/-")){
+						int s=js1.at(path.replaceAll("/-$", "")).size();
+						path=path.replaceAll("/-$", "/"+s+"");
+					}
+					String op=jsnt.v().at("/op").asText();
+					positions.put(op + path, jsnt.k());
+		      });
+		
 		for(JsonNode jsn:diff){
 			String path=jsn.at("/path").asText();
 			path=path.replaceAll("[$][^_]*[_]", "").replaceAll("/_[0]*([0-9][0-9]*)","/$1");
 			String op=jsn.at("/op").asText();
-			//System.out.println(jsn);
 			Integer pos=positions.get(op + path);
 
 			if(pos==null){
@@ -432,15 +436,16 @@ public class PojoDiff {
 			}else{
 				cdiffs[pos]=jsn;
 			}
-			
 		}
-		ArrayNode an=(new ObjectMapper()).createArrayNode();
+		
 		for(JsonNode jsn:cdiffs){
 			if(jsn!=null){
 				reorderedDiffs.add(jsn);
 			}
 		}
+		
 		canonicalizeDiff(reorderedDiffs);
+		ArrayNode an=(new ObjectMapper()).createArrayNode();
 		an.addAll(reorderedDiffs);
 		return an;
 		//return normalDiff;

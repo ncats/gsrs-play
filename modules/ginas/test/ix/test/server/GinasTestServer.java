@@ -45,6 +45,7 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.GinasFactory;
@@ -115,6 +116,7 @@ public class GinasTestServer extends ExternalResource{
 	 public static final String FAKE_USER_2="fakeuser2";
 	 public static final String FAKE_USER_3="fakeuser3";
 
+	 
 	 public static final String FAKE_PASSWORD_1="madeup1";
 	 public static final String FAKE_PASSWORD_2="madeup2";
 	 public static final String FAKE_PASSWORD_3="madeup3";
@@ -324,7 +326,7 @@ public class GinasTestServer extends ExternalResource{
 	}
 
 	private void createInitialFakeUsers() {
-        fakeUserGroup= AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
+        fakeUserGroup= AdminFactory.groupfinder.get().where().eq("name", "fake").findUnique();
         if(fakeUserGroup ==null){
             fakeUserGroup=new Group("fake");
         }
@@ -463,22 +465,19 @@ public class GinasTestServer extends ExternalResource{
 
     private void initializeControllers() {
 
+    	CachedSupplier.resetCaches();
+    	
         App.init();
       //  TextIndexer.init();
         ValidationUtils.init();
-        AdminFactory.init();
         RouteFactory.init();
         Authentication.init();
 
         IxDynamicResourceHandler.init();
 
-        UserProfileFactory.init();
         PrincipalFactory.init();
 
         SubstanceFactory.init();
-
-        EntityFactory.init();
-        SearchFactory.init();
 
         EntityPersistAdapter.init();
 

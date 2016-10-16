@@ -39,6 +39,7 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Play;
+import play.db.ebean.Model;
 import play.mvc.Http;
 
 public class Util {
@@ -535,5 +536,11 @@ public class Util {
 		};
 	}
 
+	
+	public static <I,T> CachedSupplier<Model.Finder<I,T>> finderFor(Class<I> cls, Class<T> vclass){
+		return CachedSupplier.of(()->{
+			return new Model.Finder<>(cls, vclass);
+		});
+	}
 
 }

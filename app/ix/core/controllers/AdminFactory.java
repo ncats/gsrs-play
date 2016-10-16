@@ -1,18 +1,28 @@
 package ix.core.controllers;
 
-import ix.core.models.*;
-import ix.core.util.Java8Util;
-import ix.core.util.TimeUtil;
-import ix.ncats.controllers.auth.Authenticator;
-import ix.utils.Util;
-
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.auth.AuthenticationCredentials;
+import ix.core.auth.Authenticator;
+import ix.core.factories.AuthenticatorFactory;
+import ix.core.models.Acl;
+import ix.core.models.Group;
+import ix.core.models.Namespace;
+import ix.core.models.Principal;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
+import ix.core.util.CachedSupplier;
+import ix.core.util.Java8Util;
+import ix.core.util.TimeUtil;
+import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -20,77 +30,26 @@ import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Result;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.SqlQuery;
-import com.avaje.ebean.SqlRow;
-import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class AdminFactory extends Controller {
-    static public Model.Finder<Long, Namespace> resFinder;
-    static public Model.Finder<Long, Acl> aclFinder;
-    static public Model.Finder<Long, Principal> palFinder;
-    static public Model.Finder<Long, Role> roleFinder;
-    static public Model.Finder<Long, UserProfile> proFinder;
-    public static Model.Finder<Long, Group> groupfinder;
+    static public CachedSupplier<Model.Finder<Long, Namespace>> resFinder = Util.finderFor(Long.class,Namespace.class);
+    static public CachedSupplier<Model.Finder<Long, Acl>> aclFinder= Util.finderFor(Long.class,Acl.class);
+    static public CachedSupplier<Model.Finder<Long, Principal>> palFinder= Util.finderFor(Long.class,Principal.class);
+    static public CachedSupplier<Model.Finder<Long, Role>> roleFinder= Util.finderFor(Long.class,Role.class);
+    static public CachedSupplier<Model.Finder<Long, UserProfile>> proFinder=Util.finderFor(Long.class,UserProfile.class);
+    public static CachedSupplier<Model.Finder<Long, Group>> groupfinder=Util.finderFor(Long.class,Group.class);
+    
+    
     
 
-    private static Map<String,Group> alreadyRegistered;
-    private static Map<Long, Group> groupCache;
-
+    private static CachedSupplier<Map<String,Group>> alreadyRegistered = CachedSupplier.of(()->{
+    	return new ConcurrentHashMap<String,Group>();
+    });
     
-    //Authenticators are used as fallback to authenticate if built in auth doesn't work
-    private static List<Authenticator> authenticators;
+    private static  CachedSupplier<Map<Long, Group>> groupCache = CachedSupplier.of(()->{
+    	return new ConcurrentHashMap<Long,Group>();
+    });
     
-    private static void setupAuth () {
-    	List<Object> ls= Play.application().configuration().getList("ix.core.authenticators",null);
-    	if(ls!=null){
-    		for(Object o:ls){
-    			if(o instanceof Map){
-	    			Map m = (Map)o;
-	    			String authClass=(String) m.get("authenticator");
-	    			String debug="Setting up authenticator [" + authClass + "] ... ";
-	    			try {
-						Class entityCls = Class.forName(authClass);
-						Authenticator auth=(Authenticator) entityCls.newInstance();
-						authenticators.add(auth);
-					} catch (Exception e) {
-						Logger.info(debug + "failed");
-						e.printStackTrace();
-					}
-    			}
-    			
-    		}
-    	}
-    }
-    static{
-        init();
-    }
-
-    public static void init(){
-        resFinder = new Model.Finder(Long.class, Namespace.class);
-        aclFinder =
-                new Model.Finder(Long.class, Acl.class);
-
-        palFinder =
-                new Model.Finder(Long.class, Principal.class);
-
-        roleFinder =
-                new Model.Finder(Long.class, Role.class);
-
-        proFinder =
-                new Model.Finder(Long.class, UserProfile.class);
-
-        groupfinder =
-                new Model.Finder(Long.class, Group.class);
-
-        authenticators = new ArrayList<Authenticator>();
-        alreadyRegistered = new ConcurrentHashMap<String,Group>();
-        
-        groupCache=new ConcurrentHashMap<Long,Group>();
-        setupAuth();
-    }
+    
 
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
@@ -120,7 +79,7 @@ public class AdminFactory extends Controller {
     
 
     public static Result getUser(Long id) {
-        Principal pal = palFinder.byId(id);
+        Principal pal = palFinder.get().byId(id);
         if (pal != null) {
             ObjectMapper mapper = new ObjectMapper();
             return Java8Util.ok(mapper.valueToTree(pal));
@@ -129,7 +88,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result deleteUser(Long id) {
-        Principal pal = palFinder.byId(id);
+        Principal pal = palFinder.get().byId(id);
         if (pal != null) {
             try {
                 pal.delete();
@@ -145,7 +104,7 @@ public class AdminFactory extends Controller {
 
 
     public static Result deletePermission(Long id) {
-        Acl permission = aclFinder.byId(id);
+        Acl permission = aclFinder.get().byId(id);
         if (permission != null) {
             try {
                 permission.delete();
@@ -160,12 +119,12 @@ public class AdminFactory extends Controller {
 
     public static Result deleteUserPermission(Long permId, Long userId) {
 
-        Principal user = palFinder.byId(userId);
+        Principal user = palFinder.get().byId(userId);
         if (user != null) {
             try {
 
-                Acl acl = aclFinder.setId(permId).fetch("principals").findUnique();
-                acl.principals.remove(palFinder.byId(userId));
+                Acl acl = aclFinder.get().setId(permId).fetch("principals").findUnique();
+                acl.principals.remove(palFinder.get().byId(userId));
                 acl.saveManyToManyAssociations("principals");
             } catch (Exception ex) {
                 return badRequest(ex.getMessage());
@@ -177,8 +136,8 @@ public class AdminFactory extends Controller {
     public static Result deleteUserGroup(Long grpId, Long userId) {
 
         try {
-            Group grp = groupfinder.setId(grpId).fetch("members").findUnique();
-            grp.members.remove(palFinder.byId(userId));
+            Group grp = groupfinder.get().setId(grpId).fetch("members").findUnique();
+            grp.members.remove(palFinder.get().byId(userId));
             grp.saveManyToManyAssociations("members");
         }catch(Exception ex){
             return badRequest(ex.getMessage());
@@ -187,7 +146,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result getNamespace(Long id) {
-        Namespace res = resFinder.byId(id);
+        Namespace res = resFinder.get().byId(id);
         if (res != null) {
             ObjectMapper mapper = new ObjectMapper();
             return Java8Util.ok(mapper.valueToTree(res));
@@ -196,7 +155,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result deleteNamespace(Long id) {
-        Namespace res = resFinder.byId(id);
+        Namespace res = resFinder.get().byId(id);
         if (res != null) {
             try {
                 //res.save("archive");
@@ -308,7 +267,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result get(String name) {
-        Namespace resource = resFinder
+        Namespace resource = resFinder.get()
                 .where().eq("name", name)
                 .findUnique();
         if (resource != null) {
@@ -328,14 +287,21 @@ public class AdminFactory extends Controller {
         return profile.acceptPassword(password);
     }
     public static Principal externalAuthenticate(String username, String password){
-    	Principal cred=null;
-    	for(Authenticator auth: authenticators){
-    		cred = auth.getUser(username, password);
-            if(cred!=null){
-        		break;
-            }
+    	
+    	
+    	Authenticator auth = AuthenticatorFactory
+    						.getInstance(Play.application())
+    						.getSingleResourceFor(Authenticator.class);
+    	
+    	AuthenticationCredentials cred=AuthenticationCredentials.create(username, password);
+    	
+    	UserProfile up = auth.authenticate(cred);
+    	
+    	if(up==null){
+    		return null;
     	}
-    	return cred;
+    	
+    	return up.user;
     }
 
 
@@ -359,21 +325,21 @@ public class AdminFactory extends Controller {
 
     public static List<Group> groupsByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Group> groupByUser = AdminFactory.groupfinder.where().eq("members.id", userId).findList();
+        List<Group> groupByUser = AdminFactory.groupfinder.get().where().eq("members.id", userId).findList();
         return groupByUser;
     }
 
 
     public static List<Acl> permissionByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Acl> perByUser = AdminFactory.aclFinder.where().eq("principals.id", userId).findList();
+        List<Acl> perByUser = AdminFactory.aclFinder.get().where().eq("principals.id", userId).findList();
         return perByUser;
     }
 
     public static Result setUserToInactive(Long id) {
-        Principal user = palFinder.byId(id);
+        Principal user = palFinder.get().byId(id);
         if (user != null) {
-            UserProfile profile = proFinder.where().eq("user.username", user.username).findUnique();
+            UserProfile profile = proFinder.get().where().eq("user.username", user.username).findUnique();
             profile.active = false;
         }
         return notFound("Unknown user: " + id);
@@ -381,7 +347,7 @@ public class AdminFactory extends Controller {
 
     public static void updateGroups(Long userId, List<Group> groups){
 
-        Principal user = palFinder.byId(userId);
+        Principal user = palFinder.get().byId(userId);
 
         for(Group g : AdminFactory.groupsByPrincipal(user)){
             AdminFactory.deleteUserGroup(g.id, user.id);
@@ -399,7 +365,7 @@ public class AdminFactory extends Controller {
     }
 
     public static void updatePermissions(Long userId, List<Acl> perms){
-        Principal user = palFinder.byId(userId);
+        Principal user = palFinder.get().byId(userId);
         for(Acl p : AdminFactory.permissionByPrincipal(user)){
             AdminFactory.deleteUserPermission(p.id, user.id);
         }
@@ -419,13 +385,13 @@ public class AdminFactory extends Controller {
     
     
     public static List<Group> allGroups() {
-        return groupfinder.all();
+        return groupfinder.get().all();
     }
     
     public static Group getGroupById(Long id) {
-    	Group g=groupCache.get(id);
+    	Group g=groupCache.get().get(id);
     	if(g!=null)return g;
-        g=groupfinder.byId(id);
+        g=groupfinder.get().byId(id);
         if(g!=null){
         	cacheGroup(g);
         }
@@ -433,14 +399,14 @@ public class AdminFactory extends Controller {
     }
 
     private static void cacheGroup(Group g){
-    	alreadyRegistered.put(g.name, g);
-    	groupCache.put(g.id, g);
+    	alreadyRegistered.get().put(g.name, g);
+    	groupCache.get().put(g.id, g);
     }
 
     public static synchronized Group registerGroupIfAbsent(Group org) {
-    	Group grp=alreadyRegistered.get(org.name);
+    	Group grp=alreadyRegistered.get().get(org.name);
         if(grp==null){
-        	grp = groupfinder.where().eq("name", org.name).findUnique();
+        	grp = groupfinder.get().where().eq("name", org.name).findUnique();
         }
         if (grp == null) {
             try {

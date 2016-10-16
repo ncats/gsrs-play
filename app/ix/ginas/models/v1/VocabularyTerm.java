@@ -33,9 +33,16 @@ public class VocabularyTerm extends IxModel{
     };
 
 	private static final long serialVersionUID = -5625533710493695789L;
+	@Column(length=4000)
 	public String value;
+	
+	@Column(length=4000)
     public String display;
+    
+	@Column(length=4000)
     public String description;
+	
+	
     public String origin;
 //    public String filter;
     

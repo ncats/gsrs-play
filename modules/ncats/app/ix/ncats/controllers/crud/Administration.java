@@ -98,7 +98,7 @@ public class Administration extends App {
 
             if (key.contains("g-")) {
                 String grpName = requestData.data().get(key);
-                Group group = AdminFactory.groupfinder.where().eq("name", grpName).findUnique();
+                Group group = AdminFactory.groupfinder.get().where().eq("name", grpName).findUnique();
                 if(group == null){
                     group = new Group(requestData.data().get(key));
                 }
@@ -143,7 +143,7 @@ public class Administration extends App {
     public static void updateUser(long id) {
         DynamicForm requestData = Form.form().bindFromRequest();
 
-        Principal user = AdminFactory.palFinder.byId(id);
+        Principal user = AdminFactory.palFinder.get().byId(id);
         UserProfile profile = _profiles.where().eq("user.username", user.username).findUnique();
 
         String userName = requestData.get("username");
@@ -169,7 +169,7 @@ public class Administration extends App {
 
             if (key.contains("g-")) {
                 String grpName = requestData.data().get(key);
-                Group group = AdminFactory.groupfinder.where().eq("name", grpName).findUnique();
+                Group group = AdminFactory.groupfinder.get().where().eq("name", grpName).findUnique();
                 if(group == null){
                     group = new Group(requestData.data().get(key));
                 }
@@ -208,7 +208,7 @@ public class Administration extends App {
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static UserProfile editUser(Long id) {
-        Principal user = AdminFactory.palFinder.byId(id);
+        Principal user = AdminFactory.palFinder.get().byId(id);
         UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
         up.user = user;
         return up;

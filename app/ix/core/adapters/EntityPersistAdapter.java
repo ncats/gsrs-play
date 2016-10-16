@@ -250,7 +250,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
         Edit e=null;
         lock.acquire(); //acquire the lock (blocks)
         try{
-            EntityWrapper<T> ew = key.fetch().get(); //supplies the object to be edited,
+            EntityWrapper<T> ew = (EntityWrapper<T>)key.fetch().get(); //supplies the object to be edited,
             //you could have a different supplier
             //for this, but it's nice to be sure
             //that the object can't be stale

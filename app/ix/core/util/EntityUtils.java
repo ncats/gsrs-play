@@ -1,5 +1,6 @@
 package ix.core.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
@@ -11,7 +12,9 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -21,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -43,15 +47,24 @@ import javax.persistence.Table;
 import org.apache.lucene.document.Document;
 import org.reflections.Reflections;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 
 import ix.core.FieldNameDecorator;
 import ix.core.IgnoredModel;
-import ix.core.adapters.EntityPersistAdapter;
+import ix.core.SingleParent;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.factories.FieldNameDecoratorFactory;
@@ -62,13 +75,28 @@ import ix.core.models.DataValidated;
 import ix.core.models.DataVersion;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Edit;
+import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
-import ix.ginas.models.v1.VocabularyTerm;
+import ix.core.util.PojoPointer.ArrayPath;
+import ix.core.util.PojoPointer.CountPath;
+import ix.core.util.PojoPointer.DistinctPath;
+import ix.core.util.PojoPointer.FieldPath;
+import ix.core.util.PojoPointer.FilterPath;
+import ix.core.util.PojoPointer.FlatMapPath;
+import ix.core.util.PojoPointer.GroupPath;
+import ix.core.util.PojoPointer.IDFilterPath;
+import ix.core.util.PojoPointer.IdentityPath;
+import ix.core.util.PojoPointer.LimitPath;
+import ix.core.util.PojoPointer.MapPath;
+import ix.core.util.PojoPointer.ObjectPath;
+import ix.core.util.PojoPointer.SkipPath;
+import ix.core.util.PojoPointer.SortPath;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
+import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -149,7 +177,7 @@ public class EntityUtils {
 		public static <T> EntityWrapper<T> of(T bean) {
 			Objects.requireNonNull(bean);
 			if (bean instanceof EntityWrapper) {
-				return (EntityWrapper<T>) bean;
+				return (EntityWrapper) bean;
 			}
 			return new EntityWrapper<T>(bean);
 		}
@@ -174,6 +202,14 @@ public class EntityUtils {
 
 		public JsonNode toFullJsonNode() {
 			return EntityMapper.FULL_ENTITY_MAPPER().valueToTree(getValue());
+		}
+		
+		public T getClone() throws JsonProcessingException{
+			return this.ei.fromJsonNode(this.toFullJsonNode());
+		}
+		
+		public T getWrappedClone() throws JsonProcessingException{
+			return this.ei.fromJsonNode(this.toFullJsonNode());
 		}
 
 		public Key getKey() throws NoSuchElementException {
@@ -254,7 +290,6 @@ public class EntityUtils {
 		public static Predicate<FieldMeta> isCollection = (f -> f.isArrayOrCollection());
 
 		public Stream<Tuple<FieldMeta, List<Tuple<Integer,Object>>>> streamCollectedFieldsAndValues(Predicate<FieldMeta> p) {
-
 			return streamFieldsAndValues(isCollection.and(p))
 					.map(fi->new Tuple<FieldMeta,List<Tuple<Integer,Object>>>(fi.k(), //It's so easy that a child could do it!
 							fi.k().valuesList(fi.v()) // list
@@ -275,8 +310,20 @@ public class EntityUtils {
 		}
 
 		public Stream<Tuple<MethodMeta, Object>> streamMethodsAndValues(Predicate<MethodMeta> p) {
-			return ei.getTextIndexableMethods().stream().filter(p).map(m -> new Tuple<>(m, m.getValue(this.getValue())))
-					.filter(t -> t.v().isPresent()).map(t -> new Tuple<>(t.k(), t.v().get()));
+			return ei.getTextIndexableMethods().stream()
+					.filter(p)
+					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+					.filter(t -> t.v().isPresent())
+					.map(t -> Tuple.of(t.k(), t.v().get()));
+		}
+		
+		public Stream<Tuple<MethodOrFieldMeta, Object>> streamJsonMethodsOrFieldsAndValues(Predicate<MethodOrFieldMeta> p) {
+			return Stream
+					.concat(ei.getTextIndexableMethods().stream(),ei.getTextIndexableMethods().stream())
+					.filter(p)
+					.map(m -> new Tuple<>(m, m.getValue(this.getValue())))
+					.filter(t -> t.v().isPresent())
+					.map(t -> Tuple.of(t.k(), t.v().get()));
 		}
 
 		public String get_IdField() {
@@ -289,6 +336,53 @@ public class EntityUtils {
 
 		public boolean isEntity() {
 			return ei.isEntity();
+		}
+		
+		public boolean isArrayOrCollection() {
+			return Collection.class.isAssignableFrom(ei.getClazz()) || ei.getClazz().isArray();
+		}
+		
+		/**
+		 * Returns an Optional Tuple for the value at the field.
+		 * The reason for the strange nested structure is to allow to interrogate
+		 * why a value wasn't found if one isn't found. It may be that the field itself
+		 * is not found, or that the value at that field is not retrievable. 
+		 * 
+		 * This method will return a non-empty optional if the field is accessible, and the
+		 * internal Optional will be non-empty if the value there is real.
+		 * @param field
+		 * @return
+		 */
+		public Optional<Tuple<MethodOrFieldMeta,Optional<Object>>> getValueAndFieldAt(String field){
+			if(Map.class.isAssignableFrom(ei.getClazz())){
+				VirtualMapMethodMeta vmmm=new VirtualMapMethodMeta(field);
+				return Optional.of(Tuple.of(vmmm, vmmm.getValue(this.getValue())));
+			}
+			return ei.getJsonGetterFor(field).map(f->Tuple.of(f,f.getValue(this.getValue())));
+		}
+		
+		public Stream<MethodOrFieldMeta> fields(){
+			if(Map.class.isAssignableFrom(ei.getClazz())){
+				return ((Map<String,Object>)this.getValue())
+						   .keySet()
+				           .stream()
+				           .map(k->new VirtualMapMethodMeta(k.toString()));
+			}
+			return ei.streamJsonGetters();
+		}
+		
+		public Stream<Tuple<MethodOrFieldMeta,Optional<Object>>> fieldsAndValues(){
+			System.out.println("Getting values for:"  + getKind());
+			return fields().map(m->Tuple.of(m, m.getValue(this.getValue())));
+		}
+		
+		
+		
+		public Object getValueOrNullAt(String field){
+			return getValueAndFieldAt(field)
+					.map(t->t.v())
+					.orElse(Optional.empty())
+					.orElse(null);
 		}
 
 		public boolean ignorePostUpdateHooks() {
@@ -377,6 +471,301 @@ public class EntityUtils {
 			return this.streamMethodsAndValues(m->m.getMethodName().equals(name)).findFirst().get().v();
 		}
 
+		public boolean isExplicitDeletable() {
+			return this.ei.isExplicitDeletable();
+		}
+		
+		public void delete() {
+			((Model)this.getValue()).delete();
+		}
+		
+		public void update() {
+			if(_k instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
+        		((ForceUpdatableModel)_k).forceUpdate();
+        	}else if(_k instanceof Model){
+        		((Model)_k).update();
+        	}
+		}
+
+		public Optional<Object> getArrayElementAt(int index) {
+			if(!this.isArrayOrCollection()){
+				return Optional.empty();
+			}
+			if(this.getValue() instanceof Collection){
+				Collection coll = (Collection)this.getValue();
+				if(coll instanceof List){
+					List l = (List)coll;
+					try{
+						return Optional.of(l.get(index));
+					}catch(Exception e){
+						return Optional.empty();
+					}
+				}else{
+					return coll.stream().skip(index).limit(1).findFirst();
+				}
+			}else{
+				try{
+					return Optional.of(((Object[])this.getValue())[index]);
+				}catch(Exception e){
+					return Optional.empty();
+				}
+			}
+		}
+		
+		public Stream<Object> streamArrayElements() {
+			if(!this.isArrayOrCollection()){
+				return Stream.empty();
+			}
+			if(this.getValue() instanceof Collection){
+				return ((Collection<Object>)this.getValue()).stream();
+			}else{
+				return (Arrays.stream((Object[])this.getValue()));
+			}
+		}
+		
+		/**
+		 * Same as {@link #streamArrayElements()} only the elements
+		 * are contained in {@link EntityWrapper} as a stream
+		 * @return
+		 */
+		public Stream<EntityWrapper<?>> streamWrappedArrayElements() {
+			return streamArrayElements().map(EntityWrapper::of);
+		}
+		
+		
+		
+		private static 
+		CachedSupplier<Map<String,BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>>>>
+			finders = CachedSupplier.of(()->{
+				Map<String,BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>>>
+					registry= new HashMap<>();
+				
+				//ObjectPath locator
+				registry.put(IdentityPath.class.getName(), (cpath,current)->{
+					return Optional.of(current);
+				});
+				
+				//ObjectPath locator
+				registry.put(ObjectPath.class.getName(), (cpath,current)->{
+					ObjectPath op = (ObjectPath)cpath;
+	        		String fieldname=op.getField();
+	        		Optional<Tuple<MethodOrFieldMeta,Optional<Object>>> value 
+	        				=current.getValueAndFieldAt(fieldname);
+	        		if(!value.isPresent() || !value.get().v().isPresent()){
+	        			return Optional.empty();
+	        		}
+	        		Object rv=value.get().v().get();
+	        		return Optional.of(EntityWrapper.of(rv));
+				});
+				
+				//ArrayPath locator
+				registry.put(ArrayPath.class.getName(), (cpath,current)->{
+					ArrayPath ap = (ArrayPath)cpath;
+	        		Optional<Object> value =current.getArrayElementAt(ap.getIndex());
+	        		if(!value.isPresent()){
+	        			return Optional.empty();
+	        		}
+	        		return Optional.of(EntityWrapper.of(value.get()));
+				});
+				//IDPath locator
+				registry.put(IDFilterPath.class.getName(), (cpath,current)->{
+					IDFilterPath idp = (IDFilterPath)cpath;
+					
+					Optional<EntityWrapper<?>> atId=current
+							.streamWrappedArrayElements()
+							.filter(e->idp.getId().equals(e.getKey().getIdString()))
+							.findFirst();
+					return atId;
+				});
+				
+				//FilterPath locator
+				registry.put(FilterPath.class.getName(), (cpath,current)->{
+	        		FilterPath fp = (FilterPath)cpath;
+	        		List<Object> list=current.streamWrappedArrayElementsAt(fp.getField())
+	        		  .filter(t->t.v().isPresent())
+	        		  .filter(t->fp.getValue().equals(t.v().get().getValue()+""))
+	        		  .map(t->t.k())
+	        		  .map(EntityWrapper::getValue)
+	        		  .collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(list));
+				});
+				
+				//MapPath locator
+				registry.put(MapPath.class.getName(), (cpath,current)->{
+					MapPath mp =(MapPath)cpath;
+					List<Object> list=current
+	        					.streamWrappedArrayElementsAt(mp.getField())
+	        					.map(t->t.v().orElse(null))
+	        					.filter(Objects::nonNull) 		//TODO keep nulls?
+	        					.map(EntityWrapper::getValue)
+	        					.collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(list));
+				});
+				
+				registry.put(FlatMapPath.class.getName(), (cpath,current)->{
+					FlatMapPath mp =(FlatMapPath)cpath;
+					List<Object> list =current
+							.streamWrappedArrayElementsAt(mp.getField())
+        					.map(t->t.v().orElse(null))
+        					.filter(Objects::nonNull)
+        					.filter(ew->ew.isArrayOrCollection())
+        					.flatMap(ew->ew.streamArrayElements())
+        					.collect(Collectors.toList());
+					return Optional.of(EntityWrapper.of(list));
+				});
+				
+				
+				registry.put(CountPath.class.getName(), (cpath,current)->{//Should be 0 arg?
+					CountPath mp =(CountPath)cpath;						  //Probably.
+	        		Long value =current.streamArrayElements()             //It's now doing a map(f->f.path()).filter().count()
+	        					.map(EntityWrapper::of)
+	        					.map(e->e.at(mp.getField()).orElse(null))
+	        					.filter(Objects::nonNull)
+	        					.count();
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				//Should be 0 arg?
+				//Yes, I think so
+				//This is now doing a map(f->f.path()).filter().distinct()
+				registry.put(DistinctPath.class.getName(), (cpath,current)->{
+					DistinctPath mp =(DistinctPath)cpath;		
+	        		Object value =current.streamArrayElements() 
+	        					.map(EntityWrapper::of)
+	        					.map(e->e.at(mp.getField()).orElse(null))
+	        					.filter(Objects::nonNull)
+	        					.map(EntityWrapper::getValue)
+	        					.distinct()
+	        					.collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				
+				
+				registry.put(FieldPath.class.getName(), (cpath,current)->{
+					FieldPath fp =(FieldPath)cpath;		
+	        		List<Tuple<String,Object>> value=current
+	        					.fieldsAndValues()
+	        					.map(t->Tuple.of(t.k().getJsonFieldName(), t.v().orElse(null)))
+	        					.collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				registry.put(SortPath.class.getName(), (cpath,current)->{
+					SortPath sp =(SortPath)cpath;
+	        		List<Object> value=current.streamArrayElements() 
+        					.map(EntityWrapper::of)
+        					.map(Util.toIndexedTuple())
+        					.map(e->Tuple.of(e,e.v().at(sp.getField())))
+        					.sorted((t1,t2)->{
+        						int r=0;
+        						if(t1.v().isPresent() && t2.v().isPresent()){
+        							EntityWrapper ew1=t1.v().get();
+        							EntityWrapper ew2=t2.v().get();
+        							r= ew1.compareIfPossible(ew2);
+        						}else if(t1.v().isPresent()){
+        							r= 1;
+        						}else{
+        							r= -1;
+        						}
+        						if(r==0){
+        							r=Integer.compare(t1.k().k(),t2.k().k());
+        						}
+        						if(sp.isReverse())return -r;
+        						return r;
+        					})
+        					.map(t->t.k().v().getValue())
+        					.collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				registry.put(LimitPath.class.getName(), (cpath,current)->{
+					LimitPath sp =(LimitPath)cpath;
+	        		List<Object> value=current.streamArrayElements() 
+        					.limit(sp.getValue())
+        					.collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				registry.put(SkipPath.class.getName(), (cpath,current)->{
+					SkipPath sp =(SkipPath)cpath;
+	        		List<Object> value=current.streamArrayElements() 
+        					.skip(sp.getValue())
+        					.collect(Collectors.toList());
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				registry.put(GroupPath.class.getName(), (cpath,current)->{
+					GroupPath mp =(GroupPath)cpath;
+	        		Map<String,List<Object>> value= new LinkedHashMap<>();
+	        		current.streamArrayElements() 
+	        				.map(EntityWrapper::of)
+        					.collect(Collectors.groupingBy(
+		        							t->t.at(mp.getField())
+		        							    .orElse(EntityWrapper.of("<NONE>"))
+		        							    .getValue()
+		        							    .toString()))
+        					.forEach((k,v)->{
+			        			List<Object> olist=v.stream()
+			        								.map(EntityWrapper::getValue)
+			        								.collect(Collectors.toList());
+			        			value.put(k, olist);
+			        		});
+	        		return Optional.of(EntityWrapper.of(value));
+				});
+				
+				
+				return registry;
+			});
+		
+		
+		@SuppressWarnings("unchecked")
+		private Stream<Tuple<EntityWrapper<?>,Optional<EntityWrapper<?>>>> streamWrappedArrayElementsAt(PojoPointer cpath){
+			return this.streamWrappedArrayElements()
+					   .map(e->Tuple.of(e, e.at(cpath)));
+		}
+		
+		/**
+		 * Uses a {@link PojoPointer} to retrieve specific elements within
+		 * the value wrapped by this {@link EntityWrapper}. This can be used
+		 * much like {@link JsonNode#at(com.fasterxml.jackson.core.JsonPointer)}
+		 * which retrieves a JsonNode representing the element at that location.
+		 * 
+		 * <b>Experimental</b>
+		 * @param cpath The PojoPointer representing the location of the element(s) to be retrieved
+		 * @return
+		 */
+		public Optional<EntityWrapper<?>> at(PojoPointer cpath){
+
+	        EntityWrapper<Object> current=(EntityWrapper<Object>) this;
+	        
+	        do {
+	        	BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>> finder=
+	        	finders.get().get(cpath.getClass().getName());
+	        	if(finder!=null){
+	        		Optional<EntityWrapper<?>> found=finder.apply(cpath, current);
+	        		if(!found.isPresent())return found;
+	        		current=(EntityWrapper<Object>) found.get();
+	        	}else{
+	        		throw new IllegalArgumentException("Unknown PojoPointer type:" + cpath.getClass());
+	        	}
+	        	if(!cpath.hasTail())break;
+	        	
+	        	//next
+	        	cpath=cpath.tail();
+	        } while(true);
+	        
+	        return Optional.of(current);
+	    }
+
+		
+		private int compareIfPossible(EntityWrapper<T> ew2) {
+			Objects.requireNonNull(ew2);
+			if(this.getValue() instanceof Comparable && ew2.getValue() instanceof Comparable){
+				return ((Comparable<T>)this.getValue()).compareTo(ew2.getValue());
+			}
+			return 0;
+		}
 	}
 
 	public static class EntityInfo<T> {
@@ -392,6 +781,8 @@ public class EntityUtils {
 		private List<MethodMeta> methods;
 
 		private List<MethodMeta> textMethods;
+		
+		private List<MethodOrFieldMeta> jsonFields;
 
 		private List<MethodMeta> keywordFacetMethods;
 
@@ -428,9 +819,12 @@ public class EntityUtils {
 		private boolean hasBackup = false;
 		private EntityInfo<?> ancestorInherit;
 
-
+		private boolean isExplicitDeletable=false;
 
 		private Supplier<Set<EntityInfo<? extends T>>> forLater;
+		
+		
+		Map<String,MethodOrFieldMeta> jsonGetters;
 
 		//Some simple factory helper methods
 		public List<String> getSponsoredFields() {
@@ -446,6 +840,9 @@ public class EntityUtils {
 		}
 
 
+		public boolean isExplicitDeletable(){
+			return isExplicitDeletable;
+		}
 
 
 		public static boolean isPlainOldEntityField(FieldMeta f) {
@@ -487,10 +884,9 @@ public class EntityUtils {
 			kind = cls.getName();
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
-			fields = Arrays.stream(cls.getFields()).map(f2 -> new FieldMeta(f2, dyna)).filter(f -> {
+			fields = Arrays.stream(cls.getFields()).map(f2 -> new FieldMeta(f2, dyna)).peek(f -> {
 				if (f.isId()) {
 					idField = f;
-					return false;
 				} else if (f.isDynamicFacetLabel()) {
 					dynamicLabelField = f;
 				} else if (f.isDynamicFacetValue()) {
@@ -505,10 +901,10 @@ public class EntityUtils {
 				if (f.isChangeReason()){
 					this.changeReasonField=f;
 				}
-				return true;
 			}).collect(Collectors.toList());
 
-			uniqueColumnFields = fields.stream().filter(f -> f.isUniqueColumn()).collect(Collectors.toList());
+			
+			
 
 			methods = Arrays.stream(cls.getMethods()).map(m2 -> new MethodMeta(m2)).peek(m -> {
 				if (m.isDataVersion()) {
@@ -525,12 +921,29 @@ public class EntityUtils {
 					this.changeReasonField=m;
 				}
 			}).collect(Collectors.toList());
+			
+			jsonGetters =Stream.concat(methods.stream(),  fields.stream())
+			      .filter(m->m.isJsonSerialized())
+			      .collect(Collectors.toMap(m->m.getJsonFieldName(), m->m, (a,b)->{
+			    	  if(a.getJsonModifiers()>b.getJsonModifiers())return a;
+			    	  return b;
+			      }));
+			
+			
+			uniqueColumnFields = fields.stream()
+					.filter(f -> f.isUniqueColumn())
+					.collect(Collectors.toList());
+			
+			fields.removeIf(f->f.isId());
+			
 
 			this.keywordFacetMethods = methods.stream()
 					.filter(m->m.isGetter())
 					.filter(m->m.getType().isAssignableFrom(Keyword.class))
 					.filter(m->m.getIndexable()!=null)
 					.collect(Collectors.toList());
+			
+			
 
 			seqFields = Stream.concat(fields.stream(), methods.stream())
 					.filter(f -> f.isSequence())
@@ -590,6 +1003,10 @@ public class EntityUtils {
 			if (idType != null) {
 				isIdNumeric = idType.isAssignableFrom(Long.class);
 			}
+			
+			isExplicitDeletable=(!cls.isAnnotationPresent(IgnoredModel.class) &&
+					 cls.isAnnotationPresent(SingleParent.class));
+			isExplicitDeletable &= Model.class.isAssignableFrom(cls);
 
 		}
 
@@ -729,6 +1146,20 @@ public class EntityUtils {
 		public List<MethodMeta> getTextIndexableMethods() {
 			return this.textMethods;
 		}
+		
+		public List<MethodOrFieldMeta> getJsonSerializableMethodOrFields() {
+			return this.jsonFields;
+		}
+		
+		public Optional<MethodOrFieldMeta> getJsonGetterFor(String jsonField){
+			Objects.requireNonNull(jsonField);
+			MethodOrFieldMeta mofm = jsonGetters.get(jsonField);
+			return Optional.ofNullable(mofm);
+		}
+		
+		public Stream<MethodOrFieldMeta> streamJsonGetters(){
+			return jsonGetters.values().stream();
+		}
 
 		public List<MethodMeta> getMethods() {
 			return this.methods;
@@ -792,6 +1223,8 @@ public class EntityUtils {
 		private static String getBeanName(String field) {
 			return Character.toUpperCase(field.charAt(0)) + field.substring(1);
 		}
+		
+		
 
 		/**
 		 * This preserves some of the weird checks being done to circumvent
@@ -880,11 +1313,38 @@ public class EntityUtils {
 	}
 
 	public static interface MethodOrFieldMeta{
+		
+		public static int JSON_MODIFIER_METHOD = 2;
+		public static int JSON_MODIFIER_EXPLICIT = 1;
+		
 
 		public Optional<Object> getValue(Object entity);
+		
+		default BiFunction<ObjectMapper,Object,JsonNode> getValueSerializer(){
+			return (om, o)->{
+				if(this.getSerializer()!=null){
+					try{
+						JsonFactory jsf=om.getFactory();
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						JsonGenerator jg=jsf.createGenerator(baos);
+						SerializerProvider sp=new DefaultSerializerProvider.Impl();
+						this.getSerializer().serialize(o, jg, sp);
+						jg.close();
+						return om.readTree(baos.toByteArray());
+					}catch(Exception e){
+						Logger.warn("Cannot serialize using custom, using default", e);
+					}
+				}
+				return om.valueToTree(o);
+			};
+		}
+		
+		public boolean isGenerated();
 		public boolean isNumeric();
 		public Class<?> getType();
 		public String getName();
+		public boolean isJsonSerialized();
+		public String getJsonFieldName();
 		default boolean isArrayOrCollection() {
 			return isArray() || isCollection();
 		}
@@ -893,6 +1353,12 @@ public class EntityUtils {
 		public boolean isTextEnabled();
 		public boolean isSequence();
 		public boolean isStructure();
+		
+		public Class<?> deserializeAs();
+		public <T> JsonSerializer<T> getSerializer();
+		
+		
+		public int getJsonModifiers();
 
 
 		// Below are convenience functions that aren't so 
@@ -918,10 +1384,95 @@ public class EntityUtils {
 			int[] idx = { 0 };
 			return s.map(o -> new Tuple<Integer,Object>(idx[0]++, o));
 		}
+	}
+	
+	public static class VirtualMapMethodMeta implements MethodOrFieldMeta{
 
+		private String field;
+		
+		public VirtualMapMethodMeta(String field){
+			this.field=field;
+		}
+		
+		public Map asMap(Object o ){
+			return (Map)o;
+		}
+		
+		@Override
+		public Optional<Object> getValue(Object entity) {
+			Object val=asMap(entity).get(field);
+			return Optional.ofNullable(val);
+		}
 
+		@Override
+		public boolean isNumeric() {
+			return false;
+		}
 
+		@Override
+		public Class<?> getType() {
+			return Object.class;
+		}
 
+		@Override
+		public String getName() {
+			return field;
+		}
+
+		@Override
+		public boolean isJsonSerialized() {
+			return true;
+		}
+
+		@Override
+		public String getJsonFieldName() {
+			return field;
+		}
+
+		@Override
+		public boolean isArray() {
+			return false;
+		}
+
+		@Override
+		public boolean isCollection() {
+			return false;
+		}
+
+		@Override
+		public boolean isTextEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isSequence() {
+			return false;
+		}
+
+		@Override
+		public boolean isStructure() {
+			return false;
+		}
+
+		@Override
+		public Class<?> deserializeAs() {
+			return null;
+		}
+
+		@Override
+		public <T> JsonSerializer<T> getSerializer() {
+			return null;
+		}
+
+		@Override
+		public int getJsonModifiers() {
+			return 0;
+		}
+
+		@Override
+		public boolean isGenerated() {
+			return false;
+		}
 	}
 
 	public static class MethodMeta implements MethodOrFieldMeta {
@@ -946,6 +1497,15 @@ public class EntityUtils {
 		private boolean isGetter = false;
 		private boolean isDataValidatedFlag = false;
 		private boolean isChangeReason=false;
+		private boolean isJsonIgnore=false;
+		private boolean isGeneratedByPlay=false;
+		
+		private JsonProperty jsonProperty=null;
+		private JsonSerialize jsonSerialize=null; 
+		private JsonSerializer<?> serializer=null;
+		
+		private String serializedName = null;
+		private String correspondingFieldName=null;
 		private Class<?> setterType;
 
 		private Set<Class<?>> hookTypes= new HashSet<Class<?>>();
@@ -1016,6 +1576,8 @@ public class EntityUtils {
 				indexingName = name.substring(3);
 				if (args.length == 0) {
 					isGetter = true;
+					serializedName=(indexingName.charAt(0)+"").toLowerCase() + indexingName.substring(1);
+					correspondingFieldName=serializedName;
 				}
 			} else if (name.startsWith("set")) {
 				if (args.length == 1) {
@@ -1036,7 +1598,18 @@ public class EntityUtils {
 			addHookIf(PreRemove.class);
 			addHookIf(PostRemove.class);
 			addHookIf(PostLoad.class);
-
+			
+			jsonSerialize=m.getAnnotation(JsonSerialize.class);
+			if(jsonSerialize!=null){
+				if(jsonSerialize.using()!=com.fasterxml.jackson.databind.JsonSerializer.None.class){
+					try {
+						this.serializer=jsonSerialize.using().newInstance();
+					} catch (Exception e) {
+						Logger.error(e.getMessage(),e);
+					}
+				}
+			}
+			
 			if (indexable != null) {
 				// we only index no arguments methods
 				if (args.length == 0) {
@@ -1053,6 +1626,39 @@ public class EntityUtils {
 					if (indexable.sequence()) {
 						isSequence = true;
 					}
+				}
+			}
+			
+			if(m.getName().equals("getClass") 
+					|| m.isSynthetic()
+					|| m.isBridge() 
+					){
+				isJsonIgnore=true;
+			}
+			
+			if(m.getAnnotation(play.core.enhancers.PropertiesEnhancer.GeneratedAccessor.class)!=null){
+				isGeneratedByPlay=true;
+				FieldMeta fm;
+				//Get the corresponding field
+				try {
+					Field f=m.getDeclaringClass().getDeclaredField(correspondingFieldName);
+					fm = new FieldMeta(f,null);
+					
+					isJsonIgnore=!fm.isJsonSerialized();
+				} catch (Exception e) {}
+			}
+			
+			if(Modifier.isPrivate(m.getModifiers())){
+				isJsonIgnore=true;
+			}
+			
+			if(m.getAnnotation(JsonIgnore.class)!=null){
+				isJsonIgnore=true;
+			}
+			jsonProperty= m.getAnnotation(JsonProperty.class);
+			if(jsonProperty!=null){
+				if(jsonProperty.value().length()>0){
+					serializedName=jsonProperty.value();
 				}
 			}
 
@@ -1185,6 +1791,44 @@ public class EntityUtils {
 		public boolean isNumeric() {
 			return type.isAssignableFrom(Long.class);
 		}
+		@Override
+		public boolean isJsonSerialized() {
+			if(isJsonIgnore)return false;
+			return (isGetter || (jsonProperty!=null && !isSetter));
+		}
+		@Override
+		public String getJsonFieldName() {
+			return serializedName;
+		}
+		@Override
+		public int getJsonModifiers() {
+			int ret = MethodOrFieldMeta.JSON_MODIFIER_METHOD;
+			if(this.jsonProperty!=null)ret|=MethodOrFieldMeta.JSON_MODIFIER_EXPLICIT;
+			return ret;
+		}
+
+		@Override
+		public Class<?> deserializeAs() {
+			JsonDeserialize json = (JsonDeserialize) this.m.getAnnotation(JsonDeserialize.class);
+			if (json != null) {
+				return json.as();
+			}else{
+				if(jsonSerialize!=null){
+					//j.
+				}
+				return JsonNode.class;
+			}
+		}
+		@Override
+		public JsonSerializer<?> getSerializer() {
+			
+			return this.serializer;
+		}
+		
+		@Override
+		public boolean isGenerated() {
+			return this.isGeneratedByPlay;
+		}
 
 	}
 
@@ -1290,6 +1934,15 @@ public class EntityUtils {
 		private boolean isDataValidatedFlag = false;
 		private boolean isChangeReason=false;
 
+		private boolean isJsonSerailzed=true;
+
+		private JsonSerialize jsonSerialize=null; 
+		private JsonSerializer<?> serializer=null;
+		
+		private String serializedName;
+
+		JsonProperty jsonProperty=null;
+		
 		private Column column;
 
 		public boolean isSequence() {
@@ -1341,6 +1994,9 @@ public class EntityUtils {
 			instIndexable=new InstantiatedIndexable(indexable);
 
 			int mods = f.getModifiers();
+			if (Modifier.isStatic(mods) || Modifier.isPrivate(mods) || f.isSynthetic()) {
+				this.isJsonSerailzed=false;
+			}
 			if (!indexable.indexed() || Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
 				textEnabled = false;
 			}
@@ -1350,6 +2006,7 @@ public class EntityUtils {
 			isArray = type.isArray();
 			isCollection = Collection.class.isAssignableFrom(type);
 			name = f.getName();
+			serializedName=name;
 			if (dyna != null && name.equals(dyna.label())) {
 				isDynaLabel = true;
 			}
@@ -1373,6 +2030,25 @@ public class EntityUtils {
 			}
 			if (f.getAnnotation(ChangeReason.class) != null) {
 				this.isChangeReason = true;
+			}
+			if (f.getAnnotation(JsonIgnore.class) != null) {
+				this.isJsonSerailzed = false;
+			}
+			jsonProperty= f.getAnnotation(JsonProperty.class);
+			if(jsonProperty!=null){
+				if(jsonProperty.value().length()>0){
+					serializedName=jsonProperty.value();
+				}
+			}
+			jsonSerialize=f.getAnnotation(JsonSerialize.class);
+			if(jsonSerialize!=null){
+				if(jsonSerialize.using()!=com.fasterxml.jackson.databind.JsonSerializer.None.class){
+					try {
+						this.serializer=jsonSerialize.using().newInstance();
+					} catch (Exception e) {
+						Logger.error(e.getMessage(),e);
+					}
+				}
 			}
 		}
 
@@ -1448,24 +2124,51 @@ public class EntityUtils {
 		public boolean isNumeric() {
 			return Number.class.isAssignableFrom(this.type);
 		}
-		//		
-		//		public List<VocabularyTerm> getPossibleTerms(){
-		//			
-		//			return this.possibleTerms;
-		//		}
-		//		
-		//		//TODO: Implement this
-		//		public boolean isControlled(){
-		//			return false;
-		//		}
-		//		
+		
+		@Override
+		public boolean isJsonSerialized() {
+			return this.isJsonSerailzed;
+		}
+
+		@Override
+		public String getJsonFieldName() {
+			return serializedName;
+		}
+		
+		
+		@Override
+		public int getJsonModifiers() {
+			int ret = 0;
+			if(this.jsonProperty!=null)ret|=MethodOrFieldMeta.JSON_MODIFIER_EXPLICIT;
+			return ret;
+		}
+
+		@Override
+		public Class<?> deserializeAs() {
+			JsonDeserialize json = (JsonDeserialize) this.f.getAnnotation(JsonDeserialize.class);
+			if (json != null) {
+				return json.as();
+			}else{
+				return JsonNode.class;
+			}
+		}
+
+		@Override
+		public JsonSerializer<?> getSerializer() {
+			return this.serializer;
+		}
+
+		@Override
+		public boolean isGenerated() {
+			return false;
+		}
 	}
 
 	public static class Key {
-		private EntityInfo kind;
+		private EntityInfo<?> kind;
 		private Object _id; 
 
-		private Key(EntityInfo k, Object id) {
+		private Key(EntityInfo<?> k, Object id) {
 			this.kind = k;
 			this._id = id;
 		}
@@ -1482,7 +2185,7 @@ public class EntityUtils {
 			return this._id.toString();
 		}
 
-		public EntityInfo getEntityInfo() {
+		public EntityInfo<?> getEntityInfo() {
 			return kind;
 		}
 
@@ -1495,13 +2198,14 @@ public class EntityUtils {
 		 * Returns null if not present
 		 * @return
 		 */
+		@SuppressWarnings("unchecked")
 		private Object nativeFetch(){
 			return kind.getFinder().byId(this.getIdNative());
 		}
 
 
 		// fetches from finder
-		public Optional<EntityWrapper> fetch() {
+		public Optional<EntityWrapper<?>> fetch() {
 			Object o=nativeFetch();
 			if(o==null)return Optional.empty();
 			return Optional.of(EntityWrapper.of(o));
@@ -1512,7 +2216,7 @@ public class EntityUtils {
 			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
 		}
 
-		public static Key of(EntityInfo meta, Object id) {
+		public static Key of(EntityInfo<?> meta, Object id) {
 			return new Key(meta, id);
 		}
 
@@ -1520,7 +2224,7 @@ public class EntityUtils {
 		public static Key of(Document doc) throws Exception {
 			// TODO: This should be moved to somewhere more Abstract, probably
 			String kind = doc.getField(TextIndexer.FIELD_KIND).stringValue();
-			EntityInfo ei = EntityUtils.getEntityInfoFor(kind);
+			EntityInfo<?> ei = EntityUtils.getEntityInfoFor(kind);
 			if(ei.hasIdField()){
 				if (ei.hasLongId()) {
 					Long id = doc.getField(ei.getInternalIdField()).numericValue().longValue();

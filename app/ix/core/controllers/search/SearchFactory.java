@@ -17,6 +17,7 @@ import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SuggestResult;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.CachedSupplier;
 import ix.core.util.Java8Util;
 import ix.utils.Global;
 import ix.utils.Util;
@@ -26,23 +27,15 @@ import play.db.ebean.Model;
 import play.mvc.Result;
 
 public class SearchFactory extends EntityFactory {
-    static Model.Finder<Long, ETag> etagDb;
+    static CachedSupplier<Model.Finder<Long, ETag>> etagDb = 
+    		CachedSupplier.of(()->new Model.Finder(Long.class, ETag.class));
 
-
-    private static TextIndexerPlugin textIndexerPlugin;
-    static{
-        init();
-    }
-
-    public static void init(){
-     //   TextIndexer.init();
-        etagDb = new Model.Finder(Long.class, ETag.class);
-        textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
-
-    }
+    private static CachedSupplier<TextIndexerPlugin> textIndexerPlugin= 
+    		CachedSupplier.of(()->Play.application().plugin(TextIndexerPlugin.class));
+   
 
     static TextIndexer getTextIndexer(){
-        return textIndexerPlugin.getIndexer();
+        return textIndexerPlugin.get().getIndexer();
     }
 
     public static SearchOptions parseSearchOptions
@@ -107,7 +100,7 @@ public class SearchFactory extends EntityFactory {
         if (q != null && (q.startsWith("etag:") || q.startsWith("ETag:"))) {
             String id = q.substring(5, 21);
             try {
-                ETag etag = etagDb.where().eq("etag", id).findUnique();
+                ETag etag = etagDb.get().where().eq("etag", id).findUnique();
                 if (etag.query != null) {
                     if (etag.filter != null) {
                         String[] facets = etag.filter.split("&");

@@ -6,9 +6,6 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 
-// TODO
-// 1. Need a mechanism to have a "default" implementation
-// 2. Need a mechanism to have an "accumulator" in certain cases
 
 public interface EntityResourceFactory<T> {
 	
@@ -29,9 +26,13 @@ public interface EntityResourceFactory<T> {
 	public <V extends T> void register(EntityInfo<?> emeta, V resource);
 	
 	default <V extends T> void register(EntityInfo<?> emeta, V resource, boolean descendents){
-		emeta.getTypeAndSubTypes().stream().forEach(ei->{
-			register(ei,resource);
-		});
+		if(descendents){
+			emeta.getTypeAndSubTypes().stream().forEach(ei->{
+				register(ei,resource);
+			});
+		}else{
+			register(emeta,resource);
+		}
 	}
 	
 	default <V extends T>  void register(Class<?> cls, V resource, boolean descendents){

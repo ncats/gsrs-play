@@ -49,7 +49,6 @@ public class Authentication extends Controller {
     
     static{
     	init();
-    	
     }
 
 	public static void init(){
@@ -266,7 +265,7 @@ public class Authentication extends Controller {
 
 		AuthenticationCredentials credentials = AuthenticationCredentials.create(username, password);
 
-    	UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
+    	UserProfile profile = UserProfileFactory.finder.get().where().eq("user.username", username).findUnique();
 
     	if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
     			cred = profile.user;

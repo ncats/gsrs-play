@@ -255,7 +255,7 @@ public class IxCache extends Plugin {
 	
 	public static Object getOrFetchTempRecord(Key k) throws Exception {
 		return getOrElseTemp(k.toString(), ()->{
-            Optional<EntityUtils.EntityWrapper> ret = k.fetch();
+            Optional<EntityUtils.EntityWrapper<?>> ret = k.fetch();
             if(ret.isPresent()){
                 return ret.get().getValue();
             }

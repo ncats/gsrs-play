@@ -156,12 +156,15 @@ public class Relationship extends CommonDataElementOfCollection {
     }
     
     //This flag is used to explicitly allow deleting of this relationship
+    @JsonIgnore
     private transient boolean okToRemoveFlag=false;
     
+    @JsonIgnore
     public void setOkToRemove(){
     	okToRemoveFlag=true;
     }
     
+    @JsonIgnore
     public boolean isOkToRemove(){
     	return okToRemoveFlag;
     }
