@@ -468,27 +468,16 @@ public class GinasTestServer extends ExternalResource{
     	CachedSupplier.resetCaches();
     	
         App.init();
+        
       //  TextIndexer.init();
-        ValidationUtils.init();
         RouteFactory.init();
         Authentication.init();
-
         IxDynamicResourceHandler.init();
-
         PrincipalFactory.init();
-
         SubstanceFactory.init();
-
         EntityPersistAdapter.init();
-
         SequenceIndexer.init();
-
-        GinasLoad.init();
-        GinasFactory.init();
-
-        GinasApp.init();
-        IndexValueMakerFactory.init();
-        EntityUtils.init();
+        
         //our APIs
        // SubstanceLoader.init();
     }

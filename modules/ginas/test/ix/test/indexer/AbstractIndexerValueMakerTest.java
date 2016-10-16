@@ -63,7 +63,9 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 
 	@Test
 	public void testIndexMakerIsDifferentFromDefaultForEntity(){
-		IndexValueMaker<? extends T> ivm =IndexValueMakerFactory.forClass(getEntityClass());
+		IndexValueMaker<? extends T> ivm =IndexValueMakerFactory
+											.getInstance(Play.application())
+											.getSingleResourceFor(getEntityClass());
 		assertNotEquals(ReflectingIndexValueMaker.class,ivm.getClass());
 	}
 	
@@ -81,7 +83,9 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 
 
 	public void testIndexableValuesMatchCriteria(T t, Predicate<Stream<IndexableValue>> matches){
-		IndexValueMaker<T> ivm =(IndexValueMaker<T>) IndexValueMakerFactory.forClass(getEntityClass());
+		IndexValueMaker<T> ivm =(IndexValueMaker<T>) IndexValueMakerFactory
+														.getInstance(Play.application())
+														.getSingleResourceFor(getEntityClass());
 
 		List<IndexableValue> ivs = new ArrayList<IndexableValue>();
 

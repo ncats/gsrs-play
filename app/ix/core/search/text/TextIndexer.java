@@ -210,7 +210,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	private static final Pattern SUGGESTION_WHITESPACE_PATTERN = Pattern.compile("[\\s/]");
 
-	private static AtomicBoolean ALREADY_INITIALIZED = new AtomicBoolean(false);
+	private static CachedSupplier<AtomicBoolean> ALREADY_INITIALIZED = CachedSupplier.of(()->new AtomicBoolean(false));
 
 	public static class FV {
 		String label;
@@ -610,7 +610,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 
 	public static void init() {
-		if (!ALREADY_INITIALIZED.get()) {
+		AtomicBoolean isInitialized= ALREADY_INITIALIZED.get();
+		if (!isInitialized.get()) {
 			if (indexers != null) {
 				indexers.forEach((k, v) -> {
 					System.out.println("init shutdown " + k.getAbsolutePath());
@@ -619,25 +620,25 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
 			deepKinds = Play.application().configuration()
-									.getStringList("ix.index.deepfields", new ArrayList<>())
-									.stream()
-									.map(s->{
-										try{
-											return EntityUtils.getEntityInfoFor(s).getTypeAndSubTypes();
-										}catch(Exception e){
-											e.printStackTrace();
-											return null;
-										}
-									 })
-									.filter(Objects::nonNull)
-									.flatMap(Collection::stream)
-									.map(ei->ei.getName())
-									.collect(Collectors.toSet());
+					.getStringList("ix.index.deepfields", new ArrayList<>())
+					.stream()
+					.map(s->{
+						try{
+							return EntityUtils.getEntityInfoFor(s).getTypeAndSubTypes();
+						}catch(Exception e){
+							e.printStackTrace();
+							return null;
+						}
+					})
+					.filter(Objects::nonNull)
+					.flatMap(Collection::stream)
+					.map(ei->ei.getName())
+					.collect(Collectors.toSet());
 			
 			
 			indexers = new ConcurrentHashMap<File, TextIndexer>();
 
-			ALREADY_INITIALIZED.set(true);
+			isInitialized.set(true);
 		}
 	}
 
@@ -1741,7 +1742,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 							TextField tf=new TextField(FULL_TEXT_FIELD, text, NO);
 							//tf.set
 							doc.add(tf);
-							if(USE_ANALYSIS && isDeep.call() && f.name().startsWith(ROOT +"_")){
+							if(USE_ANALYSIS && isDeep.get() && f.name().startsWith(ROOT +"_")){
 								fullText.computeIfAbsent(f.name(),k->new ArrayList<TextField>())
 									.add(tf);
 							}

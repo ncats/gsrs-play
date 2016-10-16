@@ -187,7 +187,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
             if (debugLevel >= 2) {
                 Logger.debug("IxCache missed: " + key);
             }
-            return generator.call().get();
+            return generator.call().getSync();
         }
         
         try {
@@ -196,7 +196,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
             //in case there is a cast problem
             //or some other problem with the cached value
             //re-generate
-        	return generator.call().get();
+        	return generator.call().getSync();
         }
 
     }
@@ -288,7 +288,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
     @Override
     public void put(String key, Object value, int expiration){
     	CacheGeneratorWrapper cgw = createKeyWrapper(TypedCallable.of(value),key,expiration);
-    	cgw.call().get();
+    	cgw.call().getSync();
     }
     
     @Override
@@ -299,7 +299,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
     @Override
     public void putRaw(String key, Object value, int expiration){
     	CacheGeneratorWrapper<Object> cgw = createRaw(TypedCallable.of(value),key,expiration);
-    	cgw.call().get();
+    	cgw.call().getSync();
     }
     
     public static class ConfigurableCacheElement extends Element{

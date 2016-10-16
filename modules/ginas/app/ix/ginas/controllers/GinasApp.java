@@ -116,6 +116,7 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.crud.Administration;
+import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
@@ -150,11 +151,79 @@ public class GinasApp extends App {
 	//Currently, this is "Newest change first"	
     private static final String DEFAULT_SEARCH_ORDER = "$lastEdited";
     
-    static Map<String, ResultRenderer<?>> listRenderers = new HashMap<>();
-    static Map<String, ResultRenderer<?>> thumbRenderers = new HashMap<>();
+    static CachedSupplier<Map<String, ResultRenderer<?>>> listRenderers = CachedSupplier.of(()->{
+    		Map<String, ResultRenderer<?>> list = new HashMap<>();
+    		list.put(Substance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.list.conceptlist.render((Substance)t);
+        		});
+            list.put(ChemicalSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.chemlist.render((ChemicalSubstance)t,ct.getId());
+            		});
+            list.put(ProteinSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.proteinlist.render((ProteinSubstance)t,ct.getId());
+            		});
+            list.put(NucleicAcidSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.nucleicacidlist.render((NucleicAcidSubstance)t,ct.getId());
+            		});
+            list.put(PolymerSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.polymerlist.render((PolymerSubstance)t,ct.getId());
+            		});
+            list.put(MixtureSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.mixlist.render((MixtureSubstance)t);
+            		});
+            list.put(StructurallyDiverseSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.diverselist.render((StructurallyDiverseSubstance)t);
+            		});
+            list.put(SpecifiedSubstanceGroup1Substance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.list.g1sslist.render((SpecifiedSubstanceGroup1Substance)t);
+            		});
+            return list;
+    });
+    static CachedSupplier<Map<String, ResultRenderer<?>>> thumbRenderers = CachedSupplier.of(()->{
+    	Map<String, ResultRenderer<?>> thumbs= new HashMap<>();
+    	
+    	thumbs.put(Substance.class.getName(),
+        		(t,ct)->{
+        			return ix.ginas.views.html.thumbs.conceptthumb.render((Substance)t);
+        		});
+        thumbs.put(ChemicalSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.chemthumb.render((ChemicalSubstance)t,ct.getId());
+            		});
+        thumbs.put(ProteinSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.proteinthumb.render((ProteinSubstance)t,ct.getId());
+            		});
+        thumbs.put(NucleicAcidSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.nucleicacidthumb.render((NucleicAcidSubstance)t,ct.getId());
+            		});
+        thumbs.put(PolymerSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.polymerthumb.render((PolymerSubstance)t,ct.getId());
+            		});
+        thumbs.put(MixtureSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.mixturethumb.render((MixtureSubstance)t);
+            		});
+        thumbs.put(StructurallyDiverseSubstance.class.getName(),
+            		(t,ct)->{
+            			return ix.ginas.views.html.thumbs.diversethumb.render((StructurallyDiverseSubstance)t);
+            		});
+        return thumbs;
+    });
 
 
-    private static GinasSubstanceExporterFactoryPlugin factoryPlugin;
+    private static CachedSupplier<GinasSubstanceExporterFactoryPlugin> factoryPlugin = 
+    			CachedSupplier.of(()->Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class));
 	/**
      * Search types used for UI searches. At this time 
      * these types do not extend to API searches.
@@ -216,22 +285,19 @@ public class GinasApp extends App {
 //    		Last Validated
    
     private static CachedSupplier<String[]> facetFetch= CachedSupplier.of(()->{
-		return Play.application().configuration().getStringList("ix.ginas.facets.substance.default", new ArrayList<String>()).toArray(new String[0]);
+		return Play.application()
+				   .configuration()
+				   .getStringList("ix.ginas.facets.substance.default", new ArrayList<String>())
+				   .toArray(new String[0]);
 	});
+    static CachedSupplier<PayloadPlugin> _payload = CachedSupplier.of(()->{
+    	return Play.application().plugin(PayloadPlugin.class);
+    });
     
     public static String[] getDefaultFacets(){
     	return facetFetch.get();
     }
     
-    //This is the set of facets to show with substances.
-    //currently, this can't be expanded, except in the code
-    //here. 
-   
-    
-    
-
-    static PayloadPlugin _payload ;
-
     static class SubstanceResultRenderer extends DefaultResultRenderer<Substance> {
         final String[] facets=getDefaultFacets();
         SubstanceResultRenderer () {}
@@ -257,7 +323,6 @@ public class GinasApp extends App {
 
 
     public static void init(){
-        _payload = Play.application().plugin(PayloadPlugin.class);
         try{
 			//Add specific codes to ordered list
 			List<String> codeSystems=Play.application()
@@ -271,71 +336,6 @@ public class GinasApp extends App {
 		}catch(Throwable t){
 			t.printStackTrace();
 		}
-
-        factoryPlugin = Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class);
-
-        listRenderers.put(Substance.class.getName(),
-    		(t,ct)->{
-    			return ix.ginas.views.html.list.conceptlist.render((Substance)t);
-    		});
-        listRenderers.put(ChemicalSubstance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.chemlist.render((ChemicalSubstance)t,ct.getId());
-        		});
-        listRenderers.put(ProteinSubstance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.proteinlist.render((ProteinSubstance)t,ct.getId());
-        		});
-        listRenderers.put(NucleicAcidSubstance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.nucleicacidlist.render((NucleicAcidSubstance)t,ct.getId());
-        		});
-        listRenderers.put(PolymerSubstance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.polymerlist.render((PolymerSubstance)t,ct.getId());
-        		});
-        listRenderers.put(MixtureSubstance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.mixlist.render((MixtureSubstance)t);
-        		});
-        listRenderers.put(StructurallyDiverseSubstance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.diverselist.render((StructurallyDiverseSubstance)t);
-        		});
-        listRenderers.put(SpecifiedSubstanceGroup1Substance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.list.g1sslist.render((SpecifiedSubstanceGroup1Substance)t);
-        		});
-        
-        thumbRenderers.put(Substance.class.getName(),
-        		(t,ct)->{
-        			return ix.ginas.views.html.thumbs.conceptthumb.render((Substance)t);
-        		});
-        thumbRenderers.put(ChemicalSubstance.class.getName(),
-            		(t,ct)->{
-            			return ix.ginas.views.html.thumbs.chemthumb.render((ChemicalSubstance)t,ct.getId());
-            		});
-        thumbRenderers.put(ProteinSubstance.class.getName(),
-            		(t,ct)->{
-            			return ix.ginas.views.html.thumbs.proteinthumb.render((ProteinSubstance)t,ct.getId());
-            		});
-        thumbRenderers.put(NucleicAcidSubstance.class.getName(),
-            		(t,ct)->{
-            			return ix.ginas.views.html.thumbs.nucleicacidthumb.render((NucleicAcidSubstance)t,ct.getId());
-            		});
-        thumbRenderers.put(PolymerSubstance.class.getName(),
-            		(t,ct)->{
-            			return ix.ginas.views.html.thumbs.polymerthumb.render((PolymerSubstance)t,ct.getId());
-            		});
-        thumbRenderers.put(MixtureSubstance.class.getName(),
-            		(t,ct)->{
-            			return ix.ginas.views.html.thumbs.mixturethumb.render((MixtureSubstance)t);
-            		});
-        thumbRenderers.put(StructurallyDiverseSubstance.class.getName(),
-            		(t,ct)->{
-            			return ix.ginas.views.html.thumbs.diversethumb.render((StructurallyDiverseSubstance)t);
-            		});
-        
     }
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
@@ -605,7 +605,7 @@ public class GinasApp extends App {
         if (values != null && values.length > 0) {
             String seq = values[0];
             try {
-                Payload payload = _payload.createPayload
+                Payload payload = _payload.get().createPayload
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.GinasApp.substances
                 (payload.id.toString(), 16, 1);
@@ -745,7 +745,7 @@ public class GinasApp extends App {
     	ObjectNode on=EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
     	on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension).url().toString());
 
-        on.put("isReady", factoryPlugin.isReady());
+        on.put("isReady", factoryPlugin.get().isReady());
     	on.put("isCached", false);
     	try{
     		//make sure it's present
@@ -848,7 +848,7 @@ public class GinasApp extends App {
 
 		Objects.requireNonNull(tstream, "Invalid stream");
 
-        if(!factoryPlugin.isReady()){
+        if(!factoryPlugin.get().isReady()){
             throw new IllegalStateException("export thread pool is full");
         }
 
@@ -859,7 +859,7 @@ public class GinasApp extends App {
 		final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String fname = "export-" + sdf.format(new Date()) + "." + extension;
 
-        factoryPlugin.submit(() -> {
+        factoryPlugin.get().submit(() -> {
 			try {
 				tstream.forEach(s->{
 					try{
@@ -894,13 +894,13 @@ public class GinasApp extends App {
 
     private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos) throws IOException {
 
-        if(factoryPlugin ==null){
+        if(factoryPlugin.get() ==null){
             throw new NullPointerException("could not find a factory plugin");
         }
 
-        SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.getFormatFor(extension));
+        SubstanceExporterFactory.Parameters params = new SubstanceParameters(factoryPlugin.get().getFormatFor(extension));
 
-        SubstanceExporterFactory factory= factoryPlugin.getExporterFor(params);
+        SubstanceExporterFactory factory= factoryPlugin.get().getExporterFor(params);
         if(factory ==null){
             //TODO handle null couldn't find factory for params
             throw new IllegalArgumentException("could not find suitable factory for " + params);
@@ -1953,7 +1953,7 @@ public class GinasApp extends App {
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public synchronized static Result updateIndex(String key){
-        if(!GinasLoad.ALLOW_REBUILD){
+        if(!GinasLoad.config.get().ALLOW_REBUILD){
             return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
         }
         if(updateKey==null){
@@ -2125,7 +2125,7 @@ public class GinasApp extends App {
      * @return
      */
     public static <T> Html getListContentFor(T o, SearchResultContext ctx){
-    	ResultRenderer<T> render= (ResultRenderer<T>) listRenderers.computeIfAbsent(EntityWrapper.of(o).getKind(),k->{
+    	ResultRenderer<T> render= (ResultRenderer<T>) listRenderers.get().computeIfAbsent(EntityWrapper.of(o).getKind(),k->{
     		return (t,ct)->{
     			//default to substance concept
     			return ix.ginas.views.html.list.conceptlist.render((Substance)t);
@@ -2146,7 +2146,7 @@ public class GinasApp extends App {
      * @return
      */
     public static <T> Html getGridContentFor(T o, SearchResultContext ctx){
-    	ResultRenderer<T> render= (ResultRenderer<T>) thumbRenderers.computeIfAbsent(EntityWrapper.of(o).getKind(),k->{
+    	ResultRenderer<T> render= (ResultRenderer<T>) thumbRenderers.get().computeIfAbsent(EntityWrapper.of(o).getKind(),k->{
     		return (t,ct)->{
     			//default to substance concept
     			return ix.ginas.views.html.thumbs.conceptthumb.render((Substance)t);
@@ -2166,5 +2166,70 @@ public class GinasApp extends App {
     		.collect(ModelUtils.toShorthand());
     	
     }
+
+	//TODO: move to Ginas App
+	//***************
+	public static Result index() {
+		return ok(ix.ginas.views.html.index.render());
+	}
+
+	public static Result app() {
+		return ok(ix.ginas.views.html.index.render());
+	}
+
+	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result register() {
+		return ok(ix.ginas.views.html.register.render());
+	}
+	//***************
+
+	@Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result sequence(String id) {
+		return ok(ix.ginas.views.html.sequence.render(id));
+	}
+
+	public static Result structuresearch(String q) {
+		Structure s = getStructureFrom(q);
+		String smol = null;
+		if (s != null) {
+			smol = s.molfile;
+		}
+		return ok(ix.ginas.views.html.structuresearch.render(smol));
+	}
+
+	@Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result report() {
+		return ok(ix.ginas.views.html.report.render());
+	}
+
+	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result wizard(String kind) {
+		Logger.info(kind);
+		return ok(ix.ginas.views.html.wizard.render(kind, "{}", null));
+	}
+
+	@Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result approve(String substanceId) {
+		List<Substance> substances = SubstanceFactory.resolve(substanceId);
+	
+		try {
+			if (substances.size() == 1) {
+				Substance s = substances.get(0);
+				SubstanceFactory.approveSubstance(s);
+				s.save();
+				String resp = "Substance approved with approvalID:" + s.approvalID;
+				return ok(ix.ginas.views.html.response.render(resp));
+			}
+			throw new IllegalStateException("More than one substance matches that term");
+		} catch (Exception ex) {
+			return _internalServerError(ex);
+		}
+	}
+
+	// This won't typically work, as it will collide with existing CV
+	public static Result loadCV() {
+		ControlledVocabularyFactory.loadCVFile();
+		return ok(ix.ginas.views.html.index.render());
+	}
     
 }

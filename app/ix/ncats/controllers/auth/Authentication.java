@@ -1,29 +1,33 @@
 package ix.ncats.controllers.auth;
 
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.UUID;
+
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.auth.AuthenticationCredentials;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
-import ix.core.models.*;
-import ix.core.util.TimeUtil;
-import play.*;
-import play.Logger;
-import play.db.ebean.*;
-import play.mvc.*;
-
-import com.avaje.ebean.*;
-
+import ix.core.models.Principal;
+import ix.core.models.Role;
+import ix.core.models.Session;
+import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
+import ix.core.util.TimeUtil;
 import ix.utils.Util;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import play.Application;
+import play.Logger;
+import play.Play;
+import play.db.ebean.Model;
+import play.mvc.Controller;
+import play.mvc.Http;
 
 /**
  * A simple controller to authenticate via ldap

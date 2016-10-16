@@ -1,20 +1,11 @@
 package ix.core.factories;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
-
-import ix.core.FieldNameDecorator;
 import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.ReflectingIndexValueMaker;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import play.Application;
 import play.Logger;
-import play.Play;
 
 public class IndexValueMakerFactory extends AccumlatingInternalMapEntityResourceFactory<IndexValueMaker>{
 	private static IndexValueMakerFactory _instance;
@@ -29,11 +20,6 @@ public class IndexValueMakerFactory extends AccumlatingInternalMapEntityResource
 		}else{
 			return new IndexValueMakerFactory(app);
 		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <T> IndexValueMaker<T> forClass(Class<T> c){
-		return getInstance(Play.application()).getSingleResourceFor(c);
 	}
 	
 	@Override
@@ -52,11 +38,6 @@ public class IndexValueMakerFactory extends AccumlatingInternalMapEntityResource
 		
 	}
 	
-	
-	public static void init(){
-		_instance=null;
-		
-	}
 	
 	@Override 
 	public IndexValueMaker getDefaultResourceFor(EntityInfo emeta){

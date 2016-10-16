@@ -97,8 +97,6 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				return allowed;
 			}
 		});
-
-
 	}
 
 	public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{

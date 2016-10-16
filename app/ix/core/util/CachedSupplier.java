@@ -13,57 +13,73 @@ import java.util.function.Supplier;
  */
 public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 	private static AtomicLong generatedVersion= new AtomicLong();
-	
+
 	/**
 	 * Flag to signal all {{@link ix.core.util.CachedSupplier} instances
-	 * to regenerate from their suppliers on the next call. 
+	 * to regenerate from their suppliers on the next call.
 	 */
 	public static void resetCaches(){
-		generatedVersion.incrementAndGet();
+		CachedSupplier.generatedVersion.incrementAndGet();
 	}
-	
-	private Supplier<T> c;
+
+	private final Supplier<T> c;
 	private T cache;
 	private boolean run=false;
-	private long generatedWithVersion; 
-	
-	public CachedSupplier(Supplier<T> c){
+	private long generatedWithVersion;
+
+	public CachedSupplier(final Supplier<T> c){
 		this.c=c;
 	}
-	
+
 	/**
 	 * Delegates to {@link #get()}
 	 */
-	public T call(){
+	@Override
+	public T call() throws Exception{
 		return get();
 	}
-	
+
 	@Override
-	public synchronized T get() {
-		if(run && generatedWithVersion==generatedVersion.get())return cache;
-		generatedWithVersion=generatedVersion.get();
-		cache=c.get();
-		run=true;
-		return cache;
+	public T get() {
+		if(this.run && this.generatedWithVersion==CachedSupplier.generatedVersion.get()) {
+			return this.cache;
+		}
+		this.generatedWithVersion=CachedSupplier.generatedVersion.get();
+		this.cache=this.c.get();
+		this.run=true;
+		return this.cache;
 	}
-	
+
+
+	public synchronized T getSync() {
+		return get();
+	}
+
+
+
 	/**
 	 * Flag to signal this instance to recalculate from its
 	 * supplier on next call.
 	 */
 	public void resetCache(){
-		run=false;
+		this.run=false;
 	}
-	
-	public static <T> CachedSupplier<T> of(Supplier<T> supplier){
+
+	public static <T> CachedSupplier<T> of(final Supplier<T> supplier){
 		return new CachedSupplier<T>(supplier);
 	}
-	public static <T> CachedSupplier<T> ofCallable(Callable<T> callable){
+
+	/**
+	 * Wrap the provided callable as a cached supplier
+	 * @param callable
+	 * @return
+	 */
+	public static <T> CachedSupplier<T> ofCallable(final Callable<T> callable){
 		return of(()->{
 			try{
 				return callable.call();
-			}catch(Exception e){
-				throw new IllegalStateException("Error calling callable in cached supplier");
+			}catch(final Exception e){
+				throw new IllegalStateException(e);
 			}
 		});
 	}

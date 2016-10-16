@@ -80,20 +80,21 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
-import ix.core.util.PojoPointer.ArrayPath;
-import ix.core.util.PojoPointer.CountPath;
-import ix.core.util.PojoPointer.DistinctPath;
-import ix.core.util.PojoPointer.FieldPath;
-import ix.core.util.PojoPointer.FilterPath;
-import ix.core.util.PojoPointer.FlatMapPath;
-import ix.core.util.PojoPointer.GroupPath;
-import ix.core.util.PojoPointer.IDFilterPath;
-import ix.core.util.PojoPointer.IdentityPath;
-import ix.core.util.PojoPointer.LimitPath;
-import ix.core.util.PojoPointer.MapPath;
-import ix.core.util.PojoPointer.ObjectPath;
-import ix.core.util.PojoPointer.SkipPath;
-import ix.core.util.PojoPointer.SortPath;
+import ix.core.util.pojopointer.ArrayPath;
+import ix.core.util.pojopointer.CountPath;
+import ix.core.util.pojopointer.DistinctPath;
+import ix.core.util.pojopointer.FieldPath;
+import ix.core.util.pojopointer.FilterPath;
+import ix.core.util.pojopointer.FlatMapPath;
+import ix.core.util.pojopointer.GroupPath;
+import ix.core.util.pojopointer.IDFilterPath;
+import ix.core.util.pojopointer.IdentityPath;
+import ix.core.util.pojopointer.LimitPath;
+import ix.core.util.pojopointer.MapPath;
+import ix.core.util.pojopointer.ObjectPath;
+import ix.core.util.pojopointer.PojoPointer;
+import ix.core.util.pojopointer.SkipPath;
+import ix.core.util.pojopointer.SortPath;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -111,12 +112,10 @@ public class EntityUtils {
 	private static final String ID_FIELD_NATIVE_SUFFIX = "._id";
 	private static final String ID_FIELD_STRING_SUFFIX = ".id";
 
-	private final static Map<String, EntityInfo<?>> infoCache = new ConcurrentHashMap<String, EntityInfo<?>>();
+	private final static CachedSupplier<Map<String, EntityInfo<?>>> infoCache 
+					= CachedSupplier.of(()->new ConcurrentHashMap<String, EntityInfo<?>>());
 
 
-	public static void init(){
-		infoCache.clear();
-	}
 	@Indexable // put default indexable things here
 	static final class DefaultIndexable {
 
@@ -125,7 +124,7 @@ public class EntityUtils {
 	private static final Indexable defaultIndexable = (Indexable) DefaultIndexable.class.getAnnotation(Indexable.class);
 
 	public static <T> EntityInfo<T> getEntityInfoFor(Class<T> cls) {
-		return (EntityInfo<T>) infoCache.computeIfAbsent(cls.getName(), k -> new EntityInfo<>(cls));
+		return (EntityInfo<T>) infoCache.get().computeIfAbsent(cls.getName(), k -> new EntityInfo<>(cls));
 	}
 
 	public static <T> EntityInfo<T> getEntityInfoFor(T entity) {
@@ -133,7 +132,7 @@ public class EntityUtils {
 	}
 
 	public static EntityInfo<?> getEntityInfoFor(String className) throws ClassNotFoundException {
-		EntityInfo<?> e1 = infoCache.computeIfAbsent(className, k -> {
+		EntityInfo<?> e1 = infoCache.get().computeIfAbsent(className, k -> {
 			try {
 				return EntityInfo.of(Class.forName(k));
 			} catch (Exception e) {

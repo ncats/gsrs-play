@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.AbstractGinasTest;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.pojopointer.PojoPointer;
 
 
 @RunWith(Parameterized.class)
