@@ -26,7 +26,50 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 	public static final String CAN_SEARCH = "canSearch";
 	public static final String IS_ADMIN = "isAdmin";
 	public static final String IS_USER_PRESENT = "isUserPresent";
-	private static Map<String, DynamicResourceHandler> HANDLERS;
+	private static CachedSupplier<Map<String, DynamicResourceHandler>> HANDLERS = CachedSupplier.of(()->{
+		Map<String,DynamicResourceHandler> handlers= new HashMap<String, DynamicResourceHandler>();
+
+		handlers.put(IS_ADMIN, new IsAdminHandler());
+		handlers.put(CAN_APPROVE,
+				new SimpleRoleDynamicResourceHandler(
+						Role.Approver
+						));
+		handlers.put(CAN_REGISTER,
+				new SimpleRoleDynamicResourceHandler(
+						Role.DataEntry,
+						Role.SuperDataEntry
+						));
+		handlers.put(CAN_UPDATE,
+				new SimpleRoleDynamicResourceHandler(
+						Role.Updater,
+						Role.SuperUpdate
+						));
+		handlers.put(CAN_SEARCH,  new AbstractDynamicResourceHandler() {
+			public boolean isAllowed(final String name,
+					final String meta,
+					final DeadboltHandler deadboltHandler,
+					final Http.Context ctx){
+				return true;
+			}
+
+		});
+
+		handlers.put(IS_USER_PRESENT,
+				new AbstractDynamicResourceHandler() {
+			public boolean isAllowed(final String name,
+					final String meta,
+					final DeadboltHandler deadboltHandler,
+					final Http.Context context) {
+				Subject subject = deadboltHandler.getSubject(context);
+				boolean allowed=false;
+				if (subject != null &&(subject.getIdentifier() != null || !subject.getIdentifier().equals(""))) {
+					allowed = true;
+				}
+				return allowed;
+			}
+		});
+		return handlers;
+	});
 
 	static {
 		init();
@@ -56,47 +99,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 	}
 
 	public static void init(){
-		HANDLERS = new HashMap<String, DynamicResourceHandler>();
-
-		HANDLERS.put(IS_ADMIN, new IsAdminHandler());
-		HANDLERS.put(CAN_APPROVE,
-				new SimpleRoleDynamicResourceHandler(
-						Role.Approver
-						));
-		HANDLERS.put(CAN_REGISTER,
-				new SimpleRoleDynamicResourceHandler(
-						Role.DataEntry,
-						Role.SuperDataEntry
-						));
-		HANDLERS.put(CAN_UPDATE,
-				new SimpleRoleDynamicResourceHandler(
-						Role.Updater,
-						Role.SuperUpdate
-						));
-		HANDLERS.put(CAN_SEARCH,  new AbstractDynamicResourceHandler() {
-			public boolean isAllowed(final String name,
-					final String meta,
-					final DeadboltHandler deadboltHandler,
-					final Http.Context ctx){
-				return true;
-			}
-
-		});
-
-		HANDLERS.put(IS_USER_PRESENT,
-				new AbstractDynamicResourceHandler() {
-			public boolean isAllowed(final String name,
-					final String meta,
-					final DeadboltHandler deadboltHandler,
-					final Http.Context context) {
-				Subject subject = deadboltHandler.getSubject(context);
-				boolean allowed=false;
-				if (subject != null &&(subject.getIdentifier() != null || !subject.getIdentifier().equals(""))) {
-					allowed = true;
-				}
-				return allowed;
-			}
-		});
+		
 	}
 
 	public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{
@@ -109,7 +112,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				final DeadboltHandler deadboltHandler,
 				final Http.Context context) {
 			try{
-				DynamicResourceHandler adminHandle =HANDLERS.get(IS_ADMIN);
+				DynamicResourceHandler adminHandle =HANDLERS.get().get(IS_ADMIN);
 				if (adminHandle.isAllowed(name, meta, deadboltHandler, context)){
 					return true;
 				}
@@ -128,7 +131,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 
 	// this will be invoked for Dynamic
 	public boolean isAllowed(String name, String meta, DeadboltHandler deadboltHandler, Http.Context context) {
-		DynamicResourceHandler handler = HANDLERS.get(name);
+		DynamicResourceHandler handler = HANDLERS.get().get(name);
 		
 		if (handler != null) {
 			return handler.isAllowed(name, meta, deadboltHandler, context);

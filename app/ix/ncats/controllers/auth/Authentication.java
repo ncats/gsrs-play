@@ -1,16 +1,20 @@
 package ix.ncats.controllers.auth;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.auth.AuthenticationCredentials;
+import ix.core.auth.Authenticator;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
-import ix.core.controllers.UserProfileFactory;
+import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.Session;
@@ -156,6 +160,20 @@ public class Authentication extends Controller {
     	return false;
     }
     
+	public static UserProfile getUserProfileOrElse(String username, Supplier<UserProfile> orElse) {
+		
+		UserProfile profile = _profiles.where()
+									.eq("user.username", username)
+									.findUnique();
+		
+		if(profile!=null && profile.user!=null){
+			return profile;
+		}else{
+			return orElse.get();
+		}
+
+	}
+    
     public static boolean allowNonAuthenticated(){
     	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) 
     		   ||
@@ -166,57 +184,55 @@ public class Authentication extends Controller {
     	return setSessionUser(username,null);
     }
     
+    
+    public static UserProfile setUserProfileSessionUsing(String username, String email){
+    	return setSessionUser(username,email);
+    }
+    
+    
     //Set and trust username / email as user
     //Only call after authenticated
     private static UserProfile setSessionUser(String username, String email){
-        boolean systemAuth = false;
-        boolean newregistered=false;
         
-        UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
-        Principal cred;
-        if(profile==null || profile.user == null){
+        UserProfile profile= getUserProfileOrElse(username, ()->{
         	if(Play.application().configuration().getBoolean("ix.authentication.autoregister",false)){
-        		Logger.info("Autoregistering user:" + username);
-        		Principal p = new Principal(username, email);
-        		cred= PrincipalFactory.registerIfAbsent(p);
-        		newregistered=true;
+        		Transaction tx = Ebean.beginTransaction();
+        		try{
+	        		Logger.info("Autoregistering user:" + username);
+	        		Principal p = new Principal(username, email);
+	        		p= PrincipalFactory.registerIfAbsent(p);
+	        		UserProfile up = p.getUserProfile();
+	        		if(up==null){
+	        			up = new UserProfile(p);
+	        		}
+	        		if(Play.application().configuration().getBoolean("ix.authentication.autoregisteractive",false)){
+	                	up.active = true;	
+	        		}else{
+	        			up.active = false;
+	        		}
+	        		up.systemAuth=false;
+	        		tx.commit();
+	        		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+	        		return up;
+        		}catch(Exception e){
+        			Logger.error("Error creating profile", e);
+        			return null;
+        		}finally{
+        			Ebean.endTransaction();
+        		}
         	}else{
-        		Logger.info("Autoregistering not allowed");
-        		throw new IllegalStateException("User:" + username + " is not a current user in the system");
+        		Logger.info("No user found, and autoregistering is not allowed");
+        		return null;
         	}
-        }else{
-        	systemAuth=true;
-        	cred= profile.user;
+        });
+        
+        if(profile==null){
+        	throw new IllegalStateException("Unable to set session for user:" + username);
         }
-         
         
         Transaction tx = Ebean.beginTransaction();
         try {
-        	List<UserProfile> users =
-                _profiles.where().eq("user.username", username).findList();
-
-            if (users == null || users.isEmpty()) {
-                profile = new UserProfile(cred);
-                if(newregistered){
-                	if(Play.application().configuration().getBoolean("ix.authentication.autoregisteractive",false)){
-                    	profile.active = true;	
-            		}else{
-            			profile.active = false;
-            		}
-                }else{
-                	profile.active = true;
-                }
-                profile.systemAuth = systemAuth;
-                profile.save();
-                tx.commit();
-        		tokenCache.put(new Element(profile.getComputedToken(), profile.getIdentifier()));
-            } else {
-                profile = users.iterator().next();
-                profile.user.username = username;
-
-                
-            }
-            if (!profile.active) {
+        	if (!profile.active) {
             	flash("message", "User is no longer active!");
                 throw new IllegalStateException("User:" + username + " is not an active user");
             }
@@ -264,29 +280,37 @@ public class Authentication extends Controller {
     	return null;
     }
     
+
+    public static UserProfile authenticate(AuthenticationCredentials cred){
+    	Authenticator auth = AuthenticatorFactory
+    						.getInstance(Play.application())
+    						.getAuthenticator();
+    	UserProfile up = auth.authenticate(cred);
+    	
+    	return up;
+    }
+    
     public static UserProfile directlogin(String username, String password) throws Exception{
-    	Principal cred;
+    	//Principal cred;
 
 		AuthenticationCredentials credentials = AuthenticationCredentials.create(username, password);
 
-    	UserProfile profile = UserProfileFactory.finder.get().where().eq("user.username", username).findUnique();
-
-    	if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
-    			cred = profile.user;
-        } else {
-        		cred = AdminFactory.externalAuthenticate(username,password);
-        }
-        if (cred == null) {
+		UserProfile up = authenticate(credentials);
+		
+		
+		
+        if (up == null) {
         	flash("message", "Invalid username or password");
             throw new IllegalArgumentException("Invalid credentials!");
         }
+        
         try{
-        	Authentication.setSessionUser(username);
+        	Authentication.setSessionUser(up.user.username);
         }catch(Exception e){
         	throw e;
         }
-
-        return profile;
+        
+        return up;
     }
     
     public static UserProfile getUserProfileFromToken(String username, String token){
@@ -356,31 +380,24 @@ public class Authentication extends Controller {
         	}
         }
 
-        //do key auth
-        String user=request().getHeader("auth-username");
-        String key=request().getHeader("auth-key");
-        String token=request().getHeader("auth-token");
-        String password=request().getHeader("auth-password");
+        AuthenticationCredentials cred=AuthenticationCredentials.create(ctx());
         
-        UserProfile up=null;
-
-        if(user!=null && key!=null){
-        	up=getUserProfileFromKey(user,key);
-        }else if(token!=null){
-        	try{
-        		up=getUserProfileFromTokenAlone(token);
-        	}catch(Exception e){
-        		e.printStackTrace();
-        	}
-        }else if(user!=null && password!=null){
-        	up=getUserProfileFromPassword(user,password);
+        
+        List<Authenticator> authenticators= AuthenticatorFactory
+        	.getInstance(Play.application())
+        	.getRegisteredResourcesFor(AuthenticatorFactory.RESOURCE_CLASS);
+        
+        
+        
+        Optional<UserProfile> opup=authenticators.stream()
+        		.map(au->au.authenticate(cred))
+        		.filter(Objects::nonNull)
+        		.findFirst();
+        
+        if(opup.isPresent()){
+        	setUserSessionDirectly(opup.get());
         }
-        
-        if(up!=null){
-        	setUserSessionDirectly(up);
-        }
-        
-        return up;
+        return opup.orElse(null);
     }
 
     public static Principal getUser(){

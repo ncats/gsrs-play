@@ -286,24 +286,7 @@ public class AdminFactory extends Controller {
     public static boolean validatePassword(UserProfile profile, String password) {
         return profile.acceptPassword(password);
     }
-    public static Principal externalAuthenticate(String username, String password){
-    	
-    	
-    	Authenticator auth = AuthenticatorFactory
-    						.getInstance(Play.application())
-    						.getSingleResourceFor(Authenticator.class);
-    	
-    	AuthenticationCredentials cred=AuthenticationCredentials.create(username, password);
-    	
-    	UserProfile up = auth.authenticate(cred);
-    	
-    	if(up==null){
-    		return null;
-    	}
-    	
-    	return up.user;
-    }
-
+    
 
     public static List<String> aclNamesByPrincipal(Principal cred) {
         List<Acl> perms = permissionByPrincipal(cred);

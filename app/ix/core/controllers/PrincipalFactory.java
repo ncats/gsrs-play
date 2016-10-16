@@ -28,15 +28,10 @@ public class PrincipalFactory extends EntityFactory {
     public static CachedSupplier<Model.Finder<Long, Principal>> finder = 
     		CachedSupplier.of(()->new Model.Finder(Long.class, Principal.class));
 
-    public static Map<String, Principal> justRegisteredCache;
+    public static CachedSupplier<Map<String, Principal>> justRegisteredCache = CachedSupplier.of(()->{
+    	return new ConcurrentHashMap<String, Principal>();
+    });
 
-    static{
-        init();
-    }
-
-    public static void init(){
-        justRegisteredCache = new ConcurrentHashMap<String, Principal>();
-    }
 
     public static List<Principal> all() {
         return all(finder.get());
@@ -84,13 +79,13 @@ public class PrincipalFactory extends EntityFactory {
 
     public static Principal byUserName(String uname) {
         //System.out.println("########## "+ uname);
-        Principal p = justRegisteredCache.get(uname.toUpperCase());
+        Principal p = justRegisteredCache.get().get(uname.toUpperCase());
         if (p != null) return p;
         p =  finder.get().where().ieq("username", uname).findUnique();
         if(p!=null){
         	//if not in an active commit, cache
 	        if(Ebean.currentTransaction()==null){ 
-	        	justRegisteredCache.put(p.username.toUpperCase(), p);
+	        	justRegisteredCache.get().put(p.username.toUpperCase(), p);
 	        }
         }
         return p;
@@ -105,10 +100,10 @@ public class PrincipalFactory extends EntityFactory {
                 if(t!=null){
 	                InxightTransaction it=InxightTransaction.getTransaction(t);
 	                it.addPostCommitRun(()->
-	                	justRegisteredCache.put(org.username.toUpperCase(), org)
+	                	justRegisteredCache.get().put(org.username.toUpperCase(), org)
 	                	);
                 }else{
-	                justRegisteredCache.put(org.username.toUpperCase(), org);	
+	                justRegisteredCache.get().put(org.username.toUpperCase(), org);	
                 }
                 return org;
             } catch (Exception ex) {

@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ix.core.auth.AuthenticationCredentials;
-import ix.core.auth.Authenticator;
+import ix.core.auth.UserKeyAuthenticator;
+import ix.core.auth.UserPasswordAuthenticator;
+import ix.core.auth.UserTokenAuthenticator;
+import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Payload;
 import ix.core.models.UserProfile;
 import ix.core.plugins.GinasRecordProcessorPlugin;
@@ -16,7 +18,7 @@ import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.stats.Statistics;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
-import ix.ginas.fda.FdaAuthenticator;
+import ix.ginas.fda.TrustHeaderAuthenticator;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.utils.Global;
@@ -30,13 +32,30 @@ import play.mvc.Http;
 import play.mvc.Result;
 
 public class GinasGlobal extends Global {
-
+	Application app;
+	
+	
+	private boolean showHeaders;
+	private boolean loadCV;
+	
 	static final Logger.ALogger AccessLogger = Logger.of("access");
 
 	private static List<Runnable> startRunners = new ArrayList<Runnable>();
+	
 	private static boolean isRunning=false;
 
-	private Authenticator authenticator = new FdaAuthenticator();
+	
+	private void logHeaders(Http.Request req){
+		Logger.debug("HEADERS ON REQUEST ===================");
+		String allheaders="";
+		for(String head:req.headers().keySet()){
+			allheaders+=head + "\t" + req.getHeader(head) + "\n";
+
+		}
+		Logger.debug(allheaders);
+	}
+	
+	
 	public class LoginWrapper extends Action.Simple {
 		public LoginWrapper(Action<?> action) {
 			this.delegate = action;
@@ -46,20 +65,16 @@ public class GinasGlobal extends Global {
 		public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
 
 			Http.Request req = ctx.request();
-			if(Play.application().configuration()
-					.getBoolean("ix.ginas.debug.showheaders", false)){
-				Logger.debug("HEADERS ON REQUEST ===================");
-				String allheaders="";
-				for(String head:req.headers().keySet()){
-					allheaders+=head + "\t" + req.getHeader(head) + "\n";
-
-				}
-				Logger.debug(allheaders);
+			if(showHeaders){
+				logHeaders(req);
 			}
 
 			String real = req.getHeader("X-Real-IP");
 
-			UserProfile p = authenticator.authenticate(AuthenticationCredentials.create(ctx));
+			
+			UserProfile p = Authentication.getUserProfile();
+			
+			
 			String uri=req.uri();
 			char[] cs = uri.toCharArray();
 
@@ -113,25 +128,16 @@ public class GinasGlobal extends Global {
 				);
 	}
 
-
-
-	public void onStart(Application app) {
-		super.onStart(app);
-
-		if (!ControlledVocabularyFactory.isloaded()) {
+	private void loadCV(){
+		if (loadCV && !ControlledVocabularyFactory.isloaded()) {
 			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv.json"));
-			if(!Play.isTest()){
-				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
-			}
+			Logger.info("Loaded CV:" + ControlledVocabularyFactory.size());
 		}
-		for(Runnable r:startRunners){
-			r.run();
-		}
-		startRunners.clear();
-		isRunning=true;
-		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
+	}
 
-		String fname = Play.application().configuration().getString("ix.ginas.load.file",null);
+	private void loadStartFile(){
+
+		String fname = app.configuration().getString("ix.ginas.load.file",null);
 
 		if(fname!=null){
 			try{
@@ -140,13 +146,13 @@ public class GinasGlobal extends Global {
 
 				Date start = new Date();
 				File f= new File(fname);
-				Payload payload=Play.application()
+				Payload payload=app
 						.plugin(PayloadPlugin.class)
 						.getPayloadForFile(f, PayloadPersistType.PERM);
 				if(payload.created.before(start)){
 					System.out.println("Already loaded file:" + f.getAbsolutePath());
 				}else{
-					PayloadProcessor pp =Play.application()
+					PayloadProcessor pp =app
 							.plugin(GinasRecordProcessorPlugin.class)
 							.submit(payload,
 									ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
@@ -165,20 +171,55 @@ public class GinasGlobal extends Global {
 				e.printStackTrace();
 			}
 		}
-
-
 	}
+	
+	public void setupAuthenticators(){
+		AuthenticatorFactory authFac = AuthenticatorFactory.getInstance(app);
+		authFac.registerAuthenticator(new TrustHeaderAuthenticator());
+		authFac.registerAuthenticator(new UserPasswordAuthenticator());
+		authFac.registerAuthenticator(new UserTokenAuthenticator());
+		authFac.registerAuthenticator(new UserKeyAuthenticator());
+	}
+
+	public void onStart(Application app) {
+		super.onStart(app);
+		this.app=app;
+		
+		showHeaders=app.configuration()
+					   .getBoolean("ix.ginas.debug.showheaders", false);
+		setupAuthenticators();
+		
+		loadCV=app.configuration()
+				   .getBoolean("ix.ginas.init.loadCV", true);
+
+		loadCV();
+		
+		
+		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
+		
+		
+		for(Runnable r:startRunners){
+			r.run();
+		}
+		startRunners.clear();
+		isRunning=true;
+		
+		
+		
+		loadStartFile();
+	}
+	
 	@Override
 	public void onStop(Application app){
 		startRunners.clear();
 		isRunning=false;
 	}
+	
 	public static void runAfterStart(Runnable r){
 		if(isRunning){
 			r.run();
 		}else{
 			startRunners.add(r);
 		}
-
 	}
 }

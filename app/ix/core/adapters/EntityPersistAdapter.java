@@ -47,7 +47,7 @@ import tripod.chem.indexer.StructureIndexer;
 
 public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexListener{
 
-    private static class MyLock{
+    private class MyLock{
         private Counter count = new Counter();
         private ReentrantLock lock = new ReentrantLock();
 
@@ -100,7 +100,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
                 if(value ==0){
                     //no more blocking records?
                     //remove ourselves from the map to free memory
-                    EntityPersistAdapter.lockMap.remove(thekey);
+                    lockMap.remove(thekey);
                 }
             }
         }
@@ -144,14 +144,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
 	
 	private Map<EntityInfo, EntityProcessor> entityProcessors = new ConcurrentHashMap<>();
     
-    
     //Do we need both?
-    private static Map<Key, MyLock> lockMap;
-    private static ConcurrentHashMap<Key, Edit> editMap;
+    private Map<Key, MyLock> lockMap= new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Key, Edit> editMap= new ConcurrentHashMap<>();
     
     private TextIndexerPlugin textIndexerPlugin;
-    private static StructureIndexerPlugin strucProcessPlugin;
-    private static SequenceIndexerPlugin seqProcessPlugin;
+    
+    
+    private StructureIndexerPlugin strucProcessPlugin;
+    private SequenceIndexerPlugin seqProcessPlugin;
     
     public boolean isReindexing=false;
     
@@ -165,26 +166,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     
 
 
-    static{
-        init();
-    }
-
-    public static void init(){
-
-        strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
-        seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
-
-        editMap = new ConcurrentHashMap<>();
-        lockMap = new ConcurrentHashMap<>();
-    }
-
     /**
      * Preparing the edit ...
      * 
      * @param bean
      * @return
      */
-    public static Edit createAndPushEditForWrappedEntity(EntityWrapper ew){
+    private Edit createAndPushEditForWrappedEntity(EntityWrapper ew){
     	Objects.requireNonNull(ew);
     	String oldJSON = ew.toFullJson();
     	
@@ -226,84 +214,92 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
      * @param changeOp
      * @return
      */
+    @Deprecated
     public static <T> EntityWrapper performChangeOn(T t,ChangeOperation<T> changeOp){
     	EntityWrapper<T> wrapped = EntityWrapper.of(t);
     	return performChange(wrapped.getKey(),changeOp);
     }
     
+    @Deprecated
     public static <T> EntityWrapper performChange(Key key, ChangeOperation<T> changeOp){
-       // Objects.requireNonNull(id);
-        Objects.requireNonNull(key);
-        Objects.requireNonNull(changeOp);
-        
-        
-        
-        MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
-            @Override
-            public MyLock apply(Key key) {
-                return new MyLock(key); //This should work, but feels wrong
-            }
-        });
-
-
-
-        Edit e=null;
-        lock.acquire(); //acquire the lock (blocks)
-        try{
-            EntityWrapper<T> ew = (EntityWrapper<T>)key.fetch().get(); //supplies the object to be edited,
-            //you could have a different supplier
-            //for this, but it's nice to be sure
-            //that the object can't be stale
-            e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
-                                                     //existence of an active edit
-            								   		 //let's hope it works anyway!
-            
-            Optional op = changeOp.apply((T)ew.getValue()); //saving happens here
-            												//So should anything with the edit
-            												//inside of a post Update hook
-            EntityWrapper saved=null;
-            
-            
-            //didn't work, according to change operation
-            //Either there was an error, or the decision
-            //to change was cancelled
-            if(!op.isPresent()){
-            	return null; 
-            }else{
-            	saved = EntityWrapper.of(op.get());
-			}
-			e.kind = saved.getKind();
-			e.newValue = saved.toFullJson();
-			e.comments= ew.getChangeReason().orElse(null);
-			e.save();
-			
-            return saved;
-        }catch(Exception ex){
-            ex.printStackTrace();
-            throw new IllegalStateException(ex);
-        }finally{
-            if(e !=null) {
-                popEditForUpdate(key); //When we're all done, release it
-            }
-            lock.release(); //release the lock
-        }
+    	return EntityPersistAdapter.getInstance().change(key, changeOp);
     }
+    
+    
+    
+    public <T> EntityWrapper change(Key key, ChangeOperation<T> changeOp){
+        // Objects.requireNonNull(id);
+         Objects.requireNonNull(key);
+         Objects.requireNonNull(changeOp);
+         
+         
+         
+         MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
+             @Override
+             public MyLock apply(Key key) {
+                 return new MyLock(key); //This should work, but feels wrong
+             }
+         });
+
+
+
+         Edit e=null;
+         lock.acquire(); //acquire the lock (blocks)
+         try{
+             EntityWrapper<T> ew = (EntityWrapper<T>)key.fetch().get(); //supplies the object to be edited,
+             //you could have a different supplier
+             //for this, but it's nice to be sure
+             //that the object can't be stale
+             e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
+                                                      //existence of an active edit
+             								   		 //let's hope it works anyway!
+             
+             Optional op = changeOp.apply((T)ew.getValue()); //saving happens here
+             												//So should anything with the edit
+             												//inside of a post Update hook
+             EntityWrapper saved=null;
+             
+             
+             //didn't work, according to change operation
+             //Either there was an error, or the decision
+             //to change was cancelled
+             if(!op.isPresent()){
+             	return null; 
+             }else{
+             	saved = EntityWrapper.of(op.get());
+ 			}
+ 			e.kind = saved.getKind();
+ 			e.newValue = saved.toFullJson();
+ 			e.comments= ew.getChangeReason().orElse(null);
+ 			e.save();
+ 			
+             return saved;
+         }catch(Exception ex){
+             ex.printStackTrace();
+             throw new IllegalStateException(ex);
+         }finally{
+             if(e !=null) {
+                 popEditForUpdate(key); //When we're all done, release it
+             }
+             lock.release(); //release the lock
+         }
+     }
 
     
-    private static void storeEditForUpdate(Key k, Edit e){
+    private void storeEditForUpdate(Key k, Edit e){
     	if(editMap.containsKey(k))throw new IllegalStateException("Concurrent edit may have occured, bailing out");
     	editMap.put(k,e);
     }
     
     
-    public static Edit popEditForUpdate(Key key){
+    public Edit popEditForUpdate(Key key){
     	return editMap.remove(key);	
     }
-    public static boolean isEditPresentUpdate(Key key){
+    public boolean isEditPresentUpdate(Key key){
     	return editMap.containsKey(key);
     }
     
-    public static int getEditUpdateCount(){
+    public int getEditUpdateCount(){
     	return editMap.size();
     }
 
@@ -314,6 +310,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     public EntityPersistAdapter (Application app){
     	this.application=app;
     	textIndexerPlugin = app.plugin(TextIndexerPlugin.class);
+    	strucProcessPlugin=app.plugin(StructureIndexerPlugin.class);
+        seqProcessPlugin=app.plugin(SequenceIndexerPlugin.class);
     	_instance=this;
     }
     
@@ -393,20 +391,30 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     	operate(bean,Java8ForOldEbeanHelper.processorCallableFor(PostPersist.class),false);
     }
     
-    
     public static SequenceIndexer getSequenceIndexer(){
+    	return getInstance().sequenceIndexer();
+    }
+    
+    public static StructureIndexer getStructureIndexer(){
+    	return getInstance().structureIndexer();
+    }
+    
+    public StructureIndexer structureIndexer(){
+    	if (strucProcessPlugin == null || !strucProcessPlugin.enabled()) {
+    		strucProcessPlugin=application.plugin(StructureIndexerPlugin.class);
+		}
+		return strucProcessPlugin.getIndexer();
+    }
+    
+    public SequenceIndexer sequenceIndexer(){
 		if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {
-			seqProcessPlugin = Play.application().plugin(SequenceIndexerPlugin.class);
+			seqProcessPlugin = application.plugin(SequenceIndexerPlugin.class);
 		}
 		return seqProcessPlugin.getIndexer();
 	}
     
-    public static StructureIndexer getStructureIndexer(){
-    	if (strucProcessPlugin == null || !strucProcessPlugin.enabled()) {
-    		strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
-		}
-		return strucProcessPlugin.getIndexer();
-    }
+   
+    
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {
 		Java8ForOldEbeanHelper.makeIndexOnBean(this, EntityWrapper.of(bean));
@@ -448,7 +456,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
                     	// If we didn't already start an edit for this
                     	// then start one and save it. Otherwise just ignore
                     	// the edit piece.
-						if (!EntityPersistAdapter.isEditPresentUpdate(key)) { 
+						if (!isEditPresentUpdate(key)) { 
 							Edit edit = new Edit(ew.getClazz(), key.getIdString());
 							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
 							edit.version = ew.getVersion().orElse(null);
