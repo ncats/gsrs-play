@@ -2,6 +2,7 @@ package ix.core.models;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -21,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
+import ix.core.ResourceReference;
 import ix.core.UserFetcher;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
@@ -89,20 +91,29 @@ public class Edit extends BaseModel {
     	return editor.username;
     }
     
-    public String getOldValue () {
-        return oldValue != null
-            ? Global.getNamespace()+"/edits/"+id+"/$oldValue" : null;
+    public ResourceReference<JsonNode> getOldValue () {
+    	if(this.oldValue==null)return null;
+    	String uri = Global.getNamespace()+"/edits("+id+")/$oldValue";
+    	return ResourceReference.ofSerializedJson(uri, this.oldValue);
     }
-    public String getNewValue () {
-        return newValue != null
-            ? Global.getNamespace()+"/edits/"+id+"/$newValue" : null;
+    
+    public ResourceReference<JsonNode> getNewValue () {
+    	if(this.newValue==null)return null;
+    	String uri = Global.getNamespace()+"/edits("+id+")/$newValue";
+    	return ResourceReference.ofSerializedJson(uri, this.newValue);
     }
     
 
     @JsonProperty("diff")
-    public String getDiffLink () {
-        return newValue != null
-                ? Global.getNamespace()+"/edits/"+id+"/$diff" : null;
+    public ResourceReference<JsonNode> getDiffLink () {
+    	if(this.newValue==null || this.oldValue==null)return null;
+    	String uri = Global.getNamespace()+"/edits("+id+")/$diff";
+    	return ResourceReference.of(uri, new Supplier<JsonNode>(){
+			@Override
+			public JsonNode get() {
+				return getDiff();
+			}
+    	});
     }
 
     @Override

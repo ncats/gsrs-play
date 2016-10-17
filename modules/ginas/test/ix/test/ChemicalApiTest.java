@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -24,8 +25,10 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.test.builder.SubstanceBuilder;
+import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
+import ix.utils.Util;
 import util.json.JsonUtil;
 
 public class ChemicalApiTest extends AbstractGinasServerTest {
@@ -37,6 +40,12 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 	final File molformfile=new File("test/molforms.txt");
 	
 
+//	@Override
+//	public GinasTestServer createGinasTestServer(){
+//		Map<String, Object> settings=Util.MapBuilder.get("ix.ginas.init.loadCV", (Object)false)
+//										.build();
+//		return new GinasTestServer(settings);
+//	}
     
     @Test   
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
@@ -241,6 +250,8 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 			JsonNode chemical = makeChemicalSubstanceJSON("COC1=CC=CC=C1");
             
             JsonNode entered= api.submitSubstanceJson(chemical);
+            
+            
             String displayName = entered.at("/_name").asText();
             String uuid=entered.at("/uuid").asText();
 			String export=api.exportHTML(uuid,"sdf");

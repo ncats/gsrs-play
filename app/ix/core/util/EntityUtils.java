@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -64,6 +65,7 @@ import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 
 import ix.core.FieldNameDecorator;
 import ix.core.IgnoredModel;
+import ix.core.ResourceReference;
 import ix.core.SingleParent;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
@@ -108,12 +110,68 @@ import play.db.ebean.Model.Finder;
  * @author peryeata
  */
 public class EntityUtils {
-
 	private static final String ID_FIELD_NATIVE_SUFFIX = "._id";
 	private static final String ID_FIELD_STRING_SUFFIX = ".id";
 
-	private final static CachedSupplier<Map<String, EntityInfo<?>>> infoCache 
-					= CachedSupplier.of(()->new ConcurrentHashMap<String, EntityInfo<?>>());
+	/**
+	 * This is a simplified memoized map to help avoid recalculating the same
+	 * expensive value several times with different threads. It will also avoid
+	 * the infinite loop caused by {@link ConcurrentHashMap} when adding a key
+	 * with the same reduced {@link Object#hashCode()} during a call to
+	 * {@link ConcurrentHashMap#computeIfAbsent(Object, Function)}.
+	 * 
+	 * Specifically, {@link ConcurrentHashMap} will hang indefinitely in the
+	 * following case, but will not with a {@link CachedMap#computeIfAbsent(Object, Function)}
+	 * call instead:
+	 * 
+	 * <pre>
+     * {@code 
+     *  public static void main(String... args) throws Exception {
+     *    ConcurrentHashMap<MyKey, String> mymap = new ConcurrentHashMap<>();
+     *      mymap.computeIfAbsent(new MyKey(), k->{
+     *            mymap.computeIfAbsent(new MyKey(), k2->{   //Will hang forever
+     *              return "OK";
+     *          });
+     *          return "OK2";
+     *      });
+     *  }
+     *  public static class MyKey {
+     *      &#64;Override
+     *      public int hashCode() {
+     *          return 1;   ///force to always be the same
+     *      }
+     *      public boolean equals(Object o) {
+     *          if (this == o)
+     *              return true;
+     *          return false;
+     *      }
+     *  }
+	 * }
+	 * 
+	 * </pre>
+	 * 
+	 * 
+	 * @author peryeata
+	 *
+	 * @param <K>
+	 * @param <V>
+	 */
+	private static class CachedMap<K,V>{
+		Map<K, CachedSupplier<V>> map;
+		
+		public CachedMap(int size){
+			map= new ConcurrentHashMap<K, CachedSupplier<V>>(size);
+		}
+		
+		public V computeIfAbsent(K k, Function<K,V> fun){
+			return map.computeIfAbsent(k, k2->CachedSupplier.of(()->fun.apply(k2)))
+					.getSync();
+		}
+		
+	}
+	
+	private final static CachedSupplier<CachedMap<String, EntityInfo<?>>> infoCache 
+					= CachedSupplier.of(()->new CachedMap<>(2048));
 
 
 	@Indexable // put default indexable things here
@@ -123,8 +181,11 @@ public class EntityUtils {
 
 	private static final Indexable defaultIndexable = (Indexable) DefaultIndexable.class.getAnnotation(Indexable.class);
 
+	@SuppressWarnings("unchecked")
 	public static <T> EntityInfo<T> getEntityInfoFor(Class<T> cls) {
-		return (EntityInfo<T>) infoCache.get().computeIfAbsent(cls.getName(), k -> new EntityInfo<>(cls));
+		return (EntityInfo<T>) infoCache
+								.get()
+								.computeIfAbsent(cls.getName(), k -> new EntityInfo<>(cls));
 	}
 
 	public static <T> EntityInfo<T> getEntityInfoFor(T entity) {
@@ -132,18 +193,8 @@ public class EntityUtils {
 	}
 
 	public static EntityInfo<?> getEntityInfoFor(String className) throws ClassNotFoundException {
-		EntityInfo<?> e1 = infoCache.get().computeIfAbsent(className, k -> {
-			try {
-				return EntityInfo.of(Class.forName(k));
-			} catch (Exception e) {
-				Logger.error("No class found with name:" + className);
-			}
-			return null;
-		});
-		if (e1 == null) {
-			throw new ClassNotFoundException(className);
-		}
-		return e1;
+		Class<?> cls = Class.forName(className);
+		return getEntityInfoFor(cls);
 	}
 
 	/**
@@ -764,6 +815,20 @@ public class EntityUtils {
 				return ((Comparable<T>)this.getValue()).compareTo(ew2.getValue());
 			}
 			return 0;
+		}
+
+		
+		/**
+		 * Get the "raw" value of this object for the REST API. Typically this 
+		 * is just the value itself, not serialized as a JsonNode, but it may
+		 * mean something special in certain cases.
+		 * @return
+		 */
+		public Object getRawValue() {
+			if(this.getValue() instanceof ResourceReference){
+				return ((ResourceReference) this.getValue()).rawJson();
+			}
+			return this.getValue();
 		}
 	}
 

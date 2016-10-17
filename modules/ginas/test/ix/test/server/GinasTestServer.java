@@ -590,9 +590,7 @@ public class GinasTestServer extends ExternalResource{
      * </pre>
      */
     public void restart(){
-        System.out.println("restarting...");
         stop(true);
-
         start();
     }
 

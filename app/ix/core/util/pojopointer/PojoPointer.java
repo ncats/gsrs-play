@@ -64,8 +64,27 @@ public interface PojoPointer{
 	
 	/**
 	 * ABNF:
-	 *  TBD
+	 * <pre>
+	 *URIPOJOPOINTER   = *( OBJECTLOCATOR *SPECIALLOCATOR)
+	 *SPECIALLOCATOR   = ARRAYLOCATOR / FILTERLOCATOR / FUNCTIONLOCATOR / IDLOCATOR
+	 *FILTERLOCATOR    = "(" URIPOJOPOINTER ":" FUNCTIONARGUMENT ")"
+	 *IDLOCATOR        = "(" ID ")"
+	 *FUNCTIONLOCATOR  = "!" FUNCTIONNAME "(" FUNCTIONARGUMENT ")"
+	 *FUNCTIONNAME     = *FIELDCHAR
+	 *FUNCTIONARGUMENT = "(" FUNCTIONARGUMENT ")" / *ALLOWEDCHARS
+	 *ALLOWEDCHARS     = DIGIT / ALPHA / "$" / "/" / "!" / ":" / "-" / "=" / "^" / "*" / "~" / "_"
+	 *OBJECTLOCATOR    = *("/" *1RAWSIGNIFIER FIELDSIGNIFIER) 
+	 *FIELDSIGNIFIER   = [STARTFIELD *FIELDCHAR]
+	 *STARTFIELD       = ALPHA
+	 *FIELDCHAR        = ALPHA / DIGIT / "$" / "_"
+	 *RAWSIGNIFIER     = "$"
+	 *ARRAYLOCATOR     = "($" 1*DIGIT ")"
+	 *ID               = 1*(ALPHA / DIGIT / "-")
+	 *ALPHA            = %x41-5A / %x61-7A   ; A-Z / a-z
+	 *DIGIT            = %x30-39             ; 0-9
+	 * </pre> 
 	 * 
+	 *  
 	 * @param uripath
 	 * @return
 	 */

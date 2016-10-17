@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -543,4 +544,27 @@ public class Util {
 		});
 	}
 
+	
+	public static <T,V>  Map<T,V> toMap(T t, V v){
+		Map<T,V> toMap = new HashMap<T,V>();
+		toMap.put(t, v);
+		return toMap;
+	}
+	
+	public static class MapBuilder<T,V>{
+		private Map<T,V> _map = new HashMap<>();
+		
+		public MapBuilder<T,V> put(T t,V v){
+			_map.put(t, v);
+			return this;
+		}
+		
+		public Map<T,V> build(){
+			return this._map;
+		}
+		public static <T,V> MapBuilder<T,V> putNew(T t, V v){
+			MapBuilder<T,V> mapBuilder= new MapBuilder<>();
+			return mapBuilder.put(t, v);
+		}
+	}
 }

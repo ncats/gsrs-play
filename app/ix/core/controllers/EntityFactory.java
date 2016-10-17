@@ -17,8 +17,9 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.function.BiFunction;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -56,11 +57,9 @@ import ix.core.search.text.TextIndexer;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.EntityUtils.MethodOrFieldMeta;
-import ix.core.util.pojopointer.PojoPointer;
 import ix.core.util.Java8Util;
+import ix.core.util.pojopointer.PojoPointer;
 import ix.utils.Global;
-import ix.utils.Tuple;
 import ix.utils.Util;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -590,7 +589,7 @@ public class EntityFactory extends Controller {
     protected static Object atFieldSerialized (Object inst, PojoPointer cpath) {
     	EntityWrapper ew=EntityWrapper.of(inst).at(cpath).get();
     	if(cpath.isLeafRaw()){
-    		return ew.getValue();
+    		return ew.getRawValue();
     	}else{
     		return ew.toFullJsonNode();
     	}
@@ -794,6 +793,7 @@ public class EntityFactory extends Controller {
                                 && content.indexOf("text/json") < 0)) {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
+        
         try {
             EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
             mapper.addHandler(new DeserializationProblemHandler () {
@@ -807,8 +807,7 @@ public class EntityFactory extends Controller {
                                         +") while parsing "
                                         +bean+"; skipping it..");
                             parser.skipChildren();
-                        }
-                        catch (IOException ex) {
+                        }catch (IOException ex) {
                             ex.printStackTrace();
                             Logger.error
                                 ("Unable to handle unknown property!", ex);
@@ -828,6 +827,8 @@ public class EntityFactory extends Controller {
 		            	return badRequest(validationResponse(vr));
 		            }
             }
+           
+            
             inst.save();
             tx.commit();
             Status s=created (mapper.toJson(inst));

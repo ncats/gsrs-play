@@ -49,8 +49,10 @@ public class EditFactory extends EntityFactory {
     public static Result field (String uuid, String field) {
         try {
             UUID id = UUID.fromString(uuid);
+            
             Edit edit = finder.byId(id);
             if (edit != null) {
+            	
                 return field (edit, field);
             }
             

@@ -317,27 +317,6 @@ public class GinasApp extends App {
         }
     }
 
-    static{
-        init();
-    }
-
-
-    public static void init(){
-        try{
-			//Add specific codes to ordered list
-			List<String> codeSystems=Play.application()
-					.configuration()
-					.getStringList("ix.ginas.codes.order", new ArrayList<String>());
-			int i=0;
-			codeSystemOrder= new HashMap<String, Integer>();
-			for(String s:codeSystems){
-				codeSystemOrder.put(s,i++);
-			}
-		}catch(Throwable t){
-			t.printStackTrace();
-		}
-    }
-
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
 
     
@@ -576,7 +555,7 @@ public class GinasApp extends App {
      * @return
      */
     public static Collection<List<Code>> getOrderedGroupedCodes(Substance s, int max){
-    	return getGroupedCodes(s.getOrderedCodes(codeSystemOrder),max);
+    	return getGroupedCodes(s.getOrderedCodes(getCodeSystemOrder()),max);
     }
    
     
@@ -2107,11 +2086,23 @@ public class GinasApp extends App {
         }
     }
     
-    private static Map<String,Integer> codeSystemOrder = new HashMap<>();
+    private static CachedSupplier<Map<String,Integer>> codeSystemOrder = CachedSupplier.of(()->{
+    	//Add specific codes to ordered list
+		List<String> codeSystems=Play.application()
+				.configuration()
+				.getStringList("ix.ginas.codes.order", new ArrayList<String>());
+		
+		int i=0;
+		Map<String,Integer> order= new HashMap<String, Integer>();
+		for(String s:codeSystems){
+			order.put(s,i++);
+		}
+		return order;
+    });
 
     
     public static Map<String,Integer> getCodeSystemOrder(){
-    	return codeSystemOrder;
+    	return codeSystemOrder.get();
     }
     
     

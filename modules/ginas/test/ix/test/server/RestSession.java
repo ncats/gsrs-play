@@ -1,15 +1,16 @@
 package ix.test.server;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import com.fasterxml.jackson.databind.JsonNode;
+
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
-
-import java.util.Objects;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by katzelda on 3/17/16.
@@ -30,8 +31,8 @@ public class RestSession extends AbstractSession<Void>{
     private String key;
     private String token;
     private long deadtime=0;
-
     private AUTH_TYPE authType = AUTH_TYPE.NONE;
+    Map<String, String> extraHeaders = new HashMap<>();
 
     public RestSession(int port) {
         super(port);
@@ -71,7 +72,17 @@ public class RestSession extends AbstractSession<Void>{
                     break;
             }
         }
+        extraHeaders.forEach((k,v)->{
+        	ws.setHeader(k, v);
+        });
         return ws;
+    }
+    
+    public void setAdditionalHeader(String key, String value){
+    	extraHeaders.put(key, value);
+    }
+    public void clearAdditionalHeaders(){
+    	extraHeaders.clear();
     }
 
     private void refreshTokenIfNeccesarry(){

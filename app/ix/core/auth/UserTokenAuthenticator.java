@@ -9,7 +9,6 @@ public class UserTokenAuthenticator implements Authenticator{
 	@Override
 	public UserProfile authenticate(AuthenticationCredentials credentials) {
 		Context ctx = credentials.getContext();
-		System.out.println("Found context:" + ctx);
 		if(ctx==null)return null;
 		Request r = ctx.request();
 		String token=r.getHeader("auth-token");
