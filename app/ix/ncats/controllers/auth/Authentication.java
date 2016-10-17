@@ -20,13 +20,13 @@ import ix.core.models.Role;
 import ix.core.models.Session;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
+import ix.core.util.CachedSupplier;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
-import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -34,7 +34,7 @@ import play.mvc.Controller;
 import play.mvc.Http;
 
 /**
- * A simple controller to authenticate via ldap
+ * A simple controller to authenticate
  */
 
 public class Authentication extends Controller {
@@ -50,7 +50,11 @@ public class Authentication extends Controller {
     
     private static Cache tokenCache=null;
     private static Cache tokenCacheUserProfile=null;
+    
+    
     private static long lastCacheUpdate=-1;
+    
+    private static CachedSupplier<CacheManager> manager=CachedSupplier.of(()->CacheManager.getInstance());
 
     static ix.core.plugins.SchedulerPlugin scheduler;
 
@@ -80,14 +84,17 @@ public class Authentication extends Controller {
     	
     	int maxElements=99999;
     	int maxElementsUP=100;
-        Application app=Play.application();
+        
+        
+        CacheManager manager = Authentication.manager.get();
+        
         
         CacheConfiguration config =
             new CacheConfiguration (CACHE_NAME, maxElements)
             .timeToLiveSeconds(tres/1000);
         tokenCache = new Cache (config);
-        CacheManager.getInstance().removeCache(CACHE_NAME);
-		CacheManager.getInstance().addCache(tokenCache);
+        manager.removeCache(CACHE_NAME);
+        manager.addCache(tokenCache);
 
         tokenCache.setSampledStatisticsEnabled(true);
         
@@ -96,9 +103,9 @@ public class Authentication extends Controller {
                 .timeToIdleSeconds(tres/1000/100);
         tokenCacheUserProfile= new Cache (configUp);
 
-        CacheManager.getInstance().removeCache(CACHE_NAME_UP);
-
-        CacheManager.getInstance().addCache(tokenCacheUserProfile);     
+        manager.removeCache(CACHE_NAME_UP);
+        manager.addCache(tokenCacheUserProfile);  
+        
         tokenCacheUserProfile.setSampledStatisticsEnabled(true);
         lastCacheUpdate=-1;
         
@@ -162,9 +169,7 @@ public class Authentication extends Controller {
     
 	public static UserProfile getUserProfileOrElse(String username, Supplier<UserProfile> orElse) {
 		
-		UserProfile profile = _profiles.where()
-									.eq("user.username", username)
-									.findUnique();
+		UserProfile profile = fetchProfile(username);
 		
 		if(profile!=null && profile.user!=null){
 			return profile;
@@ -261,7 +266,7 @@ public class Authentication extends Controller {
     }
     
     public static UserProfile getUserProfileFromKey(String username, String key){
-    	UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	UserProfile profile = fetchProfile(username);
     	if(profile!=null){
     		if(profile.acceptKey(key)){
     			return profile;
@@ -269,9 +274,10 @@ public class Authentication extends Controller {
     	}
     	return null;
     }
+    
+    
     public static UserProfile getUserProfileFromPassword(String username, String password){
-    	
-    	UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	UserProfile profile = fetchProfile(username);
     	if(profile!=null){
     		if(AdminFactory.validatePassword(profile, password)){
     			return profile;
@@ -339,16 +345,20 @@ public class Authentication extends Controller {
     }
     
     private static UserProfile getUserProfile(String username){
-    	Element upelm=tokenCacheUserProfile.get(username);
+    	Element upelm=tokenCacheUserProfile.get(username.toUpperCase());
     	if(upelm!=null){
     		return (UserProfile)upelm.getObjectValue();
     	}
-    	UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	UserProfile profile = fetchProfile(username);
     	if(profile!=null){
-    		tokenCacheUserProfile.put(new Element(username, profile));	
+    		tokenCacheUserProfile.put(new Element(username.toUpperCase(), profile));	
     	}
     	return profile;
     }
+
+	private static UserProfile fetchProfile(String username) {
+		return _profiles.where().ieq("user.username", username).findUnique();
+	}
     
     public static void updateUserProfileTokenCacheIfNecessary(){
     	setupCacheIfNeccessary();
@@ -357,9 +367,11 @@ public class Authentication extends Controller {
     	}else{
     	}
     }
+    
     public static void updateUserProfileToken(UserProfile up){
     	tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
     }
+    
     public static void updateUserProfileTokenCache(){
     	try{
 	    	for(UserProfile up:_profiles.all()){
@@ -466,7 +478,7 @@ public class Authentication extends Controller {
 			if(o!=null){
 				ObjectMapper om = new ObjectMapper();
 				Principal p1=om.treeToValue(om.valueToTree(o), Principal.class);
-				UserProfile profile = _profiles.where().eq("user.username", p1.username).findUnique();
+				UserProfile profile = _profiles.where().ieq("user.username", p1.username).findUnique();
 				if(profile==null){
 					profile= new UserProfile(p1);
 				}

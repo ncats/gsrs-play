@@ -174,6 +174,7 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 							.expectWithHeaderUnregisteredUser(404)
 				);
 		});
+		
 		//No auth should be possible with trust header set to false
 		TestUtil.allPermutations(2).stream().forEach(bs->{
 			toRun.add(maketest().trust(false)
