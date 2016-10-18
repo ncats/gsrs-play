@@ -301,7 +301,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
 
 
 	@Test
-	@ExpectedToFail("when a name is changed the suggest index isn't updated to remove the " +
+	@ExpectedToFail(reason = "when a name is changed the suggest index isn't updated to remove the " +
 			"old name because there is currently no way to know that something was removed or that nothing else uses it anymore")
 	public void ensureSuggestFieldDisappearsAfterNameRemoved() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
