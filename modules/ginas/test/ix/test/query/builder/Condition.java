@@ -19,8 +19,8 @@ public interface Condition {
 		return new ExactMatchTermCondition(field, value);
 	}
 
-	public static OrderedTermCondition orderedFieldQuery(String field, String value) {
-		return new OrderedTermCondition(field, value);
+	public static PhraseTermCondition phraseFieldQuery(String field, String value) {
+		return new PhraseTermCondition(field, value);
 	}
 
 	public static GlobalTermCondition rawGlobalQuery(String value) {
@@ -32,7 +32,7 @@ public interface Condition {
 	}
 
 	public static GlobalTermCondition orderedGlobalQuery(String value) {
-		return orderedFieldQuery(null, value).asGlobal();
+		return phraseFieldQuery(null, value).asGlobal();
 	}
 
 }

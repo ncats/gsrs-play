@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.avaje.ebean.Ebean;
@@ -14,6 +15,7 @@ import ix.core.auth.AuthenticationCredentials;
 import ix.core.auth.Authenticator;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
 import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Principal;
 import ix.core.models.Role;
@@ -21,6 +23,7 @@ import ix.core.models.Session;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
+import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
 import net.sf.ehcache.Cache;
@@ -38,9 +41,27 @@ import play.mvc.Http;
  */
 
 public class Authentication extends Controller {
-    public static String APP;
-    public static final String SESSION = "ix.session";
-    public static int TIMEOUT; // session idle
+	public static final String SESSION = "ix.session";
+    public static CachedSupplier<String> APP = CachedSupplier.of(()->{
+    	return Play.application()
+					.configuration()
+					.getString("ix.app", "MyApp");
+    });
+    
+    public static CachedSupplier<Integer> TIMEOUT = CachedSupplier.of(()->{
+    	return Play.application()
+    			.configuration()
+    			.getInt(SESSION, 7200); // session idle
+    });
+    
+    public static CachedSupplier<Boolean> autoRegister = CachedSupplier.of(()->{
+    	return Play.application().configuration().getBoolean("ix.authentication.autoregister",false);
+    });
+    
+    public static CachedSupplier<Boolean> autoRegisterActive = CachedSupplier.of(()->{
+    	return Play.application().configuration().getBoolean("ix.authentication.autoregisteractive",false);
+    });
+    
 
     
     static Model.Finder<UUID, Session> _sessions =
@@ -48,127 +69,101 @@ public class Authentication extends Controller {
     static Model.Finder<Long, UserProfile> _profiles =
             new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
     
-    private static Cache tokenCache=null;
-    private static Cache tokenCacheUserProfile=null;
+    public static CachedSupplier<TokenCache> tokens = CachedSupplier.of(()->{
+    	return new TokenCache();
+    });
     
     
-    private static long lastCacheUpdate=-1;
+    
+    public static class TokenCache{
+    	   private Cache tokenCache=null;
+    	   private Cache tokenCacheUserProfile=null;
+    	   private long lastCacheUpdate=-1;
+    	   
+    	   public TokenCache(){
+    		   	String CACHE_NAME="TOKEN_CACHE";
+    	    	String CACHE_NAME_UP="TOKEN_UP_CACHE";
+    	    	
+    	    	//always hold onto the tokens for twice the time required
+    	    	long tres=Util.getTimeResolutionMS()*2;
+    	    	
+    	    	int maxElements=99999;
+    	    	int maxElementsUP=100;
+    	        
+    	        
+    	        CacheManager manager = Authentication.manager.get();
+    	        
+    	        
+    	        CacheConfiguration config =
+    	            new CacheConfiguration (CACHE_NAME, maxElements)
+    	            	.timeToLiveSeconds(tres/1000);
+    	        tokenCache = new Cache (config);
+    	        manager.removeCache(CACHE_NAME);
+    	        manager.addCache(tokenCache);
+
+    	        tokenCache.setSampledStatisticsEnabled(true);
+    	        
+    	        CacheConfiguration configUp =
+    	                new CacheConfiguration (CACHE_NAME_UP, maxElementsUP)
+    	                .timeToIdleSeconds(tres/1000/100);
+    	        tokenCacheUserProfile= new Cache (configUp);
+
+    	        manager.removeCache(CACHE_NAME_UP);
+    	        manager.addCache(tokenCacheUserProfile);  
+    	        
+    	        tokenCacheUserProfile.setSampledStatisticsEnabled(true);
+    	        lastCacheUpdate=-1;
+		}
+
+		private void updateIfNeeded() {
+			if (Util.getCanonicalCacheTimeStamp() != lastCacheUpdate) {
+				updateUserProfileTokenCache();
+			}
+		}
+
+		public void updateUserCache(UserProfile up) {
+			tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+			tokenCacheUserProfile.put(new Element(up.getIdentifier(), up));
+		}
+
+		public UserProfile getUserProfile(String token) {
+			updateIfNeeded();
+			Element e=tokenCache.get(token);
+			if(e==null)return null;
+			return (UserProfile)e.getObjectValue();
+		}
+		
+		
+		public UserProfile computeUserIfAbsent(String username, Function<String,UserProfile> fetcher){
+			Element elm = tokenCacheUserProfile.get(username);
+			if(elm==null|| elm.getObjectValue()==null){
+				UserProfile upnew= fetcher.apply(username);
+				if(upnew!=null){
+					updateUserCache(upnew);
+					return upnew;
+				}
+			}
+			return (UserProfile)elm.getObjectValue();
+		}
+		private void updateUserProfileTokenCache(){
+	    	try{
+	    		StreamUtil.ofIterator(UserProfileFactory.users()).forEach(up->{
+	    			updateUserCache(up);
+	    		});
+		    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();
+	    	}catch(Exception e){
+	    		e.printStackTrace();
+	    		throw e;
+	    	}
+	    }	
+    }
+    
     
     private static CachedSupplier<CacheManager> manager=CachedSupplier.of(()->CacheManager.getInstance());
 
-    static ix.core.plugins.SchedulerPlugin scheduler;
-
     
-    static{
-    	init();
-    }
-
-	public static void init(){
-		APP = Play.application()
-				.configuration().getString("ix.app", "MyApp");
-
-		TIMEOUT = 1000 * Play.application()
-				.configuration().getInt(SESSION, 7200); // session idle
-
-        scheduler =
-                Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
-		setupCache();
-
-	}
-    
-    public static void setupCache(){
-    	String CACHE_NAME="TOKEN_CACHE";
-    	String CACHE_NAME_UP="TOKEN_UP_CACHE";
-    	//always hold onto the tokens for twice the time required
-    	long tres=Util.getTimeResolutionMS()*2;
-    	
-    	int maxElements=99999;
-    	int maxElementsUP=100;
-        
-        
-        CacheManager manager = Authentication.manager.get();
-        
-        
-        CacheConfiguration config =
-            new CacheConfiguration (CACHE_NAME, maxElements)
-            .timeToLiveSeconds(tres/1000);
-        tokenCache = new Cache (config);
-        manager.removeCache(CACHE_NAME);
-        manager.addCache(tokenCache);
-
-        tokenCache.setSampledStatisticsEnabled(true);
-        
-        CacheConfiguration configUp =
-                new CacheConfiguration (CACHE_NAME_UP, maxElementsUP)
-                .timeToIdleSeconds(tres/1000/100);
-        tokenCacheUserProfile= new Cache (configUp);
-
-        manager.removeCache(CACHE_NAME_UP);
-        manager.addCache(tokenCacheUserProfile);  
-        
-        tokenCacheUserProfile.setSampledStatisticsEnabled(true);
-        lastCacheUpdate=-1;
-        
-    }
-    
-    
-    public static void setupCacheIfNeccessary(){
-    	if(tokenCache==null){
-    		setupCache();
-    	}else{
-	    	try{
-	    		tokenCache.getSize();
-	    	}catch(Exception e){
-	    		setupCache();
-	    	}
-    	}
-    	
-    }
-
-    public static boolean loginUserFromHeader(Http.Request r){
-		try {
-			if(r==null){
-				r=request();
-			}
-			if (Play.application().configuration()
-					    .getBoolean("ix.authentication.trustheader")) {
-				String usernameheader = Play.application().configuration()
-						.getString("ix.authentication.usernameheader");
-				String usernameEmailheader = Play.application().configuration()
-						.getString("ix.authentication.useremailheader");
-				String username = r.getHeader(usernameheader);
-				String userEmail = r.getHeader(usernameEmailheader);
-				
-				if (username != null) {
-					if (validateUserHeader(username,r)) {
-						setSessionUser(username,userEmail);
-						return true;
-					}
-				}
-			}
-		} catch (Exception e) {
-
-			
-		}
-		return false;
-    }
-    
-    public static boolean validateUserHeader(String username, Http.Request r){
-    	if(r==null){
-			r=request();
-		}
-    	if(Play.application().configuration().getBoolean("ix.authentication.trustheader")){
-    		String userHeader = Play.application().configuration().getString("ix.authentication.usernameheader");
-    		String headerUser=r.getHeader(userHeader);
-    		if(headerUser!=null && headerUser.equals(username)){
-    			return true;
-    		}
-    	}
-    	return false;
-    }
     
 	public static UserProfile getUserProfileOrElse(String username, Supplier<UserProfile> orElse) {
-		
 		UserProfile profile = fetchProfile(username);
 		
 		if(profile!=null && profile.user!=null){
@@ -200,7 +195,7 @@ public class Authentication extends Controller {
     private static UserProfile setSessionUser(String username, String email){
         
         UserProfile profile= getUserProfileOrElse(username, ()->{
-        	if(Play.application().configuration().getBoolean("ix.authentication.autoregister",false)){
+        	if(autoRegister.get()){
         		Transaction tx = Ebean.beginTransaction();
         		try{
 	        		Logger.info("Autoregistering user:" + username);
@@ -210,14 +205,15 @@ public class Authentication extends Controller {
 	        		if(up==null){
 	        			up = new UserProfile(p);
 	        		}
-	        		if(Play.application().configuration().getBoolean("ix.authentication.autoregisteractive",false)){
+	        		if(autoRegisterActive.get()){
 	                	up.active = true;	
 	        		}else{
 	        			up.active = false;
 	        		}
 	        		up.systemAuth=false;
 	        		tx.commit();
-	        		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+	        		
+	        		tokens.get().updateUserCache(up);
 	        		return up;
         		}catch(Exception e){
         			Logger.error("Error creating profile", e);
@@ -330,59 +326,24 @@ public class Authentication extends Controller {
     }
     
     public static UserProfile getUserProfileFromTokenAlone(String token){
-    	updateUserProfileTokenCacheIfNecessary();
-    	Element uelm=tokenCache.get(token);
-    	if(uelm!=null){
-    		String username=(String)uelm.getObjectValue();
-    		UserProfile profile = getUserProfile(username);
-    		if(profile.acceptToken(token)){
-    			return profile;
-    		}
-    	}else{
-    		System.out.println("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());
+    	UserProfile profile=tokens.get().getUserProfile(token);
+    	if(profile!=null){
+    		return getUserProfileFromToken(profile.getIdentifier(),token);
     	}
     	return null;
     }
     
     private static UserProfile getUserProfile(String username){
-    	Element upelm=tokenCacheUserProfile.get(username.toUpperCase());
-    	if(upelm!=null){
-    		return (UserProfile)upelm.getObjectValue();
-    	}
-    	UserProfile profile = fetchProfile(username);
-    	if(profile!=null){
-    		tokenCacheUserProfile.put(new Element(username.toUpperCase(), profile));	
-    	}
-    	return profile;
+    	return tokens.get().computeUserIfAbsent(username, (u)->{
+    		return fetchProfile(u);
+    	});
     }
 
 	private static UserProfile fetchProfile(String username) {
-		return _profiles.where().ieq("user.username", username).findUnique();
+		return UserProfileFactory.getUserProfileForUsername(username);
 	}
     
-    public static void updateUserProfileTokenCacheIfNecessary(){
-    	setupCacheIfNeccessary();
-    	if(Util.getCanonicalCacheTimeStamp()!=lastCacheUpdate){
-    		updateUserProfileTokenCache();
-    	}else{
-    	}
-    }
     
-    public static void updateUserProfileToken(UserProfile up){
-    	tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
-    }
-    
-    public static void updateUserProfileTokenCache(){
-    	try{
-	    	for(UserProfile up:_profiles.all()){
-	    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
-	    	}
-	    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();
-    	}catch(Exception e){
-    		e.printStackTrace();
-    		throw e;
-    	}
-    }
     
     public static UserProfile getUserProfile() {
         Session session = getSession();
@@ -442,7 +403,7 @@ public class Authentication extends Controller {
         Session session = getCachedSession(id);
         if (session != null) {
             long current = TimeUtil.getCurrentTimeMillis();
-            if ((current - session.accessed) > TIMEOUT) {
+            if ((current - session.accessed) > TIMEOUT.get()) {
                 Logger.debug("Session " + session.id + " expired!");
                 flash("warning", "Your session has expired!");
                 flush(session);
@@ -478,7 +439,7 @@ public class Authentication extends Controller {
 			if(o!=null){
 				ObjectMapper om = new ObjectMapper();
 				Principal p1=om.treeToValue(om.valueToTree(o), Principal.class);
-				UserProfile profile = _profiles.where().ieq("user.username", p1.username).findUnique();
+				UserProfile profile = p1.getUserProfile();
 				if(profile==null){
 					profile= new UserProfile(p1);
 				}
@@ -488,13 +449,9 @@ public class Authentication extends Controller {
 			
 		}
 		
-		for(UserProfile profile:  _profiles.findList()){
-			for(Role r:profile.getRoles()){
-				if(r == Role.Admin){
-					return profile;
-				}
-			}
-		}
-		return null;
+		return StreamUtil.ofIterator(UserProfileFactory.users())
+			.filter(up->up.hasRole(Role.Admin))
+			.findFirst()
+			.orElse(null);
 	}
 }

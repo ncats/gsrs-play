@@ -3,7 +3,9 @@ package ix.ncats.controllers.crud;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
 import ix.core.models.*;
+import ix.core.util.StreamUtil;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.routes;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -15,12 +17,10 @@ import play.mvc.Result;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //@Dynamic(value = "viewUserList", handlerKey = "idg")
 public class Administration extends App {
-
-    public static Model.Finder<Long, UserProfile> _profiles =
-            new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
 
     public static String appContext = Play.application().configuration().getString("application.context");
 
@@ -40,11 +40,14 @@ public class Administration extends App {
         return ok(ix.ncats.views.html.admin.users.render(profiles, sortBy, order, filter));
     }
 
+    //TODO:
+    // Look at this
     public static List<UserProfile> principalsList() {
         List<Principal> users = PrincipalFactory.all();
-        List<UserProfile> profiles = _profiles.all();
+        List<UserProfile> profiles = StreamUtil.ofIterator(UserProfileFactory.users()).collect(Collectors.toList());
+        
         for (Principal p : users) {
-            UserProfile pri = _profiles.where().eq("user.username", p.username).findUnique();
+            UserProfile pri = p.getUserProfile();
             if (pri == null) {
                 UserProfile prof = new UserProfile(p);
                 prof.active = true;
@@ -106,18 +109,13 @@ public class Administration extends App {
             }
         }
         newUser.save();
-        UserProfile prof = _profiles.where().eq("user.username", newUser.username).findUnique();
+        UserProfile prof = newUser.getUserProfile();
 
         if (prof == null) {
             prof = new UserProfile(newUser);
             prof.active = Boolean.parseBoolean(requestData.get("active"));
             prof.setPassword(requestData.get("password"));
             prof.setRoles(rolesChecked);
-
-         /*   for (Acl p : aclsChecked) {
-                p.principals.add(newUser);
-                p.save();
-            }*/
 
             for (Group g : groupsChecked) {
                 if(g.id != null) {
@@ -144,7 +142,7 @@ public class Administration extends App {
         DynamicForm requestData = Form.form().bindFromRequest();
 
         Principal user = AdminFactory.palFinder.get().byId(id);
-        UserProfile profile = _profiles.where().eq("user.username", user.username).findUnique();
+        UserProfile profile = user.getUserProfile();
 
         String userName = requestData.get("username");
         String password = requestData.get("password");
@@ -209,11 +207,12 @@ public class Administration extends App {
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static UserProfile editUser(Long id) {
         Principal user = AdminFactory.palFinder.get().byId(id);
-        UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
+        UserProfile up = user.getUserProfile();
         up.user = user;
         return up;
     }
 
+    //TODO : Fix this too
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result deletePrincipal(Long id) {
         return AdminFactory.setUserToInactive(id);

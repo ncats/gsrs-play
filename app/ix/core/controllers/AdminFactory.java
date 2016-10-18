@@ -322,8 +322,10 @@ public class AdminFactory extends Controller {
     public static Result setUserToInactive(Long id) {
         Principal user = palFinder.get().byId(id);
         if (user != null) {
-            UserProfile profile = proFinder.get().where().eq("user.username", user.username).findUnique();
+            UserProfile profile = user.getUserProfile();
             profile.active = false;
+            profile.save();
+            return ok("Inactivated user:" + id);
         }
         return notFound("Unknown user: " + id);
     }

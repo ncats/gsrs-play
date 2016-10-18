@@ -1,6 +1,7 @@
 package ix.core.controllers;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import ix.core.models.Group;
@@ -17,13 +18,17 @@ type=UserProfile.class,
 description="Resource for handling user profiles")
 */
 public class UserProfileFactory extends EntityFactory {
-	static public CachedSupplier<Model.Finder<Long, UserProfile>> finder = CachedSupplier.of(()->new Model.Finder(Long.class, UserProfile.class));
+	static private CachedSupplier<Model.Finder<Long, UserProfile>> finder = CachedSupplier.of(()->new Model.Finder(Long.class, UserProfile.class));
 
 	
 	public static UserProfile getUserProfileForPrincipal(Principal p){
-		UserProfile profile = finder.get().where().eq("user.username", p.username).findUnique();
+		return getUserProfileForUsername(p.username);
+	}
+	public static UserProfile getUserProfileForUsername(String username){
+		UserProfile profile = finder.get().where().eq("user.username", username).findUnique();
 		return profile;
 	}
+	
 	public static UserProfile addActiveUser(Principal newUser, String password, List rolesChecked, List groupsChecked ) {
 		
         
@@ -83,7 +88,6 @@ public class UserProfileFactory extends EntityFactory {
                         for(Principal p : g.members){
                             System.out.println(p.username + " id = " + p.id);
                         }
-
                         throw t;
 					}
                 }
@@ -97,5 +101,9 @@ public class UserProfileFactory extends EntityFactory {
         Principal newUser = new Principal();
         newUser.username =username;
         return addActiveUser(newUser,password,rolesChecked,groupsChecked);
+    }
+    
+    public static Iterator<UserProfile> users(){
+    	return finder.get().findIterate();
     }
 }

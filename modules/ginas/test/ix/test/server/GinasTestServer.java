@@ -57,6 +57,7 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CachedSup;
 import ix.test.util.TestUtil;
 import net.sf.ehcache.CacheManager;
 import play.api.Application;
@@ -428,7 +429,7 @@ public class GinasTestServer extends ExternalResource{
             throw new IllegalArgumentException("roles can not be empty");
         }
 
-        Principal existingUser = principleFinder.where().eq("username", username).findUnique();
+        Principal existingUser = principleFinder.where().ieq("username", username).findUnique();
         if(existingUser !=null){
             throw new IllegalArgumentException("user already exists: " + username);
         }
@@ -464,19 +465,8 @@ public class GinasTestServer extends ExternalResource{
    }
 
     private void initializeControllers() {
-
     	CachedSupplier.resetCaches();
-    	
-        App.init();
-        
-      //  TextIndexer.init();
-        RouteFactory.init();
-        Authentication.init();
-        SubstanceFactory.init();
-        SequenceIndexer.init();
-        
-        //our APIs
-       // SubstanceLoader.init();
+    	CachedSup.resetAllCaches();
     }
 
     private void deleteH2Db() throws IOException {

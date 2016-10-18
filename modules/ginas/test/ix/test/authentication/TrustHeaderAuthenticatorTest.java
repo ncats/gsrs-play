@@ -3,9 +3,11 @@ package ix.test.authentication;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -18,6 +20,7 @@ import ix.AbstractGinasClassServerTest;
 import ix.test.server.RestSession;
 import ix.test.util.RandomTextMaker;
 import ix.test.util.TestUtil;
+import ix.utils.Tuple;
 import ix.utils.Util;
 
 @RunWith(Parameterized.class)
@@ -42,6 +45,8 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 			return password;
 		}
 		
+		
+		
 		public UserInfo(String username, String email, String password) {
 			super();
 			this.username = username;
@@ -49,6 +54,18 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 			this.password = password;
 		}
 		
+	}
+	
+	final static Random random= new Random(0);
+	
+	public static String randomizeCase(String s){
+		return s.chars().mapToObj(c->{
+			if(random.nextBoolean()){
+				return (c+"").toLowerCase();
+			}else{
+				return (c+"").toUpperCase();
+			}
+		}).collect(Collectors.joining());
 	}
 	
 	private static final String HEADER_NAME = "USERNAME_HEADER";
@@ -254,9 +271,9 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 			assertEquals(config.getExpectedStatusNoHeader(), rs.whoAmI().getStatus());
 		}
 	}
+	
 	@Test
 	public void testWithHeaderAndActiveUser() {
-		
 		UserInfo ui=userSupplier.get();
 		ts.createAdmin(ui.getUsername(), ui.getPassword());
 		
@@ -268,8 +285,24 @@ public class TrustHeaderAuthenticatorTest extends AbstractGinasClassServerTest{
 		}
 	}
 	@Test
-	public void testWithHeaderForNonExistentUser() {
+	public void testWithHeaderAndActiveUserDifferentCase() {
+		UserInfo ui=userSupplier.get();
+		String userMix1=randomizeCase(ui.getUsername());
+		String userMix2=randomizeCase(ui.getUsername());
 		
+		ts.createAdmin(userMix1, ui.getPassword());
+		
+		try (RestSession rs = ts.notLoggedInRestSession()) {
+			rs.setAdditionalHeader(HEADER_NAME,  userMix2);
+			rs.setAdditionalHeader(HEADER_EMAIL, ui.getEmail());
+			
+			assertEquals(config.getExpectedStatusWithHeaderAndCreated(), rs.whoAmI().getStatus());
+		}
+	}
+	
+	
+	@Test
+	public void testWithHeaderForNonExistentUser() {
 		UserInfo ui=userSupplier.get();
 		try (RestSession rs = ts.notLoggedInRestSession()) {
 			rs.setAdditionalHeader(HEADER_NAME, ui.getUsername());

@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,11 +28,14 @@ import ix.core.models.Acl;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
-import ix.core.util.Java8Util;
 import ix.core.util.EntityUtils.EntityInfo;
+import ix.core.util.Java8Util;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.Global;
+import ix.utils.Util;
+import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -41,97 +45,127 @@ import play.mvc.Result;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
-	static public Model.Finder<Long, Namespace> resFinder;
-    static public Model.Finder<Long, Acl> aclFinder;
-    static public Model.Finder<Long, Principal> palFinder;
-
-    static final ConcurrentMap<String, Class> _registry = new ConcurrentHashMap<String, Class>();
-    static final Set<String> _uuid = new TreeSet<String>();
+	static public CachedSupplier<Model.Finder<Long, Namespace>> resFinder =Util.finderFor(Long.class, Namespace.class);
+    static public CachedSupplier<Model.Finder<Long, Acl>> aclFinder=Util.finderFor(Long.class, Acl.class);
+    static public CachedSupplier<Model.Finder<Long, Principal>> palFinder=Util.finderFor(Long.class, Principal.class);
     
-    private static NamedResourceFilter resourceFilter=null;
-    
-    static{
-
-        init();
+    private static class FactoryRegistry{
+    	ConcurrentHashMap<String, Class<?>> registry=new ConcurrentHashMap<String, Class<?>>();
+    	private Set<String> _uuid = new TreeSet<String>();
+    	private NamedResourceFilter resourceFilter=new NamedResourceFilter(){
+			@Override
+			public boolean isVisible(Class<?> nr) {
+				return true;
+			}
+			@Override
+			public boolean isAccessible(Class<?> nr) {
+				return true;
+			}
+    	};
     	
+    	public FactoryRegistry(Application app){
+    		 String resproc= app.configuration().getString("ix.core.resourcefilter",null);
+
+    	        if(resproc!=null){
+    	            Class processorCls;
+    	            try {
+    	                processorCls = Class.forName(resproc);
+    	                setResourceFilter((NamedResourceFilter) processorCls.newInstance());
+    	            } catch (Exception e) {
+    	                e.printStackTrace();
+    	            }
+    	        }
+
+
+    	}
+
+		public NamedResourceFilter getResourceFilter() {
+			return resourceFilter;
+		}
+
+		public Set<NamedResource> getNamedResources(){
+			return registry
+				.values()
+				.stream()
+				.filter(resourceFilter)
+				.map(cls->cls.getAnnotation(NamedResource.class))
+				.collect(Collectors.toSet());
+		}
+		public void setResourceFilter(NamedResourceFilter resourceFilter) {
+			this.resourceFilter = resourceFilter;
+		}
+		
+		public Class<?> putIfAbsent(String context, Class<?> register){
+			return registry.putIfAbsent(context, register);
+		}
+
+		public <T extends EntityFactory, V> void register(String context, Class<T> factory) {
+			Class<?> old = putIfAbsent(context, factory);
+	        if (old != null) {
+	            Logger.warn("Context \""+context
+	                        +"\" now maps to "+factory.getClass());
+	        }
+	        
+	        NamedResource named  = factory.getAnnotation(NamedResource.class);
+	        if (named != null) {
+	            try {
+	            	Class<V> type=named.type();
+	            	EntityInfo<V> ei = EntityUtils.getEntityInfoFor(type);
+
+	                if (!ei.getIDFieldInfo().isPresent()) { // possible?
+	                    Logger.error("Fatal error: Entity "+ei.getName()
+	                                 +" for factory "+factory.getClass()
+	                                 +" doesn't have any Id annotation!");
+	                }else {
+	                    Class<?> c = ei.getIdType();
+	                    if (UUID.class.isAssignableFrom(c)) {
+	                        Logger.debug("## "+ei.getName()
+	                                     +" is globally unique!");
+	                        getUUIDcontexts().add(context);
+	                    }
+	                }
+	            }
+	            catch (Exception ex) {
+	                Logger.error("Can't access named resource type", ex);
+	            }
+	        }
+		}
+
+		public Class getFactory(String context) {
+			return registry.get(context);
+		}
+
+		Set<String> getUUIDcontexts() {
+			return _uuid;
+		}
+
+		void setUUIDcontexts(Set<String> _uuid) {
+			this._uuid = _uuid;
+		}
     }
-
-    public static void init() {
-        String resproc= Play.application().configuration().getString("ix.core.resourcefilter",null);
-
-        if(resproc!=null){
-            Class processorCls;
-            try {
-                processorCls = Class.forName(resproc);
-                resourceFilter=(NamedResourceFilter) processorCls.newInstance();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        resFinder =
-                new Model.Finder(Long.class, Namespace.class);
-
-        aclFinder =
-                new Model.Finder(Long.class, Acl.class);
-
-        palFinder =
-                new Model.Finder(Long.class, Principal.class);
-
-
-    }
-
-    public static <T  extends EntityFactory> void register 
+    
+    public static CachedSupplier<FactoryRegistry> _registry = CachedSupplier.of(()->{
+    	return new FactoryRegistry(Play.application());
+    });
+    
+    
+   
+    public static <T  extends EntityFactory, V> void register 
         (String context, Class<T> factory) {
-        Class old = _registry.putIfAbsent(context, factory);
-        if (old != null) {
-            Logger.warn("Context \""+context
-                        +"\" now maps to "+factory.getClass());
-        }
-        
-        NamedResource named  = factory.getAnnotation(NamedResource.class);
-        if (named != null) {
-            try {
-            	EntityInfo ei = EntityUtils.getEntityInfoFor(named.type());
-
-                if (!ei.getIDFieldInfo().isPresent()) { // possible?
-                    Logger.error("Fatal error: Entity "+ei.getName()
-                                 +" for factory "+factory.getClass()
-                                 +" doesn't have any Id annotation!");
-                }else {
-                    Class<?> c = ei.getIdType();
-                    if (UUID.class.isAssignableFrom(c)) {
-                        Logger.debug("## "+ei.getName()
-                                     +" is globally unique!");
-                        _uuid.add(context);
-                    }
-                }
-            }
-            catch (Exception ex) {
-                Logger.error("Can't access named resource type", ex);
-            }
-        }
+        _registry.get().register(context, factory);
     }
     
    
 
     public static Result listResources () {
-        Set<String> resources = new TreeSet<String>(_registry.keySet());
-        List<String> urls = new ArrayList<String>();
-        ObjectMapper mapper = new ObjectMapper();      
-        ArrayNode nodes = mapper.createArrayNode();
-        for (String res : resources) {
+    	ObjectMapper mapper = new ObjectMapper();
+    	
+    	ArrayNode nodes=mapper.createArrayNode();
+        for (NamedResource named: _registry.get().getNamedResources()) {
             ObjectNode n = mapper.createObjectNode();
-            Class<?> cls=_registry.get(res);
-            NamedResource named  = (NamedResource)cls.getAnnotation(NamedResource.class);
-            if(resourceFilter!=null){
-            	if(!resourceFilter.isVisible(cls)){
-            		continue;
-            	}
-            }
-            n.put("name", res);
+            n.put("name", named.name());
             n.put("kind", named.type().getName());
-            n.put("href", Global.getHost()+request().uri()+"/"+res);
+            n.put("href", Global.getHost()+request().uri()+"/"+named.name());
             n.put("description", named.description());
             nodes.add(n);
         }
@@ -140,27 +174,29 @@ public class RouteFactory extends Controller {
     }
 
     public static Result get (String ns, String resource) {
-        Namespace res = resFinder
+        Namespace res = resFinder.get()
             .where(Expr.eq("name", ns))
             .findUnique();
         if (res == null) {
-            return badRequest ("No such namespace: "+ns);
+            return _apiBadRequest ("No such namespace: "+ns);
         }
         
         // now see if this request has proper permission
         if (res.isPublic()) { // ok
+        	
         }
         else {
-            return forbidden ("You don't have permission to access resource!");
+            return _apiForbidden ("You don't have permission to access resource!");
         }
                   
         ObjectMapper mapper = new ObjectMapper ();
         return Java8Util.ok(mapper.valueToTree(res));
     }
 
-    static Method getMethod (String context, 
+
+	static Method getMethod (String context, 
                              String method, Class<?>... types) {
-        Class factory = _registry.get(context);
+        Class factory = _registry.get().getFactory(context);
         if (factory != null) {
             try {
                 return factory.getMethod(method, types);
@@ -185,18 +221,18 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has not method count()",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result search (String context, String q, 
                                  int top, int skip, int fdim) {
-        Class factory = _registry.get(context);
+        Class factory = _registry.get().getFactory(context);
         if (factory != null) {
             NamedResource res = 
                 (NamedResource)factory.getAnnotation(NamedResource.class);
             return SearchFactory.search(res.type(), q, top, skip, fdim);
         }
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result get (String context, Long id, String expand) {
@@ -209,7 +245,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method get(Long,String)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result doc (String context, Long id) {
@@ -223,7 +259,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method doc(Long)", context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -239,7 +275,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method get(UUID,String)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     public static Result edits (String context, Long id) {
@@ -253,7 +289,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.debug("Unknown context: "+context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -268,7 +304,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method edits(UUID)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     @Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -283,7 +319,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method for approving",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     public static Result field (String context, Long id, String field) {
@@ -297,7 +333,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method field(Long,String)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result fieldUUID (String context, String uuid, String field) {
@@ -318,7 +354,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method field(UUID,String)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     public static Result page (String context, int top,
@@ -335,7 +371,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method page(int,int,String)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -351,7 +387,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method create()",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -367,7 +403,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method validate()",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -383,7 +419,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method update(Long,String)",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -399,7 +435,7 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method updateEntity()",context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
@@ -416,25 +452,25 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method update(UUID,String)", context);
-        return badRequest ("Unknown Context: \""+context+"\"");
+        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result _getUUID (String uuid, String expand) {
-        for (String context : _uuid) {
+        for (String context : _registry.get().getUUIDcontexts()) {
             Result r = getUUID (context, uuid, expand);
             if (r.toScala().header().status() < 400)
                 return r;
         }
-        return notFound ("Unknown id "+uuid);
+        return _apiNotFound ("Unknown id "+uuid);
     }
     
     public static Result _fieldUUID (String uuid, String field) {
-        for (String context : _uuid) {
+        for (String context : _registry.get().getUUIDcontexts()) {
             Result r = fieldUUID (context, uuid, field);
             if (r.toScala().header().status() < 400)
                 return r;
         }
-        return notFound ("Unknown id "+uuid);
+        return _apiNotFound ("Unknown id "+uuid);
     }
     public static Result checkPreFlight(String path) {
         response().setHeader("Access-Control-Allow-Origin", "*");      			  // Need to add the correct domain in here!!
@@ -446,14 +482,17 @@ public class RouteFactory extends Controller {
     
     
     
-    
+    /**
+     * Aka WHOAMI
+     * @return
+     */
     public static Result profile(){
     	UserProfile p=UserFetcher.getActingUserProfile(false);
     	if(p!=null){
     		ObjectMapper om=new ObjectMapper();
         	return Java8Util.ok(om.valueToTree(p));
     	}
-    	return notFound("No user logged in");
+    	return _apiNotFound("No user logged in");
     }
     
     public static Result profileResetKey(){
@@ -464,7 +503,7 @@ public class RouteFactory extends Controller {
     		ObjectMapper om=new ObjectMapper();
         	return Java8Util.ok(om.valueToTree(p));
     	}
-    	return notFound("No user logged in");
+    	return _apiNotFound("No user logged in");
     }
     
     private static JsonNode getError(Throwable t, int status){
@@ -484,6 +523,25 @@ public class RouteFactory extends Controller {
     public static Result _apiUnauthorized(Throwable t){
     	return internalServerError(getError(t, play.mvc.Http.Status.UNAUTHORIZED));
     }
+    public static Result _apiNotFound(Throwable t){
+    	return notFound(getError(new Throwable(t), play.mvc.Http.Status.NOT_FOUND));
+    }
+    
+    public static Result _apiBadRequest(String t){
+    	return badRequest(getError(new Throwable(t), play.mvc.Http.Status.BAD_REQUEST));
+    }
+    public static Result _apiInternalServerError(String t){
+    	return internalServerError(getError(new Throwable(t), play.mvc.Http.Status.INTERNAL_SERVER_ERROR));
+    }
+    public static Result _apiUnauthorized(String t){
+    	return internalServerError(getError(new Throwable(t), play.mvc.Http.Status.UNAUTHORIZED));
+    }
+    public static Result _apiNotFound(String t){
+    	return notFound(getError(new Throwable(t), play.mvc.Http.Status.NOT_FOUND));
+    }
+    private static Result _apiForbidden(String t) {
+		return forbidden(getError(new Throwable(t), play.mvc.Http.Status.FORBIDDEN));
+	}
     
     
 

@@ -23,6 +23,7 @@ import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.v1.ChemicalSubstance;
@@ -43,6 +44,7 @@ import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
+import ix.utils.Util;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -51,20 +53,11 @@ import play.mvc.Result;
 public class SubstanceFactory extends EntityFactory {
 	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
 	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
-	static public Model.Finder<UUID, Substance> finder;
+	static public CachedSupplier<Model.Finder<UUID, Substance>> finder = Util.finderFor(UUID.class, Substance.class);
 
-	// Do we still need these?
+	// Do we still need this?
 	// Yes used in GinasApp
-	static public Model.Finder<UUID, ProteinSubstance> protfinder;
-
-	static {
-		init();
-	}
-
-	public static void init() {
-		finder = new Model.Finder(UUID.class, Substance.class);
-		protfinder = new Model.Finder(UUID.class, ProteinSubstance.class);
-	}
+	static public CachedSupplier<Model.Finder<UUID, ProteinSubstance>> protfinder=Util.finderFor(UUID.class, ProteinSubstance.class);
 
 	public static Substance getSubstance(String id) {
 		if (id == null)
@@ -107,7 +100,9 @@ public class SubstanceFactory extends EntityFactory {
 		Edit e=q.findUnique(); //AH!
 		try{
 			//Good idea? Maybe, Maybe not.
-			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
+			return (Substance) EntityUtils
+								.getEntityInfoFor(e.kind)
+								.fromJson(e.oldValue);
 		}catch(Exception e1){
 			e1.printStackTrace();
 		}
@@ -117,11 +112,11 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getSubstance(UUID uuid) {
-		return getEntity(uuid, finder);
+		return getEntity(uuid, finder.get());
 	}
 
 	public static Result get(UUID id, String select) {
-		return get(id, select, finder);
+		return get(id, select, finder.get());
 	}
 
 	public static Substance getFullSubstance(SubstanceReference subRef) {
@@ -132,7 +127,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub) {
 		List<Substance> sublist = new ArrayList<Substance>();
-		sublist = finder.where()
+		sublist = finder.get().where()
 				.and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refuuid",
 						altSub.getOrGenerateUUID().toString()),
 				com.avaje.ebean.Expr.eq("relationships.type", Substance.ALTERNATE_SUBSTANCE_REL)).findList();
@@ -178,7 +173,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getSubstanceByApprovalID(String approvalID) {
-		List<Substance> list = finder.where().ieq("approvalID", approvalID).findList();
+		List<Substance> list = finder.get().where().ieq("approvalID", approvalID).findList();
 		if (list != null && list.size() > 0) {
 			return list.get(0);
 		}
@@ -186,7 +181,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static String getMostRecentCode(String codeSystem, String like) {
-		List<Substance> subs = finder.where()
+		List<Substance> subs = finder.get().where()
 				.and(com.avaje.ebean.Expr.like("codes.code", like),
 						com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem))
 				.orderBy("codes.code").setMaxRows(1).findList();
@@ -208,18 +203,18 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static List<Substance> getSubstances(int top, int skip, String filter) {
-		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder);
+		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder.get());
 		return substances;
 	}
 
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactName(int top, int skip, String name) {
-		return finder.where().eq("names.name", name).findList();
+		return finder.get().where().eq("names.name", name).findList();
 	}
 
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactCode(int top, int skip, String code, String codeSystem) {
-		return finder.where(andAll(
+		return finder.get().where(andAll(
 				 com.avaje.ebean.Expr.eq("codes.code", code),
 				 com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
 				 com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
@@ -229,7 +224,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static Integer getCount() {
 		try {
-			return getCount(finder);
+			return getCount(finder.get());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -237,7 +232,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result count() {
-		return count(finder);
+		return count(finder.get());
 	}
 
 	public static Result page(int top, int skip) {
@@ -245,7 +240,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result page(int top, int skip, String filter) {
-		return page(top, skip, filter, finder);
+		return page(top, skip, filter, finder.get());
 	}
 
 	public static Result edits(UUID uuid) {
@@ -253,11 +248,11 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result getUUID(UUID uuid, String expand) {
-		return get(uuid, expand, finder);
+		return get(uuid, expand, finder.get());
 	}
 
 	public static Result field(UUID uuid, String path) {
-		return field(uuid, path, finder);
+		return field(uuid, path, finder.get());
 	}
 
 	public static Result create() {
@@ -267,7 +262,7 @@ public class SubstanceFactory extends EntityFactory {
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator
 				.NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().markFailed());
 		
-		return create(subClass, finder, sv);
+		return create(subClass, finder.get(), sv);
 	}
 
 	public static Result validate() {
@@ -275,11 +270,11 @@ public class SubstanceFactory extends EntityFactory {
 		Class subClass = getClassFromJson(value);
 		DefaultSubstanceValidator sv = new DefaultSubstanceValidator(
 				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
-		return validate(subClass, finder, sv);
+		return validate(subClass, finder.get(), sv);
 	}
 
 	public static Result delete(UUID uuid) {
-		return delete(uuid, finder);
+		return delete(uuid, finder.get());
 	}
 
 	public static Class<? extends Substance> getClassFromJson(JsonNode json) {
@@ -349,8 +344,8 @@ public class SubstanceFactory extends EntityFactory {
 		// if(true)return ok("###");
 		try {
 			JsonNode value = request().body().asJson();
-			Class subClass = getClassFromJson(value);
-			return update(uuid, field, subClass, finder, new GinasV1ProblemHandler(), sv);
+			Class<? extends Substance> subClass = getClassFromJson(value);
+			return update(uuid, field, subClass, finder.get(), new GinasV1ProblemHandler(), sv);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -363,7 +358,7 @@ public class SubstanceFactory extends EntityFactory {
 		// System.out.println("Dupe chack");
 		String hash = cs.structure.getLychiv4Hash();
 		List<Substance> dupeList = new ArrayList<Substance>();
-		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+		dupeList = finder.get().where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
 		return dupeList;
 	}
 	
@@ -380,7 +375,7 @@ public class SubstanceFactory extends EntityFactory {
 			int i = 0;
 			while (re.hasMoreElements()) {
 				SequenceIndexer.Result r = re.nextElement();
-				List<Substance> proteins = SubstanceFactory.finder.where().eq("protein.subunits.uuid", r.id).findList();
+				List<Substance> proteins = SubstanceFactory.finder.get().where().eq("protein.subunits.uuid", r.id).findList();
 				if (proteins != null && !proteins.isEmpty()) {
 
 					for (Substance s : proteins) {
@@ -428,7 +423,7 @@ public class SubstanceFactory extends EntityFactory {
 		}
 
 		try {
-			Substance s = finder.byId(UUID.fromString(name));
+			Substance s = finder.get().byId(UUID.fromString(name));
 			if (s != null) {
 				List<Substance> retlist = new ArrayList<Substance>();
 				retlist.add(s);
@@ -440,15 +435,15 @@ public class SubstanceFactory extends EntityFactory {
 
 		List<Substance> values = new ArrayList<Substance>();
 		if (name.length() == 8) { // might be uuid
-			values = finder.where().istartsWith("uuid", name).findList();
+			values = finder.get().where().istartsWith("uuid", name).findList();
 		}
 
 		if (values.isEmpty()) {
-			values = finder.where().ieq("approvalID", name).findList();
+			values = finder.get().where().ieq("approvalID", name).findList();
 			if (values.isEmpty()) {
-				values = finder.where().ieq("names.name", name).findList();
+				values = finder.get().where().ieq("names.name", name).findList();
 				if (values.isEmpty()) // last resort..
-					values = finder.where().ieq("codes.code", name).findList();
+					values = finder.get().where().ieq("codes.code", name).findList();
 			}
 		}
 

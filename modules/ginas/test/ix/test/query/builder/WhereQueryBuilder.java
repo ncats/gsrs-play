@@ -17,7 +17,7 @@ public class WhereQueryBuilder {
 	}
 
 	public SuppliedQueryBuilder fieldMatchesPhrase(String field, String value) {
-		return condition(Condition.orderedFieldQuery(field, value));
+		return condition(Condition.phraseFieldQuery(field, value));
 	}
 
 	public SuppliedQueryBuilder globalMatchesAny(String value) {

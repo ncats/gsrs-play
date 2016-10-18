@@ -8,6 +8,7 @@ public class SuppliedQueryBuilder extends SimpleQueryBuilder {
 	}
 
 	public SuppliedQueryBuilder and(Condition c) {
+		
 		this.c = this.c.and(c);
 		return this;
 	}

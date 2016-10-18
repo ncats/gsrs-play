@@ -20,6 +20,7 @@ import org.junit.runner.Description;
 
 import ix.AbstractGinasTest;
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CachedSup;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import net.sf.ehcache.CacheManager;
 
@@ -51,7 +52,7 @@ public class SequenceIndexerTest extends AbstractGinasTest{
     @Before
     public void setUp() throws IOException{
         clearCache();
-        SequenceIndexer.init();
+        CachedSup.resetAllCaches();
 
         indexer = SequenceIndexer.open(tmpDir.newFolder());
     }

@@ -1322,8 +1322,9 @@ public class GinasApp extends App {
        // abstract Result getResult(List<Substance> e) throws Exception;
     }
     
+    //TODO: possible duplicate of substance factory method
     public static List<Substance> resolveName(String name) {
-    	Finder<UUID,Substance> finder= SubstanceFactory.finder;
+    	Finder<UUID,Substance> finder= SubstanceFactory.finder.get();
         if (name == null) {
             return null;
         }else{
@@ -1588,7 +1589,7 @@ public class GinasApp extends App {
         @Override
         protected ProteinSubstance instrument (SequenceIndexer.Result r)
             throws Exception {
-            List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+            List<ProteinSubstance> proteins = SubstanceFactory.protfinder.get()
                 .where().eq("protein.subunits.uuid", r.id).findList(); //also slow
             ProteinSubstance protein = proteins.isEmpty() ? null : proteins.get(0);
             if (protein != null) {
@@ -1614,7 +1615,7 @@ public class GinasApp extends App {
     static public Substance resolve(Relationship rel) {
         Substance relsub = null;
         try {
-            relsub = SubstanceFactory.finder
+            relsub = SubstanceFactory.finder.get()
             		.where()
             		.eq("approvalID", rel.relatedSubstance.approvalID)
             		.findUnique();
@@ -1628,7 +1629,7 @@ public class GinasApp extends App {
     static public List<Relationship> resolveRelationships(String uuid) {
         List<Relationship> resolved = new ArrayList<Relationship>();
         try {
-            Substance sub = SubstanceFactory.finder.where().where().eq("uuid", uuid).findUnique();
+            Substance sub = SubstanceFactory.finder.get().where().where().eq("uuid", uuid).findUnique();
             if (sub != null) {
                 for (Relationship rel : sub.relationships) {
                     if (null != resolve(rel))

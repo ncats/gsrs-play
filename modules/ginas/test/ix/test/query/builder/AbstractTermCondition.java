@@ -13,8 +13,8 @@ public class AbstractTermCondition {
 		return Condition.exactFieldQuery(field, value);
 	}
 
-	public OrderedTermCondition phrase() {
-		return Condition.orderedFieldQuery(field, value);
+	public PhraseTermCondition phrase() {
+		return Condition.phraseFieldQuery(field, value);
 	}
 
 	public TermCondition raw() {

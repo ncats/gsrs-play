@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
@@ -56,23 +57,59 @@ public class SequenceIndexer {
 	static final String CACHE_NAME = SequenceIndexer.class.getName()+".Cache";
 	static final Version LUCENE_VERSION = Version.LATEST;
 
-
-
 	static CacheManager CACHE_MANAGER;
-	static Ehcache CACHE;
+	
+	/**
+	 * A slightly slimmed down form of {@link CachedSupplier},
+	 * only repeated here because the seqaln module 
+	 * can't see the Util class.
+	 * 
+	 * @author peryeata
+	 *
+	 * @param <T>
+	 */
+	public static class CachedSup<T> implements Supplier<T>{
+		private static AtomicLong generatedVersion= new AtomicLong();
+		private long generatedWith=-1;
+		private Supplier<T> sup;
+		private boolean wasRun=false;
+		private T local=null;
+		
+		public CachedSup(Supplier<T> sup){
+			this.sup=sup;
+		}
+		
+		public static <T> CachedSup<T> of(Supplier<T> sup) {
+			return new CachedSup<T>(sup);
+		}
 
-	static {
-		init ();
+		@Override
+		public T get() {
+			if(wasRun && generatedWith==generatedVersion.get()){
+				return local;
+			}else{
+				local=sup.get();
+				wasRun=true;
+				generatedWith=generatedVersion.get();
+				return local;
+			}
+		}
+		
+		public static void resetAllCaches(){
+			generatedVersion.incrementAndGet();
+		}
+		
 	}
+	
+	static CachedSup<Ehcache> CACHE = CachedSup.of(()->{
+		CACHE_MANAGER = CacheManager.getInstance();
+		return CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+	});
+	
 	public static enum CutoffType{
 		LOCAL,
 		GLOBAL,
 		SUB
-	}
-
-	public static void init(){
-		CACHE_MANAGER = CacheManager.getInstance();
-		CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
 	}
 
 	static class HSP implements Comparable<HSP> {
@@ -348,7 +385,6 @@ public class SequenceIndexer {
 
 	public SequenceIndexer (File dir, boolean readOnly,
 			ExecutorService threadPool) throws IOException {
-		init();
 
 		if (!readOnly) {
 			dir.mkdirs();
@@ -843,12 +879,12 @@ public class SequenceIndexer {
 	@SuppressWarnings("unchecked")
 	static <T> T getOrElse (String key, Callable<T> generator)
 			throws Exception {
-		Object value = CACHE.get(key);
+		Object value = CACHE.get().get(key);
 
 		
 		if (value == null) {
 			value = generator.call();
-			CACHE.put(new Element (key, value));
+			CACHE.get().put(new Element (key, value));
 
 		}else {
 			value = ((Element)value).getObjectValue();

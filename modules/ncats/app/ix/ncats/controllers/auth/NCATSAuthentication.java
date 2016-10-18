@@ -79,12 +79,11 @@ public class NCATSAuthentication extends Controller {
 
     public static Result login(String url) {
         Session session = Authentication.getSession();
-        Logger.debug("url:" +  url + "  app: " + Authentication.APP);
         if (session != null) {
             return url != null ? redirect(url)
                     : redirect(routes.NCATSAuthentication.secured());
         }
-        return ok(ix.ncats.views.html.login.render(url, Authentication.APP));
+        return ok(ix.ncats.views.html.login.render(url, Authentication.APP.get()));
     }
 
     public static Result logout() {

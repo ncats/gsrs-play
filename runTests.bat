@@ -15,6 +15,7 @@ sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.ApprovalWorkflowTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.ArgParserTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.authentication.TrustHeaderAuthenticatorTest"
+sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.authentication.UserFetcherTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.browse.ListViewTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.builder.SubstanceBuilderTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.cache.IxCacheTest"

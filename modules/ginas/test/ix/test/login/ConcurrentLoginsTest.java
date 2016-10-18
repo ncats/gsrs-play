@@ -27,15 +27,14 @@ public class ConcurrentLoginsTest extends AbstractGinasServerTest{
     @Parameterized.Parameters
     public static List<Object[]> params(){
 
-        List<Object[]> list = new ArrayList<>();
-        for(LoginStrategy s : LoginStrategy.values()){
+		List<Object[]> list = new ArrayList<>();
+		for (LoginStrategy s : LoginStrategy.values()) {
 
-            for(LoginStrategy s2 : LoginStrategy.values()){
-                    list.add(new Object[]{s, s2});
-                }
-            }
-
-        return list;
+			for (LoginStrategy s2 : LoginStrategy.values()) {
+				list.add(new Object[] { s, s2 });
+			}
+		}
+		return list;
     }
 
     private LoginStrategy strategy, strategy2;

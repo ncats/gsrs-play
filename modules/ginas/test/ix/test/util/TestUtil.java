@@ -77,8 +77,10 @@ public class TestUtil {
     
     public static List<BitSet> allPermutations(int count){
     	List<BitSet> blist = new ArrayList<>();
+    	
     	for(int i=0;i<Math.pow(2, count);i++){
-    		BitSet bs = new BitSet();
+    		BitSet bs = BitSet.valueOf(new long[]{i});
+    		
     		char[] chars=Integer.toBinaryString(i).toCharArray();
     		for(int j=0;j<chars.length;j++){
     			if(chars[j]=='1'){
