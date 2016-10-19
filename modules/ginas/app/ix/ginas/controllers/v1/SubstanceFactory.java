@@ -1,32 +1,31 @@
 package ix.ginas.controllers.v1;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import com.avaje.ebean.Expr;
-import com.avaje.ebean.Expression;
-import com.avaje.ebean.Query;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EditFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.search.SearchResultContext;
+import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
-import ix.core.util.TimeUtil;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.Java8Util;
+import ix.core.util.TimeUtil;
+import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -42,6 +41,8 @@ import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
+import ix.ncats.controllers.App;
+import ix.ncats.controllers.ResultRenderer;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
@@ -486,4 +487,35 @@ public class SubstanceFactory extends EntityFactory {
 	public static List<Edit> getEdits(UUID uuid) {
 		return getEdits(uuid, Substance.getAllClasses());
 	}
+	
+	public static Result structureSearch(String q, 
+										 String type, 
+										 double cutoff, 
+										 int top, 
+										 int skip, 
+										 int fdim) throws Exception{
+		
+		SearchResultContext context = App.substructure
+                (q, top, (skip/top) + 1, new StructureSearchResultProcessor(true));
+		
+		System.out.println("Got context:" + context);
+            return App.fetchResult
+                (context,top, (skip/top) + 1,
+                 new ResultRenderer<Substance> (){
+
+					@Override
+					public Result render(SearchResultContext context, int page, int rows, int total, int[] pages,
+							List<Facet> facets, List<Substance> results) {
+						EntityMapper em=EntityFactory.getEntityMapper();
+						return Java8Util.ok(em.valueToTree(results));
+					}
+
+					@Override
+					public int getFacetDim() {
+						return fdim;
+					}
+                	
+                });
+	}
+	
 }

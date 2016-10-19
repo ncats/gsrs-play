@@ -1,23 +1,17 @@
 package ix.core.controllers.v1;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.Experimental;
@@ -35,7 +29,6 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.Java8Util;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
-import ix.utils.Global;
 import ix.utils.Util;
 import play.Application;
 import play.Logger;
@@ -61,6 +54,7 @@ public class RouteFactory extends Controller {
 			}
 			@Override
 			public boolean isAccessible(Class<?> nr) {
+				
 				return true;
 			}
     	};
@@ -84,14 +78,6 @@ public class RouteFactory extends Controller {
 			return resourceFilter;
 		}
 
-		public Set<NamedResource> getNamedResources(){
-			return registry
-				.values()
-				.stream()
-				.filter(resourceFilter)
-				.map(cls->cls.getAnnotation(NamedResource.class))
-				.collect(Collectors.toSet());
-		}
 		
 		public Set<InstantiatedNamedResource> getInstantiatedNamedResources(){
 			return resources
@@ -110,7 +96,7 @@ public class RouteFactory extends Controller {
 			return registry.put(context, register);
 		}
 
-		public <T extends EntityFactory, V> void register(String context, Class<T> factory) {
+		public <T extends EntityFactory, V, I> void register(String context, Class<T> factory) {
 			Class<?> old = put(context, factory);
 	        if (old != null) {
 	            Logger.warn("Context \""+context
@@ -123,21 +109,20 @@ public class RouteFactory extends Controller {
 	            	Class<V> type=named.type();
 	            	EntityInfo<V> ei = EntityUtils.getEntityInfoFor(type);
 	            	
-	            	
-	            	
 	                if (!ei.getIDFieldInfo().isPresent()) { // possible?
 	                    Logger.error("Fatal error: Entity "+ei.getName()
 	                                 +" for factory "+factory.getClass()
 	                                 +" doesn't have any Id annotation!");
 	                }else {
-	                    Class<?> c = ei.getIdType();
-	                    if (UUID.class.isAssignableFrom(c)) {
+	                    Class<I> idType = (Class<I>) ei.getIdType();
+	                    InstantiatedNamedResource<I,V> resource=
+	                    		InstantiatedNamedResource.of(factory, idType, type);
+	                    if (UUID.class.isAssignableFrom(idType)) {
 	                        Logger.debug("## "+ei.getName()
 	                                     +" is globally unique!");
 	                        _uuid.add(context);
 	                    }
-	                    InstantiatedNamedResource resource=
-	                    		InstantiatedNamedResource.of(factory, ei.getIdType(), type);
+	                    
 	        	        resources.put(resource.getName(), resource);
 	                }
 	            }
@@ -145,10 +130,6 @@ public class RouteFactory extends Controller {
 	                Logger.error("Can't access named resource type", ex);
 	            }
 	        }
-		}
-
-		public Class getFactory(String context) {
-			return registry.get(context);
 		}
 		
 		@SuppressWarnings("unchecked")
@@ -216,14 +197,32 @@ public class RouteFactory extends Controller {
 
     public static Result search (String context, String q, 
                                  int top, int skip, int fdim) {
-        Class factory = _registry.get().getFactory(context);
-        if (factory != null) {
-            NamedResource res = 
-                (NamedResource)factory.getAnnotation(NamedResource.class);
-            return SearchFactory.search(res.type(), q, top, skip, fdim);
+        try {
+        	return  _registry.get()
+           		 .getResource(context)
+           		 .search(q, top, skip, fdim);
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
         }
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
+    
+	public static Result structureSearch(String context, 
+											String q, 
+											String type,
+											double cutoff,
+											int top, 
+											int skip, 
+											int fdim) {
+		try {
+			return _registry.get()
+					.getResource(context)
+					.structureSearch(q, type, cutoff, top, skip, fdim);
+		} catch (Exception ex) {
+			Logger.trace("[" + context + "]", ex);
+			return _apiInternalServerError(ex);
+		}
+	}
 
     public static Result get (String context, Long id, String expand) {
     	try {

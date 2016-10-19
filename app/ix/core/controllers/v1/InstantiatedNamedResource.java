@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.Experimental;
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.utils.Global;
@@ -58,6 +59,13 @@ public interface InstantiatedNamedResource<I,V> {
 													Argument.of(10, int.class, "top"), 
 													Argument.of(0, int.class, "skip"),
 													Argument.of(null, String.class, "filter"));
+	public static final Operation STRUCTURE_SEARCH_OPERATION = new Operation("structureSearch", 
+			Argument.of(null, String.class, "query"),
+			Argument.of("substructure", String.class, "type"),
+			Argument.of(.8, double.class, "cutoff"),
+			Argument.of(0, int.class, "top"),
+			Argument.of(0, int.class, "skip"),
+			Argument.of(0, int.class, "fdim"));
 	
 	public static final Operation[] ALL_OPERATIONS = new Operation[]{
 															CREATE_OPERATION, 
@@ -72,7 +80,8 @@ public interface InstantiatedNamedResource<I,V> {
 															APPROVE_OPERATION ,								
 															UPDATE_OPERATION ,								
 															FIELD_OPERATION ,									
-															PAGE_OPERATION 
+															PAGE_OPERATION ,
+															STRUCTURE_SEARCH_OPERATION
 														};
 	
 	public String getName();
@@ -148,14 +157,12 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result page(int top, int skip, String filter){
-		System.out.println("Setting top/skip:" + top + "," + skip);
-		Operation op= PAGE_OPERATION.values(top,skip,filter);
-		System.out.println("Getting top/skip:" + Arrays.toString(op.asRawArguments()));
-		return operate(op);
+		return operate(PAGE_OPERATION.values(top,skip,filter));
 	}
 	
-	
-	
+	default Result structureSearch(String q, String type, double cutoff, int top, int skip, int fdim){
+		return operate(STRUCTURE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim));
+	}
 	
 	default Result validate(){
 		return operate(VALIDATE_OPERATION);
@@ -263,68 +270,7 @@ public interface InstantiatedNamedResource<I,V> {
 					.toArray(i->new Object[i]);
 		}
 	}
-	
-	
-	default UnsupportedOperationException unsupported(String operation) throws UnsupportedOperationException{
-		return new UnsupportedOperationException("Resource :'" + getName()  + "' does not support the '" + operation + "' operation" );
-	}
-	
-	public static <I,V> InstantiatedNamedResource<I,V> of(Class<? extends EntityFactory> ef, Class<?> id, Class<?> resource){
-		NamedResource nr = ef.getAnnotation(NamedResource.class);
-	
-		ConcurrentHashMap<Operation, Function<Operation, Result>> resultList = new ConcurrentHashMap<>();
-		
-		Arrays.stream(ALL_OPERATIONS)
-			.map(o->o.withIdClass(id))
-			.forEach(op->{
-				try{
-					Method m = ef.getMethod(op.operationName, op.asSigniture());
-					resultList.put(op, (oppp)->{
-						Object[] raw= oppp.asRawArguments();
-						System.out.println("Values:" + Arrays.toString(raw));
-						return CachedSupplier.ofCallable(()->(Result)m.invoke(null, raw)).get();
-					});
-				}catch(Exception e){
-					//Not supported
-				}
-			});
-			
-		
-		return new InstantiatedNamedResource<I,V>(){
-			@Override
-			public Result operate(Operation op) {
-				System.out.println("Fetchiing:" + Arrays.toString(op.asRawArguments()));
-				return resultList
-						.getOrDefault(op,(o)->InstantiatedNamedResource.super.operate(o))
-						.apply(op);
-			}
 
-			@Override
-			public String getName() {
-				return nr.name();
-			}
-
-			@Override
-			public String getDescription() {
-				return nr.description();
-			}
-
-			
-
-			@Override
-			public Class<V> getTypeKind() {
-				return nr.type();
-			}
-
-			@Override
-			public Set<ix.core.controllers.v1.InstantiatedNamedResource.Operation> getSupportedOperations() {
-				return resultList.keySet();
-			}
-			
-		};
-		
-	}
-	
 	public static class Argument<T> implements Serializable{
 		private T arg;
 		private Class<T> cls;
@@ -363,5 +309,15 @@ public interface InstantiatedNamedResource<I,V> {
 		
 		
 	}
+	
+	default UnsupportedOperationException unsupported(String operation) throws UnsupportedOperationException{
+		return new UnsupportedOperationException("Resource :'" + getName()  + "' does not support the '" + operation + "' operation" );
+	}
+	
+	public static <I,V> InstantiatedNamedResource<I,V> of(Class<? extends EntityFactory> ef, Class<I> id, Class<V> resource){
+		return new StaticDelegatingNamedResource<I,V>(ef,id,resource);
+	}
+	
+
 
 }

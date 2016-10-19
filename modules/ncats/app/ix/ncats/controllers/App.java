@@ -1138,19 +1138,26 @@ public class App extends Authentication {
 			return getOrElse
 					(EntityPersistAdapter.getStructureIndexer().lastModified(),
 							key, TypedCallable.of(()->{
-								processor.setResults
-								(rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
-								SearchResultContext ctx = processor.getContext();
-								ctx.setKey(key);
-								Logger.debug("## cache missed: "+key+" => "+ctx);
-								return ctx;
+								try{
+									System.out.println("Making context");
+									processor.setResults
+									(rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
+									SearchResultContext ctx = processor.getContext();
+									ctx.setKey(key);
+									Logger.debug("## cache missed: "+key+" => "+ctx);
+									System.out.println("Making context" + ctx);
+									return ctx;
+								}catch(Exception e){
+									e.printStackTrace();
+									throw e;
+								}
 							},SearchResultContext.class));
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
 			Logger.error("Can't perform substructure search", ex);
+			throw new IllegalArgumentException(ex);
 		}
-		return null;
 	}
 
 	static String getKey (String q, double t) {

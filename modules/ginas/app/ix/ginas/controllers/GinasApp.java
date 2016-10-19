@@ -1544,7 +1544,7 @@ public class GinasApp extends App {
     	int index;
     	public static EntityInfo<ChemicalSubstance> chemMeta=EntityUtils.getEntityInfoFor(ChemicalSubstance.class);
     	
-        StructureSearchResultProcessor(boolean wait) {
+        public StructureSearchResultProcessor(boolean wait) {
         	this.setWait(wait);
         }
 
