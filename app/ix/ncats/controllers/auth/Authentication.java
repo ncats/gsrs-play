@@ -34,7 +34,6 @@ import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Controller;
-import play.mvc.Http;
 
 /**
  * A simple controller to authenticate
@@ -63,11 +62,8 @@ public class Authentication extends Controller {
     });
     
 
-    
-    static Model.Finder<UUID, Session> _sessions =
-            new Model.Finder<UUID, Session>(UUID.class, Session.class);
-    static Model.Finder<Long, UserProfile> _profiles =
-            new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
+    static CachedSupplier<Model.Finder<UUID, Session>> _sessions =
+    		Util.finderFor(UUID.class, Session.class);
     
     public static CachedSupplier<TokenCache> tokens = CachedSupplier.of(()->{
     	return new TokenCache();
@@ -355,12 +351,9 @@ public class Authentication extends Controller {
 
         AuthenticationCredentials cred=AuthenticationCredentials.create(ctx());
         
-        
         List<Authenticator> authenticators= AuthenticatorFactory
         	.getInstance(Play.application())
         	.getRegisteredResourcesFor(AuthenticatorFactory.RESOURCE_CLASS);
-        
-        
         
         Optional<UserProfile> opup=authenticators.stream()
         		.map(au->au.authenticate(cred))
@@ -389,7 +382,7 @@ public class Authentication extends Controller {
         if (id != null) {
             try {
                 session = IxCache.getOrElseRaw
-                        (id, ()->_sessions.byId(UUID.fromString(id)), 0);
+                        (id, ()->_sessions.get().byId(UUID.fromString(id)), 0);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

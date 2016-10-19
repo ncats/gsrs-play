@@ -429,19 +429,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
         protected abstract void doPersist(TransformedRecord tr);
     }
-        
-
-
-
-
-
+    
+    
     public interface PersistRecordWorkerFactory{
         PersistRecordWorker newWorkerFor(PayloadExtractedRecord prg);
     }
-
-
-
-
     
     public static Statistics getStatisticsForJob(String jobTerm){
         return jobCacheStatistics.get(jobTerm);

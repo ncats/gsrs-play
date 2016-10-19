@@ -43,10 +43,11 @@ public class UserProfile extends IxModel implements Subject {
 	@Lob
 	@JsonIgnore
 	private String rolesJSON = null; // this is a silly, but quick way to
-										// serialize roles
+									 // serialize roles
 
 	// private key to be used in authentication
-	// This is not a public/private
+	// This is not a public/private key,
+	// just a special secret to be used via API
 	@Column(name = "apikey")
 	private String key;
 

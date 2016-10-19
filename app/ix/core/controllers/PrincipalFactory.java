@@ -5,6 +5,7 @@ import ix.core.adapters.InxightTransaction;
 import ix.core.models.Principal;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.utils.Util;
 
 import java.util.Date;
 import java.util.List;
@@ -25,8 +26,10 @@ import com.fasterxml.jackson.databind.JsonNode;
         type = Principal.class,
         description = "Users, groups and organizations")
 public class PrincipalFactory extends EntityFactory {
+	
+	
     public static CachedSupplier<Model.Finder<Long, Principal>> finder = 
-    		CachedSupplier.of(()->new Model.Finder(Long.class, Principal.class));
+    		Util.finderFor(Long.class, Principal.class);
 
     public static CachedSupplier<Map<String, Principal>> justRegisteredCache = CachedSupplier.of(()->{
     	return new ConcurrentHashMap<String, Principal>();

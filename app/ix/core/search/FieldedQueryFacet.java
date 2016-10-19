@@ -208,6 +208,8 @@ public class FieldedQueryFacet implements Serializable{
 		
 	}
 	
+	
+	
 
 	// TODO: better parsing, and move this to its own 
 	// resource
@@ -226,7 +228,6 @@ public class FieldedQueryFacet implements Serializable{
 					e.printStackTrace();
 				}
 				return (FieldNameDecorator)(f->f);
-				
 		});
 		
 		

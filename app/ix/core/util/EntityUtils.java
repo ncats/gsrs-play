@@ -69,6 +69,7 @@ import ix.core.ResourceReference;
 import ix.core.SingleParent;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.factories.ApiFunctionFactory;
 import ix.core.factories.FieldNameDecoratorFactory;
 import ix.core.factories.SpecialFieldFactory;
 import ix.core.models.Backup;
@@ -91,12 +92,15 @@ import ix.core.util.pojopointer.FlatMapPath;
 import ix.core.util.pojopointer.GroupPath;
 import ix.core.util.pojopointer.IDFilterPath;
 import ix.core.util.pojopointer.IdentityPath;
+import ix.core.util.pojopointer.LambdaPath;
 import ix.core.util.pojopointer.LimitPath;
 import ix.core.util.pojopointer.MapPath;
 import ix.core.util.pojopointer.ObjectPath;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.core.util.pojopointer.SkipPath;
 import ix.core.util.pojopointer.SortPath;
+import ix.core.util.pojopointer.extensions.StringLengthRegisteredFunction;
+import ix.core.util.pojopointer.extensions.StringLengthRegisteredFunction.StringLengthPath;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -507,8 +511,8 @@ public class EntityUtils {
 		public List<Edit> getEdits(){
 			Optional<Object> opId= this.ei.getNativeIdFor(this._k);
 			if(opId.isPresent()){
-				return EntityFactory.getEdits(this.ei.getNativeIdFor(this._k).get(), 
-						this.ei.getInherittedRootEntityInfo().getTypeAndSubTypes()
+				return EntityFactory.getEdits(opId.get(), 
+						this.getEntityInfo().getInherittedRootEntityInfo().getTypeAndSubTypes()
 						.stream()
 						.map(em->em.getClazz())
 						.toArray(len->new Class<?>[len]));
@@ -643,6 +647,7 @@ public class EntityUtils {
 				//MapPath locator
 				registry.put(MapPath.class.getName(), (cpath,current)->{
 					MapPath mp =(MapPath)cpath;
+					
 					List<Object> list=current
 	        					.streamWrappedArrayElementsAt(mp.getField())
 	        					.map(t->t.v().orElse(null))
@@ -764,6 +769,18 @@ public class EntityUtils {
 	        		return Optional.of(EntityWrapper.of(value));
 				});
 				
+				ApiFunctionFactory
+					.getInstance(Play.application())
+					.getRegisteredFunctions()
+					.stream().forEach(rf->{
+						registry.put(rf.getFunctionClass().getName(), (cpath,current)->{
+							BiFunction<LambdaPath, Object, Optional<Object>> function =
+									rf.getOperation();
+							return function
+										.apply((LambdaPath) cpath, (Object)current.getValue())
+										.map(EntityWrapper::of);
+						});
+					});
 				
 				return registry;
 			});

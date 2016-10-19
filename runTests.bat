@@ -19,6 +19,7 @@ sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.browse.ListViewTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.builder.SubstanceBuilderTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.cache.IxCacheTest"
+sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.cache.StructureCacheTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.cache.TwoCacheGateKeeperTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.ChangeConfigConstructorTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.ChangeConfigTest"

@@ -36,6 +36,9 @@ import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.Expression;
+
 import ix.core.util.CachedSupplier;
 import ix.core.util.TimeUtil;
 import play.Logger;
@@ -566,5 +569,26 @@ public class Util {
 			MapBuilder<T,V> mapBuilder= new MapBuilder<>();
 			return mapBuilder.put(t, v);
 		}
+	}
+
+	//And all expressions together
+	//TODO: There has got to be a cleaner way
+	public static Expression andAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
+		}
+		return retExpr;
+	}
+
+
+	//Or all expressions together
+	//TODO: There has got to be a cleaner way
+	public static Expression orAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
+		}
+		return retExpr;
 	}
 }

@@ -2,7 +2,6 @@ package ix.core;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import controllers.Default$;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.models.Principal;
@@ -35,7 +34,7 @@ public class UserFetcher {
 				return p;
 			}
 		} catch (Exception e) {
-
+			
 		}
 		Principal p = localUser.get();
 		if (p != null){
@@ -47,10 +46,21 @@ public class UserFetcher {
 		return null;
 	}
 
+	/**
+	 * Get the acting user, allowing a default guest account. This is
+	 * equivalent to :
+	 * <pre>
+	 * <code>
+	 * getActingUser(true);
+	 * </code>
+	 * </pre>
+	 * @return A Principal
+	 */
 	public static Principal getActingUser() {
 		return getActingUser(true);
 	}
 
+	
 	public static void setLocalThreadUser(Principal p) {
 		localUser.set(p);
 	}
@@ -58,12 +68,11 @@ public class UserFetcher {
 	public static UserProfile getActingUserProfile(boolean allowGuest) {
 		Principal p = getActingUser(allowGuest);
 		if (p != null) {
-			UserProfile up = UserProfileFactory.getUserProfileForPrincipal(p);
+			UserProfile up = p.getUserProfile();
 			if (up != null) {
 				return up;
 			} else {
-				// return new UserProfile();
-
+				
 			}
 
 		}

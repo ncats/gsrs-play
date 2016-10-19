@@ -82,8 +82,9 @@ public class URIPojoPointerParser {
 					final String key = parse("_" + lambdaString, 0).get().v();
 					System.out.println("Found key:" + key);
 
-					final PojoPointer pp = LambdaParseRegistry.getPojoPointerParser(key).apply(lambdaString);
-
+					final PojoPointer pp = LambdaParseRegistry
+											.getPojoPointerParser(key)
+											.apply(lambdaString);
 					parent.tail(pp);
 					parent = pp;
 

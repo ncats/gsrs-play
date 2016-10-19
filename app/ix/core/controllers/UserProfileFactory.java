@@ -9,6 +9,7 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
+import ix.utils.Util;
 import play.db.ebean.Model;
 
 /* TODO: make this a resource eventually
@@ -18,14 +19,19 @@ type=UserProfile.class,
 description="Resource for handling user profiles")
 */
 public class UserProfileFactory extends EntityFactory {
-	static private CachedSupplier<Model.Finder<Long, UserProfile>> finder = CachedSupplier.of(()->new Model.Finder(Long.class, UserProfile.class));
+	static private CachedSupplier<Model.Finder<Long, UserProfile>> finder = 
+			Util.finderFor(Long.class,UserProfile.class);
 
 	
 	public static UserProfile getUserProfileForPrincipal(Principal p){
 		return getUserProfileForUsername(p.username);
 	}
 	public static UserProfile getUserProfileForUsername(String username){
-		UserProfile profile = finder.get().where().eq("user.username", username).findUnique();
+		
+		UserProfile profile = finder.get()
+									.where()
+									.ieq("user.username", username)
+									.findUnique();
 		return profile;
 	}
 	

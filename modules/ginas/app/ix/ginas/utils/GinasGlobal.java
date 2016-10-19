@@ -191,20 +191,15 @@ public class GinasGlobal extends Global {
 		
 		loadCV=app.configuration()
 				   .getBoolean("ix.ginas.init.loadCV", true);
-
 		loadCV();
 		
-		
 		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
-		
 		
 		for(Runnable r:startRunners){
 			r.run();
 		}
 		startRunners.clear();
 		isRunning=true;
-		
-		
 		
 		loadStartFile();
 	}

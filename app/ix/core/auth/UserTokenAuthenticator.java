@@ -13,7 +13,6 @@ public class UserTokenAuthenticator implements Authenticator{
 		Request r = ctx.request();
 		String token=r.getHeader("auth-token");
 		if(token!=null){
-			System.out.println("Found token:" + token);
         	return Authentication.getUserProfileFromTokenAlone(token);
         }
 		return null;

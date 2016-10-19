@@ -26,6 +26,7 @@ import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.TimeUtil;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -75,40 +76,20 @@ public class SubstanceFactory extends EntityFactory {
 				return s;
 			}
 		}
-		
-		//TODO: make generic somewhere
-		// for instance, couldn't edit fetching happen even on 
-		// the EnityWrapper?
-		// It would be awesome if we could say something 
-		// on any given record like:
-		//	.getEdits()
-		//	.getVersion(int i)
-		// etc ...
-		//
-		// Instead, it's quite hodge-podge now
-		
-		List<Expression> kindExpressions=
-			Arrays.stream(Substance.getAllClasses())
-					.map(c -> Expr.eq("kind",c.getName()))
-					.collect(Collectors.toList());
-				
-		
-		Query<Edit> q = EditFactory.finder.where(andAll(Expr.eq("refid", id.toString()),
-												  orAll(kindExpressions.toArray(new Expression[0])),
-												  		Expr.eq("version", version), 
-												  		Expr.isNull("path")));
-		Edit e=q.findUnique(); //AH!
-		try{
-			//Good idea? Maybe, Maybe not.
-			return (Substance) EntityUtils
-								.getEntityInfoFor(e.kind)
-								.fromJson(e.oldValue);
-		}catch(Exception e1){
-			e1.printStackTrace();
-		}
-
-		return null;
-
+		return EntityWrapper.of(s)
+				.getEdits()
+				.stream()
+				.filter(e->(version.equals(e.version)))
+				.findFirst()
+				.map(e->{
+					try{
+						return (Substance) EntityUtils
+							.getEntityInfoFor(e.kind)
+							.fromJsonNode(e.getOldValue().rawJson());
+					}catch(Exception ex){
+						throw new IllegalArgumentException(ex);
+					}
+				}).orElse(null);
 	}
 
 	public static Substance getSubstance(UUID uuid) {
@@ -214,7 +195,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactCode(int top, int skip, String code, String codeSystem) {
-		return finder.get().where(andAll(
+		return finder.get().where(Util.andAll(
 				 com.avaje.ebean.Expr.eq("codes.code", code),
 				 com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
 				 com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
@@ -235,6 +216,11 @@ public class SubstanceFactory extends EntityFactory {
 		return count(finder.get());
 	}
 
+	
+	public static Result stream(String field, int top, int skip){
+		return stream(field, top, skip, finder.get());
+	}
+	
 	public static Result page(int top, int skip) {
 		return page(top, skip, null);
 	}

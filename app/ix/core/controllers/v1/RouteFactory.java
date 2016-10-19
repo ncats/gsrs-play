@@ -1,5 +1,6 @@
 package ix.core.controllers.v1;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import be.objectify.deadbolt.java.actions.Dynamic;
+import ix.core.Experimental;
 import ix.core.NamedResource;
 import ix.core.NamedResourceFilter;
 import ix.core.UserFetcher;
@@ -62,22 +64,21 @@ public class RouteFactory extends Controller {
 				return true;
 			}
     	};
+    	ConcurrentHashMap<String, InstantiatedNamedResource> resources = new ConcurrentHashMap<>();
     	
-    	public FactoryRegistry(Application app){
-    		 String resproc= app.configuration().getString("ix.core.resourcefilter",null);
+		public FactoryRegistry(Application app) {
+			String resproc = app.configuration().getString("ix.core.resourcefilter", null);
 
-    	        if(resproc!=null){
-    	            Class processorCls;
-    	            try {
-    	                processorCls = Class.forName(resproc);
-    	                setResourceFilter((NamedResourceFilter) processorCls.newInstance());
-    	            } catch (Exception e) {
-    	                e.printStackTrace();
-    	            }
-    	        }
-
-
-    	}
+			if (resproc != null) {
+				Class processorCls;
+				try {
+					processorCls = Class.forName(resproc);
+					setResourceFilter((NamedResourceFilter) processorCls.newInstance());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
 		public NamedResourceFilter getResourceFilter() {
 			return resourceFilter;
@@ -91,16 +92,26 @@ public class RouteFactory extends Controller {
 				.map(cls->cls.getAnnotation(NamedResource.class))
 				.collect(Collectors.toSet());
 		}
+		
+		public Set<InstantiatedNamedResource> getInstantiatedNamedResources(){
+			return resources
+				.values()
+				.stream()
+				.filter(nr -> resourceFilter.test(registry.get(nr.getName())))
+				.collect(Collectors.toSet());
+		}
+		
+		
 		public void setResourceFilter(NamedResourceFilter resourceFilter) {
 			this.resourceFilter = resourceFilter;
 		}
 		
-		public Class<?> putIfAbsent(String context, Class<?> register){
-			return registry.putIfAbsent(context, register);
+		private Class<?> put(String context, Class<?> register){
+			return registry.put(context, register);
 		}
 
 		public <T extends EntityFactory, V> void register(String context, Class<T> factory) {
-			Class<?> old = putIfAbsent(context, factory);
+			Class<?> old = put(context, factory);
 	        if (old != null) {
 	            Logger.warn("Context \""+context
 	                        +"\" now maps to "+factory.getClass());
@@ -111,7 +122,9 @@ public class RouteFactory extends Controller {
 	            try {
 	            	Class<V> type=named.type();
 	            	EntityInfo<V> ei = EntityUtils.getEntityInfoFor(type);
-
+	            	
+	            	
+	            	
 	                if (!ei.getIDFieldInfo().isPresent()) { // possible?
 	                    Logger.error("Fatal error: Entity "+ei.getName()
 	                                 +" for factory "+factory.getClass()
@@ -121,8 +134,11 @@ public class RouteFactory extends Controller {
 	                    if (UUID.class.isAssignableFrom(c)) {
 	                        Logger.debug("## "+ei.getName()
 	                                     +" is globally unique!");
-	                        getUUIDcontexts().add(context);
+	                        _uuid.add(context);
 	                    }
+	                    InstantiatedNamedResource resource=
+	                    		InstantiatedNamedResource.of(factory, ei.getIdType(), type);
+	        	        resources.put(resource.getName(), resource);
 	                }
 	            }
 	            catch (Exception ex) {
@@ -134,13 +150,14 @@ public class RouteFactory extends Controller {
 		public Class getFactory(String context) {
 			return registry.get(context);
 		}
+		
+		@SuppressWarnings("unchecked")
+		public <I,V> InstantiatedNamedResource<I,V> getResource(String context){
+			return resources.get(context);
+		}
 
 		Set<String> getUUIDcontexts() {
 			return _uuid;
-		}
-
-		void setUUIDcontexts(Set<String> _uuid) {
-			this._uuid = _uuid;
 		}
     }
     
@@ -159,18 +176,10 @@ public class RouteFactory extends Controller {
 
     public static Result listResources () {
     	ObjectMapper mapper = new ObjectMapper();
-    	
-    	ArrayNode nodes=mapper.createArrayNode();
-        for (NamedResource named: _registry.get().getNamedResources()) {
-            ObjectNode n = mapper.createObjectNode();
-            n.put("name", named.name());
-            n.put("kind", named.type().getName());
-            n.put("href", Global.getHost()+request().uri()+"/"+named.name());
-            n.put("description", named.description());
-            nodes.add(n);
-        }
-
-        return ok (nodes);
+    	Set<InstantiatedNamedResource> resources = _registry
+									.get()
+									.getInstantiatedNamedResources();
+    	return ok((JsonNode)mapper.valueToTree(resources));
     }
 
     public static Result get (String ns, String resource) {
@@ -193,35 +202,16 @@ public class RouteFactory extends Controller {
         return Java8Util.ok(mapper.valueToTree(res));
     }
 
-
-	static Method getMethod (String context, 
-                             String method, Class<?>... types) {
-        Class factory = _registry.get().getFactory(context);
-        if (factory != null) {
-            try {
-                return factory.getMethod(method, types);
-            }
-            catch (Exception ex) {
-                Logger.trace("Unknown method \""+method
-                             +"\" in class "+factory.getClass(), ex);
-            }
-        }
-        return null;
-    }
-
     
     public static Result count (String context) {
-        try {
-            Method m = getMethod (context, "count");
-            if (m != null) 
-                return (Result)m.invoke(null);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .count();
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has not method count()",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result search (String context, String q, 
@@ -236,242 +226,238 @@ public class RouteFactory extends Controller {
     }
 
     public static Result get (String context, Long id, String expand) {
-        try {
-            Method m = getMethod (context, "get", Long.class, String.class);
-            if (m != null)
-                return (Result)m.invoke(null, id, expand);
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .get(id,expand);
         }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method get(Long,String)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result doc (String context, Long id) {
-        try {
-            Method m = getMethod (context, "doc", Long.class);
-            if (m != null)
-                return (Result)m.invoke(null, id);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .doc(id);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method doc(Long)", context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result getUUID (String context, String uuid, String expand) {
-        try {
-            Method m = getMethod (context, "get", UUID.class, String.class);
-            if (m != null)
-                return (Result)m.invoke(null, EntityFactory.toUUID(uuid),
-                                        expand);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .get(EntityFactory.toUUID(uuid), expand);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method get(UUID,String)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     public static Result edits (String context, Long id) {
-        try {
-            Method m = getMethod (context, "edits", Long.class);
-            if (m != null)
-                return (Result)m.invoke(null, id);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .edits(id);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.debug("Unknown context: "+context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result editsUUID (String context, String id) {
-        try {
-            Method m = getMethod (context, "edits", UUID.class);
-            if (m != null)
-                return (Result)m.invoke(null, EntityFactory.toUUID(id));
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .edits(EntityFactory.toUUID(id));
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method edits(UUID)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     @Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approveUUID (String context, String id) {
     	try {
-            Method m = getMethod (context, "approve", UUID.class);
-            if (m != null)
-                return (Result)m.invoke(null, EntityFactory.toUUID(id));
-        }
-        catch (Exception ex) {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .approve(EntityFactory.toUUID(id));
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method for approving",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     public static Result field (String context, Long id, String field) {
-        try {
-            Method m = getMethod (context, "field", Long.class, String.class);
-            if (m != null)
-                return (Result)m.invoke(null, id, field);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .field(id, field);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method field(Long,String)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result fieldUUID (String context, String uuid, String field) {
         try {
-            Method m = getMethod (context, "field", UUID.class, String.class);
-            if (m != null) {
-                return (Result)m.invoke
-                    (null, EntityFactory.toUUID(uuid), field);
-            }
-            else {
-                Logger.error
-                    ("Context \""+context
-                     +"\" doesn't have method \"field(UUID, String)\"!");
-            }
-        }
-        catch (Exception ex) {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .field(EntityFactory.toUUID(uuid), field);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method field(UUID,String)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
     
     public static Result page (String context, int top,
                                int skip, String filter) {
-        
-        try {
-            Method m = getMethod (context, "page", 
-                                  int.class, int.class, String.class);
-            if (m != null)
-                return (Result)m.invoke(null, top, skip, filter);
-        }
-        catch (Exception ex) {
-            Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
-        }
-        Logger.warn("Context {} has no method page(int,int,String)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
+    	 try {
+    		 System.out.println("Setting topskip:" + top + ":" + skip);
+         	return _registry.get()
+         			 .getResource(context)
+         			 .page(top, skip, filter);
+         }catch (Exception ex) {
+        	 
+             Logger.trace("["+context+"]", ex);
+             return _apiInternalServerError (ex);
+         }
+    }
+    
+    
+    @Experimental
+    public static Result stream(String context, String field, int top, int skip) {
+    	try {
+    		return _registry.get()
+    				.getResource(context)
+    				.stream(field, top, skip);
+    	}catch (Exception ex) {
+    		Logger.trace("["+context+"]", ex);
+    		return _apiInternalServerError (ex);
+    	}
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result create (String context) {
-        try {
-            Method m = getMethod (context, "create"); 
-            if (m != null)
-                return (Result)m.invoke(null);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .create();
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method create()",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result validate (String context) {
-        try {
-            Method m = getMethod (context, "validate"); 
-            if (m != null)
-                return (Result)m.invoke(null);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .validate();
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method validate()",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result update (String context, Long id, String field) {
-        try {
-            Method m = getMethod (context, "update", Long.class, String.class);
-            if (m != null)
-                return (Result)m.invoke(null, id, field);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .update(id, field);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method update(Long,String)",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateEntity (String context) {
-        try {
-            Method m = getMethod (context, "updateEntity");
-            if (m != null)
-                return (Result)m.invoke(null);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .updateEntity();
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method updateEntity()",context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateUUID (String context, String id, String field) {
-        try {
-            Method m = getMethod (context, "update", UUID.class, String.class);
-            if (m != null)
-                return (Result)m.invoke
-                    (null, EntityFactory.toUUID(id), field);
-        }
-        catch (Exception ex) {
+    	try {
+        	return _registry.get()
+        			 .getResource(context)
+        			 .update(id, field);
+        }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
-            return internalServerError (context);
+            return _apiInternalServerError (ex);
         }
-        Logger.warn("Context {} has no method update(UUID,String)", context);
-        return _apiBadRequest ("Unknown Context: \""+context+"\"");
     }
+    
+    
+    /**
+     * Special form to get entities with UUID as the ID without
+     * giving a specific context. This works because UUIDs are globally
+     * unique. This is the same as calling {@link #getUUID(String, String, String)}
+     * for each UUID context until one returns a passing (<400) status
+     * code, and then forwarding that result.
+     * @param uuid
+     * @param expand
+     * @return
+     */
 
     public static Result _getUUID (String uuid, String expand) {
         for (String context : _registry.get().getUUIDcontexts()) {
-            Result r = getUUID (context, uuid, expand);
-            if (r.toScala().header().status() < 400)
-                return r;
+        	try{
+	            Result r = getUUID (context, uuid, expand);
+	            if (r.toScala().header().status() < 400)
+	                return r;
+        	}catch(Exception e){
+        		//Not found here
+        	}
+        	System.out.println("Not found in:" + context);
         }
         return _apiNotFound ("Unknown id "+uuid);
     }
     
+    /**
+     * Special form to get fields in entities with UUID as the ID without
+     * giving a specific context. This works because UUIDs are globally
+     * unique. This is the same as calling {@link #fieldUUID(String, String, String)}
+     * for each UUID context until one returns a passing (<400) status
+     * code, and then forwarding that result.
+     * @param uuid
+     * @param expand
+     * @return
+     */
     public static Result _fieldUUID (String uuid, String field) {
         for (String context : _registry.get().getUUIDcontexts()) {
-            Result r = fieldUUID (context, uuid, field);
-            if (r.toScala().header().status() < 400)
-                return r;
+        	try{
+	            Result r = fieldUUID (context, uuid, field);
+	            if (r.toScala().header().status() < 400)
+	                return r;
+        	}catch(Exception e){
+        		//Not found here
+        	}
         }
         return _apiNotFound ("Unknown id "+uuid);
     }
+    
+    
     public static Result checkPreFlight(String path) {
         response().setHeader("Access-Control-Allow-Origin", "*");      			  // Need to add the correct domain in here!!
         response().setHeader("Access-Control-Allow-Methods", "POST, PUT, GET");   // Only allow POST, PUT, GET
@@ -506,13 +492,24 @@ public class RouteFactory extends Controller {
     	return _apiNotFound("No user logged in");
     }
     
+    
+    
     private static JsonNode getError(Throwable t, int status){
     	Map m=new HashMap();
-    	m.put("message", t.getMessage());
+    	if(t instanceof InvocationTargetException){
+    		m.put("message", ((InvocationTargetException)t).getTargetException().getMessage());
+    	}else{
+    		m.put("message", t.getMessage());
+    	}
     	m.put("status", status);
     	ObjectMapper om = new ObjectMapper();
+    	t.printStackTrace();
     	return om.valueToTree(m);
     }
+    
+    
+    
+    
     
     public static Result _apiBadRequest(Throwable t){
     	return badRequest(getError(t, play.mvc.Http.Status.BAD_REQUEST));
@@ -543,6 +540,4 @@ public class RouteFactory extends Controller {
 		return forbidden(getError(new Throwable(t), play.mvc.Http.Status.FORBIDDEN));
 	}
     
-    
-
 }

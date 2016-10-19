@@ -54,9 +54,13 @@ GET     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/@approve      ix.core.controll
 GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/@approve      ix.core.controllers.v1.RouteFactory.approveUUID(context: String, id:String)
 GET     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/*field  ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
 GET     /$id<[a-fA-F0-9\-]+>/*field  ix.core.controllers.v1.RouteFactory._fieldUUID(id: String, field: String)
-GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field  ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
+GET     /$id<[a-fA-F0-9\-]+>*field  ix.core.controllers.v1.RouteFactory._fieldUUID(id: String, field: String)
+GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field      ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
+GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)*field      ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
 PUT     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
 PUT     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
 
+
+GET     /$context<[a-z0-9_]+>*field      ix.core.controllers.v1.RouteFactory.stream(context: String, field: String, top: Int ?= 10, skip: Int ?= 0)
 
 OPTIONS /$path<.*>	ix.core.controllers.v1.RouteFactory.checkPreFlight(path: String)

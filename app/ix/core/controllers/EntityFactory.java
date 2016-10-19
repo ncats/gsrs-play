@@ -1,12 +1,9 @@
 package ix.core.controllers;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,13 +14,9 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.avaje.ebean.Expr;
@@ -39,7 +32,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -69,7 +61,6 @@ import play.db.ebean.Model;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
-import play.mvc.Results;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
@@ -107,10 +98,10 @@ public class EntityFactory extends Controller {
         		order=Arrays.stream(a).collect(Collectors.toList());
         	});
         	parsers.put("expand", a->{
-        		order=Arrays.stream(a).collect(Collectors.toList());
+        		expand=Arrays.stream(a).collect(Collectors.toList());
         	});
         	parsers.put("select", a->{
-        		order=Arrays.stream(a).collect(Collectors.toList());
+        		select=Arrays.stream(a).collect(Collectors.toList());
         	});
         	parsers.put("top", a->intParser.apply(a[0]).ifPresent(i->top=i));
         	parsers.put("skip", a->intParser.apply(a[0]).ifPresent(i->skip=i));
@@ -302,13 +293,21 @@ public class EntityFactory extends Controller {
             throw new RuntimeException ("Can't execute query "+ex.getMessage());
         }
     }
+    
+    protected static <K,T> Result page (int top, int skip, String filter,
+            final Model.Finder<K, T> finder) {
+    	return page(top,skip,filter, finder, l->l);
+    }
 
     protected static <K,T> Result page (int top, int skip, String filter,
-                                        final Model.Finder<K, T> finder) {
+                                        final Model.Finder<K, T> finder, 
+                                        Function<List<T>, Object> streamop) {
 
         //if (select != null) finder.select(select);
         final FetchOptions options = new FetchOptions (top, skip, filter);
         List<T> results = filter (options, finder);
+        
+        Object returnObj = streamop.apply(results);
         
         
         final ETag etag = new ETag ();
@@ -323,6 +322,8 @@ public class EntityFactory extends Controller {
         etag.sha1 = Util.sha1(request(), "filter");
         etag.method = request().method();
         etag.filter = options.filter;
+        
+        
 
         if (options.filter == null)
             etag.total = finder.findRowCount();
@@ -350,7 +351,7 @@ public class EntityFactory extends Controller {
 
         ObjectMapper mapper = getEntityMapper ();
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
-        obj.put("content", mapper.valueToTree(results));
+        obj.put("content", mapper.valueToTree(returnObj));
 
         return ok (obj);
     }
@@ -473,6 +474,16 @@ public class EntityFactory extends Controller {
         return results;
     }
 
+    protected static <K,T> Result stream (String field, int top, int skip , Model.Finder<K, T> finder) {
+    	PojoPointer pojoPoint = PojoPointer.fromUriPath(field);
+        return page (top,skip,null, finder, l->{
+        	return EntityWrapper.of(l)
+        						.at(pojoPoint)
+        						.get()
+        						.getValue();
+        });
+    }
+    
     protected static <K,T> Result get (K id, Model.Finder<K, T> finder) {
         return get (id, null, finder);
     }
@@ -539,28 +550,16 @@ public class EntityFactory extends Controller {
         FutureRowCount<T> count = finder.findFutureRowCount();
         return count.get();
     }
-    
-//    protected static Integer getCount () 
-//            throws InterruptedException, ExecutionException {
-//            //FutureRowCount<T> count = finder.findFutureRowCount();
-//            return 0;
-//    }
 
     protected static <K,T> Result field (K id, String field, 
                                          Model.Finder<K, T> finder) {
-        try {
             Logger.debug("id: "+id+" field: "+field);
             T inst = finder.byId(id);
             //query.setId(id).findUnique();
             if (inst == null) {
-                return notFound ("Bad request: "+request().uri());
+                throw new IllegalArgumentException("Bad request: "+request().uri());
             }
             return field (inst, field);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ex.getMessage());
-        }
     }
     
     public static class ErrorResponse{
@@ -576,13 +575,17 @@ public class EntityFactory extends Controller {
     //Prime canididate for rewrite with EntityWrapper
     protected static Result field (Object inst, String field) {
     	//return fieldOld(inst,field);
-    	
-    	Object o = atFieldSerialized(inst,PojoPointer.fromUriPath(field));
-    	if(o instanceof JsonNode){
-        	return ok((JsonNode)o);
-        }else{
-        	return ok(o.toString());
-        }
+    	try{
+	    	Object o = atFieldSerialized(inst,PojoPointer.fromUriPath(field));
+	    	if(o instanceof JsonNode){
+	        	return ok((JsonNode)o);
+	        }else{
+	        	return ok(o.toString());
+	        }
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw e;
+    	}
     }
     
     
@@ -595,191 +598,14 @@ public class EntityFactory extends Controller {
     	}
     }
     
-    protected static <T> Result fieldOld (Object inst, String field) {
-        
-        String[] paths = field.split("/");
-        Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
-        StringBuilder uri = new StringBuilder ();
-
-        boolean isRaw = paths[paths.length-1].charAt(0) == '$'; 
-        int i = 0;
-        Field f = null;
-        Object obj = inst;
-        
-        for (; i < paths.length && obj != null; ++i) {
-            String pname = paths[i]; // field name
-            Integer pindex = null;   // field index if field is a list
-            
-            Matcher matcher = regex.matcher(pname);
-            if (matcher.find()) {
-                pname = matcher.group(1);
-                pindex = Integer.parseInt(matcher.group(2));
-            }
-
-            if (pname.charAt(0) == '$')
-                pname = pname.substring(1);
-
-            Logger.debug("obj="+obj+"["+obj.getClass()
-                         +"] pname="+pname+" pindex="+pindex);
-            
-            try {
-                uri.append("/"+paths[i]);
-
-                /**
-                 * TODO: check for JsonProperty annotation!
-                 */                
-                f = obj.getClass().getField(pname);
-                Class<?> ftype = f.getType();
-                
-                Object val = f.get(obj);
-                if (val != null && pindex != null) {
-                    if (ftype.isArray()) {
-                        if (pindex >= Array.getLength(val)) {
-                            return badRequest
-                                (uri+": array index out of bound "
-                                 +pindex);
-                        }
-                        val = Array.get(val, pindex);
-                    }
-                    else if (Collection.class.isAssignableFrom(ftype)) {
-                        if (pindex >= ((Collection)val).size() || pindex < 0)
-                            return badRequest
-                                (uri+": list index out bound "+pindex);
-                        val = ((Collection)val).toArray()[pindex];
-                    }
-                }
-                obj = val;
-            }
-            catch (NoSuchFieldException ex) {
-                // now try method..
-                String method = "get"+pname;
-                /*
-                Logger.debug("Can't lookup field \""+pname
-                             +"\"; trying method \""+method+"\"...");
-                */
-                Object old = obj;
-                /**
-                 * TODO: check for JsonProperty annotation!
-                 */
-                for (Method m : obj.getClass().getMethods()) {
-                    if (m.getName().equalsIgnoreCase(method)) {
-                        try {
-                            Object val = m.invoke(obj);
-                            if (val != null && pindex != null) {
-                                Class<?> ftype = val.getClass();
-                                if (ftype.isArray()) {
-                                    if (pindex >= Array.getLength(val)) {
-                                        return badRequest
-                                            (uri+": array index out of bound "
-                                             +pindex);
-                                    }
-                                    val = Array.get(val, pindex);
-                                }
-                                else if (Collection.class
-                                         .isAssignableFrom(ftype)) {
-                                    if (pindex >= ((Collection)val).size()
-                                        || pindex < 0)
-                                        return badRequest
-                                            (uri+": list index out bound "
-                                             +pindex);
-                                    Iterator it = ((Collection)val).iterator();
-                                    for (int k = 0; it.hasNext() 
-                                             && k < pindex; ++k)
-                                        ;
-                                    val = it.next();
-                                }
-                            }
-                            obj = val;
-                            break; // don't 
-                        }catch (Exception e) {
-                        }
-                    }
-                }
-
-                if (old == obj) {
-                    // last resort.. serialize as json and iterate from there
-                    ObjectMapper mapper = new ObjectMapper ();
-                    JsonNode node = mapper.valueToTree(obj).get(pname);
-                    if (node == null) {
-                        Logger.error(uri.toString()
-                                     +": No method or field matching "
-                                     +"requested path");
-                        return notFound ("Invalid field path: "+uri);
-                    }
-                    
-                    while (++i < paths.length && node != null) {
-                        if (pindex != null) {
-                            node = node.isArray() && pindex < node.size()
-                                ? node.get(pindex) : null;
-                        }
-                        else {
-                            uri.append("/"+paths[i]);
-                            pname = paths[i]; // field name
-                            pindex = null; // field index if field is a list
-            
-                            matcher = regex.matcher(pname);
-                            if (matcher.find()) {
-                                pname = matcher.group(1);
-                                pindex = Integer.parseInt(matcher.group(2));
-                            }
-                            
-                            if (pname.charAt(0) == '$')
-                                pname = pname.substring(1);
-                            
-                            node = node.get(pname);
-                            if (node == null) {
-                                Logger.error(uri.toString()
-                                             +": No method or field matching "
-                                             +"requested path");
-                                return notFound ("Invalid field path: "+uri);
-                            }
-                        }
-                    }
-
-                    if (node == null)
-                        return isRaw ? noContent () : ok ("null");
-                    
-                    return isRaw && !node.isContainerNode()
-                        ? ok (node.asText()) : Java8Util.ok (node);
-                }
-            }
-            catch (Exception ex) {
-                Logger.error(uri.toString(), ex);
-                return notFound ("Invalid field path: "+uri);
-            }
-        }
-        
-        if (i < paths.length) {
-            return badRequest ("Path "+uri+" is null");
-        }
-
-        if (obj == null) {
-            return isRaw ? noContent () : ok ("null");
-        }
-        
-        ObjectMapper mapper = getEntityMapper ();
-        JsonNode node = mapper.valueToTree(obj);
-        if (isRaw && !node.isContainerNode()) {
-            // make sure the content type is properly set if the
-            // value is a json string
-            JsonDeserialize json = (JsonDeserialize)
-                f.getAnnotation(JsonDeserialize.class);
-            Results.Status status = ok (node.asText());
-            if (json != null && json.as() == JsonNode.class) {
-                status.as("application/json");
-            }
-            
-            return status;
-        }
-        return Java8Util.ok (node);
-    }
     
     @Transactional
     protected static <K, T extends Model> 
-        Result create (Class<T> type, Model.Finder<K, T> finder) {
-    	
+        Result create (Class<T> type, Model.Finder<K, T> finder) {	
     	return create(type,finder,null);
     }
+    
+    
     @Transactional
     protected static <K, T extends Model> 
         Result create (Class<T> type, Model.Finder<K, T> finder, Validator<T> validator) {
@@ -964,23 +790,21 @@ public class EntityFactory extends Controller {
 
 
     //And all expressions together
-    //TODO: There has got to be a cleaner way
+	//TODO: There has got to be a cleaner way
+	/**
+	 * @deprecated Use {@link Util#andAll(Expression...)} instead
+	 */
 	public static Expression andAll(Expression... e) {
-		Expression retExpr = e[0];
-		for (Expression expr : e) {
-			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
-		}
-		return retExpr;
+		return Util.andAll(e);
 	}
 
     //Or all expressions together
-    //TODO: There has got to be a cleaner way
+	//TODO: There has got to be a cleaner way
+	/**
+	 * @deprecated Use {@link Util#orAll(Expression...)} instead
+	 */
 	public static Expression orAll(Expression... e) {
-		Expression retExpr = e[0];
-		for (Expression expr : e) {
-			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
-		}
-		return retExpr;
+		return Util.orAll(e);
 	}
     
 	protected static Result edits(Object id, Class<?>... cls) {
@@ -1004,9 +828,9 @@ public class EntityFactory extends Controller {
 				.toArray(new Expression[0]);
 
 		Query<Edit> q = EditFactory.finder
-				.where(andAll(
+				.where(Util.andAll(
 						Expr.eq("refid", id.toString()),
-						orAll(kindExpressions)
+						Util.orAll(kindExpressions)
 						));
 		
 		fe.applyToQuery(q);
@@ -1084,6 +908,8 @@ public class EntityFactory extends Controller {
         JsonNode json = request().body().asJson();
         return updateEntity (json, type, new DefaultValidator());
     }
+    
+    
     protected static Result updateEntity (JsonNode json, Class<?> type) {
         return updateEntity (json, type, new DefaultValidator());
     }
@@ -1240,14 +1066,16 @@ public class EntityFactory extends Controller {
     }
 
     
+    
+    
     // This could become a nice method.
+    //TODO: move to EntityWrapper
     private static Optional<EntityWrapper<?>> getCurrentValue(Object value){
     	if(EntityWrapper.of(value).hasKey()){
     		return EntityWrapper.of(value).getKey().fetch();
     	}else{
     		return Optional.empty();
     	}
-    	
     }
     
 }

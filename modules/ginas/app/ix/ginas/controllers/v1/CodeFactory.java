@@ -19,6 +19,7 @@ import ix.ginas.models.v1.*;
 import ix.utils.Tuple;
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
+import ix.core.util.StreamUtil;
 
 @NamedResource(name="codes",
                type=Code.class,
@@ -69,30 +70,9 @@ public class CodeFactory extends EntityFactory {
     public static Result field (UUID uuid, String path) {
         return field (uuid, path, finder);
     }
-
-    public static Result create () {
-        return create (Code.class, finder);
-    }
-
-    public static Result delete (UUID uuid) {
-        return delete (uuid, finder);
-    }
-
-    public static Result update (UUID uuid, String field) {
-        return update (uuid, field, Code.class, finder);
-    }
-    
-    public static <T> Stream<T> asStream(Iterator<T> sourceIterator) {
-        return asStream(sourceIterator, false);
-    }
-
-    public static <T> Stream<T> asStream(Iterator<T> sourceIterator, boolean parallel) {
-        Iterable<T> iterable = () -> sourceIterator;
-        return StreamSupport.stream(iterable.spliterator(), parallel);
-    }
     
     public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix){
-    	Stream<Code> codes=asStream(
+    	Stream<Code> codes=StreamUtil.ofIterator(
     				finder.where()
     				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
     				.findIterate());

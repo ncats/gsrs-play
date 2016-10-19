@@ -104,6 +104,7 @@ public class PojoPointerTest extends AbstractGinasTest{
 		public <T> JsonNode getObjectAt(T o, PojoPointer pp){
 			
 			EntityWrapper<T> ew = EntityWrapper.of(o);
+			
 			switch(this){
 			case JSON_NODE_FINDER:
 				JsonNode jsn =ew.toFullJsonNode().at(pp.toJsonPointer());

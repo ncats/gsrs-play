@@ -19,6 +19,9 @@ public class ETag extends IxModel {
     @Column(length=4000)
     public String uri;
     public String getNextPageUri(){
+    	if(this.skip+top>=this.total){
+    		return null;
+    	}
     	Integer skip=this.skip;
     	String nskip = "skip=" + (skip+top);
     	String nuri = (uri+"").replace("skip=" + this.skip, nskip);
@@ -32,6 +35,9 @@ public class ETag extends IxModel {
     	return nuri;
     }
     public String getPreviousPageUri(){
+    	if(this.skip-top<0){
+    		return null;
+    	}
     	Integer skip=this.skip;
     	String nskip = "skip=" + Math.max((skip-top),0);
     	String nuri = (uri+"").replace("skip=" + skip, nskip);

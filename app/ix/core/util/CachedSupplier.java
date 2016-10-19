@@ -1,7 +1,9 @@
 package ix.core.util;
 
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -45,9 +47,13 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 			return this.cache;
 		}
 		this.generatedWithVersion=CachedSupplier.generatedVersion.get();
-		this.cache=this.c.get();
+		this.cache=directCall();
 		this.run=true;
 		return this.cache;
+	}
+	
+	protected T directCall(){
+		return this.c.get();
 	}
 
 
@@ -82,5 +88,61 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 				throw new IllegalStateException(e);
 			}
 		});
+	}
+	
+	public static <T> CachedThrowingSupplier<T> ofThrowing(final Callable<T> callable){
+		return new CachedThrowingSupplier<T>(()->{
+			try{
+				return callable.call();
+			}catch(final Exception e){
+				throw new IllegalStateException(e);
+			}
+		});
+	}
+	
+	/**
+	 * An extension of a {@link CachedSupplier} which will catch any
+	 * throwable thrown during the initial {@link Supplier#get()} call,
+	 * and cache it as well, returning <code>null</code> for the value
+	 * cache. Calling {@link #getThrown()} will return an {@link Optional}
+	 * of a {@link Throwable}, which is empty if there was nothing 
+	 * thrown during the execution.
+	 * @author peryeata
+	 *
+	 * @param <T>
+	 */
+	public static class CachedThrowingSupplier<T> extends CachedSupplier<T>{
+
+		public Throwable thrown=null;
+		
+		public CachedThrowingSupplier(Supplier<T> c) {
+			super(c);
+		}
+		
+		@Override
+		protected T directCall(){
+			try{
+				return super.directCall();
+			}catch(Throwable e){
+				setThrown(e);
+				return null;
+			}
+		}
+		
+		
+		private void setThrown(Throwable t){
+			this.thrown=t;
+		}
+		
+		/**
+		 * Calls the supplier (if necessary), and returns an {@link Optional}
+		 * of anything thrown by that supplier.
+		 * @return
+		 */
+		public Optional<Throwable> getThrown(){
+			this.get();
+			return Optional.ofNullable(thrown);
+		}
+		
 	}
 }

@@ -20,6 +20,7 @@ import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
+import play.mvc.Content;
 import play.mvc.BodyParser;
 import play.libs.ws.*;
 import play.libs.F;
@@ -765,7 +766,6 @@ public class App extends Authentication {
 		String key = Util.sha1(value)+"::"+size;
 		try {
 
-			response().setContentType("image/svg+xml");
 			byte[] resp = getOrElse (0l, key, TypedCallable.of(() ->{
 				MolHandler mh = new MolHandler (value);
 				Molecule mol = mh.getMolecule();
@@ -775,7 +775,8 @@ public class App extends Authentication {
 				Logger.info("ok");
 				return render (mol, "svg", size, null);
 			},byte[].class));
-			return ok(resp);
+			
+			return ok(resp).as("image/svg+xml");
 		}
 		catch (Exception ex) {
 			Logger.error("Not a valid molecule:\n"+value, ex);

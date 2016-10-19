@@ -13,6 +13,7 @@ import net.sf.ehcache.constructs.blocking.CacheEntryFactory;
 import net.sf.ehcache.writer.CacheWriter;
 import net.sf.ehcache.writer.writebehind.operations.SingleOperationType;
 import play.Logger;
+import play.Play;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -27,6 +28,10 @@ import play.db.ebean.Model;
  */
 public class FileDbCache implements GinasFileBasedCacheAdapter {
 
+	CachedSupplier<Boolean> clearDB = CachedSupplier.of(()->{
+			return Play.application().configuration().getBoolean("ix.cache.clearpersist",false);
+	});
+	
     private Database db;
 
     private final File dir;
@@ -61,7 +66,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
                 try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data.getData(), data.getOffset(), data.getSize()))) {
                     elm = new Element(key, ois.readObject());
                 }
-                //System.out.println("Found object for:" + key);
             }
             else if (status == OperationStatus.NOTFOUND) {
         
@@ -81,9 +85,13 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         
         throw new CloneNotSupportedException();
     }
+    
+    public void init(){
+    	init(clearDB.get());
+    }
 
-    @Override
-    public void init() {
+    
+    public void init(boolean cleardb) {
     	if(init){
             return;
         }
@@ -99,10 +107,12 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         EnvironmentConfig envconf = new EnvironmentConfig ();
         envconf.setAllowCreate(true);
         Environment env = new Environment (dir, envconf);
-        try{
-        	env.removeDatabase(null, cacheName);
-        }catch(Exception e){
-        	Logger.error("No persist cache to delete", e);
+        if(cleardb){
+	        try{
+	        	env.removeDatabase(null, cacheName);
+	        }catch(Exception e){
+	        	Logger.error("No persist cache to delete", e);
+	        }
         }
         DatabaseConfig dbconf = new DatabaseConfig ();
         dbconf.setAllowCreate(true);

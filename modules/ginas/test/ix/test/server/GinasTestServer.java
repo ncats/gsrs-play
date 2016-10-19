@@ -463,6 +463,9 @@ public class GinasTestServer extends ExternalResource{
         cacheManager.shutdown();
         start();
    }
+    
+    
+    
 
     private void initializeControllers() {
     	CachedSupplier.resetCaches();
@@ -587,7 +590,8 @@ public class GinasTestServer extends ExternalResource{
     public Application getApplication(){
         return ts.application();
     }
-
+    
+        
     public void start() {
         if(running){
             return;
