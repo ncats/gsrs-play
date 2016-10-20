@@ -34,8 +34,7 @@ import ix.test.util.TestNamePrinter;
 
 public class LuceneSearchTest extends AbstractGinasServerTest{
 	
-    
-    @Test    
+    @Test
    	public void testTwoWordLuceneNameSearchShouldReturn() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -50,8 +49,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
             assertRecordCount(html, 1);
         }
    	}
-    
-    @Test    
+
+    @Test
    	public void testSearchForWordPresentIn2RecordsNamesShouldReturnBoth() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -72,7 +71,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
             assertRecordCount(html, 2);
         }
    	}
-    
+
     @Test   
    	public void testExactSearchForWordPresentIn2RecordsNamesShouldReturnOnlyExact() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -301,7 +300,9 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
 
 
 
-	@Test @ExpectedToFail @Ignore
+	@Test
+	@ExpectedToFail(reason = "when a name is changed the suggest index isn't updated to remove the " +
+			"old name because there is currently no way to know that something was removed or that nothing else uses it anymore")
 	public void ensureSuggestFieldDisappearsAfterNameRemoved() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
 
@@ -343,18 +344,17 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
 	@Test
 	public void ensureSuggestFieldDisappearsAfterNameRemovedAndReindexed() throws Exception {
 		GinasTestServer.User user = ts.getFakeUser1();
+		String pre1 = "IBUP";
+		String pre2 = "ASP";
+		String ib2 = "IBUPROFEN";
+		String name2 = "ASPIRIN";
 
+		SubstanceAPI api;
 
 		try (RestSession session = ts.newRestSession(user)) {
+			api = new SubstanceAPI(session);
 
-			String pre1 = "IBUP";
-			String pre2 = "ASP";
-			String ib2 = "IBUPROFEN";
-			String name2 = "ASPIRIN";
-
-			SubstanceAPI api = new SubstanceAPI(session);
-
-			JsonNode submit=new SubstanceBuilder()
+			JsonNode submit = new SubstanceBuilder()
 					.addName(ib2)
 					.generateNewUUID()
 					.buildJson();
@@ -362,29 +362,31 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
 
 
 			JsonNode suggestBefore = api.getSuggestPrefixJson(pre1);
-			assertEquals(1,suggestBefore.at("/Name").size());
+			assertEquals(1, suggestBefore.at("/Name").size());
 			assertEquals(ib2, suggestBefore.at("/Name/0/key").asText());
 
-			JsonNode update= SubstanceBuilder
+			JsonNode update = SubstanceBuilder
 					.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
-					.andThenMutate(s->s.names.get(0).name=name2)
+					.andThenMutate(s -> s.names.get(0).name = name2)
 					.buildJson();
 
 			ensurePass(api.updateSubstance(update));
+		}
 
 			try (BrowserSession browserSession = ts.newBrowserSession(ts.createAdmin("adminguy", "admin"))) {
 				new SubstanceReIndexer(browserSession).reindex();
 			}
 
-			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
+			ts.restart();
 
+		try (RestSession session = ts.newRestSession(user)){
 			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
 			assertEquals(1,suggestLater.at("/Name").size());
 			assertEquals(name2, suggestLater.at("/Name/0/key").asText());
-
-
+			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
 		}
 	}
+
 
 	@Test
 	public void ensureSuggestFieldDisappearsAfterNameRemovedAndNewSubstanceAddedAndReindexed() throws Exception {
@@ -603,6 +605,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
 	}
 
 
+
 	@Test
    	public void testSearchForQuotedPhraseShouldReturnOnlyRecordWithThatOrder() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -627,8 +630,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
         	throw e;
         }
    	}
-    
-    
+
+
     @Test   
    	public void testSearchForNameFieldWorks() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -656,7 +659,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
         	throw e;
         }
    	}
-    
+
     @Test   
    	public void testSearchForNameInCodeFieldDoesntWork() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -676,7 +679,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
         	throw e;
         }
    	}
-    
+
     @Test   
    	public void testSearchForNameInNameFieldDoesntReturnCodeMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -702,7 +705,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
         	throw e;
         }
    	}
-    
+
     @Test
    	public void testCodeSystemDynamicFieldMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -786,8 +789,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
         	throw e;
         }
    	}
-    
-    
+
+
     @Test   
    	public void testDefaultBrowseOrderShouldShowMostRecentlyEdittedFirst() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -821,8 +824,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest{
         	throw e;
         }
    	}
-    
-    
+
+
     @Test   
    	public void testBrowsingWithDisplayNameOrderingShouldOrderAlphabetically() throws Exception {
         //JsonNode entered = parseJsonFile(resource);

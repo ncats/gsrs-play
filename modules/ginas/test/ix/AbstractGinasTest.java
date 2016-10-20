@@ -19,9 +19,9 @@ public abstract class AbstractGinasTest {
 	public TestNamePrinter printer = new TestNamePrinter();
 
 	@Rule
-	public ExpectFailureChecker checker = new ExpectFailureChecker();
+	public ExpectFailureChecker expectedToFailChecker = new ExpectFailureChecker();
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
-	
+
 }
