@@ -3,6 +3,7 @@ package ix.core.controllers;
 import static ix.core.search.ArgumentAdapter.doNothing;
 import static ix.core.search.ArgumentAdapter.ofInteger;
 import static ix.core.search.ArgumentAdapter.ofList;
+import static ix.core.search.ArgumentAdapter.ofSingleString;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -91,7 +92,8 @@ public class EntityFactory extends Controller {
     		     	ofList("expand", a->expand=a, ()->expand),
     		     	ofList("select", a->select=a, ()->select),
     		     	ofInteger("top", a->top=a, ()->top),
-    		     	ofInteger("skip", a->skip=a, ()->skip)
+    		     	ofInteger("skip", a->skip=a, ()->skip),
+    		     	ofSingleString("filter", a->filter=a, ()->filter)
          	)
          	.collect(Collectors.toMap(a->a.name(), a->a));
          });
@@ -100,7 +102,9 @@ public class EntityFactory extends Controller {
         // only in the context of a request
         public FetchOptions () {
         	Map<String,String[]> vals= new HashMap<>();
-        	try{ //TODO: Use explicit check, rather than exception handling
+        	
+        	//TODO: Use explicit check, rather than exception handling
+        	try{ 
         		vals=request().queryString();
         	}catch(Exception e){
         		//e.printStackTrace();
@@ -827,8 +831,7 @@ public class EntityFactory extends Controller {
 		
 		Expression[] kindExpressions = Arrays.stream(cls)
 				.map(c -> Expr.eq("kind", c.getName()))
-				.collect(Collectors.toList())
-				.toArray(new Expression[0]);
+				.toArray(i->new Expression[i]);
 
 		Query<Edit> q = EditFactory.finder
 				.where(Util.andAll(
@@ -837,6 +840,8 @@ public class EntityFactory extends Controller {
 						));
 		
 		fe.applyToQuery(q);
+		
+		
 		List<Edit> tmpedits = q.findList();
 		if (tmpedits != null) {
 			edits.addAll(tmpedits);

@@ -50,7 +50,6 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 				try{
 					Method m = ef.getMethod(op.getOperationName(), op.asSigniture());
 					resultList.put(op, (oppp)->{
-						System.out.println("Calling operation:" + oppp.getOperationName());
 						Object[] raw= oppp.asRawArguments();
 						return CachedSupplier.ofCallable(()->(Result)m.invoke(null, raw)).get();
 					});
@@ -61,6 +60,7 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 		
 		resultList.computeIfAbsent(SEARCH_OPERATION, op->{
 			return (opp)->{
+				@SuppressWarnings("rawtypes")
 				List<Argument> args=opp.getArguments();
 				return SearchFactory.search(resource, 
 						(String)args.get(0).getValue(),
@@ -73,7 +73,6 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 	
 	@Override
 	public Result operate(Operation op) {
-		System.out.println("Fetchiing:" + Arrays.toString(op.asRawArguments()));
 		return resultList
 				.getOrDefault(op,(o)->InstantiatedNamedResource.super.operate(o))
 				.apply(op);

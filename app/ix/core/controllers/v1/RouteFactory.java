@@ -9,6 +9,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.reflections.Reflections;
+
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,16 +22,17 @@ import ix.core.NamedResourceFilter;
 import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.plugins.IxContext;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.Java8Util;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.utils.Global;
 import ix.utils.Util;
 import play.Application;
 import play.Logger;
@@ -45,9 +48,14 @@ public class RouteFactory extends Controller {
     static public CachedSupplier<Model.Finder<Long, Acl>> aclFinder=Util.finderFor(Long.class, Acl.class);
     static public CachedSupplier<Model.Finder<Long, Principal>> palFinder=Util.finderFor(Long.class, Principal.class);
     
-    private static class FactoryRegistry{
-    	ConcurrentHashMap<String, Class<?>> registry=new ConcurrentHashMap<String, Class<?>>();
+    public static class FactoryRegistry{
+    	private ConcurrentHashMap<String, Class<?>> registry=new ConcurrentHashMap<String, Class<?>>();
     	private Set<String> _uuid = new TreeSet<String>();
+    	private ConcurrentHashMap<String, InstantiatedNamedResource> resources = new ConcurrentHashMap<>();
+    	private ConcurrentHashMap<String, String> resourceNamesForClasses = new ConcurrentHashMap<>();
+    	
+    	
+    	
     	private NamedResourceFilter resourceFilter=new NamedResourceFilter(){
 			@Override
 			public boolean isVisible(Class<?> nr) {
@@ -59,7 +67,7 @@ public class RouteFactory extends Controller {
 				return true;
 			}
     	};
-    	ConcurrentHashMap<String, InstantiatedNamedResource> resources = new ConcurrentHashMap<>();
+    	
     	
 		public FactoryRegistry(Application app) {
 			String resproc = app.configuration().getString("ix.core.resourcefilter", null);
@@ -73,7 +81,22 @@ public class RouteFactory extends Controller {
 					e.printStackTrace();
 				}
 			}
+			/**
+			 * default/global entities factory
+			 */
+			Reflections reflections = new Reflections("ix");
+			Set<Class<?>> resources = reflections.getTypesAnnotatedWith(NamedResource.class);
+			IxContext ctx= Global.getInstance().context();
+			Logger.info(resources.size() + " named resources...");
+			for (Class c : resources) {
+				NamedResource res = (NamedResource) c.getAnnotation(NamedResource.class);
+				Logger.info("+ " + c.getName() + "\n  => " + ctx.context() + ctx.api() + "/" + res.name() + "["
+						+ res.type().getName() + "]");
+				register(res.name(), c);
+			}
 		}
+		
+		
 
 		
 		public Set<InstantiatedNamedResource> getInstantiatedNamedResources(){
@@ -119,8 +142,8 @@ public class RouteFactory extends Controller {
 	                                     +" is globally unique!");
 	                        _uuid.add(context);
 	                    }
-	                    
 	        	        resources.put(resource.getName(), resource);
+	        	        resourceNamesForClasses.put(resource.getKind(), resource.getName());
 	                }
 	            }
 	            catch (Exception ex) {
@@ -132,6 +155,14 @@ public class RouteFactory extends Controller {
 		@SuppressWarnings("unchecked")
 		public <I,V> InstantiatedNamedResource<I,V> getResource(String context){
 			return resources.get(context);
+		}
+		
+		@SuppressWarnings("unchecked")
+		public <I,V> InstantiatedNamedResource<I,V> getResourceFor(Class entityType){
+			EntityInfo ei = EntityUtils.getEntityInfoFor(entityType).getInherittedRootEntityInfo();
+			String resourceName= resourceNamesForClasses.get(ei.getName());
+			if(resourceName==null) return null; //Not found
+			return resources.get(resourceName);
 		}
 
 		Set<String> getUUIDcontexts() {

@@ -171,6 +171,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         return page;
     }
 
+    
     public WSRequestHolder newRequestHolder(String relativePath){
         return url(constructUrlFor(relativePath));
     }

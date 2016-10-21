@@ -173,7 +173,7 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result approve(I id){
-		return update(id,null);
+		return operate(APPROVE_OPERATION.values(id));
 	}
 	
 	default Result update(I id, String field){
@@ -216,7 +216,6 @@ public interface InstantiatedNamedResource<I,V> {
 		
 		public Operation values(Object ... objs){
 			Operation o = clone();
-			System.out.println("Setting args:" + Arrays.toString(objs));
 			for(int i=0;i<objs.length;i++){
 				o.arguments.get(i).setValue(objs[i]);
 			}

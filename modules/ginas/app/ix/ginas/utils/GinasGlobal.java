@@ -69,11 +69,10 @@ public class GinasGlobal extends Global {
 				logHeaders(req);
 			}
 
-			String real = req.getHeader("X-Real-IP");
+			String real = req.getHeader("X-Real-IP"); //Where does this come from?
+													  //IS this due to a proxy?
 
-			
 			UserProfile p = Authentication.getUserProfile();
-			
 			
 			String uri=req.uri();
 			char[] cs = uri.toCharArray();

@@ -310,6 +310,7 @@ public class SubstanceAPI {
     public JsonHistoryResult fetchSubstanceJsonByUuid(String uuid, int version){
         JsonNode edits = fetchSubstanceHistoryJson(uuid,version);
         //should only have 1 edit...so this should be safe
+        
         assertEquals(1, edits.size());
 
 		JsonNode edit = edits.iterator().next();

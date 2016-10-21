@@ -29,7 +29,6 @@ import play.db.ebean.Model;
  * Created by katzelda on 7/7/16.
  */
 public class FileDbCache implements GinasFileBasedCacheAdapter {
-
 	CachedSupplier<Boolean> clearDB = CachedSupplier.of(()->{
 			return Play.application().configuration().getBoolean("ix.cache.clearpersist",false);
 	});
@@ -38,8 +37,8 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     private final File dir;
     private final String cacheName;
-
     private int serializableCount=0, notSerializableCount=0;
+    
     public FileDbCache(File dir, String cacheName){
         Objects.requireNonNull(dir);
         Objects.requireNonNull(cacheName);
@@ -81,18 +80,11 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         }
         return elm;
     }
-
-    @Override
-    public CacheWriter clone(Ehcache cache) throws CloneNotSupportedException {
-        
-        throw new CloneNotSupportedException();
-    }
     
     public void init(){
     	init(clearDB.get());
     }
 
-    
     public void init(boolean cleardb) {
     	if(init){
             return;
@@ -124,8 +116,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void dispose() throws CacheException {
-
-        
         if (db != null) {
             try {
                 Logger.debug("#### closing cache writer "+cacheName
@@ -172,7 +162,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
     			serializedContext=
     			((SearchResultContext)realValue).getSerializedForm();
     		
-    		System.out.println("Going to write:" + serializedContext.getClass());
     		return Optional.of(Tuple.of(serializedContext.getSerializedKey(),
     									serializedContext
     									));
@@ -202,7 +191,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
         Serializable key = seralizable.get().k();
         Object value = seralizable.get().v();
-        System.out.println("Value is:" + value.getClass());
         
         if (key != null) {
             //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());

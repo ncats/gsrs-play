@@ -637,6 +637,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 			assertEquals(oldName, api.fetchSubstanceJsonByUuid(uuid).at("/names/0/name").asText());
 
 			JsonNode originalNode = api.fetchSubstanceJsonByUuid(uuid, 1).getOldValue();
+			
 			JsonNode v2Node = api.fetchSubstanceJsonByUuid(uuid, 2).getOldValue();
 
 			assertEquals("v1 name", oldName, originalNode.at("/names/0/name").asText());

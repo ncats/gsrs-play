@@ -1,4 +1,4 @@
-package ix.ginas.models.converters;
+package ix.ginas.converters;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -15,15 +15,15 @@ import ix.core.Converter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 
-public abstract class EntityClobConverter<K> extends ScalarTypeBase<K> {
+public abstract class EntityBlobConverter<K> extends ScalarTypeBase<K> {
 	
 	
-	public EntityClobConverter(Class<K> c){
-		super(c,false, Types.CLOB);
+	public EntityBlobConverter(Class<K> c){
+		super(c,false, Types.BLOB);
 	}
 
-	public abstract String convertToString(K value) throws IOException;
-	public abstract K convertFromString(String bytes) throws IOException;
+	public abstract byte[] convertToBytes(K value) throws IOException;
+	public abstract K convertFromBytes(byte[] bytes) throws IOException;
 	
 	@Override
 	public void bind(DataBind b, K value) throws SQLException {
@@ -31,7 +31,7 @@ public abstract class EntityClobConverter<K> extends ScalarTypeBase<K> {
 			b.setNull(jdbcType);
 		} else {
 			try{
-				b.setString(convertToString(value));
+				b.setBytes(convertToBytes(value));
 			}catch(Exception e){
 				e.printStackTrace();
 				throw new SQLException(e);
@@ -62,12 +62,9 @@ public abstract class EntityClobConverter<K> extends ScalarTypeBase<K> {
 	@Override
 	public K read(DataReader reader) throws SQLException {
 		// TODO Auto-generated method stub
-		String b;
-
+		byte[] b=reader.getBlobBytes();
 		try{
-			b = reader.getString();
-			K thing=convertFromString(b);
-			return thing;
+			return convertFromBytes(b);
 		}catch(Exception e){
 			e.printStackTrace();
 			throw new SQLException(e);
@@ -99,13 +96,13 @@ public abstract class EntityClobConverter<K> extends ScalarTypeBase<K> {
 
 	@Override
 	public void writeData(DataOutput dataOutput, Object v) throws IOException {
-		System.out.println("WritingData");
 		if (v == null) {
 		      dataOutput.writeBoolean(false);
 		    } else {
 		      dataOutput.writeBoolean(true);
-		      String val = convertToString(toBeanType(v));
-		      dataOutput.writeUTF(val);
+		      byte[] bytes = convertToBytes(toBeanType(v));
+		      dataOutput.writeInt(bytes.length);
+		      dataOutput.write(bytes);
 		    }
 	}
 	

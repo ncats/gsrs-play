@@ -1,4 +1,4 @@
-package ix.ginas.models.converters;
+package ix.ginas.converters;
 
 import java.io.IOException;
 

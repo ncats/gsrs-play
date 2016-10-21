@@ -68,6 +68,8 @@ public class SearchOptions implements RequestOptions {
 	private int fdim = DEFAULT_FDIM; // facet dimension
 	// whether drilldown (false) or sideway (true)
 	private boolean sideway = true;
+	
+	private boolean wait = false;
 	private String filter;
 
 	/**
@@ -126,7 +128,8 @@ public class SearchOptions implements RequestOptions {
 		     	ofInteger("skip", a->skip=a, ()->skip),
 		     	ofInteger("fdim", a->setFdim(a), ()->getFdim()),
 		     	ofInteger("fetch", a->setFetch(a), ()->getFetch()),
-		     	ofBoolean("sideway", a->setSideway(a), ()->isSideway()),
+		     	ofBoolean("sideway", a->setSideway(a), ()->isSideway(),true),
+		     	ofBoolean("wait", a->setWait(a), ()->isWait(),false),
 		     	ofSingleString("filter", a->filter=a, ()->filter),
 		     	ofSingleString("kind", a->{
 		     		try{
@@ -486,6 +489,15 @@ public class SearchOptions implements RequestOptions {
 		this.top = top;
 		queryParams.resetCache();
 		return top;
+	}
+
+	public boolean isWait() {
+		return wait;
+	}
+
+	public boolean setWait(boolean wait) {
+		this.wait = wait;
+		return wait;
 	}
 
 }

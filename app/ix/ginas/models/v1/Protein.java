@@ -137,7 +137,6 @@ public class Protein extends GinasCommonSubData {
     
     
     public void setDisulfideLinks(List<DisulfideLink> links){
-    	System.out.println("Setting disulf links" + links.size());
     	ObjectMapper om = new ObjectMapper();
     	disulfJSON=om.valueToTree(links).toString();
     	tmpDisulfides=null;

@@ -119,11 +119,18 @@ public abstract class ArgumentAdapter implements Consumer<String[]>,
 	 * @param sup
 	 * @return
 	 */
-	public static ArgumentAdapter ofBoolean(String name, Consumer<Boolean> c, Supplier<Boolean> sup){
+	public static ArgumentAdapter ofBoolean(String name, Consumer<Boolean> c, Supplier<Boolean> sup, boolean def){
 		return new ArgumentAdapter(){
 			@Override
 			public void accept(String[] t) {
-				c.accept("false".equals(stringLastArgParser.apply(t)));
+				String get=stringLastArgParser.apply(t);
+				if("true".equals(get)){
+					c.accept(true);
+				}
+				if("false".equals(get)){
+					c.accept(false);
+				}
+				c.accept(def);
 			}
 			@Override
 			public String[] get() {
@@ -135,6 +142,7 @@ public abstract class ArgumentAdapter implements Consumer<String[]>,
 			}
 		};
 	}
+	
 	
 	public static ArgumentAdapter doNothing(){
 		return ofSingleString("", s->{},()->null);
