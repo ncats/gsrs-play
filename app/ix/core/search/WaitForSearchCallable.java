@@ -25,7 +25,7 @@ class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
         Objects.requireNonNull(result);
         this.result = result;
         //can't have negative counts
-        int count = Math.max(0, numberOfRecords - result.matches.size());
+        int count = Math.max(0, numberOfRecords - result.size());
         latch = new CountDownLatch(count);
         waitForAll = false;
 

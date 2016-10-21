@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,6 +109,8 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -140,6 +141,7 @@ import ix.utils.Tuple;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
+import play.mvc.Controller;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -213,10 +215,13 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	private static CachedSupplier<AtomicBoolean> ALREADY_INITIALIZED = CachedSupplier.of(()->new AtomicBoolean(false));
 
 	public static class FV {
+		
+		private Facet container;
 		String label;
 		Integer count;
 
-		FV(String label, Integer count) {
+		FV(Facet container, String label, Integer count) {
+			this.container=container;
 			this.label = label;
 			this.count = count;
 		}
@@ -228,10 +233,20 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		public Integer getCount() {
 			return count;
 		}
+		
+		@JsonIgnore
+		public String getToggleUrl(){
+			return container.sr.getFacetURI(container.name, this.label);
+		}
+		
 	}
 
-	public interface FacetFilter {
+	public interface FacetFilter extends Predicate<FV>{
 		boolean accepted(FV fv);
+		
+		default boolean test(FV fv){
+			return accepted(fv);
+		}
 	}
 
 	public static class Facet {
@@ -246,13 +261,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		 * selected. Note that this currently assumes
 		 * that there can only be one selected.
 		 * 
+		 * TODO: expand this to allow multiples
+		 * 
 		 * @param label
 		 */
 		public void setSelectedLabel(String label){
 			this.selectedLabel=label;
 		}
 		
-		@JsonIgnore
+		@JsonInclude(Include.NON_NULL)
 		public String getSelectedLabel(){
 			return this.selectedLabel;
 		}
@@ -271,6 +288,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 		}
 		
+		
+		
+		@JsonIgnore
 		public boolean isMissingSelectedFV(){
 			if(this.selectedLabel==null){
 				return false;
@@ -285,11 +305,11 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 		
 		
+		private SearchResult sr;
 		
-		
-
-		public Facet(String name) {
+		public Facet(String name, SearchResult sr) {
 			this.name = name;
+			this.sr=sr;
 		}
 
 		public String getName() {
@@ -328,7 +348,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 
 		public Facet filter(FacetFilter filter) {
-			Facet filtered = new Facet(name);
+			Facet filtered = new Facet(name,sr);
 			for (FV fv : values)
 				if (filter.accepted(fv))
 					filtered.values.add(fv);
@@ -372,7 +392,20 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			return counts;
 		}
 		
-		public void add(FV fv){
+		/**
+		 * Creates and adds a {@link FV} to the list of values.
+		 * 
+		 * @param label
+		 * @param count
+		 * @return The {@link FV} that was added
+		 */
+		public FV add(String label, Integer count){
+			FV val=new FV(this, label, count);
+			add(val);
+			return val;
+		}
+		
+		private void add(FV fv){
 			if(this.selectedLabel!=null){
 				if(fv.getLabel().equals(this.selectedLabel)){
 					selectedFV=fv;
@@ -891,16 +924,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				if (!terms.isEmpty()){
 					f = new TermsFilter(terms);
 				}
-				if(options.order.isEmpty()){
-					Map<String, Integer> rank = 
-					subset.stream()
-						.map(o->EntityWrapper.of(o).getKey().getIdString())
-						.map(Util.toIndexedTuple())		//Yes, I mean for this to be a function call, not a function
-						.collect(Collectors.toMap(Tuple::v, Tuple::k, (a,b)->a)); //collect, clobber duplicates
-					searchResult.setRank(rank);
+				if(options.getOrder().isEmpty()){
+					Stream<String> ids = subset.stream()
+											   .map(o->EntityWrapper.of(o).getKey().getIdString());
+					
+					Comparator<String> comp=Util.comparator(ids);
+					searchResult.setRank(comp);
 				}
-			} else if (options.kind != null) {
-				
+			} else if (options.getKind() != null) {
 				f = new FieldCacheTermsFilter(FIELD_KIND, createKindArrayFromOptions(options));
 			}
 			search(searchResult, query, f);
@@ -965,9 +996,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		
 	public Sort createSorterFromOptions(SearchOptions options) {
 		Sort sorter = null;
-		if (!options.order.isEmpty()) {
+		if (!options.getOrder().isEmpty()) {
 			List<SortField> fields = new ArrayList<SortField>();
-			for (String f : options.order) {
+			for (String f : options.getOrder()) {
 				boolean rev = false;
 				if (f.charAt(0) == SORT_ASCENDING_CHAR) {
 					f = f.substring(1);
@@ -1012,9 +1043,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public static void collectBasicFacets(Facets facets, SearchResult sr) throws IOException{
 		Map<String,List<DrillAndPath>> providedDrills = sr.getOptions().getDrillDownsMap();
 		
-		List<FacetResult> facetResults = facets.getAllDims(sr.getOptions().fdim);
+		List<FacetResult> facetResults = facets.getAllDims(sr.getOptions().getFdim());
 		if (DEBUG(1)) {
-			Logger.info("## Drilled " + (sr.getOptions().sideway ? "sideway" : "down") + " " + facetResults.size()+ " facets");
+			Logger.info("## Drilled " + (sr.getOptions().isSideway() ? "sideway" : "down") + " " + facetResults.size()+ " facets");
 		}
 		
 		//Convert FacetResult -> Facet, and add to 
@@ -1022,19 +1053,20 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		facetResults.stream()
 			.filter(Objects::nonNull)
 			.map(result -> {
-				Facet fac = new Facet(result.dim);
+				Facet fac = new Facet(result.dim, sr);
 				// make sure the facet value is returned
 				// for selected value
 				List<DrillAndPath> dp = providedDrills.get(result.dim);
 				if (dp != null) {
 					fac.setSelectedLabel(dp.get(0).asLabel());
 				}
-				Arrays.stream(result.labelValues).map(lv -> new FV(lv.label, lv.value.intValue())).forEach(fv -> fac.add(fv));
+				Arrays.stream(result.labelValues)
+						.forEach(lv -> fac.add(lv.label, lv.value.intValue()));
 				if (fac.isMissingSelectedFV()) {
 					try {
 						Number value = facets.getSpecificValue(result.dim, fac.getSelectedLabel());
 						if (value != null && value.intValue() >= 0) {
-							fac.add(new FV(fac.getSelectedLabel(), value.intValue()));
+							fac.add(fac.getSelectedLabel(), value.intValue());
 						} else {
 							Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
 									+ fac.getSelectedLabel() + "\"!");
@@ -1133,7 +1165,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			 * TODO: is this the only way to collect the counts for
 			 * range/dynamic facets?
 			 */
-			if (!options.longRangeFacets.isEmpty()){
+			if (!options.getLongRangeFacets().isEmpty()){
 				FacetsCollector.search(searcher, ddq, filter, options.max(), facetCollector);
 			}
 
@@ -1174,13 +1206,13 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		try {
 			LuceneSearchResultPopulator payload = new LuceneSearchResultPopulator(searchResult, hits, searcher);
 			//get everything, forever
-			if (options.fetch <= 0) { 
+			if (options.getFetch() <= 0) { 
 				payload.fetch();
 			} else {
 				// we first block until we have enough result to show
 				// should be fetch plus a little extra padding (2 here)
 				// why 2?
-				int fetch = options.fetch + EXTRA_PADDING;
+				int fetch = options.getFetch() + EXTRA_PADDING;
 				payload.fetch(fetch);
 
 				if (hits.totalHits > fetch) {
@@ -1264,7 +1296,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				.map(val->new ChainedFilter(val.toArray(new Filter[0]), ChainedFilter.OR))
 				.collect(Collectors.toList());
 		
-		options.termFilters.stream()
+		options.getTermFilters().stream()
 			.map(k-> new TermsFilter(new Term(k.getField(), k.getTerm())))
 			.forEach(f->filtersFromOptions.add(f));
 		Query qactual = query;
@@ -1285,6 +1317,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		if (options.getFacets().isEmpty()) { 
 			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
 		} else {
+			System.out.println("I think I have facets:" + options.getFacets().toString());
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			
 			options.getDrillDownsMap().forEach((k,v)->{
@@ -1293,7 +1326,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			qactual=ddq;
 
 			// sideways
-			if (options.sideway) {
+			if (options.isSideway()) {
 				lsp = new DrillSidewaysLuceneSearchProvider(sorter, filter, options);
 			
 			// drilldown
@@ -1341,8 +1374,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		collectBasicFacets(lspResult.getFacets(), searchResult);
 		collectLongRangeFacets(facetCollector, searchResult);
 		
-		if(USE_ANALYSIS && options.kind!=null){
-			EntityInfo<?> entityMeta= EntityUtils.getEntityInfoFor(options.kind);
+		if(USE_ANALYSIS && options.getKind()!=null){
+			EntityInfo<?> entityMeta= EntityUtils.getEntityInfoFor(options.getKind());
 			
 			FieldNameDecorator fnd=FieldNameDecoratorFactory
 										.getInstance(Play.application())
@@ -1352,8 +1385,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				try{
 					FacetsCollector facetCollector2 = new FacetsCollector();
 					Filter f=null;
-					if(options.kind!=null){
-						EntityUtils.getEntityInfoFor(options.kind);
+					if(options.getKind()!=null){
+						EntityUtils.getEntityInfoFor(options.getKind());
 						List<String> analyzers = entityMeta.getTypeAndSubTypes()
 									.stream()
 									.map(e->e.getName())
@@ -1364,7 +1397,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					}
 					LuceneSearchProvider lsp2 = new BasicLuceneSearchProvider(null, f, options.max());
 					LuceneSearchProviderResult res=lsp2.search(searcher, taxon,oq.k(),facetCollector2);
-					res.getFacets().getAllDims(options.fdim).forEach(fr->{
+					res.getFacets().getAllDims(options.getFdim()).forEach(fr->{
 						if(fr.dim.equals(TextIndexer.ANALYZER_FIELD)){
 							
 						Arrays.stream(fr.labelValues).forEach(lv->{
@@ -1606,7 +1639,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	protected void collectLongRangeFacets(FacetsCollector fc, SearchResult searchResult) throws IOException {
 		SearchOptions options = searchResult.getOptions();
-		for (SearchOptions.FacetLongRange flr : options.longRangeFacets) {
+		for (SearchOptions.FacetLongRange flr : options.getLongRangeFacets()) {
 			if (flr.range.isEmpty())
 				continue;
 
@@ -1618,16 +1651,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					.toArray(new LongRange[0]);
 
 			Facets facets = new LongRangeFacetCounts(flr.field, fc, range);
-			FacetResult result = facets.getTopChildren(options.fdim, flr.field);
-			Facet f = new Facet(result.dim);
+			FacetResult result = facets.getTopChildren(options.getFdim(), flr.field);
+			Facet f = new Facet(result.dim, searchResult);
 			
 			if (DEBUG(1)) {
 				Logger.info(" + [" + result.dim + "]");
 			}
 			
 			Arrays.stream(result.labelValues)
-				.map(lv->new FV(lv.label, lv.value.intValue()))
-				.forEach(fv->f.add(fv));
+				.forEach(lv->f.add(lv.label, lv.value.intValue()));
 			
 			searchResult.addFacet(f);
 		}

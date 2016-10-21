@@ -65,7 +65,8 @@ public interface InstantiatedNamedResource<I,V> {
 			Argument.of(.8, double.class, "cutoff"),
 			Argument.of(0, int.class, "top"),
 			Argument.of(0, int.class, "skip"),
-			Argument.of(0, int.class, "fdim"));
+			Argument.of(0, int.class, "fdim"),
+			Argument.of("", String.class, "field"));
 	
 	public static final Operation[] ALL_OPERATIONS = new Operation[]{
 															CREATE_OPERATION, 
@@ -159,9 +160,11 @@ public interface InstantiatedNamedResource<I,V> {
 	default Result page(int top, int skip, String filter){
 		return operate(PAGE_OPERATION.values(top,skip,filter));
 	}
-	
 	default Result structureSearch(String q, String type, double cutoff, int top, int skip, int fdim){
-		return operate(STRUCTURE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim));
+		return structureSearch(q,type,cutoff,top,skip,fdim, "");
+	}
+	default Result structureSearch(String q, String type, double cutoff, int top, int skip, int fdim, String field){
+		return operate(STRUCTURE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim,field));
 	}
 	
 	default Result validate(){

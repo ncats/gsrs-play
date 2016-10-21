@@ -3,7 +3,9 @@ package ix.core.plugins;
 import com.sleepycat.je.*;
 
 import ix.core.models.BaseModel;
+import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
+import ix.utils.Tuple;
 import ix.utils.Util;
 import net.sf.ehcache.CacheEntry;
 import net.sf.ehcache.CacheException;
@@ -142,33 +144,52 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         return new DatabaseEntry (value.toString().getBytes());
     }
     
-    public static Optional<Object> getSerializableObect(Element elm){
+    public static Optional<Tuple<Serializable,Object>> getSerializableObect(Element elm){
     	
     	Object value =elm.getObjectValue();
-    	
-    	if(elm.isSerializable()){
-    		if(value instanceof Model){
-	    		return Optional.empty();
-	    	}
-    		return Optional.of(value);
+    	Object key = elm.getObjectKey();
+    	if(!(key instanceof Serializable)){
+    		return Optional.empty();
     	}
     	
     	if(value instanceof CachedSupplier){
-    		//Warning: forces a real call
-    		Object realValue=((CachedSupplier)value).get();
-    		if(realValue instanceof Serializable){
-    			if(!(realValue instanceof Model)){
-    				return Optional.of(realValue);
-    			}
-    		}
+    		//Warning: forces a real, synchronized call
+    		@SuppressWarnings("unchecked")
+			Object realValue=((CachedSupplier<Object>)value).getSync();
+    		
+    		return getKeyValueSerialized((Serializable) key,realValue);
+    	}else{
+    		return getKeyValueSerialized((Serializable) key,value);
     	}
-    	return Optional.empty();
+    	
     }
-  
+    
+    private static Optional<Tuple<Serializable,Object>> 
+    					getKeyValueSerialized(Serializable key, Object realValue){
+    	if(realValue instanceof SearchResultContext){
+    		
+    		SearchResultContext.SerailizedSearchResultContext 
+    			serializedContext=
+    			((SearchResultContext)realValue).getSerializedForm();
+    		
+    		System.out.println("Going to write:" + serializedContext.getClass());
+    		return Optional.of(Tuple.of(serializedContext.getSerializedKey(),
+    									serializedContext
+    									));
+    	}
+    	
+    	if(!(realValue instanceof Serializable)){
+    		return Optional.empty();
+		}else if(realValue instanceof Model){
+			return Optional.empty();
+		}
+    	return Optional.of(Tuple.of(key, realValue));
+    	
+    }
     
     @Override
     public void write(Element elm) throws CacheException {
-    	Optional<Object> seralizable=getSerializableObect(elm);
+    	Optional<Tuple<Serializable,Object>> seralizable=getSerializableObect(elm);
     	
         if(!seralizable.isPresent()){
             notSerializableCount++;
@@ -179,18 +200,16 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         //TODO is this a safe cast?
 
 
-        Serializable key = (Serializable) elm.getObjectKey();
-
-        Object value = elm.getObjectValue();
-
-        
+        Serializable key = seralizable.get().k();
+        Object value = seralizable.get().v();
+        System.out.println("Value is:" + value.getClass());
         
         if (key != null) {
             //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
             try {
                 DatabaseEntry dkey = getKeyEntry (key);
                 DatabaseEntry data = new DatabaseEntry
-                        (Util.serialize(seralizable.get()));
+                        (Util.serialize(value));
                 OperationStatus status = db.put(null, dkey, data);
                 if (status != OperationStatus.SUCCESS) {
                     Logger.warn

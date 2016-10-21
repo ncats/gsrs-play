@@ -7,25 +7,32 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -36,7 +43,6 @@ import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
 
 import ix.core.util.CachedSupplier;
@@ -104,39 +110,62 @@ public class Util {
         return sha1 (req, (String[])null);
     }
     
+    private static String sha1 (String seed, Map<String, String[]> params) throws UnsupportedEncodingException, NoSuchAlgorithmException{
+    	 MessageDigest md = MessageDigest.getInstance("SHA1");
+         md.update(seed.getBytes("utf8"));
+         return sha1(md, params);
+   }
+    
+    private static String sha1 (MessageDigest md, Map<String, String[]> params) throws UnsupportedEncodingException{
+    	 Set<String> sorted = new TreeSet<String> (params.keySet());
+         for (String key : sorted) {
+             	String[] values = params.get(key);
+                if (values != null) {
+                     Arrays.sort(values);
+                     md.update(key.getBytes("utf8"));
+                     for (String v : values)
+                         md.update(v.getBytes("utf8"));
+                }
+         }
+         return toHex (md.digest());
+    }
+    
+    public static Map<String,String[]> reduceParams(Map<String,String[]> params, String ... keep){
+    	if (keep == null || keep.length == 0) return params;
+    	Set<String> keepSet = Arrays.stream(keep)
+    							.collect(Collectors.toSet());
+			
+    	return params.entrySet()
+    			.stream()
+    			.filter(es->keepSet.contains(es.getKey()))
+    			.collect(toMap());
+    }
+    
+    public static <T,U> Collector<Entry<T,U>,?,Map<T,U>> toMap(){
+    	return Collectors.toMap(e->e.getKey(), e->e.getValue());
+    }
+    
+    
+    
+    /**
+     * Use {@link #sha1(String, Map, String...)} instead, to avoid
+     * tight coupling to request.
+     * @param req
+     * @param params
+     * @return
+     */
+    @Deprecated
     public static String sha1 (Http.Request req, String... params) {
         String path = req.method()+"/"+req.path();
+        return sha1(path, req.queryString(), params);
+    }
+    
+    public static String sha1 (String path, Map<String,String[]> all, String... params) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
-            md.update(path.getBytes("utf8"));
-
-            Set<String> uparams = new TreeSet<String>();
-            if (params != null && params.length > 0) {
-                for (String p : params) {
-                    uparams.add(p);
-                }
-            }
-            else {
-                uparams.addAll(req.queryString().keySet());
-            }
-
-            Set<String> sorted = new TreeSet (req.queryString().keySet());
-            for (String key : sorted) {
-                if (uparams.contains(key)) {
-                    String[] values = req.queryString().get(key);
-                    if (values != null) {
-                        Arrays.sort(values);
-                        md.update(key.getBytes("utf8"));
-                        for (String v : values)
-                            md.update(v.getBytes("utf8"));
-                    }
-                }
-            }
-
-            return toHex (md.digest());
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't generate hash for request: "+req.uri(), ex);
+            Map<String, String[]> map = reduceParams(all, params);
+            return sha1(path,map);
+        }catch (Exception ex) {
+            Logger.trace("Can't generate hash for request: "+path, ex);
         }
         return null;
     }
@@ -524,13 +553,15 @@ public class Util {
 	}
 	
 	
-	public static <T> Comparator<T> comparitor(Stream<T> order){
+	public static <T> Comparator<T> comparator(Stream<T> order){
 		return comparitor(t->t, order);
 	}
 	
 	public static <T, V> Comparator<V> comparitor(Function<V,T> namer,Stream<T> order){
 		Map<T,Integer> mapOrder=order.map(toIndexedTuple())
-								     .collect(Collectors.toMap(t->t.v(), t->t.k()));
+								     .collect(Collectors.toMap(t->t.v(), 
+								    		 				   t->t.k(),
+								    		 				   (a,b)->a)); //Keep old values
 		return (a,b)->{
 			T k1=namer.apply(a);
 			T k2=namer.apply(b);
@@ -591,4 +622,105 @@ public class Util {
 		}
 		return retExpr;
 	}
+
+
+	public static String canonicalizeQuery (Http.Request req) {
+	    Map<String, String[]> queries = req.queryString();
+	    Set<String> keys = new TreeSet<String>(queries.keySet());
+	    StringBuilder q = new StringBuilder ();
+	    for (String key : keys) {
+	        if (q.length() > 0)
+	            q.append('&');
+	
+	        String[] values = queries.get(key);
+	        Arrays.sort(values);
+	        if (values != null && values.length > 0) {
+	            q.append(key+"="+values[0]);
+	        }
+	    }
+	    return q.toString();
+	}
+	
+	public static class QueryStringManipulator{
+		Map<String,String[]> originalParams;
+		CachedSupplier<Map<String,List<String>>> params = CachedSupplier.of(()->{
+			Map<String,List<String>> m= originalParams.entrySet()
+						  .stream()
+						  .map(Tuple::of)
+						  .map(t->Tuple.of(t.k(), Stream.of(t.v()).collect(Collectors.toList())))
+						  .collect(Tuple.toMap());
+			System.out.println(m.getClass());
+			return m;
+		});
+		public QueryStringManipulator(Map<String,String[]> params){
+			this.originalParams=params;
+		}
+		
+		
+		public void addValue(String key, String value){
+			params.get().putIfAbsent(key, new ArrayList<String>())
+						.add(value);
+		}
+		
+		public void removeValue(String key){
+			params.get().remove(key);
+		}
+		public List<String> getValue(String key){
+			if(params.isRun()){
+				return params.get().getOrDefault(key,new ArrayList<String>());
+			}else{
+				String[] v=originalParams.getOrDefault(key, new String[]{});
+				return Arrays.asList(v);
+			}
+		}
+		
+		public Set<String> getValueSet(String key){
+			return new HashSet<String>(getValue(key));
+		}
+		
+		public boolean containsKey(String key){
+			if(params.isRun()){
+				return params.get().containsKey(key);
+			}else{
+				return originalParams.containsKey(key);
+			}
+		}
+		
+		public void toggleInclusion(String key, String value){
+			List<String> list=params.get().computeIfAbsent(key, k-> new ArrayList<String>());
+			//TODO: could be optimized 
+			if(list.contains(value)){
+				list.remove(value);
+			}else{
+				list.add(value);
+			}
+		}
+		
+		public String toQueryString(){
+			return params.get().entrySet()
+					.stream()
+					.flatMap(this::flatten)
+					.map(es->urlEncodeUTF8(es.k()) + "=" + urlEncodeUTF8(es.v()))
+				    .reduce((p1, p2) -> p1 + "&" + p2)
+				    .orElse("");
+		}
+		
+		private Stream<Tuple<String, String>> flatten(Entry<String,List<String>> es){
+			return es.getValue()
+					 .stream()
+					 .map(s->Tuple.of(es.getKey(), s));
+		}
+		
+		
+		static String urlEncodeUTF8(String s) {
+	        try {
+	            return URLEncoder.encode(s, "UTF-8");
+	        } catch (UnsupportedEncodingException e) {
+	        	e.printStackTrace();
+	            throw new UnsupportedOperationException(e);
+	        }
+	    }
+		
+	}
+	
 }

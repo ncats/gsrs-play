@@ -15,6 +15,9 @@ import java.util.function.Supplier;
  */
 public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 	private static AtomicLong generatedVersion= new AtomicLong();
+	
+	
+	
 
 	/**
 	 * Flag to signal all {{@link ix.core.util.CachedSupplier} instances
@@ -57,10 +60,17 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 	}
 
 
+	/**
+	 * An explicitly synchronized form of {@link #get()}
+	 * @return
+	 */
 	public synchronized T getSync() {
 		return get();
 	}
-
+	
+	public boolean isRun(){
+		return run;
+	}
 
 
 	/**

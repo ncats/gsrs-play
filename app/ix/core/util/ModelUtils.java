@@ -13,6 +13,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.Site;
 
 /**
@@ -63,6 +64,14 @@ public class ModelUtils {
 			};
 		}
 		
+	}
+	
+	public static String shorthandNotationForLinks(Collection<DisulfideLink> links){
+		return links
+			.stream()
+			.map(dsl->dsl.getLinksShorthand())
+			.collect(Collectors.joining(";"));
+			//;
 	}
 	
 	/**

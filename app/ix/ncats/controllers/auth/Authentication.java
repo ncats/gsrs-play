@@ -209,7 +209,7 @@ public class Authentication extends Controller {
 	        		up.systemAuth=false;
 	        		tx.commit();
 	        		
-	        		tokens.get().updateUserCache(up);
+	        		tokens.getSync().updateUserCache(up);
 	        		return up;
         		}catch(Exception e){
         			Logger.error("Error creating profile", e);
@@ -322,7 +322,7 @@ public class Authentication extends Controller {
     }
     
     public static UserProfile getUserProfileFromTokenAlone(String token){
-    	UserProfile profile=tokens.get().getUserProfile(token);
+    	UserProfile profile=tokens.getSync().getUserProfile(token);
     	if(profile!=null){
     		return getUserProfileFromToken(profile.getIdentifier(),token);
     	}
@@ -330,7 +330,7 @@ public class Authentication extends Controller {
     }
     
     private static UserProfile getUserProfile(String username){
-    	return tokens.get().computeUserIfAbsent(username, (u)->{
+    	return tokens.getSync().computeUserIfAbsent(username, (u)->{
     		return fetchProfile(u);
     	});
     }

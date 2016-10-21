@@ -28,7 +28,6 @@ import java.util.concurrent.Callable;
 public class LazyList<K> implements List<K>{
 	private ObjectNamer objectNamer;
 	
-	
 	private List<NamedCallable<K>> _internalList = new ArrayList<NamedCallable<K>>();
 	
 	public static interface ObjectNamer{
@@ -45,15 +44,15 @@ public class LazyList<K> implements List<K>{
 		this.objectNamer=objectNamer;
 	}
 	
-	public class DefaultNamedCallable<K> implements NamedCallable<K>{
-		K k;
+	public class DefaultNamedCallable<T> implements NamedCallable<T>{
+		T k;
 		String name=null;
-		public DefaultNamedCallable(K k){
+		public DefaultNamedCallable(T k){
 			this.k=k;
 			name = LazyList.this.objectNamer.nameFor(k);
 		}
 		@Override
-		public K call() throws Exception {
+		public T call() throws Exception {
 			return k;
 		}
 		@Override
@@ -368,5 +367,29 @@ public class LazyList<K> implements List<K>{
 	}
 	
 	
+	
+	/**
+	 * Create a {@link LazyList} form of the provided collection.
+	 * 
+	 * This is not encouraged.
+	 * 
+	 * @param collection
+	 * @return
+	 */
+	public static <T> LazyList<T> of(Collection<T> collection, ObjectNamer on){
+		if(collection instanceof LazyList){
+			return (LazyList<T>)collection;
+		}else{
+			LazyList<T> ll = new LazyList<T>(on);
+			for(T t : collection){
+				ll.add(t);
+			}
+			return ll;
+		}
+	}
+	
+	public void addAll(LazyList<K> lazylist){
+		this._internalList.addAll(lazylist._internalList);
+	}
 	
 }

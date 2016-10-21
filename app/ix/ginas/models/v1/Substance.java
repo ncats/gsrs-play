@@ -170,7 +170,8 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	@JsonView(BeanViews.Full.class)
 	public List<Name> names = new ArrayList<Name>();
 
-	// TOOD original schema has superfluous name = codes in the schema here and
+	// TOOD original schema has superfluous 
+	// name = codes in the schema here and
 	// in all of Code's properties
 	@JSONEntity(title = "Codes")
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
@@ -178,6 +179,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	public List<Code> codes = new ArrayList<Code>();
 
 	@OneToOne(cascade = CascadeType.ALL)
+	@JsonView(BeanViews.Full.class)
 	public Modifications modifications;
 
 	@JSONEntity(title = "Notes")
@@ -294,6 +296,24 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 				ex.printStackTrace();
 				// this means that the class doesn't have the NamedResource
 				// annotation, so we can't resolve the context
+				node = mapper.valueToTree(names);
+			}
+		}
+		return node;
+	}
+	
+	@JsonView(BeanViews.Compact.class)
+	@JsonProperty("_modifications")
+	public JsonNode getJsonModifications() {
+		JsonNode node = null;
+		if (this.getModifications()!=null) {
+			try {
+				ObjectNode n = mapper.createObjectNode();
+				n.put("count", getModificationCount());
+				n.put("href", Global.getRef(getClass(), getUuid()) + "/modifications");
+				node = n;
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				node = mapper.valueToTree(names);
 			}
 		}

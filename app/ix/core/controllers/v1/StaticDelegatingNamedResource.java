@@ -61,7 +61,7 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 		
 		resultList.computeIfAbsent(SEARCH_OPERATION, op->{
 			return (opp)->{
-				List<Argument> args=op.getArguments();
+				List<Argument> args=opp.getArguments();
 				return SearchFactory.search(resource, 
 						(String)args.get(0).getValue(),
 						(int)args.get(1).getValue(),

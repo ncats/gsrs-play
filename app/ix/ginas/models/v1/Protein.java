@@ -20,12 +20,17 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
+import ix.core.util.ModelUtils;
 import ix.ginas.models.GinasCommonSubData;
+import ix.utils.Global;
 import play.Logger;
 
 @SuppressWarnings("serial")
@@ -49,11 +54,18 @@ public class Protein extends GinasCommonSubData {
     @Indexable(indexed=false)
     public String disulfJSON=null;
     
+    @OneToOne(mappedBy="protein")
+    private ProteinSubstance proteinSubstance;
+    
+
+	@Transient
+	protected transient ObjectMapper mapper = new ObjectMapper();
     
     @Transient
     List<DisulfideLink> tmpDisulfides=null;
     
-    public List<DisulfideLink> getDisulfideLinks(){
+    @JsonView(BeanViews.Full.class)
+	public List<DisulfideLink> getDisulfideLinks(){
     	if(tmpDisulfides!=null)return tmpDisulfides;
     	List<DisulfideLink> rolekinds=new ArrayList<DisulfideLink>();
     	if(this.disulfJSON!=null){
@@ -64,7 +76,8 @@ public class Protein extends GinasCommonSubData {
 	    			try{
 	    				rolekinds.add(om.treeToValue(om.valueToTree(o), DisulfideLink.class));
 	    			}catch(Exception e){
-	    				e.printStackTrace();
+	    				System.err.println(e.getMessage());
+	    				Logger.trace("Error parsing disulfides", e);
 	    			}
 	    		}
     		}catch(Exception e){
@@ -75,12 +88,63 @@ public class Protein extends GinasCommonSubData {
     	tmpDisulfides=rolekinds;
         return tmpDisulfides;
     }
-    public void setDisulfideLinks(List<DisulfideLink> rolekinds){
+    
+    @JsonView(BeanViews.Compact.class)
+	@JsonProperty("_disulfideLinks")
+	public JsonNode getJsonDisulfideLinks() {
+		JsonNode node = null;
+		List<DisulfideLink> links=this.getDisulfideLinks();
+		if (links.size()>0) {
+			try {
+				ObjectNode n = mapper.createObjectNode();
+				n.put("count", links.size());
+				n.put("href", Global.getRef(proteinSubstance.getClass(), proteinSubstance.getUuid()) + "/protein/disulfideLinks");
+				
+				n.put("shorthand", ModelUtils.shorthandNotationForLinks(links));
+				
+				node = n;
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				node = mapper.valueToTree(links);
+			}
+		}
+		return node;
+	}
+    
+    @JsonView(BeanViews.Compact.class)
+	@JsonProperty("_glycosylation")
+	public JsonNode getJsonGlycosylation() {
+		JsonNode node = null;
+		Glycosylation glyc=this.glycosylation;
+		if (glyc!=null) {
+			try {
+				ObjectNode n = mapper.createObjectNode();
+				if(glyc.glycosylationType!=null){
+					n.put("type",   glyc.glycosylationType);
+				}
+				n.put("nsites", glyc._NGlycosylationSiteContainer.siteCount);
+				n.put("osites", glyc._OGlycosylationSiteContainer.siteCount);
+				n.put("csites", glyc._CGlycosylationSiteContainer.siteCount);
+				n.put("href", Global.getRef(proteinSubstance.getClass(), proteinSubstance.getUuid()) + "/protein/glycosylation");
+				node = n;
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				node = mapper.valueToTree(glyc);
+			}
+		}
+		return node;
+	}
+    
+    
+    public void setDisulfideLinks(List<DisulfideLink> links){
+    	System.out.println("Setting disulf links" + links.size());
     	ObjectMapper om = new ObjectMapper();
-    	disulfJSON=om.valueToTree(rolekinds).toString();
+    	disulfJSON=om.valueToTree(links).toString();
     	tmpDisulfides=null;
     }
-
+    
+    
+    @JsonView(BeanViews.Full.class)
     @OneToOne(cascade=CascadeType.ALL)
     public Glycosylation glycosylation;
 

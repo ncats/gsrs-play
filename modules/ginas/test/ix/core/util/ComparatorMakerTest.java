@@ -22,7 +22,7 @@ public class ComparatorMakerTest extends AbstractGinasTest{
 		}
 		Collections.shuffle(mylist);
 		List<String> prefOrder = new ArrayList<>(mylist);
-		Comparator<String> comp=Util.comparitor(prefOrder.stream());
+		Comparator<String> comp=Util.comparator(prefOrder.stream());
 		Collections.shuffle(mylist);
 		assertNotEquals(prefOrder,mylist);
 		mylist.sort(comp);

@@ -52,6 +52,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Principal;
@@ -1007,22 +1008,22 @@ public class GinasApp extends App {
         editedRange.add("fPast 2 years", range);
         approvedRange.add("fPast 2 years", range);
 
-        options.longRangeFacets.add(editedRange);
-        options.longRangeFacets.add(approvedRange);
+        options.getLongRangeFacets().add(editedRange);
+        options.getLongRangeFacets().add(approvedRange);
         
         
         if(params!=null){
         	
         	String[] dep =params.get("showDeprecated");
         	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
-        		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
+        		options.getTermFilters().add(new TermFilter("SubstanceDeprecated","false"));
         	}
         }
     }
 
     public static List<Facet> getSubstanceFacets (int fdim, Map<String, String[]> map) throws IOException {
         SearchOptions options = new SearchOptions (Substance.class);
-        options.fdim = fdim;
+        options.setFdim(fdim);
         instrumentSubstanceSearchOptions (options, map);
         return getTextIndexer().search(options, null, null).getFacets();
     }
@@ -1180,9 +1181,15 @@ public class GinasApp extends App {
                 for (Substance sub : substances) {
                     indexer.add(EntityWrapper.of(sub));
                 }
-                result = SearchFactory.search
-                        (indexer, Substance.class, null, null, indexer.size(),
-                                0, FACET_DIM, request().queryString());
+
+                SearchRequest request = new SearchRequest.Builder()
+                			.top(indexer.size())
+                			.kind(Substance.class)
+                			.fdim(FACET_DIM)
+                			.withRequest(request())
+                			.build();
+                
+                result = SearchFactory.search(indexer, request);
             }
             if (result.count() < substances.size()) {
                 substances.clear();

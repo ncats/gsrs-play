@@ -6,9 +6,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.springframework.stereotype.Controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
@@ -493,29 +496,70 @@ public class SubstanceFactory extends EntityFactory {
 										 double cutoff, 
 										 int top, 
 										 int skip, 
-										 int fdim) throws Exception{
+										 int fdim,
+										 String field) throws Exception{
+		SearchResultContext context;
 		
-		SearchResultContext context = App.substructure
-                (q, top, (skip/top) + 1, new StructureSearchResultProcessor(true));
+		if(type.toLowerCase().startsWith("sub")){
+			context = App.substructure(q, 
+					/*top= */ 1, 
+					/*skip=*/ 1, 
+					new StructureSearchResultProcessor(false))
+					.getFocused(top, skip, fdim, field);
+		}else if(type.toLowerCase().startsWith("sim")){
+			context = App.similarity(q, 
+					cutoff,
+					/*top= */ 1, 
+					/*skip=*/ 1, 
+					new StructureSearchResultProcessor(false))
+					.getFocused(top, skip, fdim, field);
+		}else{
+			throw new UnsupportedOperationException("Unsupported search type:" + type);
+		}
 		
-		System.out.println("Got context:" + context);
-            return App.fetchResult
-                (context,top, (skip/top) + 1,
-                 new ResultRenderer<Substance> (){
-
-					@Override
-					public Result render(SearchResultContext context, int page, int rows, int total, int[] pages,
-							List<Facet> facets, List<Substance> results) {
-						EntityMapper em=EntityFactory.getEntityMapper();
-						return Java8Util.ok(em.valueToTree(results));
-					}
-
-					@Override
-					public int getFacetDim() {
-						return fdim;
-					}
-                	
-                });
+		context.setAdapter((so, ctx)->{
+			try {
+				return App.getResultFor(ctx, so);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new IllegalStateException("Error fetching search result", e);
+			}
+		});
+		
+		String s=play.mvc.Controller.request().getQueryString("sync");
+		
+		if("true".equals(s) ||
+		   "".equals(s)
+				){
+			try{
+				context.getDeterminedFuture().get(1, TimeUnit.MINUTES);
+				return redirect(context.getResultCall());
+			}catch(TimeoutException e){
+				Logger.warn("Structure search timed out!", e);
+			}
+		}
+		return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
+		
+		
+//            return App.fetchResult
+//                (context,top, (skip/top) + 1,
+//                 new ResultRenderer<Substance> (){
+//
+//					@Override
+//					public Result render(SearchResultContext context, 
+//                          int page, int rows, int total, int[] pages,
+//							List<Facet> facets, List<Substance> results) {
+//						Object retalue=EntityWrapper.of(results).at(pointer).get().getValue();
+//						
+//						return Java8Util.ok(em.valueToTree(retalue));
+//					}
+//
+//					@Override
+//					public int getFacetDim() {
+//						return fdim;
+//					}
+//                	
+//                });
 	}
 	
 }

@@ -99,8 +99,6 @@ import ix.core.util.pojopointer.ObjectPath;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.core.util.pojopointer.SkipPath;
 import ix.core.util.pojopointer.SortPath;
-import ix.core.util.pojopointer.extensions.StringLengthRegisteredFunction;
-import ix.core.util.pojopointer.extensions.StringLengthRegisteredFunction.StringLengthPath;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -206,23 +204,31 @@ public class EntityUtils {
 	 * drawbacks of using generic objects in much of the deepest areas of the
 	 * code.
 	 * 
+	 * <p>
 	 * Information on the methods, fiends and annotations related to this class
-	 * are memoized via a static ConcurrentHashMap.
+	 * are memoized via a static #{@link ConcurrentHashMap}.
+	 * </p>
 	 * 
+	 * <p>
 	 * Wrapping an entity in this constructor will give access to some
 	 * convenience methods that can be especially useful for finding smaller
 	 * sets of known indexable values from all fields.
+	 * </p>
 	 * 
-	 * The method {{EntityWrapper{@link #traverse()} is particularly useful for
-	 * building {{@link EntityTraverser}}s, which can allow for quick probing
+	 * <p>
+	 * The method  {@link #traverse()} is particularly useful for
+	 * building {@link EntityTraverser}s, which can allow for quick probing
 	 * of all of the entity descendants.
+	 * </p>
 	 * 
+	 * <p>
 	 * TODO there is some inconsistent design and type-safe issues in this
 	 * current instantiation
-	 * 
+	 * </p>
 	 * @author peryeata
 	 *
-	 * @param <K>
+	 *
+	 * @param <T> The type of object wrapped by the {@link EntityWrapper}
 	 */
 	public static class EntityWrapper<T> {
 		private T _k;
@@ -294,7 +300,7 @@ public class EntityUtils {
 			return ei.getUniqueColumns();
 		}
 
-		public Finder getFinder() {
+		public Finder<?,T> getFinder() {
 			return ei.getFinder();
 		}
 

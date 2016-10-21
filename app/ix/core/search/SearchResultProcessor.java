@@ -31,12 +31,12 @@ public abstract class SearchResultProcessor<T, R> {
         throws Exception {
         this.results = results;
         
-        context.start = System.currentTimeMillis();
+        context.setStart(System.currentTimeMillis());
         if(wait){
         	
         	process();
         	context.setStatus(SearchResultContext.Status.Determined);
-        	context.stop = System.currentTimeMillis();
+        	context.setStop(System.currentTimeMillis());
             
         }else{
             // the idea is to generate enough results for 1 page, and 1 extra record

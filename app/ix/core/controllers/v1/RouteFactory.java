@@ -19,6 +19,7 @@ import ix.core.NamedResource;
 import ix.core.NamedResourceFilter;
 import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
@@ -72,10 +73,6 @@ public class RouteFactory extends Controller {
 					e.printStackTrace();
 				}
 			}
-		}
-
-		public NamedResourceFilter getResourceFilter() {
-			return resourceFilter;
 		}
 
 		
@@ -156,11 +153,11 @@ public class RouteFactory extends Controller {
    
 
     public static Result listResources () {
-    	ObjectMapper mapper = new ObjectMapper();
+    	EntityMapper em = EntityFactory.getEntityMapper();
     	Set<InstantiatedNamedResource> resources = _registry
 									.get()
 									.getInstantiatedNamedResources();
-    	return ok((JsonNode)mapper.valueToTree(resources));
+    	return ok((JsonNode)em.valueToTree(resources));
     }
 
     public static Result get (String ns, String resource) {
@@ -213,11 +210,12 @@ public class RouteFactory extends Controller {
 											double cutoff,
 											int top, 
 											int skip, 
-											int fdim) {
+											int fdim,
+											String field) {
 		try {
 			return _registry.get()
 					.getResource(context)
-					.structureSearch(q, type, cutoff, top, skip, fdim);
+					.structureSearch(q, type, cutoff, top, skip, fdim, field);
 		} catch (Exception ex) {
 			Logger.trace("[" + context + "]", ex);
 			return _apiInternalServerError(ex);
@@ -464,6 +462,7 @@ public class RouteFactory extends Controller {
         response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
         return ok();
     }
+    
     
     
     

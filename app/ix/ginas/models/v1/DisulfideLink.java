@@ -53,6 +53,11 @@ public class DisulfideLink extends GinasCommonSimplifiedSubData {
     	return "";
 	}
 	
+	@JsonIgnore
+	public String getLinksShorthand(){
+		return getSitesShorthand().replace(";", "->");
+	}
+	
     public DisulfideLink () {}
     
     

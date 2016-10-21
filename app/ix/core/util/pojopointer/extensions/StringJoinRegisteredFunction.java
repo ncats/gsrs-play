@@ -12,18 +12,18 @@ import ix.core.util.pojopointer.SingleElementPath;
 import ix.core.util.pojopointer.extensions.StringJoinRegisteredFunction.JoinPath;
 
 public class StringJoinRegisteredFunction implements RegisteredFunction<JoinPath, Collection<String>, String> {
-	public static String name = "$join";
+	public static String name = "join";
 	
 	public static class JoinPath extends SingleElementPath<String>{
 		public JoinPath(String t) {
 			super(t);
 		}
-
+		
 		@Override
 		protected String thisURIPath() {
 			return name + "(" + getValue() + ")";
 		}
-
+		
 		@Override
 		public String name() {
 			return name;

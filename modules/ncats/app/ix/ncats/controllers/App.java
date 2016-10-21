@@ -58,6 +58,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.EnantiomerGenerator;
@@ -481,13 +482,10 @@ public class App extends Authentication {
 		return false;
 	}
 
-	public static List<Facet> getFacets (final Class kind, final int fdim) {
+	public static List<Facet> getFacets (final Class<?> kind, final int fdim) {
 		try {
-			SearchResult result =
-					SearchFactory.search(kind, null, 0, 0, fdim, null);
-			return result.getFacets();
-		}
-		catch (IOException ex) {
+			return getSearchFacets(kind,fdim).getFacets();
+		}catch (Exception ex) {
 			Logger.trace("Can't retrieve facets for "+kind, ex);
 		}
 		return new ArrayList<Facet>();
@@ -499,7 +497,7 @@ public class App extends Authentication {
 			return result.getFacets();
 		}
 		catch (IOException ex) {
-			Logger.trace("Can't retrieve facets for "+options.kind, ex);
+			Logger.trace("Can't retrieve facets for "+options.getKind(), ex);
 		}
 
 		return new ArrayList<Facet>();
@@ -639,13 +637,20 @@ public class App extends Authentication {
 			final int fdim) {
 		final String sha1 = Util.sha1(kind.getName()+"/"+fdim);
 		try {
+			
 			return getOrElse (sha1,  TypedCallable.of(() -> {
-				SearchResult result = SearchFactory.search
-						(kind, null, 0, 0, fdim, null);
+				SearchRequest req = new SearchRequest.Builder()
+											.top(0)
+											.skip(0)
+											.fdim(fdim)
+											.kind(kind)
+											.build();
+				
+				SearchResult result = SearchFactory.search(req);
 				return cacheKey (result, sha1);
 			},SearchResult.class));
-		}
-		catch (Exception ex) {
+			
+		}catch (Exception ex) {
 			ex.printStackTrace();
 			Logger.trace("Can't get search facets!", ex);
 		}
@@ -690,7 +695,7 @@ public class App extends Authentication {
 								return getOrElse (sha1, ()  -> {
 									SearchOptions options =
 											new SearchOptions (query);
-									options.top = total;
+									options.setTop(total);
 									SearchResult sresult = getTextIndexer().range
 											(options, field, min.isEmpty()
 													? null : Integer.parseInt(min),
@@ -701,13 +706,18 @@ public class App extends Authentication {
 							}
 						}
 
-						result = getOrElse
-								(sha1, () -> {
-									SearchResult sresult = SearchFactory.search
-											(kind, hasFacets ? null : q,
-													total, 0, FACET_DIM, query);
-									return cacheKey (sresult, sha1);
-								});
+					result = getOrElse
+							(sha1, () -> {
+								SearchRequest req= new SearchRequest.Builder()
+														.top(total)
+														.fdim(FACET_DIM)
+														.withParameters(query)
+														.query(hasFacets ? null : q)
+														.build();
+								
+								SearchResult sresult = SearchFactory.search(req);
+								return cacheKey (sresult, sha1);
+							});
 						Logger.debug(sha1+" => "+result);
 					}
 					double elapsed = (System.currentTimeMillis() - start)*1e-3;
@@ -1223,15 +1233,65 @@ public class App extends Authentication {
 		return renderer.render(src, page, rows, result.count(),
 				pages, result.getFacets(), resultList);
 	}
+	
+	/**
+	 * Get a key for the canonicalizes search. This should really not use the request
+	 * directly, but instead use {@link SearchOptions} or a {@link SearchRequest}.
+	 * @param context
+	 * @param params
+	 * @return
+	 */
+	@Deprecated
 	static String getKey (SearchResultContext context, String... params) {
 		return "fetchResult/"+context.getId()
 		+"/"+Util.sha1(request (), params);
 	}
+	
+	
+	static String getKey (SearchResultContext context, SearchOptions options, String ... params) {
+		return "fetchResult/"+context.getId()
+		+"/"+Util.sha1("search", options.asQueryParms(), params);
+	}
+	
+	
+	
+	
+	
+	
+	
+	public static SearchResult getResultFor(SearchResultContext ctx, SearchOptions options) throws IOException, Exception{
+		final String key = getKey (ctx, options, "facet", "fdim");
+		return getOrElse(key,  TypedCallable.of(() -> {
+					Collection results = ctx.getResults();
+					if (results.isEmpty()) {
+						return null;  // hmm ... is this a good idea? Probably not
+									  // it might cause a problem with the cache
+						   			  // as nulls will still get cached right now
+					}
+					
+					SearchRequest request = new SearchRequest.Builder()
+												.subset(results)
+												.options(options)
+												.top(results.size())
+												.build();
+					
+					SearchResult searchResult =
+							SearchFactory.search (request);
+					Logger.debug("Cache misses: "
+							+key+" size="+results.size()
+							+" class="+searchResult);
+					// make an alias for the context.id to this search
+					// result
+					return cacheKey (searchResult, ctx.getId());
+				}, SearchResult.class));
+	}
+	
+	
 	public static <T> Result fetchResult
 	(final SearchResultContext context, int rows,
 			int page, final ResultRenderer<T> renderer) throws Exception {
 
-		final String key = getKey (context, "facet");
+		
 
 		/**
 		 * If wait is set to be forced, we need to hold off going forward until
@@ -1242,6 +1302,11 @@ public class App extends Authentication {
 				context.getDeterminedFuture().get();
 			}
 		}
+		
+		
+		
+		
+		
 		SearchResultContext.Status stat=context.getStatus();
 		boolean isDetermined=context.isDetermined();
 		/**
@@ -1250,23 +1315,30 @@ public class App extends Authentication {
 		 * together with facets, sorting, etc.
 		 */
 
-		final SearchResult result = 
-				getOrElse(key,  TypedCallable.of(() -> {
-					Collection results = context.getResults();
-					if (results.isEmpty()) {
-						return null;
-					}
-					SearchResult searchResult =
-							SearchFactory.search (results, null, results.size(), 0,
-									renderer.getFacetDim(),
-									request().queryString());
-					Logger.debug("Cache misses: "
-							+key+" size="+results.size()
-							+" class="+searchResult);
-					// make an alias for the context.id to this search
-					// result
-					return cacheKey (searchResult, context.getId());
-				}, SearchResult.class));
+		SearchOptions options = new SearchOptions.Builder()
+									.withRequest(request())   //Really shouldn't be here
+									.build(); 
+		
+		final String key = getKey (context, options, "facet");
+		final SearchResult result = getResultFor(context, options);
+//		
+//		final SearchResult result = 
+//				getOrElse(key,  TypedCallable.of(() -> {
+//					Collection results = context.getResults();
+//					if (results.isEmpty()) {
+//						return null;
+//					}
+//					SearchResult searchResult =
+//							SearchFactory.search (results, null, results.size(), 0,
+//									renderer.getFacetDim(),
+//									request().queryString());
+//					Logger.debug("Cache misses: "
+//							+key+" size="+results.size()
+//							+" class="+searchResult);
+//					// make an alias for the context.id to this search
+//					// result
+//					return cacheKey (searchResult, context.getId());
+//				}, SearchResult.class));
 
 
 
@@ -1434,6 +1506,7 @@ public class App extends Authentication {
 		return badRequest ("Unknown statistics: "+kind);
 	}
 
+	
 	public static int[] uptime () {
 		int[] ups = null;
 		if (Global.epoch != null) {

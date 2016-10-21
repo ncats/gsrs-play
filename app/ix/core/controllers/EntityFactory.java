@@ -1,5 +1,9 @@
 package ix.core.controllers;
 
+import static ix.core.search.ArgumentAdapter.doNothing;
+import static ix.core.search.ArgumentAdapter.ofInteger;
+import static ix.core.search.ArgumentAdapter.ofList;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -10,14 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Stack;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
@@ -45,13 +47,13 @@ import ix.core.models.BeanViews;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.ArgumentAdapter;
 import ix.core.search.text.TextIndexer;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
 import ix.core.util.pojopointer.PojoPointer;
-import ix.utils.Global;
 import ix.utils.Util;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -75,7 +77,7 @@ public class EntityFactory extends Controller {
 
     
     
-    public static class FetchOptions {
+    public static class FetchOptions implements RequestOptions{
         public int top=10;
         public int skip=0;
         public String filter;
@@ -83,36 +85,19 @@ public class EntityFactory extends Controller {
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
         
-        Map<String, Consumer<String[]>> parsers = new HashMap<>();
-        
-        {
-        	Function<String, Optional<Integer>> intParser = s->{
-        		try{
-        			return Optional.of(Integer.parseInt(s));
-        		}catch(NumberFormatException ex){
-        			Logger.trace("Bogus integer value: "+s, ex);
-        		}
-        		return Optional.empty();
-        	};
-        	parsers.put("order", a->{
-        		order=Arrays.stream(a).collect(Collectors.toList());
-        	});
-        	parsers.put("expand", a->{
-        		expand=Arrays.stream(a).collect(Collectors.toList());
-        	});
-        	parsers.put("select", a->{
-        		select=Arrays.stream(a).collect(Collectors.toList());
-        	});
-        	parsers.put("top", a->intParser.apply(a[0]).ifPresent(i->top=i));
-        	parsers.put("skip", a->intParser.apply(a[0]).ifPresent(i->skip=i));
-        	parsers.put("filter", a->{
-        		filter=a[0];
-        	});
-        }
+        private CachedSupplier<Map<String, ArgumentAdapter>> argumentAdapters = CachedSupplier.of(()->{
+         	return Stream.of(
+    		     	ofList("order", a->order=a, ()->order),
+    		     	ofList("expand", a->expand=a, ()->expand),
+    		     	ofList("select", a->select=a, ()->select),
+    		     	ofInteger("top", a->top=a, ()->top),
+    		     	ofInteger("skip", a->skip=a, ()->skip)
+         	)
+         	.collect(Collectors.toMap(a->a.name(), a->a));
+         });
 
         
         // only in the context of a request
-                        
         public FetchOptions () {
         	Map<String,String[]> vals= new HashMap<>();
         	try{ //TODO: Use explicit check, rather than exception handling
@@ -120,11 +105,11 @@ public class EntityFactory extends Controller {
         	}catch(Exception e){
         		//e.printStackTrace();
         	}
-        	
-        	vals.forEach((param,value)->
-    		parsers.getOrDefault(param.toLowerCase(), s->Logger.trace("unknown option:" + param))
-    				.accept(value)
-        			);
+        	vals.forEach((param,value)->{
+        		argumentAdapters.get()
+        			.getOrDefault(param,doNothing())
+        			.accept(value);
+        	});
         }
         
         public FetchOptions (int top, int skip, String filter) {
@@ -174,6 +159,20 @@ public class EntityFactory extends Controller {
                 +",expand="+expand.size()
                 +",filter="+filter+",order="+order.size()+"}";
         }
+
+		@Override
+		public int getTop() {
+			return top;
+		}
+
+		@Override
+		public int getSkip() {
+			return skip;
+		}
+		@Override
+		public String getFilter() {
+			return filter;
+		}
     }
 
     protected static <K,T> List<T> all (Model.Finder<K, T> finder) {
@@ -298,6 +297,8 @@ public class EntityFactory extends Controller {
             final Model.Finder<K, T> finder) {
     	return page(top,skip,filter, finder, l->l);
     }
+    
+    
 
     protected static <K,T> Result page (int top, int skip, String filter,
                                         final Model.Finder<K, T> finder, 
@@ -310,68 +311,65 @@ public class EntityFactory extends Controller {
         Object returnObj = streamop.apply(results);
         
         
-        final ETag etag = new ETag ();
-        etag.top = options.top;
-        etag.skip = options.skip;
-        etag.query = canonicalizeQuery (request ());
-        etag.count = results.size();
-        etag.uri = Global.getHost()+request().uri();
-        etag.path = request().path();
-        // only include query parameters that fundamentally alters the
-        // number of results
-        etag.sha1 = Util.sha1(request(), "filter");
-        etag.method = request().method();
-        etag.filter = options.filter;
+//        final ETag etag = new ETag ();
+//        etag.top = options.top;
+//        etag.skip = options.skip;
+//        etag.query = Util.canonicalizeQuery (request ());
+//        etag.count = results.size();
+//        etag.uri = Global.getHost()+request().uri();
+//        etag.path = request().path();
+//        // only include query parameters that fundamentally alters the
+//        // number of results
+//        etag.sha1 = Util.sha1(request(), "filter");
+//        etag.method = request().method();
+//        etag.filter = options.filter;
         
+        final ETag etag = new ETag.Builder()
+        		.fromRequest(request())
+				.options(options)
+				.count(results.size())
+				.sha1OfRequest("filter")
+				.build();
         
 
         if (options.filter == null)
             etag.total = finder.findRowCount();
         else {
-            Model.Finder<Long, ETag> eFinder = 
-                new Model.Finder<Long, ETag>(Long.class, ETag.class);
-            List<ETag> etags = eFinder
-                .where().eq("sha1", etag.sha1)
-                .orderBy("modified desc").setMaxRows(1).findList();
-
-            if (!etags.isEmpty()) {
-                ETag e = etags.iterator().next();
-                Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
-                etag.total = e.total;
-            }
+        	EntityWrapper.of(etag)
+			.getFinder()
+			.where()
+			.eq("sha1", etag.sha1)
+	        .orderBy("modified desc")
+	        .setMaxRows(1)
+	        .findList()
+	        .stream().findFirst()
+	        .ifPresent(e->{
+	        	Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
+	        	etag.total = e.total;
+	        });
         }
         
         try{
             etag.save();
-        }
-        catch (Exception e) {
+        }catch (Exception e) {
             Logger.error
                 ("Error saving etag. This sometimes happens on empty DB");
         }
 
+        etag.setContent(returnObj);
+        
         ObjectMapper mapper = getEntityMapper ();
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
-        obj.put("content", mapper.valueToTree(returnObj));
 
         return ok (obj);
     }
 
-    static String canonicalizeQuery (Http.Request req) {
-        Map<String, String[]> queries = req.queryString();
-        Set<String> keys = new TreeSet<String>(queries.keySet());
-        StringBuilder q = new StringBuilder ();
-        for (String key : keys) {
-            if (q.length() > 0)
-                q.append('&');
-
-            String[] values = queries.get(key);
-            Arrays.sort(values);
-            if (values != null && values.length > 0) {
-                q.append(key+"="+values[0]);
-            }
-        }
-        return q.toString();
-    }
+    /**
+	 * @deprecated Use {@link Util#canonicalizeQuery(Http.Request)} instead
+	 */
+	static String canonicalizeQuery (Http.Request req) {
+		return Util.canonicalizeQuery(req);
+	}
 
     
     

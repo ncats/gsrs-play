@@ -136,7 +136,7 @@ public class IxCache extends Plugin {
     }
     
     
-    private static Object getRaw (String key) {
+    public static Object getRaw (String key) {
         checkInitialized();
         return _instance.gateKeeper.getRaw(key);
     }
@@ -177,7 +177,7 @@ public class IxCache extends Plugin {
             int seconds) throws Exception {
 
         checkInitialized();
-        return _instance.gateKeeper.getOrElseRaw(key,  generator,seconds);
+        return _instance.gateKeeper.getOrElseRaw(key, generator, seconds);
 
 	}
 
