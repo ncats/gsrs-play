@@ -55,7 +55,7 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 						return CachedSupplier.ofCallable(()->(Result)m.invoke(null, raw)).get();
 					});
 				}catch(Exception e){
-					System.out.println("Not found operation:" +op.getOperationName() + " in " + factory.getName());
+					//System.out.println("Not found operation:" +op.getOperationName() + " in " + factory.getName());
 				}
 			});
 		

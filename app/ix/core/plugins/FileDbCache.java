@@ -227,7 +227,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void writeAll(Collection<Element> elements) throws CacheException {
-
         //TODO is there a better way?
         for(Element e : elements){
             write(e);

@@ -49,8 +49,19 @@ public class ETag extends IxModel {
 	@Column(length = 4000)
 	public String uri;
 
+	
+	@JsonIgnore
+	public int getEffectiveTotal(){
+		if(this.total!=null){
+			return this.total;
+		}else{
+			return Integer.MAX_VALUE;
+		}
+	}
+	
+	
 	public String getNextPageUri() {
-		if (this.skip + top >= this.total) {
+		if (this.skip + top >= this.getEffectiveTotal()) {
 			return null;
 		}
 		Integer skip = this.skip;
@@ -160,10 +171,10 @@ public class ETag extends IxModel {
 
 		private String sha1;
 
-		private Integer total;
+		private int total =0;
 		private Integer count;
-		private Integer skip;
-		private Integer top;
+		private int skip=0;
+		private int top =10;
 		private Integer status;
 		private String filter;
 

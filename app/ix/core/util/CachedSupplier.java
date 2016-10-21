@@ -2,8 +2,8 @@ package ix.core.util;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -43,19 +43,27 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 	public T call() throws Exception{
 		return get();
 	}
-
+		
+	
 	@Override
 	public T get() {
-		if(this.run && this.generatedWithVersion==CachedSupplier.generatedVersion.get()) {
+		if(hasRun()) {
 			return this.cache;
+		}else{
+			synchronized(this){
+				if(hasRun()){
+					return this.cache;
+				}
+				this.generatedWithVersion=CachedSupplier.generatedVersion.get();
+				this.cache=directCall();
+				this.run=true;
+				return this.cache;
+			}
 		}
-		this.generatedWithVersion=CachedSupplier.generatedVersion.get();
-		this.cache=directCall();
-		this.run=true;
-		return this.cache;
 	}
 	
 	protected T directCall(){
+		
 		return this.c.get();
 	}
 
@@ -68,8 +76,8 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 		return get();
 	}
 	
-	public boolean isRun(){
-		return run;
+	public boolean hasRun(){
+		return this.run && this.generatedWithVersion==CachedSupplier.generatedVersion.get();
 	}
 
 
@@ -138,7 +146,6 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 				return null;
 			}
 		}
-		
 		
 		private void setThrown(Throwable t){
 			this.thrown=t;

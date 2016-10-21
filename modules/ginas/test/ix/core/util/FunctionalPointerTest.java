@@ -25,14 +25,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ix.AbstractGinasTest;
+import ix.AbstractGinasClassServerTest;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.utils.Tuple;
 
 
 @RunWith(Parameterized.class)
-public class FunctionalPointerTest extends AbstractGinasTest{
+public class FunctionalPointerTest extends AbstractGinasClassServerTest{
 
 	@Entity
 	public static class Thing{

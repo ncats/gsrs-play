@@ -332,9 +332,12 @@ public class EntityFactory extends Controller {
 				.build();
         
 
-        if (options.filter == null)
+        if (options.filter == null){
             etag.total = finder.findRowCount();
-        else {
+        }else if(etag.count<etag.top){ //if count returned is less than top,
+        								   //it's done
+        	etag.total = etag.skip + etag.count;
+        }else{
         	EntityWrapper.of(etag)
 			.getFinder()
 			.where()
@@ -347,6 +350,8 @@ public class EntityFactory extends Controller {
 	        	Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
 	        	etag.total = e.total;
 	        });
+        	
+        	
         }
         
         try{

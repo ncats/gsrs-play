@@ -631,7 +631,6 @@ public class Util {
 	    for (String key : keys) {
 	        if (q.length() > 0)
 	            q.append('&');
-	
 	        String[] values = queries.get(key);
 	        Arrays.sort(values);
 	        if (values != null && values.length > 0) {
@@ -656,36 +655,6 @@ public class Util {
 			this.originalParams=params;
 		}
 		
-		
-		public void addValue(String key, String value){
-			params.get().putIfAbsent(key, new ArrayList<String>())
-						.add(value);
-		}
-		
-		public void removeValue(String key){
-			params.get().remove(key);
-		}
-		public List<String> getValue(String key){
-			if(params.isRun()){
-				return params.get().getOrDefault(key,new ArrayList<String>());
-			}else{
-				String[] v=originalParams.getOrDefault(key, new String[]{});
-				return Arrays.asList(v);
-			}
-		}
-		
-		public Set<String> getValueSet(String key){
-			return new HashSet<String>(getValue(key));
-		}
-		
-		public boolean containsKey(String key){
-			if(params.isRun()){
-				return params.get().containsKey(key);
-			}else{
-				return originalParams.containsKey(key);
-			}
-		}
-		
 		public void toggleInclusion(String key, String value){
 			List<String> list=params.get().computeIfAbsent(key, k-> new ArrayList<String>());
 			//TODO: could be optimized 
@@ -701,8 +670,7 @@ public class Util {
 					.stream()
 					.flatMap(this::flatten)
 					.map(es->urlEncodeUTF8(es.k()) + "=" + urlEncodeUTF8(es.v()))
-				    .reduce((p1, p2) -> p1 + "&" + p2)
-				    .orElse("");
+					.collect(Collectors.joining("&"));
 		}
 		
 		private Stream<Tuple<String, String>> flatten(Entry<String,List<String>> es){
