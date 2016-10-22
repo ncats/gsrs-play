@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import org.junit.rules.ExpectedException;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import ix.ginas.utils.GinasGlobal;
 import ix.test.server.BrowserSession;
 import ix.test.server.ConfigUtil;
 import ix.test.server.GinasTestServer;
@@ -88,16 +90,26 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     private void substructureHighlightingShouldShowOnLastPage(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	
+    	
     	SubstanceSearcher.SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
     	Set<String> img_urls= SubstanceSearcher.getStructureImagesFrom(lastResults);
     	assertEquals(1,img_urls.size());
     	RestSession rs=ts.newRestSession(session.getUser());
     	
+    	CountDownLatch cdl = new CountDownLatch(1);
+    	
+    	
+    	
     	String withHighlight=img_urls.iterator().next();
     	String withoutHighlight=withHighlight.replace("context", "contextfake");
+    	System.out.println("Testing1:" + withHighlight);
+    	System.out.println("Testing2:" + withoutHighlight);
     	
     	String sha1WithHighlight=Util.sha1(rs.get(withHighlight).getBody());
+    	
+    	
     	String sha1WithoutHighlight=Util.sha1(rs.get(withoutHighlight).getBody());
     	//System.out.println("Highlight sha1:" +sha1WithHighlight);
     	//System.out.println("No Highlight sha1:" +sha1WithoutHighlight);

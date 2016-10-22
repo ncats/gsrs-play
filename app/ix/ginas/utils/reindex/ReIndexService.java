@@ -1,22 +1,25 @@
 package ix.ginas.utils.reindex;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import com.avaje.ebean.QueryIterator;
+
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.BackupEntity;
+import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.CloseableIterator;
 import ix.core.util.IOUtil;
+import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by katzelda on 5/16/16.
@@ -61,21 +64,24 @@ public class ReIndexService {
     }
 
     public void reindexAll(ReIndexListener listener){
-    	
+    	Application app = Play.application();
     	Logger.info("SHUTTING DOWN");
         listener.newReindex();
         //Util.debugSpin(3000);
-        File ginasIx = new File(Play.application().configuration().getString("ix.home"));
+       
+        File ginasIx =  app
+			        		.plugin(IxContext.class)
+			        		.home();
 
         Logger.info("#################### Deleting indexes");
         Logger.info("#################### stopping seq indexer");
-        Play.application().plugin(SequenceIndexerPlugin.class).onStop();
+        app.plugin(SequenceIndexerPlugin.class).onStop();
          Logger.info("stopping structure indexer");
-        Play.application().plugin(StructureIndexerPlugin.class).onStop();
+         app.plugin(StructureIndexerPlugin.class).onStop();
 
         TextIndexerPlugin.prepareTestRestart();
          Logger.info("stopping text indexer");
-        Play.application().plugin(TextIndexerPlugin.class).onStop();
+         app.plugin(TextIndexerPlugin.class).onStop();
          Logger.info("deleting sequence dir");
         IOUtil.deleteRecursivelyQuitely(new File(ginasIx, "sequence"));
          Logger.info("deleting structure dir");
@@ -95,9 +101,9 @@ public class ReIndexService {
         structureDir.mkdirs();
 
         
-        Play.application().plugin(SequenceIndexerPlugin.class).onStart();
-        Play.application().plugin(StructureIndexerPlugin.class).onStart();
-        Play.application().plugin(TextIndexerPlugin.class).onStart();
+        app.plugin(SequenceIndexerPlugin.class).onStart();
+        app.plugin(StructureIndexerPlugin.class).onStart();
+        app.plugin(TextIndexerPlugin.class).onStart();
 
 
         listener.totalRecordsToIndex(finder.findRowCount());

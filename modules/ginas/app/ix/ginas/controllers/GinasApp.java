@@ -71,6 +71,7 @@ import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
@@ -1596,6 +1597,7 @@ public class GinasApp extends App {
         @Override
         protected ProteinSubstance instrument (SequenceIndexer.Result r)
             throws Exception {
+        	
             List<ProteinSubstance> proteins = SubstanceFactory.protfinder.get()
                 .where().eq("protein.subunits.uuid", r.id).findList(); //also slow
             ProteinSubstance protein = proteins.isEmpty() ? null : proteins.get(0);
@@ -1975,13 +1977,16 @@ public class GinasApp extends App {
         }
     }
 
+    
+    private static CachedSupplier<Boolean> isSingleSignOn = CachedSupplier.of(()->{
+    	boolean isTrustHeaders=ConfigHelper.getBoolean("ix.authentication.trustheader", false);
+    	boolean allowNonAuth=ConfigHelper.getBoolean("ix.authentication.allownonauthenticated", true);
+    	return isTrustHeaders && !allowNonAuth;
+    });
 
 
     public static boolean isSingleSignOn(){
-    	boolean isTrustHeaders=Play.application().configuration().getBoolean("ix.authentication.trustheader", false);
-    	boolean allowNonAuth=Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated", true);
-    	
-        return isTrustHeaders && !allowNonAuth;
+        return isSingleSignOn.get();
     }
 
     private static class SubstanceReIndexListener implements ReIndexListener {
@@ -2223,6 +2228,7 @@ public class GinasApp extends App {
 		} catch (Exception ex) {
 			return _internalServerError(ex);
 		}
+		
 	}
 
 	// This won't typically work, as it will collide with existing CV

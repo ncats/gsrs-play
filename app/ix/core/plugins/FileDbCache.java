@@ -5,6 +5,7 @@ import com.sleepycat.je.*;
 import ix.core.models.BaseModel;
 import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.utils.Tuple;
 import ix.utils.Util;
 import net.sf.ehcache.CacheEntry;
@@ -29,10 +30,8 @@ import play.db.ebean.Model;
  * Created by katzelda on 7/7/16.
  */
 public class FileDbCache implements GinasFileBasedCacheAdapter {
-	CachedSupplier<Boolean> clearDB = CachedSupplier.of(()->{
-			return Play.application().configuration().getBoolean("ix.cache.clearpersist",false);
-	});
-	
+	CachedSupplier<Boolean> clearDB = ConfigHelper.supplierOf("ix.cache.clearpersist",false);
+			
     private Database db;
 
     private final File dir;

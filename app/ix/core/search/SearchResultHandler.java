@@ -9,8 +9,8 @@ import play.Logger;
 class SearchResultHandler extends UntypedActor {
     @Override
     public void onReceive (Object obj) {
-        if (obj instanceof SearchResultProcessor) {
-            SearchResultProcessor processor = (SearchResultProcessor)obj;
+        if (obj instanceof ResultProcessor) {
+        	ResultProcessor processor = (ResultProcessor)obj;
             SearchResultContext ctx = processor.getContext();               
             try {
                 ctx.setStatus(SearchResultContext.Status.Running);
@@ -27,8 +27,7 @@ class SearchResultHandler extends UntypedActor {
                 Logger.debug("Actor "+self()+" finished; "+count
                              +" search result(s) instrumented!");
                 context().stop(self ());
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 ctx.setStatus(SearchResultContext.Status.Failed);
                 ctx.setMessage(ex.getMessage());
                 ex.printStackTrace();

@@ -81,13 +81,17 @@ public class RouteFactory extends Controller {
 					e.printStackTrace();
 				}
 			}
+			
+			IxContext ctx= Global.getInstance().context();
+			
 			/**
 			 * default/global entities factory
 			 */
 			Reflections reflections = new Reflections("ix");
 			Set<Class<?>> resources = reflections.getTypesAnnotatedWith(NamedResource.class);
-			IxContext ctx= Global.getInstance().context();
+			
 			Logger.info(resources.size() + " named resources...");
+			
 			for (Class c : resources) {
 				NamedResource res = (NamedResource) c.getAnnotation(NamedResource.class);
 				Logger.info("+ " + c.getName() + "\n  => " + ctx.context() + ctx.api() + "/" + res.name() + "["

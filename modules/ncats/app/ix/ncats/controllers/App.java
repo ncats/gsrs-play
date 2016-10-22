@@ -68,6 +68,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.chem.EnantiomerGenerator.Callback;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
+import ix.core.search.ResultProcessor;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
@@ -1104,7 +1105,7 @@ public class App extends Authentication {
 
 	public static SearchResultContext batch
 	(final String q, final int rows, final Tokenizer tokenizer,
-			final SearchResultProcessor processor) {
+			final ResultProcessor processor) {
 		try {
 			final String key = "batch/"+Util.sha1(q);
 			Logger.debug("batch: q="+q+" rows="+rows);
@@ -1120,7 +1121,7 @@ public class App extends Authentication {
 	}
 	public static SearchResultContext sequence
 	(final String seq, final double identity, final int rows,
-			final int page, CutoffType ct, final SearchResultProcessor processor) {
+			final int page, CutoffType ct, final ResultProcessor processor) {
 		try {
 			final String key = App.getKeyForCurrentRequest();
 			return getOrElse
@@ -1140,7 +1141,7 @@ public class App extends Authentication {
 
 	public static SearchResultContext substructure
 	(final String query, final int rows,
-			final int page, final SearchResultProcessor processor) {
+			final int page, final ResultProcessor processor) {
 		try {
 			final String key = App.getKeyForCurrentRequest();
 			Logger.debug("substructure: query="+query
@@ -1174,6 +1175,9 @@ public class App extends Authentication {
 		return Util.sha1(q) + "/"+String.format("%1$d", (int)(1000*t+.5));
 	}
 
+	
+	
+	
 	public static SearchResultContext similarity
 	(final String query, final double threshold,
 			final int rows, final int page,
@@ -1224,7 +1228,7 @@ public class App extends Authentication {
 			pages = paging(rows, page, result.count());
 
 			//block for results only if the request specifies this
-			if(isWaitSet()){
+			if(result.getOptions().isWait()){
 				result.copyTo(resultList, (page-1)*rows, rows, true);
 			}else{
 				result.copyTo(resultList, (page-1)*rows, rows, false);
@@ -1292,7 +1296,9 @@ public class App extends Authentication {
 			int page, final ResultRenderer<T> renderer) throws Exception {
 
 		
-
+		SearchOptions options = new SearchOptions.Builder()
+				.withRequest(request())   //Really shouldn't be here
+				.build(); 
 		/**
 		 * If wait is set to be forced, we need to hold off going forward until
 		 * everything has been processed
@@ -1303,10 +1309,6 @@ public class App extends Authentication {
 			}
 		}
 		
-		
-		
-		
-		
 		SearchResultContext.Status stat=context.getStatus();
 		boolean isDetermined=context.isDetermined();
 		/**
@@ -1315,11 +1317,9 @@ public class App extends Authentication {
 		 * together with facets, sorting, etc.
 		 */
 
-		SearchOptions options = new SearchOptions.Builder()
-									.withRequest(request())   //Really shouldn't be here
-									.build(); 
 		
-		final String key = getKey (context, options, "facet");
+		
+		final String key = getKey (context, options, "facet", "fdim");
 		final SearchResult result = getResultFor(context, options);
 //		
 //		final SearchResult result = 
@@ -1461,6 +1461,7 @@ public class App extends Authentication {
 				(IxCache.getStatistics()));
 	}
 
+	
 
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result cacheList (int top, int skip) {

@@ -129,6 +129,7 @@ import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
@@ -141,7 +142,6 @@ import ix.utils.Tuple;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
-import play.mvc.Controller;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -149,9 +149,9 @@ import play.mvc.Controller;
 public class TextIndexer implements Closeable, ReIndexListener {
 	public static final String IX_BASE_PACKAGE = "ix";
 	
-	public static final boolean INDEXING_ENABLED = Play.application().configuration().getBoolean("ix.textindex.enabled",true);
+	public static final boolean INDEXING_ENABLED = ConfigHelper.getBoolean("ix.textindex.enabled",true);
+	private static final boolean USE_ANALYSIS =    ConfigHelper.getBoolean("ix.textindex.fieldsuggest",true);
 	
-	private static final boolean USE_ANALYSIS = Play.application().configuration().getBoolean("ix.textindex.fieldsuggest",true);
 	private static final String ANALYZER_FIELD = "M_FIELD";
 	private static final String ANALYZER_VAL_PREFIX = "ANALYZER_";
 	
@@ -651,7 +651,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					v.shutdown();
 				});
 			}
-			FETCH_WORKERS = Play.application().configuration().getInt("ix.fetchWorkerCount");
+			FETCH_WORKERS = ConfigHelper.getInt("ix.fetchWorkerCount",4);
 			deepKinds = Play.application().configuration()
 					.getStringList("ix.index.deepfields", new ArrayList<>())
 					.stream()

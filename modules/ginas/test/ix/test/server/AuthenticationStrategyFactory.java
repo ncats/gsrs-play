@@ -4,6 +4,8 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.Cookie;
+
+import ix.core.util.ConfigHelper;
 import play.Play;
 import play.libs.ws.WSRequestHolder;
 
@@ -91,25 +93,6 @@ public enum AuthenticationStrategyFactory {
 
     private static class SSOAuthenticationStrategy implements AuthenticationStrategy {
 
-        /*
-        if (Play.application().configuration()
-					    .getBoolean("ix.authentication.trustheader")) {
-				String usernameheader = Play.application().configuration()
-						.getString("ix.authentication.usernameheader");
-				String usernameEmailheader = Play.application().configuration()
-						.getString("ix.authentication.useremailheader");
-				String username = r.getHeader(usernameheader);
-				String userEmail = r.getHeader(usernameEmailheader);
-
-				if (username != null) {
-					if (validateUserHeader(username,r)) {
-						setSessionUser(username,userEmail);
-						return true;
-					}
-				}
-			}
-         */
-
         private String usernameField;
         private String emailField;
 
@@ -117,10 +100,10 @@ public enum AuthenticationStrategyFactory {
 
         @Override
         public void login(GinasTestServer.User user) {
-            usernameField = Play.application().configuration()
-                    .getString("ix.authentication.usernameheader");
-            emailField = Play.application().configuration()
-                    .getString("ix.authentication.useremailheader");
+            usernameField = ConfigHelper
+            		.getOrDefault("ix.authentication.usernameheader", "HEADER_USER");
+            emailField = ConfigHelper
+            		.getOrDefault("ix.authentication.useremailheader", "HEADER_EMAIL");
 
             username = user.getUserName();
             email = user.getEmail();

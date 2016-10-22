@@ -23,6 +23,7 @@ import ix.core.models.Session;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
@@ -40,28 +41,22 @@ import play.mvc.Controller;
  */
 
 public class Authentication extends Controller {
-	public static final String SESSION = "ix.session";
-    public static CachedSupplier<String> APP = CachedSupplier.of(()->{
-    	return Play.application()
-					.configuration()
-					.getString("ix.app", "MyApp");
-    });
+	static final String SESSION = "ix.session";
+   	private static String CACHE_NAME="TOKEN_CACHE";
+   	private static String CACHE_NAME_UP="TOKEN_UP_CACHE";
+	
+    public static CachedSupplier<String> APP = 
+    		ConfigHelper.supplierOf("ix.app", "MyApp");  //idle time
     
-    public static CachedSupplier<Integer> TIMEOUT = CachedSupplier.of(()->{
-    	return Play.application()
-    			.configuration()
-    			.getInt(SESSION, 7200); // session idle
-    });
+    public static CachedSupplier<Integer> TIMEOUT = 
+    		ConfigHelper.supplierOf(SESSION, 7200);  //idle time
     
-    public static CachedSupplier<Boolean> autoRegister = CachedSupplier.of(()->{
-    	return Play.application().configuration().getBoolean("ix.authentication.autoregister",false);
-    });
+    public static CachedSupplier<Boolean> autoRegister = 
+    		ConfigHelper.supplierOf("ix.authentication.autoregister", false);
     
-    public static CachedSupplier<Boolean> autoRegisterActive = CachedSupplier.of(()->{
-    	return Play.application().configuration().getBoolean("ix.authentication.autoregisteractive",false);
-    });
-    
-
+    public static CachedSupplier<Boolean> autoRegisterActive = 
+    		ConfigHelper.supplierOf("ix.authentication.autoregisteractive", false);
+    		
     static CachedSupplier<Model.Finder<UUID, Session>> _sessions =
     		Util.finderFor(UUID.class, Session.class);
     
@@ -77,8 +72,6 @@ public class Authentication extends Controller {
     	   private long lastCacheUpdate=-1;
     	   
     	   public TokenCache(){
-    		   	String CACHE_NAME="TOKEN_CACHE";
-    	    	String CACHE_NAME_UP="TOKEN_UP_CACHE";
     	    	
     	    	//always hold onto the tokens for twice the time required
     	    	long tres=Util.getTimeResolutionMS()*2;

@@ -7,10 +7,9 @@ import java.util.Optional;
 import ix.core.controllers.BackupFactory;
 import ix.core.plugins.IxCache;
 import ix.core.search.LazyList.NamedCallable;
+import ix.core.util.ConfigHelper;
 import ix.core.util.EntityUtils.Key;
-import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.Util;
-import play.Play;
 
 
 /**
@@ -24,7 +23,7 @@ import play.Play;
  * @param <K>
  */
 public class EntityFetcher<K> implements NamedCallable<K>{
-	public static final long debugDealy = Play.application().configuration().getLong("ix.settings.debug.dbdelay");
+	public static final long debugDealy = ConfigHelper.getLong("ix.settings.debug.dbdelay",0);
 
 
 	public enum CacheType{

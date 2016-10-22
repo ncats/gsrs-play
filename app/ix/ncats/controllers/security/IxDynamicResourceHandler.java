@@ -8,6 +8,7 @@ import be.objectify.deadbolt.java.DeadboltHandler;
 import be.objectify.deadbolt.java.DynamicResourceHandler;
 import ix.core.models.Role;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import play.Logger;
 import play.Play;
 import play.mvc.Http;
@@ -76,9 +77,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 	}
 
 	public static class IsAdminHandler extends AbstractDynamicResourceHandler {
-		CachedSupplier<Boolean> isAdminForced = CachedSupplier.of(()->{
-			return Play.application().configuration().getBoolean("ix.admin", false);
-		}) ;
+		CachedSupplier<Boolean> isAdminForced = ConfigHelper.supplierOf("ix.admin", false);
 
 		public boolean isAllowed(final String name, final String meta, final DeadboltHandler deadboltHandler,
 				final Http.Context context) {

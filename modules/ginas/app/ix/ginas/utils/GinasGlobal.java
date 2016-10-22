@@ -4,7 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import ix.core.Experimental;
 import ix.core.auth.UserKeyAuthenticator;
 import ix.core.auth.UserPasswordAuthenticator;
 import ix.core.auth.UserTokenAuthenticator;
@@ -63,7 +67,8 @@ public class GinasGlobal extends Global {
 
 		@Override
 		public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
-
+			requestListener.accept(ctx.request());
+			
 			Http.Request req = ctx.request();
 			if(showHeaders){
 				logHeaders(req);
@@ -216,4 +221,12 @@ public class GinasGlobal extends Global {
 			startRunners.add(r);
 		}
 	}
+	
+	private static Consumer<Http.Request> requestListener =  (r)->{};
+	
+	
+	public static void setRequestListener(Consumer<Http.Request> listen){
+		requestListener=listen;
+	}
+	
 }

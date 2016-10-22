@@ -5,6 +5,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.models.*;
+import ix.core.util.ConfigHelper;
 import ix.core.util.StreamUtil;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.routes;
@@ -21,8 +22,7 @@ import java.util.stream.Collectors;
 
 //@Dynamic(value = "viewUserList", handlerKey = "idg")
 public class Administration extends App {
-
-    public static String appContext = Play.application().configuration().getString("application.context");
+    public static String appContext = ConfigHelper.getOrDefault("application.context", "app");
 
     public static Result index() {
         return redirect(ix.ncats.controllers.crud.routes.Administration.listPrincipals(1, "", "", ""));

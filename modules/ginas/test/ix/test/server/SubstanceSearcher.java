@@ -4,8 +4,17 @@ package ix.test.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,11 +23,13 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import ix.core.search.SearchResultContext;
 import ix.ginas.models.v1.Substance;
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.query.builder.SubstanceCondition;
 import ix.test.server.BrowserSession.WrappedWebRequest;
+import ix.utils.Tuple;
 import play.libs.ws.WSResponse;
 
 /**
@@ -31,15 +42,10 @@ import play.libs.ws.WSResponse;
 public class SubstanceSearcher {
 
     private final BrowserSession session;
-
-    private static final Pattern SUBSTANCE_LINK_PATTERN = Pattern.compile("<a href=\"/ginas/app/substance/([a-z0-9\\-]+)\"");
+    private static final Pattern SUBSTANCE_LINK_HREF_PATTERN = Pattern.compile("/ginas/app/substance/([a-z0-9\\-]+)");
     private static final Pattern TOTAL_PATTERN = Pattern.compile("[^0-9]([0-9][0-9]*)[^0-9]*h3[^0-9]*pagination");
-///ginas/app/img/c37bea80-14ec-4144-8379-60c92d422713.svg?size=200&amp;context=ghtjouloym
-    private static final Pattern STRUCTURE_IMG_URL = Pattern.compile("src=.(/ginas/app/img/[^\'\"]+)");
-    
-    //"/ginas/app/api/v1/status/ceb8ca9e14006df02a6d2cee8c38e664640f2036"
-
-    private static final Pattern  SEARCH_KEY_PATTERN = Pattern.compile("ginas/app/api/v1/status/([0-9a-f]+)");
+   
+    private static final Pattern  SEARCH_KEY_PATTERN = Pattern.compile("ginas/app/api/v1/status\\(([0-9a-f]+)\\)");
 
     private String defaultSearchOrder =null;
     
@@ -86,7 +92,7 @@ public class SubstanceSearcher {
 
         Set<String> substances = new LinkedHashSet<>();
 
-        Object[] tmp;
+        Tuple<String,Set<String>> tmp=null;
         HtmlPage firstPage=null;
         String keyString=null;
         do {
@@ -95,7 +101,7 @@ public class SubstanceSearcher {
                 tmp= getSubstancesFrom(htmlPage);
                 if (firstPage == null) {
                     firstPage = htmlPage;
-                    keyString = (String)tmp[0];
+                    keyString = tmp.k();
                 }
 
                 
@@ -115,9 +121,11 @@ public class SubstanceSearcher {
                 if(e.getResponse().getContentAsString().contains("Bogus page")){
                     break;
                 }
-                throw e;
+                throw new IllegalStateException(e);
+            }catch(Exception e){
+            	e.printStackTrace();
             }
-        }while(substances.addAll( (Set<String>) tmp[1]));
+        }while(substances.addAll(tmp.v()));
 
         SearchResult results = new SearchResult(keyString, substances);
         if(results.numberOfResults() >0){
@@ -133,6 +141,8 @@ public class SubstanceSearcher {
     public HtmlPage getSubstructurePage(String smiles, int rows, int page, boolean wait) throws IOException{
     	// Added "wait" so that it doesn't return before it's
     	// completely ready
+    	
+    	
     	// This may be a problem, as URLEncoder may over encode some smiles strings
     	WrappedWebRequest root=session.newGetRequest("ginas/app/substances")
     		.addQueryParameter("type", "Substructure")
@@ -143,7 +153,21 @@ public class SubstanceSearcher {
     	if(defaultSearchOrder!=null){
     		root=root.addQueryParameter("order",defaultSearchOrder);
     	}
-    	return getPage(root, page);
+    	try{
+    		return getPage(root, page);
+    	}catch(Exception e){
+    		//e.printStackTrace();
+    		//System.out.println("Something went wrong with request:" + root.setQueryParameter("page", page+"").get());
+    		
+//    		
+//    		try {
+//				Thread.sleep(1_000);
+//			} catch (InterruptedException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+    		throw e;
+    	}
     }
     
     
@@ -256,9 +280,10 @@ public class SubstanceSearcher {
 //                 e.printStackTrace();
              	break;
              }
+        	temp = getSubstancesFrom(htmlPage).v();
             //stop if the paging throws an error
             String htmlText = htmlPage.asXml();
-            	temp = getSubstancesFrom(htmlText);
+            
             
             if(firstPage ==null){
                 firstPage = htmlPage;
@@ -328,35 +353,50 @@ public class SubstanceSearcher {
 
 
     }
+//
+//    private Set<String> getSubstancesFrom(String html){
+//        Set<String> substances = new LinkedHashSet<>();
+//        
+//        Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(html);
+//        while(matcher.find()){
+//            substances.add(matcher.group(1));
+//        }
+//
+//
+//        return substances;
+//    }
 
-    private Set<String> getSubstancesFrom(String html){
-        Set<String> substances = new LinkedHashSet<>();
-        Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(html);
-        while(matcher.find()){
-            substances.add(matcher.group(1));
-        }
-
-
-        return substances;
+    public static Function<String, Optional<String>> getMatchingGroup(Pattern p, int group){
+    	return (s)->{
+    		Matcher m = p.matcher(s);
+    		if(!m.find()){
+    			return Optional.empty();
+    		}else{
+    			return Optional.of(m.group(group));
+    		}
+    	};
     }
-
-    private Object[] getSubstancesFrom(HtmlPage page){
+    
+    private Tuple<String,Set<String>> getSubstancesFrom(HtmlPage page){
         String htmlText = page.asXml();
-        Set<String> substances =  getSubstancesFrom(htmlText);
-
-        return new Object[]{getKeyFrom(htmlText), substances};
+        Set<String> substances =  page.querySelectorAll("a[href*=\"ginas/app/substance/\"]")
+        	.stream()
+        	.map(a->a.getAttributes().getNamedItem("href").getNodeValue())
+        	.map(getMatchingGroup(SUBSTANCE_LINK_HREF_PATTERN, 1))
+        	.filter(o->o.isPresent())
+        	.map(o->o.get())
+        	.collect(Collectors.toSet());
+        
+        return Tuple.of(getKeyFrom(htmlText), substances);
 
     }
     
     public static Set<String> getStructureImagesFrom(HtmlPage page){
-        Set<String> substances = new LinkedHashSet<>();
-
-        String txt=page.asXml();
-        Matcher matcher = STRUCTURE_IMG_URL.matcher(txt);
-        while(matcher.find()){
-            substances.add(matcher.group(1));
-        }
-
+        Set<String> substances = page.querySelectorAll("img[src*=\"ginas/app/img\"]")
+        .stream()
+        .map(m->m.getAttributes().getNamedItem("src").getNodeValue())
+        .collect(Collectors.toSet());
+        
         return substances;
     }
     
@@ -418,8 +458,8 @@ public class SubstanceSearcher {
         private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
 
         private final String searchKey;
-        public SearchResult(Object[] array){
-            this((String)array[0], (Set<String>) array[1]);
+        public SearchResult(Tuple<String, Set<String>> set){
+            this(set.k(), set.v());
         }
         public SearchResult(String searchKey, Set<String> uuids){
             Objects.requireNonNull(uuids);

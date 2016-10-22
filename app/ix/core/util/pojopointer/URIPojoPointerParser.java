@@ -204,8 +204,8 @@ public class URIPojoPointerParser {
 					}
 				}
 			}
-			System.out.println("Returning null, but was set to:" + tt + " with "+ pcount);
-			System.out.println("on:" + element);
+//			System.out.println("Returning null, but was set to:" + tt + " with "+ pcount);
+//			System.out.println("on:" + element);
 			return null;
 		};
 	}
