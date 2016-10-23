@@ -779,6 +779,7 @@ public class EntityUtils {
 	        		return Optional.of(EntityWrapper.of(value));
 				});
 				
+				try{
 				ApiFunctionFactory
 					.getInstance(Play.application())
 					.getRegisteredFunctions()
@@ -791,7 +792,9 @@ public class EntityUtils {
 										.map(EntityWrapper::of);
 						});
 					});
-				
+				}catch(Exception e){
+				    Logger.error(e.getMessage(),e);
+				}
 				return registry;
 			});
 		
