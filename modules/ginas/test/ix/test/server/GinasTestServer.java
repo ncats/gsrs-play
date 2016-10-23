@@ -15,9 +15,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import javax.sql.DataSource;
@@ -30,35 +32,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.typesafe.config.Config;
-import ix.core.UserFetcher;
 
-import ix.core.adapters.EntityPersistAdapter;
+import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
-import ix.core.controllers.EntityFactory;
-import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
-import ix.core.controllers.search.SearchFactory;
-import ix.core.controllers.v1.RouteFactory;
-import ix.core.factories.IndexValueMakerFactory;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.util.CachedSupplier;
-import ix.core.util.EntityUtils;
-import ix.ginas.controllers.GinasApp;
-import ix.ginas.controllers.GinasFactory;
-import ix.ginas.controllers.GinasLoad;
-import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.validation.ValidationUtils;
 import ix.ncats.controllers.App;
-import ix.ncats.controllers.auth.Authentication;
-import ix.ncats.controllers.security.IxDynamicResourceHandler;
-import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CachedSup;
 import ix.test.util.TestUtil;
+import ix.utils.Util;
 import net.sf.ehcache.CacheManager;
 import play.api.Application;
 import play.db.ebean.Model;
@@ -200,7 +187,7 @@ public class GinasTestServer extends ExternalResource{
      *                                to the application config before the server is started.
      *                                This can be further modified using the modifyConfig methods.
      */
-    public GinasTestServer( Map<String, Object> additionalConfiguration){
+    public GinasTestServer(Map<String, Object> additionalConfiguration){
         this(DEFAULT_PORT, additionalConfiguration);
     }
 
@@ -461,9 +448,13 @@ public class GinasTestServer extends ExternalResource{
         cacheManager = CacheManager.getInstance();
         cacheManager.removalAll();
         cacheManager.shutdown();
+        
+        testSpecificAdditionalConfiguration.put("ix.cache.clearpersist",true);
         start();
+        testSpecificAdditionalConfiguration.remove("ix.cache.clearpersist");
+        
+        
    }
-    
     
     
 
@@ -601,7 +592,8 @@ public class GinasTestServer extends ExternalResource{
         Map<String,Object> map = new HashMap<>(additionalConfiguration);
         map.putAll(testSpecificAdditionalConfiguration);
 
-        ts = new TestServer(port, fakeApplication(map));
+        
+        ts = new TestServer(port, fakeApplication(unflatten(map)));
         ts.start();
 
         principleFinder =
@@ -610,6 +602,48 @@ public class GinasTestServer extends ExternalResource{
         initializeControllers();
         //we have to wait to create the users until after Play has started.
         createInitialFakeUsers();
+    }
+    
+    public static class ExpandedMap{
+    	Map<String,Object> unflattened = new HashMap<String,Object>();
+    	public ExpandedMap put(String key, Object value){
+    		String[] path=key.split("[.]");
+    		Object val=value;
+    		for(int i=path.length-1;i>=0;i--){
+    			val=Util.toMap(path[i], val);
+    		}
+    		if(val instanceof Map){
+    			mixIn(unflattened, (Map<String,Object>)val);
+    		}
+    		return this;
+    	}
+    	
+    	private static void mixIn(Map<String,Object> m1, Map<String,Object> m2){
+    		Set<String> commonKeys= new HashSet<String>(m1.keySet());
+    		commonKeys.retainAll(m2.keySet());
+    		
+    		for(String k:m2.keySet()){
+    			if(!commonKeys.contains(k)){
+    				m1.put(k, m2.get(k));
+    			}
+    		}
+    		for(String k:commonKeys){
+    			mixIn((Map)m1.get(k), (Map)m2.get(k)); //will fail if one isn't a map
+    		}
+    	}
+    	public Map<String,Object> build(){
+    		return this.unflattened;
+    	}
+    }
+    
+    
+    private Map<String, Object> unflatten(Map<String,Object> settings){
+    	ExpandedMap em = new ExpandedMap();
+    	
+    	settings.entrySet()
+    			 .stream()
+    			 .forEach(es-> em.put(es.getKey(), es.getValue()));
+    	return em.build();
     }
 
     /**

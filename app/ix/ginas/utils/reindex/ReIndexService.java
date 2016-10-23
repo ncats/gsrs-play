@@ -63,85 +63,77 @@ public class ReIndexService {
         }
     }
 
-    public void reindexAll(ReIndexListener listener){
-    	Application app = Play.application();
-    	Logger.info("SHUTTING DOWN");
+    public void reindexAll(ReIndexListener listener) {
+        Application app = Play.application();
+        Logger.info("SHUTTING DOWN");
         listener.newReindex();
-        //Util.debugSpin(3000);
-       
-        File ginasIx =  app
-			        		.plugin(IxContext.class)
-			        		.home();
+        // Util.debugSpin(3000);
+
+        File ginasIx = app.plugin(IxContext.class).home();
 
         Logger.info("#################### Deleting indexes");
         Logger.info("#################### stopping seq indexer");
         app.plugin(SequenceIndexerPlugin.class).onStop();
-         Logger.info("stopping structure indexer");
-         app.plugin(StructureIndexerPlugin.class).onStop();
+        Logger.info("stopping structure indexer");
+        app.plugin(StructureIndexerPlugin.class).onStop();
 
         TextIndexerPlugin.prepareTestRestart();
-         Logger.info("stopping text indexer");
-         app.plugin(TextIndexerPlugin.class).onStop();
-         Logger.info("deleting sequence dir");
+        Logger.info("stopping text indexer");
+        app.plugin(TextIndexerPlugin.class).onStop();
+        Logger.info("deleting sequence dir");
         IOUtil.deleteRecursivelyQuitely(new File(ginasIx, "sequence"));
-         Logger.info("deleting structure dir");
+        Logger.info("deleting structure dir");
         File structureDir = new File(ginasIx, "structure");
         IOUtil.deleteRecursivelyQuitely(structureDir);
-         Logger.info("deleting text indexer storage root dir");
+        Logger.info("deleting text indexer storage root dir");
         IOUtil.deleteRecursivelyQuitely(TextIndexerPlugin.getStorageRootDir());
 
-         Logger.info("deleting ginas ix dir");
+        Logger.info("deleting ginas ix dir");
         try {
-			IOUtil.printDirectoryStructure(ginasIx);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-        
+            IOUtil.printDirectoryStructure(ginasIx);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
         structureDir.mkdirs();
 
-        
         app.plugin(SequenceIndexerPlugin.class).onStart();
         app.plugin(StructureIndexerPlugin.class).onStart();
         app.plugin(TextIndexerPlugin.class).onStart();
 
-
         listener.totalRecordsToIndex(finder.findRowCount());
-         Logger.info("#################### Deleted everything");
-        
-        //QueryIterator must be in try-wtih-resource
-        //so it is properly closed if it errors out early.
-        try (QueryIterator<BackupEntity> iter = finder.findIterate()){
+        Logger.info("#################### Deleted everything");
+
+        // QueryIterator must be in try-wtih-resource
+        // so it is properly closed if it errors out early.
+        try (QueryIterator<BackupEntity> iter = finder.findIterate()) {
             while (iter.hasNext()) {
                 BackupEntity o = iter.next();
 
-
-                //this temp variable is because we have to
-                //make sure the data array is eagerly fetched.
-                //For some reason ebean isn't properly lazy loading
-                //this when we try to use it and get NullPointerExceptions downstream
-                //if we don't also fetch it here...
+                // this temp variable is because we have to
+                // make sure the data array is eagerly fetched.
+                // For some reason ebean isn't properly lazy loading
+                // this when we try to use it and get NullPointerExceptions
+                // downstream
+                // if we don't also fetch it here...
                 byte[] tmp = o.data;
 
                 executor.submit(new Worker(o, listener, DO_NOT_DELETE_FIRST));
 
             }
 
-
             executor.shutdown();
             executor.awaitTermination(1, TimeUnit.DAYS);
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             listener.error(e);
-        }catch(RuntimeException e){
+        } catch (RuntimeException e) {
             listener.error(e);
             throw e;
-        }finally{
+        } finally {
             listener.doneReindex();
-
 
         }
     }
-
 
     private static class Worker implements Runnable {
         private final BackupEntity oreal;

@@ -24,8 +24,6 @@ import util.json.JsonUtil.JsonNodeBuilder;
 
 public class RelationshipInvertTest extends AbstractGinasServerTest {
 
-
-
     File invrelate1 =  new File("test/testJSON/invrelate1.json");
     File invrelate2 =  new File("test/testJSON/invrelate2.json");
 

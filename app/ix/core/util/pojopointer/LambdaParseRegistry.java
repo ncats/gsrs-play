@@ -44,14 +44,17 @@ public class LambdaParseRegistry{
 		map.put("limit", LongBasedLambdaArgumentParser.of("limit", (p)->new LimitPath(p)));
 		map.put("skip", LongBasedLambdaArgumentParser.of("skip", (p)->new SkipPath(p)));
 
-		ApiFunctionFactory
-		.getInstance(Play.application())
-		.getRegisteredFunctions()
-		.stream().forEach(rf->{
-			System.out.println("Found special Function:" + rf.getFunctionURIParser().getKey());
-			LambdaArgumentParser<?> lap = rf.getFunctionURIParser();
-			map.put(lap.getKey(), lap);
-		});
+		try{
+			ApiFunctionFactory.getInstance(Play.application())
+			.getRegisteredFunctions()
+			.stream().forEach(rf->{
+				System.out.println("Found special Function:" + rf.getFunctionURIParser().getKey());
+				LambdaArgumentParser<?> lap = rf.getFunctionURIParser();
+				map.put(lap.getKey(), lap);
+			});
+		}catch(Exception e){
+			//there's no started application
+		}
 		
 		return map;
 	});

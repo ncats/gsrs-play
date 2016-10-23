@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.avaje.ebean.Ebean;
@@ -27,10 +26,7 @@ import ix.core.util.ConfigHelper;
 import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.config.CacheConfiguration;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -42,8 +38,8 @@ import play.mvc.Controller;
 
 public class Authentication extends Controller {
 	static final String SESSION = "ix.session";
-   	private static String CACHE_NAME="TOKEN_CACHE";
-   	private static String CACHE_NAME_UP="TOKEN_UP_CACHE";
+   	static String CACHE_NAME="TOKEN_CACHE";
+   	static String CACHE_NAME_UP="TOKEN_UP_CACHE";
 	
     public static CachedSupplier<String> APP = 
     		ConfigHelper.supplierOf("ix.app", "MyApp");  //idle time
@@ -60,95 +56,13 @@ public class Authentication extends Controller {
     static CachedSupplier<Model.Finder<UUID, Session>> _sessions =
     		Util.finderFor(UUID.class, Session.class);
     
-    public static CachedSupplier<TokenCache> tokens = CachedSupplier.of(()->{
-    	return new TokenCache();
+    public static CachedSupplier<UserTokenCache> tokens = CachedSupplier.of(()->{
+    	return new UserTokenCache();
     });
     
     
     
-    public static class TokenCache{
-    	   private Cache tokenCache=null;
-    	   private Cache tokenCacheUserProfile=null;
-    	   private long lastCacheUpdate=-1;
-    	   
-    	   public TokenCache(){
-    	    	
-    	    	//always hold onto the tokens for twice the time required
-    	    	long tres=Util.getTimeResolutionMS()*2;
-    	    	
-    	    	int maxElements=99999;
-    	    	int maxElementsUP=100;
-    	        
-    	        
-    	        CacheManager manager = Authentication.manager.get();
-    	        
-    	        
-    	        CacheConfiguration config =
-    	            new CacheConfiguration (CACHE_NAME, maxElements)
-    	            	.timeToLiveSeconds(tres/1000);
-    	        tokenCache = new Cache (config);
-    	        manager.removeCache(CACHE_NAME);
-    	        manager.addCache(tokenCache);
-
-    	        tokenCache.setSampledStatisticsEnabled(true);
-    	        
-    	        CacheConfiguration configUp =
-    	                new CacheConfiguration (CACHE_NAME_UP, maxElementsUP)
-    	                .timeToIdleSeconds(tres/1000/100);
-    	        tokenCacheUserProfile= new Cache (configUp);
-
-    	        manager.removeCache(CACHE_NAME_UP);
-    	        manager.addCache(tokenCacheUserProfile);  
-    	        
-    	        tokenCacheUserProfile.setSampledStatisticsEnabled(true);
-    	        lastCacheUpdate=-1;
-		}
-
-		private void updateIfNeeded() {
-			if (Util.getCanonicalCacheTimeStamp() != lastCacheUpdate) {
-				updateUserProfileTokenCache();
-			}
-		}
-
-		public void updateUserCache(UserProfile up) {
-			tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
-			tokenCacheUserProfile.put(new Element(up.getIdentifier(), up));
-		}
-
-		public UserProfile getUserProfile(String token) {
-			updateIfNeeded();
-			Element e=tokenCache.get(token);
-			if(e==null)return null;
-			return (UserProfile)e.getObjectValue();
-		}
-		
-		
-		public UserProfile computeUserIfAbsent(String username, Function<String,UserProfile> fetcher){
-			Element elm = tokenCacheUserProfile.get(username);
-			if(elm==null|| elm.getObjectValue()==null){
-				UserProfile upnew= fetcher.apply(username);
-				if(upnew!=null){
-					updateUserCache(upnew);
-					return upnew;
-				}
-			}
-			return (UserProfile)elm.getObjectValue();
-		}
-		private void updateUserProfileTokenCache(){
-	    	try{
-	    		StreamUtil.ofIterator(UserProfileFactory.users()).forEach(up->{
-	    			updateUserCache(up);
-	    		});
-		    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();
-	    	}catch(Exception e){
-	    		e.printStackTrace();
-	    		throw e;
-	    	}
-	    }	
-    }
     
-    
-    private static CachedSupplier<CacheManager> manager=CachedSupplier.of(()->CacheManager.getInstance());
 
     
     
@@ -305,7 +219,7 @@ public class Authentication extends Controller {
     }
     
     public static UserProfile getUserProfileFromToken(String username, String token){
-    	UserProfile profile = getUserProfile(username);
+    	UserProfile profile = fetchProfile(username);
     	if(profile!=null){
     		if(profile.acceptToken(token)){
     			return profile;
@@ -315,21 +229,23 @@ public class Authentication extends Controller {
     }
     
     public static UserProfile getUserProfileFromTokenAlone(String token){
-    	UserProfile profile=tokens.getSync().getUserProfile(token);
-    	if(profile!=null){
-    		return getUserProfileFromToken(profile.getIdentifier(),token);
+    	try{
+	    	UserProfile profile=tokens.getSync().getUserProfileFromToken(token);
+	    	if(profile!=null){
+	    		return getUserProfileFromToken(profile.getIdentifier(),token);
+	    	}
+	    	return null;
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		return null;
     	}
-    	return null;
-    }
-    
-    private static UserProfile getUserProfile(String username){
-    	return tokens.getSync().computeUserIfAbsent(username, (u)->{
-    		return fetchProfile(u);
-    	});
     }
 
+
 	private static UserProfile fetchProfile(String username) {
-		return UserProfileFactory.getUserProfileForUsername(username);
+		return tokens.get().computeUserIfAbsent(username, f->{
+			return UserProfileFactory.getUserProfileForUsername(username);
+		});
 	}
     
     
@@ -420,7 +336,7 @@ public class Authentication extends Controller {
         }
     }
 	public static UserProfile getAdministratorContact() {
-		Object o=Play.application().configuration().getObject("ix.sysadmin");
+		Object o= ConfigHelper.getOrDefault("ix.sysadmin",null);
 		try{
 			if(o!=null){
 				ObjectMapper om = new ObjectMapper();

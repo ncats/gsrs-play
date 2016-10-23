@@ -12,9 +12,14 @@ public class UserTokenAuthenticator implements Authenticator{
 		if(ctx==null)return null;
 		Request r = ctx.request();
 		String token=r.getHeader("auth-token");
-		if(token!=null){
-        	return Authentication.getUserProfileFromTokenAlone(token);
-        }
+		try{
+			if(token!=null){
+				UserProfile up = Authentication.getUserProfileFromTokenAlone(token);
+	        	return up;
+	        }
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		return null;
 	}
 }

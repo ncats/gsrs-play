@@ -54,7 +54,6 @@ public class URIPojoPointerParser {
 					raw = true;
 					field = field.substring(1);
 				}
-				System.out.println("Field is:" + field);
 				final PojoPointer c = new ObjectPath(field);
 				parent.tail(c);
 				parent = c;

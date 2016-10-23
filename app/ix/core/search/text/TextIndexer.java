@@ -1317,7 +1317,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		if (options.getFacets().isEmpty()) { 
 			lsp = new BasicLuceneSearchProvider(sorter, filter, options.max());
 		} else {
-			System.out.println("I think I have facets:" + options.getFacets().toString());
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			
 			options.getDrillDownsMap().forEach((k,v)->{
@@ -1793,7 +1792,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			});
 
 			
-			if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
+			if(USE_ANALYSIS && isDeep.get() && ew.hasKey()){
 				Key key =ew.getKey();
 				if(!key.getIdString().equals("")){  //probably not needed
 					StringField toAnalyze=new StringField(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind(),YES);
@@ -1835,8 +1834,12 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}finally{
 			//System.out.println("||| " + ew.getKey());
 		}
-		
 	}
+	
+	//One more thing:
+	// 1. need list of fields indexed.
+	// 2. that's easy! At index time, just also index each field
+	// 3. in fact... it's already maybe present. The
 
 	public void addDoc(Document doc) throws IOException {
 		

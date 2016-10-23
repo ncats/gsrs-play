@@ -43,7 +43,7 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         Objects.requireNonNull(cacheName);
 
         this.cacheName = cacheName;
-       this.dir = dir;
+        this.dir = dir;
     }
 
     private volatile boolean init=false;

@@ -87,6 +87,8 @@ public class IxContext extends Plugin {
         Logger.info("## "+IX_HOME+": \""+home.getCanonicalPath()+"\"");
 
         cache = getFile (IX_CACHE_BASE, "cache");
+        
+        
         cacheTime = app.configuration().getInt(IX_CACHE_TIME, 60);
         Logger.info("## "+IX_CACHE_TIME+": "+cacheTime+"s");
 

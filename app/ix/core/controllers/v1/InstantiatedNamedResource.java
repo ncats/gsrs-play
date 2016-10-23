@@ -119,7 +119,6 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result create(){
-		System.out.println("Creating");
 		return operate(CREATE_OPERATION);
 	}
 	default Result count(){

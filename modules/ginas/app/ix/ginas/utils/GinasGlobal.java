@@ -46,6 +46,9 @@ public class GinasGlobal extends Global {
 
 	private static List<Runnable> startRunners = new ArrayList<Runnable>();
 	
+	private static Consumer<Http.Request> requestListener =  (r)->{};
+	
+	
 	private static boolean isRunning=false;
 
 	
@@ -145,8 +148,10 @@ public class GinasGlobal extends Global {
 
 		if(fname!=null){
 			try{
+			    System.out.println("=============================");
+			    System.out.println("=====Loading initial set=====");
 				System.out.println(fname);
-				System.out.println("==================");
+				System.out.println("=============================");
 
 				Date start = new Date();
 				File f= new File(fname);
@@ -222,11 +227,34 @@ public class GinasGlobal extends Global {
 		}
 	}
 	
-	private static Consumer<Http.Request> requestListener =  (r)->{};
 	
 	
+	/**
+	 * Sets a {@link Consumer} to be called before the resolution of 
+	 * every request, passing it the request. This overwrites any
+	 * existing consumer already registered. To use a temporary listener,
+	 * use {@link #runWithRequestListener(Runnable, Consumer)} instead. 
+	 * @param listen
+	 */
 	public static void setRequestListener(Consumer<Http.Request> listen){
 		requestListener=listen;
+	}
+	
+	/**
+	 * Temporarily appends the given {@link Consumer} as a listener 
+	 * for requests, reseting to whatever the unappended previous consumer
+	 * was after the given {@link Runnable} has run.
+	 * @param r
+	 * @param listen
+	 */
+	public static void runWithRequestListener(Runnable r, Consumer<Http.Request> listen){
+		Consumer<Http.Request> old =requestListener;
+		setRequestListener(old.andThen(listen));
+		try{
+			r.run();
+		}finally{
+			setRequestListener(old);
+		}
 	}
 	
 }

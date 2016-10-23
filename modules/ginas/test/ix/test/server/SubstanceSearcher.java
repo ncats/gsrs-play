@@ -490,9 +490,9 @@ public class SubstanceSearcher {
         public Stream<Substance> getSubstances(){
             SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
 
-            return src.getResults().stream()
-                                .map( o -> (Substance) o);
-
+            return src.getResults()
+                       .stream()
+                       .map( o -> (Substance) o);
         }
         public InputStream export(String format){
             return getExport(format,searchKey).getInputStream();

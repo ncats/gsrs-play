@@ -73,9 +73,6 @@ public class ListViewTest  extends AbstractGinasServerTest {
 			assertTrue(html.contains("A_AA4"));
 			assertFalse(html.contains("A_AB2"));
 			
-		}catch(Throwable e){
-			e.printStackTrace();
-			throw e;
 		}
 	}
 	

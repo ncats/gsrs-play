@@ -28,26 +28,16 @@ import play.mvc.Controller;
 @CacheStrategy(evictable = false)
 public class SearchResult {
 
-	/**
-	 * Returns a list of FieldFacets which help to explain why and how
-	 * matches were done for this particular query.
-	 * 
-	 * @return
-	 */
-	public List<FieldedQueryFacet> getFieldFacets() {
-		return suggestFacets;
-	}
-
 	private String key;
 	private String query;
 	final private List<Facet> facets = new ArrayList<Facet>();
 	final private List<FieldedQueryFacet> suggestFacets = new ArrayList<FieldedQueryFacet>();
 
 	private final LazyList<Object> matches = new LazyList<>(o -> (EntityWrapper.of(o)).getKey().getIdString());
-	//List<NamedCallable> matches = new ArrayList<>();
 	
 	
 	private List<?> result; // final result when there are no more updates
+	                        // (largely unnecessary now)
 
 	private int count;
 	private SearchOptions options;
@@ -63,18 +53,17 @@ public class SearchResult {
 	}
 
 	
-	public static SearchResult fromContext(SearchResultContext ctx, SearchOptions options){
-		@SuppressWarnings("unchecked")
-		LazyList<Object> ll = (LazyList<Object>)LazyList.of(ctx.getResults(),o->EntityWrapper.of(o).getKey().toString());
-		return new SearchResult.Builder()
-					.options(options)
-					.stop(new AtomicLong(TimeUtil.getCurrentTimeMillis()))
-					.matches(ll)
-					.result(ll)
-					.key(ctx.getKey() + "/result")
-					.count(ll.size())
-					.build();
-	}
+	
+	
+	/**
+     * Returns a list of FieldFacets which help to explain why and how
+     * matches were done for this particular query.
+     * 
+     * @return
+     */
+    public List<FieldedQueryFacet> getFieldFacets() {
+        return suggestFacets;
+    }
 
 	public void setRank(Comparator<String> idCompare) {
 		Objects.requireNonNull(idCompare);
@@ -179,14 +168,6 @@ public class SearchResult {
 			matches = getMatches();
 		}
 
-		//Question:
-		// Does this ever cause a problem if we're searching for
-		// something that starts beyond where we've gotten to?
-		// Like if we try to page before getting all results?
-
-		//Answer: 
-		// not anymore. Use "wait" if that's a problem.
-
 		if (start >= matches.size()) {
 			return 0;
 		}
@@ -279,6 +260,11 @@ public class SearchResult {
 		return future;
 	}
 
+	/**
+	 * Returns a list of matches for which some special criteria are 
+	 * met. For example, an exact match on a specific designated field.
+	 * @return
+	 */
 	public List getSponsoredMatches() {
 		LazyList lazylist = new LazyList(c -> c.toString());
 		for (NamedCallable nc : sponsored.values()) {
@@ -341,11 +327,19 @@ public class SearchResult {
 	}
 	
 	
+	/**
+	 * Creates the url necessary for toggling the given facet name and
+	 * value for this SearchResult.
+	 * 
+	 * <p>
+	 * Needs an active HTTP context
+	 * </p>
+	 *  
+	 * @param facetName
+	 * @param facetValue
+	 * @return
+	 */
 	public String getFacetURI(String facetName, String facetValue){
-//		Map<String, String[]> params=options.asQueryParms();
-//		List<String> facets=Arrays.asList(params.getOrDefault("facet", new String[0]));
-//		facets.add(facetName + "/" + facetValue);
-		//		
 		try{
 			String base=Controller.request().uri().split("\\?")[0];
 
@@ -553,4 +547,31 @@ public class SearchResult {
 			this.facets.addAll(builder.facets);
 		}
 	}
+	
+	/**
+     * Static method for adapting a {@link SearchResultContext} into a {@link SearchResult}.
+     * Typically, a {@link SearchResultContext} comes first, and a search is performed to
+     * restrict the context to a specific result. This is a lazy case, where the results
+     * from a {@link SearchResultContext}, as well as some basic {@link SearchOptions}
+     * are used to create a simple {@link SearchResult}.
+     * @param ctx The SearchResultContext to use, which will be used for its key and
+     *            match results
+     * @param options The SearchOptions to use, this is useful for a few processing cases,
+     *                like top/skip etc.
+     * @return
+     */
+    public static SearchResult fromContext(SearchResultContext ctx, SearchOptions options){
+        @SuppressWarnings("unchecked")
+        LazyList<Object> ll = (LazyList<Object>)LazyList
+                            .of(ctx.getResults(),o->EntityWrapper.of(o).getKey().toString());
+        
+        return new SearchResult.Builder()
+                    .options(options)
+                    .stop(new AtomicLong(TimeUtil.getCurrentTimeMillis()))
+                    .matches(ll)
+                    .result(ll)
+                    .key(ctx.getKey() + "/result")
+                    .count(ll.size())
+                    .build();
+    }
 }

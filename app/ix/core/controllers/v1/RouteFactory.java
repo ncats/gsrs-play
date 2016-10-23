@@ -379,7 +379,6 @@ public class RouteFactory extends Controller {
 	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result create (String context) {
     	try {
-    		System.out.println("Context is:" + context);
         	return _registry.get()
         			 .getResource(context)
         			 .create();
@@ -537,7 +536,7 @@ public class RouteFactory extends Controller {
     	}
     	m.put("status", status);
     	ObjectMapper om = new ObjectMapper();
-    	t.printStackTrace();
+    	//t.printStackTrace();
     	return om.valueToTree(m);
     }
     

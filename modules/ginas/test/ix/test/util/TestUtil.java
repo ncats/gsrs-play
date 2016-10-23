@@ -57,6 +57,7 @@ public class TestUtil {
 
                 FileVisitResult fvr= super.postVisitDirectory(dir, exc);
                 try{
+                	
                     Files.delete(dir);
                 }catch(IOException e){
                     System.err.println("unable to delete:" + e.getMessage());
@@ -65,6 +66,8 @@ public class TestUtil {
             }
 
         });
+        //dir.getPath().delete();
+        //Files.delete(dir.toPath());
     }
     public static void assertContains(String within,String find){
     	String rep=within;

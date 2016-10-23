@@ -63,14 +63,11 @@ public class SearchResultContext {
     private Long start;
     private Long stop;
     
-   
-    
-    
-    private Collection results = new LinkedBlockingDeque();
-
+    private Collection<Object> results = new LinkedBlockingDeque<>();
     
     @JsonIgnore
-    private List sponsoredResults = new ArrayList();
+    private List<?> sponsoredResults = new ArrayList<>();
+    
     @JsonIgnore
     private final List<FieldedQueryFacet> fieldFacets=new ArrayList<>();
 
@@ -79,10 +76,6 @@ public class SearchResultContext {
     private String key;
 
 	private String originalRequest = null;
-    
-    
-    
-    
     
     public static class SearchResultContextDeterminedFuture extends FutureTask<Void>{
     	public SearchResultContextDeterminedFuture(final SearchResultContext context){
@@ -125,8 +118,11 @@ public class SearchResultContext {
     
     SearchResultContext () {
     	//TODO: This assumption isn't always correct
-    	this.setGeneratingUrl(Global.getHost() + Controller.request().uri());
-    	
+        try{
+            this.setGeneratingUrl(Global.getHost() + Controller.request().uri());
+        }catch(Exception e){
+            this.setGeneratingUrl(null);
+        }
     }
     
     public SearchResultContext (SearchResult result) {
@@ -388,7 +384,9 @@ public class SearchResultContext {
     
     @Deprecated
     public static SearchResultContext getSearchResultContextForKey(String key){
-    	return getContextForKey(key).getContext();
+    	SearchResultContextOrSerialized ctxwrapped=getContextForKey(key);
+    	if(ctxwrapped==null)return null;
+    	return ctxwrapped.getContext();
     }
     
     public static class SearchResultContextOrSerialized{
@@ -428,10 +426,11 @@ public class SearchResultContext {
             	}else if(value instanceof SearchResult){
             		SearchResult result = (SearchResult)value;
             		context = new SearchResultContext (result);
+            		
                     Logger.debug("status: key="+key+" finished="+context.isFinished());
             	}
             }else{
-            	String spkey=SearchResultContext.getSerializedKey(key);
+            	String spkey  = SearchResultContext.getSerializedKey(key);
             	Object value2 = IxCache.getRaw(spkey);
             	if(value2 !=null && value2 instanceof SerailizedSearchResultContext){
             		serial=(SerailizedSearchResultContext)value2;

@@ -10,17 +10,18 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import ix.AbstractGinasServerTest;
 import ix.core.factories.SpecialFieldFactory;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.ginas.models.v1.Substance;
-import ix.test.AbstractGinasServerTest;
 import ix.test.server.GinasTestServer;
 import play.Play;
 
 public class SponsoredResultsTest extends AbstractGinasServerTest{
 	List<String> specialFields;
 		
+	
 	
 	
 	

@@ -31,7 +31,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     private static final long TIMEOUT = 10_000L;
 
     private WebClient webClient;
-    private  String sessionCookie;
+    private String sessionCookie;
     private AuthenticationStrategy authenticationStrategy = NullAuthenticationStrategy.INSTANCE;
 
     public BrowserSession(int port) {
@@ -45,32 +45,10 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     }
     public BrowserSession(GinasTestServer.User user, int port, AuthenticationStrategyFactory authenticationStrategyFactory) {
         super(user, port);
-//
-//        try {
-            webClient = new WebClient();
-            authenticationStrategy= authenticationStrategyFactory.newInstance(this, webClient);
+		webClient = new WebClient();
+		authenticationStrategy = authenticationStrategyFactory.newInstance(this, webClient);
 
-            authenticationStrategy.login(user);
-//       //     webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-//            HtmlPage page = webClient.getPage(constructUrlFor("ginas/app/login"));
-//            //there is only 1 form but it isn't named..
-//            HtmlForm form = page.getForms().get(0);
-//
-//            form.getInputsByName("username").get(0).setValueAttribute(user.getUserName());
-//            form.getInputsByName("password").get(0).setValueAttribute(user.getPassword());
-//
-//            HtmlPage returnPage = form.getButtonByName("submit").click();
-//
-//
-//            Cookie cook=webClient.getCookieManager().getCookie("PLAY_SESSION");
-//            if(cook==null)throw new IOException("no session established");
-//            if(cook!=null){
-//            	this.sessionCookie = String.format("PLAY_SESSION=%s", cook.getValue());
-//            }
-//        } catch (IOException e) {
-//           throw new IllegalStateException("error logging in ", e);
-//        }
-
+		authenticationStrategy.login(user);
 
     }
     @Override

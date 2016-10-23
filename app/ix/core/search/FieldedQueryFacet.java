@@ -252,10 +252,10 @@ public class FieldedQueryFacet implements Serializable{
 					String nf = fnder.getDisplayName(f);
 					oq.op(s->s.replace(f + ":", nf + ":"));
 				});
-			System.out.println("original:" + q);
-			System.out.println("simplified:" + aq);
-			System.out.println("displayForm:" + oq.s);
-			printQueryBreakDown(qu,"");
+//			System.out.println("original:" + q);
+//			System.out.println("simplified:" + aq);
+//			System.out.println("displayForm:" + oq.s);
+//			printQueryBreakDown(qu,"");
 			
 		}catch(Exception e){
 			e.printStackTrace();

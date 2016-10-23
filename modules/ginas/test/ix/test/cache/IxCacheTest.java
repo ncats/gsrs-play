@@ -36,6 +36,7 @@ public class IxCacheTest  extends AbstractGinasServerTest {
 		assertEquals(first,result1);
 	}
 
+	//DEADLOCK
 	@Test  
 	public void fetchSlowGeneratorWith2ThreadsShouldNotCallSecondGenerator() throws Exception {
 		final String result1="First";

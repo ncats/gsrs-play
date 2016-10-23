@@ -69,39 +69,6 @@ public class IxCache extends Plugin {
                 .debugLevel(debugLevel)
                 .useNonEvictableCache(notEvictableMaxElements,timeToLive,timeToIdle)
                 .cacheAdapter(new FileDbCache(context.cache(), "inMemCache"))
-                .keyMaster(new KeyMaster(){
-
-					@Override
-					public Set<String> getAllAdaptedKeys(String baseKey) {
-						return Stream.of(baseKey).collect(Collectors.toSet());
-					}
-
-					@Override
-					public void addKey(String baseKey, String adaptKey) {
-						
-					}
-
-					@Override
-					public void removeKey(String baseKey, String adaptKey) {
-						
-					}
-
-					@Override
-					public String adaptKey(String baseKey) {
-						return baseKey;
-					}
-
-					@Override
-					public String unAdaptKey(String adaptedKey) {
-						return adaptedKey;
-					}
-
-					@Override
-					public void removeAll() {
-						
-					}
-                	
-                })
                 .build()
                 .create();
         _instance = new IxCache(gateKeeper);

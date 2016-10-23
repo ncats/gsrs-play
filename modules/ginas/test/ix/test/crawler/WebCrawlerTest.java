@@ -85,14 +85,14 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
     @Test
     public void nothingRestrictedForAdmin() throws Exception {
-        WebCrawlerSpy spy = new WebCrawlerSpy();
+        final WebCrawlerSpy spy = new WebCrawlerSpy();
         try(BrowserSession session =  ts.newBrowserSession(admin)) {
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
             URL url = ts.getHomeUrl();
 
             crawler.crawl(url);
 
-            assertTrue(spy.get401Links().isEmpty());
+            assertTrue("Admins should not find any restricted links",spy.get401Links().isEmpty());
         }
 
     }
