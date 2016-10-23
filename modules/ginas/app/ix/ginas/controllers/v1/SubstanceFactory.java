@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.springframework.stereotype.Controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -21,8 +20,9 @@ import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
+import ix.core.plugins.IxCache;
+import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
-import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
@@ -45,7 +45,6 @@ import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
-import ix.ncats.controllers.ResultRenderer;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
@@ -519,7 +518,14 @@ public class SubstanceFactory extends EntityFactory {
 		
 		context.setAdapter((so, ctx)->{
 			try {
-				return App.getResultFor(ctx, so);
+				SearchResult sr= App.getResultFor(ctx, so);
+				List<Substance> rlist = new ArrayList<Substance>();
+				sr.copyTo(rlist, so.getSkip(), so.getTop(), true); //synchronous
+				for(Substance s: rlist){
+				    Map<String,Object> o=IxCache.getMatchingContext(ctx, EntityWrapper.of(s).getKey());
+				    s.setMatchContextProperty((Map)o);
+				}
+				return sr;
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new IllegalStateException("Error fetching search result", e);
@@ -529,7 +535,7 @@ public class SubstanceFactory extends EntityFactory {
 		String s=play.mvc.Controller.request().getQueryString("sync");
 		
 		if("true".equals(s) ||
-		   "".equals(s)
+		       "".equals(s)
 				){
 			try{
 				context.getDeterminedFuture().get(1, TimeUnit.MINUTES);
@@ -539,27 +545,6 @@ public class SubstanceFactory extends EntityFactory {
 			}
 		}
 		return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
-		
-		
-//            return App.fetchResult
-//                (context,top, (skip/top) + 1,
-//                 new ResultRenderer<Substance> (){
-//
-//					@Override
-//					public Result render(SearchResultContext context, 
-//                          int page, int rows, int total, int[] pages,
-//							List<Facet> facets, List<Substance> results) {
-//						Object retalue=EntityWrapper.of(results).at(pointer).get().getValue();
-//						
-//						return Java8Util.ok(em.valueToTree(retalue));
-//					}
-//
-//					@Override
-//					public int getFacetDim() {
-//						return fdim;
-//					}
-//                	
-//                });
 	}
 	
 }

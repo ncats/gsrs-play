@@ -409,7 +409,7 @@ public class SearchResultContext {
     		return this.serial;
     	}
     	
-    	public boolean isPresent(){
+    	public boolean hasFullContext(){
     		return ctx!=null;
     	}
     }

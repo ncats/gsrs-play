@@ -9,6 +9,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.Experimental;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.ETag;
 import ix.core.plugins.TextIndexerPlugin;
@@ -214,7 +215,7 @@ public class SearchFactory extends EntityFactory {
     	
     	SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
     	if(possibleContext!=null){
-	    	if (possibleContext.isPresent()) {
+	    	if (possibleContext.hasFullContext()) {
 	    		SearchResultContext ctx=possibleContext.getContext()
 	    											    .getFocused(top, skip, fdim, field);
 	    		ObjectMapper mapper = new ObjectMapper ();
@@ -227,10 +228,11 @@ public class SearchFactory extends EntityFactory {
     }
     
     //TODO: Needs evaluation
+    @Experimental
     public static Result getSearchResultContextResults(String key, int top, int skip, int fdim, String field) {
     	SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
     	if (possibleContext != null) {
-    		if(!possibleContext.isPresent()){
+    		if(!possibleContext.hasFullContext()){
     			return redirect(possibleContext.getSerialized().generatingPath);
     		}
     		SearchResultContext ctx=possibleContext.getContext();
@@ -243,7 +245,8 @@ public class SearchFactory extends EntityFactory {
 				    				.top(top)
 				    				.skip(skip)
 				    				.fdim(fdim)
-				    				.withParameters(Util.reduceParams(request().queryString(), "facet"))
+				    				.withParameters(Util.reduceParams(request().queryString(), 
+				    				                "facet"))
 				    				.build();
     		
     		SearchResult results = ctx.getAdapted(so);
@@ -253,6 +256,8 @@ public class SearchFactory extends EntityFactory {
     		List<Object> resultSet = new ArrayList<Object>();
     		
     		results.copyTo(resultSet, so.getSkip(), so.getTop(), true);
+    		
+    		
 
     		int count = resultSet.size();
     		

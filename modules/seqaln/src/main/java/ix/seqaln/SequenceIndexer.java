@@ -6,6 +6,7 @@ import static org.apache.lucene.document.Field.Store.YES;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -138,8 +139,12 @@ public class SequenceIndexer {
 		}
 	}
 
-	public static class SEG implements Comparable<SEG> {
-		public int qi, qj;
+	public static class SEG implements Comparable<SEG>, Serializable {
+		/**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        public int qi, qj;
 		public int ti, tj;
 
 		public SEG (int qi, int qj, int ti, int tj) {
@@ -211,8 +216,14 @@ public class SequenceIndexer {
 		}
 	}
 
-	public static class Alignment implements Comparable<Alignment> {
-		public final SEG segment; // coordinate of query
+	public static class Alignment implements Comparable<Alignment>, Serializable {
+	    
+		/**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        
+        public final SEG segment; // coordinate of query
 		public final String query; // segment of query
 		public final String target; // segment of sequence
 		public final String alignment; // full alignment string
@@ -284,8 +295,12 @@ public class SequenceIndexer {
 		}
 	}
 
-	public static class Result {
-		public final CharSequence query;
+	public static class Result implements Serializable{
+		/**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        public final CharSequence query;
 		public final String id;
 		public final CharSequence target;
 		public final List<Alignment> alignments = new ArrayList<Alignment>();

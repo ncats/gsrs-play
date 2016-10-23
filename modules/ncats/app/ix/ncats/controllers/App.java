@@ -974,8 +974,7 @@ public class App extends Authentication {
 				return internalServerError
 						("Unable to retrieve image for structure "+id);
 			}
-		}
-		else {
+		}else {
 			final String key = Structure.class.getName()+"/"+id+"."+format;
 			try {
 				return getOrElse (key,  () ->{
@@ -1258,24 +1257,21 @@ public class App extends Authentication {
 	}
 	
 	
-	
-	
-	
-	
-	
-	public static SearchResult getResultFor(SearchResultContext ctx, SearchOptions options) throws IOException, Exception{
+	public static SearchResult getResultFor(SearchResultContext ctx, SearchOptions options) 
+	                                                            throws IOException, Exception{
 		final String key = getKey (ctx, options, "facet", "fdim");
 		return getOrElse(key,  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();
 					if (results.isEmpty()) {
 						return null;  // hmm ... is this a good idea? Probably not
 									  // it might cause a problem with the cache
-						   			  // as nulls will still get cached right now
+						   			  // as nulls may still get cached right now
 					}
 					
 					SearchRequest request = new SearchRequest.Builder()
 												.subset(results)
 												.options(options)
+												.skip(0)
 												.top(results.size())
 												.build();
 					

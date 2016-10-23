@@ -114,7 +114,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		 abstract <K> K get(EntityFetcher<K> fetcher) throws Exception;
 
 	}
-	public static final CacheType cacheType = CacheType.GLOBAL_CACHE; //This is probably the best option
+	public final CacheType cacheType; 
 	
 	
 	final Key theKey;
@@ -124,12 +124,17 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	long lastFetched=0l;
 	
 	public EntityFetcher(Key theKey) throws Exception{
-		Objects.requireNonNull(theKey);
-		this.theKey=theKey;
-		if(cacheType == CacheType.LOCAL_EAGER){
-			reload();
-		}
+		this(theKey, CacheType.GLOBAL_CACHE); //This is probably the best option
 	}
+	
+	public EntityFetcher(Key theKey, CacheType ct) throws Exception{
+        Objects.requireNonNull(theKey);
+        cacheType= ct;
+        this.theKey=theKey;
+        if(cacheType == CacheType.LOCAL_EAGER){
+            reload();
+        }
+    }
 	
 	// This can probably be cached without user-specific 
 	// concerns
@@ -179,4 +184,14 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	public static <T> EntityFetcher<T> of(Key k, Class<T> cls) throws Exception {
 		return new EntityFetcher<>(k);
 	}
+	
+	
+	public static EntityFetcher<?> of(Key k, CacheType cacheType) throws Exception {
+        return new EntityFetcher<>(k, cacheType);
+    }
+    
+    public static <T> EntityFetcher<T> of(Key k, Class<T> cls,CacheType cacheType) throws Exception {
+        return new EntityFetcher<>(k, cacheType);
+    }
+    
 }

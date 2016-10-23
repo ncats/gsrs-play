@@ -81,8 +81,11 @@ import ix.core.models.Edit;
 import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.search.EntityFetcher;
+import ix.core.search.EntityFetcher.CacheType;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.pojopointer.ArrayPath;
 import ix.core.util.pojopointer.CountPath;
 import ix.core.util.pojopointer.DistinctPath;
@@ -99,6 +102,7 @@ import ix.core.util.pojopointer.ObjectPath;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.core.util.pojopointer.SkipPath;
 import ix.core.util.pojopointer.SortPath;
+import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -301,7 +305,7 @@ public class EntityUtils {
 		}
 
 		public Finder<?,T> getFinder() {
-			return ei.getFinder();
+			return ei.getNativeSpecificFinder();
 		}
 
 		public boolean isValidated(){
@@ -399,7 +403,7 @@ public class EntityUtils {
 		}
 		
 		public boolean isArrayOrCollection() {
-			return Collection.class.isAssignableFrom(ei.getClazz()) || ei.getClazz().isArray();
+			return Collection.class.isAssignableFrom(ei.getEntityClass()) || ei.getEntityClass().isArray();
 		}
 		
 		/**
@@ -414,7 +418,7 @@ public class EntityUtils {
 		 * @return
 		 */
 		public Optional<Tuple<MethodOrFieldMeta,Optional<Object>>> getValueAndFieldAt(String field){
-			if(Map.class.isAssignableFrom(ei.getClazz())){
+			if(Map.class.isAssignableFrom(ei.getEntityClass())){
 				VirtualMapMethodMeta vmmm=new VirtualMapMethodMeta(field);
 				return Optional.of(Tuple.of(vmmm, vmmm.getValue(this.getValue())));
 			}
@@ -422,7 +426,7 @@ public class EntityUtils {
 		}
 		
 		public Stream<MethodOrFieldMeta> fields(){
-			if(Map.class.isAssignableFrom(ei.getClazz())){
+			if(Map.class.isAssignableFrom(ei.getEntityClass())){
 				return ((Map<String,Object>)this.getValue())
 						   .keySet()
 				           .stream()
@@ -450,7 +454,7 @@ public class EntityUtils {
 		}
 
 		public Class<?> getClazz() {
-			return ei.getClazz();
+			return ei.getEntityClass();
 		}
 
 		public boolean hasVersion() {
@@ -520,7 +524,7 @@ public class EntityUtils {
 				return EntityFactory.getEdits(opId.get(), 
 						this.getEntityInfo().getInherittedRootEntityInfo().getTypeAndSubTypes()
 						.stream()
-						.map(em->em.getClazz())
+						.map(em->em.getEntityClass())
 						.toArray(len->new Class<?>[len]));
 			}else{
 				return new ArrayList<Edit>();
@@ -897,7 +901,7 @@ public class EntityUtils {
 
 		private Class<?> idType = null;
 
-		private CachedSupplier<Model.Finder<?, T>> nativeVerySpecificfinder;
+		private CachedSupplier<Model.Finder<?, T>> nativeVerySpecificFinder;
 
 		private boolean isIdNumeric = false;
 		private Inheritance inherits;
@@ -959,13 +963,21 @@ public class EntityUtils {
 			this.table = (Table) cls.getAnnotation(Table.class);
 			this.inherits = (Inheritance) cls.getAnnotation(Inheritance.class);
 			ancestorInherit = this;
+			if (cls.isAnnotationPresent(Entity.class)) {
+                isEntity = true;
+                if (indexable != null && !indexable.indexed()) {
+                    shouldIndex = false;
+                }
+            }
 			if (this.table != null) {
 				tableName = table.name();
-			} else if (this.inherits != null) {
+			} else if (this.inherits != null || isEntity) {
 				EntityInfo<?> ei = EntityUtils.getEntityInfoFor(cls.getSuperclass());
 				tableName = ei.getTableName();
 				table = ei.table;
-				ancestorInherit = ei.ancestorInherit;
+				if(tableName!=null){
+				    ancestorInherit = ei.ancestorInherit;
+				}
 			}
 
 			kind = cls.getName();
@@ -1042,12 +1054,7 @@ public class EntityUtils {
 
 			fields.removeIf(f -> !f.isTextEnabled());
 
-			if (cls.isAnnotationPresent(Entity.class)) {
-				isEntity = true;
-				if (indexable != null && !indexable.indexed()) {
-					shouldIndex = false;
-				}
-			}
+			
 			if (Edit.class.isAssignableFrom(cls)) {
 				shouldDoPostUpdateHooks = false;
 			}
@@ -1068,7 +1075,7 @@ public class EntityUtils {
 				idType = idField.getType();
 
 				if (idField != null) {
-					nativeVerySpecificfinder = CachedSupplier.of(()->new Model.Finder(idType, this.cls));
+					nativeVerySpecificFinder = CachedSupplier.of(()->new Model.Finder(idType, this.cls));
 				}
 			}
 
@@ -1145,13 +1152,13 @@ public class EntityUtils {
 			return this.uniqueColumnFields;
 		}
 
-		public Model.Finder getFinder() {
-			return this.getInherittedRootEntityInfo().getNativeSpecificFinder();
+		public Model.Finder<Object,?> getFinder() {
+			return (Finder<Object, ?>) this.getInherittedRootEntityInfo().getNativeSpecificFinder();
 		}
 
-		public Model.Finder getNativeSpecificFinder() {
-			if(this.nativeVerySpecificfinder==null)return null;
-			return this.nativeVerySpecificfinder.get();
+		public Model.Finder<Object,T> getNativeSpecificFinder() {
+			if(this.nativeVerySpecificFinder==null)return null;
+			return (Finder<Object, T>) this.nativeVerySpecificFinder.get();
 		}
 
 		public Object formatIdToNative(String id) {
@@ -1179,7 +1186,7 @@ public class EntityUtils {
 		}
 
 		public boolean isParentOrChildOf(EntityInfo<?> ei) {
-			return (this.getClazz().isAssignableFrom(ei.getClazz()) || ei.getClazz().isAssignableFrom(this.getClazz()));
+			return (this.getEntityClass().isAssignableFrom(ei.getEntityClass()) || ei.getEntityClass().isAssignableFrom(this.getEntityClass()));
 		}
 
 		public boolean shouldIndex() {
@@ -1276,7 +1283,13 @@ public class EntityUtils {
 			return !shouldDoPostUpdateHooks;
 		}
 
-		public Class<T> getClazz() {
+		
+		/**
+		 * Returns the raw {@link Class} that this {@link EntityInfo} is
+		 * wrapping around.
+		 * @return
+		 */
+		public Class<T> getEntityClass() {
 			return this.cls;
 		}
 
@@ -1342,11 +1355,11 @@ public class EntityUtils {
 		}
 
 		public T fromJson(String oldValue) throws JsonParseException, JsonMappingException, IOException {
-			return EntityMapper.FULL_ENTITY_MAPPER().readValue(oldValue, this.getClazz());
+			return EntityMapper.FULL_ENTITY_MAPPER().readValue(oldValue, this.getEntityClass());
 		}
 
 		public T fromJsonNode(JsonNode value) throws JsonProcessingException {
-			return EntityMapper.FULL_ENTITY_MAPPER().treeToValue(value, this.getClazz());
+			return EntityMapper.FULL_ENTITY_MAPPER().treeToValue(value, this.getEntityClass());
 		}
 
 		private static final <T> EntityInfo<T> of(Class<T> cls) {
@@ -1358,7 +1371,7 @@ public class EntityUtils {
 		}
 
 		public T getInstance() throws Exception{
-			return (T) this.getClazz().newInstance();
+			return (T) this.getEntityClass().newInstance();
 		}
 
 
@@ -2349,6 +2362,19 @@ public class EntityUtils {
 			}
 		}
 
+        public static <T> Key of(Class<T> class1, Object id) {
+            EntityInfo<T> emeta=EntityUtils.getEntityInfoFor(class1);
+            return of(emeta,id);
+        }
+
+        
+        public EntityFetcher getFetcher() throws Exception{
+            return EntityFetcher.of(this);
+        }
+        
+        public EntityFetcher getFetcher(CacheType ct) throws Exception{
+            return EntityFetcher.of(this, ct);
+        }
 	}
 
 	//Not sure how this should be parameterized

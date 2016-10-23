@@ -99,7 +99,6 @@ public class Protein extends GinasCommonSubData {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", links.size());
 				n.put("href", Global.getRef(proteinSubstance.getClass(), proteinSubstance.getUuid()) + "/protein/disulfideLinks");
-				
 				n.put("shorthand", ModelUtils.shorthandNotationForLinks(links));
 				
 				node = n;

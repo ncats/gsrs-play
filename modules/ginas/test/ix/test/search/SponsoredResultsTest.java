@@ -99,8 +99,5 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
             Set<String> specialUUIDs = sr.getSpecialUuids();
             assertEquals(special.getUuid().toString().split("-")[0],
                          specialUUIDs.iterator().next());
-            
     }
-	
-	
 }

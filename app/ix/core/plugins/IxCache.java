@@ -1,15 +1,16 @@
 package ix.core.plugins;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.search.SearchResultContext;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.Key;
 import ix.utils.CallableUtil.TypedCallable;
@@ -261,6 +262,27 @@ public class IxCache extends Plugin {
 	public static void setTemp(String key, Object value) {
 		setRaw(key, value);
 	}
+	
+	public static void addToMatchingContext(SearchResultContext context, Key key, String prop, Object value){
+        Map<String,Object> additionalProps = IxCache.getMatchingContext(context, key);
+        if(additionalProps==null){
+            additionalProps=new HashMap<String,Object>();
+        }
+        additionalProps.put(prop, value);
+        setMatchingContext(context,key, additionalProps);
+    }
+	
+	public static void setMatchingContext(SearchResultContext context, Key key, Map<String,Object> matchingContext){
+	    IxCache.setTemp("MatchingContext/" + context.getId() + "/" + key.toString(), matchingContext);
+	}
+	
+	public static Map<String, Object> getMatchingContext(SearchResultContext context, Key key){
+        return (Map<String, Object>) getMatchingContextByContextID(context.getId(), key);
+    }
+	
+	public static Map<String, Object> getMatchingContextByContextID(String contextID, Key key){
+        return (Map<String, Object>) IxCache.getTemp("MatchingContext/" + contextID + "/" + key.toString());
+    }
 
 
 	/**
