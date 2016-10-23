@@ -40,6 +40,7 @@ import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceSearcher;
 import ix.test.server.SubstanceSearcher.WebExportRequest;
@@ -82,7 +83,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 	@Test 
 	public void searchAll() throws IOException, InterruptedException {
 
-		SubstanceSearcher.SearchResult searchResult = searcher.all();
+		SearchResult searchResult = searcher.all();
 		try (InputStream in = searchResult.export("csv");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
@@ -149,7 +150,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 						.build();
 		
 		
-		SubstanceSearcher.SearchResult searchResult = searcher.query(q);
+		SearchResult searchResult = searcher.query(q);
 		try (InputStream in = searchResult.export("csv");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
@@ -179,7 +180,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 
 		searchAll();
 		for (int i = 0; i < 100; i++) {
-			SubstanceSearcher.SearchResult searchResult = searcher.query(UUID.randomUUID());
+			SearchResult searchResult = searcher.query(UUID.randomUUID());
 			// System.out.println("Key:" + searchResult.getKey());
 
 		}

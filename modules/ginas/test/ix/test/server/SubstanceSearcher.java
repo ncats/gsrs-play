@@ -4,32 +4,30 @@ package ix.test.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import ix.core.search.SearchResultContext;
-import ix.ginas.models.v1.Substance;
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.query.builder.SubstanceCondition;
 import ix.test.server.BrowserSession.WrappedWebRequest;
 import ix.utils.Tuple;
+import ix.utils.Util;
 import play.libs.ws.WSResponse;
 
 /**
@@ -127,7 +125,7 @@ public class SubstanceSearcher {
             }
         }while(substances.addAll(tmp.v()));
 
-        SearchResult results = new SearchResult(keyString, substances);
+        SearchResult results = new SearchResult(keyString, substances,this);
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);
         }
@@ -153,26 +151,13 @@ public class SubstanceSearcher {
     	if(defaultSearchOrder!=null){
     		root=root.addQueryParameter("order",defaultSearchOrder);
     	}
-    	try{
-    		return getPage(root, page);
-    	}catch(Exception e){
-    		//e.printStackTrace();
-    		//System.out.println("Something went wrong with request:" + root.setQueryParameter("page", page+"").get());
-    		
-//    		
-//    		try {
-//				Thread.sleep(1_000);
-//			} catch (InterruptedException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-    		throw e;
-    	}
+    	return getPage(root, page);
     }
     
     
     public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
-    	return new SearchResult(getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait)));
+        Tuple<String,Set<String>> set = getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait));
+    	return new SearchResult(set.k(),set.v(),this);
     }
     
     public SearchResult nameSearch(String query) throws IOException{
@@ -268,47 +253,49 @@ public class SubstanceSearcher {
 
      //   System.out.println("query url is " + rootUrl);
         Set<String> substances = new LinkedHashSet<>();
-
+        Set<String> specialMatches = new LinkedHashSet<>();
         Set<String> temp;
+        
         HtmlPage firstPage=null;
         String keyString = null;
         do {
-        	 HtmlPage htmlPage=null;
-        	 try{
-        		 htmlPage = session.submit(req.setQueryParameter("page", page+"").get());
-        	 }catch(Exception e){
-//                 e.printStackTrace();
-             	break;
-             }
-        	temp = getSubstancesFrom(htmlPage).v();
-            //stop if the paging throws an error
+            HtmlPage htmlPage = null;
+            try {
+                htmlPage = session.submit(req.setQueryParameter("page", page + "").get());
+            } catch (Exception e) {
+                break;
+            }
+            temp = getSubstancesFrom(htmlPage).v();
+            specialMatches.addAll(getSpecialMatchesFrom(htmlPage));
+            // stop if the paging throws an error
             String htmlText = htmlPage.asXml();
-            
-            
-            if(firstPage ==null){
+
+            if (firstPage == null) {
                 firstPage = htmlPage;
                 keyString = getKeyFrom(htmlText);
             }
             page++;
 
-            Matcher m=TOTAL_PATTERN.matcher(htmlText);
+            Matcher m = TOTAL_PATTERN.matcher(htmlText);
             String total = null;
-            if(m.find()){
-            	total=m.group(1);
-
+            if (m.find()) {
+                total = m.group(1);
             }
-            
-            //we check the return value of the add() call
-            //because when we get to the page beyond the end of the results
-            //it returns the first page again
-            //so we can check to see if we've already added these
-            //records (so add() will return false)
-            //which will break us out of the loop.
-        }while(substances.addAll(temp));
+            // we check the return value of the add() call
+            // because when we get to the page beyond the end of the results
+            // it returns the first page again
+            // so we can check to see if we've already added these
+            // records (so add() will return false)
+            // which will break us out of the loop.
+        } while (substances.addAll(temp));
         
         
-        
-        SearchResult results = new SearchResult(keyString, substances);
+        SearchResult results = new SearchResult.Builder()
+                                        .searcher(this)
+                                        .searchKey(keyString)
+                                        .uuids(substances)
+                                        .specialUuids(specialMatches)
+                                        .build();
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);
         }
@@ -329,7 +316,7 @@ public class SubstanceSearcher {
     	Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
 
     	html.querySelectorAll("div.panel-default")
-    		.parallelStream() //Not necessary, but kinda cool
+    		.stream()
     		.filter(n->n.asXml().contains("toggleFacet"))
     		.forEach(c->{
     			String facetName = c.querySelector("h3").asText().trim();
@@ -353,42 +340,51 @@ public class SubstanceSearcher {
 
 
     }
-//
-//    private Set<String> getSubstancesFrom(String html){
-//        Set<String> substances = new LinkedHashSet<>();
-//        
-//        Matcher matcher = SUBSTANCE_LINK_PATTERN.matcher(html);
-//        while(matcher.find()){
-//            substances.add(matcher.group(1));
-//        }
-//
-//
-//        return substances;
-//    }
-
-    public static Function<String, Optional<String>> getMatchingGroup(Pattern p, int group){
-    	return (s)->{
-    		Matcher m = p.matcher(s);
-    		if(!m.find()){
-    			return Optional.empty();
-    		}else{
-    			return Optional.of(m.group(group));
-    		}
-    	};
+    
+    public static Function<String, Optional<String>> getMatchingGroup(String regex, int group){
+        Pattern p = Pattern.compile(regex);
+        return Util.getMatchingGroup(p,group);
+    }
+    
+    /**
+     * Finds all the matching substance truncated uuids
+     * in the specified {@link DomNode}, returning
+     * a set of those identifiers.
+     * @param dn
+     * @return
+     */
+    private Set<String> getSubstanceMatchesIn(DomNode dn){
+        return dn.querySelectorAll("a[href*=\"ginas/app/substance/\"]")
+                .stream()
+                .map(a->a.getAttributes().getNamedItem("href").getNodeValue())
+                .map(Util.getMatchingGroup(SUBSTANCE_LINK_HREF_PATTERN, 1))
+                .filter(o->o.isPresent())
+                .map(o->o.get())
+                .collect(Collectors.toSet());
     }
     
     private Tuple<String,Set<String>> getSubstancesFrom(HtmlPage page){
+        Set<String> substances =  getSubstanceMatchesIn(page);
         String htmlText = page.asXml();
-        Set<String> substances =  page.querySelectorAll("a[href*=\"ginas/app/substance/\"]")
-        	.stream()
-        	.map(a->a.getAttributes().getNamedItem("href").getNodeValue())
-        	.map(getMatchingGroup(SUBSTANCE_LINK_HREF_PATTERN, 1))
-        	.filter(o->o.isPresent())
-        	.map(o->o.get())
-        	.collect(Collectors.toSet());
-        
         return Tuple.of(getKeyFrom(htmlText), substances);
 
+    }
+    
+    /**
+     * Returns all matching substance truncated uuids
+     * in the dom element associated with the special
+     * matches section (somtimes called "sponsored").
+     * @param page
+     * @return
+     */
+    private Set<String> getSpecialMatchesFrom(HtmlPage page){
+        Set<String> set = new HashSet<>();
+        DomNode dn = page.querySelector(".specialmatches");
+        
+        if(dn!=null){
+            set.addAll(getSubstanceMatchesIn(dn));
+        }
+        return set;
     }
     
     public static Set<String> getStructureImagesFrom(HtmlPage page){
@@ -453,76 +449,6 @@ public class SubstanceSearcher {
     
 
 
-    public class SearchResult{
-        private final Set<String> uuids;
-        private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
-
-        private final String searchKey;
-        public SearchResult(Tuple<String, Set<String>> set){
-            this(set.k(), set.v());
-        }
-        public SearchResult(String searchKey, Set<String> uuids){
-            Objects.requireNonNull(uuids);
-            try{
-            	Objects.requireNonNull(searchKey);
-            }catch(Exception e){
-            	e.printStackTrace();
-            	throw e;
-            	
-            }
-
-            this.searchKey = searchKey;
-            this.uuids = Collections.unmodifiableSet(new LinkedHashSet<>(uuids));
-
-        }
-        public String getKey(){
-            return searchKey;
-        }
-        public Set<String> getUuids(){
-            return uuids;
-        }
-
-        public int numberOfResults(){
-            return uuids.size();
-        }
-
-
-        public Stream<Substance> getSubstances(){
-            SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
-
-            return src.getResults()
-                       .stream()
-                       .map( o -> (Substance) o);
-        }
-        public InputStream export(String format){
-            return getExport(format,searchKey).getInputStream();
-        }
-        
-        
-
-        public Map<String, Integer> getFacet(String facetName){
-            return facetMap.get(facetName);
-        }
-
-        public void setFacet(String facetName, Map<String, Integer> countMap){
-            Objects.requireNonNull(facetName);
-            Objects.requireNonNull(countMap);
-
-            Map<String, Integer> copy = new TreeMap<>(new SortByValueComparator(countMap, Order.DECREASING));
-            copy.putAll(countMap);
-
-            facetMap.put(facetName, Collections.unmodifiableMap(copy));
-
-
-        }
-
-        public Map<String, Map<String, Integer>> getAllFacets(){
-            return Collections.unmodifiableMap(facetMap);
-        }
-
-
-    }
-
     enum Order implements Comparator<Integer>{
         INCREASING{
             @Override
@@ -547,7 +473,7 @@ public class SubstanceSearcher {
             }
         };
     }
-    private static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
+    static class SortByValueComparator<T extends Comparable<? super T>, V> implements Comparator<T>{
         private final Map<T, V> countMap;
         private Comparator<V> order;
         public SortByValueComparator(Map<T, V> countMap, Comparator<V> order) {

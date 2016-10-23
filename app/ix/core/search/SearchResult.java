@@ -44,6 +44,7 @@ public class SearchResult {
 	final long timestamp = TimeUtil.getCurrentTimeMillis();
 	AtomicLong stop = new AtomicLong();
 	Comparator<String> idComparator = null;
+	private String generatingUrl;
 
 	private final List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
 

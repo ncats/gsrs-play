@@ -12,6 +12,7 @@ import org.junit.Test;
 import ix.AbstractGinasServerTest;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceSearcher;
 
@@ -32,7 +33,7 @@ public class FacetCountsTest extends AbstractGinasServerTest{
 
             loader.loadJson(new File("test/testdumps/rep90_part1.ginas"));
 
-            SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+            SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
 
             assertEquals(9, results.numberOfResults());
@@ -73,7 +74,7 @@ public class FacetCountsTest extends AbstractGinasServerTest{
 
             loader.loadJson(new File("test/testdumps/rep90_part2.ginas"));
 
-            SubstanceSearcher.SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
+            SearchResult results2 = searcher.substructure("C1=CC=CC=C1");
             assertEquals(17, results2.numberOfResults());            
             TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results2);
         }

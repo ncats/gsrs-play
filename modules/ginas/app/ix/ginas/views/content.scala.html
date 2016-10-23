@@ -146,7 +146,7 @@
             @if(total >= 1 && ctx!=null) {
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
                     @if(ctx.hasExactMatches()){
-	                    <div ng-init="hideall=true" ng-show="hideall">
+	                    <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
 	                    @if(ctx.getExactMatches().size()==1){
 	                        <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
 	                    }else{

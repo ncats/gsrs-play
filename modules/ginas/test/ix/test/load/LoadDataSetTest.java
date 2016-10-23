@@ -21,6 +21,7 @@ import ix.test.server.BrowserSession;
 import ix.test.server.ConfigUtil;
 import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceSearcher;
 import ix.test.util.TestUtil;
@@ -53,10 +54,10 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     	
     	
     	SubstanceSearcher searcher = new SubstanceSearcher(session);
-    	SubstanceSearcher.SearchResult all = searcher.all();
+    	SearchResult all = searcher.all();
         assertEquals(90, all.numberOfResults());
        
-        SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+        SearchResult results = searcher.substructure("C1=CC=CC=C1");
         assertEquals(17, results.numberOfResults());
         TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);
         
@@ -66,10 +67,10 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearcher searcher = new SubstanceSearcher(session);
     	searcher.setSearchOrder("Name Count");
-    	SubstanceSearcher.SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
+    	SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
     	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
     	
-    	SubstanceSearcher.SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
+    	SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
     	//System.out.println("Found results size:" + results2.getUuids().toString());
     	assertEquals(1, results2.getUuids().size());
     	String findUUID="445d5a83";
@@ -84,15 +85,15 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearcher searcher = new SubstanceSearcher(session);
-    	SubstanceSearcher.SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
-    	SubstanceSearcher.SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
+    	SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
+    	SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
     	assertTrue("6th page on substructure search should have 2 entries", resultsLater.getUuids().size()==2);
     }
     private void substructureHighlightingShouldShowOnLastPage(BrowserSession session) throws IOException, AssertionError{
     	SubstanceSearcher searcher = new SubstanceSearcher(session);
     	
     	
-    	SubstanceSearcher.SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
+    	SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
     	Set<String> img_urls= SubstanceSearcher.getStructureImagesFrom(lastResults);
     	assertEquals(1,img_urls.size());
@@ -246,7 +247,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
         SubstanceSearcher searcher = new SubstanceSearcher(ts.notLoggedInBrowserSession());
 
-        SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+        SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
         assertEquals(0, results.numberOfResults());
 
@@ -280,7 +281,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 
             SubstanceSearcher searcher = new SubstanceSearcher(session);
 
-            SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+            SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
             assertEquals(0, results.numberOfResults());
             assertTrue(results.getAllFacets().isEmpty());

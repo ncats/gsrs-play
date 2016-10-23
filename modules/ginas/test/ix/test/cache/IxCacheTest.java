@@ -23,8 +23,6 @@ import ix.utils.Util;
 public class IxCacheTest  extends AbstractGinasServerTest {
 
 
-	
-
 	@Test  
 	public void testFetchFromCacheWithSameKeyReturnsFirstCachedValue() throws Exception {
 		final String result1="First";

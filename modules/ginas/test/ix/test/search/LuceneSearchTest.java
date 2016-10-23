@@ -31,6 +31,7 @@ import ix.test.query.builder.SubstanceCondition;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
 import ix.test.server.SubstanceReIndexer;
 import ix.test.server.SubstanceSearcher;
@@ -108,7 +109,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 			String html = api.getTextSearchHTML(q);
 			assertRecordCount(html, 1);
-			SubstanceSearcher.SearchResult r = searcher.exactSearch(aspirin);
+			SearchResult r = searcher.exactSearch(aspirin);
 			assertEquals(1, r.getUuids().size());
 	}
 
@@ -121,7 +122,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			new SubstanceBuilder().addName("(-)-" + ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			
-				SubstanceSearcher.SearchResult r = searcher.exactSearch(ibuprofen);
+				SearchResult r = searcher.exactSearch(ibuprofen);
 				assertEquals(1, r.getUuids().size());
 
 				ts.doAsUser(u, () -> {
@@ -143,10 +144,10 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			new SubstanceBuilder().addName("notA" + prefix).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			
-				SubstanceSearcher.SearchResult r = searcher.nameSearch(prefix);
+				SearchResult r = searcher.nameSearch(prefix);
 				// assertEquals(3, r.getUuids().size());
 				System.out.println("===========");
-				SubstanceSearcher.SearchResult r2 = searcher.nameRawSearch(prefix + "*");
+				SearchResult r2 = searcher.nameRawSearch(prefix + "*");
 				assertEquals(2, r2.getUuids().size());
 
 				ts.doAsUser(u, () -> {
@@ -172,7 +173,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			new SubstanceBuilder().addName("(+)-" + ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			
-				SubstanceSearcher.SearchResult r = searcher.exactSearch(levo);
+				SearchResult r = searcher.exactSearch(levo);
 				assertEquals(1, r.getUuids().size());
 
 				ts.doAsUser(u, () -> {
@@ -197,7 +198,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			new SubstanceBuilder().addName(dextro).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			
-				SubstanceSearcher.SearchResult r = searcher.exactSearch(dextro);
+				SearchResult r = searcher.exactSearch(dextro);
 				assertEquals(1, r.getUuids().size());
 
 				ts.doAsUser(u, () -> {
@@ -310,7 +311,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
 
-			SubstanceSearcher.SearchResult r = searcher.nameSearch(name2);
+			SearchResult r = searcher.nameSearch(name2);
 			assertEquals("Name search should return 1 result", 1, r.getUuids().size());
 			
 			assertEquals(1, suggestLater.at("/Name").size());
@@ -334,7 +335,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 			
 				for (String search : toSearch) {
-					SubstanceSearcher.SearchResult r = searcher.nameSearch(search);
+					SearchResult r = searcher.nameSearch(search);
 					assertEquals("Pre-reindex Name search for " + search + " should return 1 result", 1,
 							r.getUuids().size());
 				}
@@ -342,7 +343,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 				reindex();
 
 				for (String search : toSearch) {
-					SubstanceSearcher.SearchResult r = searcher.nameSearch(search);
+					SearchResult r = searcher.nameSearch(search);
 					assertEquals("Post-reindex Name search for " + search + " should return 1 result", 1,
 							r.getUuids().size());
 				}
@@ -354,7 +355,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 		
 			Consumer<String> searchFor = (s) -> {
 				try{
-					SubstanceSearcher.SearchResult r = searcher.nameSearch(s);
+					SearchResult r = searcher.nameSearch(s);
 					assertEquals("Search for " + s + " should return 1 result", 1, r.getUuids().size());
 				}catch(Exception e){
 					throw new IllegalStateException(e);
@@ -396,7 +397,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			new SubstanceBuilder().addName(levo).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
 			new SubstanceBuilder().addName(dextro).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
-				SubstanceSearcher.SearchResult r = searcher.nameSearch(ibuprofen);
+				SearchResult r = searcher.nameSearch(ibuprofen);
 				assertEquals(3, r.getUuids().size());
 
 				ts.doAsUser(u, () -> {
@@ -445,7 +446,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 			String html = api.getTextSearchHTML(q);
 			assertRecordCount(html, 1);
-				SubstanceSearcher.SearchResult r = searcher.nameSearch(aspirin);
+				SearchResult r = searcher.nameSearch(aspirin);
 				assertEquals(1, r.getUuids().size());
 			
 	}

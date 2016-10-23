@@ -26,12 +26,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -691,5 +694,58 @@ public class Util {
 	    }
 		
 	}
+
+	/**
+     * Generates a mapping function for the given {@link Pattern} and group
+     * number. This can be used to extract matching elements of a regex easily
+     * for a {@link Stream#map(Function)} call.
+     * 
+     * <pre>
+     *  <code>
+     *   List<String> example = 
+     *      Stream.of("FOO123", "FOO456", "FOO2", "FOO", "ASDIW")
+     *           .map(getMatchingGroup(p, 1))
+     *           .filter(o->o.isPresent())
+     *           .collect(Collectors.toList());
+     *              //["123","456","2"]        
+     *           
+     *  
+     *  </code>
+     * </pre>
+     * 
+     * @param p
+     * @param group
+     * @return
+     */
+    public static Function<String, Optional<String>> getMatchingGroup(Pattern p, int group){
+        return (s)->{
+    		Matcher m = p.matcher(s);
+    		if(!m.find()){
+    			return Optional.empty();
+    		}else{
+    			return Optional.of(m.group(group));
+    		}
+    	};
+    }
+    
+    /**
+     * Delegates to {@link #getMatchingGroup(Pattern, int)} after
+     * compiling the regex {@link Pattern}. This is equivalent
+     * to the following:
+     * 
+     * <pre>
+     * <code>
+     *  Pattern p = Pattern.compile(regex);
+     *  return getMatchingGroup(p,group);
+     * </code>
+     * </pre>
+     * @param regex
+     * @param group
+     * @return
+     */
+    public static Function<String, Optional<String>> getMatchingGroup(String regex, int group){
+        Pattern p = Pattern.compile(regex);
+        return getMatchingGroup(p,group);
+    }
 	
 }
