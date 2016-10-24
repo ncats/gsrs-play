@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -77,6 +78,7 @@ public class SubstanceFactory extends EntityFactory {
 		if (s != null) {
 			if (s.version.equals(version)) {
 				return s;
+				
 			}
 		}
 		return EntityWrapper.of(s)
@@ -501,50 +503,61 @@ public class SubstanceFactory extends EntityFactory {
 		
 		if(type.toLowerCase().startsWith("sub")){
 			context = App.substructure(q, 
-					/*top= */ 1, 
-					/*skip=*/ 1, 
-					new StructureSearchResultProcessor(false))
+					/*min=*/ 1, 
+					new StructureSearchResultProcessor())
 					.getFocused(top, skip, fdim, field);
 		}else if(type.toLowerCase().startsWith("sim")){
 			context = App.similarity(q, 
 					cutoff,
-					/*top= */ 1, 
-					/*skip=*/ 1, 
-					new StructureSearchResultProcessor(false))
+					/*min=*/ 1, 
+					new StructureSearchResultProcessor())
 					.getFocused(top, skip, fdim, field);
 		}else{
 			throw new UnsupportedOperationException("Unsupported search type:" + type);
 		}
 		
-		context.setAdapter((so, ctx)->{
-			try {
-				SearchResult sr= App.getResultFor(ctx, so);
-				List<Substance> rlist = new ArrayList<Substance>();
-				sr.copyTo(rlist, so.getSkip(), so.getTop(), true); //synchronous
-				for(Substance s: rlist){
-				    Map<String,Object> o=IxCache.getMatchingContext(ctx, EntityWrapper.of(s).getKey());
-				    s.setMatchContextProperty((Map)o);
-				}
-				return sr;
-			} catch (Exception e) {
-				e.printStackTrace();
-				throw new IllegalStateException("Error fetching search result", e);
-			}
-		});
-		
-		String s=play.mvc.Controller.request().getQueryString("sync");
-		
-		if("true".equals(s) ||
-		       "".equals(s)
-				){
-			try{
-				context.getDeterminedFuture().get(1, TimeUnit.MINUTES);
-				return redirect(context.getResultCall());
-			}catch(TimeoutException e){
-				Logger.warn("Structure search timed out!", e);
-			}
-		}
-		return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
+        return detailedSearch(context);
 	}
 	
+	
+    public static Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim,
+            String field) throws Exception {
+        SearchResultContext context;
+        context =App.sequence(q, cutoff,type, 1, new ix.ginas.controllers.GinasApp.GinasSequenceResultProcessor())
+                    .getFocused(top, skip, fdim, field);
+        
+        return detailedSearch(context);
+    }
+    
+    private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
+        context.setAdapter((so, ctx) -> {
+            try {
+                SearchResult sr = App.getResultFor(ctx, so);
+                List<Substance> rlist = new ArrayList<Substance>();
+                sr.copyTo(rlist, so.getSkip(), so.getTop(), true); // synchronous
+                for (Substance s : rlist) {
+                    s.setMatchContextFromID(ctx.getId());
+                }
+                return sr;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Error fetching search result", e);
+            }
+        });
+
+        String s = play.mvc.Controller.request().getQueryString("sync");
+
+        if ("true".equals(s) || "".equals(s)) {
+            try {
+                context.getDeterminedFuture().get(1, TimeUnit.MINUTES);
+                return redirect(context.getResultCall());
+            } catch (TimeoutException e) {
+                Logger.warn("Structure search timed out!", e);
+            }
+        }
+        return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
+    }
+
+    
+    
 }

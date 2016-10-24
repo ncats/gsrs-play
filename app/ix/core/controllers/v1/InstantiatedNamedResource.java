@@ -21,6 +21,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
+import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Global;
 import play.mvc.Result;
 
@@ -68,6 +69,15 @@ public interface InstantiatedNamedResource<I,V> {
 			Argument.of(0, int.class, "fdim"),
 			Argument.of("", String.class, "field"));
 	
+	public static final Operation SEQUENCE_SEARCH_OPERATION = new Operation("sequenceSearch", 
+            Argument.of(null, String.class, "query"),
+            Argument.of(CutoffType.SUB, CutoffType.class, "cutofftype"),
+            Argument.of(.8, double.class, "cutoff"),
+            Argument.of(0, int.class, "top"),
+            Argument.of(0, int.class, "skip"),
+            Argument.of(0, int.class, "fdim"),
+            Argument.of("", String.class, "field"));
+	
 	public static final Operation[] ALL_OPERATIONS = new Operation[]{
 															CREATE_OPERATION, 
 															UPDATE_ENTITY_OPERATION ,
@@ -82,7 +92,8 @@ public interface InstantiatedNamedResource<I,V> {
 															UPDATE_OPERATION ,								
 															FIELD_OPERATION ,									
 															PAGE_OPERATION ,
-															STRUCTURE_SEARCH_OPERATION
+															STRUCTURE_SEARCH_OPERATION,
+															SEQUENCE_SEARCH_OPERATION
 														};
 	
 	public String getName();
@@ -166,6 +177,10 @@ public interface InstantiatedNamedResource<I,V> {
 	default Result structureSearch(String q, String type, double cutoff, int top, int skip, int fdim, String field){
 		return operate(STRUCTURE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim,field));
 	}
+	
+	default Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim, String field){
+        return operate(SEQUENCE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim,field));
+    }
 	
 	default Result validate(){
 		return operate(VALIDATE_OPERATION);

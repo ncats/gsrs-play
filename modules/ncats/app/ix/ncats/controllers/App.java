@@ -1,110 +1,92 @@
 package ix.ncats.controllers;
 
-import java.io.*;
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.sql.DatabaseMetaData;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.regex.Matcher;
 
-import ix.core.util.CachedSupplier;
-import ix.core.util.Java8Util;
-import ix.utils.UUIDUtil;
-import play.Play;
-import play.db.DB;
-import play.Logger;
-import play.mvc.Controller;
-import play.mvc.Result;
-import play.mvc.Call;
-import play.mvc.Content;
-import play.mvc.BodyParser;
-import play.libs.ws.*;
-import play.libs.F;
-import play.mvc.Http;
-import play.mvc.Http.Request;
-import akka.actor.ActorSystem;
-import akka.actor.UntypedActorFactory;
-import akka.actor.PoisonPill;
-import akka.actor.Inbox;
-import akka.routing.Broadcast;
-import akka.routing.RouterConfig;
-import akka.routing.FromConfig;
-import akka.routing.RoundRobinRouter;
-import akka.routing.SmallestMailboxRouter;
+import javax.imageio.ImageIO;
+
+import org.freehep.graphicsio.svg.SVGGraphics2D;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import be.objectify.deadbolt.java.actions.Dynamic;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
-import java.sql.Connection;
-
-import ix.seqaln.SequenceIndexer;
-import ix.seqaln.SequenceIndexer.CutoffType;
-import ix.utils.CallableUtil.TypedCallable;
-import ix.utils.Global;
-import ix.utils.Util;
-import tripod.chem.indexer.StructureIndexer;
-
-import static ix.core.search.text.TextIndexer.*;
-import static tripod.chem.indexer.StructureIndexer.*;
-import ix.core.plugins.TextIndexerPlugin;
-import ix.core.plugins.StructureIndexerPlugin;
-import ix.core.plugins.SequenceIndexerPlugin;
-import ix.core.plugins.IxContext;
-import ix.core.plugins.IxCache;
-import ix.core.plugins.PersistenceQueue;
-import ix.core.plugins.PayloadPlugin;
-import ix.core.controllers.search.SearchFactory;
-import ix.core.controllers.search.SearchRequest;
+import chemaxon.struc.Molecule;
+import chemaxon.util.MolHandler;
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalAtom;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.chemical.ChemicalRenderer;
+import gov.nih.ncgc.chemical.DisplayParams;
+import gov.nih.ncgc.jchemical.Jchemical;
+import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.EnantiomerGenerator;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
-import ix.core.chem.EnantiomerGenerator.Callback;
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.PayloadFactory;
+import ix.core.controllers.StructureFactory;
+import ix.core.controllers.search.SearchFactory;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
+import ix.core.plugins.IxCache;
+import ix.core.plugins.IxContext;
+import ix.core.plugins.PayloadPlugin;
+import ix.core.plugins.PersistenceQueue;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.ResultProcessor;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
-import ix.core.controllers.StructureFactory;
-import ix.core.controllers.EntityFactory;
-import ix.core.controllers.PayloadFactory;
-import chemaxon.formats.MolImporter;
-import chemaxon.struc.Molecule;
-import chemaxon.struc.MolAtom;
-import chemaxon.struc.MolBond;
-import chemaxon.util.MolHandler;
-
-import java.awt.Dimension;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import org.freehep.graphicsio.svg.SVGGraphics2D;
-
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalAtom;
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import gov.nih.ncgc.chemical.ChemicalRenderer;
-import gov.nih.ncgc.chemical.DisplayParams;
-import gov.nih.ncgc.nchemical.NchemicalRenderer;
-import gov.nih.ncgc.jchemical.Jchemical;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import net.sf.ehcache.Element;
-import ix.ncats.controllers.auth.*;
+import ix.core.search.text.TextIndexer.FV;
+import ix.core.search.text.TextIndexer.Facet;
+import ix.core.util.CachedSupplier;
+import ix.core.util.Java8Util;
+import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
-import ix.ncats.resolvers.*;
+import ix.ncats.resolvers.NCIStructureResolver;
+import ix.ncats.resolvers.PubChemStructureResolver;
+import ix.ncats.resolvers.Resolver;
+import ix.seqaln.SequenceIndexer.CutoffType;
+import ix.utils.CallableUtil.TypedCallable;
+import ix.utils.Global;
+import ix.utils.UUIDUtil;
+import ix.utils.Util;
+import net.sf.ehcache.Element;
+import play.Logger;
+import play.Play;
+import play.mvc.BodyParser;
+import play.mvc.Call;
+import play.mvc.Http.Request;
+import play.mvc.Result;
 
 
 /**
@@ -136,6 +118,7 @@ public class App extends Authentication {
 	public static TextIndexer getTextIndexer(){
 		return Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 	}
+	
 	/**
 	 * This returns links to up to 11 pages of interest.
 	 * 
@@ -1118,91 +1101,120 @@ public class App extends Authentication {
 		}
 		return null;
 	}
-	public static SearchResultContext sequence
-	(final String seq, final double identity, final int rows,
-			final int page, CutoffType ct, final ResultProcessor processor) {
-		try {
-			final String key = App.getKeyForCurrentRequest();
-			return getOrElse
-					(EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
-							TypedCallable.of(() -> {
-								processor.setResults
-								(rows, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct));
-								return processor.getContext();
-							},SearchResultContext.class));
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-			Logger.error("Can't perform sequence identity search", ex);
-		}
-		return null;
-	}
-
-	public static SearchResultContext substructure
-	(final String query, final int rows,
-			final int page, final ResultProcessor processor) {
-		try {
-			final String key = App.getKeyForCurrentRequest();
-			Logger.debug("substructure: query="+query
-					+" rows="+rows+" page="+page+" key="+key);
-			return getOrElse
-					(EntityPersistAdapter.getStructureIndexer().lastModified(),
-							key, TypedCallable.of(()->{
-								try{
-									System.out.println("Making context");
-									processor.setResults
-									(rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
-									SearchResultContext ctx = processor.getContext();
-									ctx.setKey(key);
-									Logger.debug("## cache missed: "+key+" => "+ctx);
-									System.out.println("Making context" + ctx);
-									return ctx;
-								}catch(Exception e){
-									e.printStackTrace();
-									throw e;
-								}
-							},SearchResultContext.class));
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-			Logger.error("Can't perform substructure search", ex);
-			throw new IllegalArgumentException(ex);
-		}
-	}
-
-	static String getKey (String q, double t) {
-		return Util.sha1(q) + "/"+String.format("%1$d", (int)(1000*t+.5));
-	}
-
 	
 	
-	
-	public static SearchResultContext similarity
-	(final String query, final double threshold,
-			final int rows, final int page,
-			final SearchResultProcessor processor) {
-		try {
-			final String key = App.getKeyForCurrentRequest();
-			//final String key = "similarity/"+getKey (query + request().getQueryString("order"), threshold);
-			return getOrElse
-					(EntityPersistAdapter.getStructureIndexer().lastModified(),
-							key, TypedCallable.of(()->{
-								processor.setResults
-								(rows, 
-										EntityPersistAdapter.getStructureIndexer().similarity(query, threshold, 0)
-										);
-								SearchResultContext ctx = processor.getContext();
-								ctx.setKey(key);
-								return ctx;
-							},SearchResultContext.class));
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-			Logger.error("Can't execute similarity search", ex);
-		}
-		return null;
+	public static interface SearcherTask{
+	    public String getKey();
+	    public void search(ResultProcessor processor) throws Exception;
+	    public long getLastUpdatedTime();
 	}
+	
+	public static abstract class StructureSeachTask implements SearcherTask{
+	    
+        @Override
+        public String getKey() {
+            return App.getKeyForCurrentRequest();
+        }
 
+        @Override
+        public long getLastUpdatedTime() {
+            return EntityPersistAdapter
+                    .getStructureIndexer()
+                    .lastModified();
+        }
+	    
+	}
+	
+	public static abstract class SequenceSeachTask implements SearcherTask{
+        
+        @Override
+        public String getKey() {
+            return App.getKeyForCurrentRequest();
+        }
+
+        @Override
+        public long getLastUpdatedTime() {
+            return EntityPersistAdapter
+                   .getSequenceIndexer()
+                    .lastModified();
+        }
+        
+    }
+	
+	public static SearchResultContext substructure(final String query, final int min, final ResultProcessor processor) {
+	    StructureSeachTask task = new StructureSeachTask(){
+            @Override
+            public void search(ResultProcessor processor2) throws Exception {
+                processor2.setResults(min, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
+            }
+	    };
+	    return search(task,processor);
+    }
+	
+	public static SearchResultContext similarity(final String query, final double sim, final int min, final ResultProcessor processor) {
+        StructureSeachTask task = new StructureSeachTask(){
+            @Override
+            public void search(ResultProcessor processor2) throws Exception {
+                processor2.setResults(min, EntityPersistAdapter.getStructureIndexer().similarity(query, sim));
+            }
+        };
+        return search(task,processor);
+    }
+
+    public static SearchResultContext sequence(final String seq, final double identity,
+            final CutoffType ct, final int min, final ResultProcessor processor){
+        SequenceSeachTask task = new SequenceSeachTask(){
+            @Override
+            public void search(ResultProcessor processor2) throws Exception {
+                processor.setResults(min, EntityPersistAdapter.getSequenceIndexer().search(seq, identity, ct));
+            }
+        };
+        return search(task,processor);
+    }
+	
+	
+	public static SearchResultContext search(SearcherTask task, ResultProcessor processor) {
+	    try {
+            final String key = task.getKey();
+            return getOrElse(task.getLastUpdatedTime(), key,
+                            TypedCallable.of(() -> {
+                                task.search(processor);
+                                SearchResultContext ctx = processor.getContext();
+                                ctx.setKey(key);
+                                return ctx;
+                            },SearchResultContext.class));
+        }catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform advanced search", ex);
+            throw new IllegalStateException("Can't perform advanced search", ex);
+        }
+	}
+	
+	
+    @Deprecated
+    public static SearchResultContext sequence(final String seq, final double identity, final int rows, final int page,
+            CutoffType ct, final ResultProcessor processor) {
+        return sequence(seq, identity, ct, rows * page, processor);
+    }
+
+    
+    @Deprecated
+    public static SearchResultContext substructure(final String query, final int rows, final int page,
+            final ResultProcessor processor) {
+        return substructure(query, rows, processor);
+    }
+
+    
+    @Deprecated
+    public static SearchResultContext similarity(final String query, final double threshold, final int rows,
+            final int page, final SearchResultProcessor processor) {
+        return similarity(query, threshold, rows, processor);
+    }
+
+    static String getKey (String q, double t) {
+        return Util.sha1(q) + "/"+String.format("%1$d", (int)(1000*t+.5));
+    }
+    
 	/**
 	 * Check if the current request has a wait parameter included
 	 * @return
@@ -1222,9 +1234,9 @@ public class App extends Authentication {
 		SearchResultContext src= new SearchResultContext(result);
 		List<T> resultList = new ArrayList<T>();
 		int[] pages = new int[0];
-		if (result.count() > 0) {
-			rows = Math.min(result.count(), Math.max(1, rows));
-			pages = paging(rows, page, result.count());
+		if (result.getCount() > 0) {
+			rows = Math.min(result.getCount(), Math.max(1, rows));
+			pages = paging(rows, page, result.getCount());
 
 			//block for results only if the request specifies this
 			if(result.getOptions().isWait()){
@@ -1233,7 +1245,7 @@ public class App extends Authentication {
 				result.copyTo(resultList, (page-1)*rows, rows, false);
 			}
 		}
-		return renderer.render(src, page, rows, result.count(),
+		return renderer.render(src, page, rows, result.getCount(),
 				pages, result.getFacets(), resultList);
 	}
 	
@@ -1317,26 +1329,6 @@ public class App extends Authentication {
 		
 		final String key = getKey (context, options, "facet", "fdim");
 		final SearchResult result = getResultFor(context, options);
-//		
-//		final SearchResult result = 
-//				getOrElse(key,  TypedCallable.of(() -> {
-//					Collection results = context.getResults();
-//					if (results.isEmpty()) {
-//						return null;
-//					}
-//					SearchResult searchResult =
-//							SearchFactory.search (results, null, results.size(), 0,
-//									renderer.getFacetDim(),
-//									request().queryString());
-//					Logger.debug("Cache misses: "
-//							+key+" size="+results.size()
-//							+" class="+searchResult);
-//					// make an alias for the context.id to this search
-//					// result
-//					return cacheKey (searchResult, context.getId());
-//				}, SearchResult.class));
-
-
 
 		final List<T> results = new ArrayList<T>();
 		final List<Facet> facets = new ArrayList<Facet>();
@@ -1349,9 +1341,9 @@ public class App extends Authentication {
 				IxCache.remove(key);
 			}
 
-			count = result.count();
+			count = result.getCount();
 
-			Logger.debug(key+": "+count+"/"+result.count()
+			Logger.debug(key+": "+count+"/"+result.getCount()
 			+" finished? "+context.isFinished()
 			+" stop="+stop);
 
@@ -1374,7 +1366,7 @@ public class App extends Authentication {
 
 			// This is different than the way that the text indexer allows ajaxing to 
 			// check the status of unfinished jobs. The idea here is that it would be 
-			// to confusing to have 2 levels of ajax waiting in the background
+			// too confusing to have 2 levels of ajax waiting in the background
 			// and since this method is only called for those complex external
 			// searches, which typically get some smaller number of records back,
 			// this may be an acceptable lack of responsiveness

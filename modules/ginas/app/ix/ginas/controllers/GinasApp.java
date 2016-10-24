@@ -81,6 +81,8 @@ import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.controllers.viewfinders.ListViewFinder;
+import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.SubstanceExporterFactory;
 import ix.core.util.ModelUtils;
@@ -155,60 +157,6 @@ public class GinasApp extends App {
     // Currently, this is "Newest change first"
     private static final String DEFAULT_SEARCH_ORDER = "$lastEdited";
 
-    static CachedSupplier<Map<String, ResultRenderer<?>>> listRenderers = CachedSupplier.of(() -> {
-        Map<String, ResultRenderer<?>> list = new HashMap<>();
-        list.put(Substance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.conceptlist.render((Substance) t);
-        });
-        list.put(ChemicalSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.chemlist.render((ChemicalSubstance) t, ct.getId());
-        });
-        list.put(ProteinSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.proteinlist.render((ProteinSubstance) t, ct.getId());
-        });
-        list.put(NucleicAcidSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.nucleicacidlist.render((NucleicAcidSubstance) t, ct.getId());
-        });
-        list.put(PolymerSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.polymerlist.render((PolymerSubstance) t, ct.getId());
-        });
-        list.put(MixtureSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.mixlist.render((MixtureSubstance) t);
-        });
-        list.put(StructurallyDiverseSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.diverselist.render((StructurallyDiverseSubstance) t);
-        });
-        list.put(SpecifiedSubstanceGroup1Substance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.g1sslist.render((SpecifiedSubstanceGroup1Substance) t);
-        });
-        return list;
-    });
-    static CachedSupplier<Map<String, ResultRenderer<?>>> thumbRenderers = CachedSupplier.of(() -> {
-        Map<String, ResultRenderer<?>> thumbs = new HashMap<>();
-
-        thumbs.put(Substance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.conceptthumb.render((Substance) t);
-        });
-        thumbs.put(ChemicalSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.chemthumb.render((ChemicalSubstance) t, ct.getId());
-        });
-        thumbs.put(ProteinSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.proteinthumb.render((ProteinSubstance) t, ct.getId());
-        });
-        thumbs.put(NucleicAcidSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.nucleicacidthumb.render((NucleicAcidSubstance) t, ct.getId());
-        });
-        thumbs.put(PolymerSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.polymerthumb.render((PolymerSubstance) t, ct.getId());
-        });
-        thumbs.put(MixtureSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.mixturethumb.render((MixtureSubstance) t);
-        });
-        thumbs.put(StructurallyDiverseSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.diversethumb.render((StructurallyDiverseSubstance) t);
-        });
-        return thumbs;
-    });
 
     private static CachedSupplier<GinasSubstanceExporterFactoryPlugin> factoryPlugin = CachedSupplier
             .of(() -> Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class));
@@ -1130,7 +1078,7 @@ public class GinasApp extends App {
     public static Result similarity(final String query, final double threshold, int rows, int page) {
         try {
             SearchResultContext context = similarity(query, threshold, rows, page,
-                    new StructureSearchResultProcessor(isWaitSet()));
+                    new StructureSearchResultProcessor());
             return fetchResult(context, rows, page, new SubstanceResultRenderer());
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -1158,9 +1106,8 @@ public class GinasApp extends App {
 
     public static Result substructure(final String query, final int rows, final int page) {
         try {
-
             SearchResultContext context = App.substructure(query, rows, page,
-                    new StructureSearchResultProcessor(isWaitSet()));
+                    new StructureSearchResultProcessor());
             return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
         } catch (BogusPageException ex) {
             return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
@@ -1440,8 +1387,8 @@ public class GinasApp extends App {
         int index;
         public static EntityInfo<ChemicalSubstance> chemMeta = EntityUtils.getEntityInfoFor(ChemicalSubstance.class);
 
-        public StructureSearchResultProcessor(boolean wait) {
-            this.setWait(wait);
+        public StructureSearchResultProcessor() {
+            
         }
 
         protected ChemicalSubstance instrument(StructureIndexer.Result r) throws Exception {
@@ -1478,7 +1425,7 @@ public class GinasApp extends App {
 
     public static class GinasSequenceResultProcessor
             extends SearchResultProcessor<SequenceIndexer.Result, ProteinSubstance> {
-        GinasSequenceResultProcessor() {
+        public GinasSequenceResultProcessor() {
         }
 
         @Override
@@ -2030,7 +1977,7 @@ public class GinasApp extends App {
 
     private static CachedSupplier<Map<String, Integer>> codeSystemOrder = CachedSupplier.of(() -> {
         // Add specific codes to ordered list
-        List<String> codeSystems = Play.application().configuration().getStringList("ix.ginas.codes.order",
+        List<String> codeSystems = ConfigHelper.getOrDefault("ix.ginas.codes.order",
                 new ArrayList<String>());
 
         int i = 0;
@@ -2053,19 +2000,18 @@ public class GinasApp extends App {
      * @return
      */
     public static <T> Html getListContentFor(T o, SearchResultContext ctx) {
-        ResultRenderer<T> render = (ResultRenderer<T>) listRenderers.get()
-                .computeIfAbsent(EntityWrapper.of(o).getKind(), k -> {
-                    return (t, ct) -> {
-                        // default to substance concept
+        ResultRenderer<T> render = (ResultRenderer<T>) ListViewFinder.getRendererOrDefault(o.getClass(), 
+                (t, ct) -> {
                         return ix.ginas.views.html.list.conceptlist.render((Substance) t);
-                    };
-                });
+                    });
         try {
             return render.render((T) o, ctx);
         } catch (Throwable e) {
             Logger.error(e.getMessage(), e);
-            return ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage());
+            return Html.apply("<div class=\"col-md-3 thumb-col\">"
+                    + ix.ginas.views.html.errormessage.render(CAN_T_DISPLAY_RECORD + e.getMessage()).body() + "</div>");
         }
+        
     }
 
     /**
@@ -2076,13 +2022,11 @@ public class GinasApp extends App {
      * @return
      */
     public static <T> Html getGridContentFor(T o, SearchResultContext ctx) {
-        ResultRenderer<T> render = (ResultRenderer<T>) thumbRenderers.get()
-                .computeIfAbsent(EntityWrapper.of(o).getKind(), k -> {
-                    return (t, ct) -> {
+        ResultRenderer<T> render = (ResultRenderer<T>) ThumbViewFinder.getRendererOrDefault(o.getClass(), 
+                (t, ct) -> {
                         // default to substance concept
                         return ix.ginas.views.html.thumbs.conceptthumb.render((Substance) t);
-                    };
-                });
+                    });
         try {
             return render.render((T) o, ctx);
         } catch (Throwable e) {

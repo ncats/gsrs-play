@@ -49,6 +49,8 @@ import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.util.Version;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -75,6 +77,8 @@ public class SequenceIndexer {
 		private Supplier<T> sup;
 		private boolean wasRun=false;
 		private T local=null;
+		
+		
 		
 		public CachedSup(Supplier<T> sup){
 			this.sup=sup;
@@ -110,7 +114,16 @@ public class SequenceIndexer {
 	public static enum CutoffType{
 		LOCAL,
 		GLOBAL,
-		SUB
+		SUB;
+		
+		public static CutoffType valueOfOrDefault(String s){
+		    try{
+		        CutoffType ct=CutoffType.valueOf(s);
+		        return ct;
+		    }catch(Exception e){
+		        return GLOBAL;
+		    }
+		}
 	}
 
 	static class HSP implements Comparable<HSP> {
@@ -144,8 +157,8 @@ public class SequenceIndexer {
          * 
          */
         private static final long serialVersionUID = 1L;
-        public int qi, qj;
-		public int ti, tj;
+        private int qi, qj;
+        private int ti, tj;
 
 		public SEG (int qi, int qj, int ti, int tj) {
 			this.qi = qi;
@@ -223,7 +236,7 @@ public class SequenceIndexer {
          */
         private static final long serialVersionUID = 1L;
         
-        public final SEG segment; // coordinate of query
+        private final SEG segment; // coordinate of query
 		public final String query; // segment of query
 		public final String target; // segment of sequence
 		public final String alignment; // full alignment string
@@ -231,6 +244,11 @@ public class SequenceIndexer {
 		public final double iden;
 		public final double global;
 		public final double sub;
+		
+		@JsonIgnore
+		public SEG getSegment(){
+		    return segment;
+		}
 
 		BitSet bsq;
 		BitSet bst;

@@ -3,7 +3,6 @@ package ix.core.search;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import ix.core.util.ConfigHelper;
 import play.Logger;
 
 /**
@@ -18,14 +17,13 @@ public abstract class SearchResultProcessor<T, R> implements ResultProcessor<T, 
     
     public SearchResultProcessor () {}
     
-    
-	@Override
-	public void setWait(boolean wait) {
+    @Deprecated
+    public void setWait(boolean wait) {
 		this.wait=wait;
 	}
 
 
-	@Override
+    @Deprecated
 	public boolean isWait() {
 		return wait;
 	}
@@ -38,11 +36,12 @@ public abstract class SearchResultProcessor<T, R> implements ResultProcessor<T, 
 
 
 	@Override
-	public void setResults(Iterator<T> results) {
+	public void setUnadaptedResults(Iterator<T> results) {
 		this.results=results;
 	}
+	
 	@Override
-	public Iterator<T> getResults() {
+	public Iterator<T> getUnadaptedResults() {
 		return this.results;
 	}
 
@@ -60,7 +59,5 @@ public abstract class SearchResultProcessor<T, R> implements ResultProcessor<T, 
 	}
 	
 	protected abstract R instrument(T result) throws Exception;
-
-
 	
 }

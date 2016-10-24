@@ -53,6 +53,8 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 		searcher= new SubstanceSearcher(browserSession);
 	}
 	
+	
+	
 	@After
 	public void tearDown() {
 		try{

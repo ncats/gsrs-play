@@ -32,7 +32,10 @@ import ix.core.util.pojopointer.PojoPointer;
 
 @RunWith(Parameterized.class)
 public class PojoPointerTest extends AbstractGinasTest{
-	
+	static{
+	    System.out.println("Found this at least");
+	}
+    
 	public static class SerializableObject{
 		public String stringField;
 		
@@ -84,12 +87,14 @@ public class PojoPointerTest extends AbstractGinasTest{
 	
     @Parameters(name="{0}")
     static public Collection<Object[]> findstuff(){
-    	List<Object[]> mylist  =  new ArrayList<Object[]>();
+        System.out.println("############################");
+        List<Object[]> mylist  =  new ArrayList<Object[]>();
     	for(FIND_WITH fw:FIND_WITH.values()){
     		for(POINT_WITH pw: POINT_WITH.values()){
     			mylist.add(new Object[]{fw+":"+pw,fw,pw});
     		}
     	}
+    	
     	return mylist;
     }
     
@@ -152,7 +157,7 @@ public class PojoPointerTest extends AbstractGinasTest{
 	
 	
 	public static class SimpleObject{
-		public String str;
+	    public String str;
 		public SimpleObject(String s){
 			this.str=s;
 		}

@@ -2,6 +2,7 @@ package ix.core.search;
 
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
 import akka.actor.ActorRef;
@@ -14,9 +15,6 @@ import play.Logger;
 import play.libs.Akka;
 
 public interface ResultProcessor<T, R> extends ResultMapper<T,R>{
-
-	void setWait(boolean wait);
-	boolean isWait();
 	
 	default boolean isDone(){
 		return getContext().isDetermined(); //kinda weird way to do this
@@ -39,17 +37,17 @@ public interface ResultProcessor<T, R> extends ResultMapper<T,R>{
 		setResults(StreamUtil.forEnumeration(results));
 	}
 	default void setResults(Stream<T> results){
-		setResults(results.iterator());
+		setUnadaptedResults(results.iterator());
 	}
-	public void setResults(Iterator<T> results);
+	public void setUnadaptedResults(Iterator<T> results);
 	
-	public Iterator<T> getResults();
+	public Iterator<T> getUnadaptedResults();
 	
 	default int process (int max) throws Exception {
-        while (getResults().hasNext()
+        while (getUnadaptedResults().hasNext()
                && !isDone () 
                && (max <= 0 || getContext().getCount() < max)) {
-            T r = getResults().next();
+            T r = getUnadaptedResults().next();
             // This will simulate a slow structure processing (e.g. slow database fetch)
             // This should be used in conjunction with another debugSpin in TextIndexer
             // to simulate both slow fetches and slow lucene processing
@@ -68,15 +66,11 @@ public interface ResultProcessor<T, R> extends ResultMapper<T,R>{
         }
         return getContext().getCount();
     }
-	//Fundamentally, a processor needs to do 2 things:
-	//Accept a set of unadapted records
-	//Adapt the records
-	//Create a SearchResultContext with those pieces
-	//added
+	
 	
 	/*
 	 * 
-	 * Composition wise, that means there are a few tasks:
+	 * Composition wise, there are a few tasks:
 	 * 
 	 * 1. mapper from given result to new result (should be 1 to 1? -- no!)
 	 * 2. consumer, which takes the result set to be passed to the mapper
@@ -93,22 +87,21 @@ public interface ResultProcessor<T, R> extends ResultMapper<T,R>{
 		setResults(results);
         SearchResultContext context=getContext();
         context.setStart(TimeUtil.getCurrentTimeMillis());
-        if(isWait()){
-        	process();
-        	context.setStatus(SearchResultContext.Status.Determined);
-        	context.setStop(TimeUtil.getCurrentTimeMillis());
-        }else{
-            // the idea is to generate enough results for 1 page, and 1 extra record
-        	// (enough to show pagination) and return immediately. as the user pages,
-            // the background job will fill in the rest of the results.
-        	int count = process (rows+1);
-            
-            // while we continue to fetch the rest of the results in the
-            // background
-            ActorRef handler = Akka.system().actorOf
+
+        // the idea is to generate enough results for 1 page, and 1 extra record
+        // (enough to show pagination) and return immediately. as the user pages,
+        // the background job will fill in the rest of the results.
+        int count = process (rows+1);
+
+        // while we continue to fetch the rest of the results in the
+        // background
+        ActorRef handler = Akka.system().actorOf
                 (Props.create(SearchResultHandler.class));
-            handler.tell(this, ActorRef.noSender());
-            Logger.debug("## search results submitted: "+handler);
-        }
+        handler.tell(this, ActorRef.noSender());
+        Logger.debug("## search results submitted: "+handler);
     }
+	
+	default Future<Void> getCompletedFuture(){
+	    return this.getContext().getDeterminedFuture();
+	}
 }
