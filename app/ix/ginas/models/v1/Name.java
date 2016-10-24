@@ -42,6 +42,55 @@ import ix.ginas.models.utils.JSONEntity;
 @Table(name="ix_ginas_name")
 @SingleParent
 public class Name extends CommonDataElementOfCollection {
+
+	public static enum Sorter implements  Comparator<Name> {
+
+		/**
+		 * Utility function to sort names in nice display order.
+		 * <p>
+		 * Sort criteria: </p>
+		 * <ol>
+		 * <li> Display Name </li>
+		 * <li> Preferred status</li>
+		 * <li> Official status</li>
+		 * <li> English first</li>
+		 * <li> Number of References</li>
+		 * <li> Name Type</li>
+		 * <li> Alphabetical</li>
+		 * </ol>
+		 */
+		DISPlAY_NAME_FIRST_ENGLISH_FIRST{
+			public int compare(Name o1, Name o2) {
+				if(o1.isDisplayName()!= o2.isDisplayName()){
+					if(o1.isDisplayName())return 1;
+					return -1;
+				}
+				if(o1.preferred!=o2.preferred){
+					if(o2.preferred)return 1;
+					return -1;
+				}
+				if(o1.isOfficial()!=o2.isOfficial()){
+					if(o2.isOfficial())return 1;
+					return -1;
+				}
+				if(o1.isLanguage("en")!=o2.isLanguage("en")){
+					if(o2.isLanguage("en"))return 1;
+					return -1;
+				}
+				int refDiff=o2.getReferences().size()-o1.getReferences().size();
+				if(refDiff!=0){
+					return refDiff;
+				}
+				if(!o2.type.equals(o1.type)){
+					return -o2.type.compareTo(o1.type);
+				}
+				return -o2.name.compareTo(o1.name);
+			}
+		}
+	}
+
+
+
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
     
 
@@ -187,49 +236,8 @@ public class Name extends CommonDataElementOfCollection {
     }
     
     
-    /*
-     * Utility function to sort names in nice display order.
-     * 
-     * Sort criteria:
-     *      1) Display Name
-     * 		2) Preferred status
-     * 		3) Official status
-     * 		4) English first
-     * 		5) Number of References
-     * 		6) Name Type
-     * 		7) Alphabetical
-     * 
-     */
     public static List<Name> sortNames(List<Name> nameList){
-    	Collections.sort(nameList, new Comparator<Name>(){
-			@Override
-			public int compare(Name o1, Name o2) {
-				if(o1.isDisplayName()!= o2.isDisplayName()){
-					if(o1.isDisplayName())return 1;
-					return -1;
-				}
-				if(o1.preferred!=o2.preferred){
-					if(o2.preferred)return 1;
-					return -1;
-				}		
-				if(o1.isOfficial()!=o2.isOfficial()){
-					if(o2.isOfficial())return 1;
-					return -1;
-				}
-				if(o1.isLanguage("en")!=o2.isLanguage("en")){
-					if(o2.isLanguage("en"))return 1;
-					return -1;
-				}
-				int refDiff=o2.getReferences().size()-o1.getReferences().size();
-				if(refDiff!=0){
-					return refDiff;
-				}
-				if(!o2.type.equals(o1.type)){
-					return -o2.type.compareTo(o1.type);
-				}
-				return -o2.name.compareTo(o1.name);
-			}    		
-    	});
+    	Collections.sort(nameList, Sorter.DISPlAY_NAME_FIRST_ENGLISH_FIRST);
     	return nameList;
     }
     

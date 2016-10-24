@@ -193,12 +193,6 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
 	}
 
 
-	@JsonIgnore
-	public Set<Group> getAccessGroups() {
-		return this.getAccess();
-	}
-    
-
     public GinasCommonData () {
     }
     

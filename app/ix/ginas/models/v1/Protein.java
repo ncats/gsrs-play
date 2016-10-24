@@ -1,12 +1,7 @@
 package ix.ginas.models.v1;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -24,8 +19,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.models.BeanViews;
+import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import play.Logger;
 
 @SuppressWarnings("serial")
@@ -226,5 +223,5 @@ public class Protein extends GinasCommonSubData {
     	}
     	return null;
     }
-    
+
 }
