@@ -6,6 +6,7 @@ import org.junit.Rule;
 
 import ix.test.util.TestNamePrinter;
 import org.junit.runner.RunWith;
+import org.junit.rules.ExpectedException;
 
 /**
  * Abstract test class for doing common operations
@@ -22,5 +23,8 @@ public abstract class AbstractGinasTest {
 
 	@Rule
 	public ExpectFailureChecker expectedToFailChecker = new ExpectFailureChecker();
-	
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
+
 }

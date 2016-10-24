@@ -621,18 +621,23 @@ public class GinasTestServer extends ExternalResource{
         }
         running = true;
 
-        Map<String,Object> map = new HashMap<>(additionalConfiguration);
-        map.putAll(testSpecificAdditionalConfiguration);
+        try {
+            Map<String, Object> map = new HashMap<>(additionalConfiguration);
+            map.putAll(testSpecificAdditionalConfiguration);
 
-        ts = new TestServer(port, fakeApplication(map));
-        ts.start();
+            ts = new TestServer(port, fakeApplication(map));
+            ts.start();
 
-        principleFinder =
-                new Model.Finder(Long.class, Principal.class);
+            principleFinder =
+                    new Model.Finder(Long.class, Principal.class);
 
-        initializeControllers();
-        //we have to wait to create the users until after Play has started.
-        createInitialFakeUsers();
+            initializeControllers();
+            //we have to wait to create the users until after Play has started.
+            createInitialFakeUsers();
+        } catch(Throwable ex){
+            running = false;
+            throw ex;
+        }
     }
 
     /**
