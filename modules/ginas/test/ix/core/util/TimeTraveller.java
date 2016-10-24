@@ -2,9 +2,12 @@ package ix.core.util;
 
 import org.junit.rules.ExternalResource;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -177,6 +180,57 @@ public final class TimeTraveller extends ExternalResource{
         }
        jump(amount, units);
     }
+
+    /**
+     * Jump in time forward by the amount of {@link ChronoUnit}s.  For example
+     * to jump ahead an estimated 8 months use {@code jumpAhead(8, ChronoUnit.MONTHS)}.
+     *
+     * @param amount the number of units to jump ahead, must be positive.
+     * @param units the ChronoUnit, can not be null.
+     *
+     *
+     */
+    public void jumpAhead(long amount, ChronoUnit units){
+        if(amount < 0){
+            throw new IllegalArgumentException("amount must be >= 0 : " + amount);
+        }
+        jumpAhead(units.getDuration().multipliedBy(amount));
+    }
+
+    /**
+     * Jump in time forward
+     * @param duration the {@link Duration} to jump ahead, must be positive.
+     */
+    public void jumpAhead(Duration duration){
+
+        jump(duration.toMillis(), TimeUnit.MILLISECONDS);
+    }
+    /**
+    * Jump in time backward by the amount of {@link ChronoUnit}s.  For example
+    * to jump back an estimated 8 months use {@code jumpBack(8, ChronoUnit.MONTHS)}.
+    *
+    * @param amount the number of units to jump ahead, must be positive.
+    * @param units the ChronoUnit, can not be null.
+    *
+    *
+    */
+    public void jumpBack(long amount, ChronoUnit units){
+        if(amount < 0){
+            throw new IllegalArgumentException("amount must be >= 0 : " + amount);
+        }
+        jumpBack(units.getDuration().multipliedBy(amount));
+    }
+
+    /**
+     * Jump in time forward
+     * @param duration the {@link Duration} to jump ahead, must be positive.
+     */
+    public void jumpBack(Duration duration){
+
+        jump(-duration.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+
 
     /**
      * Jump in time backward

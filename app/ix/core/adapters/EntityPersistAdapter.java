@@ -193,7 +193,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
     /**
      * Preparing the edit ...
      * 
-     * @param bean
+     * @param ew
      * @return
      */
     public static Edit createAndPushEditForWrappedEntity(EntityWrapper ew){

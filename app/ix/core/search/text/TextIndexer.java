@@ -1740,7 +1740,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				this.instrumentIndexableValue(fieldCollector, iv);
 			});
 
-			
 			if(USE_ANALYSIS && isDeep.call() && ew.hasKey()){
 				Key key =ew.getKey();
 				if(!key.getIdString().equals("")){  //probably not needed
@@ -2276,8 +2275,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		} else if (value instanceof java.util.Date) {
 			long date = ((Date) value).getTime();
 			fields.accept(new LongField(name, date, YES));
-			if (!full.equals(name))
+			if (!full.equals(name)) {
 				fields.accept(new LongField(full, date, YES));
+			}
 			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.LONG);

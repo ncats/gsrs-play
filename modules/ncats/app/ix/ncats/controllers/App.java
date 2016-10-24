@@ -755,7 +755,9 @@ public class App extends Authentication {
     
     public static <T> T getOrElse(String key, Callable<T> callable)
         throws Exception {
-        return getOrElse (getTextIndexer().lastModified(), key, callable);
+        long modified = getTextIndexer().lastModified();
+        System.out.println("get or Else last modified " + new Date(modified));
+        return getOrElse (modified, key, callable);
     }
 
     public static <T> T getOrElse (long modified,
