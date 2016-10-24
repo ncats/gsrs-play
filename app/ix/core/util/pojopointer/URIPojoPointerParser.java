@@ -13,8 +13,10 @@ public class URIPojoPointerParser {
 	}
 	public static PojoPointer fromURI(String uripath) {
 
-		if (!uripath.startsWith("/") && uripath.length() > 0 && uripath.charAt(0) != '('
-				&& uripath.charAt(0) != URIPojoPointerParser.LAMBDA_CHAR) {
+		if (!uripath.startsWith("/") && 
+	         uripath.length() > 0 && 
+	         uripath.charAt(0) != '(' && 
+	         uripath.charAt(0) != URIPojoPointerParser.LAMBDA_CHAR) {
 			uripath = "/" + uripath;
 		}
 
@@ -214,9 +216,10 @@ public class URIPojoPointerParser {
 		return ()->{
 			int pcount=0;
 			final int i=charindex.get();
-			if(i>=uripath.length()){
+			if(i>uripath.length()){
 				return null;
 			}
+			
 			for(int j=i;j<uripath.length();j++){
 				final char c=uripath.charAt(j);
 				switch(c){
@@ -236,7 +239,7 @@ public class URIPojoPointerParser {
 					break;
 				}
 			}
-			charindex.set(uripath.length());
+			charindex.set(uripath.length()+1);
 			return uripath.substring(i);
 		};
 	}
