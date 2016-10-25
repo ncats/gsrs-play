@@ -43,33 +43,22 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     SubstanceLoader loader;
     BrowserSession session;
 
-   // @Before
-    public void loadData() throws Exception{
-
-       session = ts.newBrowserSession(admin);
-
-            loader = new SubstanceLoader(session);
-            File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
-            loader.loadJson(f);
-
-            searcher = new SubstanceSearcher(session);
-    }
-
-    @After
-    public void closeSession() {
-        session.close();
-    }
 
     @Rule
     public TimeTraveller timeTraveller = new TimeTraveller();
 
 
     @Test
-    @Ignore
     public void lastEditedFacetChangeWithDates() throws IOException {
 
-        Map<String, Integer> lastEditMap = new LinkedHashMap<>();
+        session = ts.newBrowserSession(admin);
 
+        loader = new SubstanceLoader(session);
+        File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
+        loader.loadJson(f);
+
+        searcher = new SubstanceSearcher(session);
+        Map<String, Integer> lastEditMap;
         SubstanceSearcher.SearchResult results = searcher.all();
 
             assertTrue(results.numberOfResults() > 0);
@@ -83,21 +72,24 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
             timeTraveller.jump(2, TimeUnit.DAYS);
 
-            results = searcher.all();
-            lastEditMap = results.getFacet("Last Edited");
+        try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
+            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+
+            SubstanceSearcher.SearchResult results2 = searcher2.all();
+
+
+            lastEditMap = results2.getFacet("Last Edited");
             System.out.println("last Edited-after:" + lastEditMap);
 
             int afterCount = lastEditMap.get("Today");
             assertEquals(0, afterCount);
+            assertEquals(45, lastEditMap.get("This week").intValue());
 
-
+        }
         }
 
     @Test
     public void directReindex() throws IOException {
-
-      //  TimeUtil.setCurrentTime(TimeUtil.toMillis(LocalDateTime.of(1955, 11, 12, 10, 23, 0)));
-
         session = ts.newBrowserSession(admin);
 
         loader = new SubstanceLoader(session);
@@ -134,7 +126,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
                     .setLastEditedDate(TimeUtil.getCurrentDate())
                     .build();
 
-            System.out.println("substance last edited " + s.getLastEdited() + " millis = " + s.getLastEdited().getTime());
             EntityPersistAdapter.getInstance().deepreindex(s);
         }
 
@@ -153,7 +144,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
-   // @RunOnly
     public void LastEditedFacetChangeAfterSubstanceEdit() throws IOException {
 
         TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
@@ -243,7 +233,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
-     @RunOnly
     public void editTopLevelFieldShouldUpdatedLastEdited() throws IOException {
 
         TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
@@ -262,8 +251,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
-
-        System.out.println(results.getUuids());
 
         lastEditMap = results.getFacet("Last Edited");
 
