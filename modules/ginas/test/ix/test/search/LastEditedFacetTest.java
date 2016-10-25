@@ -65,7 +65,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             assertTrue(!results.getAllFacets().isEmpty());
 
             lastEditMap = results.getFacet("Last Edited");
-            System.out.println("last Edited-before:" + lastEditMap);
 
             int beforeCount = lastEditMap.get("Today");
             assertEquals(45,  beforeCount);
@@ -79,7 +78,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
             lastEditMap = results2.getFacet("Last Edited");
-            System.out.println("last Edited-after:" + lastEditMap);
 
             int afterCount = lastEditMap.get("Today");
             assertEquals(0, afterCount);
@@ -104,12 +102,10 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
-        System.out.println("facets = " + results.getAllFacets().keySet());
         lastEditMap = results.getFacet("Last Edited");
-        System.out.println("last Edited-before:" + lastEditMap);
 
         int beforeCount = lastEditMap.get("Today");
-        // assertEquals(45,  beforeCount);
+        assertEquals(20,  beforeCount);
 
 
         String uuid = "8206586d-2a94-42a5-bc66-ebb1bd8dc618";
@@ -135,7 +131,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
             lastEditMap = results.getFacet("Last Edited");
-            System.out.println("last Edited-after:" + lastEditMap);
 
             int afterCount = lastEditMap.get("Today");
 
@@ -163,22 +158,16 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
 
-        System.out.println(results.getUuids());
-
-        System.out.println("facets = " + results.getAllFacets().keySet());
         lastEditMap = results.getFacet("Last Edited");
-        System.out.println("last Edited-before:" + lastEditMap);
 
         int beforeCount = lastEditMap.get("Today");
-       // assertEquals(45,  beforeCount);
+        assertEquals(20,  beforeCount);
 
 
         String uuid = "8206586d-2a94-42a5-bc66-ebb1bd8dc618";
 
         timeTraveller.jumpAhead(8, ChronoUnit.MONTHS);
 
-
-        System.out.println("=======================================\n\n\n\n\n");
 
         GinasTestServer.User admin3 = ts.createUser(Arrays.asList(Role.values()));
         try(RestSession restSession = ts.newRestSession(admin3)) {
@@ -197,38 +186,19 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
         }
-    //    IxCache.clearCache();
 
-////        timeTraveller.jump(5, TimeUnit.MINUTES);
-//        try(BrowserSession bs2 = ts.newBrowserSession(admin)){
-//            SubstanceLoader loader = new SubstanceLoader(bs2);
-//            loader.loadJson(f, 20, 25);
-//        }
 
-        timeTraveller.jump(5, TimeUnit.MINUTES);
 
     try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
             SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
-        System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
             lastEditMap = results.getFacet("Last Edited");
-            System.out.println("last Edited-after:" + lastEditMap);
 
             int afterCount = lastEditMap.get("Today");
 
         assertEquals(1, afterCount);
     }
-
-        //assertEquals(1, afterCount);
-
-
-
-        //JsonNode json = session.extractJSON(response);
-         /*   //JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
-		    SubstanceBuilder.from(json)
-					.addName("ASDASDSD")
-					.build();*/
 
     }
 
@@ -297,16 +267,6 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             assertEquals(1, lastEditMap.get("Today").intValue());
             assertEquals(19, lastEditMap.get("Past 1 year").intValue());
         }
-
-        //assertEquals(1, afterCount);
-
-
-
-        //JsonNode json = session.extractJSON(response);
-         /*   //JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
-		    SubstanceBuilder.from(json)
-					.addName("ASDASDSD")
-					.build();*/
 
     }
 }
