@@ -132,6 +132,10 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         return url(url.toString()).get().get(timeout);
     }
 
+    public SubstanceSearcher newSubstanceSearcher() {
+        return new SubstanceSearcher(this);
+    }
+
 
     private static enum NullAuthenticationStrategy implements AuthenticationStrategy{
         INSTANCE;

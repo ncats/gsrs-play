@@ -2,6 +2,7 @@ package ix.test.builder;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -218,10 +219,15 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 	
 	public T addName(String name){
 		return andThen(s->{
+
+
 			Name n=new Name(name);
 			n.addLanguage("en");
 			n.addReference(getOrAddFirstReference(s));
-			s.names.add(n);
+
+            List<Name> newList = new ArrayList(s.names);
+            newList.add(n);
+            s.names =  newList;
 		});
 	}
 	

@@ -20,6 +20,10 @@ public class RestSession extends AbstractSession<Void>{
 
     private static final String API_CV_LIST="ginas/app/api/v1/vocabularies";
 
+    public SubstanceAPI newSubstanceAPI() {
+        return new SubstanceAPI(this);
+    }
+
     public enum AUTH_TYPE{
         USERNAME_PASSWORD,
         USERNAME_KEY,
