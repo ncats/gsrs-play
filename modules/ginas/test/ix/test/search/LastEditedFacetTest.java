@@ -69,7 +69,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         Map<String, Integer> lastEditMap = new LinkedHashMap<>();
 
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
             assertTrue(results.numberOfResults() > 0);
             assertTrue(!results.getAllFacets().isEmpty());
@@ -107,7 +107,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         Map<String, Integer> lastEditMap;
 
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
@@ -167,7 +167,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         Map<String, Integer> lastEditMap;
 
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
