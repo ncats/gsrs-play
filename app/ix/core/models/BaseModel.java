@@ -108,6 +108,7 @@ public abstract class BaseModel extends Model{
 	}
 	
 	
+	
 	public void setMatchContextFromID(String contextId){
 	    Key k = EntityWrapper.of(this).getKey();
 	    setMatchContextProperty(IxCache.getMatchingContextByContextID(contextId, k));

@@ -1110,7 +1110,6 @@ public class App extends Authentication {
 	}
 	
 	public static abstract class StructureSeachTask implements SearcherTask{
-	    
         @Override
         public String getKey() {
             return App.getKeyForCurrentRequest();
@@ -1201,14 +1200,14 @@ public class App extends Authentication {
     @Deprecated
     public static SearchResultContext substructure(final String query, final int rows, final int page,
             final ResultProcessor processor) {
-        return substructure(query, rows, processor);
+        return substructure(query, rows*page, processor);
     }
 
     
     @Deprecated
     public static SearchResultContext similarity(final String query, final double threshold, final int rows,
             final int page, final SearchResultProcessor processor) {
-        return similarity(query, threshold, rows, processor);
+        return similarity(query, threshold, rows*page, processor);
     }
 
     static String getKey (String q, double t) {

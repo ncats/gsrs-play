@@ -49,8 +49,8 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 			.forEach(op->{
 				try{
 					Method m = ef.getMethod(op.getOperationName(), op.asSigniture());
-					resultList.put(op, (oppp)->{
-						Object[] raw= oppp.asRawArguments();
+					resultList.put(op, (realOperation)->{
+						Object[] raw= realOperation.asRawArguments();
 						return CachedSupplier.ofCallable(()->(Result)m.invoke(null, raw)).get();
 					});
 				}catch(Exception e){

@@ -30,6 +30,19 @@ public abstract class ArgumentAdapter implements Consumer<String[]>,
  	public static final Function<List<String>, String[]> stringListParserInv = l->{
  		return l.stream().toArray(i->new String[i]);
  	};
+ 	
+ 	public static final Function<String[], Optional<Double>> doubleParser = stringLastArgParser.andThen(s->{
+        try{
+            return Optional.of(Double.parseDouble(s));
+        }catch(NumberFormatException ex){
+            Logger.trace("Bogus double value: "+s, ex);
+        }
+        return Optional.empty();
+    });
+    public static final Function<List<String>, String[]> doubleParserInv = d->{
+        return new String[]{d+""};
+    };
+ 	
  	public static final Function<String[], Optional<Integer>> intParser = stringLastArgParser.andThen(s->{
  		try{
  			return Optional.of(Integer.parseInt(s));
@@ -147,5 +160,26 @@ public abstract class ArgumentAdapter implements Consumer<String[]>,
 	public static ArgumentAdapter doNothing(){
 		return ofSingleString("", s->{},()->null);
 	}
+	
+	public static String getLastStringOrElse(String[] args, String def){
+	    if(args==null)return def;
+	    return ArgumentAdapter.stringLastArgParser.apply(args);
+	}
+	public static Double getLastDoubleOrElse(String[] args, Double def){
+        if(args==null)return def;
+        return ArgumentAdapter.doubleParser.apply(args).orElse(def);
+    }
+	public static Integer getLastIntegerOrElse(String[] args, Integer def){
+        if(args==null)return def;
+        return ArgumentAdapter.intParser.apply(args).orElse(def);
+    }
+    public static Boolean getLastBooleanOrElse(String[] args, boolean def) {
+        if(args==null)return def;
+        return ArgumentAdapter.stringLastArgParser
+                    .andThen(s->{
+                        return Boolean.parseBoolean(s);   
+                    })
+                    .apply(args);
+    }
 	
 }

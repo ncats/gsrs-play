@@ -53,6 +53,7 @@ import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.ValidationMessageHolder;
 import ix.ginas.models.serialization.DateDeserializer;

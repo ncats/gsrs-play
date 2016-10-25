@@ -1,5 +1,7 @@
 package ix.core.controllers.v1;
 
+import static ix.core.search.ArgumentAdapter.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,15 +24,20 @@ import ix.core.NamedResourceFilter;
 import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.controllers.SequenceFactory;
+import ix.core.controllers.StructureFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
+import ix.core.models.Payload;
 import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxContext;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.Java8Util;
+import ix.ginas.models.v1.Subunit;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Global;
@@ -40,6 +47,7 @@ import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
+import play.mvc.Call;
 import play.mvc.Controller;
 import play.mvc.Result;
 
@@ -74,7 +82,7 @@ public class RouteFactory extends Controller {
             String resproc = app.configuration().getString("ix.core.resourcefilter", null);
 
             if (resproc != null) {
-                Class processorCls;
+                Class<?> processorCls;
                 try {
                     processorCls = Class.forName(resproc);
                     setResourceFilter((NamedResourceFilter) processorCls.newInstance());
@@ -239,7 +247,84 @@ public class RouteFactory extends Controller {
             return _apiInternalServerError (ex);
         }
     }
+    
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, maxLength = 50_000)
+    public static Result sequenceSearchPost(String context) {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest("Sequence is too large!");
+        }
 
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        
+        String q =      getLastStringOrElse(params.get("q"), null);
+        String type =   getLastStringOrElse(params.get("type"), "SUB");
+        Double co =     getLastDoubleOrElse(params.get("cutoff"), 0.8);
+        Integer top =   getLastIntegerOrElse(params.get("top"), 10);
+        Integer skip=   getLastIntegerOrElse(params.get("skip"), 0);
+        Integer fdim =  getLastIntegerOrElse(params.get("fdim"), 10);
+        String field =  getLastStringOrElse(params.get("field"), "");
+
+        
+        Subunit sub= SequenceFactory.getStructureFrom(q,true);
+
+        try {
+            
+            Call call = ix.core.controllers
+                    .v1.routes.RouteFactory
+                    .sequenceSearch(context,
+                                    sub.uuid.toString(),
+                                    type,
+                                    co,
+                                    top,
+                                    skip,
+                                    fdim,
+                                    field);
+            return redirect(call);
+        } catch (Exception ex) {
+            Logger.error("Structure search call error", ex);
+            return _apiInternalServerError(ex);
+        }
+    }
+
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, maxLength = 50_000)
+    public static Result structureSearchPost(String context) {
+
+        if (request().body().isMaxSizeExceeded()) {
+            return _apiBadRequest("Structure is too large!");
+        }
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        
+        String q =      getLastStringOrElse(params.get("q"), null);
+        String type =   getLastStringOrElse(params.get("type"), "sub");
+        Double co =     getLastDoubleOrElse(params.get("cutoff"), 0.8);
+        Integer top =   getLastIntegerOrElse(params.get("top"), 10);
+        Integer skip=   getLastIntegerOrElse(params.get("skip"), 0);
+        Integer fdim =  getLastIntegerOrElse(params.get("fdim"), 10);
+        String field =  getLastStringOrElse(params.get("field"), "");
+        
+        boolean wait = getLastBooleanOrElse(params.get("wait"), false);
+
+        Structure struc= StructureFactory.getStructureFrom(q,true);
+        
+        try {
+            
+            Call call = ix.core.controllers
+                    .v1.routes.RouteFactory
+                    .structureSearch(context,
+                                    struc.id.toString(),
+                                    type,
+                                    co,
+                                    top,
+                                    skip,
+                                    fdim,
+                                    field);
+            return redirect(call);
+        } catch (Exception ex) {
+            Logger.error("Structure search call error", ex);
+            return _apiInternalServerError(ex);
+        }
+    }
+    
     public static Result structureSearch(String context, 
             String q, 
             String type,
@@ -248,10 +333,12 @@ public class RouteFactory extends Controller {
             int skip, 
             int fdim,
             String field) {
+        System.out.println("DO THIS TOO");
         try {
+            Structure struc = StructureFactory.getStructureFrom(q, false);
             return _registry.get()
                     .getResource(context)
-                    .structureSearch(q, type, cutoff, top, skip, fdim, field);
+                    .structureSearch(struc.molfile, type, cutoff, top, skip, fdim, field);
         } catch (Exception ex) {
             Logger.trace("[" + context + "]", ex);
             return _apiInternalServerError(ex);
@@ -267,9 +354,10 @@ public class RouteFactory extends Controller {
             int fdim,
             String field) {
         try {
+            Subunit sub = SequenceFactory.getStructureFrom(q, false);
             return _registry.get()
                     .getResource(context)
-                    .sequenceSearch(q,  CutoffType.valueOfOrDefault(type), cutoff, top, skip, fdim, field);
+                    .sequenceSearch(sub.sequence,  CutoffType.valueOfOrDefault(type), cutoff, top, skip, fdim, field);
         } catch (Exception ex) {
             Logger.trace("[" + context + "]", ex);
             return _apiInternalServerError(ex);
@@ -446,6 +534,7 @@ public class RouteFactory extends Controller {
         }
     }
 
+    
     @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateUUID (String context, String id, String field) {
@@ -508,6 +597,11 @@ public class RouteFactory extends Controller {
         return _apiNotFound ("Unknown id "+uuid);
     }
 
+    
+    
+    
+    
+    
 
     public static Result checkPreFlight(String path) {
         response().setHeader("Access-Control-Allow-Origin", "*");      			  // Need to add the correct domain in here!!

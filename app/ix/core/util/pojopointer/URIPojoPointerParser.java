@@ -11,6 +11,7 @@ public class URIPojoPointerParser {
 		LAMBDA,
 		LOCATOR
 	}
+	
 	public static PojoPointer fromURI(String uripath) {
 
 		if (!uripath.startsWith("/") && 
@@ -70,10 +71,8 @@ public class URIPojoPointerParser {
 			for (Tuple<URIPojoPointerParser.ELEMENT_TYPE, String> tup = parser.get(); tup != null; tup = parser.get()) {
 				switch (tup.k()) {
 				case FIELD:
-					System.out.println("Not going to parse field:" + tup.v() + " already did!");
 					break;
 				case LAMBDA:
-					System.out.println("It's a lambda");
 					String lambdaString = tup.v();
 
 					if (lambdaString.startsWith("(")) {
@@ -166,7 +165,6 @@ public class URIPojoPointerParser {
 			for(int j=i;j<element.length();j++){
 				switch(element.charAt(j)){
 				case URIPojoPointerParser.LAMBDA_CHAR:
-					System.out.println("Start lambda:" + pcount);
 					if(tt==null){
 						tt=URIPojoPointerParser.ELEMENT_TYPE.LAMBDA;
 					}
@@ -189,8 +187,6 @@ public class URIPojoPointerParser {
 					pcount--;
 					if(pcount==0){
 						charindex.set(j+1);
-
-						System.out.println("End" + tt);
 						if(tt==URIPojoPointerParser.ELEMENT_TYPE.LOCATOR){
 							return Tuple.of(tt,element.substring(i+1,j));
 						}
@@ -205,8 +201,6 @@ public class URIPojoPointerParser {
 					}
 				}
 			}
-//			System.out.println("Returning null, but was set to:" + tt + " with "+ pcount);
-//			System.out.println("on:" + element);
 			return null;
 		};
 	}

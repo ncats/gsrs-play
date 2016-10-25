@@ -44,11 +44,8 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
     private static void loadRep90() throws Exception {
         try (BrowserSession session = ts.newBrowserSession(admin)) {
-
             SubstanceLoader loader = new SubstanceLoader(session);
-
             File f = new File("test/testdumps/rep90.ginas");
-
             loader.loadJson(f);
         }
     }

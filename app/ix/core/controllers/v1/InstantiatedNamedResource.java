@@ -68,7 +68,6 @@ public interface InstantiatedNamedResource<I,V> {
 			Argument.of(0, int.class, "skip"),
 			Argument.of(0, int.class, "fdim"),
 			Argument.of("", String.class, "field"));
-	
 	public static final Operation SEQUENCE_SEARCH_OPERATION = new Operation("sequenceSearch", 
             Argument.of(null, String.class, "query"),
             Argument.of(CutoffType.SUB, CutoffType.class, "cutofftype"),

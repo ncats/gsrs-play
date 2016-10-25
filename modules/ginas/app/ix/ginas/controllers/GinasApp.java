@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -512,6 +511,7 @@ public class GinasApp extends App {
             return badRequest("Structure is too large!");
         }
 
+        
         Map<String, String[]> params = request().body().asFormUrlEncoded();
 
         String[] values = params.get("q");
@@ -524,7 +524,6 @@ public class GinasApp extends App {
 
         if (values != null && values.length > 0) {
             Structure q = getStructureFrom(values[0]);
-
             try {
                 Call call = routes.GinasApp.substances(q.id.toString(), 16, 1);
                 return redirect(
@@ -537,6 +536,10 @@ public class GinasApp extends App {
 
         return badRequest("Invalid \"q\" parameter specified!");
     }
+    
+    
+    
+    
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result admin() {

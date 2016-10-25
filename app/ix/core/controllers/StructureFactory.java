@@ -1,13 +1,19 @@
 package ix.core.controllers;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.utils.UUIDUtil;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -94,5 +100,33 @@ public class StructureFactory extends EntityFactory {
     		return null;
     	}
     	
+    }
+    
+    
+    
+    public static Structure getStructureFrom(String str, boolean store) {
+        Objects.requireNonNull(str);
+        if (UUIDUtil.isUUID(str)) {
+            Structure s = StructureFactory.getStructure(str);
+            if (s != null) {
+                return s;
+            }
+        }
+        try {
+            List<Structure> moieties = new ArrayList<Structure>();
+            String payload = ChemCleaner.getCleanMolfile(str);
+            Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
+                                                                                       // standardize!
+            if (payload.contains("\n") && payload.contains("M  END")) {
+                struc.molfile = payload;
+            }
+
+            if(store){
+                StructureFactory.saveTempStructure(struc);
+            }
+            return struc;
+        } catch (Exception e) {
+            throw new IllegalStateException("Can not parse structure from:" + str);
+        }
     }
 }
