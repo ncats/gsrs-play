@@ -65,6 +65,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
     @Test
+    @Ignore
     public void lastEditedFacetChangeWithDates() throws IOException {
 
         Map<String, Integer> lastEditMap = new LinkedHashMap<>();
@@ -152,7 +153,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     }
 
     @Test
-    @RunOnly
+   // @RunOnly
     public void LastEditedFacetChangeAfterSubstanceEdit() throws IOException {
 
         TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
@@ -228,6 +229,87 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         assertEquals(1, afterCount);
     }
+
+        //assertEquals(1, afterCount);
+
+
+
+        //JsonNode json = session.extractJSON(response);
+         /*   //JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
+		    SubstanceBuilder.from(json)
+					.addName("ASDASDSD")
+					.build();*/
+
+    }
+
+    @Test
+     @RunOnly
+    public void editTopLevelFieldShouldUpdatedLastEdited() throws IOException {
+
+        TimeUtil.setCurrentTime(TimeUtil.toMillis(TimeUtil.getCurrentLocalDateTime().plusYears(5)));
+
+        session = ts.newBrowserSession(admin);
+
+        loader = new SubstanceLoader(session);
+        File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
+        loader.loadJson(f, 0, 20);
+
+        searcher = new SubstanceSearcher(session);
+
+        Map<String, Integer> lastEditMap;
+
+        SubstanceSearcher.SearchResult results = searcher.all();
+
+        assertTrue(results.numberOfResults() > 0);
+        assertTrue(!results.getAllFacets().isEmpty());
+
+        System.out.println(results.getUuids());
+
+        lastEditMap = results.getFacet("Last Edited");
+
+        int beforeCount = lastEditMap.get("Today");
+        assertEquals(20,  beforeCount);
+
+
+        String uuid = "8206586d-2a94-42a5-bc66-ebb1bd8dc618";
+
+        timeTraveller.jumpAhead(8, ChronoUnit.MONTHS);
+
+
+
+        GinasTestServer.User admin3 = ts.createUser(Arrays.asList(Role.values()));
+        try(RestSession restSession = ts.newRestSession(admin3)) {
+            SubstanceAPI api =  restSession.newSubstanceAPI();
+
+
+            JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
+            SubstanceBuilder.from(fetched)
+                    .andThen(s ->{
+                        s.changeReason = "TESTING";
+                    })
+                    .buildJsonAnd(json -> api.updateSubstanceJson(json));
+
+            Substance substance = api.fetchSubstanceObjectByUuid(uuid, Substance.class);
+
+            assertEquals(TimeUtil.getCurrentLocalDate(), TimeUtil.asLocalDate(substance.getLastEdited()));
+            assertEquals("TESTING", substance.changeReason);
+
+
+        }
+
+
+
+        try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
+            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+
+            results = searcher2.all();
+
+            lastEditMap = results.getFacet("Last Edited");
+
+
+            assertEquals(1, lastEditMap.get("Today").intValue());
+            assertEquals(19, lastEditMap.get("Past 1 year").intValue());
+        }
 
         //assertEquals(1, afterCount);
 

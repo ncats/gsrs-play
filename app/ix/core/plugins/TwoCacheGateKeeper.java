@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import ix.core.CacheStrategy;
 import ix.core.util.CachedSupplier;
+import ix.core.util.TimeUtil;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -255,7 +256,20 @@ public class TwoCacheGateKeeper implements GateKeeper {
             return;
         }
         //Object setvalue=value;
-        Element e=new Element (adaptedKey, value, expiration <= 0, expiration, expiration);
+        /*
+        final Object key, final Object value, final long version,
+                   final long creationTime, final long lastAccessTime,
+                   final long lastUpdateTime, final long hitCount)
+         */
+        long now = TimeUtil.getCurrentTimeMillis();
+        Element e=new TimeUtilElement (adaptedKey, value, 1, now, now, now,0);
+        e.setEternal(expiration <=0);
+
+            e.setTimeToIdle(expiration);
+
+            e.setTimeToLive(expiration);
+
+
         if(isEvictable(value)){
         	evictableCache.putWithWriter(e);
         }else{
@@ -328,6 +342,33 @@ public class TwoCacheGateKeeper implements GateKeeper {
             Logger.trace("Disposing cache " + c.getName(), e);
         }
     }
-    
-    
+
+    /**
+     * Extension of EhCache Element that overrides
+     * the Element expriation calcuation to use our {@link TimeUtil}
+     * library to get the current time instead of System time.
+     * This lets us play around with what the cache thinks is "now"
+     * in our tests.
+     *
+     * @author katzelda
+     */
+    private static class TimeUtilElement extends Element{
+
+        public TimeUtilElement(Object key, Object value, long version, long creationTime, long lastAccessTime, long lastUpdateTime, long hitCount) {
+            super(key, value, version, creationTime, lastAccessTime, lastUpdateTime, hitCount);
+        }
+
+        @Override
+        public boolean isExpired() {
+            if (!isLifespanSet() || isEternal()) {
+                return false;
+            }
+
+            long now = TimeUtil.getCurrentTimeMillis();
+            long expirationTime = getExpirationTime();
+
+            return now > expirationTime;
+        }
+    }
+
 }

@@ -624,7 +624,9 @@ public class App extends Authentication {
         
         
         Collections.sort(args);
-        return Util.sha1(args.toArray(new String[0]));
+
+        String sh1 = Util.sha1(args.toArray(new String[0]));
+        return sh1;
     }
 
     public static SearchResult getSearchContext (String ctx) {
@@ -756,7 +758,6 @@ public class App extends Authentication {
     public static <T> T getOrElse(String key, Callable<T> callable)
         throws Exception {
         long modified = getTextIndexer().lastModified();
-        System.out.println("get or Else last modified " + new Date(modified));
         return getOrElse (modified, key, callable);
     }
 

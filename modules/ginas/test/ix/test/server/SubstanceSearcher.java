@@ -212,7 +212,6 @@ public class SubstanceSearcher {
         do {
         	 HtmlPage htmlPage=null;
         	 try{
-        		 
         		 htmlPage = session.submit(session.newGetRequest(rootUrl + "&page=" + page));
         	 }catch(Exception e){
                  if(keyString ==null){
@@ -222,6 +221,7 @@ public class SubstanceSearcher {
              }
             //stop if the paging throws an error
            String htmlText = htmlPage.asXml();
+
             	temp = getSubstancesFrom(htmlText);
             
             if(firstPage ==null){
@@ -307,7 +307,7 @@ public class SubstanceSearcher {
     	Map<String, Map<String,Integer>> map = new LinkedHashMap<>();
 
     	html.querySelectorAll("div.panel-default")
-    		.parallelStream() //Not necessary, but kinda cool
+    		.stream()
     		.filter(n->n.asXml().contains("toggleFacet"))
     		.forEach(c->{
     			String facetName = c.querySelector("h3").asText().trim();
