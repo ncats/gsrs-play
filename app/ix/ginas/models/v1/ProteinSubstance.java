@@ -1,17 +1,22 @@
 package ix.ginas.models.v1;
 
+import ix.core.models.Group;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
+
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
+import java.util.Set;
 
 @SuppressWarnings("serial")
 @Entity
 @Inheritance
 @DiscriminatorValue("PRO")
-public class ProteinSubstance extends Substance {
+public class ProteinSubstance extends Substance implements GinasSubstanceDefinitionAccess {
 
 	@OneToOne(cascade=CascadeType.ALL)
     public Protein protein;
@@ -76,6 +81,11 @@ public class ProteinSubstance extends Substance {
     	}
     	//protein.delete();
     }
+
+	//@JsonIgnore
+	public GinasAccessReferenceControlled getDefinitionElement(){
+		return protein;
+	}
     
     
 }
