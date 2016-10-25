@@ -1,8 +1,12 @@
 package ix;
 
+import ix.core.util.ExpectFailureChecker;
+import ix.core.util.RunOnlyTestRunner;
 import org.junit.Rule;
 
 import ix.test.util.TestNamePrinter;
+import org.junit.runner.RunWith;
+import org.junit.rules.ExpectedException;
 
 /**
  * Abstract test class for doing common operations
@@ -12,8 +16,15 @@ import ix.test.util.TestNamePrinter;
  * @author peryeata
  *
  */
+@RunWith(RunOnlyTestRunner.class)
 public abstract class AbstractGinasTest {
 	@Rule
 	public TestNamePrinter printer = new TestNamePrinter();
-	
+
+	@Rule
+	public ExpectFailureChecker expectedToFailChecker = new ExpectFailureChecker();
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
+
 }

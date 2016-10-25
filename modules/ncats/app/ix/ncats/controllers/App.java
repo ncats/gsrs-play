@@ -423,7 +423,6 @@ public class App extends Authentication {
 			if (values != null)
 				query.put(p, values);
 		}
-
 		return query.isEmpty() ? "" : "?"+queryString (query);
 	}
 

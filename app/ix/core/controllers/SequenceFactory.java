@@ -20,8 +20,8 @@ import play.mvc.Result;
 public class SequenceFactory extends EntityFactory {
     static final Logger.ALogger AccessLogger = Logger.of("access");
     
-    public static final Model.Finder<UUID, Subunit> finder = 
-        new Model.Finder(UUID.class, Subunit.class);
+    public static final Model.Finder<UUID, Subunit> finder =
+            new Model.Finder(UUID.class, Subunit.class);
     
     public static Subunit getSubunit (UUID id) {
         Subunit s=getTempSequence(id.toString());

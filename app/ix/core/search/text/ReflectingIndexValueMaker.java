@@ -20,6 +20,7 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 
 	public class IndexingFieldCreator implements BiConsumer<PathStack, EntityUtils.EntityWrapper>{
 		Consumer<IndexableValue> toAdd;
+		private EntityWrapper firstValue=null;
 		
 		public IndexingFieldCreator(Consumer<IndexableValue> toAdd) {
 			Objects.requireNonNull(toAdd);
@@ -96,6 +97,10 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 		// TODO: clean up
 		@Override
 		public void accept(PathStack t, EntityUtils.EntityWrapper u) {
+
+			if(firstValue ==null){
+				firstValue = u;
+			}
 			acceptWithGeneric(t, u);
 		}
 

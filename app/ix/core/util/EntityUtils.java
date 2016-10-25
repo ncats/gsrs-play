@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -85,7 +86,6 @@ import ix.core.search.EntityFetcher;
 import ix.core.search.EntityFetcher.CacheType;
 import ix.core.search.text.PathStack;
 import ix.core.search.text.TextIndexer;
-import ix.core.util.EntityUtils.Key;
 import ix.core.util.pojopointer.ArrayPath;
 import ix.core.util.pojopointer.CountPath;
 import ix.core.util.pojopointer.DistinctPath;
@@ -102,7 +102,6 @@ import ix.core.util.pojopointer.ObjectPath;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.core.util.pojopointer.SkipPath;
 import ix.core.util.pojopointer.SortPath;
-import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -2265,6 +2264,9 @@ public class EntityUtils {
 		public boolean isGenerated() {
 			return false;
 		}
+		public boolean isDate() {
+            return Date.class.isAssignableFrom(this.type);
+        }
 	}
 
 	public static class Key {

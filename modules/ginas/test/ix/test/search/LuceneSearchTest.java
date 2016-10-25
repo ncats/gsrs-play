@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -55,6 +54,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 	
 	
 	
+
 	@After
 	public void tearDown() {
 		try{
@@ -84,6 +84,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			String html = api.getTextSearchHTML(theName);
 			assertRecordCount(html, 1);
 	}
+
 
 	@Test
 	public void testSearchForWordPresentIn2RecordsNamesShouldReturnBoth() throws Exception {
@@ -223,9 +224,12 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 	}
 
+
+
+
 	@Test
-	@ExpectedToFail
-	@Ignore
+	@ExpectedToFail(reason = "when a name is changed the suggest index isn't updated to remove the " +
+			"old name because there is currently no way to know that something was removed or that nothing else uses it anymore")
 	public void ensureSuggestFieldDisappearsAfterNameRemoved() throws Exception {
 	
 			String pre = "IBUP";
@@ -258,28 +262,33 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			String name2 = "ASPIRIN";
 
 			JsonNode submit = new SubstanceBuilder().addName(ib2).generateNewUUID().buildJson();
+
 			ensurePass(api.submitSubstance(submit));
 
 			JsonNode suggestBefore = api.getSuggestPrefixJson(pre1);
 			assertEquals(1, suggestBefore.at("/Name").size());
 			assertEquals(ib2, suggestBefore.at("/Name/0/key").asText());
 
-			JsonNode update = SubstanceBuilder.from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
+			JsonNode update = SubstanceBuilder
+			        .from(api.fetchSubstanceJsonByUuid(submit.at("/uuid").asText()))
 					.andThenMutate(s -> s.names.get(0).name = name2)
 					.buildJson();
 
 			ensurePass(api.updateSubstance(update));
+		
 
 			
 			reindex();
 			
 
-			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
+			ts.restart();
 
 			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
 			assertEquals(1, suggestLater.at("/Name").size());
 			assertEquals(name2, suggestLater.at("/Name/0/key").asText());
+			assertTrue(api.getSuggestPrefixJson(pre1).at("/Name").isMissingNode());
 	}
+
 
 	@Test
 	public void ensureSuggestFieldDisappearsAfterNameRemovedAndNewSubstanceAddedAndReindexed() throws Exception {
@@ -638,7 +647,6 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 					n -> assertFalse("First page shouldn't show oldest records by default.", html.contains(n)));
 
 	}
-
 	@Test
 	public void testBrowsingWithDisplayNameOrderingShouldOrderAlphabetically() throws Exception {
 		
@@ -656,14 +664,13 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			String rhtml = api.fetchSubstancesUISearchHTML(null, null, "$Display Name");
 			int rows = 16;
 
-			// System.out.println(html);
-			// Collections.reverse(addedName);
 			addedName.stream().limit(rows)
 					.forEachOrdered(n -> assertTrue("Sorting alphabetical should show:" + n, html.contains(n)));
 			addedName.stream().skip(rows)
 					.forEachOrdered(n -> assertFalse("Sorting alphabetical shouldn't show:" + n, html.contains(n)));
 
 			Collections.reverse(addedName);
+
 			addedName.stream().limit(16)
 					.forEachOrdered(n -> assertTrue("Sorting rev alphabetical should show:" + n, rhtml.contains(n)));
 			addedName.stream().skip(16).forEachOrdered(

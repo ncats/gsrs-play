@@ -24,11 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.core.models.BaseModel;
-import ix.core.models.ForceUpdatableModel;
-import ix.core.models.Group;
-import ix.core.models.Indexable;
-import ix.core.models.Principal;
+import ix.core.models.*;
 import ix.core.util.TimeUtil;
 import ix.ginas.models.serialization.GroupDeserializer;
 import ix.ginas.models.serialization.GroupSerializer;
@@ -63,14 +59,14 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     @Id
     public UUID uuid;
     
-    @Indexable(facet = true, name = "Creation Date", sortable=true)
+    @Indexable(name = "Creation Date", sortable=true)
     public Date created=null;
     
     @OneToOne()
     @Indexable(facet = true, name = "Created By", sortable=true, recurse=false)
     public Principal createdBy;
     
-    @Indexable(facet = true, name = "Last Edited Date", sortable=true)
+    @Indexable( name = "Last Edited Date", sortable=true)
     public Date lastEdited;
     
     //TP: why is this one-to-one?
@@ -242,8 +238,11 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     public void updateAuditInfo(boolean creation, boolean force){
     	Date currentDate = TimeUtil.getCurrentDate();
+		System.out.println("in auditInfo force = " + force);
     	if(this.lastEditedBy == null || this.createdBy==null || force){
+
 			Principal p1=UserFetcher.getActingUser();
+			System.out.println("here acting user = " + p1 + " currentDate = " + currentDate);
 	        if(p1!=null){
 	        	if(lastEditedBy== null || force){
 	        		this.lastEditedBy=p1;

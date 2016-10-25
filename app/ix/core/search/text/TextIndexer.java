@@ -27,15 +27,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -548,14 +543,30 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 
 	class FlushDaemon implements Runnable {
+
+		private ReentrantLock latch = new ReentrantLock();
 		FlushDaemon() {
+		}
+
+		protected void lockFlush(){
+			latch.lock();
+		}
+
+		protected void unLockFlush(){
+			latch.unlock();
 		}
 
 		public void run() {
 			// Don't execute if already shutdown
-			if (isShutDown)
-				return;
-			execute();
+			latch.lock();
+			try {
+				if(isShutDown || isReindexing){
+					return;
+				}
+				execute();
+			}finally {
+				latch.unlock();
+			}
 		}
 
 		/**
@@ -567,7 +578,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 
 		private void flush() {
-
 			File configFile = getFacetsConfigFile();
 			if (TextIndexer.this.hasBeenModifiedSince(configFile.lastModified())) {
 				Logger.debug(
@@ -631,6 +641,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	private File indexFileDir, facetFileDir;
 
 	private boolean isShutDown = false;
+
+	private boolean isReindexing = false;
 
 	private FlushDaemon flushDaemon;
 
@@ -1790,8 +1802,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			valueMaker.createIndexableValues(ew.getValue(), iv->{
 				this.instrumentIndexableValue(fieldCollector, iv);
 			});
-
-			
 			if(USE_ANALYSIS && isDeep.get() && ew.hasKey()){
 				Key key =ew.getKey();
 				if(!key.getIdString().equals("")){  //probably not needed
@@ -2110,13 +2120,19 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	@Override
 	public void newReindex() {
+
+		flushDaemon.lockFlush();
 		//we have to clear our suggest fields since they are about to be completely replaced
 		lookups.clear();
 		sorters.clear();
+		isReindexing = true;
+		flushDaemon.unLockFlush();
 	}
 
 	@Override
-	public void doneReindex() {}
+	public void doneReindex() {
+		isReindexing = false;
+	}
 
 	@Override
 	public void recordReIndexed(Object o) {	}
@@ -2324,8 +2340,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		} else if (value instanceof java.util.Date) {
 			long date = ((Date) value).getTime();
 			fields.accept(new LongField(name, date, YES));
-			if (!full.equals(name))
-				fields.accept(new LongField(full, date, NO));
+			if (!full.equals(name)) {
+				fields.accept(new LongField(full, date, YES));
+			}
 			if (indexableValue.sortable()) {
 				String f = SORT_PREFIX + full;
 				sorters.put(f, SortField.Type.LONG);

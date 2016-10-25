@@ -6,14 +6,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.KeyDataPair;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by katzelda on 4/4/16.
@@ -38,6 +38,15 @@ public class SubstanceLoader {
             throw new FileNotFoundException(json.getAbsolutePath());
         }
         String url = submitFileForLoading(json);
+
+        waitUntilComplete(url);
+    }
+
+    public void loadJson(File json,  int numRecordsToSkip, int numRecordsToLoad) throws IOException{
+        if(!json.exists()){
+            throw new FileNotFoundException(json.getAbsolutePath());
+        }
+        String url = submitFileForLoading(json, numRecordsToSkip, numRecordsToLoad);
 
         waitUntilComplete(url);
     }
@@ -86,5 +95,52 @@ public class SubstanceLoader {
 
         url = matcher.group(1);
         return url;
+    }
+
+    private String submitFileForLoading(File json, int numRecordsToSkip, int numRecordsToLoad) throws IOException {
+        String url;
+
+
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new NameValuePair("file-type", "JSON"));
+
+        File tmp = createParitalTempFile(json, numRecordsToSkip, numRecordsToLoad);
+        params.add(new KeyDataPair("file-name", tmp, tmp.getName(), "application/json", "utf-8"));
+        WebRequest request = session.newPostRequest("ginas/app/load");
+        request.setEncodingType(FormEncodingType.MULTIPART);
+        request.setRequestParameters(params);
+
+        HtmlPage result = session.submit(request);
+
+        Matcher matcher = LOAD_MONITOR_PATTERN.matcher(result.asXml());
+        if(!matcher.find()){
+            throw new IOException("could not parse monitor URL for load");
+        }
+
+        url = matcher.group(1);
+        System.out.println("monitor URL = " + url);
+        return url;
+    }
+
+    private File createParitalTempFile(File json,int numRecordsToSkip, int numRecordsToLoad ) throws IOException{
+        File tmp = File.createTempFile("ginas-json",".gsrs");
+        tmp.deleteOnExit();
+        try(BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(tmp)))));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(json))));
+        ){
+            for(int i=0; i<numRecordsToSkip; i++){
+              reader.readLine();
+            }
+            for(int i=0; i<numRecordsToLoad; i++){
+                String line = reader.readLine();
+                if(line ==null){
+                    break;
+                }
+                out.write(line);
+                out.newLine();
+            }
+        }
+
+        return tmp;
     }
 }

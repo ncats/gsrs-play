@@ -263,7 +263,10 @@ public class SubstanceSearcher {
             try {
                 htmlPage = session.submit(req.setQueryParameter("page", page + "").get());
             } catch (Exception e) {
-                break;
+                if(keyString ==null){
+                    throw e;
+                }
+               break;
             }
             temp = getSubstancesFrom(htmlPage).v();
             specialMatches.addAll(getSpecialMatchesFrom(htmlPage));

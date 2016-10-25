@@ -154,7 +154,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 	@Indexable(facet = true, name = "Approved By", sortable=true, recurse=false)
 	public Principal approvedBy;
 
-	@Indexable(facet = true, name = "Approved Date", sortable=true)
+	@Indexable(name = "Approved Date", sortable=true)
 	@JsonDeserialize(using = DateDeserializer.class)
 	public Date approved;
 

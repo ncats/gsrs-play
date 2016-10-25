@@ -5,27 +5,18 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalField;
+import java.time.temporal.WeekFields;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -75,7 +66,6 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.Java8Util;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
@@ -84,7 +74,6 @@ import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.SubstanceExporterFactory;
-import ix.core.util.ModelUtils;
 import ix.ginas.models.v1.Amount;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -312,9 +301,9 @@ public class GinasApp extends App {
     public static String translateFacetName(String n) {
         if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
             return "Stereochemistry";
-        if ("modified".equalsIgnoreCase(n))
+        if ("root_lastEdited".equalsIgnoreCase(n))
             return "Last Edited";
-        if ("approved".equalsIgnoreCase(n))
+        if ("root_approved".equalsIgnoreCase(n))
             return "Last Validated";
         if ("LyChI_L4".equalsIgnoreCase(n)) {
             return "Structure Hash";
@@ -426,7 +415,7 @@ public class GinasApp extends App {
             if ("non-approved".equalsIgnoreCase(label)) {
                 return "Non-Validated";
             }
-            if (name.equalsIgnoreCase("approved") || name.equalsIgnoreCase("modified")) {
+            if (name.equalsIgnoreCase("root_approved") || name.equalsIgnoreCase("root_lastEdited")){
                 return label.substring(1); // skip the prefix character
             }
 
@@ -852,72 +841,169 @@ public class GinasApp extends App {
         return internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform squence search!"));
     }
 
-    public static void instrumentSubstanceSearchOptions(SearchOptions options, Map<String, String[]> params) {
-        SearchOptions.FacetLongRange editedRange = new SearchOptions.FacetLongRange("modified");
-        SearchOptions.FacetLongRange approvedRange = new SearchOptions.FacetLongRange("approved");
+    private static void instrumentSearchOptions(SearchOptions options, Map<String, String[]> params,
+                                                Map<String, Function<LocalDateTime, LocalDateTime>> orderedMap){
 
-        Calendar now = Calendar.getInstance();
-        Calendar cal = (Calendar) now.clone();
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
 
-        // add a single character prefix so as to keep the map sorted; the
-        // decorator strips this out
-        long[] range = new long[] { cal.getTimeInMillis(), now.getTimeInMillis() };
-        editedRange.add("aToday", range);
-        approvedRange.add("aToday", range);
-        now = (Calendar) cal.clone();
+        SearchOptions.FacetLongRange editedRange =
+                new SearchOptions.FacetLongRange ("root_lastEdited");
+        SearchOptions.FacetLongRange approvedRange =
+                new SearchOptions.FacetLongRange ("root_approved");
 
-        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-        range = new long[] { cal.getTimeInMillis(), now.getTimeInMillis() };
-        editedRange.add("bThis week", range);
-        approvedRange.add("bThis week", range);
-        now = (Calendar) cal.clone();
 
-        cal.set(Calendar.WEEK_OF_MONTH, 1);
-        range = new long[] { cal.getTimeInMillis(), now.getTimeInMillis() };
-        editedRange.add("cThis month", range);
-        approvedRange.add("cThis month", range);
-        now = (Calendar) cal.clone();
+        List<SearchOptions.FacetLongRange> facetRanges = new ArrayList<>();
 
-        cal = (Calendar) now.clone();
-        cal.add(Calendar.MONTH, -6);
-        range = new long[] { cal.getTimeInMillis(), now.getTimeInMillis() };
-        editedRange.add("dPast 6 months", range);
-        approvedRange.add("dPast 6 months", range);
-        now = (Calendar) cal.clone();
+        facetRanges.add(editedRange);
+        facetRanges.add(approvedRange);
 
-        cal = (Calendar) now.clone();
-        cal.add(Calendar.YEAR, -1);
-        range = new long[] { cal.getTimeInMillis(), now.getTimeInMillis() };
-        editedRange.add("ePast 1 year", range);
-        approvedRange.add("ePast 1 year", range);
-        now = (Calendar) cal.clone();
+        LocalDateTime now = TimeUtil.getCurrentLocalDateTime();
 
-        cal = (Calendar) now.clone();
-        cal.add(Calendar.YEAR, -2);
-        range = new long[] { cal.getTimeInMillis(), now.getTimeInMillis() };
-        editedRange.add("fPast 2 years", range);
-        approvedRange.add("fPast 2 years", range);
 
-        options.getLongRangeFacets().add(editedRange);
-        options.getLongRangeFacets().add(approvedRange);
+        char leadingChar = 'A';
+//        long start = TimeUtil.toMillis(midnightThisMorning);
+//        long end = todayMillis;
 
-        if (params != null) {
+        long end = TimeUtil.toMillis(now) + 1000L;
 
-            String[] dep = params.get("showDeprecated");
-            if (dep == null || dep.length <= 0 || dep[0].equalsIgnoreCase("false")) {
-                options.getTermFilters().add(new TermFilter("SubstanceDeprecated", "false"));
+        for(Map.Entry<String, Function<LocalDateTime, LocalDateTime>> entry : orderedMap.entrySet()){
+            // add a single character prefix so as to keep the map sorted; the
+            // decorator strips this out
+            String name = leadingChar + entry.getKey();
+            LocalDateTime startDate = entry.getValue().apply(now);
+            System.out.println("start date for " + name + "  " + startDate + "- "  + new Date(end));
+            long start = TimeUtil.toMillis(startDate);
+
+            long[] range = new long[]{start, end};
+
+            for(SearchOptions.FacetLongRange facet : facetRanges){
+                facet.add(name, range);
+            }
+
+            end = start;
+            leadingChar++;
+        }
+
+
+        options.longRangeFacets.addAll(facetRanges);
+
+
+        if(params!=null){
+
+            String[] dep =params.get("showDeprecated");
+            if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
+                options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
             }
         }
+    }
+
+    public static void instrumentSubstanceSearchOptions(SearchOptions options, Map<String, String[]> params) {
+
+
+        Map<String, Function<LocalDateTime, LocalDateTime>> map = new LinkedHashMap<>();
+        map.put("Today", now -> LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT));
+        map.put("This week", now -> {
+            WeekFields weekFields = WeekFields.of(Locale.getDefault());
+            TemporalField dayOfWeek = weekFields.dayOfWeek();
+            return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+                    .with(dayOfWeek, 1);
+        });
+
+        map.put("This month", now ->
+            LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+                    .withDayOfMonth(1)
+        );
+
+        map.put("Past 6 months", now ->
+                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+                        .minusMonths(6)
+        );
+
+        map.put("Past 1 year", now ->
+                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+                        .minusYears(1)
+        );
+
+        map.put("Past 2 years", now ->
+                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+                        .minusYears(2)
+        );
+
+
+        instrumentSearchOptions(options, params, map);
+
+
+//        SearchOptions.FacetLongRange editedRange =
+//            new SearchOptions.FacetLongRange ("root_lastEdited");
+//        SearchOptions.FacetLongRange approvedRange =
+//            new SearchOptions.FacetLongRange ("root_approved");
+//
+//        LocalDateTime now = TimeUtil.getCurrentLocalDateTime();
+//
+//        long todayMillis = TimeUtil.toMillis(now);
+//        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+//        TemporalField dayOfWeek = weekFields.dayOfWeek();
+//
+//
+//
+//        LocalDateTime midnightThisMorning = LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT);
+//
+//
+//
+//        // add a single character prefix so as to keep the map sorted; the
+//        // decorator strips this out
+//
+//
+//        long start = TimeUtil.toMillis(midnightThisMorning);
+//        long end = todayMillis;
+//        long[] range = new long[]{start, end};
+//
+//
+//        editedRange.add("aToday", range);
+//        approvedRange.add("aToday", range);
+//
+//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.with(dayOfWeek, 1)),
+//                           todayMillis};
+//        editedRange.add("bThis week", range);
+//        approvedRange.add("bThis week", range);
+//
+//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.withDayOfMonth(1)),
+//                          todayMillis};
+//        editedRange.add("cThis month", range);
+//        approvedRange.add("cThis month", range);
+//
+//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.minusMonths(6)),
+//                          todayMillis};
+//        editedRange.add("dPast 6 months", range);
+//        approvedRange.add("dPast 6 months", range);
+//
+//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.minusYears(1)),
+//                todayMillis};
+//        editedRange.add("ePast 1 year", range);
+//        approvedRange.add("ePast 1 year", range);
+//
+//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.minusYears(2)),
+//                todayMillis};
+//        editedRange.add("fPast 2 years", range);
+//        approvedRange.add("fPast 2 years", range);
+//
+//        options.longRangeFacets.add(editedRange);
+//        options.longRangeFacets.add(approvedRange);
+//
+//
+//        if(params!=null){
+//
+//        	String[] dep =params.get("showDeprecated");
+//        	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
+//        		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
+//        	}
+//        }
     }
 
     public static List<Facet> getSubstanceFacets(int fdim, Map<String, String[]> map) throws IOException {
         SearchOptions options = new SearchOptions(Substance.class);
         options.setFdim(fdim);
-        instrumentSubstanceSearchOptions(options, map);
+        instrumentSubstanceSearchOptions (options, map);
+
         return getTextIndexer().search(options, null, null).getFacets();
     }
 
@@ -947,8 +1033,8 @@ public class GinasApp extends App {
             Logger.debug(String.format("Elapsed %1$.3fs to retrieve " + "search %2$d/%3$d results...", elapsed,
                     result.size(), result.count()));
             return result;
-        } catch (Exception ex) {
-            Logger.trace("Unable to perform search", ex);
+        }catch (Exception ex) {
+            Logger.error("Unable to perform search", ex);
         }
         return null;
     }

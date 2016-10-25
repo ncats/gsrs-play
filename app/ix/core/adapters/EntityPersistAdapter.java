@@ -169,7 +169,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     /**
      * Preparing the edit ...
      * 
-     * @param bean
+     * @param ew
      * @return
      */
     private Edit createAndPushEditForWrappedEntity(EntityWrapper ew){
