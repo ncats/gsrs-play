@@ -593,7 +593,7 @@ public class GinasTestServer extends ExternalResource{
             Map<String, Object> map = new HashMap<>(additionalConfiguration);
             map.putAll(testSpecificAdditionalConfiguration);
 
-            ts = new TestServer(port, fakeApplication(map));
+            ts = new TestServer(port, fakeApplication(unflatten(map)));
             ts.start();
 
             principleFinder =

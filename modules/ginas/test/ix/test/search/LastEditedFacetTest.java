@@ -43,16 +43,16 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
     SubstanceLoader loader;
     BrowserSession session;
 
-   // @Before
+    // @Before
     public void loadData() throws Exception{
 
-       session = ts.newBrowserSession(admin);
+        session = ts.newBrowserSession(admin);
 
-            loader = new SubstanceLoader(session);
-            File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
-            loader.loadJson(f);
+        loader = new SubstanceLoader(session);
+        File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
+        loader.loadJson(f);
 
-            searcher = new SubstanceSearcher(session);
+        searcher = new SubstanceSearcher(session);
     }
 
     @After
@@ -71,31 +71,31 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         SearchResult results = searcher.all();
 
-            assertTrue(results.numberOfResults() > 0);
-            assertTrue(!results.getAllFacets().isEmpty());
+        assertTrue(results.numberOfResults() > 0);
+        assertTrue(!results.getAllFacets().isEmpty());
 
-            lastEditMap = results.getFacet("Last Edited");
-            System.out.println("last Edited-before:" + lastEditMap);
+        lastEditMap = results.getFacet("Last Edited");
+        System.out.println("last Edited-before:" + lastEditMap);
 
-            int beforeCount = lastEditMap.get("Today");
-            assertEquals(45,  beforeCount);
+        int beforeCount = lastEditMap.get("Today");
+        assertEquals(45,  beforeCount);
 
-            timeTraveller.jump(2, TimeUnit.DAYS);
+        timeTraveller.jump(2, TimeUnit.DAYS);
 
-            results = searcher.all();
-            lastEditMap = results.getFacet("Last Edited");
-            System.out.println("last Edited-after:" + lastEditMap);
+        results = searcher.all();
+        lastEditMap = results.getFacet("Last Edited");
+        System.out.println("last Edited-after:" + lastEditMap);
 
-            int afterCount = lastEditMap.get("Today");
-            assertEquals(0, afterCount);
+        int afterCount = lastEditMap.get("Today");
+        assertEquals(0, afterCount);
 
 
-        }
+    }
 
     @Test
     public void directReindex() throws IOException {
 
-      //  TimeUtil.setCurrentTime(TimeUtil.toMillis(LocalDateTime.of(1955, 11, 12, 10, 23, 0)));
+        //  TimeUtil.setCurrentTime(TimeUtil.toMillis(LocalDateTime.of(1955, 11, 12, 10, 23, 0)));
 
         session = ts.newBrowserSession(admin);
 
@@ -179,7 +179,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         System.out.println("last Edited-before:" + lastEditMap);
 
         int beforeCount = lastEditMap.get("Today");
-       // assertEquals(45,  beforeCount);
+        // assertEquals(45,  beforeCount);
 
 
         String uuid = "8206586d-2a94-42a5-bc66-ebb1bd8dc618";
@@ -196,45 +196,45 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
             JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
             SubstanceBuilder.from(fetched)
-                    .setLastEditedDate(TimeUtil.getCurrentDate())
-                    .buildJsonAnd(json -> api.updateSubstanceJson(json));
+            .setLastEditedDate(TimeUtil.getCurrentDate())
+            .buildJsonAnd(json -> api.updateSubstanceJson(json));
 
-             Substance substance = api.fetchSubstanceObjectByUuid(uuid, Substance.class);
+            Substance substance = api.fetchSubstanceObjectByUuid(uuid, Substance.class);
 
             assertEquals(TimeUtil.getCurrentLocalDate(), TimeUtil.asLocalDate(substance.getLastEdited()));
 
 
 
         }
-    //    IxCache.clearCache();
+        //    IxCache.clearCache();
 
-////        timeTraveller.jump(5, TimeUnit.MINUTES);
-//        try(BrowserSession bs2 = ts.newBrowserSession(admin)){
-//            SubstanceLoader loader = new SubstanceLoader(bs2);
-//            loader.loadJson(f, 20, 25);
-//        }
+        ////        timeTraveller.jump(5, TimeUnit.MINUTES);
+        //        try(BrowserSession bs2 = ts.newBrowserSession(admin)){
+        //            SubstanceLoader loader = new SubstanceLoader(bs2);
+        //            loader.loadJson(f, 20, 25);
+        //        }
 
         timeTraveller.jump(5, TimeUnit.MINUTES);
 
-    try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
+        try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
             SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
-        System.out.println(TimeUtil.getCurrentDate());
+            System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
             lastEditMap = results.getFacet("Last Edited");
             System.out.println("last Edited-after:" + lastEditMap);
 
             int afterCount = lastEditMap.get("Today");
 
-        assertEquals(1, afterCount);
-    }
+            assertEquals(1, afterCount);
+        }
 
         //assertEquals(1, afterCount);
 
 
 
         //JsonNode json = session.extractJSON(response);
-         /*   //JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
+        /*   //JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
 		    SubstanceBuilder.from(json)
 					.addName("ASDASDSD")
 					.build();*/
