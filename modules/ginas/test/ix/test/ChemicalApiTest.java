@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -23,12 +22,14 @@ import ix.AbstractGinasServerTest;
 import ix.core.ValidationMessage;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
+import ix.test.server.RestSubstanceSearcher;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
-import ix.utils.Util;
+import ix.test.server.SubstanceSearcherIFace;
 import util.json.JsonUtil;
 
 public class ChemicalApiTest extends AbstractGinasServerTest {
@@ -39,13 +40,6 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 	final File chemicalResource=new File("test/testJSON/editChemical.json");
 	final File molformfile=new File("test/molforms.txt");
 	
-
-//	@Override
-//	public GinasTestServer createGinasTestServer(){
-//		Map<String, Object> settings=Util.MapBuilder.get("ix.ginas.init.loadCV", (Object)false)
-//										.build();
-//		return new GinasTestServer(settings);
-//	}
     
     @Test   
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
@@ -202,12 +196,14 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(form1));
             ensurePass( api.submitSubstance(form2));
             
-            String html=api.getSubstructureMatchHTML("C1=CC=CC=C1");
-            assertTrue("Should have 2 matches, but found something else",html.contains("<span id=\"record-count\" class=\"label label-default\">2</span>"));
+            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SearchResult result=searcher.substructure("C1=CC=CC=C1");
+            assertEquals(2, result.getUuids().size());
         }
    	}
     
     @Test   
+    @RunOnly
    	public void testSubstructureSearchSpecificity() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -218,8 +214,10 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(form1));
             ensurePass( api.submitSubstance(form2));
             
-            String html=api.getSubstructureMatchHTML("C1=CC=CC=C1");
-            assertTrue("Should have 1 match, but found something else:" + html,html.contains("<span id=\"record-count\" class=\"label label-default\">1</span>"));
+            
+            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SearchResult result=searcher.substructure("C1=CC=CC=C1");
+            assertEquals(1, result.getUuids().size());
         }
    	}
     
@@ -527,7 +525,6 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
     			.asChemical()
 				.addName(smiles + " name")
     			.setStructure(smiles)
-
     			.build();
     }
     

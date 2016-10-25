@@ -88,6 +88,7 @@ public abstract class AbstractSession<T> implements Closeable{
     }
 
     public String constructUrlFor(String path) {
+        if(path.startsWith("http"))return path;
     	StringBuilder sb = new StringBuilder("http://localhost:")
                 .append(port);
     	

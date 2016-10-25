@@ -23,6 +23,10 @@ public class WhereQueryBuilder {
 	public SuppliedQueryBuilder globalMatchesAny(String value) {
 		return condition(Condition.rawGlobalQuery(value));
 	}
+	
+	public SuppliedQueryBuilder allDocsQuery() {
+        return condition(Condition.rawFieldQuery("*", "*"));
+    }
 
 	public SuppliedQueryBuilder globalMatchesPhrase(String value) {
 		return condition(Condition.orderedGlobalQuery(value));

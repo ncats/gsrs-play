@@ -127,7 +127,11 @@ public class RestSession extends AbstractSession<Void>{
 
     @Override
     public WSResponse get(String path) {
-        return url(constructUrlFor(path)).get().get(timeout);
+        return getRequest(path).get().get(timeout);
+    }
+    
+    public WSRequestHolder getRequest(String path){
+        return url(constructUrlFor(path));
     }
 
     public JsonNode getAsJson(String path){

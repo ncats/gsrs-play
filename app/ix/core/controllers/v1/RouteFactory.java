@@ -410,7 +410,6 @@ public class RouteFactory extends Controller {
             int skip, 
             int fdim,
             String field) {
-        System.out.println("DO THIS TOO");
         try {
             Structure struc = StructureFactory.getStructureFrom(q, false);
             return _registry.get()

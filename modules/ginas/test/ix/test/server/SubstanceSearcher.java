@@ -10,10 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -23,8 +21,6 @@ import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import ix.test.query.builder.SimpleQueryBuilder;
-import ix.test.query.builder.SubstanceCondition;
 import ix.test.server.BrowserSession.WrappedWebRequest;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -33,11 +29,11 @@ import play.libs.ws.WSResponse;
 /**
  * Abstracts all the html parsing and ginas specific url knowledge
  * to make a prorammatic way to query a running ginas instance to search
- * for substances.
+ * for substances. This SubstanceSearcher is specifically for browser-piloting.
  *
  * Created by katzelda on 4/5/16.
  */
-public class SubstanceSearcher {
+public class SubstanceSearcher implements SubstanceSearcherIFace {
 
     private final BrowserSession session;
     private static final Pattern SUBSTANCE_LINK_HREF_PATTERN = Pattern.compile("/ginas/app/substance/([a-z0-9\\-]+)");
@@ -53,39 +49,30 @@ public class SubstanceSearcher {
         this.session = session;
     }
     
+    /* (non-Javadoc)
+     * @see ix.test.server.SubstanceSearcherIFace#setSearchOrder(java.lang.String)
+     */
+    @Override
     public void setSearchOrder(String order){
     	this.defaultSearchOrder=order;
     }
     
-    
-    
-
-    /**
-     * Get the UUIDs of all the loaded substances that have this substructure.
-     * Assumes the page size for searches is 16.
-     * @param smiles a kekulized SMILES string of the substructure to search for.
-     * @return a Set of UUIDs that match. will never be null but may be empty.
-     *
-     * @throws IOException if there is a problem parsing the results.
+    /* (non-Javadoc)
+     * @see ix.test.server.SubstanceSearcherIFace#substructure(java.lang.String)
      */
+    @Override
     public SearchResult substructure(String smiles) throws IOException {
     	return substructure(smiles, 16, true);
     }
     
-    /**
-     * Get the UUIDs of all the loaded substances that have this substructure.
-     * @param smiles a kekulized SMILES string of the substructure to search for.
-     * @param rows the number of rows per page to return
-     * @return a Set of UUIDs that match. will never be null but may be empty.
-     *
-     * @throws IOException if there is a problem parsing the results.
+    /* (non-Javadoc)
+     * @see ix.test.server.SubstanceSearcherIFace#substructure(java.lang.String, int, boolean)
      */
+    @Override
     public SearchResult substructure(String smiles, int rows, boolean wait) throws IOException {
 
         //TODO have to kekulize
 
-
-    	
         int page=1;
 
         Set<String> substances = new LinkedHashSet<>();
@@ -160,75 +147,26 @@ public class SubstanceSearcher {
     	return new SearchResult(set.k(),set.v(),this);
     }
     
-    public SearchResult nameSearch(String query) throws IOException{
-    	String q = new SimpleQueryBuilder()
-    			.where()
-    			.condition(SubstanceCondition.name(query).phrase())
-    			.build();
-    	return query(q);
-    }
     
-    /**
-     * Performs a name search, trusting that the query term is
-     * formatted exactly as it needs to be, with any included
-     * quotes or wildcard characters
-     * @param query
-     * @return
-     * @throws IOException
+    /* (non-Javadoc)
+     * @see ix.test.server.SubstanceSearcherIFace#query(java.util.UUID)
      */
-    public SearchResult nameRawSearch(String query) throws IOException{
-    	String q = new SimpleQueryBuilder()
-    			.where()
-    			.condition(SubstanceCondition.name(query).raw())
-    			.build();
-    	return query(q);
-    }
-    
-    public SearchResult exactNameSearch(String query) throws IOException{
-    	String q = new SimpleQueryBuilder()
-    			.where()
-    			.condition(SubstanceCondition.name(query).exact())
-    			.build();
-        return query(q);
-    }
-    public SearchResult codeSearch(String query) throws IOException{
-    	String q = new SimpleQueryBuilder()
-    			.where()
-    			.condition(SubstanceCondition.code(query).phrase())
-    			.build();
-        return query(q);
-    }
-    public SearchResult exactSearch(String query) throws IOException{
-    	String q = new SimpleQueryBuilder()
-    			.where()
-    			.globalMatchesExact(query)
-    			.build();
-        return query(q);
-    }
-    
-    
-    /**
-     * Get the UUIDs of all the loaded substances
-     * @return a Set of UUIDs that match. will never be null but may be empty.
-     * @throws IOException if there is a problem parsing the results.
-     */
+    @Override
     public SearchResult query(UUID uuid) throws IOException {
         return query(uuid.toString());
     }
-    /**
-     * Get the UUIDs of all the loaded substances
-     * @return a Set of UUIDs that match. will never be null but may be empty.
-     * @throws IOException if there is a problem parsing the results.
+    /* (non-Javadoc)
+     * @see ix.test.server.SubstanceSearcherIFace#query(java.lang.String)
      */
+    @Override
     public SearchResult query(String queryString) throws IOException {
         return performSearch(queryString);
     }
     
-    /**
-     * Get the UUIDs of all the loaded substances
-     * @return a Set of UUIDs that match. will never be null but may be empty.
-     * @throws IOException if there is a problem parsing the results.
+    /* (non-Javadoc)
+     * @see ix.test.server.SubstanceSearcherIFace#all()
      */
+    @Override
     public SearchResult all() throws IOException {
         return performSearch(null);
     }
@@ -308,7 +246,6 @@ public class SubstanceSearcher {
     private String getKeyFrom(String htmlText) {
         Matcher m = SEARCH_KEY_PATTERN.matcher(htmlText);
         if(!m.find()){
-            //throw new IllegalStateException("could not find search key for " + htmlText);
             return "";
         }
         return m.group(1);
@@ -339,14 +276,6 @@ public class SubstanceSearcher {
                 results.setFacet(next.getKey(), next.getValue());
             }
         }
-
-
-
-    }
-    
-    public static Function<String, Optional<String>> getMatchingGroup(String regex, int group){
-        Pattern p = Pattern.compile(regex);
-        return Util.getMatchingGroup(p,group);
     }
     
     /**

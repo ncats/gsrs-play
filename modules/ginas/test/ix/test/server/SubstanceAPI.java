@@ -30,6 +30,8 @@ import play.libs.ws.WSResponse;
  */
 public class SubstanceAPI {
 
+    //TODO: Refactor
+    
     private static final String API_URL_VALIDATE = "ginas/app/api/v1/substances/@validate";
     private static final String API_URL_SUGGEST = "ginas/app/api/v1/suggest";
     private static final String API_URL_SUBMIT_SUBSTANCE = "ginas/app/api/v1/substances";
