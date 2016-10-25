@@ -65,28 +65,20 @@ public class StructureFactory extends EntityFactory {
         return field (id, path, finder);
     }
 
-    public static Result delete (UUID id) {
-        return delete (id, finder);
-    }
 
     public static Result edits (UUID id) {
         return edits (id, Structure.class);
     }
-
-    public static Result updateEntity () {
-        return EntityFactory.updateEntity(Structure.class);
-    }
     
     public static void saveTempStructure(Structure s){
     	if(s.id==null)s.id=UUID.randomUUID();
-        AccessLogger.info(UserFetcher.getActingUser().username + ":" + " searched for:" + s.id + ":" + s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
+        
         AccessLogger.info("{} {} {} {} \"{}\"", 
         		UserFetcher.getActingUser(true).username, 
         		"unknown", 
         		"unknown",
         		"structure search:" + s.id,
         		s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
-    	play.cache.Cache.set(s.id.toString(), s);
     	IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toFullJson());
     }
     
@@ -98,11 +90,8 @@ public class StructureFactory extends EntityFactory {
     	}catch(Exception e){
     		Logger.error("Error deserializing structure", e);
     		return null;
-    	}
-    	
+    	}	
     }
-    
-    
     
     public static Structure getStructureFrom(String str, boolean store) {
         Objects.requireNonNull(str);

@@ -37,7 +37,10 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.Java8Util;
-import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.Subunit;  //It is not ideal to have ginas model imports
+                                    //but since there is no generic sequence support
+                                    //outside of ginas, this is used until something
+                                    //else exists
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Global;

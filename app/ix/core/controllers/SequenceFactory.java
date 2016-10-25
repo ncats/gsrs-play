@@ -3,7 +3,6 @@ package ix.core.controllers;
 import java.util.Objects;
 import java.util.UUID;
 
-import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.plugins.IxCache;
 import ix.core.util.EntityUtils;
@@ -14,10 +13,10 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
-
-@NamedResource(name="sequences",
-               type=Subunit.class,
-               description="Resource for handling protein and nucleic acid sequences")
+//TODO: Decide if this should be a named Resource directly
+//@NamedResource(name="sequences",
+//               type=Subunit.class,
+//               description="Resource for handling protein and nucleic acid sequences")
 public class SequenceFactory extends EntityFactory {
     static final Logger.ALogger AccessLogger = Logger.of("access");
     
@@ -82,7 +81,7 @@ public class SequenceFactory extends EntityFactory {
     	try{
     		return EntityUtils.getEntityInfoFor(Subunit.class).fromJson(jsn);
     	}catch(Exception e){
-    		Logger.error("Error deserializing structure", e);
+    		Logger.error("Error deserializing sequence", e);
     		return null;
     	}
     	
@@ -106,7 +105,7 @@ public class SequenceFactory extends EntityFactory {
             }
             return su;
         } catch (Exception e) {
-            throw new IllegalStateException("Can not parse structure from:" + str);
+            throw new IllegalStateException("Can not parse sequence from:" + str);
         }
     }
 }
