@@ -426,6 +426,13 @@ public class SearchOptions implements RequestOptions {
 	public List<TermFilter> getTermFilters() {
 		return termFilters;
 	}
+	
+	public void addTermFilters(List<TermFilter> termFilters) {
+        this.termFilters.addAll(termFilters);
+    }
+	public void addTermFilter(TermFilter termFilter) {
+        this.termFilters.add(termFilter);
+    }
 
 	public List<String> getOrder() {
 		return order;
@@ -440,6 +447,9 @@ public class SearchOptions implements RequestOptions {
 	public List<FacetLongRange> getLongRangeFacets() {
 		return longRangeFacets;
 	}
+	public void addLongRangeFacets(List<FacetLongRange> longRangeFacets) {
+        this.longRangeFacets.addAll(longRangeFacets);
+    }
 
 	public void setLongRangeFacets(List<FacetLongRange> longRangeFacets) {
 		this.longRangeFacets = longRangeFacets;

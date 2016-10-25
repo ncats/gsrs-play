@@ -66,6 +66,9 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
+import ix.core.util.Java8Util;
+import ix.core.util.ModelUtils;
+import ix.core.util.TimeUtil;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
@@ -884,14 +887,14 @@ public class GinasApp extends App {
         }
 
 
-        options.longRangeFacets.addAll(facetRanges);
+        options.addLongRangeFacets(facetRanges);
 
 
         if(params!=null){
 
             String[] dep =params.get("showDeprecated");
             if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
-                options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
+                options.addTermFilter(new TermFilter("SubstanceDeprecated","false"));
             }
         }
     }
@@ -1586,6 +1589,8 @@ public class GinasApp extends App {
         return resolved;
     }
 
+    
+    //TODO: When is this used?
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     static public Result relationships(String uuid) {
         List<Relationship> rels = resolveRelationships(uuid);
@@ -2126,8 +2131,9 @@ public class GinasApp extends App {
     }
 
     public static String siteShorthand(int subunitIndex, BitSet residues) {
-        return residues.stream().mapToObj(i -> new Site(subunitIndex, i + 1)).collect(ModelUtils.toShorthand());
-
+        return residues.stream()
+                .mapToObj(i -> new Site(subunitIndex, i + 1))
+                .collect(ModelUtils.toShorthand());
     }
 
     // TODO: move to Ginas App
