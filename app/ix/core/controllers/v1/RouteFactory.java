@@ -248,6 +248,44 @@ public class RouteFactory extends Controller {
         }
     }
     
+    
+    
+    /**
+     * <p>
+     * Accepts an HTTP POST request with a sequence search payload, storing the
+     * sequence payload, and redirecting to a GET request, using the stored ID
+     * (UUID in this case) to make the search capable of fitting nicely in a
+     * simple GET request, forwarding to the route found at
+     * {@link #sequenceSearch(String, String, String, double, int, int, int, String)}
+     * . The encoding of the parameters is done using
+     * {@link BodyParser.FormUrlEncoded}, to be in line with the mechanism done
+     * with GET requests.
+     * 
+     * </p>
+     * 
+     * <p>
+     * For example, given the curl command:
+     * </p>
+     * 
+     * <pre>
+     * <code>
+     * curl -L 'http://localhost:9000/ginas/app/api/v1/substances/sequenceSearch' --data 'cutoff=0.5&type=SUB&q=GGGCYFQNCPKG' --compressed
+     * </code>
+     * </pre>
+     * 
+     * <p>
+     * Will redirect to the equivalent of:
+     * 
+     * <pre>
+     * <code>
+     * curl http://localhost:9000/ginas/app/api/v1/substances/sequenceSearch?q=<SOME_UUID>&type=SUB&cutoff=0.5
+     * </code>
+     * </pre>
+     * <p>
+     * 
+     * @param context
+     * @return
+     */
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, maxLength = 50_000)
     public static Result sequenceSearchPost(String context) {
         if (request().body().isMaxSizeExceeded()) {
@@ -281,11 +319,47 @@ public class RouteFactory extends Controller {
                                     field);
             return redirect(call);
         } catch (Exception ex) {
-            Logger.error("Structure search call error", ex);
+            Logger.error("Sequence search call error", ex);
             return _apiInternalServerError(ex);
         }
     }
 
+    /**
+     * <p>
+     * Accepts an HTTP POST request with a structure search payload, storing the
+     * structure payload, and redirecting to a GET request, using the stored ID
+     * (UUID in this case) to make the search capable of fitting nicely in a
+     * simple GET request, forwarding to the route found at
+     * {@link #structureSearch(String, String, String, double, int, int, int, String)}
+     * . The encoding of the parameters is done using
+     * {@link BodyParser.FormUrlEncoded}, to be in line with the mechanism done
+     * with GET requests.
+     * 
+     * </p>
+     * 
+     * <p>
+     * For example, given the curl command:
+     * </p>
+     * 
+     * <pre>
+     * <code>
+     * curl -L 'http://localhost:9000/ginas/app/api/v1/substances/structureSearch' --data 'type=Substructure&q=%0D%0A+++JSDraw210241620382D%0D%0A%0D%0A++6++6++0++0++0++0++++++++++++++0+V2000%0D%0A+++15.7560+++-6.5520++++0.0000+C+++0++0++0++0++0++0++0++0++0++0++0++0%0D%0A+++14.4050+++-5.7720++++0.0000+C+++0++0++0++0++0++0++0++0++0++0++0++0%0D%0A+++14.4050+++-4.2120++++0.0000+C+++0++0++0++0++0++0++0++0++0++0++0++0%0D%0A+++17.1070+++-5.7720++++0.0000+C+++0++0++0++0++0++0++0++0++0++0++0++0%0D%0A+++17.1070+++-4.2120++++0.0000+C+++0++0++0++0++0++0++0++0++0++0++0++0%0D%0A+++15.7560+++-3.4320++++0.0000+C+++0++0++0++0++0++0++0++0++0++0++0++0%0D%0A++1++2++2++0++0++0++0%0D%0A++2++3++1++0++0++0++0%0D%0A++1++4++1++0++0++0++0%0D%0A++4++5++2++0++0++0++0%0D%0A++5++6++1++0++0++0++0%0D%0A++6++3++2++0++0++0++0%0D%0AM++END%0D%0A' --compressed
+     * </code>
+     * </pre>
+     * 
+     * <p>
+     * Will redirect to the equivalent of:
+     * 
+     * <pre>
+     * <code>
+     * curl http://localhost:9000/ginas/app/api/v1/substances/structureSearch?q=<SOME_UUID>&type=Substructure
+     * </code>
+     * </pre>
+     * <p>
+     * 
+     * @param context
+     * @return
+     */
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, maxLength = 50_000)
     public static Result structureSearchPost(String context) {
 
@@ -345,6 +419,7 @@ public class RouteFactory extends Controller {
         }
     }
 
+    
     public static Result sequenceSearch(String context, 
             String q, 
             String type,
