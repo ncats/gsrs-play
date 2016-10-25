@@ -4,10 +4,12 @@ import ix.core.models.Group;
 import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.IndexableValueFromRaw;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -23,7 +25,7 @@ public class RecordAccessIndexValueMaker implements IndexValueMaker<Substance> {
 
         makeRecordAccessLevelValues(t, consumer);
         makeDisplayNameValues(t, consumer);
-       // makeDefinitionLevelAccessValues(t, consumer);
+        makeDefinitionLevelAccessValues(t, consumer);
     }
 
     public void makeRecordAccessLevelValues(Substance t, Consumer<IndexableValue> consumer) {
@@ -58,30 +60,26 @@ public class RecordAccessIndexValueMaker implements IndexValueMaker<Substance> {
         }
     }
 
-/*    public void makeDefinitionLevelAccessValues(Substance t, Consumer<IndexableValue> consumer) {
+    public void makeDefinitionLevelAccessValues(Substance t, Consumer<IndexableValue> consumer) {
 
-        Set<Group> groups;
+        Set<Group> groups=null;
 
-        if(t instanceof ChemicalSubstance){
-
-            ChemicalSubstance chem = (ChemicalSubstance) t;
-            groups = chem.structure.getAccess();
-        }else {
-            groups = t.getAccess();
+        if(t instanceof GinasSubstanceDefinitionAccess){
+            groups= Optional.ofNullable(((GinasSubstanceDefinitionAccess) t).getDefinitionElement())
+                    .map(d->d.getAccess())
+                    .orElse(null);
         }
 
         if(groups== null || groups.isEmpty())
         {
             consumer.accept(new IndexableValueFromRaw("Definition Level Access", "public").dynamic());
-            System.out.println("group Level public");
         }
         else {
             for (Group grp: groups) {
                 consumer.accept(new IndexableValueFromRaw("Definition Level Access", grp.name).dynamic());
-                System.out.println("group Level : " + grp.name);
             }
         }
 
-    }*/
+    }
 
 }

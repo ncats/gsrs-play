@@ -9,6 +9,5 @@ import java.util.Set;
  */
 public interface GinasSubstanceDefinitionAccess {
 
-    //GinasAccessReferenceControlled getDefinitionAccess();
-    Set<Group> getDefinitionAccess();
+    GinasAccessReferenceControlled getDefinitionElement();
 }
