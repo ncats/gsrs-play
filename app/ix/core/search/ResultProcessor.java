@@ -67,6 +67,24 @@ public interface ResultProcessor<T, R> extends ResultMapper<T,R>{
         return getContext().getCount();
     }
 	
+	default void run(int rows) throws Exception{
+	    SearchResultContext context=getContext();
+	    if(context.getStart()==null){
+	        context.setStart(TimeUtil.getCurrentTimeMillis());
+	    }
+        // the idea is to generate enough results for 1 page, and 1 extra record
+        // (enough to show pagination) and return immediately. as the user pages,
+        // the background job will fill in the rest of the results.
+        int count = process (rows+1);
+
+        // while we continue to fetch the rest of the results in the
+        // background
+        ActorRef handler = Akka.system().actorOf
+                (Props.create(SearchResultHandler.class));
+        handler.tell(this, ActorRef.noSender());
+        Logger.debug("## search results submitted: "+handler);
+	}
+	
 	
 	/*
 	 * 
@@ -85,20 +103,7 @@ public interface ResultProcessor<T, R> extends ResultMapper<T,R>{
 	
 	default void setResults (int rows, Enumeration<T> results) throws Exception {
 		setResults(results);
-        SearchResultContext context=getContext();
-        context.setStart(TimeUtil.getCurrentTimeMillis());
-
-        // the idea is to generate enough results for 1 page, and 1 extra record
-        // (enough to show pagination) and return immediately. as the user pages,
-        // the background job will fill in the rest of the results.
-        int count = process (rows+1);
-
-        // while we continue to fetch the rest of the results in the
-        // background
-        ActorRef handler = Akka.system().actorOf
-                (Props.create(SearchResultHandler.class));
-        handler.tell(this, ActorRef.noSender());
-        Logger.debug("## search results submitted: "+handler);
+		run(rows);
     }
 	
 	default Future<Void> getCompletedFuture(){

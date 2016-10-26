@@ -873,7 +873,7 @@ public class GinasApp extends App {
             // decorator strips this out
             String name = leadingChar + entry.getKey();
             LocalDateTime startDate = entry.getValue().apply(now);
-            System.out.println("start date for " + name + "  " + startDate + "- "  + new Date(end));
+            
             long start = TimeUtil.toMillis(startDate);
 
             long[] range = new long[]{start, end};
@@ -935,71 +935,6 @@ public class GinasApp extends App {
         instrumentSearchOptions(options, params, map);
 
 
-//        SearchOptions.FacetLongRange editedRange =
-//            new SearchOptions.FacetLongRange ("root_lastEdited");
-//        SearchOptions.FacetLongRange approvedRange =
-//            new SearchOptions.FacetLongRange ("root_approved");
-//
-//        LocalDateTime now = TimeUtil.getCurrentLocalDateTime();
-//
-//        long todayMillis = TimeUtil.toMillis(now);
-//        WeekFields weekFields = WeekFields.of(Locale.getDefault());
-//        TemporalField dayOfWeek = weekFields.dayOfWeek();
-//
-//
-//
-//        LocalDateTime midnightThisMorning = LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT);
-//
-//
-//
-//        // add a single character prefix so as to keep the map sorted; the
-//        // decorator strips this out
-//
-//
-//        long start = TimeUtil.toMillis(midnightThisMorning);
-//        long end = todayMillis;
-//        long[] range = new long[]{start, end};
-//
-//
-//        editedRange.add("aToday", range);
-//        approvedRange.add("aToday", range);
-//
-//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.with(dayOfWeek, 1)),
-//                           todayMillis};
-//        editedRange.add("bThis week", range);
-//        approvedRange.add("bThis week", range);
-//
-//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.withDayOfMonth(1)),
-//                          todayMillis};
-//        editedRange.add("cThis month", range);
-//        approvedRange.add("cThis month", range);
-//
-//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.minusMonths(6)),
-//                          todayMillis};
-//        editedRange.add("dPast 6 months", range);
-//        approvedRange.add("dPast 6 months", range);
-//
-//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.minusYears(1)),
-//                todayMillis};
-//        editedRange.add("ePast 1 year", range);
-//        approvedRange.add("ePast 1 year", range);
-//
-//        range = new long[]{TimeUtil.toMillis(midnightThisMorning.minusYears(2)),
-//                todayMillis};
-//        editedRange.add("fPast 2 years", range);
-//        approvedRange.add("fPast 2 years", range);
-//
-//        options.longRangeFacets.add(editedRange);
-//        options.longRangeFacets.add(approvedRange);
-//
-//
-//        if(params!=null){
-//
-//        	String[] dep =params.get("showDeprecated");
-//        	if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
-//        		options.termFilters.add(new TermFilter("SubstanceDeprecated","false"));
-//        	}
-//        }
     }
 
     public static List<Facet> getSubstanceFacets(int fdim, Map<String, String[]> map) throws IOException {

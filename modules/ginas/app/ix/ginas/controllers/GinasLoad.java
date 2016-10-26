@@ -296,9 +296,9 @@ public class GinasLoad extends App {
 
 		List<ProcessingJob> jobs = new ArrayList<ProcessingJob>();
 		int[] pages = new int[0];
-		if (result.count() > 0) {
-			rows = Math.min(result.count(), Math.max(1, rows));
-			pages = paging(rows, page, result.count());
+		if (result.getCount() > 0) {
+			rows = Math.min(result.getCount(), Math.max(1, rows));
+			pages = paging(rows, page, result.getCount());
 			for (int i = (page - 1) * rows, j = 0; j < rows
 					&& i < result.size(); ++j, ++i) {
 				jobs.add((ProcessingJob) result.get(i));
@@ -306,7 +306,7 @@ public class GinasLoad extends App {
 		}
 
 		return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
-				result.count(), pages, decorate(facets), jobs));
+				result.getCount(), pages, decorate(facets), jobs));
 
 	}
 

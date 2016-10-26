@@ -1,10 +1,15 @@
 package ix.core.controllers.v1;
 
-import static ix.core.search.ArgumentAdapter.*;
+import static ix.core.search.ArgumentAdapter.getLastBooleanOrElse;
+import static ix.core.search.ArgumentAdapter.getLastDoubleOrElse;
+import static ix.core.search.ArgumentAdapter.getLastIntegerOrElse;
+import static ix.core.search.ArgumentAdapter.getLastStringOrElse;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -28,7 +33,6 @@ import ix.core.controllers.SequenceFactory;
 import ix.core.controllers.StructureFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
-import ix.core.models.Payload;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
@@ -169,8 +173,8 @@ public class RouteFactory extends Controller {
         }
 
         @SuppressWarnings("unchecked")
-        public <I,V> InstantiatedNamedResource<I,V> getResource(String context){
-            return resources.get(context);
+        public <I,V> InstantiatedNamedResource<I,V> getResource(String context) throws NoSuchElementException{
+            return Optional.of(resources.get(context)).get();
         }
 
         @SuppressWarnings("unchecked")
@@ -726,7 +730,7 @@ public class RouteFactory extends Controller {
         }
         m.put("status", status);
         ObjectMapper om = new ObjectMapper();
-        //t.printStackTrace();
+        t.printStackTrace();
         return om.valueToTree(m);
     }
 

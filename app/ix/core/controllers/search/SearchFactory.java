@@ -212,7 +212,7 @@ public class SearchFactory extends EntityFactory {
     
     //TODO: Needs evaluation
     public static Result getSearchResultContext (String key, int top, int skip, int fdim, String field) {
-    	
+        System.out.println("getting context:" + key);
     	SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
     	if(possibleContext!=null){
 	    	if (possibleContext.hasFullContext()) {
@@ -230,12 +230,16 @@ public class SearchFactory extends EntityFactory {
     //TODO: Needs evaluation
     @Experimental
     public static Result getSearchResultContextResults(String key, int top, int skip, int fdim, String field) {
-    	SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
+        System.out.println("getting context:" + key);
+        SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
+    	
     	if (possibleContext != null) {
     		if(!possibleContext.hasFullContext()){
     			return redirect(possibleContext.getSerialized().generatingPath);
     		}
     		SearchResultContext ctx=possibleContext.getContext();
+    		
+    		
     		
     		EntityMapper em=EntityFactory.getEntityMapper();
     		

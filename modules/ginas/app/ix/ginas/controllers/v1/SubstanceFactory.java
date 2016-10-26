@@ -2,26 +2,32 @@ package ix.ginas.controllers.v1;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.chem.StructureProcessor;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.search.SearchFactory;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.models.UserProfile;
-import ix.core.plugins.IxCache;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.ResultProcessor;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
@@ -46,11 +52,13 @@ import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
+import ix.ncats.controllers.App.SearcherTask;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
 import ix.utils.Util;
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -78,13 +86,12 @@ public class SubstanceFactory extends EntityFactory {
 		if (s != null) {
 			if (s.version.equals(version)) {
 				return s;
-				
 			}
 		}
 		return EntityWrapper.of(s)
 				.getEdits()
 				.stream()
-				.filter(e->(version.equals(e.version)))
+				.filter(e->(version.equals(e.version))) //version -1 is the right thing
 				.findFirst()
 				.map(e->{
 					try{
@@ -512,7 +519,45 @@ public class SubstanceFactory extends EntityFactory {
 					/*min=*/ 1, 
 					new StructureSearchResultProcessor())
 					.getFocused(top, skip, fdim, field);
-		}else{
+		}else if(type.toLowerCase().startsWith("fle")){
+		    //I don't like this section of the code
+		    
+		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    //NEEDS CLEANUP
+		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
+                                                                             // standardize
+            String hash = struc2.getLychiv3Hash();
+            SearchRequest request = new SearchRequest.Builder()
+                   .kind(Substance.class)
+                   .fdim(fdim)
+                   .query(hash)
+                   .top(Integer.MAX_VALUE)
+                   .build()
+                   ;
+            TextSearchTask task = new TextSearchTask(request);
+            context = App.search(task, task.getProcessor());
+            
+            
+		}else if(type.toLowerCase().startsWith("exa")){
+		    //I don't like this section of the code
+            
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //NEEDS CLEANUP
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
+                                                                             // standardize
+            String hash = "root_structure_properties_term:" + struc2.getLychiv4Hash();
+            SearchRequest request = new SearchRequest.Builder()
+                   .kind(Substance.class)
+                   .fdim(fdim)
+                   .query(hash)
+                   .top(Integer.MAX_VALUE)
+                   .build()
+                   ;
+            TextSearchTask task = new TextSearchTask(request);
+            context = App.search(task, task.getProcessor());
+        }else{
 			throw new UnsupportedOperationException("Unsupported search type:" + type);
 		}
 		
@@ -558,6 +603,74 @@ public class SubstanceFactory extends EntityFactory {
         return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
     }
 
+    public static class TextSearchTask implements SearcherTask{
+
+        private SearchRequest request;
+        private String key;
+        
+        
+        public TextSearchTask(SearchRequest request){
+            this.request=request;
+            String q = request.getQuery();
+            request.getOptions().asQueryParms();
+            key=Util.sha1("search" + q, request.getOptions().asQueryParms(), 
+                                        "kind",
+                                        "filter",
+                                        "facet",
+                                        "order", 
+                                        "fdim");
+        }
+        @Override
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public void search(ResultProcessor processor) throws Exception {
+            //do nothing. Nothing needs to be processed
+        }
+
+        @Override
+        public long getLastUpdatedTime() {
+            return Play.application().plugin(TextIndexerPlugin.class).getIndexer().lastModified();
+        }
+        
+        
+        public ResultProcessor getProcessor(){
+            return new SearchResultWrappingResultProcessor(this.request);
+        }
+    }
+    
+    public static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
+        private CachedSupplier<SearchResultContext> result;
+        
+        public SearchResultWrappingResultProcessor(SearchRequest request){
+            result=CachedSupplier.ofCallable(()->{
+                return new SearchResultContext(SearchFactory.search(request)); 
+            });
+        }
+        @Override
+        public Stream map(Object result) {
+               throw new UnsupportedOperationException(this.getClass() + " doesn't support mapping");
+        }
+
+        @Override
+        public SearchResultContext getContext() {
+                return result.get();
+        }
+
+        @Override
+        public void setUnadaptedResults(Iterator results) {
+            throw new UnsupportedOperationException(this.getClass() + " doesn't support setting an iterator");            
+        }
+
+        @Override
+        public Iterator getUnadaptedResults() {
+            throw new UnsupportedOperationException(this.getClass() + " doesn't support getting an iterator");
+        }
+        
+    }
+    
     
     
 }

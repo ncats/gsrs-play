@@ -70,6 +70,7 @@ import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
 import ix.core.util.Java8Util;
+import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.ncats.resolvers.NCIStructureResolver;
@@ -651,7 +652,7 @@ public class App extends Authentication {
 				&& q.indexOf('/') > 0 && q.indexOf("\"") < 0;
 
 				try {       
-					long start = System.currentTimeMillis();
+					long start = TimeUtil.getCurrentTimeMillis();
 					SearchResult result;
 					if (indexer != getTextIndexer()) {
 						// if it's an ad-hoc indexer, then we don't bother caching
@@ -717,13 +718,8 @@ public class App extends Authentication {
 				}
 				return null;
 	}
-	static protected String formatKey(String key){
-		return key;
-	}
 
 	static protected SearchResult cacheKey (SearchResult result, String key) {
-		key=formatKey(key);
-		//      IxCache.set(key, result); // create alias       
 		result.setKey(key);
 		return result;
 	}
@@ -1169,7 +1165,7 @@ public class App extends Authentication {
         };
         return search(task,processor);
     }
-	
+    
 	
 	public static SearchResultContext search(SearcherTask task, ResultProcessor processor) {
 	    try {
@@ -1179,6 +1175,7 @@ public class App extends Authentication {
                                 task.search(processor);
                                 SearchResultContext ctx = processor.getContext();
                                 ctx.setKey(key);
+                                
                                 return ctx;
                             },SearchResultContext.class));
         }catch (Exception ex) {
@@ -1190,22 +1187,31 @@ public class App extends Authentication {
 	
 	
     @Deprecated
-    public static SearchResultContext sequence(final String seq, final double identity, final int rows, final int page,
-            CutoffType ct, final ResultProcessor processor) {
+    public static SearchResultContext sequence(final String seq, 
+                                               final double identity, 
+                                               final int rows, 
+                                               final int page,
+                                               CutoffType ct, 
+                                               final ResultProcessor processor) {
         return sequence(seq, identity, ct, rows * page, processor);
     }
 
     
     @Deprecated
-    public static SearchResultContext substructure(final String query, final int rows, final int page,
-            final ResultProcessor processor) {
+    public static SearchResultContext substructure(final String query, 
+                                                    final int rows, 
+                                                    final int page,
+                                                    final ResultProcessor processor) {
         return substructure(query, rows*page, processor);
     }
 
     
     @Deprecated
-    public static SearchResultContext similarity(final String query, final double threshold, final int rows,
-            final int page, final SearchResultProcessor processor) {
+    public static SearchResultContext similarity(final String query, 
+                                                 final double threshold, 
+                                                 final int rows,
+                                                 final int page, 
+                                                 final SearchResultProcessor processor) {
         return similarity(query, threshold, rows*page, processor);
     }
 
@@ -1226,6 +1232,8 @@ public class App extends Authentication {
 	}
 
 
+	
+	//@Deprecated
 	public static <T> Result fetchResultImmediate
 	(final SearchResult result, int rows,
 			int page, final ResultRenderer<T> renderer) throws Exception {
