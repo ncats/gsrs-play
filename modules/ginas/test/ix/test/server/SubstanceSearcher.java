@@ -98,7 +98,7 @@ public class SubstanceSearcher implements SubstanceSearcherIFace {
 
         Tuple<String,Set<String>> tmp=null;
         HtmlPage firstPage=null;
-        String keyString=null;
+        String keyString="";
         do {
             try {
                 HtmlPage htmlPage = getChemicalSearchPage(smiles,cutoff,type ,rows,page, wait);

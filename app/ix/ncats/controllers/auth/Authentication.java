@@ -45,7 +45,7 @@ public class Authentication extends Controller {
     		ConfigHelper.supplierOf("ix.app", "MyApp");  //idle time
     
     public static CachedSupplier<Integer> TIMEOUT = 
-    		ConfigHelper.supplierOf(SESSION, 7200);  //idle time
+    		ConfigHelper.supplierOf(SESSION, 1000 * 60 * 15);  //idle time (that's 15 minutes)
     
     public static CachedSupplier<Boolean> autoRegister = 
     		ConfigHelper.supplierOf("ix.authentication.autoregister", false);
@@ -305,7 +305,10 @@ public class Authentication extends Controller {
         Session session = getCachedSession(id);
         if (session != null) {
             long current = TimeUtil.getCurrentTimeMillis();
-            if ((current - session.accessed) > TIMEOUT.get()) {
+            long duration = TIMEOUT.get()*1000;
+            long timeSinceAccessed  = (current - session.accessed);
+            
+            if (timeSinceAccessed > duration) {
                 Logger.debug("Session " + session.id + " expired!");
                 flash("warning", "Your session has expired!");
                 flush(session);

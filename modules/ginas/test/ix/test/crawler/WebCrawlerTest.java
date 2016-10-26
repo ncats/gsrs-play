@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import ix.AbstractGinasClassServerTest;
 import ix.core.plugins.IxCache;
+import ix.core.util.RunOnly;
 import ix.core.util.StopWatch;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
@@ -56,7 +57,9 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
 
         WebCrawlerSpy spy = new WebCrawlerSpy();
+        
         try(BrowserSession session =  ts.notLoggedInBrowserSession()){
+            
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
             URL url = ts.getHomeUrl();
 
@@ -83,9 +86,12 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
     @Test
     public void nothingRestrictedForAdmin() throws Exception {
         final WebCrawlerSpy spy = new WebCrawlerSpy();
+        
         try(BrowserSession session =  ts.newBrowserSession(admin)) {
+            
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
             URL url = ts.getHomeUrl();
+            
 
             crawler.crawl(url);
 
@@ -184,6 +190,7 @@ public class WebCrawlerTest  extends AbstractGinasClassServerTest {
         @Override
         protected void visitErrorURL(URL url, int statusCode, String statusMessage, List<URL> path) {
             if(statusCode ==401){
+                
                 _401Links.add(url);
             }else if(statusCode == 404){
             	System.out.println("404\t" + url + "\t" + path.size());

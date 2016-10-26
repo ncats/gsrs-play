@@ -1,10 +1,15 @@
 package ix.test.server;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.query.builder.SubstanceCondition;
+import ix.test.server.SubstanceSearcher.WebExportRequest;
+import play.libs.ws.WSResponse;
 
 public interface SubstanceSearcherIFace {
 
@@ -173,5 +178,7 @@ public interface SubstanceSearcherIFace {
                 .build();
         return query(q);
     }
+    
+    
 
 }
