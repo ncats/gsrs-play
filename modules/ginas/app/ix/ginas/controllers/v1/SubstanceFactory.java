@@ -100,7 +100,6 @@ public class SubstanceFactory extends EntityFactory {
 												  		Expr.eq("version", version), 
 												  		Expr.isNull("path")));
 		Edit e=q.findUnique(); //AH!
-		System.out.println("edit: " + e);
 		try{
 			//Good idea? Maybe, Maybe not.
 			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
