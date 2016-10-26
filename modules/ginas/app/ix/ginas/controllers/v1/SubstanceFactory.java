@@ -579,6 +579,7 @@ public class SubstanceFactory extends EntityFactory {
             try {
                 SearchResult sr = App.getResultFor(ctx, so);
                 List<Substance> rlist = new ArrayList<Substance>();
+                
                 sr.copyTo(rlist, so.getSkip(), so.getTop(), true); // synchronous
                 for (Substance s : rlist) {
                     s.setMatchContextFromID(ctx.getId());
@@ -603,7 +604,7 @@ public class SubstanceFactory extends EntityFactory {
         return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
     }
 
-    public static class TextSearchTask implements SearcherTask{
+    private static class TextSearchTask implements SearcherTask{
 
         private SearchRequest request;
         private String key;
@@ -641,7 +642,7 @@ public class SubstanceFactory extends EntityFactory {
         }
     }
     
-    public static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
+    private static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
         private CachedSupplier<SearchResultContext> result;
         
         public SearchResultWrappingResultProcessor(SearchRequest request){

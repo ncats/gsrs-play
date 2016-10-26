@@ -42,7 +42,7 @@ public class SearchResult {
 	private int count;
 	private SearchOptions options;
 	final long timestamp = TimeUtil.getCurrentTimeMillis();
-	AtomicLong stop = new AtomicLong();
+	final AtomicLong stop = new AtomicLong();
 	Comparator<String> idComparator = null;
 	private String generatingUrl;
 
@@ -281,6 +281,7 @@ public class SearchResult {
 
 		if (finished) {
 			if (idComparator != null) {
+			    System.out.println("SORTY SORT");
 				matches.sortByNames(idComparator);
 			}
 			result = matches;
@@ -456,7 +457,7 @@ public class SearchResult {
 		private List<?> result;
 		private int count;
 		private SearchOptions options;
-		private AtomicLong stop;
+		private long stop =-1;
 		private Comparator<String> idComparator;
 		private List<SoftReference<SearchResultDoneListener>> listeners;
 		private Map<String, NamedCallable> sponsored;
@@ -501,7 +502,7 @@ public class SearchResult {
 			return this;
 		}
 
-		public Builder stop(AtomicLong stop) {
+		public Builder stop(long stop) {
 			this.stop = stop;
 			return this;
 		}
@@ -533,7 +534,9 @@ public class SearchResult {
 		this.result = builder.result;
 		this.count = builder.count;
 		this.options = builder.options;
-		this.stop = builder.stop;
+		if(builder.stop>0){
+		    this.stop.set(builder.stop);
+		}
 		this.idComparator = builder.idComparator;
 		if(builder.sponsored!=null){
 			this.sponsored.putAll(builder.sponsored);
@@ -568,7 +571,7 @@ public class SearchResult {
         
         return new SearchResult.Builder()
                     .options(options)
-                    .stop(new AtomicLong(TimeUtil.getCurrentTimeMillis()))
+                    .stop(TimeUtil.getCurrentTimeMillis())
                     .matches(ll)
                     .result(ll)
                     .key(ctx.getKey() + "/result")

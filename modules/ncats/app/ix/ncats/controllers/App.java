@@ -1280,24 +1280,36 @@ public class App extends Authentication {
 		final String key = getKey (ctx, options, "facet", "fdim");
 		return getOrElse(key,  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();
-					if (results.isEmpty()) {
-						return null;  // hmm ... is this a good idea? Probably not
-									  // it might cause a problem with the cache
-						   			  // as nulls may still get cached right now
-					}
 					
 					SearchRequest request = new SearchRequest.Builder()
-												.subset(results)
-												.options(options)
-												.skip(0)
-												.top(results.size())
-												.build();
+                            .subset(results)
+                            .options(options)
+                            .skip(0)
+                            .top(results.size())
+                            .build();
 					
-					SearchResult searchResult =
-							SearchFactory.search (request);
-					Logger.debug("Cache misses: "
-							+key+" size="+results.size()
-							+" class="+searchResult);
+					SearchResult searchResult =null;
+					
+					if (results.isEmpty()) {
+					    System.out.println("Got nothing");
+					    searchResult= new SearchResult.Builder()
+					                    .count(0)
+					                    .result(new ArrayList<Object>())
+					                    .options(options)
+					                    .stop(TimeUtil.getCurrentTimeMillis())
+					                    .build();
+					    
+//						return null;  // hmm ... is this a good idea? Probably not
+//									  // it might cause a problem with the cache
+//						   			  // as nulls may still get cached right now
+					}else{
+					    searchResult =
+	                            SearchFactory.search (request);
+	                    Logger.debug("Cache misses: "
+	                            +key+" size="+results.size()
+	                            +" class="+searchResult);
+					}
+					
 					// make an alias for the context.id to this search
 					// result
 					return cacheKey (searchResult, ctx.getId());

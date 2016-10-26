@@ -52,7 +52,10 @@ public class RestSubstanceSearcher implements SubstanceSearcherIFace{
                 .get()
                 .get(REST_TIMEOUT)
                 .asJson();
-
+        return processAsyncRequest(jsn);
+    }
+    
+    private SearchResult processAsyncRequest(JsonNode jsn) throws JsonParseException, JsonMappingException, IOException{
         //wait for async
         while(!jsn.get("finished").asBoolean()){
             jsn=this.session.getRequest(jsn.get("url").asText())
@@ -60,10 +63,44 @@ public class RestSubstanceSearcher implements SubstanceSearcherIFace{
                     .get(REST_TIMEOUT)
                     .asJson();
         }
-
         String key = jsn.get("key").asText();
-
         return resultsFromFirstResultNode(jsn,key);
+    }
+    
+    @Override
+    public SearchResult similarity(String smiles, double cutoff) throws IOException {
+        JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
+                .setQueryParameter("q", smiles)
+                .setQueryParameter("type", "Similarity")
+                .setQueryParameter("cutoff", cutoff+"")
+                .get()
+                .get(REST_TIMEOUT)
+                .asJson();
+        return processAsyncRequest(jsn);
+    }
+
+
+    @Override
+    public SearchResult flex(String smiles) throws IOException {
+        JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
+                .setQueryParameter("q", smiles)
+                .setQueryParameter("type", "Flex")
+                .get()
+                .get(REST_TIMEOUT)
+                .asJson();
+        return processAsyncRequest(jsn);
+    }
+
+
+    @Override
+    public SearchResult exact(String smiles) throws IOException {
+        JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
+                .setQueryParameter("q", smiles)
+                .setQueryParameter("type", "Exact")
+                .get()
+                .get(REST_TIMEOUT)
+                .asJson();
+        return processAsyncRequest(jsn);
     }
     
     private SearchResult resultsFromFirstResultNode(JsonNode jsn, String key) throws JsonParseException, JsonMappingException, IOException{
@@ -123,12 +160,6 @@ public class RestSubstanceSearcher implements SubstanceSearcherIFace{
         }
     }
 
-    
-    //TODO: Should implement?
-    @Override
-    public SearchResult substructure(String smiles, int rows, boolean wait) throws IOException {
-        throw new UnsupportedOperationException(this.getClass() + " doesn't support sync calls to substructure search yet");
-    }
 
     @Override
     public SearchResult query(String queryString) throws IOException {
@@ -141,5 +172,8 @@ public class RestSubstanceSearcher implements SubstanceSearcherIFace{
         return resultsFromFirstResultNode(jsn, null); //No search result key for text from rest
                                                       //api (yet)
     }
+
+
+   
 
 }

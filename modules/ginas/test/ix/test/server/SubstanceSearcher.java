@@ -65,11 +65,30 @@ public class SubstanceSearcher implements SubstanceSearcherIFace {
     	return substructure(smiles, 16, true);
     }
     
-    /* (non-Javadoc)
-     * @see ix.test.server.SubstanceSearcherIFace#substructure(java.lang.String, int, boolean)
-     */
     @Override
+    public SearchResult similarity(String smiles, double cutoff) throws IOException {
+        return similarity(smiles, cutoff, 16, true);
+    }
+    
+    @Override
+    public SearchResult flex(String smiles) throws IOException {
+        return structureSearch(smiles,0.8, "Flex", 16, true);
+    }
+    
+    @Override
+    public SearchResult exact(String smiles) throws IOException {
+        return structureSearch(smiles,0.8, "Exact", 16, true);
+    }
+    
+    public SearchResult similarity(String smiles, double cutoff, int rows, boolean wait) throws IOException {
+        return structureSearch(smiles, 0.8, "Similarity", rows, wait);
+    }
+    
     public SearchResult substructure(String smiles, int rows, boolean wait) throws IOException {
+        return structureSearch(smiles, 0.8, "Substructure", rows, wait);
+    }
+    
+    public SearchResult structureSearch(String smiles, double cutoff, String type, int rows, boolean wait) throws IOException{
 
         //TODO have to kekulize
 
@@ -82,14 +101,12 @@ public class SubstanceSearcher implements SubstanceSearcherIFace {
         String keyString=null;
         do {
             try {
-                HtmlPage htmlPage = getSubstructurePage(smiles,rows,page, wait);
+                HtmlPage htmlPage = getChemicalSearchPage(smiles,cutoff,type ,rows,page, wait);
                 tmp= getSubstancesFrom(htmlPage);
                 if (firstPage == null) {
                     firstPage = htmlPage;
                     keyString = tmp.k();
                 }
-
-                
 
                 page++;
                 //we check the return value of the add() call
@@ -99,7 +116,7 @@ public class SubstanceSearcher implements SubstanceSearcherIFace {
                 //records (so add() will return false)
                 //which will break us out of the loop.
             }catch(FailingHttpStatusCodeException e){
-            	
+                
                 //Code looks like it's been improved
                 //to throw an exception if you page too far
                 //so swallow that exception.
@@ -108,7 +125,7 @@ public class SubstanceSearcher implements SubstanceSearcherIFace {
                 }
                 throw new IllegalStateException(e);
             }catch(Exception e){
-            	e.printStackTrace();
+                e.printStackTrace();
             }
         }while(substances.addAll(tmp.v()));
 
@@ -123,22 +140,36 @@ public class SubstanceSearcher implements SubstanceSearcherIFace {
     	return session.submit(wwr.setQueryParameter("page", page+"").get());
     }
     
+    public HtmlPage getExactPage(String smiles, int rows, int page, boolean wait) throws IOException{
+        return getChemicalSearchPage(smiles,0.8,"Exact",rows,page,wait);
+    }
+    public HtmlPage getFlexPage(String smiles, int rows, int page, boolean wait) throws IOException{
+        return getChemicalSearchPage(smiles,0.8,"Flex",rows,page,wait);
+    }
     public HtmlPage getSubstructurePage(String smiles, int rows, int page, boolean wait) throws IOException{
-    	// Added "wait" so that it doesn't return before it's
-    	// completely ready
-    	
-    	
-    	// This may be a problem, as URLEncoder may over encode some smiles strings
-    	WrappedWebRequest root=session.newGetRequest("ginas/app/substances")
-    		.addQueryParameter("type", "Substructure")
-    		.addQueryParameter("q", smiles)
-    		.addQueryParameter("wait", wait+"")
-    		.addQueryParameter("rows", rows+"");
-    	
-    	if(defaultSearchOrder!=null){
-    		root=root.addQueryParameter("order",defaultSearchOrder);
-    	}
-    	return getPage(root, page);
+        return getChemicalSearchPage(smiles,0.8,"Substructure",rows,page,wait);
+    }
+    public HtmlPage getSimilarityPage(String smiles, double cutoff, int rows, int page, boolean wait) throws IOException{
+        return getChemicalSearchPage(smiles,cutoff,"Similarity",rows,page,wait);
+    }
+    
+    public HtmlPage getChemicalSearchPage(String smiles, double cutoff, String type, int rows, int page, boolean wait) throws IOException{
+        // Added "wait" so that it doesn't return before it's
+        // completely ready
+        
+        
+        // This may be a problem, as URLEncoder may over encode some smiles strings
+        WrappedWebRequest root=session.newGetRequest("ginas/app/substances")
+            .addQueryParameter("type", type)
+            .addQueryParameter("q", smiles)
+            .addQueryParameter("cutoff", cutoff +"")
+            .addQueryParameter("wait", wait+"")
+            .addQueryParameter("rows", rows+"");
+        
+        if(defaultSearchOrder!=null){
+            root=root.addQueryParameter("order",defaultSearchOrder);
+        }
+        return getPage(root, page);
     }
     
     

@@ -19,18 +19,44 @@ public interface SubstanceSearcherIFace {
      * @throws IOException if there is a problem parsing the results.
      */
     SearchResult substructure(String smiles) throws IOException;
-
+    
     /**
-     * Get the UUIDs of all the loaded substances that have this substructure.
-     * @param smiles a kekulized SMILES string of the substructure to search for.
-     * @param rows the number of rows per page to return
+     * Get the UUIDs of all the loaded substances that have similarity
+     * above the specified cutoff
+     * @param smiles a kekulized SMILES string of structure for similarity search
      * @return a Set of UUIDs that match. will never be null but may be empty.
      *
      * @throws IOException if there is a problem parsing the results.
      */
-    SearchResult substructure(String smiles, int rows, boolean wait) throws IOException;
+    SearchResult similarity(String smiles, double cutoff) throws IOException;
 
-   
+    /**
+     * Get the UUIDs of all the loaded substances that have a defined moiety
+     * which matches the given structure by a lychi level 3 match.
+     * This is also called "flex match"
+     * 
+     * @param smiles a kekulized SMILES string of structure search
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     *
+     * @throws IOException if there is a problem parsing the results.
+     */
+    SearchResult flex(String smiles) throws IOException;
+    
+    
+    /**
+     * Get the UUIDs of all the loaded substances that have a defined structure
+     * which matches the given structure by a lychi level 4 match.
+     * This is also called "exact match"
+     * 
+     * @param smiles a kekulized SMILES string of structure search
+     * @return a Set of UUIDs that match. will never be null but may be empty.
+     *
+     * @throws IOException if there is a problem parsing the results.
+     */
+    SearchResult exact(String smiles) throws IOException;
+
+    
+    
     /**
      * Performs an name search, where some name must contain
      * the "words" in the provided query string, in that order.
