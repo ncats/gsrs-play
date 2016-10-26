@@ -316,7 +316,10 @@
                     map[res[1]].push(res[2]);
                 }
             }
-            map.errors = errors;
+
+            if(errors.length > 0) {
+                map.errors = errors;
+            }
             return map;
         };
         utils.setSRUConnectivityDisplay = function (srus) {

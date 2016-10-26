@@ -1,3 +1,22 @@
+GSRS v???
+============
+Changes:
+
+Enchancements
+-------------
+1. Added new facets - Record Level Access,
+Display Name Level Access, Definiton Level Access
+
+
+Bug Fixes
+----------
+1. issue # GSRS-187 - Error message when
+    trying to view a substance that I approved
+2. issue # GSRS-184 - SSG1 Submission
+   failed without any error. Added validation for SSG1
+3. issue # GSRS-179 - Could not submit a polymer record
+
+
 
 GSRS v1.2.08
 ============

@@ -9,6 +9,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import ix.test.server.JsonHistoryResult;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +27,7 @@ public class EditHistoryTest  extends AbstractGinasServerTest {
 	public final static String INVALID_APPROVAL_ID="0000000001";
     
     
-    @Test
+	@Test
 	public void testRecordHistoryEditCanProduceDiff() throws Exception {
     	try(RestSession session = ts.newRestSession(ts.createUser(Role.SuperDataEntry,
     															  Role.SuperUpdate))){
@@ -71,6 +73,40 @@ public class EditHistoryTest  extends AbstractGinasServerTest {
     			});
         }
     	
+	}
+
+	@Test
+	public void approvingASubstanceMakesAEditForThePreviousVersion() throws Exception {
+		UUID uuid = UUID.randomUUID();
+		try(RestSession session = ts.newRestSession(ts.createUser(Role.SuperDataEntry,
+				Role.SuperUpdate))){
+			SubstanceAPI api2 = new SubstanceAPI(session);
+
+			new SubstanceBuilder()
+					.asChemical()
+					.setStructure("C1CCCCC1CCCCO")
+					.addName("Chemical Name")
+					.setUUID(uuid)
+					.buildJsonAnd(c->{
+						ensurePass(api2.submitSubstance(c));
+					});
+		}
+
+		try(RestSession session = ts.newRestSession(ts.createUser(Role.SuperDataEntry,
+				Role.SuperUpdate, Role.Approver))){
+			SubstanceAPI api2 = new SubstanceAPI(session);
+
+			api2.approveSubstance(uuid.toString());
+			JsonNode afterApprove=api2.fetchSubstanceJsonByUuid(uuid.toString());
+			assertEquals("2", afterApprove.get("version").asText());
+
+			JsonHistoryResult oldVersion = api2.fetchSubstanceJsonByUuid(uuid.toString(),1);
+
+			assertEquals("1", oldVersion.getHistoryNode().get("version").asText());
+
+		}
+
+
 	}
     
     
