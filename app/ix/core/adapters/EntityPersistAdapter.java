@@ -672,13 +672,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter{
                     try {
                         m.invoke(bean);
                     }catch (Exception ex) {
+                        ex.printStackTrace();
                         Logger.trace
                             ("Can't invoke method "
                              +m.getName()+"["+ew.getClazz()+"]", ex);
                     }
                 }
             }
-            
             deleteIndexOnBean(bean);
             makeIndexOnBean(bean);
             

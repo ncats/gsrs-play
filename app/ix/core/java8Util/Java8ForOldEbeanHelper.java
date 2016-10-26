@@ -242,7 +242,7 @@ public class Java8ForOldEbeanHelper {
 	 * {@link EntityPersistAdapter#makeIndexOnBean(Object)} delegation.
 	 * 
 	 * @param epa
-	 * @param bean
+	 * @param ew
 	 * @throws java.io.IOException
 	 */
 	public static void makeIndexOnBean(EntityPersistAdapter epa, EntityWrapper<?> ew) throws java.io.IOException {

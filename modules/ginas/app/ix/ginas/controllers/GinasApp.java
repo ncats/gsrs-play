@@ -986,7 +986,6 @@ public class GinasApp extends App {
             // decorator strips this out
             String name = leadingChar + entry.getKey();
             LocalDateTime startDate = entry.getValue().apply(now);
-            System.out.println("start date for " + name + "  " + startDate + "- "  + new Date(end));
             long start = TimeUtil.toMillis(startDate);
 
             long[] range = new long[]{start, end};
@@ -1126,7 +1125,6 @@ public class GinasApp extends App {
         final Map<String, String[]> params = App.getRequestQuery();
         
         final String sha1 = App.getKeyForCurrentRequest();
-        
         String[] order = params.get("order");
         
         
