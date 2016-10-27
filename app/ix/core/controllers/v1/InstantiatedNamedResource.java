@@ -28,73 +28,72 @@ import play.mvc.Result;
 
 @Experimental
 public interface InstantiatedNamedResource<I,V> {
-	public static final Operation CREATE_OPERATION = new Operation("create");
-	public static final Operation UPDATE_ENTITY_OPERATION = new Operation("updateEntity");
-	public static final Operation COUNT_OPERATION = new Operation("count");
-	public static final Operation VALIDATE_OPERATION = new Operation("validate");
-	public static final Operation STREAM_OPERATION = new Operation("stream", 
-													Argument.of(null, String.class, "field"),
-													Argument.of(0, int.class , "top"),
-													Argument.of(0, int.class , "skip"));
-	public static final Operation SEARCH_OPERATION = new Operation("search", 
-													Argument.of(null, String.class, "query"),
-													Argument.of(0, int.class, "top"),
-													Argument.of(0, int.class, "skip"),
-													Argument.of(0, int.class, "fdim"));
-	public static final Operation GET_OPERATION = new Operation("get", 
-													Argument.of(null, Id.class, "id"),
-													Argument.of(null, String.class, "expand"));
-	public static final Operation DOC_OPERATION = new Operation("doc", 
-													Argument.of(null, Id.class, "id"));
-	public static final Operation EDITS_OPERATION = new Operation("edits", 
-													Argument.of(null, Id.class, "id"));
-	public static final Operation APPROVE_OPERATION = new Operation("approve", 
-													Argument.of(null, Id.class, "id"));
-	public static final Operation UPDATE_OPERATION = new Operation("approve", 
-													Argument.of(null, Id.class, "id"),
-													Argument.of(null, String.class, "field"));
-	public static final Operation FIELD_OPERATION = new Operation("field", 
-													Argument.of(null, Id.class, "id"),
-													Argument.of(null, String.class, "field"));
-	public static final Operation PAGE_OPERATION = new Operation("page", 
-													Argument.of(10, int.class, "top"), 
-													Argument.of(0, int.class, "skip"),
-													Argument.of(null, String.class, "filter"));
-	public static final Operation STRUCTURE_SEARCH_OPERATION = new Operation("structureSearch", 
-			Argument.of(null, String.class, "query"),
-			Argument.of("substructure", String.class, "type"),
-			Argument.of(.8, double.class, "cutoff"),
-			Argument.of(0, int.class, "top"),
-			Argument.of(0, int.class, "skip"),
-			Argument.of(0, int.class, "fdim"),
-			Argument.of("", String.class, "field"));
-	public static final Operation SEQUENCE_SEARCH_OPERATION = new Operation("sequenceSearch", 
-            Argument.of(null, String.class, "query"),
-            Argument.of(CutoffType.SUB, CutoffType.class, "cutofftype"),
-            Argument.of(.8, double.class, "cutoff"),
-            Argument.of(0, int.class, "top"),
-            Argument.of(0, int.class, "skip"),
-            Argument.of(0, int.class, "fdim"),
-            Argument.of("", String.class, "field"));
-	
-	public static final Operation[] ALL_OPERATIONS = new Operation[]{
-															CREATE_OPERATION, 
-															UPDATE_ENTITY_OPERATION ,
-															COUNT_OPERATION ,
-															VALIDATE_OPERATION ,
-															STREAM_OPERATION ,								
-															SEARCH_OPERATION ,								
-															GET_OPERATION ,									
-															DOC_OPERATION ,									
-															EDITS_OPERATION,									
-															APPROVE_OPERATION ,								
-															UPDATE_OPERATION ,								
-															FIELD_OPERATION ,									
-															PAGE_OPERATION ,
-															STRUCTURE_SEARCH_OPERATION,
-															SEQUENCE_SEARCH_OPERATION
-														};
-	
+    
+    public static enum Operations{
+        CREATE_OPERATION(new Operation("create")),
+        VALIDATE_OPERATION(new Operation("validate")),
+        UPDATE_ENTITY_OPERATION(new Operation("updateEntity")),
+        COUNT_OPERATION(new Operation("count")),
+        STREAM_OPERATION(new Operation("stream", 
+                Argument.of(null, String.class, "field"),
+                Argument.of(0, int.class , "top"),
+                Argument.of(0, int.class , "skip"))),
+        SEARCH_OPERATION(new Operation("search", 
+                Argument.of(null, String.class, "query"),
+                Argument.of(0, int.class, "top"),
+                Argument.of(0, int.class, "skip"),
+                Argument.of(0, int.class, "fdim"))),
+        GET_OPERATION(new Operation("get", 
+                Argument.of(null, Id.class, "id"),
+                Argument.of(null, String.class, "expand"))),
+        DOC_OPERATION(new Operation("doc", 
+                Argument.of(null, Id.class, "id"))),
+        EDITS_OPERATION(new Operation("edits", 
+                Argument.of(null, Id.class, "id"))),
+        APPROVE_OPERATION(new Operation("approve", 
+                Argument.of(null, Id.class, "id"))),
+        UPDATE_OPERATION(new Operation("approve", 
+                Argument.of(null, Id.class, "id"),
+                Argument.of(null, String.class, "field"))),
+        FIELD_OPERATION(new Operation("field", 
+                Argument.of(null, Id.class, "id"),
+                Argument.of(null, String.class, "field"))),
+        PAGE_OPERATION(new Operation("page", 
+                Argument.of(10, int.class, "top"), 
+                Argument.of(0, int.class, "skip"),
+                Argument.of(null, String.class, "filter"))),
+        STRUCTURE_SEARCH_OPERATION(new Operation("structureSearch", 
+                Argument.of(null, String.class, "query"),
+                Argument.of("substructure", String.class, "type"),
+                Argument.of(.8, double.class, "cutoff"),
+                Argument.of(0, int.class, "top"),
+                Argument.of(0, int.class, "skip"),
+                Argument.of(0, int.class, "fdim"),
+                Argument.of("", String.class, "field"))),
+        SEQUENCE_SEARCH_OPERATION(new Operation("sequenceSearch", 
+                Argument.of(null, String.class, "query"),
+                Argument.of(CutoffType.SUB, CutoffType.class, "cutofftype"),
+                Argument.of(.8, double.class, "cutoff"),
+                Argument.of(0, int.class, "top"),
+                Argument.of(0, int.class, "skip"),
+                Argument.of(0, int.class, "fdim"),
+                Argument.of("", String.class, "field")));
+        
+        private final Operation op;
+        public Operation op(){
+            return this.op;
+        }
+        private Operations(Operation op){
+            this.op=op;
+            
+        }
+        
+        public Operation with(Object ...objs){
+            return this.op.values(objs);
+        }
+    }
+    
+    
 	public String getName();
 	public String getDescription();
 	
@@ -129,18 +128,18 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result create(){
-		return operate(CREATE_OPERATION);
+		return operate(Operations.CREATE_OPERATION.with());
 	}
 	default Result count(){
-		return operate(COUNT_OPERATION);
+		return operate(Operations.COUNT_OPERATION.with());
 	}
 
 	default Result stream(String q, int top, int skip){
-		return operate(STREAM_OPERATION.values(q,top,skip));
+		return operate(Operations.STREAM_OPERATION.with(q,top,skip));
 	}
 	default Result search(String q, 
             int top, int skip, int fdim){
-		return operate(SEARCH_OPERATION.values(q,top,skip, fdim));
+		return operate(Operations.SEARCH_OPERATION.with(q,top,skip, fdim));
 	}
 	
 	default Result get(I id){
@@ -148,19 +147,19 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result get(I id, String expand){
-		return operate(GET_OPERATION.values(id,expand));
+		return operate(Operations.GET_OPERATION.with(id,expand));
 	}
 	
 	default Result doc(I id){
-		return operate(DOC_OPERATION.values(id));
+		return operate(Operations.DOC_OPERATION.with(id));
 	}
 	
 	default Result edits(I id){
-		return operate(EDITS_OPERATION.values(id));
+		return operate(Operations.EDITS_OPERATION.with(id));
 	}
 	
 	default Result field(I id, String field){
-		return operate(FIELD_OPERATION.values(id, field));
+		return operate(Operations.FIELD_OPERATION.with(id, field));
 	}
 	
 	default Result page(int top, int skip){
@@ -168,33 +167,33 @@ public interface InstantiatedNamedResource<I,V> {
 	}
 	
 	default Result page(int top, int skip, String filter){
-		return operate(PAGE_OPERATION.values(top,skip,filter));
+		return operate(Operations.PAGE_OPERATION.with(top,skip,filter));
 	}
 	default Result structureSearch(String q, String type, double cutoff, int top, int skip, int fdim){
 		return structureSearch(q,type,cutoff,top,skip,fdim, "");
 	}
 	default Result structureSearch(String q, String type, double cutoff, int top, int skip, int fdim, String field){
-		return operate(STRUCTURE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim,field));
+		return operate(Operations.STRUCTURE_SEARCH_OPERATION.with(q,type,cutoff,top,skip,fdim,field));
 	}
 	
 	default Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim, String field){
-        return operate(SEQUENCE_SEARCH_OPERATION.values(q,type,cutoff,top,skip,fdim,field));
+        return operate(Operations.SEQUENCE_SEARCH_OPERATION.with(q,type,cutoff,top,skip,fdim,field));
     }
 	
 	default Result validate(){
-		return operate(VALIDATE_OPERATION);
+		return operate(Operations.VALIDATE_OPERATION.with());
 	}
 	
 	default Result approve(I id){
-		return operate(APPROVE_OPERATION.values(id));
+		return operate(Operations.APPROVE_OPERATION.with(id));
 	}
 	
 	default Result update(I id, String field){
-		return operate(UPDATE_OPERATION.values(id,field));
+		return operate(Operations.UPDATE_OPERATION.with(id,field));
 	}
 	
 	default Result updateEntity(){
-		return operate(UPDATE_ENTITY_OPERATION);
+		return operate(Operations.UPDATE_ENTITY_OPERATION.with());
 	}
 	
 	

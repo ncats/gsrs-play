@@ -3,6 +3,7 @@ package ix.utils;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,20 @@ public class Tuple<K,V>{
 		
 	}
 	
+	public static <K,V,U> Function<Tuple<K,V>, Tuple<K,U>> vmap(Function<V,U> fun){
+	    return (t)->{
+	        return Tuple.of(t.k(),fun.apply(t.v()));
+	    };
+    }
+	
+	public static <K,V,L> Function<Tuple<K,V>, Tuple<L,V>> kmap(Function<K,L> fun){
+        return (t)->{
+            return Tuple.of(fun.apply(t.k()),t.v());
+        };
+    }
+	
+	
+	
 	/**
 	 * Used to make a conversion from an {@link Entry} to
 	 * a tuple.
@@ -43,6 +58,7 @@ public class Tuple<K,V>{
 		return Tuple.of(ent.getKey(),ent.getValue());
 		
 	}
+	
 	public static<K,V> BiFunction<K,V,Tuple<K,V>> map(){
 		return (k,v)->{
 			return new Tuple<K,V>(k,v);

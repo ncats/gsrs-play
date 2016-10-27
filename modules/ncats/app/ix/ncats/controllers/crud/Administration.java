@@ -44,7 +44,7 @@ public class Administration extends App {
     // Look at this
     public static List<UserProfile> principalsList() {
         List<Principal> users = PrincipalFactory.all();
-        List<UserProfile> profiles = StreamUtil.ofIterator(UserProfileFactory.users()).collect(Collectors.toList());
+        List<UserProfile> profiles = StreamUtil.forIterator(UserProfileFactory.users()).collect(Collectors.toList());
         
         for (Principal p : users) {
             UserProfile pri = p.getUserProfile();

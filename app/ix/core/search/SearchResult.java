@@ -16,10 +16,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.CacheStrategy;
 import ix.core.search.LazyList.NamedCallable;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
 import ix.utils.Util.QueryStringManipulator;
@@ -33,7 +36,7 @@ public class SearchResult {
 	final private List<Facet> facets = new ArrayList<Facet>();
 	final private List<FieldedQueryFacet> suggestFacets = new ArrayList<FieldedQueryFacet>();
 
-	private final LazyList<Object> matches = new LazyList<>(o -> (EntityWrapper.of(o)).getKey().getIdString());
+	private final LazyList<Key,Object> matches = new LazyList<>(o -> (EntityWrapper.of(o)).getKey());
 	
 	
 	private List<?> result; // final result when there are no more updates
@@ -43,7 +46,7 @@ public class SearchResult {
 	private SearchOptions options;
 	final long timestamp = TimeUtil.getCurrentTimeMillis();
 	final AtomicLong stop = new AtomicLong();
-	Comparator<String> idComparator = null;
+	Comparator<Key> idComparator = null;
 	private String generatingUrl;
 
 	private final List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
@@ -66,7 +69,7 @@ public class SearchResult {
         return suggestFacets;
     }
 
-	public void setRank(Comparator<String> idCompare) {
+	public void setRank(Comparator<Key> idCompare) {
 		Objects.requireNonNull(idCompare);
 		idComparator = idCompare;
 	}
@@ -172,7 +175,8 @@ public class SearchResult {
 		if (start >= matches.size()) {
 			return 0;
 		}
-
+	
+		
 		Iterator it = matches.listIterator(start);
 
 		int i = 0;
@@ -183,6 +187,67 @@ public class SearchResult {
 		return i;
 
 	}
+	
+	/**
+     * Copies from the search results {@link Key}s to the specified list
+     * with specified offset (for the master results), and
+     * total count of records to be copied.
+     * 
+     * Note: This method will block and wait for the "correct" 
+     * answer only if the final <pre>wait</pre> parameter is 
+     * <pre>true</pre>. Otherwise it will return whatever
+     * is available.
+     * 
+      * @param list 
+     *  Destination list to copy keys into
+     * @param start
+     *  Offset starting location from master list
+     * @param count
+     *  Total number of records to be copied
+     * @param wait
+     *  set to true for blocking for correct answer,
+     *  false will return available records immediately
+     * @return
+     */
+    public int copyKeysTo(List<Key> list, int start, int count, boolean wait) {
+
+        // It may be that the page that is being fetched is not yet
+        // complete. There are 2 options here then. The first is to
+        // return whatever is ready now immediately, and report the
+        // number of results (that is what had been done before).
+
+        // The second way is to wait for the fetching to be completed
+        // which is what is demonstrated below. 
+        List<Object> matches;
+        if (wait) {
+            try {
+                matches = this.getMatchesFuture(start + count).get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+                //interrupted...make empty list?
+                matches = Collections.emptyList();
+            }
+        } else {
+            matches = getMatches();
+        }
+
+        if (start >= matches.size()) {
+            return 0;
+        }
+        
+        LazyList<Key,Object> keyList = LazyList.of(matches, (t)->EntityWrapper.of(t).getKey());
+        
+        List<NamedCallable<Key,Object>> allKeys= keyList.getInternalList();
+        Iterator<NamedCallable<Key,Object>> it = allKeys.listIterator(start);
+        int i = 0;
+        for (; i < count && it.hasNext(); ++i) {
+            list.add(it.next().getName());
+        }
+
+        return i;
+
+    }
+	
 
 	/**
 	 * Copies from the search results to the specified list
@@ -267,8 +332,8 @@ public class SearchResult {
 	 * @return
 	 */
 	public List getSponsoredMatches() {
-		LazyList lazylist = new LazyList(c -> c.toString());
-		for (NamedCallable nc : sponsored.values()) {
+		LazyList<Key,Object> lazylist = new LazyList<>(c -> EntityWrapper.of(c).getKey());
+		for (NamedCallable<Key,Object> nc : sponsored.values()) {
 			lazylist.addCallable(nc);
 		}
 		return lazylist;
@@ -281,7 +346,6 @@ public class SearchResult {
 
 		if (finished) {
 			if (idComparator != null) {
-			    System.out.println("SORTY SORT");
 				matches.sortByNames(idComparator);
 			}
 			result = matches;
@@ -319,13 +383,38 @@ public class SearchResult {
 		return stop.get() >= timestamp;
 	}
 
-	private final Map<String, NamedCallable> sponsored = new HashMap<>();
+	private final Map<Key, NamedCallable<Key,Object>> sponsored = new HashMap<>();
 
-	public void addNamedCallable(NamedCallable c) {
+	public void addNamedCallable(NamedCallable<Key,Object> c) {
 		if (!sponsored.containsKey(c.getName())) {
 			matches.addCallable(c);
 			processAddition(c);
 		}
+	}
+	
+	@JsonIgnore
+	public String getFacetURI(String facetName){
+	    try{
+            String base=Controller.request().uri().split("\\?")[0] + "/@facets";
+
+            Map<String, String[]> params=new HashMap<>(Controller.request().queryString());
+            QueryStringManipulator qManip = new QueryStringManipulator(params);
+
+
+            qManip.toggleInclusion("field", facetName);
+
+            String newQueryString =qManip.toQueryString();
+
+            if(newQueryString.length()<=0){
+                System.out.println(newQueryString);
+                return Global.getHost() + base;
+            }
+            return Global.getHost() + base + "?" + newQueryString;
+        }catch(Exception e){
+            e.printStackTrace();
+            throw e;
+
+        }
 	}
 	
 	
@@ -341,7 +430,7 @@ public class SearchResult {
 	 * @param facetValue
 	 * @return
 	 */
-	public String getFacetURI(String facetName, String facetValue){
+	public String getFacetToggleURI(String facetName, String facetValue){
 		try{
 			String base=Controller.request().uri().split("\\?")[0];
 
@@ -358,7 +447,6 @@ public class SearchResult {
 				System.out.println(newQueryString);
 				return Global.getHost() + base;
 			}
-			System.out.println("New string:" + newQueryString);
 			return Global.getHost() + base + "?" + newQueryString;
 		}catch(Exception e){
 			e.printStackTrace();
@@ -368,7 +456,7 @@ public class SearchResult {
 				
 	}
 
-	public void addSponsoredNamedCallable(NamedCallable c) {
+	public void addSponsoredNamedCallable(NamedCallable<Key,Object> c) {
 		//System.out.println("Sponsored record: " + c.getName());
 		sponsored.put(c.getName(), c);
 		matches.addCallable(c);
@@ -453,14 +541,14 @@ public class SearchResult {
 		private String query;
 		private List<Facet> facets;
 		private List<FieldedQueryFacet> suggestFacets;
-		private LazyList<Object> matches;
+		private LazyList<Key,Object> matches;
 		private List<?> result;
 		private int count;
 		private SearchOptions options;
 		private long stop =-1;
-		private Comparator<String> idComparator;
+		private Comparator<Key> idComparator;
 		private List<SoftReference<SearchResultDoneListener>> listeners;
-		private Map<String, NamedCallable> sponsored;
+		private Map<Key, NamedCallable<Key,Object>> sponsored;
 
 		public Builder key(String key) {
 			this.key = key;
@@ -482,7 +570,7 @@ public class SearchResult {
 			return this;
 		}
 
-		public Builder matches(LazyList<Object> matches) {
+		public Builder matches(LazyList<Key,Object> matches) {
 			this.matches = matches;
 			return this;
 		}
@@ -507,7 +595,7 @@ public class SearchResult {
 			return this;
 		}
 
-		public Builder idComparator(Comparator<String> idComparator) {
+		public Builder idComparator(Comparator<Key> idComparator) {
 			this.idComparator = idComparator;
 			return this;
 		}
@@ -517,7 +605,7 @@ public class SearchResult {
 			return this;
 		}
 
-		public Builder sponsored(Map<String, NamedCallable> sponsored) {
+		public Builder sponsored(Map<Key, NamedCallable<Key,Object>> sponsored) {
 			this.sponsored = sponsored;
 			return this;
 		}
@@ -566,10 +654,12 @@ public class SearchResult {
      */
     public static SearchResult fromContext(SearchResultContext ctx, SearchOptions options){
         @SuppressWarnings("unchecked")
-        LazyList<Object> ll = (LazyList<Object>)LazyList
-                            .of(ctx.getResults(),o->EntityWrapper.of(o).getKey().toString());
+        LazyList<Key,Object> ll = (LazyList<Key,Object>)LazyList
+                            .of(ctx.getResults(),o->EntityWrapper.of(o).getKey());
+        
         
         return new SearchResult.Builder()
+                
                     .options(options)
                     .stop(TimeUtil.getCurrentTimeMillis())
                     .matches(ll)

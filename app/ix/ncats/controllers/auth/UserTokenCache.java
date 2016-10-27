@@ -87,7 +87,7 @@ public class UserTokenCache{
 	
 	private void updateUserProfileTokenCache(){
     	try{
-    		StreamUtil.ofIterator(UserProfileFactory.users()).forEach(up->{
+    		StreamUtil.forIterator(UserProfileFactory.users()).forEach(up->{
     			updateUserCache(up);
     		});
 	    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();

@@ -23,11 +23,11 @@ import static ix.core.search.ArgumentAdapter.*;
 
 
 public class SearchOptions implements RequestOptions {
-	public static class TermFilter {
+	public static class SearchTermFilter {
 		String field;
 		String term;
 
-		public TermFilter(String field, String term) {
+		public SearchTermFilter(String field, String term) {
 			this.field = field;
 			this.term = term;
 		}
@@ -56,6 +56,8 @@ public class SearchOptions implements RequestOptions {
 
 	public static final int DEFAULT_TOP = 10;
 	public static final int DEFAULT_FDIM = 10;
+	public static final int DEFAULT_FSKIP = 0;
+	public static final String DEFAULT_FFILTER = "";
 
 	// default number of elements to fetch while blocking
 	public static final int DEFAULT_FETCH_SIZE = 100; // 0 means all
@@ -66,7 +68,17 @@ public class SearchOptions implements RequestOptions {
 	private int skip;
 	private int fetch = DEFAULT_FETCH_SIZE;
 	private int fdim = DEFAULT_FDIM; // facet dimension
-	// whether drilldown (false) or sideway (true)
+	
+	private int fskip=DEFAULT_FSKIP;
+	
+	
+
+    private String ffilter=DEFAULT_FFILTER;
+	
+	
+
+
+    // whether drilldown (false) or sideway (true)
 	private boolean sideway = true;
 	
 	private boolean wait = false;
@@ -79,7 +91,7 @@ public class SearchOptions implements RequestOptions {
 	private List<FacetLongRange> longRangeFacets = new ArrayList<FacetLongRange>();
 	private List<String> order = new ArrayList<String>();
 	private List<String> expand = new ArrayList<String>();
-	private List<TermFilter> termFilters = new ArrayList<TermFilter>();
+	private List<SearchTermFilter> termFilters = new ArrayList<SearchTermFilter>();
 
 	public SearchOptions() {
 	}
@@ -126,10 +138,12 @@ public class SearchOptions implements RequestOptions {
 		     	ofList("facet", a->facets=a, ()->facets),
 		     	ofInteger("top", a->setTop(a), ()->getTop()),
 		     	ofInteger("skip", a->skip=a, ()->skip),
+		     	ofInteger("fskip", a->fskip=a, ()->fskip),
 		     	ofInteger("fdim", a->setFdim(a), ()->getFdim()),
 		     	ofInteger("fetch", a->setFetch(a), ()->getFetch()),
 		     	ofBoolean("sideway", a->setSideway(a), ()->isSideway(),true),
 		     	ofBoolean("wait", a->setWait(a), ()->isWait(),false),
+		     	ofSingleString("ffilter", a->ffilter=a, ()->ffilter),
 		     	ofSingleString("filter", a->filter=a, ()->filter),
 		     	ofSingleString("kind", a->{
 		     		try{
@@ -298,9 +312,11 @@ public class SearchOptions implements RequestOptions {
 		private List<FacetLongRange> longRangeFacets = new ArrayList<>();
 		private List<String> order = new ArrayList<>();
 		private List<String> expand = new ArrayList<>();
-		private List<TermFilter> termFilters = new ArrayList<>();
+		private List<SearchTermFilter> termFilters = new ArrayList<>();
 		
 		private Map<String,String[]> params;
+        private int fskip;
+        private String ffilter;
 		
 		/**
 		 * Creates a clone of the given {@link SearchOptions}, clobbering any previous
@@ -322,7 +338,7 @@ public class SearchOptions implements RequestOptions {
 			facets(new ArrayList<String>(so.getFacets()));
 			order(new ArrayList<String>(so.getOrder()));
 			expand(new ArrayList<String>(so.expand));
-			termFilters(new ArrayList<TermFilter>(so.termFilters));
+			termFilters(new ArrayList<SearchTermFilter>(so.termFilters));
 			longRangeFacets(new ArrayList<FacetLongRange>(so.longRangeFacets));
 			return this;
 		}
@@ -351,6 +367,16 @@ public class SearchOptions implements RequestOptions {
 			this.fdim = fdim;
 			return this;
 		}
+		
+		public Builder fskip(int fskip) {
+            this.fskip = fskip;
+            return this;
+        }
+		
+		public Builder ffilter(String ffilter) {
+            this.ffilter = ffilter;
+            return this;
+        }
 
 		public Builder sideway(boolean sideway) {
 			this.sideway = sideway;
@@ -386,7 +412,7 @@ public class SearchOptions implements RequestOptions {
 			return this;
 		}
 
-		public Builder termFilters(List<TermFilter> termFilters) {
+		public Builder termFilters(List<SearchTermFilter> termFilters) {
 			this.termFilters = termFilters;
 			return this;
 		}
@@ -414,6 +440,8 @@ public class SearchOptions implements RequestOptions {
 		this.setSideway(builder.sideway);
 		this.filter = builder.filter;
 		this.facets = builder.facets;
+		this.ffilter= builder.ffilter;
+		this.fskip  = builder.fskip;
 		this.setLongRangeFacets(builder.longRangeFacets);
 		this.setOrder(builder.order);
 		this.expand = builder.expand;
@@ -423,14 +451,14 @@ public class SearchOptions implements RequestOptions {
 		}
 	}
 
-	public List<TermFilter> getTermFilters() {
+	public List<SearchTermFilter> getTermFilters() {
 		return termFilters;
 	}
 	
-	public void addTermFilters(List<TermFilter> termFilters) {
+	public void addTermFilters(List<SearchTermFilter> termFilters) {
         this.termFilters.addAll(termFilters);
     }
-	public void addTermFilter(TermFilter termFilter) {
+	public void addTermFilter(SearchTermFilter termFilter) {
         this.termFilters.add(termFilter);
     }
 
@@ -494,6 +522,23 @@ public class SearchOptions implements RequestOptions {
 		queryParams.resetCache();
 		return fetch;
 	}
+	
+
+    public int getFskip() {
+        return fskip;
+    }
+
+    public void setFskip(int fskip) {
+        this.fskip = fskip;
+    }
+    
+    public String getFfilter() {
+        return ffilter;
+    }
+
+    public void setFfilter(String ffilter) {
+        this.ffilter = ffilter;
+    }
 
 	public int setTop(int top) {
 		this.top = top;

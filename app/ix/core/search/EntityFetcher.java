@@ -22,7 +22,7 @@ import ix.utils.Util;
  *
  * @param <K>
  */
-public class EntityFetcher<K> implements NamedCallable<K>{
+public class EntityFetcher<K> implements NamedCallable<Key,K>{
 	public static final long debugDealy = ConfigHelper.getLong("ix.settings.debug.dbdelay",0);
 
 
@@ -144,8 +144,8 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		return cacheType.get(this);
 	}
 	
-	public String getName(){
-		return theKey.getIdString();
+	public Key getName(){
+		return theKey;
 	}
 	
 	public Optional<K> getOrReload(){

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.CacheStrategy;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.models.ETag;
 import ix.core.plugins.IxCache;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
@@ -46,11 +47,11 @@ public class SearchResultContext {
     //This also needs some canonical form of the standard query,
     //so that it COULD be rerun if it is ever removed / finished
     
-    public static final BiFunction<SearchOptions, SearchResultContext, SearchResult> DEFAULT_ADAPTER = (so,ctx)->{
-    	return SearchResult.fromContext(ctx, so);
+    public static final BiFunction<SearchRequest, SearchResultContext, SearchResult> DEFAULT_ADAPTER = (sr,ctx)->{
+    	return SearchResult.fromContext(ctx, sr.getOptions());
     };
     
-    private BiFunction<SearchOptions, SearchResultContext, SearchResult> adapter = DEFAULT_ADAPTER;
+    private BiFunction<SearchRequest, SearchResultContext, SearchResult> adapter = DEFAULT_ADAPTER;
 
     public static interface StatusChangeListener{
     	void onStatusChange(SearchResultContext.Status newStatus, SearchResultContext.Status oldStatus);
@@ -249,7 +250,10 @@ public class SearchResultContext {
     public Collection getResults () { return results; }
     
     @com.fasterxml.jackson.annotation.JsonIgnore
-    public Collection getResultsAsList () {return (results!=null)?new ArrayList<>(results):null; }
+    public List getResultsAsList() {
+        if(results instanceof List)return (List)results;
+        return (results != null) ? new ArrayList<>(results) : new ArrayList<>();
+    }
     
     protected void add (Object obj) { results.add(obj); }
     
@@ -361,6 +365,7 @@ public class SearchResultContext {
     }
     
     
+    
     /**
      * Sets the adapter to be used when fetching records from his context.
      * This is used to set special collection, indexing and grouping considerations,
@@ -371,13 +376,14 @@ public class SearchResultContext {
      * TODO: move to constructor or builder
      * @param adapter
      */
-    public void setAdapter(BiFunction<SearchOptions, SearchResultContext, SearchResult> adapter){
+    public void setAdapter(BiFunction<SearchRequest, SearchResultContext, SearchResult> adapter){
+        System.out.println("Is this adapter even working?");
     	if(this.adapter==DEFAULT_ADAPTER){
     		this.adapter=adapter;
     	}
     }
     
-    public SearchResult getAdapted(SearchOptions opt){
+    public SearchResult getAdapted(SearchRequest opt){
     	System.out.println("Getting adapted at base");
     	return adapter.apply(opt, this);
     }

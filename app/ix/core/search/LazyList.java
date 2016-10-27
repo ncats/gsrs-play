@@ -25,44 +25,49 @@ import java.util.concurrent.Callable;
  *
  * @param <K>
  */
-public class LazyList<K> implements List<K>{
-	private ObjectNamer objectNamer;
+public class LazyList<N,K> implements List<K>{
+	private ObjectNamer<K,N> objectNamer;
 	
-	private List<NamedCallable<K>> _internalList = new ArrayList<NamedCallable<K>>();
+	private List<NamedCallable<N,K>> _internalList = new ArrayList<NamedCallable<N,K>>();
 	
-	public static interface ObjectNamer{
-		public String nameFor(Object k);
+	public static interface ObjectNamer<T,K>{
+		public K nameFor(T k);
 	}
 
-	public static interface NamedCallable<K> extends Callable<K>{
-		default String getName(){
+	public static interface NamedCallable<KK,VV> extends Callable<VV>{
+		default KK getName(){
 			return null;
 		}
 	}
 	
-	public LazyList(ObjectNamer objectNamer){
+	public LazyList(ObjectNamer<K,N> objectNamer){
 		this.objectNamer=objectNamer;
 	}
 	
-	public class DefaultNamedCallable<T> implements NamedCallable<T>{
-		T k;
-		String name=null;
-		public DefaultNamedCallable(T k){
-			this.k=k;
-			name = LazyList.this.objectNamer.nameFor(k);
+	public class DefaultNamedCallable implements NamedCallable<N,K>{
+		K v;
+		
+		N name=null;
+		
+		public DefaultNamedCallable(K v){
+			this.v=v;
+			name = LazyList.this.objectNamer.nameFor(v);
 		}
 		@Override
-		public T call() throws Exception {
-			return k;
+		public K call() throws Exception {
+			return v;
 		}
+		
 		@Override
-		public String getName(){
+		public N getName(){
 			return name;
 		}
 	}
 	 
 	
-	
+	public List<NamedCallable<N,K>> getInternalList(){
+	    return this._internalList;
+	}
 	
 	
 	
@@ -104,7 +109,7 @@ public class LazyList<K> implements List<K>{
 
 	@Override
 	public boolean add(K e) {
-		return _internalList.add(new DefaultNamedCallable<K>(e));
+		return _internalList.add(new DefaultNamedCallable(e));
 	}
 
 	@Override
@@ -279,28 +284,27 @@ public class LazyList<K> implements List<K>{
 	 * @param c
 	 * @return
 	 */
-	public boolean addCallable(NamedCallable<K> c){
+	public boolean addCallable(NamedCallable<N,K> c){
 		return this._internalList.add(c);
 	}
 	
-	public void sortByNames(Comparator<String> c) {
+	public void sortByNames(Comparator<N> c) {
 		
-		NamedCallable<K>[] a = this._internalList.toArray(new NamedCallable[0]);
+		NamedCallable<N,K>[] a = this._internalList.toArray(new NamedCallable[0]);
         if(c==null){
         	Comparator<String> stringComparator = DefaultComparator.getInstance();
-        	c=stringComparator;
+        	c = (n1,n2)->{
+        	    return stringComparator.compare(n1.toString(), n2.toString());
+        	};
         }
-        final Comparator<String> rawComparator =c;
-        Arrays.sort(a, new Comparator<NamedCallable<K>>(){
-			@Override
-			public int compare(NamedCallable<K> c1, NamedCallable< K> c2) {
-				String n1= c1.getName();
-				String n2= c2.getName();
+        final Comparator<N> rawComparator =c;
+        Arrays.sort(a, (c1, c2) -> {
+				N n1= c1.getName();
+				N n2= c2.getName();
 				return rawComparator.compare(n1, n2);
-			}
-        });
-        ListIterator<NamedCallable<K>> i = _internalList.listIterator();
-        for (NamedCallable<K> e : a) {
+			});
+        ListIterator<NamedCallable<N,K>> i = _internalList.listIterator();
+        for (NamedCallable<N,K> e : a) {
             i.next();
             i.set(e);
         }
@@ -308,14 +312,12 @@ public class LazyList<K> implements List<K>{
 	
 	@Override
 	public void sort(Comparator<? super K> c) {
-		NamedCallable<K>[] a = this._internalList.toArray(new NamedCallable[0]);
+		NamedCallable<N,K>[] a = this._internalList.toArray(new NamedCallable[0]);
         if(c==null){
         	c=(Comparator<? super K>)DefaultComparator.getInstance();
         }
         final Comparator<? super K> rawComparator =c;
-        Arrays.sort(a, new Comparator<Callable<K>>(){
-			@Override
-			public int compare(Callable<K> c1, Callable< K> c2) {
+        Arrays.sort(a, (c1,c2) -> {
 				K o1=null;
 				K o2=null;
 				try {
@@ -325,10 +327,9 @@ public class LazyList<K> implements List<K>{
 					o2 = c2.call();
 				} catch (Exception e) {}
 				return rawComparator.compare(o1, o2);
-			}
-        });
-        ListIterator<NamedCallable<K>> i = _internalList.listIterator();
-        for (NamedCallable<K> e : a) {
+			});
+        ListIterator<NamedCallable<N,K>> i = _internalList.listIterator();
+        for (NamedCallable<N,K> e : a) {
             i.next();
             i.set(e);
         }
@@ -376,11 +377,11 @@ public class LazyList<K> implements List<K>{
 	 * @param collection
 	 * @return
 	 */
-	public static <T> LazyList<T> of(Collection<T> collection, ObjectNamer on){
+	public static <T,N> LazyList<N,T> of(Collection<T> collection, ObjectNamer<T,N> on){
 		if(collection instanceof LazyList){
-			return (LazyList<T>)collection;
+			return (LazyList<N,T>)collection;
 		}else{
-			LazyList<T> ll = new LazyList<T>(on);
+			LazyList<N,T> ll = new LazyList<N,T>(on);
 			for(T t : collection){
 				ll.add(t);
 			}
@@ -388,7 +389,7 @@ public class LazyList<K> implements List<K>{
 		}
 	}
 	
-	public void addAll(LazyList<K> lazylist){
+	public void addAll(LazyList<N,K> lazylist){
 		this._internalList.addAll(lazylist._internalList);
 	}
 	

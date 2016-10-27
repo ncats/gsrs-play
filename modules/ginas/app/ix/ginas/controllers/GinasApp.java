@@ -53,7 +53,7 @@ import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.EntityFetcher;
 import ix.core.search.SearchOptions;
-import ix.core.search.SearchOptions.TermFilter;
+import ix.core.search.SearchOptions.SearchTermFilter;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
@@ -894,7 +894,7 @@ public class GinasApp extends App {
 
             String[] dep =params.get("showDeprecated");
             if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
-                options.addTermFilter(new TermFilter("SubstanceDeprecated","false"));
+                options.addTermFilter(new SearchTermFilter("SubstanceDeprecated","false"));
             }
         }
     }

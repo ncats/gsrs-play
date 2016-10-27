@@ -28,7 +28,7 @@ public class StreamUtilitiesTest extends AbstractGinasTest{
 		names.add("1234");
 		Iterator<String> it=names.iterator();
 		
-		assertEquals(names, StreamUtil.ofIterator(it).collect(Collectors.toList()));
+		assertEquals(names, StreamUtil.forIterator(it).collect(Collectors.toList()));
 		
 	}
 	

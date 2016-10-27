@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.Experimental;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.ETag;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.SearchOptions;
@@ -18,9 +19,12 @@ import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultContext.SearchResultContextOrSerialized;
 import ix.core.search.SuggestResult;
+import ix.core.search.text.FacetMeta;
 import ix.core.search.text.TextIndexer;
+import ix.core.search.text.TextIndexer.TermVectors;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.utils.Global;
@@ -28,6 +32,7 @@ import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
+import play.mvc.Controller;
 import play.mvc.Result;
 
 public class SearchFactory extends EntityFactory {
@@ -43,7 +48,6 @@ public class SearchFactory extends EntityFactory {
     
     public static SearchResult search(TextIndexer indexer, SearchRequest searchRequest) throws IOException{
     	String q = searchRequest.getQuery();
-    	
     	
     	//If this search is an etag search, fetch that existing etag
     	//and apply the existing query that is specified by that 
@@ -118,12 +122,27 @@ public class SearchFactory extends EntityFactory {
     	return search(getTextIndexer(), request);
     }
         
-    public static Result search (String q, int top, int skip, int fdim) {
-        return search (null, q, top, skip, fdim);
+    public static Result searchREST (String q, int top, int skip, int fdim) {
+        return searchREST (null, q, top, skip, fdim);
+    }
+    
+    public static SearchResult search (Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+        SearchRequest req = new SearchRequest.Builder()
+                .top(top)
+                .skip(skip)
+                .fdim(fdim)
+                .kind(kind)
+                .withRequest(request()) // I don't like this, 
+                                        // I like being explicit
+                .query(q)
+                .build();               
+
+        SearchResult result = search(req);
+        return result;
+
     }
         
-    public static Result search (Class<?> kind, String q, 
-                                 int top, int skip, int fdim) {
+    public static Result searchREST (Class<?> kind, String q, int top, int skip, int fdim) {
         if (Global.DEBUG(1)) {
             Logger.debug("SearchFactory.search: kind="
                          +(kind != null ? kind.getName():"")+" q="
@@ -131,17 +150,9 @@ public class SearchFactory extends EntityFactory {
         }
 
         try {
-        	SearchRequest req = new SearchRequest.Builder()
-        								.top(top)
-        								.skip(skip)
-        								.fdim(fdim)
-        								.kind(kind)
-        								.withRequest(request()) // I don't like this, 
-        														// I like being explicit
-        								.query(q)
-        								.build();				
+        					
         	
-            SearchResult result = search(req);
+            SearchResult result = search(kind,q,top,skip,fdim);
             
             List<Object> results = new ArrayList<Object>();
             
@@ -149,25 +160,53 @@ public class SearchFactory extends EntityFactory {
             									  //anything, but it's actually right,
                         						  //because the original request did the skipping.
              									  //This mechanism should probably be worked out.
+                                                  //better
             
             final ETag etag = new ETag.Builder()
             		.fromRequest(request())
-    				.options(req.getOptions())
+    				.options(result.getOptions())
     				.count(results.size()) 
-    				.total(result.count())
+    				.total(result.getCount())
     				.sha1OfRequest("q", "facet")
     				.build();
-            etag.save();
             
+            
+            etag.save();
             etag.setContent(results);
             etag.setFacets(result.getFacets());
-            etag.setSelected(req.getOptions().getFacets(), req.getOptions().isSideway());
+            etag.setSelected(result.getOptions().getFacets(), result.getOptions().isSideway());
             
             
             EntityMapper mapper = getEntityMapper ();
             return Java8Util.ok (mapper.valueToTree(etag));
         }
         catch (IOException ex) {
+            return badRequest (ex.getMessage());
+        }
+    }
+    
+    public static Result searchRESTFacets (Class<?> kind, String q, String facetField, int fdim, int fskip, String ffilter) {
+      
+        try {
+                            
+            System.out.println("Searching for:" + q);
+            SearchResult result = search(kind, q, Integer.MAX_VALUE, 0,fdim);
+            
+            List<Key> keyResults = new ArrayList<Key>();
+            
+            result.copyKeysTo(keyResults, 0, Integer.MAX_VALUE, true); 
+            
+            TermVectors vec=Play
+                    .application()
+                    .plugin(TextIndexerPlugin.class)
+                    .getIndexer()
+                    .getTermVectorsFromKeys(kind, facetField, keyResults);
+            
+            FacetMeta fm=vec.getFacet(fdim, fskip, ffilter, Global.getHost() + Controller.request().uri());       
+            
+            EntityMapper mapper = getEntityMapper ();
+            return Java8Util.ok (mapper.valueToTree(fm));
+        }catch (Exception ex) {
             return badRequest (ex.getMessage());
         }
     }
@@ -210,6 +249,8 @@ public class SearchFactory extends EntityFactory {
     	return getSearchResultContext(key,10,0,10,"");
     }
     
+
+    
     //TODO: Needs evaluation
     public static Result getSearchResultContext (String key, int top, int skip, int fdim, String field) {
         System.out.println("getting context:" + key);
@@ -224,8 +265,49 @@ public class SearchFactory extends EntityFactory {
 	    		return redirect(possibleContext.getSerialized().generatingPath);
 	    	}
     	}
-        return notFound ("No key found: "+key+"!");
+        return RouteFactory._apiNotFound("No key found: "+key+"!");
     }
+    
+    @Experimental
+    public static Result getSearchResultContextFacets(String key, String field) throws Exception {
+        System.out.println("getting context facets:" + key);
+        SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
+        
+        if (possibleContext != null) {
+            if(!possibleContext.hasFullContext()){
+                return redirect(possibleContext.getSerialized().generatingPath);
+            }
+            SearchResultContext context = possibleContext.getContext();
+            
+            
+            SearchOptions so = new SearchOptions.Builder()
+                    .fdim(10)
+                    .fskip(0)
+                    .ffilter("")
+                    .withParameters(Util.reduceParams(request().queryString(), 
+                                    "fdim", "fskip", "ffilter"))
+                    .build();
+            
+            Object first=context.getResults()
+                                .stream()
+                                .findFirst()
+                                .get();
+            
+            TermVectors vec=Play
+                    .application()
+                    .plugin(TextIndexerPlugin.class)
+                    .getIndexer()
+                    .getTermVectors(first.getClass(), field, context.getResultsAsList());
+            
+            FacetMeta fm=vec.getFacet(so.getFdim(), so.getFskip(), so.getFfilter(), Global.getHost() + Controller.request().uri());       
+            
+            EntityMapper em = EntityFactory.getEntityMapper();
+            
+            return Java8Util.ok(em.valueToTree(fm));
+        }
+        return RouteFactory._apiNotFound("No key found: "+key+"!");
+    }
+    
     
     //TODO: Needs evaluation
     @Experimental
@@ -240,12 +322,11 @@ public class SearchFactory extends EntityFactory {
     		SearchResultContext ctx=possibleContext.getContext();
     		
     		
-    		
     		EntityMapper em=EntityFactory.getEntityMapper();
     		
     		//TODO: include facets and such by passing through
     		//to search result as well.
-    		SearchOptions so = new SearchOptions.Builder()
+    		SearchRequest so = new SearchRequest.Builder()
 				    				.top(top)
 				    				.skip(skip)
 				    				.fdim(fdim)
@@ -253,13 +334,15 @@ public class SearchFactory extends EntityFactory {
 				    				                "facet"))
 				    				.build();
     		
+    		
+    		
     		SearchResult results = ctx.getAdapted(so);
     		
     		PojoPointer pp = PojoPointer.fromUriPath(field);
     		
     		List<Object> resultSet = new ArrayList<Object>();
     		
-    		results.copyTo(resultSet, so.getSkip(), so.getTop(), true);
+    		results.copyTo(resultSet, so.getOptions().getSkip(), so.getOptions().getTop(), true);
     		
     		
 
@@ -273,11 +356,13 @@ public class SearchFactory extends EntityFactory {
     		
     		final ETag etag = new ETag.Builder()
             		.fromRequest(request())
-    				.options(so)
+            		.options(so.getOptions())
     				.count(count)
     				.total(results.getCount())
     				.sha1(Util.sha1(ctx.getKey()))
     				.build();
+    		
+    		
     		
             etag.save(); //Always save?
             

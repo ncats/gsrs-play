@@ -21,13 +21,21 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -64,6 +72,7 @@ import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
+import org.apache.lucene.index.AtomicReaderContext;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
 import org.apache.lucene.index.IndexReader;
@@ -72,7 +81,10 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.IndexableFieldType;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queries.ChainedFilter;
+import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -80,6 +92,7 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.FieldCacheRangeFilter;
 import org.apache.lucene.search.FieldCacheTermsFilter;
 import org.apache.lucene.search.Filter;
@@ -89,10 +102,12 @@ import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.suggest.DocumentDictionary;
@@ -106,6 +121,7 @@ import org.apache.lucene.util.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -130,6 +146,7 @@ import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.StopWatch;
+import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.utils.Global;
@@ -142,7 +159,9 @@ import play.Play;
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer implements Closeable, ReIndexListener {
-	public static final String IX_BASE_PACKAGE = "ix";
+	private static final String TERM_VEC_PREFIX = "F";
+
+    public static final String IX_BASE_PACKAGE = "ix";
 	
 	public static final boolean INDEXING_ENABLED = ConfigHelper.getBoolean("ix.textindex.enabled",true);
 	private static final boolean USE_ANALYSIS =    ConfigHelper.getBoolean("ix.textindex.fieldsuggest",true);
@@ -209,6 +228,321 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	private static CachedSupplier<AtomicBoolean> ALREADY_INITIALIZED = CachedSupplier.of(()->new AtomicBoolean(false));
 
+	
+	private static class TermVectorField extends org.apache.lucene.document.Field {
+        static final FieldType TermVectorFieldType = new FieldType ();
+        static {
+            TermVectorFieldType.setIndexed(true);
+            TermVectorFieldType.setTokenized(false);
+            TermVectorFieldType.setStoreTermVectors(true);
+            TermVectorFieldType.setStoreTermVectorPositions(false);
+            TermVectorFieldType.freeze();
+        }
+        
+        public TermVectorField (String field, String value) {
+            super (field, value, TermVectorFieldType);
+        }
+    }
+
+    public class TermVectors implements java.io.Serializable {
+        static private final long serialVersionUID = 0x192464a5d08ea528l;
+        
+        private Class kind;     
+        private String field;
+        private int numDocs;
+        private List<TermList> docs = new ArrayList<TermList>();
+        private Map<String, DocumentSet> terms = new TreeMap<String,DocumentSet>();
+        private Map<String, String> filters = new TreeMap<String, String>();
+        
+        TermVectors (Class kind, String field) {
+            this.kind = kind;
+            this.field = field;
+        }
+
+        public Class getKind () { return kind; }
+        public String getField () { return field.substring(TERM_VEC_PREFIX.length()); }
+
+        public Map<String, String> getFilters () { return filters; }
+        public Map<String, DocumentSet> getTerms () { return terms; }
+        public List<TermList> getDocs () { return docs; }    
+        public int getNumDocs () { return numDocs; }
+        public int getNumDocsWithTerms () { return docs.size(); }
+        public int getNumTerms () { return terms.size(); }
+        public Integer getTermCount (String term) {
+            DocumentSet map = terms.get(term);
+            Integer count = null;
+            if (map != null) {
+                count = map.getNDocs();
+            }
+            return count;
+        }
+        
+        public Predicate<Tuple<String, Integer>> getPredicate(Query q){
+            String find = "";
+            if(q instanceof PhraseQuery){
+                find=Stream.of(((PhraseQuery)q).getTerms())
+                        .map(t->t.text())
+                        .collect(Collectors.joining(" "));
+            }else if(q instanceof TermQuery){
+                find=Stream.of(((TermQuery)q).getTerm())
+                        .map(t->t.text())
+                        .collect(Collectors.joining(" "));
+            }else if(q instanceof TermRangeQuery){
+                TermRangeQuery trq= (TermRangeQuery)q;
+                Integer max = Integer.parseInt(trq.getUpperTerm().utf8ToString())+ ((trq.includesUpper())?1:0);
+                Integer min = Integer.parseInt(trq.getLowerTerm().utf8ToString())- ((trq.includesLower())?1:0);;
+                
+                return (t)->{
+                    return (t.v()< max) && (t.v()>min);   
+                  };
+                
+            }else if(q instanceof NumericRangeQuery){
+                NumericRangeQuery nq = (NumericRangeQuery)q;
+                nq.includesMax();
+                nq.includesMin();
+                
+                Integer max=((NumericRangeQuery)q)
+                                .getMax()
+                                .intValue() + ((nq.includesMax())?1:0);
+                Integer min=((NumericRangeQuery)q)
+                                .getMin()
+                                .intValue() - ((nq.includesMin())?1:0);
+                
+                return (t)->{
+                  return (t.v()< max) && (t.v()>min);   
+                };
+            }else if(q instanceof PrefixQuery){
+                PrefixQuery pq = (PrefixQuery)q;
+                find=pq.getPrefix().text();
+                String finalField = find.toLowerCase();
+                return (t)->{
+                    return Stream
+                            .of(t.k().toLowerCase().split(" "))
+                            .filter(f->f.startsWith(finalField))
+                            .findAny().isPresent();
+                  };
+            }else{
+                throw new IllegalStateException(q.getClass() + " not supported ");
+            }
+            String finalField = find.toLowerCase();
+            System.out.println("Going to filter" + finalField);
+            return (t)->{
+              return t.k().toLowerCase().contains(finalField);  
+            };
+        }
+        
+        public FacetMeta getFacet(int top, int skip, String filter, String uri) throws ParseException{
+            Facet fac = new Facet(getField(), null);
+            System.out.println("Top:" + top);
+            System.out.println("Skip:" + skip);
+            System.out.println("ffilter:" + filter);
+            
+            Predicate<Tuple<String,Integer>> filt=(t)->true;
+            
+            if(filter!=null && !filter.equals("")){
+                QueryParser parser = new IxQueryParser("label", indexAnalyzer);
+                filt = getPredicate(parser.parse(filter));
+            }
+            
+            
+            terms.entrySet()
+                .stream()
+                .map(es->Tuple.of(es.getKey(), es.getValue().getNDocs()))
+                .filter(filt)
+                .map(t->new FV(fac,t.k(),t.v()))
+                .collect(StreamUtil.maxElements(top+skip, Facet.Comparators.COUNT_SORTER_DESC))
+                .skip(skip)
+                .limit(top)
+                .forEach(fv->{
+                    fac.add(fv);
+                });
+        
+            return new FacetMeta.Builder()
+            .facets(fac)
+            .ffilter(filter)
+            .fdim(top)
+            .fskip(skip)
+            .ftotal(terms.size())
+            .uri(uri)
+            .build();
+        }
+        
+    }
+    private static class DocumentSet{
+        private Set s;
+        public DocumentSet(Set set){
+            this.s=set;
+        }
+        public Set getDocs(){
+            return this.s;
+        }
+        public int getNDocs(){
+            return this.s.size();
+        }
+        public static DocumentSet of(Set s){
+            return new DocumentSet(s);
+        }
+    }
+    
+    private static class TermList{
+        private String id;
+        private List s;
+        public TermList(String id,List list){
+            this.id=id;
+            this.s=list;
+        }
+        
+        public String getDoc(){
+            return id;
+        }
+        
+        public int getNTerms(){
+            return this.s.size();
+        }
+        
+        public List getTerms(){
+            return this.s;
+        }
+        public static TermList of(String id, List s){
+            return new TermList(id,s);
+        }
+    }
+
+    class TermVectorsCollector<T> extends Collector {
+        private int docBase;
+        private TermsEnum termsEnum;
+        private IndexReader reader;     
+        private EntityInfo<T> entityMeta;
+        private TermVectors tvec;
+        private Map<String, Set<Object>> counts;
+        private HashSet<String> set = new HashSet<String>();
+
+        
+        //TODO: paging
+        TermVectorsCollector (Class<T> kind, String originalField, IndexSearcher searcher, Term... terms)
+            throws IOException {
+            String adaptedField = TERM_VEC_PREFIX + originalField;
+            
+            tvec = new TermVectors (kind, adaptedField);
+            counts = new TreeMap<String, Set<Object>>();
+            
+            entityMeta = EntityUtils.getEntityInfoFor(kind);
+            set.add(entityMeta.getInternalIdField());
+                
+            this.reader = searcher.getIndexReader();
+            
+            Filter filter = filterForKinds(kind);
+            
+            Query tq= entityMeta.getTypeAndSubTypes()
+                    .stream()
+                    .map(s->s.getName())
+                    .map(s->new TermQuery(new Term (FIELD_KIND, s)))
+                    .collect(()->new BooleanQuery(), 
+                            (bq,t)->bq.add(t, Occur.SHOULD), 
+                            (bq1,bq2)->{
+                                bq1.add(bq2, Occur.SHOULD);
+                            });
+            
+            if (terms != null && terms.length > 0) {
+                Filter[] filters = new TermFilter[terms.length];
+                for (int i = 0; i < terms.length; ++i) {
+                    filters[i] = new TermFilter(terms[i]);
+                    tvec.filters.put(terms[i].field(), terms[i].text());
+                }
+                filter = new ChainedFilter(filters, ChainedFilter.OR);
+            }
+            
+            searcher.search(tq, filter, this);
+
+            Collections.sort(tvec.docs, (m1,m2)->{
+                        Integer c1 = m1.getNTerms();
+                        Integer c2 = m2.getNTerms();
+                        return c2 - c1;
+                });
+
+            tvec.terms= counts.entrySet()
+                    .stream()
+                    .map(Tuple::of)
+                    .map(Tuple.vmap(DocumentSet::of))
+                    .collect(Tuple.toMap());
+            counts = null;
+            
+        }
+       
+        
+        public void setScorer (Scorer scorer) {}
+        
+        public boolean acceptsDocsOutOfOrder () { return true; }
+        
+        public void collect (int doc) {
+            int docId = docBase + doc;
+            
+            System.out.println("Found " + doc);
+            try {
+                
+                //TODO: It IS possible to get all fields
+                //available here. That could be useful
+                //for having a "facets" resource in the
+                //context of a collection
+                
+//                StreamUtil
+//                        .forIterable(reader.getTermVectors(docId))
+//                        .forEach(c->{
+//                            System.out.println("GOT Facet:" + c);
+//                        });
+                
+                
+                Terms docterms = reader.getTermVector(docId, tvec.field);
+                if (docterms != null) {
+                    Document d = reader.document(docId);                    
+                    String kind=d.get(FIELD_KIND).toString();
+                    
+                    EntityInfo einfo=EntityUtils.getEntityInfoFor(kind);
+                    
+                    String idstring = d.get(einfo.getInternalIdField()).toString();
+                    Object nativeID= einfo.formatIdToNative(idstring.toString());
+                    
+                    
+                    List<String> terms = StreamUtil
+                      .from(docterms.iterator(termsEnum)) //Not sure what termsEnum is here
+                      .streamNullable(en->en.next())
+                      .map(t->t.utf8ToString())
+                      .peek(term->{
+                                counts.computeIfAbsent(term, t->new HashSet<>())
+                                      .add(nativeID);
+                       })
+                      .collect(Collectors.toList());
+                            
+                    tvec.docs.add(TermList.of(idstring, terms));
+                }else {
+                    //Logger.debug("No term vector for field \""+field+"\"!");
+                }
+                ++tvec.numDocs;
+            }catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        
+        public void setNextReader (AtomicReaderContext ctx) {
+            docBase = ctx.docBase;
+        }
+
+        public TermVectors termVectors () { return tvec; }
+    }
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public static class FV {
 		
 		private Facet container;
@@ -231,9 +565,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		
 		@JsonIgnore
 		public String getToggleUrl(){
-			return container.sr.getFacetURI(container.name, this.label);
+			return container.sr.getFacetToggleURI(container.name, this.label);
 		}
-		
 	}
 
 	public interface FacetFilter extends Predicate<FV>{
@@ -249,7 +582,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		private List<FV> values = new ArrayList<FV>();
 		private String selectedLabel=null;
 		private FV selectedFV = null;
-		
+        private SearchResult sr;
+        
 		
 		/**
 		 * Set the labeled facet which was intentionally 
@@ -283,7 +617,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 		}
 		
-		
+		@JsonProperty("_self")
+		public String getSelfUri(){
+		    if(sr!=null){
+		        return sr.getFacetURI(name);
+		    }else{
+		        return null;
+		    }
+		}
 		
 		@JsonIgnore
 		public boolean isMissingSelectedFV(){
@@ -300,8 +641,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 		
 		
-		private SearchResult sr;
-		
 		public Facet(String name, SearchResult sr) {
 			this.name = name;
 			this.sr=sr;
@@ -315,6 +654,17 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			return values;
 		}
 
+		
+		/**
+		 * Get the number of {@link FV} values currently present
+		 * in this facet. This is equivalent to:
+		 * <pre>
+		 * <code>
+		 *    return this.getValues().size();
+		 * </code>
+		 * </pre>
+		 * @return
+		 */
 		public int size() {
 			return values.size();
 		}
@@ -365,6 +715,36 @@ public class TextIndexer implements Closeable, ReIndexListener {
 						d = v1.label.compareTo(v2.label);
 					return d;
 			});
+		}
+		
+		public static enum Comparators implements Comparator<FV>{
+            LABEL_SORTER_ASC{
+                @Override
+                public int compare(FV v1, FV v2) {
+                    return v1.label.compareTo(v2.label);
+                }
+            },
+            COUNT_SORTER_ASC{
+                @Override
+                public int compare(FV v1, FV v2) {
+                    int d = (v1.count - v2.count);
+                    if (d == 0)
+                        d = v1.label.compareTo(v2.label);
+                    return d;
+                }
+            },
+            LABEL_SORTER_DESC{
+                @Override
+                public int compare(FV v1, FV v2) {
+                    return -LABEL_SORTER_ASC.compare(v1, v2);
+                }
+            },
+            COUNT_SORTER_DESC{
+                @Override
+                public int compare(FV v1, FV v2) {
+                    return -COUNT_SORTER_ASC.compare(v1, v2);
+                }
+            };
 		}
 
 		@JsonIgnore
@@ -937,14 +1317,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					f = new TermsFilter(terms);
 				}
 				if(options.getOrder().isEmpty()){
-					Stream<String> ids = subset.stream()
-											   .map(o->EntityWrapper.of(o).getKey().getIdString());
+					Stream<Key> ids = subset.stream()
+											   .map(o->EntityWrapper.of(o).getKey());
 					
-					Comparator<String> comp=Util.comparator(ids);
+					Comparator<Key> comp=Util.comparator(ids);
 					searchResult.setRank(comp);
 				}
 			} else if (options.getKind() != null) {
-				f = new FieldCacheTermsFilter(FIELD_KIND, createKindArrayFromOptions(options));
+				f = createKindArrayFromOptions(options);
 			}
 			search(searchResult, query, f);
 		}
@@ -952,13 +1332,22 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		return searchResult;
 	}
 
-	private String[] createKindArrayFromOptions(SearchOptions options) {
-		return options.getKindInfo()
-				.getTypeAndSubTypes()
-				.stream()
-				.map(s->s.getName())
-				.collect(Collectors.toList()).toArray(new String[0]);
-				//.toArray();
+	private static FieldCacheTermsFilter filterForKinds(Class<?> cls){
+	    EntityInfo einfo = EntityUtils.getEntityInfoFor(cls);
+        return filterForKinds(einfo);
+    }
+	private static FieldCacheTermsFilter filterForKinds(EntityInfo<?> einfo){
+	    String[] opts= einfo.getTypeAndSubTypes()
+                            .stream()
+                            .map(s->s.getName())
+                            .collect(Collectors.toList()).toArray(new String[0]);
+	    return new FieldCacheTermsFilter(FIELD_KIND, opts);
+	}
+	
+	
+	
+	private FieldCacheTermsFilter createKindArrayFromOptions(SearchOptions options) {
+		return filterForKinds(options.getKindInfo());
 	}
 
 	public SearchResult filter(Collection<?> subset) throws IOException {
@@ -972,6 +1361,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				.filter(t -> t != null)
 				.collect(Collectors.toList());
 	}
+	protected List<Term> getTermsFromKeys(Collection<Key> subset) {
+        return subset.stream()
+                .map(this::getTerm)
+                .filter(t -> t != null)
+                .collect(Collectors.toList());
+    }
+	
+	
 
 	protected TermsFilter getTermsFilter(Collection<?> subset) {
 		return new TermsFilter(getTerms(subset));
@@ -1205,7 +1602,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		try (TaxonomyReader taxon = new DirectoryTaxonomyReader(taxonWriter)) {
 			hits = firstPassLuceneSearch(searcher,taxon,searchResult,filter, query);
 		}
-
+		
 		if (DEBUG(1)) {
 			Logger.debug(
 					"## Query executes in " 
@@ -1224,6 +1621,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				// we first block until we have enough result to show
 				// should be fetch plus a little extra padding (2 here)
 				// why 2?
+			    // TODO: should we really block here?
 				int fetch = options.getFetch() + EXTRA_PADDING;
 				payload.fetch(fetch);
 
@@ -1256,7 +1654,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 						
 					});
 				} else {
-					
 					searchResult.done();
 				}
 			}
@@ -1367,6 +1764,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 								searchResult.addSponsoredNamedCallable(new EntityFetcher<>(k));
 							} catch (Exception e) {
 								e.printStackTrace();
+								
 								Logger.error(e.getMessage());
 							}
 						}
@@ -1680,19 +2078,18 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		if (entity == null)
 			return null;
 		
-		EntityWrapper<T> ew= EntityWrapper.of(entity);
-		
-		Optional<Term> oTerm=ew.getOptionalKey().map(key->{
-			Tuple<String,String> kv= key.asLuceneIdTuple(); 
-			return new Term(kv.k(), kv.v());
-		});
-		
-		if(!oTerm.isPresent()){
-			Logger.warn("Entity " + entity + "[" + entity.getClass() + "] has no Id field!");
-			return null;
-		}
-		
-		return oTerm.get();
+		return EntityWrapper.of(entity)
+		           .getOptionalKey()
+                   .map(key->getTerm(key))
+                   .orElseGet(()->{
+                       Logger.warn("Entity " + entity + "[" + entity.getClass() + "] has no Id field!");
+                       return null;
+                   });
+	}
+	
+	protected <T> Term getTerm(Key k){
+	    Tuple<String,String> tup=k.asLuceneIdTuple();
+	    return new Term(tup.k(),tup.v());
 	}
 
 	public Document getDoc(Object entity) throws Exception {
@@ -1790,6 +2187,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 									.add(tf);
 							}
 						}
+					}else if(f instanceof FacetField){
+					    String key = ((FacetField)f).dim;
+					    String text = ((FacetField)f).path[0];
+
+					    if (text != null) {
+					        TermVectorField tvf = new TermVectorField(TERM_VEC_PREFIX + key,text);
+					        System.out.println("Logged:" + key + " is " + text);
+					        doc.add(tvf);
+					    }
 					}
 					doc.add(f);
 			};
@@ -2202,6 +2608,38 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			isShutDown = true;
 		}
 	}
+	
+	
+	public TermVectors getTermVectors (Class kind, String field) throws IOException{
+	    return getTermVectors(kind,field, new ArrayList<Term>(),new HashMap<String,String>());
+	}
+	
+	public TermVectors getTermVectors (Class kind, String field, List<?> subset) throws IOException{
+	    return getTermVectors(kind,field, getTerms(subset), new HashMap<String,String>());
+    }
+	
+	public TermVectors getTermVectorsFromKeys (Class kind, String field, List<Key> subset) throws IOException{
+        return getTermVectors(kind,field, getTermsFromKeys(subset), new HashMap<String,String>());
+    }
+	
+	
+	public TermVectors getTermVectors (Class kind, String field,
+	        List<Term> termslist, Map<String, String> filters)
+	                throws IOException {
+	    Objects.requireNonNull(filters);
+	    
+	    final Term[] terms =StreamUtil.with(termslist.stream())
+	                                  .and(filters.entrySet()
+	                                              .stream()
+	                                              .map(es-> new Term(es.getKey(),es.getValue())))
+	                                  .stream()
+	                                  .toArray(i-> new Term[i]);
+	    System.out.println("We have:" + terms.length + " terms");
+	    
+	    return withSearcher(searcher -> {
+	        return new TermVectorsCollector(kind, field,searcher, terms).termVectors();
+        }); 
+	}
 
 	private static void closeAndIgnore(Closeable closeable) {
 		if (closeable == null) {
@@ -2417,7 +2855,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	private static String replaceSpecialCharsForExactMatch(String in) {
 
 		String tmp = LEVO_PATTERN.matcher(in).replaceAll(LEVO_WORD);
-
 		tmp = DEXTRO_PATTERN.matcher(tmp).replaceAll(DEXTRO_WORD);
 		return tmp;
 

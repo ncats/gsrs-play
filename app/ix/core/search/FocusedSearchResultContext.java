@@ -5,6 +5,7 @@ import java.util.function.BiFunction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.controllers.search.SearchRequest;
 import play.mvc.Call;
 
 
@@ -22,10 +23,10 @@ class FocusedSearchResultContext extends SearchResultContext{
 	public String getGeneratingUrl() {
 		return ctx.getGeneratingUrl();
 	}
-	public void setAdapter(BiFunction<SearchOptions, SearchResultContext, SearchResult> adapter) {
+	public void setAdapter(BiFunction<SearchRequest, SearchResultContext, SearchResult> adapter) {
 		ctx.setAdapter(adapter);
 	}
-	public SearchResult getAdapted(SearchOptions opt) {
+	public SearchResult getAdapted(SearchRequest opt) {
 		System.out.println("Getting adapted");
 		return ctx.getAdapted(opt);
 	}

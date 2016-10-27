@@ -31,18 +31,24 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.controllers.SequenceFactory;
 import ix.core.controllers.StructureFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxContext;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.SearchOptions;
+import ix.core.search.text.FacetMeta;
+import ix.core.search.text.TextIndexer.Facet;
+import ix.core.search.text.TextIndexer.TermVectors;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.Java8Util;
 import ix.ginas.models.v1.Subunit;  //It is not ideal to have ginas model imports
-                                    //but since there is no generic sequence support
+//but since there is no generic sequence support
                                     //outside of ginas, this is used until something
                                     //else exists
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -628,6 +634,56 @@ public class RouteFactory extends Controller {
             return _apiInternalServerError (ex);
         }
     }
+    
+    //searchFacets(context: String, q: String ?= null, field ?= null, fdim: Int ?= 10, fskip: Int ?= 0, ffilter ?= "")
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result searchFacets (String context, String q, String field, int fdim, int fskip, String ffilter) {
+        try {
+            Class kind = _registry.get()
+                    .getResource(context)
+                    .getTypeKind();
+            
+            return SearchFactory.searchRESTFacets(kind, q, field, fdim, fskip, ffilter);
+            
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    
+    
+    @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result facets (String context, int top, int skip, String field) {
+        try {
+            Class kind = _registry.get()
+                    .getResource(context)
+                    .getTypeKind();
+            EntityMapper em= EntityFactory.getEntityMapper();
+            
+            
+            TermVectors tv=Play.application()
+            .plugin(TextIndexerPlugin.class)
+            .getIndexer()
+            .getTermVectors(kind, field);
+            
+            SearchOptions so = new SearchOptions.Builder()
+                    .fdim(10)
+                    .fskip(0)
+                    .ffilter("")
+                    .withParameters(Util.reduceParams(request().queryString(), 
+                                    "fdim", "fskip", "ffilter"))
+                    .build();
+            
+            FacetMeta fm=tv.getFacet(so.getFdim(), so.getFskip(), so.getFfilter(), Global.getHost() + Controller.request().uri());       
+            return Java8Util.ok(em.valueToTree(fm));
+            
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    
+    //facets(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
 
 
     /**

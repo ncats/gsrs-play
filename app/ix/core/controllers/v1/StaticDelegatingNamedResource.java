@@ -27,6 +27,7 @@ import play.mvc.Result;
  * 
  * </p>
  * @author peryeata
+ * 
  *
  * @param <I> The type of ID
  * @param <V> The type of entity
@@ -44,8 +45,8 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 		this.nr=factory.getAnnotation(NamedResource.class);
 		this.entityType=resource;
 		
-		Arrays.stream(ALL_OPERATIONS)
-			.map(o->o.withIdClass(idType))
+		Arrays.stream(Operations.values())
+			.map(o->o.op().withIdClass(idType))
 			.forEach(op->{
 				try{
 					Method m = ef.getMethod(op.getOperationName(), op.asSigniture());
@@ -58,11 +59,11 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 				}
 			});
 		
-		resultList.computeIfAbsent(SEARCH_OPERATION, op->{
+		resultList.computeIfAbsent(Operations.SEARCH_OPERATION.op(), op->{
 			return (opp)->{
 				@SuppressWarnings("rawtypes")
 				List<Argument> args=opp.getArguments();
-				return SearchFactory.search(resource, 
+				return SearchFactory.searchREST(resource, 
 						(String)args.get(0).getValue(),
 						(int)args.get(1).getValue(),
 						(int)args.get(2).getValue(),

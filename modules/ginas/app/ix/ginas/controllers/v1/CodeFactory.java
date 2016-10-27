@@ -72,7 +72,7 @@ public class CodeFactory extends EntityFactory {
     }
     
     public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix){
-    	Stream<Code> codes=StreamUtil.ofIterator(
+    	Stream<Code> codes=StreamUtil.forIterator(
     				finder.where()
     				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
     				.findIterate());

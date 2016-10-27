@@ -1269,24 +1269,28 @@ public class App extends Authentication {
 	}
 	
 	
-	static String getKey (SearchResultContext context, SearchOptions options, String ... params) {
+	static String getKey (SearchResultContext context, SearchRequest request, String ... params) {
 		return "fetchResult/"+context.getId()
-		+"/"+Util.sha1("search", options.asQueryParms(), params);
+		+"/"+Util.sha1("search", request.asQueryParms(), params);
 	}
 	
 	
-	public static SearchResult getResultFor(SearchResultContext ctx, SearchOptions options) 
+	public static SearchResult getResultFor(SearchResultContext ctx, SearchRequest req) 
 	                                                            throws IOException, Exception{
-		final String key = getKey (ctx, options, "facet", "fdim");
+	    
+	    final String key = getKey (ctx, req, "facet", "fdim", "q");
+	    System.out.println("K______:" + key);
 		return getOrElse(key,  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();
 					
 					SearchRequest request = new SearchRequest.Builder()
                             .subset(results)
-                            .options(options)
+                            .options(req.getOptions())
                             .skip(0)
                             .top(results.size())
+                            .query(req.getQuery())
                             .build();
+					
 					
 					SearchResult searchResult =null;
 					
@@ -1295,13 +1299,9 @@ public class App extends Authentication {
 					    searchResult= new SearchResult.Builder()
 					                    .count(0)
 					                    .result(new ArrayList<Object>())
-					                    .options(options)
+					                    .options(req.getOptions())
 					                    .stop(TimeUtil.getCurrentTimeMillis())
 					                    .build();
-					    
-//						return null;  // hmm ... is this a good idea? Probably not
-//									  // it might cause a problem with the cache
-//						   			  // as nulls may still get cached right now
 					}else{
 					    searchResult =
 	                            SearchFactory.search (request);
@@ -1322,7 +1322,7 @@ public class App extends Authentication {
 			int page, final ResultRenderer<T> renderer) throws Exception {
 
 		
-		SearchOptions options = new SearchOptions.Builder()
+		SearchRequest options = new SearchRequest.Builder()
 				.withRequest(request())   //Really shouldn't be here
 				.build(); 
 		/**
@@ -1345,7 +1345,7 @@ public class App extends Authentication {
 
 		
 		
-		final String key = getKey (context, options, "facet", "fdim");
+		final String key = getKey (context, options, "facet", "fdim", "q");
 		final SearchResult result = getResultFor(context, options);
 
 		final List<T> results = new ArrayList<T>();
@@ -1523,7 +1523,7 @@ public class App extends Authentication {
 					- Global.epoch.getTime())/1000;
 			ups[0] = (int)(u/3600); // hour
 			ups[1] = (int)((u/60) % 60); // min
-			ups[2] = (int)(u%60); // sec
+			ups[2] = (int)((u%60)); // sec
 		}
 		return ups;
 	}

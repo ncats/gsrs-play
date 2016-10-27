@@ -1130,7 +1130,7 @@ public class EntityUtils {
 			return this.validatedField;
 		}
 
-		public Class<?> getIdType() {
+		public Class getIdType() {
 			return idType;
 		}
 

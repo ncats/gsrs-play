@@ -6,7 +6,7 @@ import java.util.Map;
 
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.FacetLongRange;
-import ix.core.search.SearchOptions.TermFilter;
+import ix.core.search.SearchOptions.SearchTermFilter;
 import play.mvc.Http.Request;
 
 public class SearchRequest {
@@ -98,7 +98,7 @@ public class SearchRequest {
 			return this;
 		}
 
-		public Builder termFilters(List<TermFilter> termFilters) {
+		public Builder termFilters(List<SearchTermFilter> termFilters) {
 			opBuilder.termFilters(termFilters);
 			return this;
 		}
@@ -138,4 +138,10 @@ public class SearchRequest {
 		this.subset = builder.subset;
 		this.query = builder.query;
 	}
+
+    public Map<String, String[]> asQueryParms() {
+        Map<String,String[]> map = options.asQueryParms();
+        map.put("q", new String[]{query});
+        return map;
+    }
 }

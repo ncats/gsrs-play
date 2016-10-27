@@ -354,7 +354,7 @@ public class Authentication extends Controller {
 			
 		}
 		
-		return StreamUtil.ofIterator(UserProfileFactory.users())
+		return StreamUtil.forIterator(UserProfileFactory.users())
 			.filter(up->up.hasRole(Role.Admin))
 			.findFirst()
 			.orElse(null);
