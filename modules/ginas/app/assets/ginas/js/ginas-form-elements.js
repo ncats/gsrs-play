@@ -901,7 +901,13 @@
                         download.fetch().then(function (data) {
                             json = JSON.stringify(data.data);
                             var b = new Blob([json], {type: "application/json"});
-                            scope.url = URL.createObjectURL(b);
+                            if (navigator.appVersion.toString().indexOf('.NET') > 0) {
+                                window.navigator.msSaveBlob(b, "results.json");
+                            }
+                            else
+                            {
+                                scope.url = URL.createObjectURL(b);
+                            }
                             element.replaceWith($compile(
                                 '<a class="btn btn-primary" tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
@@ -914,7 +920,13 @@
                         download.fetch(scope.uuid).then(function (data) {
                             json = JSON.stringify(data.data);
                             var b = new Blob([json], {type: "application/json"});
-                            scope.url = URL.createObjectURL(b);
+                            if (navigator.appVersion.toString().indexOf('.NET') > 0) {
+                                window.navigator.msSaveBlob(b, "results.json");
+                            }
+                            else
+                            {
+                                scope.url = URL.createObjectURL(b);
+                            }
                             element.replaceWith($compile(
                                 '<a class="btn btn-primary"tabindex="0" role="button" download="results.json"' +
                                 'href="' + scope.url + '" target = "_self" id ="download">' +
@@ -934,7 +946,13 @@
                             json = JSON.stringify(scope.data);
                             b = new Blob([json], {type: "application/json"});
                         }
-                        scope.url = URL.createObjectURL(b);
+
+                        if (navigator.appVersion.toString().indexOf('.NET') > 0) {
+                            window.navigator.msSaveBlob(b, "results.json");
+                        }
+                        else {
+                            scope.url = URL.createObjectURL(b);
+                        }
                         element.replaceWith($compile(
                             '<a class="btn btn-primary"tabindex="0" role="button" download="results.' + fileType +
                             '" href="' + scope.url + '" target = "_self" id ="download">' +
