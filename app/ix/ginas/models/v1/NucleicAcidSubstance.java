@@ -14,6 +14,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Inheritance
@@ -69,7 +70,7 @@ public class NucleicAcidSubstance extends Substance implements GinasSubstanceDef
     	return tot;
     }
 
-	//@JsonIgnore
+	@JsonIgnore
 	public GinasAccessReferenceControlled getDefinitionElement(){
 		return nucleicAcid;
 	}

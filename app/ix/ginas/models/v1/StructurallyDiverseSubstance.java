@@ -3,7 +3,7 @@ package ix.ginas.models.v1;
 import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.util.Set;
 
@@ -21,7 +21,7 @@ public class StructurallyDiverseSubstance extends Substance implements GinasSubs
     	super.delete();
     }
 
-    //@JsonIgnore
+    @JsonIgnore
     public GinasAccessReferenceControlled getDefinitionElement(){
         return structurallyDiverse;
     }

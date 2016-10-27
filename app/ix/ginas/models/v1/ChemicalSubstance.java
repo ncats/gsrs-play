@@ -126,7 +126,7 @@ public class ChemicalSubstance extends Substance implements GinasSubstanceDefini
 		return structure.molfile;
 	}
 
-    //@JsonIgnore
+    @JsonIgnore
     public GinasAccessReferenceControlled getDefinitionElement(){
         return structure;
     }

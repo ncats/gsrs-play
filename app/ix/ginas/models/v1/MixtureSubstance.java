@@ -41,7 +41,7 @@ public class MixtureSubstance extends Substance implements GinasSubstanceDefinit
     	
     }
 
-	//@JsonIgnore
+	@JsonIgnore
 	public GinasAccessReferenceControlled getDefinitionElement(){
 		return mixture;
 	}

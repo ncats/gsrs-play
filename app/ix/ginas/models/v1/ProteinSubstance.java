@@ -11,6 +11,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @SuppressWarnings("serial")
 @Entity
@@ -82,7 +83,7 @@ public class ProteinSubstance extends Substance implements GinasSubstanceDefinit
     	//protein.delete();
     }
 
-	//@JsonIgnore
+	@JsonIgnore
 	public GinasAccessReferenceControlled getDefinitionElement(){
 		return protein;
 	}

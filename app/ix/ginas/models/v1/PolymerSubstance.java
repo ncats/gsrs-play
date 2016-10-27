@@ -5,6 +5,7 @@ import ix.core.GinasProcessingMessage;
 import ix.core.models.Group;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.util.List;
@@ -27,7 +28,7 @@ public class PolymerSubstance extends Substance implements GinasSubstanceDefinit
         return polymer.displayStructure.toChemical(messages);
     }
 
-    //@JsonIgnore
+    @JsonIgnore
     public GinasAccessReferenceControlled getDefinitionElement(){
         return polymer;
     }
