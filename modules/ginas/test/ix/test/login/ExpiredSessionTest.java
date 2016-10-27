@@ -49,7 +49,7 @@ public class ExpiredSessionTest extends AbstractGinasServerTest{
     public void slightlyExpiredSessionShouldMakeYouLoggedOut(){
         try(BrowserSession session = ts.newBrowserSession(user)){
 
-            timeTraveller.jump(Authentication.TIMEOUT.get() +1, TimeUnit.MILLISECONDS);
+            timeTraveller.jump(Authentication.TIMEOUT.get() +1, TimeUnit.SECONDS);
 
             ensureNotLoggedIn(session.get(URL));
         }
