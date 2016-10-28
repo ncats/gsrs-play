@@ -23,15 +23,16 @@ import java.util.concurrent.Callable;
  *   
  * @author tyler
  *
- * @param <K>
+ * @param <N> The type of the name to be used
+ * @param <T> The type of the object returned (the things "stored" in the list)
  */
-public class LazyList<N,K> implements List<K>{
-	private ObjectNamer<K,N> objectNamer;
+public class LazyList<N,T> implements List<T>{
+	private ObjectNamer<T,N> objectNamer;
 	
-	private List<NamedCallable<N,K>> _internalList = new ArrayList<NamedCallable<N,K>>();
+	private List<NamedCallable<N,T>> _internalList = new ArrayList<NamedCallable<N,T>>();
 	
-	public static interface ObjectNamer<T,K>{
-		public K nameFor(T k);
+	public static interface ObjectNamer<T,N>{
+		public N nameFor(T t);
 	}
 
 	public static interface NamedCallable<KK,VV> extends Callable<VV>{
@@ -40,21 +41,21 @@ public class LazyList<N,K> implements List<K>{
 		}
 	}
 	
-	public LazyList(ObjectNamer<K,N> objectNamer){
+	public LazyList(ObjectNamer<T,N> objectNamer){
 		this.objectNamer=objectNamer;
 	}
 	
-	public class DefaultNamedCallable implements NamedCallable<N,K>{
-		K v;
+	public class DefaultNamedCallable implements NamedCallable<N,T>{
+		T v;
 		
 		N name=null;
 		
-		public DefaultNamedCallable(K v){
+		public DefaultNamedCallable(T v){
 			this.v=v;
 			name = LazyList.this.objectNamer.nameFor(v);
 		}
 		@Override
-		public K call() throws Exception {
+		public T call() throws Exception {
 			return v;
 		}
 		
@@ -65,7 +66,7 @@ public class LazyList<N,K> implements List<K>{
 	}
 	 
 	
-	public List<NamedCallable<N,K>> getInternalList(){
+	public List<NamedCallable<N,T>> getInternalList(){
 	    return this._internalList;
 	}
 	
@@ -87,7 +88,7 @@ public class LazyList<N,K> implements List<K>{
 	}
 
 	@Override
-	public Iterator<K> iterator() {
+	public Iterator<T> iterator() {
 		return listIterator();
 	}
 
@@ -108,7 +109,7 @@ public class LazyList<N,K> implements List<K>{
 	}
 
 	@Override
-	public boolean add(K e) {
+	public boolean add(T e) {
 		return _internalList.add(new DefaultNamedCallable(e));
 	}
 
@@ -123,16 +124,16 @@ public class LazyList<N,K> implements List<K>{
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends K> c) {
+	public boolean addAll(Collection<? extends T> c) {
 		boolean changed = true;
-		for(K k : c){
+		for(T k : c){
 			changed &= this.add(k);
 		}
 		return changed;
 	}
 
 	@Override
-	public boolean addAll(int index, Collection<? extends K> c) {
+	public boolean addAll(int index, Collection<? extends T> c) {
 		throw new UnsupportedOperationException("add all index method not supported");
 	}
 
@@ -152,7 +153,7 @@ public class LazyList<N,K> implements List<K>{
 	}
 
 	@Override
-	public K get(int index) {
+	public T get(int index) {
 		try {
 			return _internalList.get(index).call();
 		} catch (Exception e) {
@@ -162,20 +163,20 @@ public class LazyList<N,K> implements List<K>{
 	}
 
 	@Override
-	public K set(int index, K element) {
-		K old = this.get(index);
+	public T set(int index, T element) {
+		T old = this.get(index);
 		_internalList.set(index, ()->element);
 		return old;
 	}
 
 	@Override
-	public void add(int index, K element) {
+	public void add(int index, T element) {
 		throw new UnsupportedOperationException("add at index method not supported");
 	}
 
 	@Override
-	public K remove(int index) {
-		K old = this.get(index);
+	public T remove(int index) {
+		T old = this.get(index);
 		_internalList.remove(index);
 		return old;
 	}
@@ -262,18 +263,18 @@ public class LazyList<N,K> implements List<K>{
 	}
 	
 	@Override
-	public ListIterator<K> listIterator() {
-		return new LazyList.LazyListIterator<K>(this,0);
+	public ListIterator<T> listIterator() {
+		return new LazyList.LazyListIterator<T>(this,0);
 		
 	}
 
 	@Override
-	public ListIterator<K> listIterator(int index) {
-		return new LazyList.LazyListIterator<K>(this,index);
+	public ListIterator<T> listIterator(int index) {
+		return new LazyList.LazyListIterator<T>(this,index);
 	}
 
 	@Override
-	public List<K> subList(int fromIndex, int toIndex) {
+	public List<T> subList(int fromIndex, int toIndex) {
 		throw new UnsupportedOperationException("sublist method not supported");
 	}
 	
@@ -284,13 +285,13 @@ public class LazyList<N,K> implements List<K>{
 	 * @param c
 	 * @return
 	 */
-	public boolean addCallable(NamedCallable<N,K> c){
+	public boolean addCallable(NamedCallable<N,T> c){
 		return this._internalList.add(c);
 	}
 	
 	public void sortByNames(Comparator<N> c) {
 		
-		NamedCallable<N,K>[] a = this._internalList.toArray(new NamedCallable[0]);
+		NamedCallable<N,T>[] a = this._internalList.toArray(new NamedCallable[0]);
         if(c==null){
         	Comparator<String> stringComparator = DefaultComparator.getInstance();
         	c = (n1,n2)->{
@@ -303,23 +304,23 @@ public class LazyList<N,K> implements List<K>{
 				N n2= c2.getName();
 				return rawComparator.compare(n1, n2);
 			});
-        ListIterator<NamedCallable<N,K>> i = _internalList.listIterator();
-        for (NamedCallable<N,K> e : a) {
+        ListIterator<NamedCallable<N,T>> i = _internalList.listIterator();
+        for (NamedCallable<N,T> e : a) {
             i.next();
             i.set(e);
         }
     }
 	
 	@Override
-	public void sort(Comparator<? super K> c) {
-		NamedCallable<N,K>[] a = this._internalList.toArray(new NamedCallable[0]);
+	public void sort(Comparator<? super T> c) {
+		NamedCallable<N,T>[] a = this._internalList.toArray(new NamedCallable[0]);
         if(c==null){
-        	c=(Comparator<? super K>)DefaultComparator.getInstance();
+        	c=(Comparator<? super T>)DefaultComparator.getInstance();
         }
-        final Comparator<? super K> rawComparator =c;
+        final Comparator<? super T> rawComparator =c;
         Arrays.sort(a, (c1,c2) -> {
-				K o1=null;
-				K o2=null;
+				T o1=null;
+				T o2=null;
 				try {
 					o1 = c1.call();
 				} catch (Exception e) {}
@@ -328,8 +329,8 @@ public class LazyList<N,K> implements List<K>{
 				} catch (Exception e) {}
 				return rawComparator.compare(o1, o2);
 			});
-        ListIterator<NamedCallable<N,K>> i = _internalList.listIterator();
-        for (NamedCallable<N,K> e : a) {
+        ListIterator<NamedCallable<N,T>> i = _internalList.listIterator();
+        for (NamedCallable<N,T> e : a) {
             i.next();
             i.set(e);
         }
@@ -389,7 +390,7 @@ public class LazyList<N,K> implements List<K>{
 		}
 	}
 	
-	public void addAll(LazyList<N,K> lazylist){
+	public void addAll(LazyList<N,T> lazylist){
 		this._internalList.addAll(lazylist._internalList);
 	}
 	
