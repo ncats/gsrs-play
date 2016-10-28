@@ -1,14 +1,6 @@
 package ix.ginas.models.v1;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -400,18 +392,23 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 		return node;
 	}
 
+
+	@JsonIgnore
+	public Optional<Name> getDisplayName(){
+		return getBestName(Name.Sorter.DISPlAY_NAME_FIRST_ENGLISH_FIRST);
+	}
+
+	@JsonIgnore
+	public Optional<Name> getBestName(Comparator<Name> comp){
+		return names.stream().max(comp);
+	}
+
 	@Indexable(suggest = true, facet = true, name = "Display Name", sortable=true)
 	@JsonProperty("_name")
 	public String getName() {
-		if(names!=null){
-			for (Name n : names) {
-				if (n.preferred) {
-					return n.name;
-				}
-			}
-		}
-		if(names!=null && names.size()>0){
-			return names.get(0).name;	
+		Optional<Name> aName = getDisplayName();
+		if(aName.isPresent()){
+			return aName.get().name;
 		}
 		if(this.isAlternativeDefinition()){
 			SubstanceReference subref=this.getPrimaryDefinitionReference();

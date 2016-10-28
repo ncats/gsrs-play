@@ -1047,7 +1047,7 @@ public class EntityFactory extends Controller {
 	                // updated at all, at least from the ebean perspective
 	                // so this forces the reindexing, at least
 	                
-	                EntityPersistAdapter.getInstance().deepreindex(newValue);
+	                EntityPersistAdapter.getInstance().deepreindex(entityThatWasSaved);
                 }catch(Exception e){
                 	Logger.error("Error updating entity", e);
                 }finally{

@@ -1,5 +1,4 @@
 package ix.ginas.controllers.v1;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,6 +10,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -35,7 +37,9 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
+
 import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
+import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -81,7 +85,7 @@ public class SubstanceFactory extends EntityFactory {
 	public static Substance getSubstanceVersion(String id, String version) {
 		if (id == null)
 			return null;
-		
+
 		Substance s = SubstanceFactory.getSubstance(id);
 		if (s != null) {
 			if (s.version.equals(version)) {
@@ -113,9 +117,14 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getFullSubstance(SubstanceReference subRef) {
-		if (subRef == null)
-			return null;
-		return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
+		try {
+			if (subRef == null)
+				return null;
+			return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
+		}catch(Exception e){
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub) {
@@ -394,20 +403,33 @@ public class SubstanceFactory extends EntityFactory {
 		return new ArrayList<Substance>(dupes);
 	}
 
-	public static Result approve(String substanceId) {
-		try {
-			List<Substance> substances = SubstanceFactory.resolve(substanceId);
+	public static Substance approve(Substance s){
+		EntityUtils.EntityWrapper<Substance> changed= EntityPersistAdapter.performChangeOn(s, csub->{
+			SubstanceFactory.approveSubstance(csub);
+			csub.save();
+			return Optional.of(csub);
+		});
+		if(changed==null){
+			throw new IllegalStateException("Approval encountered an error");
+		}else{
+			return changed.getValue();
+		}
+	}
 
+	public static Result approve(String substanceId) {
+
+		List<Substance> substances = SubstanceFactory.resolve(substanceId);
+
+		try {
 			if (substances.size() == 1) {
 				Substance s = substances.get(0);
-				approveSubstance(s);
-				s.save();
-				EntityMapper em = EntityMapper.FULL_ENTITY_MAPPER();
-				return ok(em.toJson(s));
+				Substance sapproved= approve(s);
+				return ok(EntityUtils.EntityWrapper.of(sapproved).toFullJsonNode());
 			}
 			throw new IllegalStateException("More than one substance matches that term");
 		} catch (Exception ex) {
-			return RouteFactory._apiBadRequest(ex);
+			ex.printStackTrace();
+			throw new IllegalStateException();
 		}
 	}
 

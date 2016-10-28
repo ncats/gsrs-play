@@ -2193,7 +2193,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 					    if (text != null) {
 					        TermVectorField tvf = new TermVectorField(TERM_VEC_PREFIX + key,text);
-					        System.out.println("Logged:" + key + " is " + text);
 					        doc.add(tvf);
 					    }
 					}

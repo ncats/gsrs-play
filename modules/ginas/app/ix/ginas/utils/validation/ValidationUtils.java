@@ -24,29 +24,9 @@ import ix.core.util.CachedSupplier;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.Component;
-import ix.ginas.models.v1.DisulfideLink;
-import ix.ginas.models.v1.GinasChemicalStructure;
-import ix.ginas.models.v1.MixtureSubstance;
-import ix.ginas.models.v1.Moiety;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.Note;
-import ix.ginas.models.v1.NucleicAcidSubstance;
-import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.Property;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Reference;
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.models.v1.Site;
-import ix.ginas.models.v1.StructurallyDiverseSubstance;
-import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.*;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionLevel;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
-import ix.ginas.models.v1.SubstanceReference;
-import ix.ginas.models.v1.Subunit;
-import ix.ginas.models.v1.Unit;
 import ix.ginas.utils.*;
 import ix.core.GinasProcessingMessage;
 import ix.core.GinasProcessingMessage.Link;
@@ -243,6 +223,8 @@ public class ValidationUtils {
 			case reference:
 				break;
 			case specifiedSubstanceG1:
+				gpm.addAll(validateAndPrepareSSG1(
+						(SpecifiedSubstanceGroup1Substance) s, strat));
 				break;
 			case specifiedSubstanceG2:
 				break;
@@ -755,6 +737,31 @@ public class ValidationUtils {
 					|| cs.structurallyDiverse.sourceMaterialType.equals("")) {
 				gpm.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Structurally diverse substance must specify a sourceMaterialType"));
+			}
+
+		}
+		return gpm;
+	}
+
+	private static List<? extends GinasProcessingMessage> validateAndPrepareSSG1(
+			SpecifiedSubstanceGroup1Substance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
+		if (cs.specifiedSubstance == null) {
+			gpm.add(GinasProcessingMessage
+					.ERROR_MESSAGE("Specified substance must have a specified substance component"));
+		} else {
+			if (cs.specifiedSubstance.constituents== null || cs.specifiedSubstance.constituents.size()==0) {
+				gpm.add(GinasProcessingMessage
+						.ERROR_MESSAGE("Specified substance must have at least 1 constituent"));
+			} else {
+				cs.specifiedSubstance.constituents.stream()
+							.filter(c->c.substance==null)
+							.findAny()
+							.ifPresent(missingSubstance->{
+								gpm.add(GinasProcessingMessage
+										.ERROR_MESSAGE("Specified substance constituents must have an associated substance record"));
+							});
+
 			}
 
 		}

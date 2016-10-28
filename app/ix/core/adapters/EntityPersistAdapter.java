@@ -479,7 +479,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
             Logger.debug(">> Old: "+mapper.valueToTree(oldvalues)
                          +"\n>> New: "+mapper.valueToTree(bean));
         }
-
         operate(bean,Java8ForOldEbeanHelper.processorCallableFor(PostUpdate.class),true);
         
         

@@ -14,7 +14,9 @@ import java.util.stream.Stream;
 
 import ix.core.CacheStrategy;
 import ix.core.util.CachedSupplier;
+
 import ix.utils.CallableUtil.TypedCallable;
+import ix.core.util.TimeUtil;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -27,7 +29,7 @@ import play.Logger;
  */
 public class TwoCacheGateKeeper implements GateKeeper {
 
-	private Map<String, ConfigurableCacheElement> temporaryCache = new ConcurrentHashMap<String,ConfigurableCacheElement>();
+	private Map<String, TimeUtilCacheElement> temporaryCache = new ConcurrentHashMap<String,TimeUtilCacheElement>();
 
     private final KeyMaster keyMaster;
     private final Ehcache evictableCache;
@@ -252,15 +254,15 @@ public class TwoCacheGateKeeper implements GateKeeper {
     }
     
     private void refreshElementAtWith(String adaptedKey, Class<?> type){
-    	ConfigurableCacheElement elm = (ConfigurableCacheElement)this.getRawElement(adaptedKey);
+    	TimeUtilCacheElement elm = (TimeUtilCacheElement)this.getRawElement(adaptedKey);
     	refreshElementWith(elm, type);
     }
     
-    private void refreshElementWith(ConfigurableCacheElement e, Class<?> type){
+    private void refreshElementWith(TimeUtilCacheElement e, Class<?> type){
     	if(e==null){
     		return;
     	}
-		ConfigurableCacheElement polElm = (ConfigurableCacheElement) e;
+		TimeUtilCacheElement polElm = (TimeUtilCacheElement) e;
 		if (polElm.getEvictionType() == EvictionType.UNKNOWN) {
 			EvictionType et = getEvictionPolicy(type);
 			if (et == EvictionType.UNKNOWN) {
@@ -271,7 +273,7 @@ public class TwoCacheGateKeeper implements GateKeeper {
 		}
     }
     
-    private void resortElement(ConfigurableCacheElement polElm){
+    private void resortElement(TimeUtilCacheElement polElm){
     	addElementToCache(polElm);
 		this.temporaryCache.remove(polElm.getObjectKey().toString());
     }
@@ -302,41 +304,55 @@ public class TwoCacheGateKeeper implements GateKeeper {
     	cgw.call().getSync();
     }
     
-    public static class ConfigurableCacheElement extends Element{
+    
+    /**
+     * Extension of EhCache Element that overrides
+     * the Element expiration calculation to use our {@link TimeUtil}
+     * library to get the current time instead of System time.
+     * This lets us play around with what the cache thinks is "now"
+     * in our tests.
+     * 
+     * In addition, this element allows a little more information
+     * about what kind of eviction policy should be used
+     * for the object being cached.
+     *
+     * @author katzelda
+     */
+    public static class TimeUtilCacheElement extends Element{
     	/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
 		public EvictionType evictionType=EvictionType.EVICTABLE;
-		public ConfigurableCacheElement(Object key, Object value, Boolean eternal, Integer timeToIdleSeconds,
+		public TimeUtilCacheElement(Object key, Object value, Boolean eternal, Integer timeToIdleSeconds,
 				Integer timeToLiveSeconds) {
 			super(key, value, eternal, timeToIdleSeconds, timeToLiveSeconds);
 		}
 
-		public ConfigurableCacheElement(Object key, Object value, long version, long creationTime, long lastAccessTime, long hitCount,
+		public TimeUtilCacheElement(Object key, Object value, long version, long creationTime, long lastAccessTime, long hitCount,
 				boolean cacheDefaultLifespan, int timeToLive, int timeToIdle, long lastUpdateTime) {
 			super(key, value, version, creationTime, lastAccessTime, hitCount, cacheDefaultLifespan, timeToLive, timeToIdle,
 					lastUpdateTime);
 		}
 
-		public ConfigurableCacheElement(Object key, Object value, long version, long creationTime, long lastAccessTime,
+		public TimeUtilCacheElement(Object key, Object value, long version, long creationTime, long lastAccessTime,
 				long lastUpdateTime, long hitCount) {
 			super(key, value, version, creationTime, lastAccessTime, lastUpdateTime, hitCount);
 		}
 
-		public ConfigurableCacheElement(Object key, Object value, long version) {
+		public TimeUtilCacheElement(Object key, Object value, long version) {
 			super(key, value, version);
 		}
 
-		public ConfigurableCacheElement(Object key, Object value) {
+		public TimeUtilCacheElement(Object key, Object value) {
 			super(key, value);
 		}
 
-		public ConfigurableCacheElement(Serializable key, Serializable value, long version) {
+		public TimeUtilCacheElement(Serializable key, Serializable value, long version) {
 			super(key, value, version);
 		}
 
-		public ConfigurableCacheElement(Serializable key, Serializable value) {
+		public TimeUtilCacheElement(Serializable key, Serializable value) {
 			super(key, value);
 		}
 		public EvictionType getEvictionType(){
@@ -345,20 +361,38 @@ public class TwoCacheGateKeeper implements GateKeeper {
 		public void setEvictionType(EvictionType et){
 			evictionType=et;
 		}
+		
+        @Override
+        public boolean isExpired() {
+            if (!isLifespanSet() || isEternal()) {
+                return false;
+            }
+            long now = TimeUtil.getCurrentTimeMillis();
+            long expirationTime = getExpirationTime();
+            return now > expirationTime;
+        }
     	
     }
     
-    private ConfigurableCacheElement addToCache(String adaptedKey, CachedSupplier<?> value, int expiration, Class<?> type) {
+    private TimeUtilCacheElement addToCache(String adaptedKey, CachedSupplier<?> value, int expiration, Class<?> type) {
         if(value == null){
             return null;
         }
-        ConfigurableCacheElement e=new ConfigurableCacheElement (adaptedKey, value, expiration <= 0, expiration, expiration);
+        long now = TimeUtil.getCurrentTimeMillis();
+        
+        TimeUtilCacheElement e=new TimeUtilCacheElement (adaptedKey, value, 1, now, now, now,0);
+        e.setEternal(expiration <=0);
+
+        e.setTimeToIdle(expiration);
+
+        e.setTimeToLive(expiration);
+        
         e.setEvictionType(getEvictionPolicy(type));
         addElementToCache(e);
         return e;
     }
     
-    private void addElementToCache(ConfigurableCacheElement e){
+    private void addElementToCache(TimeUtilCacheElement e){
         switch(e.getEvictionType()){
 			case EVICTABLE:
 				evictableCache.putWithWriter(e);

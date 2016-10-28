@@ -26,10 +26,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.BeanViews;
+import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.util.ModelUtils;
 import ix.ginas.models.GinasCommonSubData;
+
 import ix.utils.Global;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import play.Logger;
 
 @SuppressWarnings("serial")
@@ -231,10 +234,7 @@ public class Protein extends GinasCommonSubData {
 
 	@Override
 	public void update() {
-
-		System.out.println((new ObjectMapper()).valueToTree(subunits));
 		super.update();
-		System.out.println((new ObjectMapper()).valueToTree(subunits));
 	}
 
 	/**

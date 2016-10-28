@@ -3,18 +3,24 @@ package ix.ginas.models.v1;
 //import gov.nih.ncats.informatics.ginas.shared.model.v1.utils.JSONEntity;
 
 
+import ix.core.models.Group;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
+
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
+import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Inheritance
 @DiscriminatorValue("NA")
 //@JSONEntity(name = "nucleicAcidSubstance", title = "Nucleic Acid Substance")
-public class NucleicAcidSubstance extends Substance {
+public class NucleicAcidSubstance extends Substance implements GinasSubstanceDefinitionAccess{
 	@OneToOne(cascade= CascadeType.ALL)
 	public NucleicAcid nucleicAcid;
 
@@ -63,6 +69,11 @@ public class NucleicAcidSubstance extends Substance {
     	}
     	return tot;
     }
+
+	@JsonIgnore
+	public GinasAccessReferenceControlled getDefinitionElement(){
+		return nucleicAcid;
+	}
     
 //	public NucleicAcid getNucleicAcid() {
 //		return nucleicAcid;

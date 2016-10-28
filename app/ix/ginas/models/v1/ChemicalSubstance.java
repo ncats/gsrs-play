@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -23,8 +24,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.GinasProcessingMessage;
 import ix.core.models.BeanViews;
+import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -33,7 +37,7 @@ import ix.utils.Global;
 @Entity
 @Inheritance
 @DiscriminatorValue("CHE")
-public class ChemicalSubstance extends Substance  {
+public class ChemicalSubstance extends Substance implements GinasSubstanceDefinitionAccess {
 	
     @JSONEntity(isRequired = true)
     @OneToOne(cascade=CascadeType.ALL)
@@ -121,4 +125,9 @@ public class ChemicalSubstance extends Substance  {
 	public String getStructureMolfile(){
 		return structure.molfile;
 	}
+
+    @JsonIgnore
+    public GinasAccessReferenceControlled getDefinitionElement(){
+        return structure;
+    }
 }

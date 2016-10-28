@@ -439,6 +439,8 @@ public class App extends Authentication {
 		});
 		return q.toString();
 	}
+	
+	
 
 	public static boolean hasFacet (Facet facet, int i) {
 		String[] facets = request().queryString().get("facet");

@@ -1,11 +1,7 @@
 package ix.ginas.controllers;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,6 +19,8 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
+
+import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -290,7 +288,19 @@ public class GinasFactory extends EntityFactory {
 	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approve(String substanceId) {
-		return GinasApp.approve(substanceId);
+		List<Substance> substances = SubstanceFactory.resolve(substanceId);
+
+		try {
+			if (substances.size() == 1) {
+				Substance s = substances.get(0);
+				Substance sapproved=SubstanceFactory.approve(s);
+    			String resp = "Substance approved with approvalID:" + sapproved.getApprovalID();
+				return ok(ix.ginas.views.html.response.render(resp));
+			}
+			throw new IllegalStateException("More than one substance matches that term");
+		} catch (Exception ex) {
+			return GinasApp._internalServerError(ex);
+		}
 	}
 
 	public static Principal byUsername(String user) {

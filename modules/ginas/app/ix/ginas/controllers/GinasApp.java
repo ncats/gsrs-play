@@ -949,7 +949,7 @@ public class GinasApp extends App {
         final Map<String, String[]> params = App.getRequestQuery();
 
         final String sha1 = App.getKeyForCurrentRequest();
-
+        
         String[] order = params.get("order");
 
         // default to "lastEdited" as sort order
