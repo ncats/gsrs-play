@@ -1307,7 +1307,9 @@ public class EntityUtils {
 		}
 
 		public Object getVersionFor(Object entity) {
-			return (this.versionField !=null) ? this.versionField.getValue(entity): null;
+		    if(this.versionField==null)return null;
+		    
+		    return this.versionField.getValue(entity).orElse(null);
 		}
 
 		public String getVersionAsStringFor(Object entity) {
