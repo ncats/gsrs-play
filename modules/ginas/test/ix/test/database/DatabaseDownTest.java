@@ -12,7 +12,6 @@ public class DatabaseDownTest extends AbstractGinasServerTest {
 
     @Test
     public void runAppWithSecondDBDownAndEvolutionDisabledTest(){
-        Configuration config = ts.getApplication().configuration();
         String content = ts.notLoggedInBrowserSession().get("ginas/app").getBody();
         assertContains(content,"substances");
 
@@ -23,7 +22,6 @@ public class DatabaseDownTest extends AbstractGinasServerTest {
                 put("db.default2.url", "jdbc:mysql://localhost:3306/second");
                 put("db.default2.user", "root");
                 put("db.default2.password", "password");
-                put("evolutionplugin", "disabled");
             }
         });
 
@@ -33,9 +31,12 @@ public class DatabaseDownTest extends AbstractGinasServerTest {
     }
 
 
+    
+    //In the ideal world, this would be ok, and wouldn't fail.
+    //But now it does, because it can't use the ebean pieces if the
+    //database can't be connected
     @Test
     public void runAppWithSecondDBDownAndEvolutionNotDisabledTest(){
-        Configuration config = ts.getApplication().configuration();
         String content = ts.notLoggedInBrowserSession().get("ginas/app").getBody();
         assertContains(content,"substances");
 
@@ -48,7 +49,7 @@ public class DatabaseDownTest extends AbstractGinasServerTest {
                 put("db.default2.url", "jdbc:mysql://localhost:3306/second");
                 put("db.default2.user", "root");
                 put("db.default2.password", "password");
-                // put("evolutionplugin", "disabled");
+                put("ebean.default2","ix.ginas.secondarymodels.*");
             }
         });
 
@@ -57,6 +58,6 @@ public class DatabaseDownTest extends AbstractGinasServerTest {
         content = ts.notLoggedInBrowserSession().get("ginas/app").getBody();
 
         //System.out.println("content:" + content);
-        //assertContains(content,"substances");
+        assertContains(content,"substances");
     }
 }
