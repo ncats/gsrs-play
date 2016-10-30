@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import javax.persistence.OptimisticLockException;
@@ -26,15 +24,11 @@ public class InxightTransaction {
 	public static InxightTransaction getTransaction(Transaction t){
 		
 		InxightTransaction it=_instances.get(t);
-		//cleanupTransactions();
 		if(it!=null){
-			//System.out.println("Found transaction" + t);
 			return it;
 		}else{
-			//System.out.println("Can't find transaction" + t);
 			it= new InxightTransaction(t);
 			it.setEnhanced(false);
-			//it.waitAndDestroy();
 			return it;
 		}
 	}

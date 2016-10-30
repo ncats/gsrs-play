@@ -599,13 +599,11 @@ public class SubstanceFactory extends EntityFactory {
     private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
         context.setAdapter((so, ctx) -> {
             try {
-                System.out.println("Doing detailed");
                 SearchResult sr = App.getResultFor(ctx, so);
                 List<Substance> rlist = new ArrayList<Substance>();
                 
                 sr.copyTo(rlist, so.getOptions().getSkip(), so.getOptions().getTop(), true); // synchronous
                 for (Substance s : rlist) {
-                    System.out.println("MAYBE IT DOESN'T");
                     s.setMatchContextFromID(ctx.getId());
                 }
                 return sr;
@@ -637,8 +635,8 @@ public class SubstanceFactory extends EntityFactory {
         public TextSearchTask(SearchRequest request){
             this.request=request;
             String q = request.getQuery();
-            request.getOptions().asQueryParms();
-            key=Util.sha1("search" + q, request.getOptions().asQueryParms(), 
+            request.getOptions().asQueryParams();
+            key=Util.sha1("search" + q, request.getOptions().asQueryParams(), 
                                         "kind",
                                         "filter",
                                         "facet",

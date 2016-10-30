@@ -894,7 +894,7 @@ public class GinasApp extends App {
 
             String[] dep =params.get("showDeprecated");
             if(dep==null || dep.length<=0 || dep[0].equalsIgnoreCase("false")){
-                options.addTermFilter(new SearchTermFilter("SubstanceDeprecated","false"));
+                options.addTermFilter("SubstanceDeprecated","false");
             }
         }
     }

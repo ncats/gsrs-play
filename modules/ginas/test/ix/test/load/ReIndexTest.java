@@ -12,7 +12,7 @@ import ix.test.server.ConfigUtil;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceReIndexer;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 import ix.test.util.TestUtil;
 
 /**
@@ -47,7 +47,7 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
 
                 reIndexer.reindex();
 
-                SubstanceSearcher searcher = new SubstanceSearcher(session);
+                BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
 
                 SearchResult results = searcher.substructure("C1=CC=CC=C1");
 

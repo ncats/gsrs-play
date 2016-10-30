@@ -137,17 +137,19 @@ public abstract class ArgumentAdapter implements Consumer<String[]>,
 			@Override
 			public void accept(String[] t) {
 				String get=stringLastArgParser.apply(t);
-				if("true".equals(get)){
+				if("true".equalsIgnoreCase(get)){
 					c.accept(true);
+					return;
 				}
-				if("false".equals(get)){
+				if("false".equalsIgnoreCase(get)){
 					c.accept(false);
+					return;
 				}
 				c.accept(def);
 			}
 			@Override
 			public String[] get() {
-				return stringLastArgParserInv.apply(sup.get()?null:"false");
+				return stringLastArgParserInv.apply(sup.get()?"true":"false");
 			}
 			@Override
 			public String name() {

@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -26,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +42,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,6 +67,7 @@ import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.range.LongRange;
 import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
@@ -82,9 +84,7 @@ import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.IndexableFieldType;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
-import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queries.ChainedFilter;
-import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.classic.CharStream;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -135,10 +135,12 @@ import ix.core.search.EntityFetcher;
 import ix.core.search.FieldedQueryFacet;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
 import ix.core.search.InxightInfixSuggester;
+import ix.core.search.LazyList;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
 import ix.core.search.SearchResult;
 import ix.core.search.SuggestResult;
+import ix.core.search.text.TextIndexer.IxQueryParser;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
 import ix.core.util.EntityUtils;
@@ -244,7 +246,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
         }
     }
 
-    public class TermVectors implements java.io.Serializable {
+    public static class TermVectors implements java.io.Serializable {
         static private final long serialVersionUID = 0x192464a5d08ea528l;
         
         private Class kind;     
@@ -325,7 +327,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
                 throw new IllegalStateException(q.getClass() + " not supported ");
             }
             String finalField = find.toLowerCase();
-            System.out.println("Going to filter" + finalField);
             return (t)->{
               return t.k().toLowerCase().contains(finalField);  
             };
@@ -333,14 +334,11 @@ public class TextIndexer implements Closeable, ReIndexListener {
         
         public FacetMeta getFacet(int top, int skip, String filter, String uri) throws ParseException{
             Facet fac = new Facet(getField(), null);
-            System.out.println("Top:" + top);
-            System.out.println("Skip:" + skip);
-            System.out.println("ffilter:" + filter);
             
             Predicate<Tuple<String,Integer>> filt=(t)->true;
             
             if(filter!=null && !filter.equals("")){
-                QueryParser parser = new IxQueryParser("label", indexAnalyzer);
+                QueryParser parser = new IxQueryParser("label");
                 filt = getPredicate(parser.parse(filter));
             }
             
@@ -368,7 +366,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
         }
         
     }
-    private static class DocumentSet{
+    private static class DocumentSet implements Serializable{
         private Set s;
         public DocumentSet(Set set){
             this.s=set;
@@ -384,7 +382,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
         }
     }
     
-    private static class TermList{
+    private static class TermList implements Comparable<TermList>, Serializable{
         private String id;
         private List s;
         public TermList(String id,List list){
@@ -406,20 +404,22 @@ public class TextIndexer implements Closeable, ReIndexListener {
         public static TermList of(String id, List s){
             return new TermList(id,s);
         }
+
+        @Override
+        public int compareTo(TermList o) {
+            return o.getNTerms()-this.getNTerms();
+        }
     }
 
-    class TermVectorsCollector<T> extends Collector {
+    static class TermVectorsCollector<T> extends Collector {
         private int docBase;
-        private TermsEnum termsEnum;
         private IndexReader reader;     
         private EntityInfo<T> entityMeta;
         private TermVectors tvec;
         private Map<String, Set<Object>> counts;
-        private HashSet<String> set = new HashSet<String>();
+        private final Set<String> fieldSet;
 
-        
-        //TODO: paging
-        TermVectorsCollector (Class<T> kind, String originalField, IndexSearcher searcher, Term... terms)
+        private TermVectorsCollector (Class<T> kind, String originalField, IndexSearcher searcher, Filter extrafilter, Query q)
             throws IOException {
             String adaptedField = TERM_VEC_PREFIX + originalField;
             
@@ -427,38 +427,29 @@ public class TextIndexer implements Closeable, ReIndexListener {
             counts = new TreeMap<String, Set<Object>>();
             
             entityMeta = EntityUtils.getEntityInfoFor(kind);
-            set.add(entityMeta.getInternalIdField());
+            
+            fieldSet = entityMeta.getTypeAndSubTypes()
+                      .stream()
+                      .map(em->em.getInternalIdField())
+                      .collect(Collectors.toSet());
+            fieldSet.add(FIELD_KIND);
+            
                 
             this.reader = searcher.getIndexReader();
             
             Filter filter = filterForKinds(kind);
             
-            Query tq= entityMeta.getTypeAndSubTypes()
-                    .stream()
-                    .map(s->s.getName())
-                    .map(s->new TermQuery(new Term (FIELD_KIND, s)))
-                    .collect(()->new BooleanQuery(), 
-                            (bq,t)->bq.add(t, Occur.SHOULD), 
-                            (bq1,bq2)->{
-                                bq1.add(bq2, Occur.SHOULD);
-                            });
-            
-            if (terms != null && terms.length > 0) {
-                Filter[] filters = new TermFilter[terms.length];
-                for (int i = 0; i < terms.length; ++i) {
-                    filters[i] = new TermFilter(terms[i]);
-                    tvec.filters.put(terms[i].field(), terms[i].text());
-                }
-                filter = new ChainedFilter(filters, ChainedFilter.OR);
+            if(q==null){
+                q = new MatchAllDocsQuery();
             }
             
-            searcher.search(tq, filter, this);
+            if(extrafilter!=null){
+                filter=new ChainedFilter(new Filter[]{filter,extrafilter},ChainedFilter.AND);
+            }
+            
+            searcher.search(q, filter, this);
 
-            Collections.sort(tvec.docs, (m1,m2)->{
-                        Integer c1 = m1.getNTerms();
-                        Integer c2 = m2.getNTerms();
-                        return c2 - c1;
-                });
+            Collections.sort(tvec.docs);
 
             tvec.terms= counts.entrySet()
                     .stream()
@@ -476,8 +467,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
         
         public void collect (int doc) {
             int docId = docBase + doc;
-            
-            System.out.println("Found " + doc);
             try {
                 
                 //TODO: It IS possible to get all fields
@@ -494,25 +483,24 @@ public class TextIndexer implements Closeable, ReIndexListener {
                 
                 Terms docterms = reader.getTermVector(docId, tvec.field);
                 if (docterms != null) {
-                    Document d = reader.document(docId);                    
+                    Document d = reader.document(docId, fieldSet);                    
                     String kind=d.get(FIELD_KIND).toString();
                     
                     EntityInfo einfo=EntityUtils.getEntityInfoFor(kind);
-                    
                     String idstring = d.get(einfo.getInternalIdField()).toString();
                     Object nativeID= einfo.formatIdToNative(idstring.toString());
                     
                     
                     List<String> terms = StreamUtil
-                      .from(docterms.iterator(termsEnum)) //Not sure what termsEnum is here
-                      .streamNullable(en->en.next())
-                      .map(t->t.utf8ToString())
-                      .peek(term->{
-                                counts.computeIfAbsent(term, t->new HashSet<>())
-                                      .add(nativeID);
-                       })
-                      .collect(Collectors.toList());
-                            
+                          .from(docterms.iterator(null)) //Not sure what termsEnum is here
+                          .streamNullable(en->en.next())
+                          .map(t->t.utf8ToString())
+                          .peek(term->{
+                                    counts.computeIfAbsent(term, t->new HashSet<>())
+                                          .add(nativeID);
+                           })
+                          .collect(Collectors.toList());
+                                
                     tvec.docs.add(TermList.of(idstring, terms));
                 }else {
                     //Logger.debug("No term vector for field \""+field+"\"!");
@@ -528,17 +516,11 @@ public class TextIndexer implements Closeable, ReIndexListener {
         }
 
         public TermVectors termVectors () { return tvec; }
+        
+        public static <T> TermVectorsCollector<T> make(Class<T> kind, String originalField, IndexSearcher searcher, Filter filter, Query q) throws IOException{
+            return new TermVectorsCollector<T>(kind,originalField, searcher, filter,q);
+        }
     }
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
@@ -580,41 +562,37 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public static class Facet {
 		String name;
 		private List<FV> values = new ArrayList<FV>();
-		private String selectedLabel=null;
-		private FV selectedFV = null;
-        private SearchResult sr;
+		private Set<String> selectedLabel=new HashSet<>();
+		private SearchResult sr;
+		
+		private CachedSupplier<List<FV>> selectedFVfetch = 
+		        CachedSupplier.of(()->{
+		           return this.values.stream()
+		               .filter(fv->selectedLabel.contains(fv.getLabel()))
+		               .collect(Collectors.toList());
+		        });
         
 		
 		/**
-		 * Set the labeled facet which was intentionally 
-		 * selected. Note that this currently assumes
-		 * that there can only be one selected.
-		 * 
-		 * TODO: expand this to allow multiples
+		 * Set the labeled facet(s) which were intentionally 
+		 * selected. 
 		 * 
 		 * @param label
 		 */
-		public void setSelectedLabel(String label){
-			this.selectedLabel=label;
+		public void setSelectedLabel(String ... label){
+		    for(String l:label){
+		        this.selectedLabel.add(l);
+		    }
 		}
 		
 		@JsonInclude(Include.NON_NULL)
-		public String getSelectedLabel(){
+		public Set<String> getSelectedLabels(){
 			return this.selectedLabel;
 		}
 		
 		@JsonIgnore
-		public FV getSelectedFV(){
-			if(this.selectedFV!=null){
-				return selectedFV;
-			}else if(this.selectedLabel!=null){
-				return this.values.stream()
-					.filter(fv->fv.getLabel().equals(selectedLabel))
-					.findFirst()
-					.orElse(null);
-			}else{
-				return null;
-			}
+		public List<FV> getSelectedFV(){
+		    return this.selectedFVfetch.get();
 		}
 		
 		@JsonProperty("_self")
@@ -627,17 +605,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 		
 		@JsonIgnore
-		public boolean isMissingSelectedFV(){
-			if(this.selectedLabel==null){
-				return false;
-			}else{
-				if(getSelectedFV()==null){
-					return true;
-				}else{
-					return false;
-				}
-			}
-			
+		public Set<String> getMissingSelections(){
+		    Set<String> containedSet=this.getSelectedFV().stream()
+		        .map(FV::getLabel)
+		        .collect(Collectors.toSet());
+		    
+		    Set<String> totalSet = new HashSet<>(this.selectedLabel);
+		    totalSet.removeAll(containedSet);
+		    return totalSet;
 		}
 		
 		
@@ -729,7 +704,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
                 public int compare(FV v1, FV v2) {
                     int d = (v1.count - v2.count);
                     if (d == 0)
-                        d = v1.label.compareTo(v2.label);
+                        d = -v1.label.compareTo(v2.label);
                     return d;
                 }
             },
@@ -781,13 +756,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 		
 		private void add(FV fv){
-			if(this.selectedLabel!=null){
-				if(fv.getLabel().equals(this.selectedLabel)){
-					selectedFV=fv;
-				}
-			}
 			this.values.add(fv);
+			this.selectedFVfetch.resetCache();
 		}
+
+        public void setSelectedLabels(List<String> collect) {
+            this.selectedLabel.clear();
+            this.selectedLabel.addAll(collect);
+            this.selectedFVfetch.resetCache();
+        }
 	}
 
 	class SuggestLookup implements Closeable {
@@ -1001,7 +978,13 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	private Analyzer indexAnalyzer;
 	private DirectoryTaxonomyWriter taxonWriter;
 	private FacetsConfig facetsConfig;
-	private ConcurrentMap<String, SuggestLookup> lookups;
+	
+	public FacetsConfig getFacetsConfig() {
+        return facetsConfig;
+    }
+
+
+    private ConcurrentMap<String, SuggestLookup> lookups;
 	private ConcurrentMap<String, SortField.Type> sorters;
 	
 	
@@ -1125,6 +1108,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		// indexReader = DirectoryReader.open(indexWriter, true);
 		taxonWriter = new DirectoryTaxonomyWriter(taxonDir);
 
+		
+		
 		facetsConfig = loadFacetsConfig(new File(dir, FACETS_CONFIG_FILE));
 		if (facetsConfig == null) {
 			int size = taxonWriter.getSize();
@@ -1170,10 +1155,10 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	@FunctionalInterface
 	interface SearcherFunction<R> {
-		R apply(IndexSearcher indexSearcher) throws IOException;
+		R apply(IndexSearcher indexSearcher) throws Exception;
 	}
 
-	private <R> R withSearcher(SearcherFunction<R> worker) throws IOException {
+	private <R> R withSearcher(SearcherFunction<R> worker) throws Exception {
 		searchManager.maybeRefresh();
 		IndexSearcher searcher = searchManager.acquire();
 		try {
@@ -1232,6 +1217,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		indexer.sorters.putAll(sorters);
 		return indexer;
 	}
+	
+	
 
 	public List<SuggestResult> suggest(String field, CharSequence key, int max) throws IOException {
 		SuggestLookup lookup = lookups.get(field);
@@ -1256,7 +1243,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public int size() {
 		try {
 			return withSearcher(s -> s.getIndexReader().numDocs());
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			Logger.trace("Can't retrieve NumDocs", ex);
 		}
 		return -1;
@@ -1270,7 +1257,11 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		protected IxQueryParser(CharStream charStream) {
 			super(charStream);
 		}
-
+		
+		public IxQueryParser(String def) {
+            super(def, createIndexAnalyzer());
+        }
+		
 		public IxQueryParser(String string, Analyzer indexAnalyzer) {
 			super(string, indexAnalyzer);
 		}
@@ -1297,19 +1288,23 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public SearchResult search(SearchOptions options, String qtext, Collection<?> subset) throws IOException {
 		SearchResult searchResult = new SearchResult(options, qtext);
 
-		Query query = null;
-		if (qtext == null) {
-			query = new MatchAllDocsQuery();
-		} else {
-			try {
-				QueryParser parser = new IxQueryParser(FULL_TEXT_FIELD, indexAnalyzer);
-				query = parser.parse(qtext);
-			} catch (ParseException ex) {
-				ex.printStackTrace();
-				Logger.warn("Can't parse query expression: " + qtext, ex);
-			}
-		}
-		if (query != null) {
+		Supplier<Query> qs = ()->{
+		    Query query=null;
+    		if (qtext == null) {
+    			query = new MatchAllDocsQuery();
+    		} else {
+    			try {
+    				QueryParser parser = new IxQueryParser(FULL_TEXT_FIELD, indexAnalyzer);
+    				query = parser.parse(qtext);
+    			} catch (ParseException ex) {
+    				ex.printStackTrace();
+    				Logger.warn("Can't parse query expression: " + qtext, ex);
+    				throw new IllegalStateException(ex);
+    			}
+    		}
+    		return query;
+		};
+		Supplier<Filter> fs = ()->{
 			Filter f = null;
 			if (subset != null) {
 				List<Term> terms = getTerms(subset);
@@ -1318,7 +1313,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				}
 				if(options.getOrder().isEmpty()){
 					Stream<Key> ids = subset.stream()
-											   .map(o->EntityWrapper.of(o).getKey());
+											.map(o->EntityWrapper.of(o).getKey());
 					
 					Comparator<Key> comp=Util.comparator(ids);
 					searchResult.setRank(comp);
@@ -1326,9 +1321,19 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			} else if (options.getKind() != null) {
 				f = createKindArrayFromOptions(options);
 			}
-			search(searchResult, query, f);
-		}
-
+			return f;
+		};
+		Query q=qs.get();
+		Filter f=fs.get();
+		
+        long time = StopWatch.timeElapsed(() -> {
+            try {
+                search(searchResult, q, f);
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        
 		return searchResult;
 	}
 
@@ -1340,7 +1345,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	    String[] opts= einfo.getTypeAndSubTypes()
                             .stream()
                             .map(s->s.getName())
-                            .collect(Collectors.toList()).toArray(new String[0]);
+                            .collect(Collectors.toList())
+                            .toArray(new String[0]);
 	    return new FieldCacheTermsFilter(FIELD_KIND, opts);
 	}
 	
@@ -1350,7 +1356,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		return filterForKinds(options.getKindInfo());
 	}
 
-	public SearchResult filter(Collection<?> subset) throws IOException {
+	public SearchResult filter(Collection<?> subset) throws Exception {
 		SearchOptions options = new SearchOptions(null, subset.size(), 0, subset.size() / 2);
 		return filter(options, subset);
 	}
@@ -1361,6 +1367,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				.filter(t -> t != null)
 				.collect(Collectors.toList());
 	}
+	
 	protected List<Term> getTermsFromKeys(Collection<Key> subset) {
         return subset.stream()
                 .map(this::getTerm)
@@ -1368,26 +1375,29 @@ public class TextIndexer implements Closeable, ReIndexListener {
                 .collect(Collectors.toList());
     }
 	
-	
-
 	protected TermsFilter getTermsFilter(Collection<?> subset) {
 		return new TermsFilter(getTerms(subset));
 	}
+	
+	protected TermsFilter getTermKeysFilter(Collection<Key> keyset) {
+        return new TermsFilter(getTermsFromKeys(keyset));
+    }
 
-	public SearchResult filter(SearchOptions options, Collection<?> subset) throws IOException {
+
+	public SearchResult filter(SearchOptions options, Collection<?> subset) throws Exception {
 		return filter(options, getTermsFilter(subset));
 	}
 
-	public SearchResult range(SearchOptions options, String field, Integer min, Integer max) throws IOException {
+	public SearchResult range(SearchOptions options, String field, Integer min, Integer max) throws Exception {
 		Query query = NumericRangeQuery.newIntRange(field, min, max, true /* minInclusive? */, true/* maxInclusive? */);
 		return search(new SearchResult(options, null), query, null);
 	}
 
-	protected SearchResult filter(SearchOptions options, Filter filter) throws IOException {
+	protected SearchResult filter(SearchOptions options, Filter filter) throws Exception {
 		return search(new SearchResult(options, null), new MatchAllDocsQuery(), filter);
 	}
 
-	protected SearchResult search(SearchResult searchResult, Query query, Filter filter) throws IOException {
+	protected SearchResult search(SearchResult searchResult, Query query, Filter filter) throws Exception {
 		return withSearcher(searcher -> search(searcher, searchResult, query, filter));
 	}
 
@@ -1463,25 +1473,36 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			.filter(Objects::nonNull)
 			.map(result -> {
 				Facet fac = new Facet(result.dim, sr);
+				
 				// make sure the facet value is returned
 				// for selected value
+				
 				List<DrillAndPath> dp = providedDrills.get(result.dim);
 				if (dp != null) {
-					fac.setSelectedLabel(dp.get(0).asLabel());
+				    List<String> selected=dp.stream()
+				                        .map(l->l.asLabel())
+				                        .collect(Collectors.toList());
+					fac.setSelectedLabels(selected);
 				}
-				Arrays.stream(result.labelValues)
-						.forEach(lv -> fac.add(lv.label, lv.value.intValue()));
-				if (fac.isMissingSelectedFV()) {
-					try {
-						Number value = facets.getSpecificValue(result.dim, fac.getSelectedLabel());
-						if (value != null && value.intValue() >= 0) {
-							fac.add(fac.getSelectedLabel(), value.intValue());
-						} else {
-							Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
-									+ fac.getSelectedLabel() + "\"!");
-						}
-					} catch (Exception e) {}
+				
+				for(LabelAndValue lv:result.labelValues){
+				    fac.add(lv.label, lv.value.intValue());
 				}
+				
+				fac.getMissingSelections().stream().forEach(l->{
+				    try {
+                        Number value = facets.getSpecificValue(result.dim, l);
+                        if (value != null && value.intValue() >= 0) {
+                            fac.add(l, value.intValue());
+                        } else {
+                            Logger.warn("Facet \"" + result.dim + "\" doesn't have any " + "value for label \""
+                                    + l + "\"!");
+                        }
+                    } catch (Exception e) {
+                       Logger.warn("error collecting facets", e);
+                    }
+				});
+				
 				fac.sort();
 				return fac;
 			})
@@ -1491,7 +1512,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	
 	// Abstracted interface to help with cleaning up workflow
 	// Call search, then call getTopDocs and/or getFacets
-	// It's
 	
 	public static interface LuceneSearchProvider{
 		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query q,FacetsCollector facetCollector) throws IOException;
@@ -1520,9 +1540,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	
 	
 	public class BasicLuceneSearchProvider implements LuceneSearchProvider{
-		Sort sorter;
-		Filter filter;
-		int max;
+		private Sort sorter;
+		private Filter filter;
+		private int max;
 		
 		public BasicLuceneSearchProvider(Sort sorter,Filter filter, int max){
 			this.sorter=sorter;
@@ -1531,7 +1551,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 
 		@Override
-		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query query,FacetsCollector facetCollector) throws IOException {
+		public DefaultLuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query query, FacetsCollector facetCollector) throws IOException {
 			TopDocs hits=null;
 			Facets facets=null;
 			//FacetsCollector.
@@ -1550,9 +1570,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public class DrillSidewaysLuceneSearchProvider implements LuceneSearchProvider{
 		private TopDocs hits=null;
 		private Facets facets=null;
-		Sort sorter;
-		Filter filter;
-		SearchOptions options;
+		private Sort sorter;
+		private Filter filter;
+		private SearchOptions options;
 		
 		public DrillSidewaysLuceneSearchProvider(Sort sorter,Filter filter, SearchOptions options){
 			this.sorter=sorter;
@@ -1561,18 +1581,23 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		}
 
 		@Override
-		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query ddq1,FacetsCollector facetCollector) throws IOException {
+		public LuceneSearchProviderResult search(IndexSearcher searcher, TaxonomyReader taxon, Query ddq1, FacetsCollector facetCollector) throws IOException {
 			if(!(ddq1 instanceof DrillDownQuery)){
 				throw new IllegalStateException("Query must be drill down query");
 			}
 			DrillDownQuery ddq = (DrillDownQuery)ddq1;
 			DrillSideways sideway = new DrillSideways(searcher, facetsConfig, taxon);
+			
+			
 			DrillSideways.DrillSidewaysResult swResult = sideway.search(ddq, filter, null, options.max(),
 					sorter, false, false);
+			
+			
 			
 			/*
 			 * TODO: is this the only way to collect the counts for
 			 * range/dynamic facets?
+			 * 
 			 */
 			if (!options.getLongRangeFacets().isEmpty()){
 				FacetsCollector.search(searcher, ddq, filter, options.max(), facetCollector);
@@ -1600,7 +1625,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		final TopDocs hits;
 		
 		try (TaxonomyReader taxon = new DirectoryTaxonomyReader(taxonWriter)) {
-			hits = firstPassLuceneSearch(searcher,taxon,searchResult,filter, query);
+		    hits=firstPassLuceneSearch(searcher,taxon,searchResult,filter, query);
 		}
 		
 		if (DEBUG(1)) {
@@ -1615,7 +1640,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		try {
 			LuceneSearchResultPopulator payload = new LuceneSearchResultPopulator(searchResult, hits, searcher);
 			//get everything, forever
-			if (options.getFetch() <= 0) { 
+			if (options.getFetch() <= 0) {
 				payload.fetch();
 			} else {
 				// we first block until we have enough result to show
@@ -1623,8 +1648,9 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				// why 2?
 			    // TODO: should we really block here?
 				int fetch = options.getFetch() + EXTRA_PADDING;
+				
 				payload.fetch(fetch);
-
+				
 				if (hits.totalHits > fetch) {
 					// now queue the payload so the remainder is fetched in
 					// the background
@@ -1648,7 +1674,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 							});
 						} catch (Exception e) {
 							e.printStackTrace();
-							System.out.println("Search failed at:" + searchResult.getMatches().size());
 							Logger.error("Error in processing payload", e);
 						}
 						
@@ -1656,6 +1681,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				} else {
 					searchResult.done();
 				}
+				
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -1705,9 +1731,12 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				.map(val->new ChainedFilter(val.toArray(new Filter[0]), ChainedFilter.OR))
 				.collect(Collectors.toList());
 		
-		options.getTermFilters().stream()
+		options.getTermFilters()
+		    .stream()
 			.map(k-> new TermsFilter(new Term(k.getField(), k.getTerm())))
 			.forEach(f->filtersFromOptions.add(f));
+		
+		
 		Query qactual = query;
 			
 		//Collect the range filters into one giant filter.
@@ -1728,9 +1757,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		} else {
 			DrillDownQuery ddq = new DrillDownQuery(facetsConfig, query);
 			
-			options.getDrillDownsMap().forEach((k,v)->{
-				v.stream().forEach(dp->ddq.add(dp.getDrill(), dp.getPaths()));
-			});
+			options.getDrillDownsMap()
+			    .entrySet()
+			    .stream()
+			    .flatMap(e->e.getValue().stream())
+			    .forEach((dp)->{
+			        ddq.add(dp.getDrill(), dp.getPaths());
+			    });
+			
 			qactual=ddq;
 
 			// sideways
@@ -1743,12 +1777,17 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 		} // facets is empty
 
+		
+		//Promote special matches
 		if(searchResult.getOptions().getKindInfo() !=null){
-			List<String> sponsoredFields = searchResult.getOptions().getKindInfo().getSponsoredFields();
+		    //Special "promoted" match types
+			List<String> sponsoredFields = searchResult.getOptions()
+			                                           .getKindInfo()
+			                                           .getSponsoredFields();
 
 			if (searchResult.getQuery() != null) {
 				try {
-					for (String sp : sponsoredFields) {
+				    for (String sp : sponsoredFields) {
 						String theQuery = "\"" + toExactMatchString(
 								TextIndexer.replaceSpecialCharsForExactMatch(searchResult.getQuery().trim().replace("\"", ""))).toLowerCase() + "\"";
 						QueryParser parser = new IxQueryParser(sp, indexAnalyzer);
@@ -1758,7 +1797,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 						TopDocs td = lspResult.getTopDocs();
 						for (int j = 0; j < td.scoreDocs.length; j++) {
 							Document doc = searcher.doc(td.scoreDocs[j].doc);
-
 							try {
 								Key k = Key.of(doc);
 								searchResult.addSponsoredNamedCallable(new EntityFetcher<>(k));
@@ -1771,7 +1809,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 					}
 				} catch (Exception ex) {
-
+				    Logger.warn("Error performing lucene search", ex);
 				}
 			}
 		}
@@ -1781,6 +1819,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		hits=lspResult.getTopDocs();
 		
 		collectBasicFacets(lspResult.getFacets(), searchResult);
+		
 		collectLongRangeFacets(facetCollector, searchResult);
 		
 		if(USE_ANALYSIS && options.getKind()!=null){
@@ -1835,7 +1874,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 	
 	public IxQueryParser getQueryParser(){
-		return getQueryParser(this.FULL_TEXT_FIELD);
+		return getQueryParser(FULL_TEXT_FIELD);
 	}
 	
 	public Query parseQuery(String q) throws Exception{
@@ -2028,7 +2067,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		return suggestedQueries;
 	}
 	
-	public static List<BooleanClause> flattenToLinkedOr(BooleanQuery bq){
+	private static List<BooleanClause> flattenToLinkedOr(BooleanQuery bq){
 		List<BooleanClause> bqs= new ArrayList<BooleanClause>();
 		for(BooleanClause bcl: bq.getClauses()){
 			if(bcl.getOccur() != Occur.SHOULD) return null;
@@ -2254,7 +2293,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	//One more thing:
 	// 1. need list of fields indexed.
 	// 2. that's easy! At index time, just also index each field
-	// 3. in fact... it's already maybe present. The
+	// 3. in fact... it's already maybe present ...
 
 	public void addDoc(Document doc) throws IOException {
 		
@@ -2609,34 +2648,32 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 	
 	
-	public TermVectors getTermVectors (Class kind, String field) throws IOException{
-	    return getTermVectors(kind,field, new ArrayList<Term>(),new HashMap<String,String>());
+	public TermVectors getTermVectors (Class kind, String field) throws Exception{
+	    return getTermVectors(kind,field, (Filter)null, null);
 	}
 	
-	public TermVectors getTermVectors (Class kind, String field, List<?> subset) throws IOException{
-	    return getTermVectors(kind,field, getTerms(subset), new HashMap<String,String>());
-    }
-	
-	public TermVectors getTermVectorsFromKeys (Class kind, String field, List<Key> subset) throws IOException{
-        return getTermVectors(kind,field, getTermsFromKeys(subset), new HashMap<String,String>());
-    }
-	
-	
-	public TermVectors getTermVectors (Class kind, String field,
-	        List<Term> termslist, Map<String, String> filters)
-	                throws IOException {
-	    Objects.requireNonNull(filters);
+	public TermVectors getTermVectors(Class kind, String field, List<Object> subset, Query q) throws Exception{
+	    LazyList<Key, Object> llist = LazyList.of(subset, (o)->EntityWrapper.of(o).getKey());
 	    
-	    final Term[] terms =StreamUtil.with(termslist.stream())
-	                                  .and(filters.entrySet()
-	                                              .stream()
-	                                              .map(es-> new Term(es.getKey(),es.getValue())))
-	                                  .stream()
-	                                  .toArray(i-> new Term[i]);
-	    System.out.println("We have:" + terms.length + " terms");
+	    List<Key> klist = llist.getInternalList()
+	         .stream()
+	         .map(n->n.getName())
+	         .collect(Collectors.toList());
+	    
+	    return getTermVectorsFromKeys(kind,field, klist,q);
+    }
+	
+	public TermVectors getTermVectorsFromKeys (Class kind, String field, List<Key> subset, Query q) throws Exception{
+	    return getTermVectors(kind,field, getTermKeysFilter(subset),q);
+    }
+	
+	
+	public TermVectors getTermVectors (Class kind, String field, Filter luceneFilter, Query query)
+	                throws Exception {
 	    
 	    return withSearcher(searcher -> {
-	        return new TermVectorsCollector(kind, field,searcher, terms).termVectors();
+	        return TermVectorsCollector.make(kind, field, searcher, luceneFilter, query)
+	               .termVectors();
         }); 
 	}
 

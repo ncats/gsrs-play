@@ -14,18 +14,24 @@ import java.util.stream.Stream;
 
 import ix.core.search.SearchResultContext;
 import ix.ginas.models.v1.Substance;
-import ix.test.server.SubstanceSearcher.Order;
-import ix.test.server.SubstanceSearcher.SortByValueComparator;
+import ix.test.server.BrowserSubstanceSearcher.Order;
+import ix.test.server.BrowserSubstanceSearcher.SortByValueComparator;
 
 public class SearchResult {
 	private final Set<String> uuids;
 	private final Set<String> specialUuids = new HashSet<>();
 	private final Map<String, Map<String, Integer>> facetMap = new LinkedHashMap<>();
-	private final SubstanceSearcher searcher;
+	private final BrowserSubstanceSearcher searcher;
 
 	private String searchKey;
+	
+	
+	//TODO: Refactor
+	public SearchResult(){
+	    this("",new HashSet<String>(),null);
+	}
 
-	public SearchResult(String searchKey, Set<String> uuids, SubstanceSearcher searcher) {
+	public SearchResult(String searchKey, Set<String> uuids, BrowserSubstanceSearcher searcher) {
 		Objects.requireNonNull(uuids);
 		try {
 			Objects.requireNonNull(searchKey);
@@ -89,7 +95,7 @@ public class SearchResult {
 		private Set<String> uuids;
 		private Set<String> specialUuids= new HashSet<>();
 		private Map<String, Map<String, Integer>> facetMap = new HashMap<>();
-		private SubstanceSearcher searcher;
+		private BrowserSubstanceSearcher searcher;
 		private String searchKey;
 
 		public Builder uuids(Set<String> uuids) {
@@ -107,7 +113,7 @@ public class SearchResult {
 			return this;
 		}
 
-		public Builder searcher(SubstanceSearcher searcher) {
+		public Builder searcher(BrowserSubstanceSearcher searcher) {
 			this.searcher = searcher;
 			return this;
 		}

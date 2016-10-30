@@ -26,7 +26,7 @@ import ix.test.server.BrowserSession;
 import ix.test.server.RestSession;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 import play.Play;
 
 public class SponsoredResultsTest extends AbstractGinasClassServerTest{
@@ -34,7 +34,7 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 		
 	static BrowserSession bsession;
 	static RestSession    rsession;
-	static SubstanceSearcher    searcher;
+	static BrowserSubstanceSearcher    searcher;
 	static SubstanceAPI api;
 	
 	@BeforeClass
@@ -56,7 +56,7 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 		ts.restart();
 		bsession= ts.newBrowserSession(ts.getFakeUser1());
 		rsession= ts.newRestSession(ts.getFakeUser1());
-		searcher= new SubstanceSearcher(bsession);
+		searcher= new BrowserSubstanceSearcher(bsession);
 		api = new SubstanceAPI(rsession);
 		
 	}

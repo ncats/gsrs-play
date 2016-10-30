@@ -70,6 +70,7 @@ import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
 import ix.core.util.CachedSupplier;
 import ix.core.util.Java8Util;
+import ix.core.util.StopWatch;
 import ix.core.util.TimeUtil;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
@@ -1271,17 +1272,18 @@ public class App extends Authentication {
 	}
 	
 	
-	static String getKey (SearchResultContext context, SearchRequest request, String ... params) {
-		return "fetchResult/"+context.getId()
-		+"/"+Util.sha1("search", request.asQueryParms(), params);
+	static String getKey (SearchResultContext context, SearchRequest request) {
+	    
+	    return "fetchResult/"+context.getId() + "/" + request.getDefiningSetSha1();
+//		return "fetchResult/"+context.getId()
+//		+"/"+Util.sha1("search", request.asQueryParams(), params);
 	}
 	
 	
 	public static SearchResult getResultFor(SearchResultContext ctx, SearchRequest req) 
 	                                                            throws IOException, Exception{
 	    
-	    final String key = getKey (ctx, req, "facet", "fdim", "q");
-	    System.out.println("K______:" + key);
+	    final String key = getKey (ctx, req);
 		return getOrElse(key,  TypedCallable.of(() -> {
 					Collection results = ctx.getResults();
 					
@@ -1305,8 +1307,8 @@ public class App extends Authentication {
 					                    .stop(TimeUtil.getCurrentTimeMillis())
 					                    .build();
 					}else{
-					    searchResult =
-	                            SearchFactory.search (request);
+					    
+					    searchResult = SearchFactory.search (request);
 	                    Logger.debug("Cache misses: "
 	                            +key+" size="+results.size()
 	                            +" class="+searchResult);
@@ -1324,7 +1326,7 @@ public class App extends Authentication {
 			int page, final ResultRenderer<T> renderer) throws Exception {
 
 		
-		SearchRequest options = new SearchRequest.Builder()
+		SearchRequest searchRequest = new SearchRequest.Builder()
 				.withRequest(request())   //Really shouldn't be here
 				.build(); 
 		/**
@@ -1347,8 +1349,8 @@ public class App extends Authentication {
 
 		
 		
-		final String key = getKey (context, options, "facet", "fdim", "q");
-		final SearchResult result = getResultFor(context, options);
+		final String key = getKey (context, searchRequest);
+		final SearchResult result = getResultFor(context, searchRequest);
 
 		final List<T> results = new ArrayList<T>();
 		final List<Facet> facets = new ArrayList<Facet>();

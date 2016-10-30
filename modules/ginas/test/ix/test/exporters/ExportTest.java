@@ -42,8 +42,8 @@ import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceSearcher;
-import ix.test.server.SubstanceSearcher.WebExportRequest;
+import ix.test.server.BrowserSubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher.WebExportRequest;
 import ix.test.util.TestUtil;
 import play.mvc.Http;
 
@@ -61,7 +61,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 	}
 
 	static BrowserSession session;
-	static SubstanceSearcher searcher;
+	static BrowserSubstanceSearcher searcher;
 	static RestSession restSession;
 
 	@BeforeClass
@@ -72,7 +72,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 		SubstanceLoader loader = new SubstanceLoader(session);
 		File f = new File("test/testdumps/rep90.ginas");
 		loader.loadJson(f);
-		searcher = new SubstanceSearcher(session);
+		searcher = new BrowserSubstanceSearcher(session);
 	}
 
 	@After

@@ -29,7 +29,7 @@ import ix.test.server.RestSession;
 import ix.test.server.RestSubstanceSearcher;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
-import ix.test.server.SubstanceSearcherIFace;
+import ix.test.server.SubstanceSearcher;
 import util.json.JsonUtil;
 
 public class ChemicalApiTest extends AbstractGinasServerTest {
@@ -111,7 +111,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(entered));
             
             
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult sresult = searcher.flex("ClCC1CO1");
             assertTrue("Should have some result for flex match, but couldn't find any",sresult.getUuids().size()==1);
         }
@@ -128,7 +128,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(entered));
             
             
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult sresult = searcher.flex("ClCC1CO1");
             assertTrue("Should have some result for flex match, but couldn't find any",sresult.getUuids().size()==1);
         }
@@ -145,7 +145,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(form1));
             ensurePass( api.submitSubstance(form2));
             
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult sresult = searcher.flex("OC1=CC=CC=C1");
             assertEquals("Should have 2 results for flex match, but found something else",2,sresult.getUuids().size());
         }
@@ -163,7 +163,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             
             
 
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult sresult = searcher.flex("CCCOC1=CC=CC=C1");
             assertEquals("Should have no matches, but found some",0,sresult.getUuids().size());
             
@@ -186,7 +186,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             
             
 
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult sresult = searcher.exact("OC1=CC=CC=C1");
             assertEquals("Should have 1 match, but found something else",1,sresult.getUuids().size());
             
@@ -204,7 +204,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(form1));
             ensurePass( api.submitSubstance(form2));
             
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult result=searcher.substructure("C1=CC=CC=C1");
             assertEquals(2, result.getUuids().size());
         }
@@ -222,7 +222,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             ensurePass( api.submitSubstance(form2));
             
             
-            SubstanceSearcherIFace searcher = new RestSubstanceSearcher(session);
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
             SearchResult result=searcher.substructure("C1=CC=CC=C1");
             assertEquals(1, result.getUuids().size());
         }

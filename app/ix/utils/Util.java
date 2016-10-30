@@ -127,8 +127,11 @@ public class Util {
                 if (values != null) {
                      Arrays.sort(values);
                      md.update(key.getBytes("utf8"));
-                     for (String v : values)
-                         md.update(v.getBytes("utf8"));
+                     for (String v : values){
+                         if(v!=null){
+                             md.update(v.getBytes("utf8"));
+                         }
+                     }
                 }
          }
          return toHex (md.digest());
@@ -167,6 +170,7 @@ public class Util {
     public static String sha1 (String path, Map<String,String[]> all, String... params) {
         try {
             Map<String, String[]> map = reduceParams(all, params);
+            
             return sha1(path,map);
         }catch (Exception ex) {
             Logger.trace("Can't generate hash for request: "+path, ex);
@@ -652,7 +656,6 @@ public class Util {
 						  .map(Tuple::of)
 						  .map(t->Tuple.of(t.k(), Stream.of(t.v()).collect(Collectors.toList())))
 						  .collect(Tuple.toMap());
-			System.out.println(m.getClass());
 			return m;
 		});
 		public QueryStringManipulator(Map<String,String[]> params){
@@ -747,5 +750,12 @@ public class Util {
         Pattern p = Pattern.compile(regex);
         return getMatchingGroup(p,group);
     }
+
+
+    public static <T> Set<T> toSet(T ... elements) {
+        return Stream.of(elements).collect(Collectors.toSet());
+    }
+    
+    
 	
 }

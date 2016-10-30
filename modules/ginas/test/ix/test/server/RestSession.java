@@ -51,12 +51,14 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public WSRequestHolder createRequestHolder(String path){
-        return url(constructUrlFor(path));
+        return urlWithLogin(constructUrlFor(path));
     }
-    public WSRequestHolder url(String url){
+    public WSRequestHolder urlWithLogin(String url){
         WSRequestHolder ws = WS.url(url);
-
-
+        return withLogin(ws);
+    }
+    public WSRequestHolder withLogin(WSRequestHolder ws){
+        
         if(isLoggedIn()) {
             switch (authType) {
                 case TOKEN:
@@ -77,7 +79,7 @@ public class RestSession extends AbstractSession<Void>{
             }
         }
         extraHeaders.forEach((k,v)->{
-        	ws.setHeader(k, v);
+            ws.setHeader(k, v);
         });
         return ws;
     }
@@ -131,7 +133,11 @@ public class RestSession extends AbstractSession<Void>{
     }
     
     public WSRequestHolder getRequest(String path){
-        return url(constructUrlFor(path));
+        return urlWithLogin(constructUrlFor(path));
+    }
+    
+    public JsonNode getAsJson(WSRequestHolder hold){
+        return extractJSON(hold.get().get(timeout));
     }
 
     public JsonNode getAsJson(String path){
@@ -152,7 +158,7 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public JsonNode urlJSON(String fullUrl){
-        return extractJSON(url(fullUrl).get().get(timeout));
+        return extractJSON(urlWithLogin(fullUrl).get().get(timeout));
     }
 
     public ControlledVocab getControlledVocabulary(){

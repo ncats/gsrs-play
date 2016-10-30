@@ -1276,6 +1276,17 @@ public class EntityUtils {
 		public String getExternalIdFieldName() {
 			return kind + ID_FIELD_STRING_SUFFIX;
 		}
+		
+		
+		/**
+         * Returns a {@link Tuple} of the kind field and the
+         * kind of this object, useful for filtering
+         * by this kind in Lucene.
+         * @return
+         */
+		public Tuple<String,String>  getLuceneKindTuple(){
+		    return Tuple.of(TextIndexer.FIELD_KIND,this.getName());
+		}
 
 		public boolean isEntity() {
 			return this.isEntity;
@@ -1327,6 +1338,7 @@ public class EntityUtils {
 		private static String getBeanName(String field) {
 			return Character.toUpperCase(field.charAt(0)) + field.substring(1);
 		}
+		
 		
 		
 
@@ -2319,6 +2331,12 @@ public class EntityUtils {
 		}
 
 
+		/**
+		 * Returns a {@link Tuple} of the ID field and ID 
+		 * as a string, that would be used to retrieve this
+		 * entity from the lucene store.
+		 * @return
+		 */
 		public Tuple<String, String> asLuceneIdTuple() {
 			return new Tuple<String, String>(kind.getInternalIdField(), this.getIdString());
 		}

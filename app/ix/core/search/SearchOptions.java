@@ -127,7 +127,7 @@ public class SearchOptions implements RequestOptions {
 	
 	
 	
-	public Map<String,String[]> asQueryParms(){
+	public Map<String,String[]> asQueryParams(){
 		return queryParams.get();
 	}
 	
@@ -136,6 +136,16 @@ public class SearchOptions implements RequestOptions {
 		     	ofList("order", a->setOrder(a), ()->getOrder()),
 		     	ofList("expand", a->expand=a, ()->expand),
 		     	ofList("facet", a->facets=a, ()->facets),
+		     	ofList("termfilter", rq->{
+		     	    termFilters=rq.stream()
+		     	                .map(f->new SearchTermFilter(f.split(":")[0],f.split(":")[1]))
+		     	                .collect(Collectors.toList());
+		     	
+		     	}, ()->{
+		     	    return termFilters.stream()
+		     	                  .map(tf->tf.getField() + ":" + tf.getTerm())
+		     	                  .collect(Collectors.toList());
+		     	}),
 		     	ofInteger("top", a->setTop(a), ()->getTop()),
 		     	ofInteger("skip", a->skip=a, ()->skip),
 		     	ofInteger("fskip", a->fskip=a, ()->fskip),
@@ -244,10 +254,13 @@ public class SearchOptions implements RequestOptions {
 	}
 
 	public Map<String, List<DrillAndPath>> getDrillDownsMap() {
-		Map<String, List<DrillAndPath>> providedDrills = new HashMap<String, List<DrillAndPath>>();
-		// the first term is the drilldown dimension
-		this.facets.stream().map(dd -> parseDrillAndPath(dd)).filter(Objects::nonNull).forEach(
-				dp -> providedDrills.computeIfAbsent(dp.getDrill(), t -> new ArrayList<DrillAndPath>()).add(dp));
+		// parses to a map, though it doesn't NEED to be a map,
+	    // it could just as easily be a flat list
+		Map<String, List<DrillAndPath>> providedDrills =this.facets
+		                    .stream()
+		                    .map(dd -> parseDrillAndPath(dd))
+		                    .filter(Objects::nonNull)
+		                    .collect(Collectors.groupingBy(d->d.getDrill()));
 		return providedDrills;
 	}
 
@@ -447,7 +460,7 @@ public class SearchOptions implements RequestOptions {
 		this.expand = builder.expand;
 		this.termFilters = builder.termFilters;
 		if(builder.params!=null){
-			this.parse(builder.params);
+		    this.parse(builder.params);
 		}
 	}
 
@@ -460,6 +473,9 @@ public class SearchOptions implements RequestOptions {
     }
 	public void addTermFilter(SearchTermFilter termFilter) {
         this.termFilters.add(termFilter);
+    }
+	public void addTermFilter(String field, String value) {
+	    addTermFilter(new SearchTermFilter(field,value));
     }
 
 	public List<String> getOrder() {
@@ -517,10 +533,13 @@ public class SearchOptions implements RequestOptions {
 		return fetch;
 	}
 
-	public int setFetch(int fetch) {
+	public void setFetch(int fetch) {
 		this.fetch = fetch;
 		queryParams.resetCache();
-		return fetch;
+	}
+	
+	public void setFetchAll(){
+	    setFetch(-1);
 	}
 	
 
@@ -530,6 +549,7 @@ public class SearchOptions implements RequestOptions {
 
     public void setFskip(int fskip) {
         this.fskip = fskip;
+        queryParams.resetCache();
     }
     
     public String getFfilter() {

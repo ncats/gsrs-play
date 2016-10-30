@@ -28,13 +28,13 @@ import ix.test.server.RestSession;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
 import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 
 public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
     public static final String TEST_TESTDUMPS_REP90_PART1_GINAS = "test/testdumps/rep90_part1.ginas";
 
-    SubstanceSearcher searcher;
+    BrowserSubstanceSearcher searcher;
     SubstanceLoader loader;
     BrowserSession session;
 
@@ -53,7 +53,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         loader.loadJson(f);
 
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
         Map<String, Integer> lastEditMap;
         SearchResult results = searcher.all();
 
@@ -70,7 +70,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         timeTraveller.jump(2, TimeUnit.DAYS);
 
         try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             SearchResult results2 = searcher2.all();
 
@@ -92,7 +92,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, 0, 20);
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
 
         Map<String, Integer> lastEditMap;
 
@@ -124,7 +124,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         }
 
         try( BrowserSession session2 = ts.newBrowserSession(admin)) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
@@ -147,7 +147,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, 0, 20);
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
 
         Map<String, Integer> lastEditMap;
 
@@ -187,7 +187,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         }
 
         try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             results = searcher2.all();
             lastEditMap = results.getFacet("Last Edited");
@@ -210,7 +210,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, 0, 20);
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
 
         Map<String, Integer> lastEditMap;
 
@@ -254,7 +254,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
         try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             results = searcher2.all();
 

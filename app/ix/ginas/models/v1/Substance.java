@@ -198,7 +198,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 	@JSONEntity(title = "Approval ID", isReadOnly = true)
 	@Column(length = 10)
-	@Indexable(facet = true, suggest = true, name = "Approval ID", sortable=true)
+	@Indexable(suggest = true, name = "Approval ID", sortable=true)
 	public String approvalID;
 
 	// TODO in original schema, this field is missing its items: String
@@ -234,7 +234,6 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
 
 	public Substance() {
 		this(SubstanceClass.concept);
-
 	}
 
 	public Substance(SubstanceClass subcls) {

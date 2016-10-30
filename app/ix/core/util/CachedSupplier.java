@@ -23,7 +23,7 @@ public class CachedSupplier<T> implements Supplier<T>, Callable<T>{
 	 * Flag to signal all {{@link ix.core.util.CachedSupplier} instances
 	 * to regenerate from their suppliers on the next call.
 	 */
-	public static void resetCaches(){
+	public static void resetAllCaches(){
 		CachedSupplier.generatedVersion.incrementAndGet();
 	}
 

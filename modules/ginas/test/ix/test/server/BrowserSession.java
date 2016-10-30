@@ -170,8 +170,8 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         return url(url.toString()).get().get(timeout);
     }
 
-    public SubstanceSearcher newSubstanceSearcher() {
-        return new SubstanceSearcher(this);
+    public BrowserSubstanceSearcher newSubstanceSearcher() {
+        return new BrowserSubstanceSearcher(this);
     }
 
 

@@ -12,6 +12,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
+import ix.ginas.utils.GinasGlobal;
 
 /**
  * Created by katzelda on 4/12/16.
@@ -94,6 +97,23 @@ public class TestUtil {
     	}
     	return blist;
     	
+    }
+    
+    public static void waitForParam(String p){
+        CountDownLatch cdl = new CountDownLatch(1);
+        GinasGlobal.runWithRequestListener(()->{
+            System.out.println("WAITING FOR '" +p + "' PARAM");
+            try {
+                cdl.await();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }, r->{
+            if(r.getQueryString(p)!=null){
+                cdl.countDown();
+            }
+        });
     }
     
     

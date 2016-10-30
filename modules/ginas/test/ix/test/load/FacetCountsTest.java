@@ -14,7 +14,7 @@ import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 
 /**
  * Created by katzelda on 4/29/16.
@@ -29,7 +29,7 @@ public class FacetCountsTest extends AbstractGinasServerTest{
 
             SubstanceLoader loader = new SubstanceLoader(session);
 
-            SubstanceSearcher searcher = new SubstanceSearcher(session);
+            BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
 
             loader.loadJson(new File("test/testdumps/rep90_part1.ginas"));
 

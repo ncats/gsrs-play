@@ -5,11 +5,13 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
@@ -377,14 +379,12 @@ public class SearchResultContext {
      * @param adapter
      */
     public void setAdapter(BiFunction<SearchRequest, SearchResultContext, SearchResult> adapter){
-        System.out.println("Is this adapter even working?");
-    	if(this.adapter==DEFAULT_ADAPTER){
+        if(this.adapter==DEFAULT_ADAPTER){
     		this.adapter=adapter;
     	}
     }
     
     public SearchResult getAdapted(SearchRequest opt){
-    	System.out.println("Getting adapted at base");
     	return adapter.apply(opt, this);
     }
     

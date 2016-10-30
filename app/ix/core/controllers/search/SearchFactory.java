@@ -6,6 +6,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.Query;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -13,6 +16,7 @@ import ix.core.Experimental;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.ETag;
+import ix.core.plugins.IxCache;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchResult;
@@ -27,6 +31,7 @@ import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
 import ix.core.util.pojopointer.PojoPointer;
+import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Global;
 import ix.utils.Util;
 import play.Logger;
@@ -126,17 +131,23 @@ public class SearchFactory extends EntityFactory {
         return searchREST (null, q, top, skip, fdim);
     }
     
-    public static SearchResult search (Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+    private static SearchRequest getSearchRequest(Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
         SearchRequest req = new SearchRequest.Builder()
                 .top(top)
                 .skip(skip)
                 .fdim(fdim)
                 .kind(kind)
                 .withRequest(request()) // I don't like this, 
-                                        // I like being explicit
+                                        // I like being explicit,
+                                        // but it's ok for now
                 .query(q)
-                .build();               
-
+                .build();      
+        return req;
+    }
+    
+    
+    public static SearchResult search (Class<?> kind, String q, int top, int skip, int fdim) throws IOException {
+        SearchRequest req = getSearchRequest(kind,q,top,skip,fdim);
         SearchResult result = search(req);
         return result;
 
@@ -159,8 +170,8 @@ public class SearchFactory extends EntityFactory {
             result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
             									  //anything, but it's actually right,
                         						  //because the original request did the skipping.
-             									  //This mechanism should probably be worked out.
-                                                  //better
+             									  //This mechanism should probably be worked out
+                                                  //better, as it's not consistent.
             
             final ETag etag = new ETag.Builder()
             		.fromRequest(request())
@@ -188,26 +199,37 @@ public class SearchFactory extends EntityFactory {
     public static Result searchRESTFacets (Class<?> kind, String q, String facetField, int fdim, int fskip, String ffilter) {
       
         try {
-                            
-            System.out.println("Searching for:" + q);
-            SearchResult result = search(kind, q, Integer.MAX_VALUE, 0,fdim);
+             
+            SearchRequest sq = getSearchRequest(kind, q, Integer.MAX_VALUE, 0,fdim);
             
-            List<Key> keyResults = new ArrayList<Key>();
             
-            result.copyKeysTo(keyResults, 0, Integer.MAX_VALUE, true); 
+            String fkey = sq.getDefiningSetSha1() + "/" + "facet/" + facetField;
             
-            TermVectors vec=Play
+            TextIndexer indexer= Play
                     .application()
                     .plugin(TextIndexerPlugin.class)
-                    .getIndexer()
-                    .getTermVectorsFromKeys(kind, facetField, keyResults);
+                    .getIndexer();
+            
+            TermVectors vec = IxCache.getOrElse(indexer.lastModified(),fkey, TypedCallable.of(()->{
+                try{
+                    Query query=sq.extractFullFacetQuery(indexer.getQueryParser(), indexer.getFacetsConfig(),facetField);
+                    return indexer
+                        .getTermVectors(kind, facetField, (Filter)null,query);
+                }catch(Exception e){
+                    e.printStackTrace();
+                    throw e;
+                }
+            }, TermVectors.class));
+            
+            
             
             FacetMeta fm=vec.getFacet(fdim, fskip, ffilter, Global.getHost() + Controller.request().uri());       
             
             EntityMapper mapper = getEntityMapper ();
             return Java8Util.ok (mapper.valueToTree(fm));
         }catch (Exception ex) {
-            return badRequest (ex.getMessage());
+            ex.printStackTrace();
+            return RouteFactory._apiBadRequest(ex);
         }
     }
     
@@ -253,8 +275,7 @@ public class SearchFactory extends EntityFactory {
     
     //TODO: Needs evaluation
     public static Result getSearchResultContext (String key, int top, int skip, int fdim, String field) {
-        System.out.println("getting context:" + key);
-    	SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
+        SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
     	if(possibleContext!=null){
 	    	if (possibleContext.hasFullContext()) {
 	    		SearchResultContext ctx=possibleContext.getContext()
@@ -270,7 +291,6 @@ public class SearchFactory extends EntityFactory {
     
     @Experimental
     public static Result getSearchResultContextFacets(String key, String field) throws Exception {
-        System.out.println("getting context facets:" + key);
         SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
         
         if (possibleContext != null) {
@@ -280,24 +300,44 @@ public class SearchFactory extends EntityFactory {
             SearchResultContext context = possibleContext.getContext();
             
             
-            SearchOptions so = new SearchOptions.Builder()
+            SearchRequest sr = new SearchRequest.Builder()
                     .fdim(10)
-                    .fskip(0)
-                    .ffilter("")
                     .withParameters(Util.reduceParams(request().queryString(), 
-                                    "fdim", "fskip", "ffilter"))
+                                    "fdim", "fskip", "ffilter", "q", "facet", "sideway"))
                     .build();
             
-            Object first=context.getResults()
-                                .stream()
-                                .findFirst()
-                                .get();
+            String fkey = context.getKey() + "/facets/" + sr.getDefiningSetSha1() + "/" +field; 
             
-            TermVectors vec=Play
+            TextIndexer indexer= Play
                     .application()
                     .plugin(TextIndexerPlugin.class)
-                    .getIndexer()
-                    .getTermVectors(first.getClass(), field, context.getResultsAsList());
+                    .getIndexer();
+            
+            
+            TermVectors vec = IxCache.getOrElse(indexer.lastModified(), fkey, TypedCallable.of(()->{
+                //All of this only to get the "kind" filter needed
+                //TODO: Could be added to the search result context as a high-level field
+                
+                
+                Object first=context.getResults()
+                        .stream()
+                        .findFirst()
+                        .get();
+    
+                Class<Object> kind = (Class<Object>) EntityWrapper.of(first)
+                    .getEntityInfo()
+                    .getInherittedRootEntityInfo()
+                    .getEntityClass();
+                
+                
+                Query q=sr.extractFullFacetQuery(indexer.getQueryParser(), indexer.getFacetsConfig(), field);
+                
+                return indexer
+                        .getTermVectors(kind, field, (List<Object>)context.getResultsAsList(),q);
+                
+            }, TermVectors.class));
+            
+            SearchOptions so =sr.getOptions();
             
             FacetMeta fm=vec.getFacet(so.getFdim(), so.getFskip(), so.getFfilter(), Global.getHost() + Controller.request().uri());       
             
@@ -312,7 +352,6 @@ public class SearchFactory extends EntityFactory {
     //TODO: Needs evaluation
     @Experimental
     public static Result getSearchResultContextResults(String key, int top, int skip, int fdim, String field) {
-        System.out.println("getting context:" + key);
         SearchResultContextOrSerialized possibleContext=SearchResultContext.getContextForKey(key);
     	
     	if (possibleContext != null) {
@@ -331,9 +370,8 @@ public class SearchFactory extends EntityFactory {
 				    				.skip(skip)
 				    				.fdim(fdim)
 				    				.withParameters(Util.reduceParams(request().queryString(), 
-				    				                "facet"))
+				    				                "facet", "sideway"))
 				    				.build();
-    		
     		
     		
     		SearchResult results = ctx.getAdapted(so);
@@ -361,8 +399,6 @@ public class SearchFactory extends EntityFactory {
     				.total(results.getCount())
     				.sha1(Util.sha1(ctx.getKey()))
     				.build();
-    		
-    		
     		
             etag.save(); //Always save?
             

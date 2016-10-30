@@ -459,7 +459,7 @@ public class GinasTestServer extends ExternalResource{
     
 
     private void initializeControllers() {
-    	CachedSupplier.resetCaches();
+    	CachedSupplier.resetAllCaches();
     	CachedSup.resetAllCaches();
     }
 

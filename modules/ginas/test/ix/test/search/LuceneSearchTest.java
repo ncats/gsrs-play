@@ -33,7 +33,7 @@ import ix.test.server.RestSession;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
 import ix.test.server.SubstanceReIndexer;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 
 public class LuceneSearchTest extends AbstractGinasServerTest {
 
@@ -41,7 +41,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 	BrowserSession browserSession;
 	User u;
 	SubstanceAPI api;
-	SubstanceSearcher searcher;
+	BrowserSubstanceSearcher searcher;
 
 	@Before
 	public void setup() {
@@ -49,7 +49,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 		session = ts.newRestSession(u);
 		browserSession = ts.newBrowserSession(u);
 		api = new SubstanceAPI(session);
-		searcher= new SubstanceSearcher(browserSession);
+		searcher= new BrowserSubstanceSearcher(browserSession);
 	}
 	
 	

@@ -23,7 +23,7 @@ import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 import ix.test.util.TestUtil;
 import ix.utils.Util;
 /**
@@ -53,7 +53,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     public static void runRepTests(BrowserSession session) throws IOException, AssertionError{
     	
     	
-    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	SearchResult all = searcher.all();
         assertEquals(90, all.numberOfResults());
        
@@ -65,7 +65,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     
     
     private void substructureSearchShouldWait(BrowserSession session) throws IOException, AssertionError{
-    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	searcher.setSearchOrder("Name Count");
     	SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
     	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
@@ -84,18 +84,18 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     }
     
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
-    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
     	SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
     	assertTrue("6th page on substructure search should have 2 entries", resultsLater.getUuids().size()==2);
     }
     private void substructureHighlightingShouldShowOnLastPage(BrowserSession session) throws IOException, AssertionError{
-    	SubstanceSearcher searcher = new SubstanceSearcher(session);
+    	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	
     	
     	SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
-    	Set<String> img_urls= SubstanceSearcher.getStructureImagesFrom(lastResults);
+    	Set<String> img_urls= BrowserSubstanceSearcher.getStructureImagesFrom(lastResults);
     	assertEquals(1,img_urls.size());
     	RestSession rs=ts.newRestSession(session.getUser());
     	
@@ -245,7 +245,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     @Test  
     public void noDataLoadedShouldReturnZeroResults() throws IOException {
 
-        SubstanceSearcher searcher = new SubstanceSearcher(ts.notLoggedInBrowserSession());
+        BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(ts.notLoggedInBrowserSession());
 
         SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
@@ -279,7 +279,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
         ts.start();
         try(BrowserSession session = ts.newBrowserSession(admin)){
 
-            SubstanceSearcher searcher = new SubstanceSearcher(session);
+            BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
 
             SearchResult results = searcher.substructure("C1=CC=CC=C1");
 

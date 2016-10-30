@@ -383,9 +383,7 @@ public class LazyList<N,T> implements List<T>{
 			return (LazyList<N,T>)collection;
 		}else{
 			LazyList<N,T> ll = new LazyList<N,T>(on);
-			for(T t : collection){
-				ll.add(t);
-			}
+			ll.addAll(collection);
 			return ll;
 		}
 	}
@@ -393,5 +391,6 @@ public class LazyList<N,T> implements List<T>{
 	public void addAll(LazyList<N,T> lazylist){
 		this._internalList.addAll(lazylist._internalList);
 	}
+	
 	
 }
