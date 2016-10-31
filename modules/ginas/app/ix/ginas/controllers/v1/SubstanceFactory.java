@@ -597,12 +597,13 @@ public class SubstanceFactory extends EntityFactory {
     }
     
     private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
-        context.setAdapter((so, ctx) -> {
+        context.setAdapter((srequest, ctx) -> {
             try {
-                SearchResult sr = App.getResultFor(ctx, so);
+                SearchResult sr = App.getResultFor(ctx, srequest);
+                
                 List<Substance> rlist = new ArrayList<Substance>();
                 
-                sr.copyTo(rlist, so.getOptions().getSkip(), so.getOptions().getTop(), true); // synchronous
+                sr.copyTo(rlist, srequest.getOptions().getSkip(), srequest.getOptions().getTop(), true); // synchronous
                 for (Substance s : rlist) {
                     s.setMatchContextFromID(ctx.getId());
                 }

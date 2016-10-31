@@ -385,7 +385,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             }
             
             JsonNode jsn = req.get()
-                    .get(4*REST_TIMEOUT)
+                    .get(REST_TIMEOUT)
                     .asJson();
             return searcher.resultsFromFirstResultNode(jsn, ""); //No search result key for text from rest
         }

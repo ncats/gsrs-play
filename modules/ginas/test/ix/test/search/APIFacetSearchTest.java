@@ -7,14 +7,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +25,7 @@ import ix.ginas.utils.GinasGlobal;
 import ix.test.builder.AbstractSubstanceBuilder;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.performance.LoadRecordPerformanceTest;
+import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
 import ix.test.server.RestSubstanceSearcher;
@@ -354,6 +353,35 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
                                 .getFilteredFacet(bucketCodeValues[0])
                                 .getFacetMap(),
                      facetedResult.getFacetResult(bucketCodeSystem).getFacetMap()
+                    );
+        
+    }
+    
+    @Test
+    public void facetCountsUpdatedOnSidewaysStructureAndTextSearch() throws IOException{
+        RestSubstanceSearcher rsearch= new RestSubstanceSearcher(session);
+        
+        RestSearchResult baseResult = (RestSearchResult) rsearch.substructure("C");
+        
+        Integer expectedAmount= baseResult.getFacetResult(bucketCodeSystem)
+                                          .getFacetCountForValue(bucketCodeValues[0]);
+        
+        //TestUtil.waitForParam("ok");
+        
+        
+        RestSearchResult subQueryResult = (RestSearchResult) baseResult.getRefiningSearcher()
+                        .setQuery(new SimpleQueryBuilder().where()
+                                .globalMatchesExact(bucketCodeValues[0])
+                                .build())
+                        .submit();
+        
+        assertEquals(expectedAmount, subQueryResult.getTotal());
+        
+        assertEquals(
+                    baseResult.getFacetResult(bucketCodeSystem)
+                                .getFilteredFacet(bucketCodeValues[0])
+                                .getFacetMap(),
+                     subQueryResult.getFacetResult(bucketCodeSystem).getFacetMap()
                     );
         
     }

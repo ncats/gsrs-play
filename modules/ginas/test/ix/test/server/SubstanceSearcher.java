@@ -213,8 +213,6 @@ public interface SubstanceSearcher {
         public boolean value(){
             return bprop;
         }
-        
-        
     }
     
     

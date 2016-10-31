@@ -9,6 +9,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalField;
 import java.time.temporal.WeekFields;
 import java.util.*;
@@ -866,17 +867,37 @@ public class GinasApp extends App {
 //        long start = TimeUtil.toMillis(midnightThisMorning);
 //        long end = todayMillis;
 
+        //1 second in future
         long end = TimeUtil.toMillis(now) + 1000L;
+        
+        
+        LocalDateTime last = now;
 
         for(Map.Entry<String, Function<LocalDateTime, LocalDateTime>> entry : orderedMap.entrySet()){
             // add a single character prefix so as to keep the map sorted; the
             // decorator strips this out
             String name = leadingChar + entry.getKey();
-            LocalDateTime startDate = entry.getValue().apply(now);
             
+            
+            LocalDateTime startDate = entry.getValue().apply(now);
             long start = TimeUtil.toMillis(startDate);
+            
+            
+            //This is terrible, and I hate it, but this is a
+            //quick fix for the calander problem.
+            if(start>end){
+                startDate = entry.getValue().apply(last);
+                start = TimeUtil.toMillis(startDate);
+            }
+            
 
             long[] range = new long[]{start, end};
+            
+            
+            
+            if(end<start){
+                System.out.println("How is this possible?");
+            }
 
             for(SearchOptions.FacetLongRange facet : facetRanges){
                 facet.add(name, range);
@@ -884,6 +905,7 @@ public class GinasApp extends App {
 
             end = start;
             leadingChar++;
+            last=startDate;
         }
 
 
@@ -901,9 +923,18 @@ public class GinasApp extends App {
 
     public static void instrumentSubstanceSearchOptions(SearchOptions options, Map<String, String[]> params) {
 
-
+        //Note, this is not really the right terminology.
+        //durations of time are better than actual cal. references,
+        //as they don't behave quite as well, and may cause more confusion
+        //due to their non-overlapping nature. This makes it easier
+        //to have a bug, and harder for a user to understand.
+        
+        
         Map<String, Function<LocalDateTime, LocalDateTime>> map = new LinkedHashMap<>();
         map.put("Today", now -> LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT));
+        
+        
+        //
         map.put("This week", now -> {
             WeekFields weekFields = WeekFields.of(Locale.getDefault());
             TemporalField dayOfWeek = weekFields.dayOfWeek();
@@ -911,9 +942,12 @@ public class GinasApp extends App {
                     .with(dayOfWeek, 1);
         });
 
-        map.put("This month", now ->
-            LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
-                    .withDayOfMonth(1)
+        map.put("This month", now ->{
+            LocalDateTime ldt=LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+                         .withDayOfMonth(1);
+            
+            return ldt; 
+        }
         );
 
         map.put("Past 6 months", now ->
@@ -961,9 +995,14 @@ public class GinasApp extends App {
         try {
             long start = System.currentTimeMillis();
             SearchResult result = getOrElse(sha1, TypedCallable.of(() -> {
-                SearchOptions options = new SearchOptions(Substance.class, total, 0, FACET_DIM).parse(params);
-                instrumentSubstanceSearchOptions(options, params);
-                return cacheKey(getTextIndexer().search(options, q), sha1);
+                try{
+                    SearchOptions options = new SearchOptions(Substance.class, total, 0, FACET_DIM).parse(params);
+                    instrumentSubstanceSearchOptions(options, params);
+                    return cacheKey(getTextIndexer().search(options, q), sha1);
+                }catch(Exception e){
+                    e.printStackTrace();
+                    throw e;
+                }
             } , SearchResult.class));
             Logger.debug(sha1 + " => " + result);
 

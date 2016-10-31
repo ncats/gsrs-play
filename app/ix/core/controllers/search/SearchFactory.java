@@ -304,6 +304,7 @@ public class SearchFactory extends EntityFactory {
                     .fdim(10)
                     .withParameters(Util.reduceParams(request().queryString(), 
                                     "fdim", "fskip", "ffilter", "q", "facet", "sideway"))
+                    .query(request().getQueryString("q")) //TODO: Refactor this
                     .build();
             
             String fkey = context.getKey() + "/facets/" + sr.getDefiningSetSha1() + "/" +field; 
@@ -363,24 +364,26 @@ public class SearchFactory extends EntityFactory {
     		
     		EntityMapper em=EntityFactory.getEntityMapper();
     		
-    		//TODO: include facets and such by passing through
-    		//to search result as well.
-    		SearchRequest so = new SearchRequest.Builder()
+    		SearchRequest searchRequest = new SearchRequest.Builder()
 				    				.top(top)
 				    				.skip(skip)
 				    				.fdim(fdim)
 				    				.withParameters(Util.reduceParams(request().queryString(), 
-				    				                "facet", "sideway"))
+				    				        "facet", "sideway"))
+				    				.query(request().getQueryString("q")) //TODO: Refactor this
 				    				.build();
     		
     		
-    		SearchResult results = ctx.getAdapted(so);
+    		
+    		SearchResult results = ctx.getAdapted(searchRequest);
     		
     		PojoPointer pp = PojoPointer.fromUriPath(field);
     		
     		List<Object> resultSet = new ArrayList<Object>();
     		
-    		results.copyTo(resultSet, so.getOptions().getSkip(), so.getOptions().getTop(), true);
+    		SearchOptions so = searchRequest.getOptions();
+    		
+    		results.copyTo(resultSet, so.getSkip(), so.getTop(), true);
     		
     		
 
@@ -394,7 +397,7 @@ public class SearchFactory extends EntityFactory {
     		
     		final ETag etag = new ETag.Builder()
             		.fromRequest(request())
-            		.options(so.getOptions())
+            		.options(searchRequest.getOptions())
     				.count(count)
     				.total(results.getCount())
     				.sha1(Util.sha1(ctx.getKey()))
