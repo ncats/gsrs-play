@@ -1317,9 +1317,9 @@ public class EntityUtils {
 			return (this.versionField != null);
 		}
 
-		public Object getVersionFor(Object entity) {
+		public Object getVersionFor(Object entity){
+		    if(!this.hasVersion())return null;
 		    if(this.versionField==null)return null;
-		    
 		    return this.versionField.getValue(entity).orElse(null);
 		}
 
