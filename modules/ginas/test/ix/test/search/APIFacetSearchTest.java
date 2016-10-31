@@ -95,8 +95,8 @@ public class APIFacetSearchTest extends AbstractGinasClassServerTest{
         Stream<String> strings= Stream.iterate(0, i->i+1)
               .map(i->LoadRecordPerformanceTest.toAlphabet(i, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
         
-        Stream<String> smilesStructures= Stream.iterate(0, i->i+1)
-                .map(i->"C" + LoadRecordPerformanceTest.toAlphabet(i, "POCNS"));
+        Stream<String> smilesStructures= LoadRecordPerformanceTest.uniqueReversable("SPONC")
+                                            .map(s->"C" + s);
         
         Supplier<String> smilesPuller=StreamUtil.supplierFor(smilesStructures);
         Supplier<String> stringPuller=StreamUtil.supplierFor(strings);
