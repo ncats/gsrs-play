@@ -884,7 +884,7 @@ public class GinasApp extends App {
             
             
             //This is terrible, and I hate it, but this is a
-            //quick fix for the calander problem.
+            //quick fix for the calendar problem.
             if(start>end){
                 startDate = entry.getValue().apply(last);
                 start = TimeUtil.toMillis(startDate);
@@ -934,36 +934,42 @@ public class GinasApp extends App {
         map.put("Today", now -> LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT));
         
         
-        //
+        //(Last 7 days)
         map.put("This week", now -> {
-            WeekFields weekFields = WeekFields.of(Locale.getDefault());
-            TemporalField dayOfWeek = weekFields.dayOfWeek();
-            return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
-                    .with(dayOfWeek, 1);
+            return now.minusDays(7);
+//            TemporalField dayOfWeek = weekFields.dayOfWeek();
+//            return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+//                    .with(dayOfWeek, 1);
         });
 
+        //(Last 30 days)
         map.put("This month", now ->{
-            LocalDateTime ldt=LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
-                         .withDayOfMonth(1);
-            
-            return ldt; 
+            return now.minusDays(30);
+//            LocalDateTime ldt=LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+//                         .withDayOfMonth(1);
+//            return ldt; 
         }
         );
 
-        map.put("Past 6 months", now ->
-                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
-                        .minusMonths(6)
-        );
+        //(Last 6 months)
+        map.put("Past 6 months", now ->{
+            return now.minusMonths(6);
+//                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+//                        .minusMonths(6)
+        });
 
-        map.put("Past 1 year", now ->
-                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
-                        .minusYears(1)
-        );
+        //(Last 1 year)
+        map.put("Past 1 year", now ->{
+            return now.minusYears(1);
+//                return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+//                        .minusYears(1);
+        });
 
-        map.put("Past 2 years", now ->
-                LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
-                        .minusYears(2)
-        );
+        map.put("Past 2 years", now ->{
+            return now.minusYears(2);
+//            return LocalDateTime.of(now.toLocalDate(), LocalTime.MIDNIGHT)
+//                        .minusYears(2);
+        });
 
 
         instrumentSearchOptions(options, params, map);

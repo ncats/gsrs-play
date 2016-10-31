@@ -2092,13 +2092,12 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 			Logger.debug("[Range facet: \"" + flr.field + "\"");
 			
+			//
 			LongRange[] range = flr.range
 			                .entrySet()
-			                .stream()
-			                .map(Tuple::of)
+			                .stream().map(Tuple::of)
 			                .map(me ->new LongRange(me.k(), me.v()[0], true, me.v()[1], true))
-			                .collect(Collectors.toList())
-			                .toArray(new LongRange[0]);
+			                .toArray(i->new LongRange[i]);
 
 			Facets facets = new LongRangeFacetCounts(flr.field, fc, range);
 			FacetResult result = facets.getTopChildren(options.getFdim(), flr.field);
