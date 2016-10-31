@@ -104,6 +104,10 @@ public class GinasTestSuite extends Suite{
         File root = new File(new File(".").getAbsolutePath()).getParentFile().getParentFile().getParentFile();
         System.out.println("root dir = " + root.getAbsolutePath());
         for(Class c : suiteClasses){
+            //skip all abstract classes
+            if(Modifier.isAbstract(c.getModifiers())){
+                continue;
+            }
             String command = format.format(new Object[]{c.getCanonicalName()});
 
             List<String> args = ArgParser.parseArgs(command);
