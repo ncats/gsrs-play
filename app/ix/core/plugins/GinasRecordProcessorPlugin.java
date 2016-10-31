@@ -1,5 +1,22 @@
 package ix.core.plugins;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+
 import ix.core.UserFetcher;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
@@ -10,34 +27,20 @@ import ix.core.processing.RecordExtractor;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.core.util.BlockingSubmitExecutor;
-import ix.core.util.Filters;
+import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.FilteredPrintStream;
+import ix.core.util.Filters;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
-import ix.utils.TimeProfiler;
 import ix.utils.Util;
-
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
 import play.Application;
 import play.Logger;
-import play.Play;
 import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 
 public class GinasRecordProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
@@ -59,6 +62,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
     private static ObjectMapper om = new ObjectMapper();
 
     private static int MAX_EXTRACTION_QUEUE = 100;
+    
         
 
     private Set<ExecutorService> executorServices = new HashSet<>();
@@ -171,7 +175,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         public final V recordToPersist;
         public final ProcessingRecord rec;
         final K theRecord;
-        final boolean actuallyPersist = Play.application().configuration().getBoolean("ix.ginas.batch.persist",true); 
+        final CachedSupplier<Boolean> actuallyPersist = ConfigHelper.supplierOf("ix.ginas.batch.persist",true); 
 
         public TransformedRecord(V persistRecord, K record,
                                  ProcessingRecord rec) {
@@ -188,7 +192,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
             
 				try {
 					long start=TimeUtil.getCurrentTimeMillis();
-					if(actuallyPersist){
+					if(actuallyPersist.get()){
 						rec.job.getPersister().persist(this);
 					}
 					applyStatisticsChangeForJob(k, Statistics.CHANGE.ADD_PE_GOOD);
@@ -224,7 +228,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
         job.message="Job complete";
 
         job.update();
-        TimeProfiler.stopGlobalTime("full submit");
     }
 
         
@@ -239,14 +242,14 @@ public class GinasRecordProcessorPlugin extends Plugin {
     @Override
     public void onStart() {
         Config cfg = new Config();
-        if (play.Play.application().configuration()
-            .getBoolean("ix.ginas.hazelcast", false)) {
+        if (app.configuration()
+        	   .getBoolean("ix.ginas.hazelcast", false)) {
             HazelcastInstance instance = Hazelcast.newHazelcastInstance(cfg);
             jobCacheStatistics = instance.getMap("jobStatistics");
             queueStatistics= instance.getMap("queueStatistics");
         }
         
-        MAX_EXTRACTION_QUEUE=play.Play.application().configuration()
+        MAX_EXTRACTION_QUEUE=app.configuration()
                 .getInt("ix.ginas.maxrecordqueue", MAX_EXTRACTION_QUEUE);
 
 
@@ -429,19 +432,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
         protected abstract void doPersist(TransformedRecord tr);
     }
-        
-
-
-
-
-
+    
+    
     public interface PersistRecordWorkerFactory{
         PersistRecordWorker newWorkerFor(PayloadExtractedRecord prg);
     }
-
-
-
-
     
     public static Statistics getStatisticsForJob(String jobTerm){
         return jobCacheStatistics.get(jobTerm);

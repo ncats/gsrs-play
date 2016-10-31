@@ -47,7 +47,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
     @JsonIgnore
     public Long version;
     
-    public final Date created = TimeUtil.getCurrentDate();
+    public Date created;
     public Date lastEdited;
     public boolean deprecated;
 

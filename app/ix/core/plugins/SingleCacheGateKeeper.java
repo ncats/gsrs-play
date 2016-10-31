@@ -1,19 +1,18 @@
 package ix.core.plugins;
 
-import net.sf.ehcache.Cache;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import ix.utils.CallableUtil.TypedCallable;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * Created by katzelda on 5/19/16.
@@ -45,22 +44,22 @@ public class SingleCacheGateKeeper implements GateKeeper {
         evictableCache.removeAll();
     }
 
-    private <T> Callable<T> createRaw(Callable<T> delegate, String key){
+    private <T> TypedCallable<T> createRaw(TypedCallable<T> delegate, String key){
 
         return createRaw(delegate, key, 0);
     }
 
-    private <T> Callable<T> createRaw(Callable<T> delegate, String key, int seconds){
+    private <T> TypedCallable<T> createRaw(TypedCallable<T> delegate, String key, int seconds){
 
         return new CacheGeneratorWrapper<T>(delegate, key, key,seconds);
     }
 
-    private <T> Callable<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey){
+    private <T> TypedCallable<T> createKeyWrapper(TypedCallable<T> delegate, String key, String adaptedKey){
 
         return createKeyWrapper(delegate, key, adaptedKey, 0);
     }
 
-    private <T> Callable<T> createKeyWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds){
+    private <T> TypedCallable<T> createKeyWrapper(TypedCallable<T> delegate, String key, String adaptedKey, int seconds){
 
         return new CacheGeneratorWrapper<T>(delegate, key, adaptedKey,seconds);
     }
@@ -101,8 +100,8 @@ public class SingleCacheGateKeeper implements GateKeeper {
      * and puts it in the correct cache with the correct adapted key.
      * @param <T>
      */
-    private class CacheGeneratorWrapper<T> implements Callable<T>{
-       private final Callable<T> delegate;
+    private class CacheGeneratorWrapper<T> implements TypedCallable<T>{
+       private final TypedCallable<T> delegate;
        private final String key, adaptedKey;
 
        private final int seconds;
@@ -110,7 +109,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
 
 
 
-       private CacheGeneratorWrapper(Callable<T> delegate, String key, String adaptedKey, int seconds) {
+       private CacheGeneratorWrapper(TypedCallable<T> delegate, String key, String adaptedKey, int seconds) {
            this.delegate = delegate;
            this.key = key;
            this.adaptedKey = adaptedKey;
@@ -134,11 +133,11 @@ public class SingleCacheGateKeeper implements GateKeeper {
     }
 
     @Override
-    public <T> T getSinceOrElse(String key, long creationTime, Callable<T> generator) throws Exception{
+    public <T> T getSinceOrElse(String key, long creationTime, TypedCallable<T> generator) throws Exception{
         return getSinceOrElse(key, creationTime, generator, 0);
     }
     @Override
-    public <T> T getSinceOrElse(String key, long creationTime, Callable<T> generator, int seconds) throws Exception{
+    public <T> T getSinceOrElse(String key, long creationTime, TypedCallable<T> generator, int seconds) throws Exception{
       String adaptedKey = keyMaster.adaptKey(key);
         return getOrElseRaw(adaptedKey,
                 createKeyWrapper(generator, key, adaptedKey, seconds),
@@ -148,7 +147,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
 
 
 
-    private  <T> T getOrElseRaw(String key, Callable<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
+    private  <T> T getOrElseRaw(String key, TypedCallable<T> generator, Predicate<Element> regeneratePredicate) throws Exception{
         Element e = evictableCache.get(key);
 
 
@@ -170,7 +169,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
     }
 
     @Override
-    public <T> T getOrElseRaw(String key, Callable<T> generator, int seconds) throws Exception{
+    public <T> T getOrElseRaw(String key, TypedCallable<T> generator, int seconds) throws Exception{
        return getOrElseRaw(key,
                createRaw(generator,key, seconds),
                (e)->false);
@@ -199,7 +198,7 @@ public class SingleCacheGateKeeper implements GateKeeper {
     }
 
     @Override
-    public <T> T getOrElse(String key, Callable<T> generator, int seconds) throws Exception{
+    public <T> T getOrElse(String key, TypedCallable<T> generator, int seconds) throws Exception{
         String adaptedKey = keyMaster.adaptKey(key);
 
         return getOrElseRaw(adaptedKey,
@@ -263,12 +262,12 @@ public class SingleCacheGateKeeper implements GateKeeper {
     }
 
     @Override
-    public <T> T getOrElseRaw(String key, Callable<T> generator) throws Exception {
+    public <T> T getOrElseRaw(String key, TypedCallable<T> generator) throws Exception {
         return getOrElseRaw(key, generator, 0);
     }
 
     @Override
-    public <T> T getOrElse(String key, Callable<T> generator) throws Exception {
+    public <T> T getOrElse(String key, TypedCallable<T> generator) throws Exception {
         return getOrElse(key, generator, 0);
     }
 

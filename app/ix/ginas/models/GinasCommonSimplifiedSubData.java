@@ -59,7 +59,7 @@ public class GinasCommonSimplifiedSubData extends GinasCommonSubData implements 
 		}
 	 	
 	 	
-	 	@JsonIgnore
+	 	 @JsonIgnore
 	 	 @JsonSerialize(contentUsing = GroupSerializer.class)
 	     public Set<Group> getAccess(){
 	     	return super.getAccess();

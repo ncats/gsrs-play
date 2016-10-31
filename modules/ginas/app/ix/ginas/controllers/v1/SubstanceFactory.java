@@ -1,24 +1,44 @@
 package ix.ginas.controllers.v1;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.avaje.ebean.Expr;
-import com.avaje.ebean.Expression;
-import com.avaje.ebean.Query;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EditFactory;
+import ix.core.chem.StructureProcessor;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.search.SearchFactory;
+import ix.core.controllers.search.SearchRequest;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.models.UserProfile;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.ResultProcessor;
+import ix.core.search.SearchResult;
+import ix.core.search.SearchResultContext;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
+
+import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -35,10 +55,14 @@ import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
+import ix.ncats.controllers.App;
+import ix.ncats.controllers.App.SearcherTask;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
+import ix.utils.Util;
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -46,20 +70,11 @@ import play.mvc.Result;
 public class SubstanceFactory extends EntityFactory {
 	private static final String CODE_TYPE_PRIMARY = "PRIMARY";
 	private static final double SEQUENCE_IDENTITY_CUTOFF = 0.85;
-	static public Model.Finder<UUID, Substance> finder;
+	static public CachedSupplier<Model.Finder<UUID, Substance>> finder = Util.finderFor(UUID.class, Substance.class);
 
-	// Do we still need these?
+	// Do we still need this?
 	// Yes used in GinasApp
-	static public Model.Finder<UUID, ProteinSubstance> protfinder;
-
-	static {
-		init();
-	}
-
-	public static void init() {
-		finder = new Model.Finder(UUID.class, Substance.class);
-		protfinder = new Model.Finder(UUID.class, ProteinSubstance.class);
-	}
+	static public CachedSupplier<Model.Finder<UUID, ProteinSubstance>> protfinder=Util.finderFor(UUID.class, ProteinSubstance.class);
 
 	public static Substance getSubstance(String id) {
 		if (id == null)
@@ -77,46 +92,28 @@ public class SubstanceFactory extends EntityFactory {
 				return s;
 			}
 		}
-		
-		//TODO: make generic somewhere
-		// for instance, couldn't edit fetching happen even on 
-		// the EnityWrapper?
-		// It would be awesome if we could say something 
-		// on any given record like:
-		//	.getEdits()
-		//	.getVersion(int i)
-		// etc ...
-		//
-		// Instead, it's quite hodge-podge now
-		
-		List<Expression> kindExpressions=
-			Arrays.stream(Substance.getAllClasses())
-					.map(c -> Expr.eq("kind",c.getName()))
-					.collect(Collectors.toList());
-				
-		
-		Query<Edit> q = EditFactory.finder.where(andAll(Expr.eq("refid", id.toString()),
-												  orAll(kindExpressions.toArray(new Expression[0])),
-												  		Expr.eq("version", version), 
-												  		Expr.isNull("path")));
-		Edit e=q.findUnique(); //AH!
-		try{
-			//Good idea? Maybe, Maybe not.
-			return (Substance) EntityUtils.getEntityInfoFor(e.kind).fromJson(e.oldValue);
-		}catch(Exception e1){
-			e1.printStackTrace();
-		}
-
-		return null;
-
+		return EntityWrapper.of(s)
+				.getEdits()
+				.stream()
+				.filter(e->(version.equals(e.version))) //version -1 is the right thing
+				.findFirst()
+				.map(e->{
+					try{
+						return (Substance) EntityUtils
+							.getEntityInfoFor(e.kind)
+							.fromJsonNode(e.getOldValue().rawJson());
+					}catch(Exception ex){
+						throw new IllegalArgumentException(ex);
+					}
+				}).orElse(null);
 	}
 
 	public static Substance getSubstance(UUID uuid) {
-		return getEntity(uuid, finder);
+		return getEntity(uuid, finder.get());
 	}
 
 	public static Result get(UUID id, String select) {
-		return get(id, select, finder);
+		return get(id, select, finder.get());
 	}
 
 	public static Substance getFullSubstance(SubstanceReference subRef) {
@@ -132,7 +129,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub) {
 		List<Substance> sublist = new ArrayList<Substance>();
-		sublist = finder.where()
+		sublist = finder.get().where()
 				.and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refuuid",
 						altSub.getOrGenerateUUID().toString()),
 				com.avaje.ebean.Expr.eq("relationships.type", Substance.ALTERNATE_SUBSTANCE_REL)).findList();
@@ -178,7 +175,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Substance getSubstanceByApprovalID(String approvalID) {
-		List<Substance> list = finder.where().ieq("approvalID", approvalID).findList();
+		List<Substance> list = finder.get().where().ieq("approvalID", approvalID).findList();
 		if (list != null && list.size() > 0) {
 			return list.get(0);
 		}
@@ -186,7 +183,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static String getMostRecentCode(String codeSystem, String like) {
-		List<Substance> subs = finder.where()
+		List<Substance> subs = finder.get().where()
 				.and(com.avaje.ebean.Expr.like("codes.code", like),
 						com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem))
 				.orderBy("codes.code").setMaxRows(1).findList();
@@ -208,18 +205,18 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static List<Substance> getSubstances(int top, int skip, String filter) {
-		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder);
+		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder.get());
 		return substances;
 	}
 
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactName(int top, int skip, String name) {
-		return finder.where().eq("names.name", name).findList();
+		return finder.get().where().eq("names.name", name).findList();
 	}
 
 	// TODO: Doesn't support top/skip
 	public static List<Substance> getSubstancesWithExactCode(int top, int skip, String code, String codeSystem) {
-		return finder.where(andAll(
+		return finder.get().where(Util.andAll(
 				 com.avaje.ebean.Expr.eq("codes.code", code),
 				 com.avaje.ebean.Expr.eq("codes.codeSystem", codeSystem),
 				 com.avaje.ebean.Expr.eq("codes.type", CODE_TYPE_PRIMARY)
@@ -229,7 +226,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	public static Integer getCount() {
 		try {
-			return getCount(finder);
+			return getCount(finder.get());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -237,15 +234,20 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result count() {
-		return count(finder);
+		return count(finder.get());
 	}
 
+	
+	public static Result stream(String field, int top, int skip){
+		return stream(field, top, skip, finder.get());
+	}
+	
 	public static Result page(int top, int skip) {
 		return page(top, skip, null);
 	}
 
 	public static Result page(int top, int skip, String filter) {
-		return page(top, skip, filter, finder);
+		return page(top, skip, filter, finder.get());
 	}
 
 	public static Result edits(UUID uuid) {
@@ -253,11 +255,11 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result getUUID(UUID uuid, String expand) {
-		return get(uuid, expand, finder);
+		return get(uuid, expand, finder.get());
 	}
 
 	public static Result field(UUID uuid, String path) {
-		return field(uuid, path, finder);
+		return field(uuid, path, finder.get());
 	}
 
 	public static Result create() {
@@ -267,7 +269,7 @@ public class SubstanceFactory extends EntityFactory {
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator
 				.NEW_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().markFailed());
 		
-		return create(subClass, finder, sv);
+		return create(subClass, finder.get(), sv);
 	}
 
 	public static Result validate() {
@@ -275,11 +277,11 @@ public class SubstanceFactory extends EntityFactory {
 		Class subClass = getClassFromJson(value);
 		DefaultSubstanceValidator sv = new DefaultSubstanceValidator(
 				GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
-		return validate(subClass, finder, sv);
+		return validate(subClass, finder.get(), sv);
 	}
 
 	public static Result delete(UUID uuid) {
-		return delete(uuid, finder);
+		return delete(uuid, finder.get());
 	}
 
 	public static Class<? extends Substance> getClassFromJson(JsonNode json) {
@@ -349,8 +351,8 @@ public class SubstanceFactory extends EntityFactory {
 		// if(true)return ok("###");
 		try {
 			JsonNode value = request().body().asJson();
-			Class subClass = getClassFromJson(value);
-			return update(uuid, field, subClass, finder, new GinasV1ProblemHandler(), sv);
+			Class<? extends Substance> subClass = getClassFromJson(value);
+			return update(uuid, field, subClass, finder.get(), new GinasV1ProblemHandler(), sv);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -363,7 +365,7 @@ public class SubstanceFactory extends EntityFactory {
 		// System.out.println("Dupe chack");
 		String hash = cs.structure.getLychiv4Hash();
 		List<Substance> dupeList = new ArrayList<Substance>();
-		dupeList = finder.where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+		dupeList = finder.get().where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
 		return dupeList;
 	}
 	
@@ -380,7 +382,7 @@ public class SubstanceFactory extends EntityFactory {
 			int i = 0;
 			while (re.hasMoreElements()) {
 				SequenceIndexer.Result r = re.nextElement();
-				List<Substance> proteins = SubstanceFactory.finder.where().eq("protein.subunits.uuid", r.id).findList();
+				List<Substance> proteins = SubstanceFactory.finder.get().where().eq("protein.subunits.uuid", r.id).findList();
 				if (proteins != null && !proteins.isEmpty()) {
 
 					for (Substance s : proteins) {
@@ -441,7 +443,7 @@ public class SubstanceFactory extends EntityFactory {
 		}
 
 		try {
-			Substance s = finder.byId(UUID.fromString(name));
+			Substance s = finder.get().byId(UUID.fromString(name));
 			if (s != null) {
 				List<Substance> retlist = new ArrayList<Substance>();
 				retlist.add(s);
@@ -453,15 +455,15 @@ public class SubstanceFactory extends EntityFactory {
 
 		List<Substance> values = new ArrayList<Substance>();
 		if (name.length() == 8) { // might be uuid
-			values = finder.where().istartsWith("uuid", name).findList();
+			values = finder.get().where().istartsWith("uuid", name).findList();
 		}
 
 		if (values.isEmpty()) {
-			values = finder.where().ieq("approvalID", name).findList();
+			values = finder.get().where().ieq("approvalID", name).findList();
 			if (values.isEmpty()) {
-				values = finder.where().ieq("names.name", name).findList();
+				values = finder.get().where().ieq("names.name", name).findList();
 				if (values.isEmpty()) // last resort..
-					values = finder.where().ieq("codes.code", name).findList();
+					values = finder.get().where().ieq("codes.code", name).findList();
 			}
 		}
 
@@ -518,4 +520,181 @@ public class SubstanceFactory extends EntityFactory {
 	public static List<Edit> getEdits(UUID uuid) {
 		return getEdits(uuid, Substance.getAllClasses());
 	}
+	
+	public static Result structureSearch(String q, 
+										 String type, 
+										 double cutoff, 
+										 int top, 
+										 int skip, 
+										 int fdim,
+										 String field) throws Exception{
+		SearchResultContext context;
+		
+		if(type.toLowerCase().startsWith("sub")){
+			context = App.substructure(q, 
+					/*min=*/ 1, 
+					new StructureSearchResultProcessor())
+					.getFocused(top, skip, fdim, field);
+		}else if(type.toLowerCase().startsWith("sim")){
+			context = App.similarity(q, 
+					cutoff,
+					/*min=*/ 1, 
+					new StructureSearchResultProcessor())
+					.getFocused(top, skip, fdim, field);
+		}else if(type.toLowerCase().startsWith("fle")){
+		    //I don't like this section of the code
+		    
+		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    //NEEDS CLEANUP
+		    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
+                                                                             // standardize
+            String hash = struc2.getLychiv3Hash();
+            SearchRequest request = new SearchRequest.Builder()
+                   .kind(Substance.class)
+                   .fdim(fdim)
+                   .query(hash)
+                   .top(Integer.MAX_VALUE)
+                   .build()
+                   ;
+            TextSearchTask task = new TextSearchTask(request);
+            context = App.search(task, task.getProcessor());
+            
+            
+		}else if(type.toLowerCase().startsWith("exa")){
+		    //I don't like this section of the code
+            
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //NEEDS CLEANUP
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            Structure struc2 = StructureProcessor.instrument(q, null, true); // don't
+                                                                             // standardize
+            String hash = "root_structure_properties_term:" + struc2.getLychiv4Hash();
+            SearchRequest request = new SearchRequest.Builder()
+                   .kind(Substance.class)
+                   .fdim(fdim)
+                   .query(hash)
+                   .top(Integer.MAX_VALUE)
+                   .build()
+                   ;
+            TextSearchTask task = new TextSearchTask(request);
+            context = App.search(task, task.getProcessor());
+        }else{
+			throw new UnsupportedOperationException("Unsupported search type:" + type);
+		}
+		
+        return detailedSearch(context);
+	}
+	
+	
+    public static Result sequenceSearch(String q, CutoffType type, double cutoff, int top, int skip, int fdim,
+            String field) throws Exception {
+        SearchResultContext context;
+        context =App.sequence(q, cutoff,type, 1, new ix.ginas.controllers.GinasApp.GinasSequenceResultProcessor())
+                    .getFocused(top, skip, fdim, field);
+        
+        return detailedSearch(context);
+    }
+    
+    private static Result detailedSearch(SearchResultContext context) throws InterruptedException, ExecutionException{
+        context.setAdapter((srequest, ctx) -> {
+            try {
+                SearchResult sr = App.getResultFor(ctx, srequest);
+                
+                List<Substance> rlist = new ArrayList<Substance>();
+                
+                sr.copyTo(rlist, srequest.getOptions().getSkip(), srequest.getOptions().getTop(), true); // synchronous
+                for (Substance s : rlist) {
+                    s.setMatchContextFromID(ctx.getId());
+                }
+                return sr;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Error fetching search result", e);
+            }
+        });
+
+        String s = play.mvc.Controller.request().getQueryString("sync");
+
+        if ("true".equals(s) || "".equals(s)) {
+            try {
+                context.getDeterminedFuture().get(1, TimeUnit.MINUTES);
+                return redirect(context.getResultCall());
+            } catch (TimeoutException e) {
+                Logger.warn("Structure search timed out!", e);
+            }
+        }
+        return Java8Util.ok(EntityFactory.getEntityMapper().valueToTree(context));
+    }
+
+    private static class TextSearchTask implements SearcherTask{
+
+        private SearchRequest request;
+        private String key;
+        
+        
+        public TextSearchTask(SearchRequest request){
+            this.request=request;
+            String q = request.getQuery();
+            request.getOptions().asQueryParams();
+            key=Util.sha1("search" + q, request.getOptions().asQueryParams(), 
+                                        "kind",
+                                        "filter",
+                                        "facet",
+                                        "order", 
+                                        "fdim");
+        }
+        @Override
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public void search(ResultProcessor processor) throws Exception {
+            //do nothing. Nothing needs to be processed
+        }
+
+        @Override
+        public long getLastUpdatedTime() {
+            return Play.application().plugin(TextIndexerPlugin.class).getIndexer().lastModified();
+        }
+        
+        
+        public ResultProcessor getProcessor(){
+            return new SearchResultWrappingResultProcessor(this.request);
+        }
+    }
+    
+    private static class SearchResultWrappingResultProcessor implements ResultProcessor<Object, Object>{
+        private CachedSupplier<SearchResultContext> result;
+        
+        public SearchResultWrappingResultProcessor(SearchRequest request){
+            result=CachedSupplier.ofCallable(()->{
+                return new SearchResultContext(SearchFactory.search(request)); 
+            });
+        }
+        @Override
+        public Stream map(Object result) {
+               throw new UnsupportedOperationException(this.getClass() + " doesn't support mapping");
+        }
+
+        @Override
+        public SearchResultContext getContext() {
+                return result.get();
+        }
+
+        @Override
+        public void setUnadaptedResults(Iterator results) {
+            throw new UnsupportedOperationException(this.getClass() + " doesn't support setting an iterator");            
+        }
+
+        @Override
+        public Iterator getUnadaptedResults() {
+            throw new UnsupportedOperationException(this.getClass() + " doesn't support getting an iterator");
+        }
+        
+    }
+    
+    
+    
 }

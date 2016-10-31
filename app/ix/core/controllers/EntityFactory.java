@@ -1,28 +1,26 @@
 package ix.core.controllers;
 
+import static ix.core.search.ArgumentAdapter.doNothing;
+import static ix.core.search.ArgumentAdapter.ofInteger;
+import static ix.core.search.ArgumentAdapter.ofList;
+import static ix.core.search.ArgumentAdapter.ofSingleString;
+
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Stack;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.Expression;
@@ -37,14 +35,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.DefaultValidator;
 import ix.core.ExceptionValidationMessage;
-import ix.core.IgnoredModel;
-import ix.core.SingleParent;
 import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
@@ -52,12 +47,14 @@ import ix.core.adapters.InxightTransaction;
 import ix.core.models.BeanViews;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
-import ix.core.models.ForceUpdatableModel;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.ArgumentAdapter;
 import ix.core.search.text.TextIndexer;
+import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
-import ix.utils.Global;
+import ix.core.util.pojopointer.PojoPointer;
 import ix.utils.Util;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
@@ -67,30 +64,21 @@ import play.db.ebean.Model;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
-import play.mvc.Results;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
 
-
-    static TextIndexerPlugin textIndexerPlugin;
+    static CachedSupplier<TextIndexerPlugin> textIndexerPlugin = CachedSupplier.of(()->{
+    	return Play.application().plugin(TextIndexerPlugin.class);
+    });
     
-    static{
-    	init();
-    }
-    
-    
-    public static void init(){
-        textIndexerPlugin=Play.application().plugin(TextIndexerPlugin.class);
-    }
-
     static TextIndexer getTextIndexer(){
-        return textIndexerPlugin.getIndexer();
+        return textIndexerPlugin.get().getIndexer();
     }
 
     
     
-    public static class FetchOptions {
+    public static class FetchOptions implements RequestOptions{
         public int top=10;
         public int skip=0;
         public String filter;
@@ -98,48 +86,34 @@ public class EntityFactory extends Controller {
         public List<String> order = new ArrayList<String>();
         public List<String> select = new ArrayList<String>();
         
-        Map<String, Consumer<String[]>> parsers = new HashMap<>();
-        
-        {
-        	Function<String, Optional<Integer>> intParser = s->{
-        		try{
-        			return Optional.of(Integer.parseInt(s));
-        		}catch(NumberFormatException ex){
-        			Logger.trace("Bogus integer value: "+s, ex);
-        		}
-        		return Optional.empty();
-        	};
-        	parsers.put("order", a->{
-        		order=Arrays.stream(a).collect(Collectors.toList());
-        	});
-        	parsers.put("expand", a->{
-        		order=Arrays.stream(a).collect(Collectors.toList());
-        	});
-        	parsers.put("select", a->{
-        		order=Arrays.stream(a).collect(Collectors.toList());
-        	});
-        	parsers.put("top", a->intParser.apply(a[0]).ifPresent(i->top=i));
-        	parsers.put("skip", a->intParser.apply(a[0]).ifPresent(i->skip=i));
-        	parsers.put("filter", a->{
-        		filter=a[0];
-        	});
-        }
+        private CachedSupplier<Map<String, ArgumentAdapter>> argumentAdapters = CachedSupplier.of(()->{
+         	return Stream.of(
+    		     	ofList("order", a->order=a, ()->order),
+    		     	ofList("expand", a->expand=a, ()->expand),
+    		     	ofList("select", a->select=a, ()->select),
+    		     	ofInteger("top", a->top=a, ()->top),
+    		     	ofInteger("skip", a->skip=a, ()->skip),
+    		     	ofSingleString("filter", a->filter=a, ()->filter)
+         	)
+         	.collect(Collectors.toMap(a->a.name(), a->a));
+         });
 
         
         // only in the context of a request
-                        
         public FetchOptions () {
         	Map<String,String[]> vals= new HashMap<>();
-        	try{ //TODO: Use explicit check, rather than exception handling
+        	
+        	//TODO: Use explicit check, rather than exception handling
+        	try{ 
         		vals=request().queryString();
         	}catch(Exception e){
         		//e.printStackTrace();
         	}
-        	
-        	vals.forEach((param,value)->
-    		parsers.getOrDefault(param.toLowerCase(), s->Logger.trace("unknown option:" + param))
-    				.accept(value)
-        			);
+        	vals.forEach((param,value)->{
+        		argumentAdapters.get()
+        			.getOrDefault(param,doNothing())
+        			.accept(value);
+        	});
         }
         
         public FetchOptions (int top, int skip, String filter) {
@@ -189,6 +163,20 @@ public class EntityFactory extends Controller {
                 +",expand="+expand.size()
                 +",filter="+filter+",order="+order.size()+"}";
         }
+
+		@Override
+		public int getTop() {
+			return top;
+		}
+
+		@Override
+		public int getSkip() {
+			return skip;
+		}
+		@Override
+		public String getFilter() {
+			return filter;
+		}
     }
 
     protected static <K,T> List<T> all (Model.Finder<K, T> finder) {
@@ -308,89 +296,103 @@ public class EntityFactory extends Controller {
             throw new RuntimeException ("Can't execute query "+ex.getMessage());
         }
     }
+    
+    protected static <K,T> Result page (int top, int skip, String filter,
+            final Model.Finder<K, T> finder) {
+    	return page(top,skip,filter, finder, l->l);
+    }
+    
+    
 
     protected static <K,T> Result page (int top, int skip, String filter,
-                                        final Model.Finder<K, T> finder) {
+                                        final Model.Finder<K, T> finder, 
+                                        Function<List<T>, Object> streamop) {
 
         //if (select != null) finder.select(select);
         final FetchOptions options = new FetchOptions (top, skip, filter);
         List<T> results = filter (options, finder);
         
+        Object returnObj = streamop.apply(results);
         
-        final ETag etag = new ETag ();
-        etag.top = options.top;
-        etag.skip = options.skip;
-        etag.query = canonicalizeQuery (request ());
-        etag.count = results.size();
-        etag.uri = Global.getHost()+request().uri();
-        etag.path = request().path();
-        // only include query parameters that fundamentally alters the
-        // number of results
-        etag.sha1 = Util.sha1(request(), "filter");
-        etag.method = request().method();
-        etag.filter = options.filter;
+        
+//        final ETag etag = new ETag ();
+//        etag.top = options.top;
+//        etag.skip = options.skip;
+//        etag.query = Util.canonicalizeQuery (request ());
+//        etag.count = results.size();
+//        etag.uri = Global.getHost()+request().uri();
+//        etag.path = request().path();
+//        // only include query parameters that fundamentally alters the
+//        // number of results
+//        etag.sha1 = Util.sha1(request(), "filter");
+//        etag.method = request().method();
+//        etag.filter = options.filter;
+        
+        final ETag etag = new ETag.Builder()
+        		.fromRequest(request())
+				.options(options)
+				.count(results.size())
+				.sha1OfRequest("filter")
+				.build();
+        
 
-        if (options.filter == null)
+        if (options.filter == null){
             etag.total = finder.findRowCount();
-        else {
-            Model.Finder<Long, ETag> eFinder = 
-                new Model.Finder(Long.class, ETag.class);
-            List<ETag> etags = eFinder
-                .where().eq("sha1", etag.sha1)
-                .orderBy("modified desc").setMaxRows(1).findList();
-
-            if (!etags.isEmpty()) {
-                ETag e = etags.iterator().next();
-                Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
-                etag.total = e.total;
-            }
+        }else if(etag.count<etag.top){ //if count returned is less than top,
+        								   //it's done
+        	etag.total = etag.skip + etag.count;
+        }else{
+        	EntityWrapper.of(etag)
+			.getFinder()
+			.where()
+			.eq("sha1", etag.sha1)
+	        .orderBy("modified desc")
+	        .setMaxRows(1)
+	        .findList()
+	        .stream().findFirst()
+	        .ifPresent(e->{
+	        	Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
+	        	etag.total = e.total;
+	        });
+        	
+        	
         }
         
         try{
             etag.save();
-        }
-        catch (Exception e) {
+        }catch (Exception e) {
             Logger.error
                 ("Error saving etag. This sometimes happens on empty DB");
         }
 
+        etag.setContent(returnObj);
+        
         ObjectMapper mapper = getEntityMapper ();
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
-        obj.put("content", mapper.valueToTree(results));
 
         return ok (obj);
     }
 
-    static String canonicalizeQuery (Http.Request req) {
-        Map<String, String[]> queries = req.queryString();
-        Set<String> keys = new TreeSet<String>(queries.keySet());
-        StringBuilder q = new StringBuilder ();
-        for (String key : keys) {
-            if (q.length() > 0)
-                q.append('&');
-
-            String[] values = queries.get(key);
-            Arrays.sort(values);
-            if (values != null && values.length > 0) {
-                q.append(key+"="+values[0]);
-            }
-        }
-        return q.toString();
-    }
+    /**
+	 * @deprecated Use {@link Util#canonicalizeQuery(Http.Request)} instead
+	 */
+	static String canonicalizeQuery (Http.Request req) {
+		return Util.canonicalizeQuery(req);
+	}
 
     
     
     static public EntityMapper getEntityMapper () {
-        List<Class> views = new ArrayList<Class>();
+        List<Class<?>> views = new ArrayList<Class<?>>();
 
         Map<String, String[]> params = request().queryString();
         String[] args = params.get("view");
         if (args != null) {
         	
-            Class[] classes = BeanViews.class.getClasses();
+            Class<?>[] classes = BeanViews.class.getClasses();
             for (String a : args) {
                 int matches = 0;
-                for (Class c : classes) {
+                for (Class<?> c : classes) {
                     if (a.equalsIgnoreCase(c.getSimpleName())) {
                         views.add(c);
                         ++matches;
@@ -403,8 +405,6 @@ public class EntityFactory extends Controller {
         }else {
             views.add(BeanViews.Compact.class);
         }
-        EntityMapper em=new EntityMapper (views.toArray(new Class[0]));
-        
         
         return new EntityMapper (views.toArray(new Class[0]));
     }
@@ -470,8 +470,7 @@ public class EntityFactory extends Controller {
         if (cons.isEmpty()) {
             Logger.warn("Can't filter by example because JSON"
                         +" doesn't contain any primitive field!");
-        }
-        else {
+        }else {
             results = finder.where()
                 .allEq(cons)
                 //.orderBy("id asc")
@@ -482,6 +481,16 @@ public class EntityFactory extends Controller {
         return results;
     }
 
+    protected static <K,T> Result stream (String field, int top, int skip , Model.Finder<K, T> finder) {
+    	PojoPointer pojoPoint = PojoPointer.fromUriPath(field);
+        return page (top,skip,null, finder, l->{
+        	return EntityWrapper.of(l)
+        						.at(pojoPoint)
+        						.get()
+        						.getValue();
+        });
+    }
+    
     protected static <K,T> Result get (K id, Model.Finder<K, T> finder) {
         return get (id, null, finder);
     }
@@ -548,234 +557,62 @@ public class EntityFactory extends Controller {
         FutureRowCount<T> count = finder.findFutureRowCount();
         return count.get();
     }
-    
-//    protected static Integer getCount () 
-//            throws InterruptedException, ExecutionException {
-//            //FutureRowCount<T> count = finder.findFutureRowCount();
-//            return 0;
-//    }
 
     protected static <K,T> Result field (K id, String field, 
                                          Model.Finder<K, T> finder) {
-        try {
             Logger.debug("id: "+id+" field: "+field);
             T inst = finder.byId(id);
             //query.setId(id).findUnique();
             if (inst == null) {
-                return notFound ("Bad request: "+request().uri());
+                throw new IllegalArgumentException("Bad request: "+request().uri());
             }
             return field (inst, field);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ex.getMessage());
-        }
+    }
+    
+    public static class ErrorResponse{
+    	public int status;
+    	public String message;
+    	public ErrorResponse(int status, String message){
+    		this.status=status;
+    		this.message=message;
+    	}
     }
     
     
     //Prime canididate for rewrite with EntityWrapper
-    protected static <T> Result field (Object inst, String field) {
-        /*
-        Query<T> query = finder.query();
-        int depth = 0;
-        if (field != null) {
-            StringBuilder path = new StringBuilder ();
-            for (String p : field.split("[\\(0-9\\)\\/]+")) {
-                if (path.length() > 0) path.append('.');
-                path.append(p);
-                ++depth;
-            }
-            if (depth > 1) {
-                Logger.debug
-                    (request().uri()+": field="+field+" => path="+path);
-                query = query.fetch(path.toString());
-            }
-        }
-        */
-        String[] paths = field.split("/");
-        Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
-        StringBuilder uri = new StringBuilder ();
-
-        boolean isRaw = paths[paths.length-1].charAt(0) == '$'; 
-        int i = 0;
-        Field f = null;
-        Object obj = inst;
-        
-        for (; i < paths.length && obj != null; ++i) {
-            String pname = paths[i]; // field name
-            Integer pindex = null; // field index if field is a list
-            
-            Matcher matcher = regex.matcher(pname);
-            if (matcher.find()) {
-                pname = matcher.group(1);
-                pindex = Integer.parseInt(matcher.group(2));
-            }
-
-            if (pname.charAt(0) == '$')
-                pname = pname.substring(1);
-
-            Logger.debug("obj="+obj+"["+obj.getClass()
-                         +"] pname="+pname+" pindex="+pindex);
-            
-            try {
-                uri.append("/"+paths[i]);
-
-                /**
-                 * TODO: check for JsonProperty annotation!
-                 */                
-                f = obj.getClass().getField(pname);
-                String fname = f.getName();
-                Class<?> ftype = f.getType();
-                
-                Object val = f.get(obj);
-                if (val != null && pindex != null) {
-                    if (ftype.isArray()) {
-                        if (pindex >= Array.getLength(val)) {
-                            return badRequest
-                                (uri+": array index out of bound "
-                                 +pindex);
-                        }
-                        val = Array.get(val, pindex);
-                    }
-                    else if (Collection.class.isAssignableFrom(ftype)) {
-                        if (pindex >= ((Collection)val).size() || pindex < 0)
-                            return badRequest
-                                (uri+": list index out bound "+pindex);
-                        val = ((Collection)val).toArray()[pindex];
-                    }
-                }
-                obj = val;
-            }
-            catch (NoSuchFieldException ex) {
-                // now try method..
-                String method = "get"+pname;
-                /*
-                Logger.debug("Can't lookup field \""+pname
-                             +"\"; trying method \""+method+"\"...");
-                */
-                Object old = obj;
-                /**
-                 * TODO: check for JsonProperty annotation!
-                 */
-                for (Method m : obj.getClass().getMethods()) {
-                    if (m.getName().equalsIgnoreCase(method)) {
-                        try {
-                            Object val = m.invoke(obj);
-                            if (val != null && pindex != null) {
-                                Class<?> ftype = val.getClass();
-                                if (ftype.isArray()) {
-                                    if (pindex >= Array.getLength(val)) {
-                                        return badRequest
-                                            (uri+": array index out of bound "
-                                             +pindex);
-                                    }
-                                    val = Array.get(val, pindex);
-                                }
-                                else if (Collection.class
-                                         .isAssignableFrom(ftype)) {
-                                    if (pindex >= ((Collection)val).size()
-                                        || pindex < 0)
-                                        return badRequest
-                                            (uri+": list index out bound "
-                                             +pindex);
-                                    Iterator it = ((Collection)val).iterator();
-                                    for (int k = 0; it.hasNext() 
-                                             && k < pindex; ++k)
-                                        ;
-                                    val = it.next();
-                                }
-                            }
-                            obj = val;
-                            break; // don't 
-                        }
-                        catch (Exception e) {
-                        }
-                    }
-                }
-
-                if (old == obj) {
-                    // last resort.. serialize as json and iterate from there
-                    ObjectMapper mapper = new ObjectMapper ();
-                    JsonNode node = mapper.valueToTree(obj).get(pname);
-                    if (node == null) {
-                        Logger.error(uri.toString()
-                                     +": No method or field matching "
-                                     +"requested path");
-                        return notFound ("Invalid field path: "+uri);
-                    }
-                    
-                    while (++i < paths.length && node != null) {
-                        if (pindex != null) {
-                            node = node.isArray() && pindex < node.size()
-                                ? node.get(pindex) : null;
-                        }
-                        else {
-                            uri.append("/"+paths[i]);
-                            pname = paths[i]; // field name
-                            pindex = null; // field index if field is a list
-            
-                            matcher = regex.matcher(pname);
-                            if (matcher.find()) {
-                                pname = matcher.group(1);
-                                pindex = Integer.parseInt(matcher.group(2));
-                            }
-                            
-                            if (pname.charAt(0) == '$')
-                                pname = pname.substring(1);
-                            
-                            node = node.get(pname);
-                            if (node == null) {
-                                Logger.error(uri.toString()
-                                             +": No method or field matching "
-                                             +"requested path");
-                                return notFound ("Invalid field path: "+uri);
-                            }
-                        }
-                    }
-
-                    if (node == null)
-                        return isRaw ? noContent () : ok ("null");
-                    
-                    return isRaw && !node.isContainerNode()
-                        ? ok (node.asText()) : Java8Util.ok (node);
-                }
-            }
-            catch (Exception ex) {
-                Logger.error(uri.toString(), ex);
-                return notFound ("Invalid field path: "+uri);
-            }
-        }
-        
-        if (i < paths.length) {
-            return badRequest ("Path "+uri+" is null");
-        }
-
-        if (obj == null) {
-            return isRaw ? noContent () : ok ("null");
-        }
-        
-        ObjectMapper mapper = getEntityMapper ();
-        JsonNode node = mapper.valueToTree(obj);
-        if (isRaw && !node.isContainerNode()) {
-            // make sure the content type is properly set if the
-            // value is a json string
-            JsonDeserialize json = (JsonDeserialize)
-                f.getAnnotation(JsonDeserialize.class);
-            Results.Status status = ok (node.asText());
-            if (json != null && json.as() == JsonNode.class) {
-                status.as("application/json");
-            }
-            
-            return status;
-        }
-        return Java8Util.ok (node);
+    protected static Result field (Object inst, String field) {
+    	//return fieldOld(inst,field);
+    	try{
+	    	Object o = atFieldSerialized(inst,PojoPointer.fromUriPath(field));
+	    	if(o instanceof JsonNode){
+	        	return ok((JsonNode)o);
+	        }else{
+	        	return ok(o.toString());
+	        }
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw e;
+    	}
     }
+    
+    
+    protected static Object atFieldSerialized (Object inst, PojoPointer cpath) {
+    	EntityWrapper ew=EntityWrapper.of(inst).at(cpath).get();
+    	if(cpath.isLeafRaw()){
+    		return ew.getRawValue();
+    	}else{
+    		return ew.toFullJsonNode();
+    	}
+    }
+    
+    
     @Transactional
     protected static <K, T extends Model> 
-        Result create (Class<T> type, Model.Finder<K, T> finder) {
-    	
+        Result create (Class<T> type, Model.Finder<K, T> finder) {	
     	return create(type,finder,null);
     }
+    
+    
     @Transactional
     protected static <K, T extends Model> 
         Result create (Class<T> type, Model.Finder<K, T> finder, Validator<T> validator) {
@@ -789,6 +626,7 @@ public class EntityFactory extends Controller {
                                 && content.indexOf("text/json") < 0)) {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
+        
         try {
             EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
             mapper.addHandler(new DeserializationProblemHandler () {
@@ -802,8 +640,7 @@ public class EntityFactory extends Controller {
                                         +") while parsing "
                                         +bean+"; skipping it..");
                             parser.skipChildren();
-                        }
-                        catch (IOException ex) {
+                        }catch (IOException ex) {
                             ex.printStackTrace();
                             Logger.error
                                 ("Unable to handle unknown property!", ex);
@@ -823,6 +660,8 @@ public class EntityFactory extends Controller {
 		            	return badRequest(validationResponse(vr));
 		            }
             }
+           
+            
             inst.save();
             tx.commit();
             Status s=created (mapper.toJson(inst));
@@ -895,7 +734,7 @@ public class EntityFactory extends Controller {
             
             
             //gets the value (if exists)
-            Optional<EntityWrapper> oldValue = getCurrentValue(inst);
+            Optional<EntityWrapper<?>> oldValue = getCurrentValue(inst);
             
             ValidationResponse<T> vr;
             
@@ -958,23 +797,21 @@ public class EntityFactory extends Controller {
 
 
     //And all expressions together
-    //TODO: There has got to be a cleaner way
+	//TODO: There has got to be a cleaner way
+	/**
+	 * @deprecated Use {@link Util#andAll(Expression...)} instead
+	 */
 	public static Expression andAll(Expression... e) {
-		Expression retExpr = e[0];
-		for (Expression expr : e) {
-			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
-		}
-		return retExpr;
+		return Util.andAll(e);
 	}
 
     //Or all expressions together
-    //TODO: There has got to be a cleaner way
+	//TODO: There has got to be a cleaner way
+	/**
+	 * @deprecated Use {@link Util#orAll(Expression...)} instead
+	 */
 	public static Expression orAll(Expression... e) {
-		Expression retExpr = e[0];
-		for (Expression expr : e) {
-			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
-		}
-		return retExpr;
+		return Util.orAll(e);
 	}
     
 	protected static Result edits(Object id, Class<?>... cls) {
@@ -994,16 +831,17 @@ public class EntityFactory extends Controller {
 		
 		Expression[] kindExpressions = Arrays.stream(cls)
 				.map(c -> Expr.eq("kind", c.getName()))
-				.collect(Collectors.toList())
-				.toArray(new Expression[0]);
+				.toArray(i->new Expression[i]);
 
 		Query<Edit> q = EditFactory.finder
-				.where(andAll(
+				.where(Util.andAll(
 						Expr.eq("refid", id.toString()),
-						orAll(kindExpressions)
+						Util.orAll(kindExpressions)
 						));
 		
 		fe.applyToQuery(q);
+		
+		
 		List<Edit> tmpedits = q.findList();
 		if (tmpedits != null) {
 			edits.addAll(tmpedits);
@@ -1028,6 +866,8 @@ public class EntityFactory extends Controller {
                 return update (id,field,type,finder, null, null);
     }
     
+    
+    
     // This expects an update of the full record to be done using "/path/*"
     // or "/path/_"
     //
@@ -1038,14 +878,27 @@ public class EntityFactory extends Controller {
     // never being determined via ebean. Need to disable it.
     //
     @Deprecated
-    protected static <K, T extends Model> Result update 
-        (K id, String field, Class<T> type, Model.Finder<K, T> finder,
+    protected static <K, T extends Model, V extends T> Result update 
+        (K id, String field, Class<V> type, Model.Finder<K, T> finder,
          DeserializationProblemHandler deserializationHandler, Validator<T> validator) {
+    	
     	return forbidden ("Update field methods not available at this time");
-    } // update ()
+    }
     
-    public interface EntityCallable{
-        void call(Object m, String path);
+    
+    @Deprecated
+    protected static <T> Result updateField 
+        (Key k, PojoPointer path, JsonNode replace, Validator<T> validator) {
+    	
+//    	EntityWrapper ewOld = k.fetch().get();
+//    	
+//    	Object o = atFieldSerialized(ewOld.getValue(),path);
+//    	if(o instanceof JsonNode){
+//    		
+//    	}
+    	
+    	
+    	return forbidden ("Update field methods not available at this time");
     }
     
     
@@ -1063,6 +916,8 @@ public class EntityFactory extends Controller {
         JsonNode json = request().body().asJson();
         return updateEntity (json, type, new DefaultValidator());
     }
+    
+    
     protected static Result updateEntity (JsonNode json, Class<?> type) {
         return updateEntity (json, type, new DefaultValidator());
     }
@@ -1124,37 +979,25 @@ public class EntityFactory extends Controller {
         
     	while(!changeStack.isEmpty()){
     		Object v=changeStack.pop();
-    		if(!EntityWrapper.of(v).isIgnoredModel()){
-        		if(v instanceof ForceUpdatableModel){ //TODO: Move to EntityInfo
-        			//System.out.println("Force update for:" + v);
-            		((ForceUpdatableModel)v).forceUpdate();
-            	}else if(v instanceof Model){
-            		//System.out.println("Regular update for:" + v);
-            		((Model)v).update();
-            	}else{
-            		//System.out.println("Nothing to do for:" + v);
-            	}
+    		EntityWrapper ewchanged=EntityWrapper.of(v);
+    		if(!ewchanged.isIgnoredModel()){
+    			ewchanged.update();
     		}
     	}
 
     	//explicitly delete deleted things
-    	
     	//This should ONLY delete objects which "belong"
     	//to something. That is, have a @SingleParent annotation
     	//inside
     	
-    	// TODO: Move to EntityInfo
-    	for(Object toDelete : removed){
-    		if(toDelete !=null){
-        		if(!toDelete.getClass().isAnnotationPresent(IgnoredModel.class) &&
-        			toDelete.getClass().isAnnotationPresent(SingleParent.class)){
-        			if(toDelete instanceof Model){
-        				Logger.warn("deleting:" + ((Model)toDelete));
-        				((Model)toDelete).delete();
-        			}
-            	}
-    		}
-    	}
+    	removed.stream()
+    		   .filter(Objects::nonNull)
+    		   .map(o->EntityWrapper.of(o))
+    		   .filter(ew->ew.isExplicitDeletable())
+    		   .forEach(ew->{
+    			   Logger.warn("deleting:" + ((Model)ew.getValue()));
+    			   ew.delete();
+    		   });
     }
 
     /*
@@ -1162,7 +1005,7 @@ public class EntityFactory extends Controller {
      * then we just need to store the old JSON, and the new.
      * 
      */
-    protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
+    protected static <T> Result updateEntity (JsonNode json, Class<? extends T> type, Validator<T> validator ) {
         
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
     	
@@ -1178,17 +1021,18 @@ public class EntityFactory extends Controller {
             		.orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
             
             //validation response holder
-            ValidationResponse[] vr = new ValidationResponse[]{null};
+            List<ValidationResponse<T>> vrlist = new ArrayList<>();
             
             
             //Do we still need this???
             //EditHistory eh = new EditHistory (json.toString());
             
-            EntityWrapper savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
-            	EntityWrapper og= EntityWrapper.of(ov);
+            EntityWrapper<T> savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
+            	EntityWrapper<T> og= EntityWrapper.of((T)ov);
 
-                vr[0]=validator.validate(newValue,og.getValue());
-                if(!vr[0].isValid()){
+            	ValidationResponse<T> vrr=validator.validate((T)newValue,(T)og.getValue());
+            	vrlist.add(vrr);
+                if(!vrr.isValid()){
                 	return Optional.empty();
                 }
                 EntityWrapper entityThatWasSaved=null;
@@ -1205,19 +1049,19 @@ public class EntityFactory extends Controller {
 	                
 	                EntityPersistAdapter.getInstance().deepreindex(entityThatWasSaved);
                 }catch(Exception e){
-                	
-                	e.printStackTrace();
+                	Logger.error("Error updating entity", e);
                 }finally{
                 	tx.end();
                 }
                 return Optional.ofNullable(entityThatWasSaved);
             });
             
-            if(vr[0]==null){
+            
+            if(vrlist.isEmpty()){
             	return badRequest("Validation Response could not be generated");
-            }else if(!vr[0].isValid()){
-	            return badRequest(prepareValidationResponse(vr[0],false));
-	        }else if(savedVersion == null){ //Couldn't happen for some reason
+            }else if(!vrlist.get(0).isValid()){
+	            return badRequest(prepareValidationResponse(vrlist.get(0),false));
+	        }else if(savedVersion == null){ 				 //Couldn't happen for some reason
 	        	return internalServerError ("unsuccessful"); //TODO: make this follow a better contract
 	        }
             
@@ -1225,21 +1069,21 @@ public class EntityFactory extends Controller {
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             ex.printStackTrace();
-            
-            //Ebean.rollbackTransaction();
             return internalServerError (ex.getMessage());
         }
     }
 
     
+    
+    
     // This could become a nice method.
-    private static Optional<EntityWrapper> getCurrentValue(Object value){
+    //TODO: move to EntityWrapper
+    private static Optional<EntityWrapper<?>> getCurrentValue(Object value){
     	if(EntityWrapper.of(value).hasKey()){
     		return EntityWrapper.of(value).getKey().fetch();
     	}else{
     		return Optional.empty();
     	}
-    	
     }
     
 }

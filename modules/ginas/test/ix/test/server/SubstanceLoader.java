@@ -62,7 +62,7 @@ public class SubstanceLoader {
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
-            WebRequest request = session.newGetRequest(monitorUrl);
+            WebRequest request = session.newGetRequest(monitorUrl).get();
             HtmlPage monitorPage = session.submit(request);
 
            // System.out.println(monitorPage.asXml());
@@ -71,7 +71,6 @@ public class SubstanceLoader {
             if(matcher.find()){
                 status = matcher.group(1);
             }
-            System.out.println(status);
 
         }while(!"COMPLETE".equals(status));
     }
@@ -95,7 +94,6 @@ public class SubstanceLoader {
         }
 
         url = matcher.group(1);
-        System.out.println("monitor URL = " + url);
         return url;
     }
 

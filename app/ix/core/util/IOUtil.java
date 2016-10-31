@@ -47,7 +47,6 @@ public final class IOUtil {
                  File dirfile=dir.toFile();
                  try{
                      System.out.println("Visiting  :" + dirfile.getAbsolutePath());
-                     //Files.delete(dir);
                  }catch(Exception e){
                      System.out.println("unable to visit:" + e.getMessage());
                  }

@@ -1,15 +1,16 @@
 package ix.test.server;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import com.fasterxml.jackson.databind.JsonNode;
+
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
-
-import java.util.Objects;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Created by katzelda on 3/17/16.
@@ -34,8 +35,8 @@ public class RestSession extends AbstractSession<Void>{
     private String key;
     private String token;
     private long deadtime=0;
-
     private AUTH_TYPE authType = AUTH_TYPE.NONE;
+    Map<String, String> extraHeaders = new HashMap<>();
 
     public RestSession(int port) {
         super(port);
@@ -50,12 +51,14 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public WSRequestHolder createRequestHolder(String path){
-        return url(constructUrlFor(path));
+        return urlWithLogin(constructUrlFor(path));
     }
-    public WSRequestHolder url(String url){
+    public WSRequestHolder urlWithLogin(String url){
         WSRequestHolder ws = WS.url(url);
-
-
+        return withLogin(ws);
+    }
+    public WSRequestHolder withLogin(WSRequestHolder ws){
+        
         if(isLoggedIn()) {
             switch (authType) {
                 case TOKEN:
@@ -75,7 +78,17 @@ public class RestSession extends AbstractSession<Void>{
                     break;
             }
         }
+        extraHeaders.forEach((k,v)->{
+            ws.setHeader(k, v);
+        });
         return ws;
+    }
+    
+    public void setAdditionalHeader(String key, String value){
+    	extraHeaders.put(key, value);
+    }
+    public void clearAdditionalHeaders(){
+    	extraHeaders.clear();
     }
 
     private void refreshTokenIfNeccesarry(){
@@ -116,7 +129,15 @@ public class RestSession extends AbstractSession<Void>{
 
     @Override
     public WSResponse get(String path) {
-        return url(constructUrlFor(path)).get().get(timeout);
+        return getRequest(path).get().get(timeout);
+    }
+    
+    public WSRequestHolder getRequest(String path){
+        return urlWithLogin(constructUrlFor(path));
+    }
+    
+    public JsonNode getAsJson(WSRequestHolder hold){
+        return extractJSON(hold.get().get(timeout));
     }
 
     public JsonNode getAsJson(String path){
@@ -137,7 +158,7 @@ public class RestSession extends AbstractSession<Void>{
     }
 
     public JsonNode urlJSON(String fullUrl){
-        return extractJSON(url(fullUrl).get().get(timeout));
+        return extractJSON(urlWithLogin(fullUrl).get().get(timeout));
     }
 
     public ControlledVocab getControlledVocabulary(){

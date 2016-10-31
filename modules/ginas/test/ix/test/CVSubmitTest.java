@@ -1,4 +1,6 @@
 package ix.test;
+import static org.junit.Assert.*;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -21,7 +23,6 @@ public class CVSubmitTest extends AbstractGinasServerTest {
         @Before
         public void login(){
             session = ts.newRestSession(ts.getFakeUser1());
-
             api = new SubstanceAPI(session);
         }
 
@@ -33,9 +34,10 @@ public class CVSubmitTest extends AbstractGinasServerTest {
         @Test
         public void testAPIValidateCVSubmit() throws Exception {
         	ObjectMapper om = new ObjectMapper();
-        	String raw="{\"domain\":\"ADASDAS\",\"terms\":[]}";
+        	String domain ="ADASDAS";
+        	String raw="{\"domain\":\""+domain+"\",\"terms\":[]}";
         	JsonNode newCD=om.readTree(raw);
             JsonNode jsonNode1 = api.submitCVDomainJson(newCD);
-            System.out.println(jsonNode1);
+            assertEquals(domain,jsonNode1.at("/domain").asText());
         }
     }

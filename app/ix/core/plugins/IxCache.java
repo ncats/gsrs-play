@@ -1,16 +1,19 @@
 package ix.core.plugins;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ix.core.search.SearchResultContext;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.Key;
+import ix.utils.CallableUtil.TypedCallable;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Statistics;
 import play.Application;
@@ -52,7 +55,7 @@ public class IxCache extends Plugin {
         int debugLevel = context.getDebugLevel();
         
         int maxElements = app.configuration()
-            .getInt(CACHE_MAX_ELEMENTS, DEFAULT_MAX_ELEMENTS);
+        		.getInt(CACHE_MAX_ELEMENTS, DEFAULT_MAX_ELEMENTS);
 
         int notEvictableMaxElements = app.configuration()
                 .getInt(CACHE_MAX_NOT_EVICTABLE_ELEMENTS, DEFAULT_MAX_ELEMENTS);
@@ -66,7 +69,7 @@ public class IxCache extends Plugin {
         GateKeeper gateKeeper = new GateKeeperFactory.Builder( maxElements, timeToLive, timeToIdle)
                 .debugLevel(debugLevel)
                 .useNonEvictableCache(notEvictableMaxElements,timeToLive,timeToIdle)
-                .cacheAdapter( new FileDbCache(context.cache(), "inMemCache"))
+                .cacheAdapter(new FileDbCache(context.cache(), "inMemCache"))
                 .build()
                 .create();
         _instance = new IxCache(gateKeeper);
@@ -101,7 +104,7 @@ public class IxCache extends Plugin {
     }
     
     
-    private static Object getRaw (String key) {
+    public static Object getRaw (String key) {
         checkInitialized();
         return _instance.gateKeeper.getRaw(key);
     }
@@ -112,7 +115,7 @@ public class IxCache extends Plugin {
      * apply generator if the evictableCache was created before epoch
      */
     public static <T> T getOrElse (long epoch,
-                                   String key, Callable<T> generator)
+                                   String key, TypedCallable<T> generator)
         throws Exception {
 
         checkInitialized();
@@ -121,13 +124,13 @@ public class IxCache extends Plugin {
 
     }
     
-    public static <T> T getOrElse (String key, Callable<T> generator)
+    public static <T> T getOrElse (String key, TypedCallable<T> generator)
         throws Exception {
     	return getOrElse(key,generator,0);
     }
     
     // mimic play.Cache 
-    public static <T> T getOrElse (String key, Callable<T> generator,
+    public static <T> T getOrElse (String key, TypedCallable<T> generator,
                                    int seconds) throws Exception {
         checkInitialized();
         return _instance.gateKeeper.getOrElse(key,  generator,seconds);
@@ -138,11 +141,11 @@ public class IxCache extends Plugin {
         _instance.gateKeeper.clear();
     }
     
-    public static <T> T getOrElseRaw (String key, Callable<T> generator,
+    public static <T> T getOrElseRaw (String key, TypedCallable<T> generator,
             int seconds) throws Exception {
 
         checkInitialized();
-        return _instance.gateKeeper.getOrElseRaw(key,  generator,seconds);
+        return _instance.gateKeeper.getOrElseRaw(key, generator, seconds);
 
 	}
 
@@ -207,7 +210,7 @@ public class IxCache extends Plugin {
 
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getOrElseTemp(String key, Callable<T> generator) throws Exception{
+	public static <T> T getOrElseTemp(String key, TypedCallable<T> generator) throws Exception{
 		Object o=getTemp(key);
 		if(o==null){
 			o=generator.call();
@@ -220,7 +223,7 @@ public class IxCache extends Plugin {
 	
 	public static Object getOrFetchTempRecord(Key k) throws Exception {
 		return getOrElseTemp(k.toString(), ()->{
-            Optional<EntityUtils.EntityWrapper> ret = k.fetch();
+            Optional<EntityUtils.EntityWrapper<?>> ret = k.fetch();
             if(ret.isPresent()){
                 return ret.get().getValue();
             }
@@ -259,6 +262,27 @@ public class IxCache extends Plugin {
 	public static void setTemp(String key, Object value) {
 		setRaw(key, value);
 	}
+	
+	public static void addToMatchingContext(SearchResultContext context, Key key, String prop, Object value){
+        Map<String,Object> additionalProps = IxCache.getMatchingContext(context, key);
+        if(additionalProps==null){
+            additionalProps=new HashMap<String,Object>();
+        }
+        additionalProps.put(prop, value);
+        setMatchingContext(context,key, additionalProps);
+    }
+	
+	public static void setMatchingContext(SearchResultContext context, Key key, Map<String,Object> matchingContext){
+	    IxCache.setTemp("MatchingContext/" + context.getId() + "/" + key.toString(), matchingContext);
+	}
+	
+	public static Map<String, Object> getMatchingContext(SearchResultContext context, Key key){
+        return (Map<String, Object>) getMatchingContextByContextID(context.getId(), key);
+    }
+	
+	public static Map<String, Object> getMatchingContextByContextID(String contextID, Key key){
+        return (Map<String, Object>) IxCache.getTemp("MatchingContext/" + contextID + "/" + key.toString());
+    }
 
 
 	/**
@@ -268,6 +292,7 @@ public class IxCache extends Plugin {
 	 * 
 	 */
 	public static void markChange() {
+		//System.err.println(Util.getExecutionPath());
 		_instance.notifyChange(System.currentTimeMillis());
 	}
 	
@@ -287,7 +312,14 @@ public class IxCache extends Plugin {
 	}
 	
 	public static boolean mightBeDirtySince(long t){
+		
 		return _instance.hasBeenNotifiedSince(t);
 	}
+	
+	public static IxCache getInstance(){
+		return _instance;
+	}
+	
+	
 	
 }

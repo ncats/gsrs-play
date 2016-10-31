@@ -57,7 +57,7 @@
         <div class = "row">
               <div class = "col-md-12">
 		  @for(subunit <- prot.protein.subunits) {
-		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
+		      @defining(GinasApp.getSeqAlignment(ctx, prot, subunit.uuid.toString)){ r =>
   		         @if(r != null) {
 			        <br>
 			        <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>

@@ -12,6 +12,7 @@ import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.search.SearchResult;
 import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.Facet;
+import ix.core.util.CachedSupplier;
 import ix.core.util.Java8Util;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
@@ -24,6 +25,7 @@ import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
+import ix.utils.CallableUtil.TypedCallable;
 import ix.utils.Util;
 
 import java.io.UnsupportedEncodingException;
@@ -33,7 +35,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import ix.ginas.utils.validation.ValidationUtils;
-
+import play.Application;
 import play.Logger;
 import play.Play;
 import play.data.DynamicForm;
@@ -45,33 +47,36 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasLoad extends App {
-	public static boolean OLD_LOAD;
-	public static boolean ALLOW_LOAD;
-	public static boolean ALLOW_REBUILD;
+	
+	public static CachedSupplier<LoadConfiguration> config = 
+				CachedSupplier.of(()->new LoadConfiguration(Play.application())); 
+	
+	public static class LoadConfiguration{
+		public boolean OLD_LOAD ;
+		public boolean ALLOW_LOAD;
+		public boolean ALLOW_REBUILD;
+		
+		public LoadConfiguration(Application app){
+			OLD_LOAD = app.configuration()
+					.getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
+			ALLOW_LOAD = app.configuration()
+					.getBoolean("ix.ginas.allowloading", true);
+			ALLOW_REBUILD = app.configuration()
+					.getBoolean("ix.ginas.allowindexrebuild", true);
+		}
+	}
+	
+	
 
 	public static final String[] ALL_FACETS = { "Job Status" };
 
-	static GinasRecordProcessorPlugin ginasRecordProcessorPlugin;
-	static PayloadPlugin payloadPlugin ;
-
-	static{
-		init();
-	}
-
-	public static void init(){
-		OLD_LOAD = Play.application().configuration()
-				.getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
-		ALLOW_LOAD = Play.application().configuration()
-				.getBoolean("ix.ginas.allowloading", true);
-		ALLOW_REBUILD = Play.application().configuration()
-				.getBoolean("ix.ginas.allowindexrebuild", true);
-
-		ginasRecordProcessorPlugin = Play
-				.application().plugin(GinasRecordProcessorPlugin.class);
-
-		payloadPlugin = Play.application().plugin(
-				PayloadPlugin.class);
-	}
+	static CachedSupplier<GinasRecordProcessorPlugin> ginasRecordProcessorPlugin = CachedSupplier.of(()->Play
+			.application().plugin(GinasRecordProcessorPlugin.class));
+	
+	static CachedSupplier<PayloadPlugin> payloadPlugin = CachedSupplier.of(()->Play.application().plugin(
+			PayloadPlugin.class));
+	
+	
 
 	public static Result error(int code, String mesg) {
 		return ok(ix.ginas.views.html.error.render(code, mesg));
@@ -108,7 +113,7 @@ public class GinasLoad extends App {
 
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result load() {
-		if (!ALLOW_LOAD) {
+		if (!GinasLoad.config.get().ALLOW_LOAD) {
 			return redirect(ix.ginas.controllers.routes.GinasFactory.index());
 		}
 		return ok(ix.ginas.views.html.admin.load.render());
@@ -116,7 +121,7 @@ public class GinasLoad extends App {
 
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result loadJSON() {
-		if (!ALLOW_LOAD) {
+		if (!GinasLoad.config.get().ALLOW_LOAD) {
 			return badRequest("Invalid request!");
 		}
 
@@ -133,13 +138,13 @@ public class GinasLoad extends App {
 				persister = ix.ginas.utils.GinasUtils.GinasSubstanceForceAuditPersister.class;
 			}
 			
-			Payload payload = payloadPlugin.parseMultiPart("file-name",
+			Payload payload = payloadPlugin.get().parseMultiPart("file-name",
 					request(), PayloadPersistType.TEMP);
 			switch (type) {
 				case "JSON":
 					Logger.info("JOS =" + type);
 					
-						String id = ginasRecordProcessorPlugin
+						String id = ginasRecordProcessorPlugin.get()
 								.submit(payload,
 										ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
 										persister).key;
@@ -174,13 +179,13 @@ public class GinasLoad extends App {
 		Logger.info("type =" + type);
 		Logger.info("name =" + nam);
 		try {
-			Payload payload = payloadPlugin.parseMultiPart("file-name",
+			Payload payload = payloadPlugin.get().parseMultiPart("file-name",
 					request(), PayloadPersistType.PERM);
 			if(payload!=null){
 				//Need something to persist payloads in the database as a blob
 				ObjectMapper om = new ObjectMapper();
 				JsonNode jsn= om.valueToTree(payload);
-				((com.fasterxml.jackson.databind.node.ObjectNode)jsn).put("url", payloadPlugin.getUrlForPayload(payload));
+				((com.fasterxml.jackson.databind.node.ObjectNode)jsn).put("url", payloadPlugin.get().getUrlForPayload(payload));
 				return ok(jsn);
 			}else{
 				throw new IllegalStateException("Failed to upload file. Was 'file-name' specified?");
@@ -221,7 +226,7 @@ public class GinasLoad extends App {
 
 		// return ok("test");
 
-		String id = ginasRecordProcessorPlugin.submit(sdpayload,
+		String id = ginasRecordProcessorPlugin.get().submit(sdpayload,
 				ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.class,
 				ix.ginas.utils.GinasUtils.GinasSubstancePersister.class).key;
 		return redirect(ix.ginas.controllers.routes.GinasLoad
@@ -269,7 +274,7 @@ public class GinasLoad extends App {
 			}
 			return createJobResult(result, rows, page);
 		} else {
-			return getOrElse(key, ()->{
+			return getOrElse(key, TypedCallable.of(()->{
 					Logger.debug("Cache missed: " + key);
 					TextIndexer.Facet[] facets = filter(
 							getFacets(ProcessingJob.class, 30), ALL_FACETS);
@@ -281,7 +286,7 @@ public class GinasLoad extends App {
 
 					return ok(ix.ginas.views.html.admin.jobs.render(page,
 							nrows, total, pages, decorate(facets), substances));
-			});
+			}, Result.class));
 		}
 	}
 
@@ -291,9 +296,9 @@ public class GinasLoad extends App {
 
 		List<ProcessingJob> jobs = new ArrayList<ProcessingJob>();
 		int[] pages = new int[0];
-		if (result.count() > 0) {
-			rows = Math.min(result.count(), Math.max(1, rows));
-			pages = paging(rows, page, result.count());
+		if (result.getCount() > 0) {
+			rows = Math.min(result.getCount(), Math.max(1, rows));
+			pages = paging(rows, page, result.getCount());
 			for (int i = (page - 1) * rows, j = 0; j < rows
 					&& i < result.size(); ++j, ++i) {
 				jobs.add((ProcessingJob) result.get(i));
@@ -301,7 +306,7 @@ public class GinasLoad extends App {
 		}
 
 		return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
-				result.count(), pages, decorate(facets), jobs));
+				result.getCount(), pages, decorate(facets), jobs));
 
 	}
 

@@ -20,12 +20,14 @@ import ix.ginas.models.v1.Substance;
 @MappedSuperclass
 public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	//@JsonIgnore
 	private EmbeddedKeywordList internalReferences = new EmbeddedKeywordList();
 	
-    
-    
-    
     public GinasCommonSubData () {
     }
     

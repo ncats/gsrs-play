@@ -76,8 +76,6 @@ public class CV {
                 }
             }
         }
-        
-        System.out.println("Couldn't find CV element:" + domain + "\t" + value);
         return value;
     }
 

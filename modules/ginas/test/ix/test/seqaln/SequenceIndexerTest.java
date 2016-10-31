@@ -20,6 +20,7 @@ import org.junit.runner.Description;
 
 import ix.AbstractGinasTest;
 import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.CachedSup;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import net.sf.ehcache.CacheManager;
 
@@ -46,12 +47,13 @@ public class SequenceIndexerTest extends AbstractGinasTest{
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder();
 
+    
     private SequenceIndexer indexer;
 
     @Before
     public void setUp() throws IOException{
         clearCache();
-        SequenceIndexer.init();
+        CachedSup.resetAllCaches();
 
         indexer = SequenceIndexer.open(tmpDir.newFolder());
     }
@@ -194,7 +196,7 @@ public class SequenceIndexerTest extends AbstractGinasTest{
         assertEquals( 1, alignment.iden, DELTA);
 
         SequenceIndexer.SEG expected = new  SequenceIndexer.SEG(0,seq.length(), 0, seq.length());
-        assertEquals(expected, alignment.segment);
+        assertEquals(expected, alignment.getSegment());
 
         assertFalse(results.hasMoreElements());
     }
@@ -227,7 +229,7 @@ public class SequenceIndexerTest extends AbstractGinasTest{
 
 
         SequenceIndexer.SEG expected = new  SequenceIndexer.SEG(0,seq.length(), 0, seq.length());
-        assertEquals(expected, alignment.segment);
+        assertEquals(expected, alignment.getSegment());
     }
 
     @Test
@@ -267,7 +269,7 @@ public class SequenceIndexerTest extends AbstractGinasTest{
     private Set<SequenceIndexer.SEG> getSegmentsFrom( SequenceIndexer.Result result) {
         Set<SequenceIndexer.SEG> set = new HashSet<>();
         for(SequenceIndexer.Alignment alignment : result.alignments){
-            set.add(alignment.segment);
+            set.add(alignment.getSegment());
         }
         return set;
     }

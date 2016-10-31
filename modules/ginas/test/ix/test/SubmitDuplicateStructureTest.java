@@ -44,8 +44,6 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
 @RunWith(Parameterized.class)
 public class SubmitDuplicateStructureTest extends AbstractGinasServerTest {
 
-
-
     @Parameterized.Parameters(name = "{0}")
     public static List<Object[]> getData(){
         List<Object[]> list = new ArrayList<>();

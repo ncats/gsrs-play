@@ -6,6 +6,7 @@ import static org.apache.lucene.document.Field.Store.YES;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -22,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
@@ -47,6 +49,8 @@ import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.util.Version;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -57,19 +61,69 @@ public class SequenceIndexer {
     static final Version LUCENE_VERSION = Version.LATEST;
 
     static CacheManager CACHE_MANAGER;
-    static Ehcache CACHE;
 
-    static {
-        init ();
+    /**
+     * A slightly slimmed down form of {@link CachedSupplier},
+     * only repeated here because the seqaln module 
+     * can't see the Util class.
+     * 
+     * @author peryeata
+     *
+     * @param <T>
+     */
+    public static class CachedSup<T> implements Supplier<T>{
+        private static AtomicLong generatedVersion= new AtomicLong();
+        private long generatedWith=-1;
+        private Supplier<T> sup;
+        private boolean wasRun=false;
+        private T local=null;
+
+
+
+        public CachedSup(Supplier<T> sup){
+            this.sup=sup;
+        }
+
+        public static <T> CachedSup<T> of(Supplier<T> sup) {
+            return new CachedSup<T>(sup);
+        }
+
+        @Override
+        public T get() {
+            if(wasRun && generatedWith==generatedVersion.get()){
+                return local;
+            }else{
+                local=sup.get();
+                wasRun=true;
+                generatedWith=generatedVersion.get();
+                return local;
+            }
+        }
+
+        public static void resetAllCaches(){
+            generatedVersion.incrementAndGet();
+        }
+
     }
-    public static enum CutoffType{
-    	LOCAL,
-    	GLOBAL,
-    	SUB
-    }
-    public static void init(){
+
+    static CachedSup<Ehcache> CACHE = CachedSup.of(()->{
         CACHE_MANAGER = CacheManager.getInstance();
-        CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+        return CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+    });
+
+    public static enum CutoffType{
+        LOCAL,
+        GLOBAL,
+        SUB;
+
+        public static CutoffType valueOfOrDefault(String s){
+            try{
+                CutoffType ct=CutoffType.valueOf(s);
+                return ct;
+            }catch(Exception e){
+                return GLOBAL;
+            }
+        }
     }
 
     static class HSP implements Comparable<HSP> {
@@ -98,9 +152,13 @@ public class SequenceIndexer {
         }
     }
 
-    public static class SEG implements Comparable<SEG> {
-        public int qi, qj;
-        public int ti, tj;
+    public static class SEG implements Comparable<SEG>, Serializable {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        private int qi, qj;
+        private int ti, tj;
 
         public SEG (int qi, int qj, int ti, int tj) {
             this.qi = qi;
@@ -112,7 +170,7 @@ public class SequenceIndexer {
         public boolean overlap (SEG seg) {
             return overlap (seg, 0);
         }
-        
+
         public boolean overlap (SEG seg, int gap) {
             /*
              * a_i ------ a_j
@@ -124,7 +182,7 @@ public class SequenceIndexer {
 
             return (Math.abs(qi - seg.qj) <= gap
                     && Math.abs(ti - seg.tj) <= gap)
-                || (Math.abs(seg.qi - qj) <= gap
+                    || (Math.abs(seg.qi - qj) <= gap
                     && Math.abs(seg.ti - tj) <= gap);
         }
 
@@ -171,8 +229,14 @@ public class SequenceIndexer {
         }
     }
 
-    public static class Alignment implements Comparable<Alignment> {
-        public final SEG segment; // coordinate of query
+    public static class Alignment implements Comparable<Alignment>, Serializable {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final SEG segment; // coordinate of query
         public final String query; // segment of query
         public final String target; // segment of sequence
         public final String alignment; // full alignment string
@@ -181,21 +245,26 @@ public class SequenceIndexer {
         public final double global;
         public final double sub;
 
+        @JsonIgnore
+        public SEG getSegment(){
+            return segment;
+        }
+
         BitSet bsq;
         BitSet bst;
-        
+
         Alignment (SEG segment,
-                   String query, 
-                   String target,
-                   String alignment, 
-                   int score, 
-                   double iden, 
-                   double global,
-                   double sub,
-                   BitSet qsites,
-                   BitSet tsites
-                   ) {
-        	this.segment = segment;
+                String query, 
+                String target,
+                String alignment, 
+                int score, 
+                double iden, 
+                double global,
+                double sub,
+                BitSet qsites,
+                BitSet tsites
+                ) {
+            this.segment = segment;
             this.query = query;
             this.target = target;
             this.alignment = alignment;
@@ -206,7 +275,7 @@ public class SequenceIndexer {
             bsq=qsites;
             bst=tsites;
         }
-        
+
         public int compareTo (Alignment aln) {
             int d = aln.score - score;
             if (d == 0) {
@@ -215,36 +284,40 @@ public class SequenceIndexer {
             }
             if (d == 0)
                 d = segment.qi - aln.segment.qi;
-            
+
             return d;
         }
 
         public String toString () {
             return "[score] "+score+"\n[identity] "
-                +String.format("%1$.3f", iden)
-                +"\n[alignment]\n"+alignment;
+                    +String.format("%1$.3f", iden)
+                    +"\n[alignment]\n"+alignment;
         }
-        
+
         /**
          * Returns a bitset of the indexes where a match was
          * found for the target sequence
          * @return Bitset of the matching target sites. 1-indexed.
          */
         public BitSet targetSites(){
-        	return bst;
+            return bst;
         }
-        
+
         /**
          * Returns a bitset of the indexes where a match was
          * found for the query sequence
          * @return Bitset of the matching query sites. 1-indexed.
          */
         public BitSet querySites(){
-        	return bsq;
+            return bsq;
         }
     }
-    
-    public static class Result {
+
+    public static class Result implements Serializable{
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
         public final CharSequence query;
         public final String id;
         public final CharSequence target;
@@ -260,8 +333,8 @@ public class SequenceIndexer {
             this.query = query;
             this.target = target;
         }
-        
-        
+
+
     }
 
     static final Result POISON_RESULT = new Result ();
@@ -269,7 +342,7 @@ public class SequenceIndexer {
     public static class ResultEnumeration implements Enumeration<Result> {
         final BlockingQueue<Result> queue;
         Result next;
-        
+
         ResultEnumeration (BlockingQueue<Result> queue) {
             this.queue = queue;
             if(queue==null){
@@ -292,7 +365,7 @@ public class SequenceIndexer {
         public boolean hasMoreElements () {
             return next != POISON_RESULT;
         }
-        
+
         public Result nextElement () {
             if(!hasMoreElements()){
                 throw new NoSuchElementException();
@@ -304,7 +377,7 @@ public class SequenceIndexer {
         }
     }
 
-    
+
     public static final String FIELD_KMER = "_KMER";
     public static final String FIELD_ID = "_ID";
     public static final String FIELD_SEQ = "_SEQ";
@@ -326,9 +399,9 @@ public class SequenceIndexer {
     private boolean localThreadPool = false;
     private SearcherManager kmerSearchManager;
     private SearcherManager seqSearchManager;
-    
+
     private AtomicLong lastModified = new AtomicLong (0);
-    
+
     public static SequenceIndexer openReadOnly (File dir) throws IOException {
         return new SequenceIndexer (dir, true);
     }
@@ -337,23 +410,22 @@ public class SequenceIndexer {
         return new SequenceIndexer (dir, false);
     }
 
-    
+
     private SequenceIndexer (File dir, boolean readOnly) throws IOException {
         this (dir, readOnly, ForkJoinPool.commonPool());
         localThreadPool = true;
     }
 
     public SequenceIndexer (File dir, boolean readOnly,
-                            ExecutorService threadPool) throws IOException {
-        init();
-        
+            ExecutorService threadPool) throws IOException {
+
         if (!readOnly) {
             dir.mkdirs();
         }
-        
+
         if (!dir.isDirectory())
             throw new IllegalArgumentException ("Not a directory: "+dir);
-        
+
         File index = new File (dir, "index");
         if (!index.exists())
             index.mkdirs();
@@ -366,10 +438,10 @@ public class SequenceIndexer {
         kmerDir = new NIOFSDirectory (kmer, NoLockFactory.getNoLockFactory());
         if (!readOnly) {
             indexWriter = new IndexWriter (indexDir, new IndexWriterConfig 
-                                           (LUCENE_VERSION, indexAnalyzer));
+                    (LUCENE_VERSION, indexAnalyzer));
             kmerWriter = new IndexWriter
-                (kmerDir, new IndexWriterConfig
-                 (LUCENE_VERSION, indexAnalyzer));
+                    (kmerDir, new IndexWriterConfig
+                            (LUCENE_VERSION, indexAnalyzer));
             kmerSearchManager = new SearcherManager (kmerWriter, true, null);
             seqSearchManager = new SearcherManager (indexWriter, true, null);
             _kmerReader = DirectoryReader.open(kmerWriter, true);
@@ -391,13 +463,13 @@ public class SequenceIndexer {
         fields.put(FIELD_ID, new KeywordAnalyzer ());
         fields.put(FIELD_KMER, new KeywordAnalyzer ());
         return  new PerFieldAnalyzerWrapper 
-            (new StandardAnalyzer (LUCENE_VERSION), fields);
+                (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
 
-    
+
     public File getBasePath () { return baseDir; }
-    
+
     public long getSize() {
         if (indexWriter == null)
             return _indexReader.numDocs();
@@ -419,7 +491,7 @@ public class SequenceIndexer {
             e.printStackTrace();
         }
     }
-    
+
     public void shutdown () {
         closeAndIgnore(kmerSearchManager);
         closeAndIgnore(seqSearchManager);
@@ -432,11 +504,11 @@ public class SequenceIndexer {
 
         closeAndIgnore(kmerDir);
         closeAndIgnore(indexDir);
-        
+
         if (localThreadPool) {
             threadPool.shutdownNow();
         }
-        
+
 
     }
 
@@ -449,7 +521,7 @@ public class SequenceIndexer {
 
 
     public void add (String id, String seq)
-        throws IOException {
+            throws IOException {
         if (indexWriter == null)
             throw new RuntimeException ("Index is read-only!");
 
@@ -459,10 +531,10 @@ public class SequenceIndexer {
             StringField idf = new StringField (FIELD_ID, id, YES);
             doc.add(idf);
             doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
-            doc.add(new StoredField (FIELD_SEQ, seq.toString()));
+            doc.add(new StoredField (FIELD_SEQ, seq.toString())); //why toString?
             indexWriter.addDocument(doc);
-           // indexWriter.updateDocument(new Term (FIELD_ID, id), doc);
-            
+            // indexWriter.updateDocument(new Term (FIELD_ID, id), doc);
+
             Kmers kmers = Kmers.create(seq);
             for (String kmer : kmers.kmers()) {
                 BitSet positions = kmers.positions(kmer);
@@ -471,11 +543,13 @@ public class SequenceIndexer {
                 doc2.add(idf);
                 doc2.add(kmerf);
                 for (int i = positions.nextSetBit(0);
-                     i>=0; i = positions.nextSetBit(i+1)) {
+                        i>=0; i = positions.nextSetBit(i+1)) {
                     doc2.add(new IntField (FIELD_POSITION, i, YES));
                 }
                 kmerWriter.addDocument(doc2);
             }
+            indexWriter.commit();
+            kmerWriter.commit();
         }
         finally {
             lastModified.set(System.currentTimeMillis());
@@ -484,11 +558,11 @@ public class SequenceIndexer {
 
 
     public long lastModified () { return lastModified.get(); }
-    
+
     public ResultEnumeration search (String query) {
         return search (query, 0.4,CutoffType.GLOBAL);
     }
-    
+
     public ResultEnumeration search (String query,CutoffType rt) {
         return search (query, 0.4,rt);
     }
@@ -496,35 +570,35 @@ public class SequenceIndexer {
     public ResultEnumeration search (String query, double identity,CutoffType rt) {
         return search (query, identity, 3,rt);
     }
-    
+
     public ResultEnumeration search (final String query,
-                                     final double identity, final int gap,CutoffType rt) {
+            final double identity, final int gap,CutoffType rt) {
         if (getSize()<=0 || query == null || query.length() == 0) {
             return new ResultEnumeration(null);
         }
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
         threadPool.submit(()->{
-                    ix.core.util.StopWatch.timeElapsed(()->{
-	                    try {
-	                        search (out, query, identity, gap, rt);
-	                    }catch (Exception ex) {
-	                        ex.printStackTrace();
-	                    }finally{
-	                        try {
-	                            out.put(POISON_RESULT);// finish
-	                        }catch (InterruptedException e) {
-	                            Logger.error(e.getMessage(), e);
-	                        } 
-	                    }
-                    });
-                });
-        
+            ix.core.util.StopWatch.timeElapsed(()->{
+                try {
+                    search (out, query, identity, gap, rt);
+                }catch (Exception ex) {
+                    ex.printStackTrace();
+                }finally{
+                    try {
+                        out.put(POISON_RESULT);// finish
+                    }catch (InterruptedException e) {
+                        Logger.error(e.getMessage(), e);
+                    } 
+                }
+            });
+        });
+
         return new ResultEnumeration (out);
     }
 
     protected void search (BlockingQueue<Result> results,
-                           String query, double identity, int gap,CutoffType rt)
-        throws Exception {
+            String query, double identity, int gap,CutoffType rt)
+                    throws Exception {
 
         /*
          * this can be expensive if we call search often. having a daemon
@@ -540,15 +614,15 @@ public class SequenceIndexer {
         }
         searcher = null;
     }
-   
+
     protected void search (IndexSearcher kmerSearcher,
-                           BlockingQueue<Result> results,
-                           String query, double identity, int gap, CutoffType rt)
-        throws Exception {
+            BlockingQueue<Result> results,
+            String query, double identity, int gap, CutoffType rt)
+                    throws Exception {
 
         Kmers kmers = Kmers.create(query);
         final int K = kmers.getK();
-        
+
         int ndocs = Math.max(1, kmerSearcher.getIndexReader().numDocs());
         final Map<String, List<HSP>> hsp = new TreeMap<String, List<HSP>>();
 
@@ -565,13 +639,13 @@ public class SequenceIndexer {
                 final String id = doc.get(FIELD_ID);
 
                 List<HSP> hits = hsp.computeIfAbsent(id, k-> new ArrayList<>());
-                
+
                 IndexableField[] pos = doc.getFields(FIELD_POSITION);
-                
+
                 for (int j = 0; j < pos.length; ++j) {
                     int k = pos[j].numericValue().intValue();
                     for (int l = positions.nextSetBit(0);
-                         l >= 0; l = positions.nextSetBit(l+1)) {
+                            l >= 0; l = positions.nextSetBit(l+1)) {
                         hits.add(new HSP (kmer, l, k));
                     }
                 }
@@ -595,12 +669,9 @@ public class SequenceIndexer {
                 continue;
             }
             Result result = new Result (me.getKey(), qs, seq);
-            /*
-              System.err.println(" Query: "+query);
-              System.err.println("Target: "+seq);
-            */
+
             Collections.sort(me.getValue());
-            
+
             HSP bgn = null, end = null;
             List<SEG> segments = new ArrayList<SEG>();
             for (HSP h : me.getValue()) {
@@ -608,10 +679,10 @@ public class SequenceIndexer {
                     bgn = h;
                 }else {
                     if (h.i < end.i || h.j < end.j
-                        || ((h.i - (end.i+K)) > gap
-                            && (h.j - (end.j+K)) > gap)
-                        || h.gap() - end.gap() > gap
-                        ) {
+                            || ((h.i - (end.i+K)) > gap
+                                    && (h.j - (end.j+K)) > gap)
+                            || h.gap() - end.gap() > gap
+                            ) {
                         //System.err.println(" ** start: "+bgn+" end: "+end);
                         // now do global alignment of the subsequence
                         segments.add(new SEG (bgn.i, end.i+K, bgn.j, end.j+K));
@@ -630,8 +701,8 @@ public class SequenceIndexer {
             for (SEG seg : segments) {
                 System.err.println(seg);
             }
-            */
-            
+             */
+
             List<SEG> remove = new ArrayList<SEG>();
             for (int i = 0; i < segments.size(); ++i) {
                 SEG seg = segments.get(i);
@@ -661,23 +732,23 @@ public class SequenceIndexer {
                 result.alignments.add(aln);
             }
             if(maxaln!=null){
-            	double score =0;
-            	switch(rt){
-					case GLOBAL:
-						score=maxaln.global;
-						break;
-					case LOCAL:
-						score=maxaln.iden;
-						break;
-					case SUB:
-						score=maxaln.sub;
-						break;
-					default:
-						break;
-            	}
-	            if (score >= identity) {
-	                results.put(result);
-	            }
+                double score =0;
+                switch(rt){
+                case GLOBAL:
+                    score=maxaln.global;
+                    break;
+                case LOCAL:
+                    score=maxaln.iden;
+                    break;
+                case SUB:
+                    score=maxaln.sub;
+                    break;
+                default:
+                    break;
+                }
+                if (score >= identity) {
+                    results.put(result);
+                }
             }
         }
     }
@@ -685,23 +756,23 @@ public class SequenceIndexer {
     public String getSeq (final String id) {
         try {
             return getOrElse
-                (getClass().getName()+"/"+FIELD_SEQ+"/"+id,
-                      ()->{
-                         seqSearchManager.maybeRefresh();
-                         IndexSearcher searcher = seqSearchManager.acquire();
-                         try {
-                             TopDocs docs = searcher.search
-                                 (new TermQuery (new Term (FIELD_ID, id)), 1);
-                             if (docs.totalHits > 0) {
-                                 Document d = searcher.doc
-                                     (docs.scoreDocs[0].doc);
-                                return d.get(FIELD_SEQ);
-                             }
-                         }finally {
-                             seqSearchManager.release(searcher);
-                         }
-                         return null;
-                     });
+                    (getClass().getName()+"/"+FIELD_SEQ+"/"+id,
+                            ()->{
+                                seqSearchManager.maybeRefresh();
+                                IndexSearcher searcher = seqSearchManager.acquire();
+                                try {
+                                    TopDocs docs = searcher.search
+                                            (new TermQuery (new Term (FIELD_ID, id)), 1);
+                                    if (docs.totalHits > 0) {
+                                        Document d = searcher.doc
+                                                (docs.scoreDocs[0].doc);
+                                        return d.get(FIELD_SEQ);
+                                    }
+                                }finally {
+                                    seqSearchManager.release(searcher);
+                                }
+                                return null;
+                            });
         }catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -717,7 +788,7 @@ public class SequenceIndexer {
      * by the HSP segments
      */
     static Alignment align (SEG seg, String query, String target, 
-                            int match, int gap) {
+            int match, int gap) {
         String q = query.substring(seg.qi, seg.qj);
         String s = target.substring(seg.ti, seg.tj);
 
@@ -725,8 +796,8 @@ public class SequenceIndexer {
         System.err.println("** aligning subsequences...");
         System.err.println(q);
         System.err.println(s);
-        */
-        
+         */
+
         int[][] M = new int[q.length()+1][s.length()+1];
         for (int i = 0; i <= q.length(); ++i)
             M[i][0] = gap*i;
@@ -749,15 +820,15 @@ public class SequenceIndexer {
         int j = s.length();
         BitSet qsites = new BitSet();
         BitSet tsites = new BitSet();
-        
+
         while (i > 0 && j > 0) {
             char a = q.charAt(i-1);
             char b = s.charAt(j-1);
             boolean matched =
-                Character.toUpperCase(a) == Character.toUpperCase(b);
-            
+                    Character.toUpperCase(a) == Character.toUpperCase(b);
+
             if (i > 0 && j > 0 && M[i][j] == M[i-1][j-1]
-                + (matched ? match : 0)) {
+                    + (matched ? match : 0)) {
                 qa.insert(0, a);
                 qs.insert(0, b);
                 qq.insert(0, matched ? '|' : ' ');
@@ -785,71 +856,72 @@ public class SequenceIndexer {
         System.err.println(qa);
         System.err.println(qq);
         System.err.println(qs);
-        */
+         */
 
         int score = M[q.length()][s.length()];
-        
+
         //Local alignment score 
         // (fraction of aligned residues in the longest local sequence)
-		double iden=(double)score/Math.max(q.length(),s.length());
-		
-		//Global alignment score
-		// (fraction of aligned residues in the longest global sequence)
-		double glob=(double)score/Math.max(query.length(),target.length());
-		
-		//Sub alignment score
-		// (local alignment score, multiplied by the fraction of the
-		//  residues found in the query)
-		//
-		//	The purpose of this is to penalize the local identity score
-		//  such that a strong local alignment that doesn't have much 
-		//  of the query present is not weighted as strongly
-		
-		//  As an example where we want to have high match
-		//   Query: ABC
-		//  Target: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-		//  
-		//	As an example where we want to have a low match
-		//   Query: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-		//  Target: ABC
-		//
-		double sub=iden*score/(double)query.length();
-		
-		String rangeq=String.format("%1$5d - %2$d", seg.qi+1,seg.qj);
-		String ranget=String.format("%1$5d - %2$d", seg.ti+1,seg.tj);
-		
-		int diff=ranget.length()-rangeq.length();
-		String pad="         ".substring(0, Math.abs(diff)+1);
-		rangeq+=(diff>0)?pad:" ";
-		ranget+=(diff<0)?pad:" ";
-		
+        double iden=(double)score/Math.max(q.length(),s.length());
+
+        //Global alignment score
+        // (fraction of aligned residues in the longest global sequence)
+        double glob=(double)score/Math.max(query.length(),target.length());
+
+        //Sub alignment score
+        // (local alignment score, multiplied by the fraction of the
+        //  residues found in the query)
+        //
+        //	The purpose of this is to penalize the local identity score
+        //  such that a strong local alignment that doesn't have much 
+        //  of the query present is not weighted as strongly
+
+        //  As an example where we want to have high match
+        //   Query: ABC
+        //  Target: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        //  
+        //	As an example where we want to have a low match
+        //   Query: XXXXXXXXABCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        //  Target: ABC
+        //
+        double sub=iden*score/(double)query.length();
+
+        String rangeq=String.format("%1$5d - %2$d", seg.qi+1,seg.qj);
+        String ranget=String.format("%1$5d - %2$d", seg.ti+1,seg.tj);
+
+        int diff=ranget.length()-rangeq.length();
+        String pad="         ".substring(0, Math.abs(diff)+1);
+        rangeq+=(diff>0)?pad:" ";
+        ranget+=(diff<0)?pad:" ";
+
         return new Alignment (seg, qa.toString(), qs.toString(),
-                              qa+rangeq +"[Query]"
-                              +"\n"+qq+"\n"
-                              +qs+ranget + "[Target]",
-                              score, 
-                              iden,
-                              glob,
-                              sub,
-                              qsites,
-                              tsites
-        		
-        		);
+                qa+rangeq +"[Query]"
+                        +"\n"+qq+"\n"
+                        +qs+ranget + "[Target]",
+                        score, 
+                        iden,
+                        glob,
+                        sub,
+                        qsites,
+                        tsites
+
+                );
     }
 
     @SuppressWarnings("unchecked")
-        static <T> T getOrElse (String key, Callable<T> generator)
-        throws Exception {
-        Object value = CACHE.get(key);
+    static <T> T getOrElse (String key, Callable<T> generator)
+            throws Exception {
+        Object value = CACHE.get().get(key);
+
 
         if (value == null) {
             value = generator.call();
-            CACHE.put(new Element (key, value));
-            
+            CACHE.get().put(new Element (key, value));
+
         }else {
             value = ((Element)value).getObjectValue();
         }
-        
+
         return (T)value;
     }
 
@@ -866,7 +938,7 @@ public class SequenceIndexer {
             System.err.println("\n");
         }
     }
-    
+
     public static void main (String[] argv) throws Exception {
         SequenceIndexer seqidx = SequenceIndexer.open(new File ("seqidx"));
         try {
@@ -875,39 +947,39 @@ public class SequenceIndexer {
             seqidx.add("3", "asdflkjdflmn");
             seqidx.add("4", "TESTOSTERONE DECANOATE");
             seqidx.add("5",
-"MHTGGETSACKPSSVRLAPSFSFHAAGLQMAGQMPHSHQYSDRRQPNISDQQVSALSYSD"+
-"QIQQPLTNQVMPDIVMLQRRMPQTFRDPATAPLRKLSVDLIKTYKHINEVYYAKKKRRHQ"+
-"QGQGDDSSHKKERKVYNDGYDDDNYDYIVKNGEKWMDRYEIDSLIGKGSFGQVVKAYDRV"+
-"EQEWVAIKIIKNKKAFLNQAQIEVRLLELMNKHDTEMKYYIVHLKRHFMFRNHLCLVFEM"+
-"LSYNLYDLLRNTNFRGVSLNLTRKFAQQMCTALLFLATPELSIIHCDLKPENILLCNPKR"+
-"SAIKIVDFGSSCQLGQRIYQYIQSRFYRSPEVLLGMPYDLAIDMWSLGCILVEMHTGEPL"+
-"FSGANEVDQMNKIVEVLGIPPAHILDQAPKARKFFEKLPDGTWNLKKTKDGKREYKPPGT"+
-"RKLHNILGVETGGPGGRRAGESGHTVADYLKFKDLILRMLDYDPKTRIQPYYALQHSFFK"+
-"KTADEGTNTSNSVSTSPAMEQSQSSGTTSSTSSSSGGSSGTSNSGRARSDPTHQHRHSGG"+
-"HFTAAVQAMDCETHSPQVRQQFPAPLGWSGTEAPTQVTVETHPVQETTFHVAPQQNALHH"+
-"HHGNSSHHHHHHHHHHHHHGQQALGNRTRPRVYNSPTNSSSTQDSMEVGHSHHSMTSLSS"+
-"STTSSSTSSSSTGNQGNQAYQNRPVAANTLDFGQNGAMDVNLTVYSNPRQETGIAGHPTY"+
-"QFSANTGPAHYMTEGHLTMRQGADREESPMTGVCVQQSPVASS");
+                    "MHTGGETSACKPSSVRLAPSFSFHAAGLQMAGQMPHSHQYSDRRQPNISDQQVSALSYSD"+
+                            "QIQQPLTNQVMPDIVMLQRRMPQTFRDPATAPLRKLSVDLIKTYKHINEVYYAKKKRRHQ"+
+                            "QGQGDDSSHKKERKVYNDGYDDDNYDYIVKNGEKWMDRYEIDSLIGKGSFGQVVKAYDRV"+
+                            "EQEWVAIKIIKNKKAFLNQAQIEVRLLELMNKHDTEMKYYIVHLKRHFMFRNHLCLVFEM"+
+                            "LSYNLYDLLRNTNFRGVSLNLTRKFAQQMCTALLFLATPELSIIHCDLKPENILLCNPKR"+
+                            "SAIKIVDFGSSCQLGQRIYQYIQSRFYRSPEVLLGMPYDLAIDMWSLGCILVEMHTGEPL"+
+                            "FSGANEVDQMNKIVEVLGIPPAHILDQAPKARKFFEKLPDGTWNLKKTKDGKREYKPPGT"+
+                            "RKLHNILGVETGGPGGRRAGESGHTVADYLKFKDLILRMLDYDPKTRIQPYYALQHSFFK"+
+                            "KTADEGTNTSNSVSTSPAMEQSQSSGTTSSTSSSSGGSSGTSNSGRARSDPTHQHRHSGG"+
+                            "HFTAAVQAMDCETHSPQVRQQFPAPLGWSGTEAPTQVTVETHPVQETTFHVAPQQNALHH"+
+                            "HHGNSSHHHHHHHHHHHHHGQQALGNRTRPRVYNSPTNSSSTQDSMEVGHSHHSMTSLSS"+
+                            "STTSSSTSSSSTGNQGNQAYQNRPVAANTLDFGQNGAMDVNLTVYSNPRQETGIAGHPTY"+
+                    "QFSANTGPAHYMTEGHLTMRQGADREESPMTGVCVQQSPVASS");
 
             ResultEnumeration results;      
             results = seqidx.search("abcdelghilmn");
             dump (results);
-            
+
             results = seqidx.search("testosterone undecanoate");
             dump (results);
 
             results = seqidx.search(
-"MRHSKRTHCPDWDSRESWGHESYRGSHKRKRRSHSSTQENRHCKPHHQFKESDCHYLEAR"+
-"SLNERDYRDRRYVDEYRNDYCEGYVPRHYHRDIESGYRIHCSKSSVRSRRSSPKRKRNRH"+
-"CSSHQSRSKSHRRKRSRSIEDDEEGHLICQSGDVLRARYEIVDTLGEGAFGKVVECIDHG"+
-"MDGMHVAVKIVKNVGRYREAARSEIQVLEHLNSTDPNSVFRCVQMLEWFDHHGHVCIVFE"+
-"LLGLSTYDFIKENSFLPFQIDHIRQMAYQICQSINFLHHNKLTHTDLKPENILFVKSDYV"+
-"VKYNSKMKRDERTLKNTDIKVVDFGSATYDDEHHSTLVSTRHYRAPEVILALGWSQPCDV"+
-"WSIGCILIEYYLGFTVFQTHDSKEHLAMMERILGPIPQHMIQKTRKRKYFHHNQLDWDEH"+
-"SSAGRYVRRRCKPLKEFMLCHDEEHEKLFDLVRRMLEYDPTQRITLDEALQHPFFDLLKK"+
-"K");
+                    "MRHSKRTHCPDWDSRESWGHESYRGSHKRKRRSHSSTQENRHCKPHHQFKESDCHYLEAR"+
+                            "SLNERDYRDRRYVDEYRNDYCEGYVPRHYHRDIESGYRIHCSKSSVRSRRSSPKRKRNRH"+
+                            "CSSHQSRSKSHRRKRSRSIEDDEEGHLICQSGDVLRARYEIVDTLGEGAFGKVVECIDHG"+
+                            "MDGMHVAVKIVKNVGRYREAARSEIQVLEHLNSTDPNSVFRCVQMLEWFDHHGHVCIVFE"+
+                            "LLGLSTYDFIKENSFLPFQIDHIRQMAYQICQSINFLHHNKLTHTDLKPENILFVKSDYV"+
+                            "VKYNSKMKRDERTLKNTDIKVVDFGSATYDDEHHSTLVSTRHYRAPEVILALGWSQPCDV"+
+                            "WSIGCILIEYYLGFTVFQTHDSKEHLAMMERILGPIPQHMIQKTRKRKYFHHNQLDWDEH"+
+                            "SSAGRYVRRRCKPLKEFMLCHDEEHEKLFDLVRRMLEYDPTQRITLDEALQHPFFDLLKK"+
+                    "K");
             dump (results);
-            
+
             results = seqidx.search("qmagphshqysdrrqvqpnisdqq");
             dump (results);
         }
@@ -917,13 +989,13 @@ public class SequenceIndexer {
         }
     }
 
-        public boolean isClosed() {
-                try{
-                indexWriter.numDocs();
-                return false;
+    public boolean isClosed() {
+        try{
+            indexWriter.numDocs();
+            return false;
         }catch(AlreadyClosedException e){
-                System.out.println("Already closed");
+            System.out.println("Already closed");
         }
-                return true;
-        }
+        return true;
+    }
 }

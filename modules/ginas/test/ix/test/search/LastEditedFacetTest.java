@@ -1,45 +1,40 @@
 package ix.test.search;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ix.core.adapters.EntityPersistAdapter;
-import ix.core.models.Role;
-import ix.core.plugins.IxCache;
-import ix.core.util.RunOnly;
-import ix.core.util.TimeTraveller;
-import ix.core.util.TimeUtil;
-import ix.ginas.models.v1.Substance;
-import ix.test.SubstanceJsonUtil;
-import ix.test.builder.SubstanceBuilder;
-import ix.test.load.AbstractLoadDataSetTest;
-import ix.test.server.*;
-import ix.test.util.TestUtil;
-import org.junit.*;
-import play.api.Configuration;
-import play.libs.ws.WSResponse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Rule;
+import org.junit.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import ix.core.adapters.EntityPersistAdapter;
+import ix.core.models.Role;
+import ix.core.util.TimeTraveller;
+import ix.core.util.TimeUtil;
+import ix.ginas.models.v1.Substance;
+import ix.test.builder.SubstanceBuilder;
+import ix.test.load.AbstractLoadDataSetTest;
+import ix.test.server.BrowserSession;
+import ix.test.server.GinasTestServer;
+import ix.test.server.RestSession;
+import ix.test.server.SearchResult;
+import ix.test.server.SubstanceAPI;
+import ix.test.server.SubstanceLoader;
+import ix.test.server.BrowserSubstanceSearcher;
 
 public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
     public static final String TEST_TESTDUMPS_REP90_PART1_GINAS = "test/testdumps/rep90_part1.ginas";
 
-    SubstanceSearcher searcher;
+    BrowserSubstanceSearcher searcher;
     SubstanceLoader loader;
     BrowserSession session;
 
@@ -57,24 +52,27 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f);
 
-        searcher = new SubstanceSearcher(session);
+
+        searcher = new BrowserSubstanceSearcher(session);
         Map<String, Integer> lastEditMap;
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
-            assertTrue(results.numberOfResults() > 0);
-            assertTrue(!results.getAllFacets().isEmpty());
 
-            lastEditMap = results.getFacet("Last Edited");
+        assertTrue(results.numberOfResults() > 0);
+        assertTrue(!results.getAllFacets().isEmpty());
 
-            int beforeCount = lastEditMap.get("Today");
-            assertEquals(45,  beforeCount);
 
-            timeTraveller.jump(2, TimeUnit.DAYS);
+        lastEditMap = results.getFacet("Last Edited");
+
+        int beforeCount = lastEditMap.get("Today");
+        assertEquals(45,  beforeCount);
+
+        timeTraveller.jump(2, TimeUnit.DAYS);
 
         try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
-            SubstanceSearcher.SearchResult results2 = searcher2.all();
+            SearchResult results2 = searcher2.all();
 
 
             lastEditMap = results2.getFacet("Last Edited");
@@ -84,7 +82,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
             assertEquals(45, lastEditMap.get("This week").intValue());
 
         }
-        }
+    }
 
     @Test
     public void directReindex() throws IOException {
@@ -94,11 +92,11 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, 0, 20);
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
 
         Map<String, Integer> lastEditMap;
 
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
@@ -126,7 +124,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         }
 
         try( BrowserSession session2 = ts.newBrowserSession(admin)) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             System.out.println(TimeUtil.getCurrentDate());
             results = searcher2.all();
@@ -149,11 +147,11 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, 0, 20);
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
 
         Map<String, Integer> lastEditMap;
 
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
@@ -161,6 +159,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         lastEditMap = results.getFacet("Last Edited");
 
         int beforeCount = lastEditMap.get("Today");
+
         assertEquals(20,  beforeCount);
 
 
@@ -176,10 +175,10 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
             JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
             SubstanceBuilder.from(fetched)
-                    .setLastEditedDate(TimeUtil.getCurrentDate())
-                    .buildJsonAnd(json -> api.updateSubstanceJson(json));
+            .setLastEditedDate(TimeUtil.getCurrentDate())
+            .buildJsonAnd(json -> api.updateSubstanceJson(json));
 
-             Substance substance = api.fetchSubstanceObjectByUuid(uuid, Substance.class);
+            Substance substance = api.fetchSubstanceObjectByUuid(uuid, Substance.class);
 
             assertEquals(TimeUtil.getCurrentLocalDate(), TimeUtil.asLocalDate(substance.getLastEdited()));
 
@@ -187,18 +186,16 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         }
 
-
-
-    try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+        try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             results = searcher2.all();
             lastEditMap = results.getFacet("Last Edited");
 
             int afterCount = lastEditMap.get("Today");
 
-        assertEquals(1, afterCount);
-    }
+            assertEquals(1, afterCount);
+        }
 
     }
 
@@ -213,11 +210,11 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
         loader.loadJson(f, 0, 20);
 
-        searcher = new SubstanceSearcher(session);
+        searcher = new BrowserSubstanceSearcher(session);
 
         Map<String, Integer> lastEditMap;
 
-        SubstanceSearcher.SearchResult results = searcher.all();
+        SearchResult results = searcher.all();
 
         assertTrue(results.numberOfResults() > 0);
         assertTrue(!results.getAllFacets().isEmpty());
@@ -241,10 +238,10 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
             JsonNode fetched = api.fetchSubstanceJsonByUuid(uuid);
             SubstanceBuilder.from(fetched)
-                    .andThen(s ->{
-                        s.changeReason = "TESTING";
-                    })
-                    .buildJsonAnd(json -> api.updateSubstanceJson(json));
+            .andThen(s ->{
+                s.changeReason = "TESTING";
+            })
+            .buildJsonAnd(json -> api.updateSubstanceJson(json));
 
             Substance substance = api.fetchSubstanceObjectByUuid(uuid, Substance.class);
 
@@ -257,7 +254,7 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
         try( BrowserSession session2 = ts.notLoggedInBrowserSession()) {
-            SubstanceSearcher searcher2 = session2.newSubstanceSearcher();
+            BrowserSubstanceSearcher searcher2 = session2.newSubstanceSearcher();
 
             results = searcher2.all();
 

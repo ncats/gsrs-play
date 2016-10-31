@@ -4,9 +4,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import ix.core.auth.AuthenticationCredentials;
-import ix.core.auth.Authenticator;
+import ix.core.Experimental;
+import ix.core.auth.UserKeyAuthenticator;
+import ix.core.auth.UserPasswordAuthenticator;
+import ix.core.auth.UserTokenAuthenticator;
+import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Payload;
 import ix.core.models.UserProfile;
 import ix.core.plugins.GinasRecordProcessorPlugin;
@@ -16,7 +22,7 @@ import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.stats.Statistics;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
-import ix.ginas.fda.FdaAuthenticator;
+import ix.ginas.fda.TrustHeaderAuthenticator;
 import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.utils.Global;
@@ -30,13 +36,33 @@ import play.mvc.Http;
 import play.mvc.Result;
 
 public class GinasGlobal extends Global {
-
+	Application app;
+	
+	
+	private boolean showHeaders;
+	private boolean loadCV;
+	
 	static final Logger.ALogger AccessLogger = Logger.of("access");
 
 	private static List<Runnable> startRunners = new ArrayList<Runnable>();
+	
+	private static Consumer<Http.Request> requestListener =  (r)->{};
+	
+	
 	private static boolean isRunning=false;
 
-	private Authenticator authenticator = new FdaAuthenticator();
+	
+	private void logHeaders(Http.Request req){
+		Logger.debug("HEADERS ON REQUEST ===================");
+		String allheaders="";
+		for(String head:req.headers().keySet()){
+			allheaders+=head + "\t" + req.getHeader(head) + "\n";
+
+		}
+		Logger.debug(allheaders);
+	}
+	
+	
 	public class LoginWrapper extends Action.Simple {
 		public LoginWrapper(Action<?> action) {
 			this.delegate = action;
@@ -44,22 +70,18 @@ public class GinasGlobal extends Global {
 
 		@Override
 		public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
-
+			requestListener.accept(ctx.request());
+			
 			Http.Request req = ctx.request();
-			if(Play.application().configuration()
-					.getBoolean("ix.ginas.debug.showheaders", false)){
-				Logger.debug("HEADERS ON REQUEST ===================");
-				String allheaders="";
-				for(String head:req.headers().keySet()){
-					allheaders+=head + "\t" + req.getHeader(head) + "\n";
-
-				}
-				Logger.debug(allheaders);
+			if(showHeaders){
+				logHeaders(req);
 			}
 
-			String real = req.getHeader("X-Real-IP");
+			String real = req.getHeader("X-Real-IP"); //Where does this come from?
+													  //IS this due to a proxy?
 
-			UserProfile p = authenticator.authenticate(AuthenticationCredentials.create(ctx));
+			UserProfile p = Authentication.getUserProfile();
+			
 			String uri=req.uri();
 			char[] cs = uri.toCharArray();
 
@@ -113,40 +135,33 @@ public class GinasGlobal extends Global {
 				);
 	}
 
-
-
-	public void onStart(Application app) {
-		super.onStart(app);
-
-		if (!ControlledVocabularyFactory.isloaded()) {
+	private void loadCV(){
+		if (loadCV && !ControlledVocabularyFactory.isloaded()) {
 			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv.json"));
-			if(!Play.isTest()){
-				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
-			}
+			Logger.info("Loaded CV:" + ControlledVocabularyFactory.size());
 		}
-		for(Runnable r:startRunners){
-			r.run();
-		}
-		startRunners.clear();
-		isRunning=true;
-		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
+	}
 
-		String fname = Play.application().configuration().getString("ix.ginas.load.file",null);
+	private void loadStartFile(){
+
+		String fname = app.configuration().getString("ix.ginas.load.file",null);
 
 		if(fname!=null){
 			try{
+			    System.out.println("=============================");
+			    System.out.println("=====Loading initial set=====");
 				System.out.println(fname);
-				System.out.println("==================");
+				System.out.println("=============================");
 
 				Date start = new Date();
 				File f= new File(fname);
-				Payload payload=Play.application()
+				Payload payload=app
 						.plugin(PayloadPlugin.class)
 						.getPayloadForFile(f, PayloadPersistType.PERM);
 				if(payload.created.before(start)){
 					System.out.println("Already loaded file:" + f.getAbsolutePath());
 				}else{
-					PayloadProcessor pp =Play.application()
+					PayloadProcessor pp =app
 							.plugin(GinasRecordProcessorPlugin.class)
 							.submit(payload,
 									ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
@@ -165,20 +180,81 @@ public class GinasGlobal extends Global {
 				e.printStackTrace();
 			}
 		}
-
-
 	}
+	
+	public void setupAuthenticators(){
+		AuthenticatorFactory authFac = AuthenticatorFactory.getInstance(app);
+		authFac.registerAuthenticator(new TrustHeaderAuthenticator());
+		authFac.registerAuthenticator(new UserPasswordAuthenticator());
+		authFac.registerAuthenticator(new UserTokenAuthenticator());
+		authFac.registerAuthenticator(new UserKeyAuthenticator());
+	}
+
+	public void onStart(Application app) {
+		super.onStart(app);
+		this.app=app;
+		
+		showHeaders=app.configuration()
+					   .getBoolean("ix.ginas.debug.showheaders", false);
+		setupAuthenticators();
+		
+		loadCV=app.configuration()
+				   .getBoolean("ix.ginas.init.loadCV", true);
+		loadCV();
+		
+		IxDeadboltHandler.setErrorResultProvider(GinasApp::error);
+		
+		for(Runnable r:startRunners){
+			r.run();
+		}
+		startRunners.clear();
+		isRunning=true;
+		
+		loadStartFile();
+	}
+	
 	@Override
 	public void onStop(Application app){
 		startRunners.clear();
 		isRunning=false;
 	}
+	
 	public static void runAfterStart(Runnable r){
 		if(isRunning){
 			r.run();
 		}else{
 			startRunners.add(r);
 		}
-
 	}
+	
+	
+	
+	/**
+	 * Sets a {@link Consumer} to be called before the resolution of 
+	 * every request, passing it the request. This overwrites any
+	 * existing consumer already registered. To use a temporary listener,
+	 * use {@link #runWithRequestListener(Runnable, Consumer)} instead. 
+	 * @param listen
+	 */
+	public static void setRequestListener(Consumer<Http.Request> listen){
+		requestListener=listen;
+	}
+	
+	/**
+	 * Temporarily appends the given {@link Consumer} as a listener 
+	 * for requests, reseting to whatever the unappended previous consumer
+	 * was after the given {@link Runnable} has run.
+	 * @param r
+	 * @param listen
+	 */
+	public static void runWithRequestListener(Runnable r, Consumer<Http.Request> listen){
+		Consumer<Http.Request> old =requestListener;
+		setRequestListener(old.andThen(listen));
+		try{
+			r.run();
+		}finally{
+			setRequestListener(old);
+		}
+	}
+	
 }

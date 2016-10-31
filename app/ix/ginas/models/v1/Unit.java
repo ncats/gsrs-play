@@ -55,7 +55,7 @@ public class Unit extends GinasCommonSubData {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
-    public String structure;  //TODO: should be changed to be a structure
+    public String structure;    //TODO: should be changed to be a structure
     
     public String type;
     
@@ -88,7 +88,6 @@ public class Unit extends GinasCommonSubData {
     
     @JsonIgnore
     //TODO:Make this inspect the structure itself
-    //there are
     public List<String> getContainedConnections(){
     	//System.err.println("WARNING: SRU structure not validated to check for connection points");
     	List<String> contained=new ArrayList<String>();
@@ -132,30 +131,12 @@ public class Unit extends GinasCommonSubData {
     	set1.add(rgroup2);
     	setAttachmentMap(amap);
     }
-    /*
-    public Map<String,LinkedHashSet<String>> getAttachmentMap(){
-    	ObjectMapper om = new ObjectMapper();
-    	Map<String, LinkedHashSet<String>> amap=null;
-    	
-		try {
-			amap = om.readValue(_attachmentMap, new TypeReference<Map<String, LinkedHashSet<String>>>(){});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-    	return amap;
-    }
     
-    public void setAttachementMap(Map<String,LinkedHashSet<String>> amap){
-    	ObjectMapper om = new ObjectMapper();
-    	_attachmentMap=null;
-    	try {
-			_attachmentMap=om.writeValueAsString(amap);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+    
+    @JsonIgnore
+    public Polymer getPolymer(){
+        return this.owner;
     }
-    */
     
 
     public Unit () {}

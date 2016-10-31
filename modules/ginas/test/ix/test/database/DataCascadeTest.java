@@ -28,10 +28,10 @@ public class DataCascadeTest   extends AbstractGinasServerTest {
           e.save();
           
           long editorid=e.editor.id;
-          Principal p1=PrincipalFactory.finder.byId(editorid);
+          Principal p1=PrincipalFactory.finder.get().byId(editorid);
           assertEquals((long)p1.id,editorid);
           e.delete();
-          Principal p2=PrincipalFactory.finder.byId(editorid);
+          Principal p2=PrincipalFactory.finder.get().byId(editorid);
           assertNotNull("User should remain retrievable after an edit is deleted",p2);
           assertEquals((long)p2.id,editorid);
     }
@@ -45,10 +45,10 @@ public class DataCascadeTest   extends AbstractGinasServerTest {
           e.curator=user1;
           e.save();
           long editorid=user1.id;
-          Principal p1=PrincipalFactory.finder.byId(editorid);
+          Principal p1=PrincipalFactory.finder.get().byId(editorid);
           assertEquals((long)p1.id,editorid);
           e.delete();
-          Principal p2=PrincipalFactory.finder.byId(editorid);
+          Principal p2=PrincipalFactory.finder.get().byId(editorid);
           assertNotNull("User should remain retrievable after a curation is deleted",p2);
           assertEquals((long)p2.id,editorid);
     }

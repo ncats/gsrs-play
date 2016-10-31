@@ -33,7 +33,7 @@
                     <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>
                 </div>
                 <div>
-                @defining(GinasApp.getChemSimilarity(ctx, chem.structure.id.toString())) { sim =>
+                @defining(GinasApp.getChemSimilarity(ctx, chem)) { sim =>
                     @if(sim != null) {
                         <br>
                         <em>Similarity</em> <code>

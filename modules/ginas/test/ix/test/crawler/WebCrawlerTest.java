@@ -14,11 +14,11 @@ import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
-import ix.AbstractGinasTest;
+import ix.AbstractGinasClassServerTest;
 import ix.core.plugins.IxCache;
+import ix.core.util.RunOnly;
 import ix.core.util.StopWatch;
 import ix.test.server.BrowserSession;
 import ix.test.server.GinasTestServer;
@@ -28,10 +28,7 @@ import play.libs.ws.WSResponse;
 /**
  * Created by katzelda on 6/29/16.
  */
-public class WebCrawlerTest  extends AbstractGinasTest {
-
-    @ClassRule
-    public static GinasTestServer ts = new GinasTestServer();
+public class WebCrawlerTest  extends AbstractGinasClassServerTest {
 
     private static GinasTestServer.User admin;
 
@@ -48,11 +45,8 @@ public class WebCrawlerTest  extends AbstractGinasTest {
 
     private static void loadRep90() throws Exception {
         try (BrowserSession session = ts.newBrowserSession(admin)) {
-
             SubstanceLoader loader = new SubstanceLoader(session);
-
             File f = new File("test/testdumps/rep90.ginas");
-
             loader.loadJson(f);
         }
     }
@@ -63,7 +57,9 @@ public class WebCrawlerTest  extends AbstractGinasTest {
 
 
         WebCrawlerSpy spy = new WebCrawlerSpy();
+        
         try(BrowserSession session =  ts.notLoggedInBrowserSession()){
+            
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
             URL url = ts.getHomeUrl();
 
@@ -89,14 +85,15 @@ public class WebCrawlerTest  extends AbstractGinasTest {
 
     @Test
     public void nothingRestrictedForAdmin() throws Exception {
-        WebCrawlerSpy spy = new WebCrawlerSpy();
+        final WebCrawlerSpy spy = new WebCrawlerSpy();
+        
         try(BrowserSession session =  ts.newBrowserSession(admin)) {
             WebCrawler crawler = new WebCrawler.Builder(session, spy).build();
             URL url = ts.getHomeUrl();
-
+            
             crawler.crawl(url);
 
-            assertTrue(spy.get401Links().isEmpty());
+            assertTrue("Admins should not find any restricted links, found:" + spy.get401Links().toString(),spy.get401Links().isEmpty());
         }
 
     }
@@ -191,6 +188,7 @@ public class WebCrawlerTest  extends AbstractGinasTest {
         @Override
         protected void visitErrorURL(URL url, int statusCode, String statusMessage, List<URL> path) {
             if(statusCode ==401){
+                
                 _401Links.add(url);
             }else if(statusCode == 404){
             	System.out.println("404\t" + url + "\t" + path.size());

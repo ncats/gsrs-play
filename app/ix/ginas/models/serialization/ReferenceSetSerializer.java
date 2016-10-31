@@ -1,9 +1,5 @@
 package ix.ginas.models.serialization;
 
-import ix.core.models.Keyword;
-import ix.core.models.Value;
-import ix.ginas.models.GinasCommonSubData;
-
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -12,6 +8,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+
+import ix.core.models.Keyword;
+import ix.ginas.models.GinasCommonSubData;
 
 public class ReferenceSetSerializer extends JsonSerializer<Set<Keyword>> {
     public ReferenceSetSerializer () {}

@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,23 +27,23 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
-import ix.AbstractGinasTest;
+import ix.AbstractGinasClassServerTest;
 import ix.core.CacheStrategy;
 import ix.core.models.Role;
 import ix.core.plugins.IxCache;
 import ix.core.util.StopWatch;
 import ix.ginas.controllers.GinasApp;
 import ix.test.builder.SubstanceBuilder;
+import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.server.BrowserSession;
-import ix.test.server.GinasTestServer;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
-import ix.test.server.SubstanceSearcher;
-import ix.test.server.SubstanceSearcher.WebExportRequest;
+import ix.test.server.BrowserSubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher.WebExportRequest;
 import ix.test.util.TestUtil;
 import play.mvc.Http;
 
@@ -52,24 +51,17 @@ import play.mvc.Http;
 /**
  * Created by katzelda on 9/20/16.
  */
-public class ExportTest  extends AbstractGinasTest {
-
-	@ClassRule
-	public static GinasTestServer ts = new GinasTestServer(new HashMap<String, Object>() {
-		{
-			put("ix.cache.maxElementsNonEvictable", 10);
-
-		}
-	});
+public class ExportTest  extends AbstractGinasClassServerTest {
 
 	@Before
 	public void clearCache() {
+		ts.modifyConfig("ix.cache.maxElementsNonEvictable", 10);
+		ts.restart();
 		IxCache.clearCache();
-		
 	}
 
 	static BrowserSession session;
-	static SubstanceSearcher searcher;
+	static BrowserSubstanceSearcher searcher;
 	static RestSession restSession;
 
 	@BeforeClass
@@ -80,7 +72,7 @@ public class ExportTest  extends AbstractGinasTest {
 		SubstanceLoader loader = new SubstanceLoader(session);
 		File f = new File("test/testdumps/rep90.ginas");
 		loader.loadJson(f);
-		searcher = new SubstanceSearcher(session);
+		searcher = new BrowserSubstanceSearcher(session);
 	}
 
 	@After
@@ -91,7 +83,7 @@ public class ExportTest  extends AbstractGinasTest {
 	@Test 
 	public void searchAll() throws IOException, InterruptedException {
 
-		SubstanceSearcher.SearchResult searchResult = searcher.all();
+		SearchResult searchResult = searcher.all();
 		try (InputStream in = searchResult.export("csv");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
@@ -148,10 +140,17 @@ public class ExportTest  extends AbstractGinasTest {
 		return uuids;
 	}
 
+	
 	@Test 
 	public void searchOne() throws IOException {
-
-		SubstanceSearcher.SearchResult searchResult = searcher.query("GUIZOTIA ABYSSINICA (L. F.) CASS.");
+		
+		String q=new SimpleQueryBuilder()
+						.where()
+						.globalMatchesPhrase("GUIZOTIA ABYSSINICA (L. F.) CASS.")
+						.build();
+		
+		
+		SearchResult searchResult = searcher.query(q);
 		try (InputStream in = searchResult.export("csv");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
@@ -181,7 +180,7 @@ public class ExportTest  extends AbstractGinasTest {
 
 		searchAll();
 		for (int i = 0; i < 100; i++) {
-			SubstanceSearcher.SearchResult searchResult = searcher.query(UUID.randomUUID());
+			SearchResult searchResult = searcher.query(UUID.randomUUID());
 			// System.out.println("Key:" + searchResult.getKey());
 
 		}

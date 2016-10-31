@@ -18,6 +18,7 @@ import org.junit.rules.ExpectedException;
  */
 @RunWith(RunOnlyTestRunner.class)
 public abstract class AbstractGinasTest {
+    
 	@Rule
 	public TestNamePrinter printer = new TestNamePrinter();
 

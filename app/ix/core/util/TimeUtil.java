@@ -10,12 +10,17 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by katzelda on 3/24/16.
  */
 public final class TimeUtil {
-	static private long startNano=0;
-	static private long startMSNano=0;
-	static{
-		startNano=System.nanoTime();
-        startMSNano=TimeUnit.NANOSECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-	}
+//	static private long startNano=0;
+//	static private long startMSNano=0;
+//	
+//	static{
+//		init();
+//	}
+//	
+//	public static void init(){
+//		startNano=System.nanoTime();
+//        startMSNano=TimeUnit.NANOSECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+//	}
 	
     private TimeUtil(){
         
@@ -32,7 +37,8 @@ public final class TimeUtil {
     public static long getCurrentTime(TimeUnit tu){
     	Long setTime = FIXED_TIME.get();
     	if(setTime == null){
-    		setTime= startMSNano + (System.nanoTime()-startNano);
+    		setTime= System.currentTimeMillis()*1_000_000;
+    		//setTime= startMSNano + (System.nanoTime()-startNano);
         }
     	return tu.convert(setTime, TimeUnit.NANOSECONDS);
     }

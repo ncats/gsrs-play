@@ -46,23 +46,16 @@ public class EditFactory extends EntityFactory {
         return null;
     }
 
-    public static Result field (String uuid, String field) {
-        try {
-            UUID id = UUID.fromString(uuid);
-            Edit edit = finder.byId(id);
-            if (edit != null) {
-                return field (edit, field);
-            }
-            
-            return notFound ("Bad request: "+request().uri());
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't retrieve edit "+uuid, ex);
-        }
+	public static Result field(String uuid, String field) {
 
-        return internalServerError
-            ("Unable to fullfil request: "+request().uri());
-    }
+		UUID id = UUID.fromString(uuid);
+
+		Edit edit = finder.byId(id);
+		if (edit != null) {
+			return field(edit, field);
+		}
+		throw new IllegalArgumentException("Bad request: " + request().uri());
+	}
     
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);

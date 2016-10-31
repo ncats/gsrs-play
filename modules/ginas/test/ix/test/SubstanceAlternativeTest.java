@@ -49,7 +49,8 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
 	        String uuid = js.get("uuid").asText();
 
             SubstanceAPI.ValidationResponse response = api.validateSubstance(js);
-            assertTrue(response.isValid());
+            
+            response.assertValid();
 
 	        ensurePass(api.submitSubstance(js));
 	
@@ -80,17 +81,15 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
 
     @Test
     public void testAPIAlternativeSubstanceUpdate()   throws Exception {
-    	try{
         //submit primary
         resource = new File("test/testJSON/alternative/Prim1.json");
         JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(resource));
         String uuid = js.get("uuid").asText();
-//        JsonNode validationResult = api.validateSubstanceJson(js); //should have JSON substance builder!
-//        SubstanceJsonUtil.ensureIsValid(validationResult);		 //Oh man! Everyone will think we're so
-//        ensurePass(api.submitSubstance(js));					   //cool then! I can't even imagine ...
 
         SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
-        assertTrue(validationResult.isValid());
+        
+        
+        validationResult.assertValid();
         ensurePass(api.submitSubstance(js));
 
         //submit alternative
@@ -101,7 +100,7 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
 
         SubstanceAPI.ValidationResponse responseA = api.validateSubstance(jsA);
         
-        assertTrue(responseA.isValid());
+        responseA.assertValid();
         ensurePass(api.submitSubstance(jsA));
 
         //check alternative relationship with primary
@@ -122,8 +121,7 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
 //        SubstanceJsonUtil.ensureIsValid(validationResultNew);
 //
         SubstanceAPI.ValidationResponse validationResultNew = api.validateSubstance(jsNew);
-        assertTrue(validationResultNew.isValid());
-
+        validationResultNew.assertValid();
         ensurePass(api.submitSubstance(jsNew));
 
         //update alternative
@@ -152,9 +150,5 @@ public class SubstanceAlternativeTest extends AbstractGinasServerTest {
         JsonNode fetchedNew = api.fetchSubstanceJsonByUuid(uuidNew);
         String refUuidNew = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedNew);
         assertTrue(refUuidNew.equals(uuidAUpdate));
-    	}catch(Throwable t){
-    		t.printStackTrace();
-    		throw t;
-    	}
     }
 }

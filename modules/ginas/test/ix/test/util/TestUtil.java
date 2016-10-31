@@ -9,7 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
+import ix.ginas.utils.GinasGlobal;
 
 /**
  * Created by katzelda on 4/12/16.
@@ -55,6 +60,7 @@ public class TestUtil {
 
                 FileVisitResult fvr= super.postVisitDirectory(dir, exc);
                 try{
+                	
                     Files.delete(dir);
                 }catch(IOException e){
                     System.err.println("unable to delete:" + e.getMessage());
@@ -63,6 +69,8 @@ public class TestUtil {
             }
 
         });
+        //dir.getPath().delete();
+        //Files.delete(dir.toPath());
     }
     public static void assertContains(String within,String find){
     	String rep=within;
@@ -72,6 +80,41 @@ public class TestUtil {
     	assertTrue("Should have found:'" + find + "' in '" + rep + "'" ,within.contains(find));
     }
     
+    
+    public static List<BitSet> allPermutations(int count){
+    	List<BitSet> blist = new ArrayList<>();
+    	
+    	for(int i=0;i<Math.pow(2, count);i++){
+    		BitSet bs = BitSet.valueOf(new long[]{i});
+    		
+    		char[] chars=Integer.toBinaryString(i).toCharArray();
+    		for(int j=0;j<chars.length;j++){
+    			if(chars[j]=='1'){
+    				bs.set(j);
+    			}
+    		}
+    		blist.add(bs);
+    	}
+    	return blist;
+    	
+    }
+    
+    public static void waitForParam(String p){
+        CountDownLatch cdl = new CountDownLatch(1);
+        GinasGlobal.runWithRequestListener(()->{
+            System.out.println("WAITING FOR '" +p + "' PARAM");
+            try {
+                cdl.await();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }, r->{
+            if(r.getQueryString(p)!=null){
+                cdl.countDown();
+            }
+        });
+    }
     
     
 }

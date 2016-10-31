@@ -7,11 +7,6 @@
 @import ix.core.search.FieldedQueryFacet
 @import ix.ginas.controllers.GinasApp
 
-@import ix.ginas.models.v1.StructurallyDiverseSubstance
-
-@import ix.ginas.models.v1.NucleicAcidSubstance
-@import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance
-
 
 @import be.objectify.deadbolt.java.views.html._
 @import ix.ncats.controllers.security.IxDynamicResourceHandler
@@ -151,7 +146,7 @@
             @if(total >= 1 && ctx!=null) {
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
                     @if(ctx.hasExactMatches()){
-	                    <div ng-init="hideall=true" ng-show="hideall">
+	                    <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
 	                    @if(ctx.getExactMatches().size()==1){
 	                        <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
 	                    }else{
@@ -362,7 +357,7 @@
                               </h4>
                         } else {
                                     <span class="center-text"><h4 class="no-margin">Searched for:<em>
-                                    @defining(FieldedQueryFacet.displayQuery(request().getQueryString("q"))) { keyval =>
+                                    @defining(FieldedQueryFacet.displayQuery(kind,request().getQueryString("q"))) { keyval =>
                                         @if(keyval!=null){
                                             <b>@keyval(0)</b> : <span class="query-term">@keyval(1)</span>  <span>@keyval(2)</span>
                                         }

@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import javax.persistence.OptimisticLockException;
@@ -22,27 +20,15 @@ public class InxightTransaction {
 	private static ConcurrentHashMap<Transaction, InxightTransaction> _instances=
 			new ConcurrentHashMap<Transaction, InxightTransaction>();
 
-	public static ExecutorService es;
 	
-	static{
-		init();
-	}
-	
-	public static void init(){
-		es=Executors.newCachedThreadPool();
-	}
 	public static InxightTransaction getTransaction(Transaction t){
 		
 		InxightTransaction it=_instances.get(t);
-		//cleanupTransactions();
 		if(it!=null){
-			//System.out.println("Found transaction" + t);
 			return it;
 		}else{
-			//System.out.println("Can't find transaction" + t);
 			it= new InxightTransaction(t);
 			it.setEnhanced(false);
-			//it.waitAndDestroy();
 			return it;
 		}
 	}
@@ -82,31 +68,6 @@ public class InxightTransaction {
 			
 		});
 	}
-	
-	public void waitAndDestroy(){
-		Runnable r= new Runnable(){
-
-			@Override
-			public void run() {
-				while(true){
-					if(!t.isActive()){
-						break;
-					}else{
-						try {
-							Thread.sleep(1);
-						} catch (InterruptedException e) {
-							
-						}
-					}
-				}
-				destroy();
-			}
-			
-		};
-		
-		es.submit(r);
-	}
-	
 
 	public static InxightTransaction beginTransaction(){
 		return new InxightTransaction(Ebean.beginTransaction());

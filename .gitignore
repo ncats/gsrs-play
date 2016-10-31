@@ -4,3 +4,7 @@
 /ginas.ix/
 /logs/
 **/*-log*.gz
+**/.DS_Store
+**/.classpath
+**/.settings
+**/.project
