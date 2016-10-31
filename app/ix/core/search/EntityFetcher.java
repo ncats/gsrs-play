@@ -7,10 +7,9 @@ import java.util.Optional;
 import ix.core.controllers.BackupFactory;
 import ix.core.plugins.IxCache;
 import ix.core.search.LazyList.NamedCallable;
+import ix.core.util.ConfigHelper;
 import ix.core.util.EntityUtils.Key;
-import ix.ginas.models.v1.ChemicalSubstance;
 import ix.utils.Util;
-import play.Play;
 
 
 /**
@@ -23,8 +22,8 @@ import play.Play;
  *
  * @param <K>
  */
-public class EntityFetcher<K> implements NamedCallable<K>{
-	public static final long debugDealy = Play.application().configuration().getLong("ix.settings.debug.dbdelay");
+public class EntityFetcher<K> implements NamedCallable<Key,K>{
+	public static final long debugDealy = ConfigHelper.getLong("ix.settings.debug.dbdelay",0);
 
 
 	public enum CacheType{
@@ -115,7 +114,7 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		 abstract <K> K get(EntityFetcher<K> fetcher) throws Exception;
 
 	}
-	public static final CacheType cacheType = CacheType.GLOBAL_CACHE; //This is probably the best option
+	public final CacheType cacheType; 
 	
 	
 	final Key theKey;
@@ -125,12 +124,17 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	long lastFetched=0l;
 	
 	public EntityFetcher(Key theKey) throws Exception{
-		Objects.requireNonNull(theKey);
-		this.theKey=theKey;
-		if(cacheType == CacheType.LOCAL_EAGER){
-			reload();
-		}
+		this(theKey, CacheType.GLOBAL_CACHE); //This is probably the best option
 	}
+	
+	public EntityFetcher(Key theKey, CacheType ct) throws Exception{
+        Objects.requireNonNull(theKey);
+        cacheType= ct;
+        this.theKey=theKey;
+        if(cacheType == CacheType.LOCAL_EAGER){
+            reload();
+        }
+    }
 	
 	// This can probably be cached without user-specific 
 	// concerns
@@ -140,8 +144,8 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 		return cacheType.get(this);
 	}
 	
-	public String getName(){
-		return theKey.getIdString();
+	public Key getName(){
+		return theKey;
 	}
 	
 	public Optional<K> getOrReload(){
@@ -180,4 +184,14 @@ public class EntityFetcher<K> implements NamedCallable<K>{
 	public static <T> EntityFetcher<T> of(Key k, Class<T> cls) throws Exception {
 		return new EntityFetcher<>(k);
 	}
+	
+	
+	public static EntityFetcher<?> of(Key k, CacheType cacheType) throws Exception {
+        return new EntityFetcher<>(k, cacheType);
+    }
+    
+    public static <T> EntityFetcher<T> of(Key k, Class<T> cls,CacheType cacheType) throws Exception {
+        return new EntityFetcher<>(k, cacheType);
+    }
+    
 }

@@ -30,7 +30,7 @@ public interface ReIndexListener {
     /**
      * The total number of records that are to be indexed.
      * This method will be called before {@link #doneReindex()}
-     * but is not guarenteed to be be called before
+     * but is not guaranteed to be be called before
      * {@link #recordReIndexed(Object)} because some implementations
      * may compute the total asynchronously.
      *

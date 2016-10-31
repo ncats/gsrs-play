@@ -3,7 +3,10 @@ package ix.core.plugins;
 import com.sleepycat.je.*;
 
 import ix.core.models.BaseModel;
+import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
+import ix.utils.Tuple;
 import ix.utils.Util;
 import net.sf.ehcache.CacheEntry;
 import net.sf.ehcache.CacheException;
@@ -13,6 +16,7 @@ import net.sf.ehcache.constructs.blocking.CacheEntryFactory;
 import net.sf.ehcache.writer.CacheWriter;
 import net.sf.ehcache.writer.writebehind.operations.SingleOperationType;
 import play.Logger;
+import play.Play;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -26,19 +30,20 @@ import play.db.ebean.Model;
  * Created by katzelda on 7/7/16.
  */
 public class FileDbCache implements GinasFileBasedCacheAdapter {
-
+	CachedSupplier<Boolean> clearDB = ConfigHelper.supplierOf("ix.cache.clearpersist",false);
+			
     private Database db;
 
     private final File dir;
     private final String cacheName;
-
     private int serializableCount=0, notSerializableCount=0;
+    
     public FileDbCache(File dir, String cacheName){
         Objects.requireNonNull(dir);
         Objects.requireNonNull(cacheName);
 
         this.cacheName = cacheName;
-       this.dir = dir;
+        this.dir = dir;
     }
 
     private volatile boolean init=false;
@@ -61,7 +66,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
                 try(ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data.getData(), data.getOffset(), data.getSize()))) {
                     elm = new Element(key, ois.readObject());
                 }
-                //System.out.println("Found object for:" + key);
             }
             else if (status == OperationStatus.NOTFOUND) {
         
@@ -75,15 +79,12 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         }
         return elm;
     }
-
-    @Override
-    public CacheWriter clone(Ehcache cache) throws CloneNotSupportedException {
-        
-        throw new CloneNotSupportedException();
+    
+    public void init(){
+    	init(clearDB.get());
     }
 
-    @Override
-    public void init() {
+    public void init(boolean cleardb) {
     	if(init){
             return;
         }
@@ -99,10 +100,12 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         EnvironmentConfig envconf = new EnvironmentConfig ();
         envconf.setAllowCreate(true);
         Environment env = new Environment (dir, envconf);
-        try{
-        	env.removeDatabase(null, cacheName);
-        }catch(Exception e){
-        	Logger.error("No persist cache to delete", e);
+        if(cleardb){
+	        try{
+	        	env.removeDatabase(null, cacheName);
+	        }catch(Exception e){
+	        	Logger.error("No persist cache to delete", e);
+	        }
         }
         DatabaseConfig dbconf = new DatabaseConfig ();
         dbconf.setAllowCreate(true);
@@ -112,8 +115,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void dispose() throws CacheException {
-
-        
         if (db != null) {
             try {
                 Logger.debug("#### closing cache writer "+cacheName
@@ -132,33 +133,51 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         return new DatabaseEntry (value.toString().getBytes());
     }
     
-    public static Optional<Object> getSerializableObect(Element elm){
+    public static Optional<Tuple<Serializable,Object>> getSerializableObect(Element elm){
     	
     	Object value =elm.getObjectValue();
-    	
-    	if(elm.isSerializable()){
-    		if(value instanceof Model){
-	    		return Optional.empty();
-	    	}
-    		return Optional.of(value);
+    	Object key = elm.getObjectKey();
+    	if(!(key instanceof Serializable)){
+    		return Optional.empty();
     	}
     	
     	if(value instanceof CachedSupplier){
-    		//Warning: forces a real call
-    		Object realValue=((CachedSupplier)value).get();
-    		if(realValue instanceof Serializable){
-    			if(!(realValue instanceof Model)){
-    				return Optional.of(realValue);
-    			}
-    		}
+    		//Warning: forces a real, synchronized call
+    		@SuppressWarnings("unchecked")
+			Object realValue=((CachedSupplier<Object>)value).getSync();
+    		
+    		return getKeyValueSerialized((Serializable) key,realValue);
+    	}else{
+    		return getKeyValueSerialized((Serializable) key,value);
     	}
-    	return Optional.empty();
+    	
     }
-  
+    
+    private static Optional<Tuple<Serializable,Object>> 
+    					getKeyValueSerialized(Serializable key, Object realValue){
+    	if(realValue instanceof SearchResultContext){
+    		
+    		SearchResultContext.SerailizedSearchResultContext 
+    			serializedContext=
+    			((SearchResultContext)realValue).getSerializedForm();
+    		
+    		return Optional.of(Tuple.of(serializedContext.getSerializedKey(),
+    									serializedContext
+    									));
+    	}
+    	
+    	if(!(realValue instanceof Serializable)){
+    		return Optional.empty();
+		}else if(realValue instanceof Model){
+			return Optional.empty();
+		}
+    	return Optional.of(Tuple.of(key, realValue));
+    	
+    }
     
     @Override
     public void write(Element elm) throws CacheException {
-    	Optional<Object> seralizable=getSerializableObect(elm);
+    	Optional<Tuple<Serializable,Object>> seralizable=getSerializableObect(elm);
     	
         if(!seralizable.isPresent()){
             notSerializableCount++;
@@ -169,18 +188,15 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
         //TODO is this a safe cast?
 
 
-        Serializable key = (Serializable) elm.getObjectKey();
-
-        Object value = elm.getObjectValue();
-
-        
+        Serializable key = seralizable.get().k();
+        Object value = seralizable.get().v();
         
         if (key != null) {
             //Logger.debug("Persisting cache key="+key+" value="+elm.getObjectValue());
             try {
                 DatabaseEntry dkey = getKeyEntry (key);
                 DatabaseEntry data = new DatabaseEntry
-                        (Util.serialize(seralizable.get()));
+                        (Util.serialize(value));
                 OperationStatus status = db.put(null, dkey, data);
                 if (status != OperationStatus.SUCCESS) {
                     Logger.warn
@@ -198,7 +214,6 @@ public class FileDbCache implements GinasFileBasedCacheAdapter {
 
     @Override
     public void writeAll(Collection<Element> elements) throws CacheException {
-
         //TODO is there a better way?
         for(Element e : elements){
             write(e);

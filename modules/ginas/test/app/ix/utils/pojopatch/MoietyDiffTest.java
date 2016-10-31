@@ -30,7 +30,6 @@ public class MoietyDiffTest extends AbstractGinasServerTest{
         UUID uuid = UUID.randomUUID();
         UUID uuid2 = UUID.randomUUID();
 
-        System.out.println("uuid = " + uuid);
         old.uuid = uuid;
         old.structure = new GinasChemicalStructure();
         old.structure.smiles = "c1cccc1";
@@ -45,10 +44,6 @@ public class MoietyDiffTest extends AbstractGinasServerTest{
         newMoiety.structure.id = uuid2;
 
         newMoiety.enforce();
-
-
-        System.out.println("old json");
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.valueToTree(old)));
 
         PojoPatch<Moiety> patch = PojoDiff.getDiff(old, newMoiety);
         patch.apply(old);

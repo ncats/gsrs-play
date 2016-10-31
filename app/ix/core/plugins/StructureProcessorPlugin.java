@@ -117,12 +117,21 @@ public class StructureProcessorPlugin extends Plugin {
         Stage stage = Stage.Routing;
         
         Structure struc;
+        boolean standardize;
         StructureReceiver.Status status = StructureReceiver.Status.OK;
         String mesg;
+
+        public ReceiverProcessor (Molecule mol, 
+                                  StructureReceiver receiver,
+                                  StructureIndexer indexer) {
+            this (mol, false, receiver, indexer);
+        }
         
-        public ReceiverProcessor (Molecule mol, StructureReceiver receiver,
+        public ReceiverProcessor (Molecule mol, boolean standardize,
+                                  StructureReceiver receiver,
                                   StructureIndexer indexer) {
             this.mol = mol;
+            this.standardize = standardize;
             this.receiver = receiver;
             this.indexer = indexer;
             this.key = randomKey (10);
@@ -143,7 +152,7 @@ public class StructureProcessorPlugin extends Plugin {
             
             try {
                 if (mol != null) {
-                    struc = StructureProcessor.instrument(mol);
+                    struc = StructureProcessor.instrument(mol, standardize);
                 }
                 stage = Stage.Persisting;
             }
@@ -580,6 +589,12 @@ public class StructureProcessorPlugin extends Plugin {
             throw new IllegalArgumentException
                 ("Unable to parse input structure: "+struc);
         }
+    }
+
+    public void submit (Molecule mol, boolean standardize,
+                        StructureReceiver receiver) {
+        inbox.send(processor, new ReceiverProcessor
+                   (mol, standardize, receiver, indexer));
     }
 
     public void submit (Molecule mol, StructureReceiver receiver) {

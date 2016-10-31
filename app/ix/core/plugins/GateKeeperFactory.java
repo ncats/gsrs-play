@@ -20,6 +20,9 @@ import net.sf.ehcache.constructs.blocking.SelfPopulatingCache;
 
 import java.util.function.Supplier;
 
+import ix.core.UserFetcher;
+import ix.utils.Util;
+
 /**
  * Created by katzelda on 5/26/16.
  */
@@ -56,34 +59,26 @@ public final class GateKeeperFactory {
 
 		@Override
 		public void delete(CacheEntry arg0) throws CacheException {
-			// TODO Auto-generated method stub
-			System.out.println("Deleting:" + arg0);
+			//System.out.println("Deleting:" + arg0);
 		}
 
 		@Override
 		public void deleteAll(Collection<CacheEntry> arg0)
 				throws CacheException {
-			// TODO Auto-generated method stub
-			System.out.println("Deleting all");
+			//System.out.println("Deleting all");
 		}
 
 		@Override
 		public void dispose() throws CacheException {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
-		public void init() {
-			// TODO Auto-generated method stub
-			
-		}
+		public void init() {}
 
 		@Override
 		public void throwAway(Element arg0, SingleOperationType arg1,
 				RuntimeException arg2) {
-			// TODO Auto-generated method stub
-			System.out.println("Throwing away:" + arg0);
+			//System.out.println("Throwing away:" + arg0);
 		}
 
 		@Override
@@ -107,7 +102,7 @@ public final class GateKeeperFactory {
         private Integer nonEvictableMaxElements, nonEvictableTimeToLive, nonEvictableTimeToIdle;
 
         private GinasFileBasedCacheAdapter cacheAdapter =DoNothingDBCacheWriter.INSTANCE;
-        
+        private KeyMaster km= new ExplicitMapKeyMaster();
         
         public Builder(int maxElements, int timeToLive, int timeToIdle){
             this.maxElements = maxElements;
@@ -123,6 +118,11 @@ public final class GateKeeperFactory {
         
         public Builder cacheAdapter(GinasFileBasedCacheAdapter adapter){
         	this.cacheAdapter=adapter;
+        	return this;
+        }
+        
+        public Builder keyMaster(KeyMaster keymaster){
+        	this.km=keymaster;
         	return this;
         }
 
@@ -153,7 +153,7 @@ public final class GateKeeperFactory {
                     evictableCache.registerCacheWriter(cacheAdapter);
                     evictableCache.setSampledStatisticsEnabled(true);
                     Ehcache eh_evictableCache= new SelfPopulatingCache(evictableCache,cacheAdapter);
-                    return new SingleCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), eh_evictableCache);
+                    return new SingleCacheGateKeeper(debugLevel, this.km, eh_evictableCache);
                };
             }else{
                 supplier = ()->{
@@ -186,7 +186,7 @@ public final class GateKeeperFactory {
 
                     evictableCache.setSampledStatisticsEnabled(true);
 
-                    return new TwoCacheGateKeeper(debugLevel, new ExplicitMapKeyMaster(), eh_evictableCache, eh_nonEvictableCache);
+                    return new TwoCacheGateKeeper(debugLevel, this.km, eh_evictableCache, eh_nonEvictableCache);
                 };
             }
 
@@ -194,6 +194,7 @@ public final class GateKeeperFactory {
         }
     }
 
+    
     private static class ExplicitMapKeyMaster implements KeyMaster{
         private ConcurrentHashMap<String,Set<String>> thekeys= new ConcurrentHashMap<String,Set<String>>();
         private int size=0;
@@ -221,6 +222,18 @@ public final class GateKeeperFactory {
         @Override
         public void removeAll() {
             thekeys.clear();
+        }
+        
+        public String adaptKey(String baseKey) {
+            final String user = UserFetcher.getActingUser(true).username;
+            return "!" + baseKey + "#" + Util.sha1(user);
+        }
+
+        public String unAdaptKey(String adaptedKey) {
+            if (!adaptedKey.startsWith("!")) {
+                return adaptedKey;
+            }
+            return adaptedKey.substring(1, adaptedKey.lastIndexOf('#'));
         }
     }
 }

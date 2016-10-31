@@ -44,7 +44,13 @@ import ix.ginas.models.serialization.ReferenceSetSerializer;
 @DiscriminatorValue("GSRS")
 public class GinasChemicalStructure extends Structure implements GinasAccessReferenceControlled {
 
-	private EmbeddedKeywordList internalReferences = new EmbeddedKeywordList();
+	/**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+
+    private EmbeddedKeywordList internalReferences = new EmbeddedKeywordList();
 	
 	
     public Date created=null;

@@ -1,11 +1,13 @@
 package ix.test.server;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import play.libs.ws.WSResponse;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import play.libs.ws.WSResponse;
 
 /**
  * Parent class that handles generic inxight session
@@ -58,7 +60,15 @@ public abstract class AbstractSession<T> implements Closeable{
         if(status2 != 200 && status2 != 201){
             throw new IllegalStateException("response status Not OK : " + status2 + " in " + wsResponse1.getBody());
         }
-        JsonNode returned = wsResponse1.asJson();
+        JsonNode returned=null;
+        String body = wsResponse1.getBody();
+        try{
+        	returned = (new ObjectMapper()).readTree(body);
+        }catch(Exception e){
+        	System.out.println("That's an error!");
+            System.out.println(body);
+            throw new IllegalStateException(e);
+        }
         Objects.requireNonNull(returned);
         return returned;
     }
@@ -78,6 +88,7 @@ public abstract class AbstractSession<T> implements Closeable{
     }
 
     public String constructUrlFor(String path) {
+        if(path.startsWith("http"))return path;
     	StringBuilder sb = new StringBuilder("http://localhost:")
                 .append(port);
     	

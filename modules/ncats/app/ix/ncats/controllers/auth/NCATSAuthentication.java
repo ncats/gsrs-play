@@ -27,6 +27,7 @@ import com.avaje.ebean.*;
 
 import ix.core.plugins.IxCache;
 import ix.core.plugins.IxContext;
+import ix.core.util.ConfigHelper;
 import ix.ncats.models.Employee;
 import ix.utils.Util;
 import net.sf.ehcache.Cache;
@@ -79,29 +80,14 @@ public class NCATSAuthentication extends Controller {
 
     public static Result login(String url) {
         Session session = Authentication.getSession();
-        Logger.debug("url:" +  url + "  app: " + Authentication.APP);
         if (session != null) {
             return url != null ? redirect(url)
                     : redirect(routes.NCATSAuthentication.secured());
         }
-        return ok(ix.ncats.views.html.login.render(url, Authentication.APP));
+        return ok(ix.ncats.views.html.login.render(url, Authentication.APP.get()));
     }
 
     public static Result logout() {
-
-//        if (Play.application().configuration()
-//					    .getBoolean("ix.authentication.trustheader")) {
-//            String usernameheader = Play.application().configuration()
-//                    .getString("ix.authentication.usernameheader");
-//            String usernameEmailheader = Play.application().configuration()
-//                    .getString("ix.authentication.useremailheader");
-//
-//            Map<String, String[]> headers = request().headers();
-//            headers.remove(usernameheader);
-//            headers.remove(usernameEmailheader);
-//
-//        }
-
         Session session = Authentication.getSession();
         if (session != null) {
             flash("message", session.profile.user.username
@@ -120,7 +106,7 @@ public class NCATSAuthentication extends Controller {
             return redirect(routes.NCATSAuthentication.login(null));
         }
         
-        String context = Play.application().configuration().getString("application.context");
+        String context = ConfigHelper.getOrDefault("application.context", "app");
         return redirect(context);
     }
 }

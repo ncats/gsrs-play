@@ -4,6 +4,7 @@ import ix.core.models.Group;
 import ix.core.search.text.IndexValueMaker;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.IndexableValueFromRaw;
+import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasSubstanceDefinitionAccess;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
@@ -29,57 +30,38 @@ public class RecordAccessIndexValueMaker implements IndexValueMaker<Substance> {
     }
 
     public void makeRecordAccessLevelValues(Substance t, Consumer<IndexableValue> consumer) {
-
         Set<Group> groups=t.getAccess();
 
-
-        if(groups== null || groups.isEmpty())
-        {
-            consumer.accept(new IndexableValueFromRaw("Record Level Access", "public").dynamic());
-        }
-        else {
-            for (Group grp: groups) {
-                consumer.accept(new IndexableValueFromRaw("Record Level Access", grp.name).dynamic());
-            }
-        }
+        makeAccessLevelFacet("Record Level Access",groups, consumer);
     }
 
     public void makeDisplayNameValues(Substance t, Consumer<IndexableValue> consumer) {
-
         Set<Group> groups= t.getDisplayName().map(n -> n.getAccess()).orElse(null);
 
-
-        if(groups== null || groups.isEmpty())
-        {
-            consumer.accept(new IndexableValueFromRaw("Display Name Level Access ", "public").dynamic());
-        }
-        else {
-            for (Group grp: groups) {
-                consumer.accept(new IndexableValueFromRaw("Display Name Level Access ", grp.name).dynamic());
-            }
-        }
+        makeAccessLevelFacet("Display Name Level Access",groups, consumer);
     }
 
     public void makeDefinitionLevelAccessValues(Substance t, Consumer<IndexableValue> consumer) {
-
         Set<Group> groups=null;
 
         if(t instanceof GinasSubstanceDefinitionAccess){
             groups= Optional.ofNullable(((GinasSubstanceDefinitionAccess) t).getDefinitionElement())
                     .map(d->d.getAccess())
                     .orElse(null);
+            makeAccessLevelFacet("Definition Level Access",groups, consumer);
         }
-
-        if(groups== null || groups.isEmpty())
-        {
-            consumer.accept(new IndexableValueFromRaw("Definition Level Access", "public").dynamic());
-        }
-        else {
+        
+    }
+    public void makeAccessLevelFacet(String facetName, Set<Group> groups, Consumer<IndexableValue> consumer) {
+        
+        if(groups== null || groups.isEmpty()){
+            consumer.accept(new IndexableValueFromRaw(facetName, "public").dynamic());
+        }else {
             for (Group grp: groups) {
-                consumer.accept(new IndexableValueFromRaw("Definition Level Access", grp.name).dynamic());
+                consumer.accept(new IndexableValueFromRaw(facetName, grp.name).dynamic());
             }
         }
-
     }
+    
 
 }

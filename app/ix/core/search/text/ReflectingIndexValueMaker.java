@@ -3,6 +3,7 @@ package ix.core.search.text;
 import static org.apache.lucene.document.Field.Store.NO;
 import static org.apache.lucene.document.Field.Store.YES;
 
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -18,17 +19,15 @@ import ix.core.util.EntityUtils.EntityWrapper;
 public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 
 	public class IndexingFieldCreator implements BiConsumer<PathStack, EntityUtils.EntityWrapper>{
-		
 		Consumer<IndexableValue> toAdd;
 		private EntityWrapper firstValue=null;
 		
 		public IndexingFieldCreator(Consumer<IndexableValue> toAdd) {
+			Objects.requireNonNull(toAdd);
 			this.toAdd = toAdd; 						//where to put the fields 
 		}
 	
 		public void acceptWithGeneric(PathStack path, EntityUtils.EntityWrapper<Object> ew) {
-			if (toAdd != null) {
-				
 				toAdd.accept(new IndexableValueDirect(new FacetField(TextIndexer.DIM_CLASS, ew.getKind())));
 				
 				ew.getId().ifPresent(o -> {
@@ -38,7 +37,7 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 						toAdd.accept(new IndexableValueDirect(new StringField(ew.getInternalIdField(), o.toString(), YES)));  //Only Special case
 					}
 					toAdd.accept(new IndexableValueDirect(new StringField(ew.getIdField(), o.toString(), NO)));
-				});
+				}); //
 	
 				// primitive fields only, they should all get indexed
 				ew.streamFieldsAndValues(f -> f.isPrimitive()).forEach(fi -> {
@@ -46,20 +45,19 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 						toAdd.accept(IndexableValueFromIndexable.of( path.getFirst(), fi.v(), path.toPath(),
 								fi.k().getIndexable()));
 					});
-				});
+				}); //Primitive fields
 	
 				ew.getDynamicFacet().ifPresent(fv -> {
 					path.pushAndPopWith(fv.k(), () -> {
-						
 						toAdd.accept(new IndexableValueFromRaw(fv.k(), fv.v(), path.toPath()).dynamic());
 					});
-				});
+				}); //Dynamic Facets
 				
 				ew.streamMethodKeywordFacets().forEach(kw -> {
 					path.pushAndPopWith(kw.label, () -> {
 						toAdd.accept(new IndexableValueFromRaw(kw.label, kw.getValue(), path.toPath()).dynamic());
 					});
-				});
+				}); //Method keywords
 	
 				ew.streamMethodsAndValues(m -> m.isArrayOrCollection()).forEach(t -> {
 					path.pushAndPopWith(t.k().getName(), () -> {
@@ -82,22 +80,16 @@ public class ReflectingIndexValueMaker<T> implements IndexValueMaker<T>{
 				ew.streamFieldsAndValues(f -> (!f.isPrimitive() && !f.isArrayOrCollection())).forEach(fi -> {
 					path.pushAndPopWith(fi.k().getName(), () -> {
 						if (fi.k().isEntityType()) {
-							if (toAdd != null) {
-								if (fi.k().isExplicitlyIndexable()) {
-									toAdd.accept(IndexableValueFromIndexable.of(  path.getFirst(), fi.v(),
-											path.toPath(), fi.k().getIndexable()));
-								}
-							}
-						} else { // treat as string
-
-							if (toAdd != null) {
-								toAdd.accept(IndexableValueFromIndexable.of(  path.getFirst(), fi.v(),
+							if (fi.k().isExplicitlyIndexable()) {
+								toAdd.accept(IndexableValueFromIndexable.of(path.getFirst(), fi.v(),
 										path.toPath(), fi.k().getIndexable()));
 							}
+						} else { // treat as string
+							toAdd.accept(IndexableValueFromIndexable.of(path.getFirst(), fi.v(),
+									path.toPath(), fi.k().getIndexable()));
 						}
 					}); // for each field with value
 				}); // foreach non-primitive field
-			}
 		}
 	
 		

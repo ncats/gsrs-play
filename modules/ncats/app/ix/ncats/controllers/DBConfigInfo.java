@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import ix.core.util.ConfigHelper;
 import play.db.DB;
 
 public class DBConfigInfo{
@@ -45,7 +46,7 @@ public class DBConfigInfo{
      * @return
      */
     public static List<DBConfigInfo> getDefinedDatabases(){
-    	Object dbs=play.Play.application().configuration().getObject("db");
+    	Object dbs=ConfigHelper.getOrDefault("db", null);
     	List<DBConfigInfo> dblist = new ArrayList<DBConfigInfo>();
     	if(dbs instanceof Map){
     		Map<String,Object> databases = (Map<String,Object>)dbs;

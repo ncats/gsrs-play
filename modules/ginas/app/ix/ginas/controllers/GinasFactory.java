@@ -18,10 +18,11 @@ import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
+import ix.core.util.CachedSupplier;
+
 import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
-import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
@@ -32,53 +33,40 @@ import ix.ginas.utils.validation.ValidationUtils;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
-import play.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
 public class GinasFactory extends EntityFactory {
-	private static Model.Finder<Long, Principal> finder;
-	private static Model.Finder<UUID, Unit> unitFinder;
+	private static CachedSupplier<Model.Finder<Long, Principal>> finder=Util.finderFor(Long.class, Principal.class);
+	private static CachedSupplier<Model.Finder<UUID, Unit>> unitFinder=Util.finderFor(UUID.class, Unit.class);
 
 	private static final long EXPIRE_LOCK_TIME_MS = 1 * 60 * 1000; // one minute
-	private static Map<String, EditLock> currentlyEditing;
+	private static CachedSupplier<Map<String, EditLock>> currentlyEditing =
+			CachedSupplier.of(()->new HashMap<String, EditLock>());
 
-	public static void init() {
-		finder = new Model.Finder(Long.class, Principal.class);
-		unitFinder = new Model.Finder(UUID.class, Unit.class);
-		// this can be a normal hashMap not a concurrent hashmap
-		// because we have to potentially do multiple
-		// mutatator operations in a single "transaction"
-		// like check if absent and then check/replace if expired
-		currentlyEditing = new HashMap<String, EditLock>();
-	}
 
 	public static Unit findUnitById(String uuidString) {
 		return findUnitById(UUID.fromString(uuidString));
 	}
 
 	public static Unit findUnitById(UUID uuid) {
-		return unitFinder.byId(uuid);
+		return unitFinder.get().byId(uuid);
 	}
 
-	static {
-		init();
-	}
 
 	private static void addEditLock(EditLock el) {
 		synchronized (currentlyEditing) {
-			currentlyEditing.put(el.id, el);
+			currentlyEditing.get().put(el.id, el);
 		}
 	}
 
 	private static EditLock getEditLock(String id) {
-
 		synchronized (currentlyEditing) {
-			EditLock elock = currentlyEditing.get(id);
+			EditLock elock = currentlyEditing.get().get(id);
 			if (elock == null || elock.isExpired()) {
-				currentlyEditing.remove(id);
+				currentlyEditing.get().remove(id);
 				return null;
 			}
 			return elock;
@@ -110,18 +98,30 @@ public class GinasFactory extends EntityFactory {
 		}
 	}
 
+	//TODO: move to Ginas App
+	//***************
+	/**
+	 * @deprecated Use {@link GinasApp#index()} instead
+	 */
 	public static Result index() {
-		return ok(ix.ginas.views.html.index.render());
+		return GinasApp.index();
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#app()} instead
+	 */
 	public static Result app() {
-		return ok(ix.ginas.views.html.index.render());
+		return GinasApp.app();
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#register()} instead
+	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result register() {
-		return ok(ix.ginas.views.html.register.render());
+		return GinasApp.register();
 	}
+	//***************
 
 	public static String getSmiles(String id) {
 		return getSmiles(id, 0);
@@ -176,29 +176,35 @@ public class GinasFactory extends EntityFactory {
 		return null;
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#sequence(String)} instead
+	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result sequence(String id) {
-		return ok(ix.ginas.views.html.sequence.render(id));
+		return GinasApp.sequence(id);
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#structuresearch(String)} instead
+	 */
 	public static Result structuresearch(String q) {
-		Structure s = GinasApp.getStructureFrom(q);
-		String smol = null;
-		if (s != null) {
-			smol = s.molfile;
-		}
-		return ok(ix.ginas.views.html.structuresearch.render(smol));
+		return GinasApp.structuresearch(q);
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#report()} instead
+	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result report() {
-		return ok(ix.ginas.views.html.report.render());
+		return GinasApp.report();
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#wizard(String)} instead
+	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result wizard(String kind) {
-		Logger.info(kind);
-		return ok(ix.ginas.views.html.wizard.render(kind, "{}", null));
+		return GinasApp.wizard(kind);
 	}
 
 	public static class LockResponse {
@@ -277,6 +283,9 @@ public class GinasFactory extends EntityFactory {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link GinasApp#approve(String)} instead
+	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_APPROVE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approve(String substanceId) {
 		List<Substance> substances = SubstanceFactory.resolve(substanceId);
@@ -295,7 +304,7 @@ public class GinasFactory extends EntityFactory {
 	}
 
 	public static Principal byUsername(String user) {
-		return finder.where().eq("username", user).findUnique();
+		return finder.get().where().eq("username", user).findUnique();
 	}
 
 	public static Principal registerIfAbsent(String user) {
@@ -351,9 +360,11 @@ public class GinasFactory extends EntityFactory {
 	}
 
 	// This won't typically work, as it will collide with existing CV
+	/**
+	 * @deprecated Use {@link GinasApp#loadCV()} instead
+	 */
 	public static Result loadCV() {
-		ControlledVocabularyFactory.loadCVFile();
-		return ok(ix.ginas.views.html.index.render());
+		return GinasApp.loadCV();
 	}
 
 	

@@ -20,6 +20,7 @@ import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.plugins.PayloadPlugin;
+import ix.core.util.CachedSupplier;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.EmbeddedKeywordList;
 import ix.ginas.models.GinasAccessReferenceControlled;
@@ -29,12 +30,15 @@ import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
 import ix.ginas.utils.*;
 import ix.core.GinasProcessingMessage;
 import ix.core.GinasProcessingMessage.Link;
+import play.Application;
 import play.Configuration;
 import play.Logger;
 import play.Play;
 import play.mvc.Call;
 
 public class ValidationUtils {
+
+	private static final String VALIDATION_CONF = "validation.conf";
 
 	public static interface ValidationRule<K>{
 		public GinasProcessingMessage validate(K obj);
@@ -52,28 +56,35 @@ public class ValidationUtils {
 	}
 	
 	
-	static PayloadPlugin _payload = null;
-	public static boolean extractLocators = true;
-	static Config validationConf = null;
-	static boolean requireName = true;
+	static CachedSupplier<PayloadPlugin> _payload = CachedSupplier.of(()->Play.application().plugin(PayloadPlugin.class));
+	static CachedSupplier<ValidationConfig> validationConf = CachedSupplier.of(()->{
+		return new ValidationConfig(Play.application());
+	});
 
-	static {
-		init();
-	}
-
-	public static void init() {
-		Configuration conf = Play.application().configuration();
-		URL validationUrl = Play.application().classloader()
-				.getResource("validation.conf");
-		if (validationUrl != null) {
-			validationConf = ConfigFactory.load(Play.application()
-					.classloader(), "validation.conf");
-			requireName = validationConf.getBoolean("requireNames");
+	
+	public static class ValidationConfig{
+		Config validationConf;
+		private boolean requireName=true;
+		private boolean extractLocators=true;
+		public ValidationConfig(Application app){
+			Configuration conf = app.configuration();
+			URL validationUrl = app.classloader().getResource(VALIDATION_CONF);
+			if (validationUrl != null) {
+				validationConf = ConfigFactory.load(app.classloader(), VALIDATION_CONF);
+			}
+			extractLocators = conf.getBoolean("ix.ginas.prepare.extractlocators",true);
+			if(validationConf!=null){
+				requireName=validationConf.getBoolean("requireNames");
+			}
 		}
-		_payload = Play.application().plugin(PayloadPlugin.class);
-		extractLocators = conf.getBoolean("ix.ginas.prepare.extractlocators",
-				true);
+		public boolean requireName(){
+			return requireName;
+		}
 	}
+	
+	
+	
+	
 
 	static List<GinasProcessingMessage> validateAndPrepare(Substance s,
 			GinasProcessingStrategy strat) {
@@ -95,7 +106,7 @@ public class ValidationUtils {
 								+ uuid));
 			}
 			if (s.definitionType == SubstanceDefinitionType.PRIMARY) {
-				if (requireName) {
+				if (ValidationUtils.validationConf.get().requireName()) {
 					validateNames(s, gpm, strat);
 				}
 				validateCodes(s, gpm, strat);
@@ -351,7 +362,7 @@ public class ValidationUtils {
 				if (n.isDisplayName()) {
 					display++;
 				}
-				if (extractLocators) {
+				if (validationConf.get().extractLocators) {
 					extractLocators(s, n, gpm, strat);
 				}
 				if (n.languages == null || n.languages.size() == 0) {
@@ -591,7 +602,7 @@ public class ValidationUtils {
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 		try {
 			for (Subunit su : proteinsubstance.protein.subunits) {
-				Payload payload = _payload.createPayload("Sequence Search",
+				Payload payload = _payload.get().createPayload("Sequence Search",
 						"text/plain", su.sequence);
 				List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
 						.getNearCollsionProteinSubstancesToSubunit(10, 0, su);

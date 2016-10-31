@@ -9,11 +9,18 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_polymer")
 public class Polymer extends GinasCommonSubData {
+    
+    @OneToOne(mappedBy="polymer")
+    private PolymerSubstance owner;
+    
+    
     @OneToOne(cascade=CascadeType.ALL)
     public PolymerClassification classification;
 
@@ -32,4 +39,8 @@ public class Polymer extends GinasCommonSubData {
     public Polymer () {}
     
     
+    @JsonIgnore
+    public PolymerSubstance getPolymerSubstance(){
+        return this.owner;
+    }
 }

@@ -7,28 +7,35 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -39,10 +46,14 @@ import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.avaje.ebean.Expression;
+
 import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.core.util.TimeUtil;
 import play.Logger;
 import play.Play;
+import play.db.ebean.Model;
 import play.mvc.Http;
 
 public class Util {
@@ -53,8 +64,8 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
-    public static CachedSupplier<Long> TIME_RESOLUTION_MS=CachedSupplier.of(()->Play.application().configuration().getLong("ix.tokenexpiretime",(long)(3600*1000*24)));
-
+    public static CachedSupplier<Long> TIME_RESOLUTION_MS=
+    		ConfigHelper.supplierOf("ix.tokenexpiretime",(long)(3600*1000*24));
 
     private static int BUFFER_SIZE = 8192; //8K
 
@@ -103,39 +114,66 @@ public class Util {
         return sha1 (req, (String[])null);
     }
     
+    private static String sha1 (String seed, Map<String, String[]> params) throws UnsupportedEncodingException, NoSuchAlgorithmException{
+    	 MessageDigest md = MessageDigest.getInstance("SHA1");
+         md.update(seed.getBytes("utf8"));
+         return sha1(md, params);
+   }
+    
+    private static String sha1 (MessageDigest md, Map<String, String[]> params) throws UnsupportedEncodingException{
+    	 Set<String> sorted = new TreeSet<String> (params.keySet());
+         for (String key : sorted) {
+             	String[] values = params.get(key);
+                if (values != null) {
+                     Arrays.sort(values);
+                     md.update(key.getBytes("utf8"));
+                     for (String v : values){
+                         if(v!=null){
+                             md.update(v.getBytes("utf8"));
+                         }
+                     }
+                }
+         }
+         return toHex (md.digest());
+    }
+    
+    public static Map<String,String[]> reduceParams(Map<String,String[]> params, String ... keep){
+    	if (keep == null || keep.length == 0) return params;
+    	Set<String> keepSet = Arrays.stream(keep)
+    							.collect(Collectors.toSet());
+			
+    	return params.entrySet()
+    			.stream()
+    			.filter(es->keepSet.contains(es.getKey()))
+    			.collect(toMap());
+    }
+    
+    public static <T,U> Collector<Entry<T,U>,?,Map<T,U>> toMap(){
+    	return Collectors.toMap(e->e.getKey(), e->e.getValue());
+    }
+    
+    
+    
+    /**
+     * Use {@link #sha1(String, Map, String...)} instead, to avoid
+     * tight coupling to request.
+     * @param req
+     * @param params
+     * @return
+     */
+    @Deprecated
     public static String sha1 (Http.Request req, String... params) {
         String path = req.method()+"/"+req.path();
+        return sha1(path, req.queryString(), params);
+    }
+    
+    public static String sha1 (String path, Map<String,String[]> all, String... params) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
-            md.update(path.getBytes("utf8"));
-
-            Set<String> uparams = new TreeSet<String>();
-            if (params != null && params.length > 0) {
-                for (String p : params) {
-                    uparams.add(p);
-                }
-            }
-            else {
-                uparams.addAll(req.queryString().keySet());
-            }
-
-            Set<String> sorted = new TreeSet (req.queryString().keySet());
-            for (String key : sorted) {
-                if (uparams.contains(key)) {
-                    String[] values = req.queryString().get(key);
-                    if (values != null) {
-                        Arrays.sort(values);
-                        md.update(key.getBytes("utf8"));
-                        for (String v : values)
-                            md.update(v.getBytes("utf8"));
-                    }
-                }
-            }
-
-            return toHex (md.digest());
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't generate hash for request: "+req.uri(), ex);
+            Map<String, String[]> map = reduceParams(all, params);
+            
+            return sha1(path,map);
+        }catch (Exception ex) {
+            Logger.trace("Can't generate hash for request: "+path, ex);
         }
         return null;
     }
@@ -521,6 +559,203 @@ public class Util {
 
 		return sbSource.toString();
 	}
+	
+	
+	public static <T> Comparator<T> comparator(Stream<T> order){
+		return comparitor(t->t, order);
+	}
+	
+	public static <T, V> Comparator<V> comparitor(Function<V,T> namer,Stream<T> order){
+		Map<T,Integer> mapOrder=order.map(toIndexedTuple())
+								     .collect(Collectors.toMap(t->t.v(), 
+								    		 				   t->t.k(),
+								    		 				   (a,b)->a)); //Keep old values
+		return (a,b)->{
+			T k1=namer.apply(a);
+			T k2=namer.apply(b);
+			Integer i1=mapOrder.getOrDefault(k1, Integer.MAX_VALUE);
+			Integer i2=mapOrder.getOrDefault(k2, Integer.MAX_VALUE);
+			return Integer.compare(i1, i2);
+		};
+	}
+
+	
+	public static <I,T> CachedSupplier<Model.Finder<I,T>> finderFor(Class<I> cls, Class<T> vclass){
+		return CachedSupplier.of(()->{
+			return new Model.Finder<>(cls, vclass);
+		});
+	}
+
+	
+	public static <T,V>  Map<T,V> toMap(T t, V v){
+		Map<T,V> toMap = new HashMap<T,V>();
+		toMap.put(t, v);
+		return toMap;
+	}
+	
+	public static class MapBuilder<T,V>{
+		private Map<T,V> _map = new HashMap<>();
+		
+		public MapBuilder<T,V> put(T t,V v){
+			_map.put(t, v);
+			return this;
+		}
+		
+		public Map<T,V> build(){
+			return this._map;
+		}
+		public static <T,V> MapBuilder<T,V> putNew(T t, V v){
+			MapBuilder<T,V> mapBuilder= new MapBuilder<>();
+			return mapBuilder.put(t, v);
+		}
+	}
+
+	//And all expressions together
+	//TODO: There has got to be a cleaner way
+	public static Expression andAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.and(retExpr, expr);
+		}
+		return retExpr;
+	}
 
 
+	//Or all expressions together
+	//TODO: There has got to be a cleaner way
+	public static Expression orAll(Expression... e) {
+		Expression retExpr = e[0];
+		for (Expression expr : e) {
+			retExpr = com.avaje.ebean.Expr.or(retExpr, expr);
+		}
+		return retExpr;
+	}
+
+
+	public static String canonicalizeQuery (Http.Request req) {
+	    Map<String, String[]> queries = req.queryString();
+	    Set<String> keys = new TreeSet<String>(queries.keySet());
+	    StringBuilder q = new StringBuilder ();
+	    for (String key : keys) {
+	        if (q.length() > 0)
+	            q.append('&');
+	        String[] values = queries.get(key);
+	        Arrays.sort(values);
+	        if (values != null && values.length > 0) {
+	            q.append(key+"="+values[0]);
+	        }
+	    }
+	    return q.toString();
+	}
+	
+	public static class QueryStringManipulator{
+		Map<String,String[]> originalParams;
+		CachedSupplier<Map<String,List<String>>> params = CachedSupplier.of(()->{
+			Map<String,List<String>> m= originalParams.entrySet()
+						  .stream()
+						  .map(Tuple::of)
+						  .map(t->Tuple.of(t.k(), Stream.of(t.v()).collect(Collectors.toList())))
+						  .collect(Tuple.toMap());
+			return m;
+		});
+		public QueryStringManipulator(Map<String,String[]> params){
+			this.originalParams=params;
+		}
+		
+		public void toggleInclusion(String key, String value){
+			List<String> list=params.get().computeIfAbsent(key, k-> new ArrayList<String>());
+			//TODO: could be optimized 
+			if(list.contains(value)){
+				list.remove(value);
+			}else{
+				list.add(value);
+			}
+		}
+		
+		public String toQueryString(){
+			return params.get().entrySet()
+					.stream()
+					.flatMap(this::flatten)
+					.map(es->urlEncodeUTF8(es.k()) + "=" + urlEncodeUTF8(es.v()))
+					.collect(Collectors.joining("&"));
+		}
+		
+		private Stream<Tuple<String, String>> flatten(Entry<String,List<String>> es){
+			return es.getValue()
+					 .stream()
+					 .map(s->Tuple.of(es.getKey(), s));
+		}
+		
+		
+		static String urlEncodeUTF8(String s) {
+	        try {
+	            return URLEncoder.encode(s, "UTF-8");
+	        } catch (UnsupportedEncodingException e) {
+	        	e.printStackTrace();
+	            throw new UnsupportedOperationException(e);
+	        }
+	    }
+		
+	}
+
+	/**
+     * Generates a mapping function for the given {@link Pattern} and group
+     * number. This can be used to extract matching elements of a regex easily
+     * for a {@link Stream#map(Function)} call.
+     * 
+     * <pre>
+     *  <code>
+     *   List<String> example = 
+     *      Stream.of("FOO123", "FOO456", "FOO2", "FOO", "ASDIW")
+     *           .map(getMatchingGroup(p, 1))
+     *           .filter(o->o.isPresent())
+     *           .collect(Collectors.toList());
+     *              //["123","456","2"]        
+     *           
+     *  
+     *  </code>
+     * </pre>
+     * 
+     * @param p
+     * @param group
+     * @return
+     */
+    public static Function<String, Optional<String>> getMatchingGroup(Pattern p, int group){
+        return (s)->{
+    		Matcher m = p.matcher(s);
+    		if(!m.find()){
+    			return Optional.empty();
+    		}else{
+    			return Optional.of(m.group(group));
+    		}
+    	};
+    }
+    
+    /**
+     * Delegates to {@link #getMatchingGroup(Pattern, int)} after
+     * compiling the regex {@link Pattern}. This is equivalent
+     * to the following:
+     * 
+     * <pre>
+     * <code>
+     *  Pattern p = Pattern.compile(regex);
+     *  return getMatchingGroup(p,group);
+     * </code>
+     * </pre>
+     * @param regex
+     * @param group
+     * @return
+     */
+    public static Function<String, Optional<String>> getMatchingGroup(String regex, int group){
+        Pattern p = Pattern.compile(regex);
+        return getMatchingGroup(p,group);
+    }
+
+
+    public static <T> Set<T> toSet(T ... elements) {
+        return Stream.of(elements).collect(Collectors.toSet());
+    }
+    
+    
+	
 }

@@ -6,12 +6,26 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
+import javax.persistence.PostUpdate;
+import javax.persistence.PrePersist;
+import javax.persistence.PreRemove;
+import javax.persistence.PreUpdate;
 
 import ix.core.EntityProcessor;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
+import ix.core.util.EntityUtils.MethodMeta;
 
 /**
  * This class was created so Ebean enchanced classes using Play 2.3 can use Java
@@ -30,212 +44,6 @@ import ix.core.util.EntityUtils.Key;
  */
 public class Java8ForOldEbeanHelper {
 
-	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#prePersist(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPrePersistEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "prePersist", ep::prePersist);
-	}
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#postPersist(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPostPersistEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "postPersist", ep::postPersist);
-	}
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#preUpdate(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPreUpdateEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "preUpdate", ep::preUpdate);
-	}
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#postUpdate(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPostUpdateEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "postUpdate", ep::postUpdate);
-	}
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#preRemove(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPreRemoveEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "preRemove", ep::preRemove);
-	}
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#postRemove(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPostRemoveEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "postRemove", ep::postRemove);
-	}
-
-	/**
-	 * Register an EntityProcessor's {@link EntityProcessor#postLoad(Object)}
-	 * method.
-	 * 
-	 * @param cls
-	 *            the class type of this processor
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 * @param ep
-	 *            the EntityProcessor's instance.
-	 */
-	public static void addPostLoadEntityProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			EntityProcessor ep) {
-		registerProcessor(cls, registry, "postLoad", ep::postLoad);
-	}
-
-	private static void registerProcessor(Class cls, Map<Class<?>, List<EntityPersistAdapter.Hook>> registry,
-			String name, EntityHookMethod method) {
-
-		registry.computeIfAbsent(cls, k -> new ArrayList<>()).add(new EntityProcessorHook(method, name));
-
-	}
-
-	/**
-	 * Register the given method as an EntityPersistAdapter Hook if it is
-	 * annotated with the given annotation. this method will not do anything if
-	 * the method does not have the given annotation.
-	 *
-	 * @param annotation
-	 *            the annotation to look for.
-	 * @param cls
-	 *            the class to inspect.
-	 * @param m
-	 *            the method to inspect.
-	 * @param registry
-	 *            the registry mapping of hooks.
-	 */
-	public static void register(Class annotation, Class cls, Method m,
-			Map<Class<?>, List<EntityPersistAdapter.Hook>> registry) {
-		if (m.isAnnotationPresent(annotation)) {
-			// Logger.info("Method \""+m.getName()+"\"["+cls.getName()
-			// +"] is registered for "+annotation.getName());
-			convertToMethodHandle(cls, m, registry);
-
-		}
-	}
-
-	private static void convertToMethodHandle(Class cls, Method m,
-			Map<Class<?>, List<EntityPersistAdapter.Hook>> registry) {
-		try {
-			MethodHandle mh = LOOKUP.unreflect(m);
-
-			registry.computeIfAbsent(cls, k -> new ArrayList<>()).add(new MethodHandleHook(m.getName(), mh));
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-	}
-
-	@FunctionalInterface
-	interface EntityHookMethod {
-		void apply(Object o) throws EntityProcessor.FailProcessingException;
-	}
-
-	private static class EntityProcessorHook implements EntityPersistAdapter.Hook {
-		private final EntityHookMethod delegate;
-		private final String name;
-
-		public EntityProcessorHook(EntityHookMethod method, String name) {
-			this.name = name;
-			this.delegate = method;
-		}
-
-		@Override
-		public void invoke(Object o) throws Exception {
-			delegate.apply(o);
-		}
-
-		@Override
-		public String getName() {
-			return name;
-		}
-
-	}
-
-	private static class MethodHandleHook implements EntityPersistAdapter.Hook {
-
-		private final String name;
-		private final MethodHandle methodHandle;
-
-		public MethodHandleHook(String name, MethodHandle methodHandle) {
-			this.name = name;
-			this.methodHandle = methodHandle;
-		}
-
-		@Override
-		public void invoke(Object o) throws Exception {
-			try {
-				methodHandle.invoke(o);
-			} catch (Throwable t) {
-				throw new Exception(t.getMessage(), t);
-			}
-		}
-
-		@Override
-		public String getName() {
-			return name;
-		}
-	}
 
 	/**
 	 * Method to perform indexing needed. This method is just for
@@ -309,6 +117,49 @@ public class Java8ForOldEbeanHelper {
 			removeSequenceIndexesForBean(epa,beanWrapped);
 			removeStructureIndexesForBean(epa,beanWrapped);
 		}
+	}
+	
+	public static BiFunction<Object,EntityProcessor,Callable> processorCallableFor(Class<?> annotation){
+		return (b,ep)->{
+			if(annotation.equals(PrePersist.class)){
+				return ()->{
+					ep.prePersist(b);
+					return null;
+				};
+			}else if(annotation.equals(PostPersist.class)){
+				return ()->{
+					ep.postPersist(b);
+					return null;
+				};
+			}else if(annotation.equals(PreUpdate.class)){
+				return ()->{
+					ep.preUpdate(b);
+					return null;
+				};
+			}else if(annotation.equals(PostUpdate.class)){
+				return ()->{
+					ep.postUpdate(b);
+					return null;
+				};
+			}else if(annotation.equals(PreRemove.class)){
+				return ()->{
+					ep.preRemove(b);
+					return null;
+				};
+			}else if(annotation.equals(PostRemove.class)){
+				return ()->{
+					ep.postRemove(b);
+					return null;
+				};
+			}else if(annotation.equals(PostLoad.class)){
+				return ()->{
+					ep.postLoad(b);
+					return null;
+				};
+			}else{
+				throw new IllegalArgumentException("Unknown option for:" + annotation.getName());
+			}
+		};
 	}
 
 	/**

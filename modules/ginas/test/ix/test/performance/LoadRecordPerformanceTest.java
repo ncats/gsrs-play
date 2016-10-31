@@ -2,6 +2,9 @@ package ix.test.performance;
 
 import static ix.test.SubstanceJsonUtil.ensurePass;
 
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.junit.Test;
 
 import ix.AbstractGinasServerTest;
@@ -52,20 +55,60 @@ public class LoadRecordPerformanceTest extends AbstractGinasServerTest{
         }
    	}
     
+    /**
+     * Just encodes the number "i" in "excel"-like notation,
+     * where each char in "alphabet" is cycled through in order.
+     * 
+     * <p>
+     * For example, with alphabet <code>ABCDEFGHIJKLMNOPQRSTUVWXYZ</code>
+     * the value at 0 would be "A", and the value at 25 would be "Z". 26
+     * would give "AA", and 27 "AB". 
+     * </p>
+     * 
+     * 
+     * @param i
+     * @param alphabet
+     * @return
+     */
+    public static String toAlphabet(int i,String alphabet){
+        return toAlphabet(i, alphabet.toCharArray());
+    }
     
-    //Just convert integer to base {alphabet.length()},
-  	//using the chars in alphabet as the digits
-  	public static String toAlphabet(int i,String alphabet){
-  			int j=i;
-  			char[] alph=alphabet.toCharArray();
-  			String ret="";
-  			while(j>0){
-  				ret=(alph[j % alph.length]) + ret;
-  				j/=alph.length;
-  			}
-  			if(ret.length()==0){
-  				return ""+alph[0];
-  			}
-  			return ret;
-  	}
+    
+    public static String toAlphabet(int i,char[] alph){
+        int j=i;
+        String ret="";
+        char c2;
+        while(j>=alph.length){
+            c2=(alph[(j) % alph.length]);
+            ret=c2 + ret;
+            j=j/(alph.length)-1;
+        }
+        return alph[j] + ret;
+    
+    }
+    
+    
+    /**
+     * Creates an infinite stream of all unique strings that can 
+     * be created from the chars in the provided alphabet. "Unique"
+     * here includes a check that the string is not the reverse
+     * of a string previously seen in the stream. In other words,
+     * this is an ordered stream of all possible strings,
+     * with the later value of non-palindromic strings removed.
+     * @param alphabet
+     * @return
+     */
+    public static Stream<String> uniqueReversable(String alphabet){
+        char[] abet = alphabet.toCharArray();
+        return IntStream.iterate(0, i->i+1)
+            .mapToObj(i->toAlphabet(i,abet))
+            .filter(s->isLowerOrder(s));
+    }
+    
+    
+    private static boolean isLowerOrder(String s){
+        StringBuilder sb= new StringBuilder(s);
+        return sb.reverse().toString().compareTo(s)>=0;
+    }
 }

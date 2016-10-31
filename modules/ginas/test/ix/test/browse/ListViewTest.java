@@ -73,9 +73,6 @@ public class ListViewTest  extends AbstractGinasServerTest {
 			assertTrue(html.contains("A_AA4"));
 			assertFalse(html.contains("A_AB2"));
 			
-		}catch(Throwable e){
-			e.printStackTrace();
-			throw e;
 		}
 	}
 	
@@ -171,11 +168,17 @@ public class ListViewTest  extends AbstractGinasServerTest {
 			Collection<List<Code>> clistGrouped=GinasApp.getOrderedGroupedCodes(s, 2);
 			
 			assertEquals(2,clistGrouped.size());
-			List<Integer> sizelist=clistGrouped.stream().map(cl->cl.size()).collect(Collectors.toList());
+			List<Integer> sizelist=clistGrouped
+										.stream()
+										.map(cl->cl.size())
+										.collect(Collectors.toList());
 			for(Integer i: sizelist){
 				assertEquals(2,i.intValue());
 			}
-			List<String> csystems=clistGrouped.stream().map(l->l.get(0).codeSystem).collect(Collectors.toList());
+			List<String> csystems=clistGrouped
+										.stream()
+										.map(l->l.get(0).codeSystem)
+										.collect(Collectors.toList());
 			
 			
 			assertEquals(codeOrder.subList(0, 2),csystems);

@@ -38,8 +38,9 @@ class LuceneSearchResultPopulator {
 		this.options = result.getOptions();
 		result.setCount(hits.totalHits);
 		total  = Math.max(0, Math.min(options.max(), result.getCount()));
-		offset = Math.min(options.skip, total);
+		offset = Math.min(options.getSkip(), total);
 	}
+	
 	
 	public void setSearcher(IndexSearcher searcher){
 		this.searcher=searcher;
@@ -54,7 +55,7 @@ class LuceneSearchResultPopulator {
 	}
 
 	void fetch(int size) throws IOException, InterruptedException {
-		size = Math.min(options.top, Math.min(total - offset, size));
+		size = Math.min(options.getTop(), Math.min(total - offset, size));
 		
 		for (int i = result.size(); i < size; ++i) {
 			if (Thread.interrupted()) {

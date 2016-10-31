@@ -1,6 +1,7 @@
 package ix.test.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +30,8 @@ import play.libs.ws.WSResponse;
  */
 public class SubstanceAPI {
 
+    //TODO: Refactor
+    
     private static final String API_URL_VALIDATE = "ginas/app/api/v1/substances/@validate";
     private static final String API_URL_SUGGEST = "ginas/app/api/v1/suggest";
     private static final String API_URL_SUBMIT_SUBSTANCE = "ginas/app/api/v1/substances";
@@ -310,6 +314,7 @@ public class SubstanceAPI {
     public JsonHistoryResult fetchSubstanceJsonByUuid(String uuid, int version){
         JsonNode edits = fetchSubstanceHistoryJson(uuid,version);
         //should only have 1 edit...so this should be safe
+        
         assertEquals(1, edits.size());
 
 		JsonNode edit = edits.iterator().next();
@@ -483,7 +488,6 @@ public class SubstanceAPI {
                 for(JsonNode node : asJson().at(VALIDATION_MESSAGE_PATH)){
                     list.add(new ObjectMapper().treeToValue(node, GinasProcessingMessage.class));
                 }
-
                return list;
             }catch(Exception e){
                 throw new IllegalStateException("error unmarshalling json",e);
@@ -497,6 +501,19 @@ public class SubstanceAPI {
                     ", js=" + asJson() +
                     "\nmessages = " + getMessages() +
                     '}';
+        }
+        
+        
+        public void assertValid(){
+        	try{
+        		assertTrue(this.isValid());
+        	}catch(Throwable t){
+        		String msgblob=getMessages().stream()
+        			.map(s->s.getMessageType() + ":" + s.getMessage())
+        			.collect(Collectors.joining("\n"));
+        		assertTrue(msgblob, this.isValid());
+        		throw t;
+        	}
         }
     }
 

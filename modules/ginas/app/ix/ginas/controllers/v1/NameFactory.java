@@ -64,15 +64,8 @@ public class NameFactory extends EntityFactory {
         return field (uuid, path, finder);
     }
 
-    public static Result create () {
-        return create (Name.class, finder);
-    }
-
     public static Result delete (UUID uuid) {
         return delete (uuid, finder);
     }
 
-    public static Result update (UUID uuid, String field) {
-        return update (uuid, field, Name.class, finder);
-    }
 }

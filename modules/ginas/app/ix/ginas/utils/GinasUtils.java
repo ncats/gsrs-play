@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
@@ -28,15 +29,18 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
+import ix.core.util.CachedSupplier;
+import ix.core.util.ConfigHelper;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.seqaln.SequenceIndexer;
 import play.Logger;
 import play.Play;
 
-import java.util.regex.Pattern;
-
 public class GinasUtils {
+	private static CachedSupplier<Boolean> validation=
+			ConfigHelper.supplierOf("ix.ginas.batch.validation", true);
+	
 	public static GinasProcessingStrategy DEFAULT_BATCH_STRATEGY = GinasProcessingStrategy
 			.ACCEPT_APPLY_ALL_MARK_FAILED();
 	private static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
@@ -294,7 +298,7 @@ public class GinasUtils {
 	}
 
 	public static class GinasJSONExtractor extends RecordExtractor<JsonNode> {
-		boolean validation=Play.application().configuration().getBoolean("ix.ginas.batch.validation", true);
+		
 		
 		public GinasJSONExtractor() {
 			super(null);
@@ -347,7 +351,7 @@ public class GinasUtils {
 		@Override
 		public RecordTransformer getTransformer() {
 			
-			if(validation){
+			if(validation.get()){
 				return new GinasSubstanceTransformer(DefaultSubstanceValidator.BATCH_SUBSTANCE_VALIDATOR(DEFAULT_BATCH_STRATEGY));
 			}else{
 				return new GinasSubstanceTransformer(DefaultSubstanceValidator.IGNORE_SUBSTANCE_VALIDATOR());

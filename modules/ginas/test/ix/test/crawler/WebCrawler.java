@@ -73,6 +73,12 @@ public class WebCrawler {
             if(status == 200){
                 DocumentParser doc = new DocumentParser (DTD.getDTD("html"));
                 doc.parse(new StringReader(resp.getBody()), this, true);
+            }else{
+                try{
+                    //System.out.println("GOT:######" + status + "\n\n\n" + resp.getBody());
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             }
             
         }

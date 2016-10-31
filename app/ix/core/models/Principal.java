@@ -61,7 +61,6 @@ public class Principal extends IxModel {
     
     @JsonIgnore
     public UserProfile getUserProfile(){
-    	System.out.println("FETCHING");
     	return UserProfileFactory.getUserProfileForPrincipal(this);
     }
 

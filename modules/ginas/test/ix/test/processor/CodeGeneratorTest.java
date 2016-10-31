@@ -4,6 +4,7 @@ import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -40,7 +41,11 @@ public class CodeGeneratorTest extends AbstractGinasServerTest{
 			Config additionalConfig = ConfigFactory.parseString(addconf)
 					.resolve()
 					.withOnlyPath("ix.core.entityprocessors");
-			return new Configuration(additionalConfig).asMap();
+			Map hm = new Configuration(additionalConfig).asMap();
+			System.out.println(hm.toString());
+			
+			
+			return hm;
 		});
 	}
 

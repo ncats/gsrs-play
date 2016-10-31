@@ -5,51 +5,132 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
-import ix.AbstractGinasServerTest;
+import ix.AbstractGinasTest;
+import ix.core.controllers.EntityFactory;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Parameter;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.Substance;
-import ix.utils.pojopatch.Change;
 import ix.utils.pojopatch.PojoDiff;
 import ix.utils.pojopatch.PojoPatch;
 
 /**
  * Created by katzelda on 3/7/16.
  */
-public class PojoDiffTest extends AbstractGinasServerTest{
+
+@RunWith(Parameterized.class)
+public class PojoDiffTest extends AbstractGinasTest{
 
     
     private List<UUID> uuids = new ArrayList<>();
-    private int uuidIndex=0;
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = EntityFactory.EntityMapper.INTERNAL_ENTITY_MAPPER();
+    
+    
+    
+    public static enum PatchType{
+    	MUTATE_DIRECT,
+    	MUTATE_USING_DIFF,
+    	APPLY_DIFF_TO_CLONE,
+    	RETURN_EXPECTED;
+    	
+    	public <T> T applyChange(T o1, T o2) throws Exception{
+    		switch(this){
+			case MUTATE_DIRECT:
+				{
+					PojoPatch<T> patch = PojoDiff.getDiff(o1, o2);
+					patch.apply(o1);
+					return o1;
+				}
+			case MUTATE_USING_DIFF:
+				{
+					EntityWrapper<T> ew1=EntityWrapper.of(o1);
+		    		EntityWrapper<T> ew2=EntityWrapper.of(o2);
+		    		JsonNode oldOne = ew1.toFullJsonNode();
+		    		JsonNode newOne = ew2.toFullJsonNode();
+		    		JsonPatch jp=JsonDiff.asJsonPatch(oldOne, newOne);
+		    		JsonNode modifiedOne=jp.apply(oldOne);
+		    		T tnew=ew1.getEntityInfo().fromJsonNode(modifiedOne);
+		    		
+		    		PojoPatch<T> patch = PojoDiff.getDiff(o1,tnew);
+			    	patch.apply(o1);
+			    	return o1;
+				}
+				
+			case RETURN_EXPECTED:
+				{
+					return o2;
+				}
+			case APPLY_DIFF_TO_CLONE:
+				{
+					PojoPatch<T> patch = PojoDiff.getDiff(o1, o2);
+					T clone=EntityWrapper.of(o1).getClone();
+					patch.apply(clone);
+					return clone;
+				}
+			default:
+				throw new IllegalArgumentException("Uknown option:" + this);
+    	
+    	}
+    	}
+    }
+    
+    @Parameterized.Parameters(name = "{0}")
+	public static List<Object[]> params(){
+		List<Object[]> list = new ArrayList<>();
+		for(PatchType type: PatchType.values()){
+			list.add(new Object[]{type+" serailize nether",type,false,false});
+			list.add(new Object[]{type+" serailize both",type,true,true});
+			list.add(new Object[]{type+" serailize first",type,true,false});
+			list.add(new Object[]{type+" serailize second",type,false,true});
+		}
+		
+		return list;
+	}
+	
+	boolean serializefirst=false;
+	boolean serializesecond=false;
 
-    private UUID getNextUUID(){
-        if(uuidIndex == uuids.size()){
-            UUID uuid = UUID.randomUUID();
-            uuids.add(uuid);
-            uuidIndex++;
-            return uuid;
-        }
-        return uuids.get(uuidIndex++);
+	public PojoDiffTest(String name, PatchType pt, boolean serializefirst, boolean serializesecond){
+		this.ptype=pt;
+		this.serializefirst=serializefirst;
+		this.serializesecond=serializesecond;
+		
+	}
+    
+    public PatchType ptype=PatchType.MUTATE_DIRECT;
+    public <T> T getChanged(T o1, T o2) throws Exception{
+    	if(serializefirst){
+    		EntityWrapper<T> ew=EntityWrapper.of(o1);
+    		o1=ew.getEntityInfo().fromJsonNode(ew.toFullJsonNode());
+    	}
+    	if(serializesecond){
+    		EntityWrapper<T> ew=EntityWrapper.of(o2);
+    		o2=ew.getEntityInfo().fromJsonNode(ew.toFullJsonNode());
+    	}
+    	return ptype.applyChange(o1, o2);
+         
     }
     
    
-
     private String getUUID(int index){
         if(index == uuids.size()){
             UUID uuid = UUID.randomUUID();
@@ -69,9 +150,7 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 
         old.id = 12345L;
 
-        PojoPatch patch = PojoDiff.getDiff(old, old);
-
-        patch.apply(old);
+        old=getChanged(old, old);
 
         Author expected = new Author();
         expected.id = 12345L;
@@ -83,28 +162,24 @@ public class PojoDiffTest extends AbstractGinasServerTest{
     @Test
     public void setField() throws Exception {
         Author old = new Author();
-
         old.id = 12345L;
 
         assertNull(old.lastname);
 
         Author update = new Author();
         update.id = 12345L;
-
         update.lastname = "Jones";
 
-        PojoPatch patch = PojoDiff.getDiff(old, update);
-
-        patch.apply(old);
+        old=getChanged(old, update);
 
         assertEquals(update.lastname, old.lastname);
 
-        JsonMatches(update, old);
+        jsonMatches(update, old);
 
     }
 
 
-    private void JsonMatches(Object expected, Object actual){
+    private void jsonMatches(Object expected, Object actual){
     	JsonNode js1=mapper.valueToTree(expected);
     	JsonNode js2=mapper.valueToTree(actual);
     	try{
@@ -127,13 +202,11 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         update.id = 12345L;
 
 
-        PojoPatch patch = PojoDiff.getDiff(old, update);
-
-        patch.apply(old);
+        old=getChanged(old, update);
 
         assertNull(old.lastname);
 
-        JsonMatches(update, old);
+        jsonMatches(update, old);
 
     }
 
@@ -156,13 +229,10 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 
         update.setParameters(updatedParams);
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-
-        patch.apply(prop);
-
+        prop=getChanged(prop, update);
         assertEquals(updatedParams, prop.getParameters());
 
-        JsonMatches(update, prop);
+        jsonMatches(update, prop);
 
     }
     @Test
@@ -186,21 +256,18 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         Parameter p3 = new Parameter();
         p3.setName( "foobarfoo");
         updatedParams.add(p3);
-        //updatedParams.add(p1a);
+        
+        updatedParams.stream().forEach(p->p.getOrGenerateUUID());
 
         Property update = new Property();
 
         update.setParameters(updatedParams);
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
+        prop=getChanged(prop, update);
         
-        patch.apply(prop);
+        assertEquals(updatedParams,prop.getParameters());
         
-
-        assertTrue(updatedParams.containsAll(prop.getParameters()));
-        assertTrue(prop.getParameters().containsAll(updatedParams));
-
-        JsonMatches(update, prop);
+        jsonMatches(update, prop);
 
     }
     
@@ -215,9 +282,9 @@ public class PojoDiffTest extends AbstractGinasServerTest{
     	Name n2 = new Name();
     	s2.names.add(n2);
     	
-    	PojoPatch<Substance> patch = PojoDiff.getDiff(s, s2);
+    	s=getChanged(s, s2);
 
-    	Stack changes =patch.apply(s);
+    	jsonMatches(s, s2);
     	
     	
     }
@@ -247,9 +314,7 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 
         update.setParameters(newParams);
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-
-        patch.apply(prop);
+        prop=getChanged(prop, update);
 
 
         List<Parameter> updatedParams = prop.getParameters();
@@ -261,7 +326,7 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         assertEquals(p2.getName(), updatedParams.get(0).getName());
 
 
-        JsonMatches(update, prop);
+        jsonMatches(update, prop);
 
     }
 
@@ -287,59 +352,57 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 
         update.setParameters(new ArrayList<Parameter>());
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-
-        patch.apply(prop);
+        prop=getChanged(prop, update);
 
         assertTrue(prop.getParameters().isEmpty());
 
-        JsonMatches(update, prop);
+        jsonMatches(update, prop);
 
     }
     @Test
     public void switchOrderSimple() throws Exception {
-    	try{
 	        List<Parameter> originalParams = new ArrayList<>();
-	        Parameter p1 = new Parameter();
-	        p1.setName("foo");
+	        Supplier<Parameter> p1 = ()->{
+	        	Parameter p=new Parameter();
+		        p.setName("foo");
+		        return p;
+	        };
 	
-	        Parameter p2 = new Parameter();
-	        p2.setName("bar");
+	        Supplier<Parameter> p2 = ()->{
+	        	Parameter p=new Parameter();
+		        p.setName("bar");
+		        return p;
+	        };
 	
-	        originalParams.add(p1);
-	        originalParams.add(p2);
+	        originalParams.add(p1.get());
+	        originalParams.add(p2.get());
 	
 	        Property prop = new Property();
-	
+	        
 	        prop.setParameters(originalParams);
-	
 	
 	        Property update = new Property();
 	
 	        List<Parameter> newParams=new ArrayList<Parameter>();
-	        newParams.add(p2);
-	        newParams.add(p1);
+	        
+	        newParams.add(p2.get());
+	        newParams.add(p1.get());
+	        
 	        update.setParameters(newParams);
-	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-	        patch.apply(prop);
+	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==2);
-	        JsonMatches(update, prop);
-		}catch(Exception e){
-			e.printStackTrace();
-			throw e;
-		}
+	        jsonMatches(update, prop);
     }
     @Test
     public void switchOrderIdsSimple() throws Exception {
-    	try{
 	        List<Parameter> originalParams = new ArrayList<>();
 	        Parameter p1 = new Parameter();
 	        p1.setName("foo");
-	        UUID uui1=p1.getOrGenerateUUID();
+	        p1.getOrGenerateUUID();
 	
 	        Parameter p2 = new Parameter();
 	        p2.setName("bar");
-	        UUID uui2=p2.getOrGenerateUUID();
+	        p2.getOrGenerateUUID();
 	
 	        originalParams.add(p1);
 	        originalParams.add(p2);
@@ -355,17 +418,11 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 	        newParams.add(p2);
 	        newParams.add(p1);
 	        update.setParameters(newParams);
-	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-	        patch.apply(prop);
+	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==2);
 	        assertEquals(update,prop);
-	        
-		}catch(Exception e){
-			e.printStackTrace();
-			throw e;
-		}
     }
-    public class MapContainer{
+    public static class MapContainer{
     	public Map<String,String> fstring;
     	
     	public boolean equals(Object o){
@@ -399,8 +456,7 @@ public class PojoDiffTest extends AbstractGinasServerTest{
     	mc1.addProperty("key1", "value1");
     	mc1.addProperty("key2", "value2");
     	MapContainer mc2=new MapContainer();
-    	PojoPatch<MapContainer> patch = PojoDiff.getDiff(mc2, mc1);
-    	patch.apply(mc2);
+    	mc2=getChanged(mc2, mc1);
     	assertEquals(mc1,mc2);
     }
     
@@ -410,22 +466,20 @@ public class PojoDiffTest extends AbstractGinasServerTest{
     	mc1.addProperty("key1", "value1");
     	mc1.addProperty("key2", "value2");
     	MapContainer mc2=new MapContainer();
-    	PojoPatch<MapContainer> patch = PojoDiff.getDiff(mc1, mc2);
-    	patch.apply(mc1);
+    	mc1=getChanged(mc1, mc2);
     	assertEquals(mc2,mc1);
     }
     
     @Test
     public void addNewToListWithIDSimple() throws Exception {
-    	try{
 	        List<Parameter> originalParams = new ArrayList<>();
 	        Parameter p1 = new Parameter();
 	        p1.setName("foo");
-	        UUID uui1=p1.getOrGenerateUUID();
+	        p1.getOrGenerateUUID();
 	
 	        Parameter p2 = new Parameter();
 	        p2.setName("bar");
-	        UUID uui2=p2.getOrGenerateUUID();
+	        p2.getOrGenerateUUID();
 	
 	        originalParams.add(p1);
 	        originalParams.add(p2);
@@ -445,27 +499,21 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 	        newParams.add(p2);
 	        newParams.add(p3);
 	        update.setParameters(newParams);
-	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-	        patch.apply(prop);
+	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==3);
-	        JsonMatches(update, prop);
+	        jsonMatches(update, prop);
 	        
-		}catch(Exception e){
-			e.printStackTrace();
-			throw e;
-		}
     }
     @Test
     public void addNewToListWithoutIDSimple() throws Exception {
-    	try{
 	        List<Parameter> originalParams = new ArrayList<>();
 	        Parameter p1 = new Parameter();
 	        p1.setName("foo");
-	        UUID uui1=p1.getOrGenerateUUID();
+	        p1.getOrGenerateUUID();
 	
 	        Parameter p2 = new Parameter();
 	        p2.setName("bar");
-	        UUID uui2=p2.getOrGenerateUUID();
+	        p2.getOrGenerateUUID();
 	
 	        originalParams.add(p1);
 	        originalParams.add(p2);
@@ -484,15 +532,10 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 	        newParams.add(p2);
 	        newParams.add(p3);
 	        update.setParameters(newParams);
-	        PojoPatch<Property> patch = PojoDiff.getDiff(prop, update);
-	        patch.apply(prop);
+	        prop=getChanged(prop, update);
 	        assertTrue(prop.getParameters().size()==3);
 	        assertEquals(update,prop);
 	        
-		}catch(Exception e){
-			e.printStackTrace();
-			throw e;
-		}
     }
 
     @Test
@@ -506,11 +549,8 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         newProp.addReference(getUUID(0));
         newProp.addReference(getUUID(1));
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
-
-        patch.apply(old);
-
-        JsonMatches(newProp, old);
+        old=getChanged(old, newProp);
+        jsonMatches(newProp, old);
 
     }
     @Test
@@ -553,14 +593,9 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         
 
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(oldp, newp);
-        for(Change c:patch.getChanges()){
-        	System.out.println("Changed:" + c.toString());
-        }
-
-        patch.apply(oldp);
-
-        JsonMatches(newp, oldp);
+        oldp=getChanged(oldp, newp);
+        
+        jsonMatches(newp, oldp);
 
     }
 
@@ -578,11 +613,9 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         newProp.addReference(getUUID(2));
 
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+        old=getChanged(old, newProp);
 
-        patch.apply(old);
-
-        JsonMatches(newProp, old);
+        jsonMatches(newProp, old);
 
     }
 
@@ -597,12 +630,9 @@ public class PojoDiffTest extends AbstractGinasServerTest{
 
         newProp.addReference(getUUID(1));
 
+        old=getChanged(old, newProp);
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
-
-        patch.apply(old);
-
-        JsonMatches(newProp, old);
+        jsonMatches(newProp, old);
 
     }
 
@@ -626,36 +656,89 @@ public class PojoDiffTest extends AbstractGinasServerTest{
         newProp.addReference(getUUID(1));
         newProp.addReference(getUUID(0));
 
-        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
+        old=getChanged(old, newProp);
         
-        patch.apply(old);
-
-        JsonMatches(newProp, old);
+        jsonMatches(newProp, old);
 
     }
 
     @Test
     public void removeMultipleFromSet() throws Exception{
-        Property old = new Property();
-
-        old.addReference(getUUID(0));
-        old.addReference(getUUID(1));
-        old.addReference(getUUID(2));
-
-        Property newProp = new Property();
-
-        newProp.addReference(getUUID(1));
-
-
-        PojoPatch<Property> patch = PojoDiff.getDiff(old, newProp);
-
-        patch.apply(old);
-
-        JsonMatches(newProp, old);
-
+    	int totalInSet =10;
+    	
+    	for(int i=1;i<totalInSet;i++){
+    		for(int j=0;j<i;j++){
+		        Property old = new Property();
+		        for(int k=0;k<i;k++){
+		        	old.addReference(getUUID(k));
+		        }
+		
+		        Property newProp = new Property();
+		        
+		        newProp.addReference(getUUID(j));
+		
+		        old=getChanged(old, newProp);
+		
+		        jsonMatches(newProp, old);
+    		}
+    	}
     }
-
-
-
+    
+    @Test
+    public void removeOneFromSet() throws Exception{
+    	int totalInSet =10;
+    	
+    	for(int i=1;i<totalInSet;i++){
+    		for(int j=0;j<i;j++){
+		        Property old = new Property();
+		        Property newProp = new Property();
+		        
+		        for(int k=0;k<i;k++){
+		        	old.addReference(getUUID(k));
+		        	if(k!=j){
+		        		newProp.addReference(getUUID(k));
+		        	}
+		        }
+		
+		        old=getChanged(old, newProp);
+		
+		        jsonMatches(newProp, old);
+    		}
+    	}
+    }
+    
+    
+    @Test
+    public void testRepetitivelyApplyAddingPatchAdds() throws Exception{
+    	String adding="test";
+    	List<String> mylist1 = new ArrayList<String>();
+    	mylist1.add(adding);
+    	List<String> mylist2 = new ArrayList<String>();
+    	List<String> expected = new ArrayList<String>();
+    	
+    	PojoPatch<List<String>> pp=PojoDiff.getDiff(mylist2, mylist1);
+    	
+    	for(int i=0;i<10;i++){
+    		pp.apply(mylist2);
+    		expected.add(adding);
+    		assertEquals(expected,mylist2);
+    	}
+    }
+    
+    @Test
+    public void testSortingPatchWorks() throws Exception{
+    	
+    	List<String> mylist1 = new ArrayList<String>();
+    	
+    	
+    	for(int i=0;i<100;i++){
+    		mylist1.add("Testing:" + i);
+    	}
+    	List<String> mylist2 = new ArrayList<String>(mylist1);
+    	Collections.shuffle(mylist1);
+    	mylist1=getChanged(mylist1, mylist2);
+    	assertEquals(mylist2,mylist1);
+    		
+    }
 
 }

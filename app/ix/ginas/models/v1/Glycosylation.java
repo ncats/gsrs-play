@@ -27,6 +27,9 @@ import play.Logger;
 @JSONEntity(name = "glycosylation", title = "Glycosylation", isFinal = true)
 public class Glycosylation extends GinasCommonSubData {
 
+	@OneToOne(mappedBy="glycosylation")
+    private Protein protein;
+	
     @JsonIgnore
     @Indexable(indexed=false)
 	@OneToOne(cascade=CascadeType.ALL)

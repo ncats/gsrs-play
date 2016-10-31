@@ -9,9 +9,10 @@ import org.junit.Test;
 
 import ix.test.server.BrowserSession;
 import ix.test.server.ConfigUtil;
+import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
 import ix.test.server.SubstanceReIndexer;
-import ix.test.server.SubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher;
 import ix.test.util.TestUtil;
 
 /**
@@ -46,9 +47,9 @@ public class ReIndexTest extends AbstractLoadDataSetTest{
 
                 reIndexer.reindex();
 
-                SubstanceSearcher searcher = new SubstanceSearcher(session);
+                BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
 
-                SubstanceSearcher.SearchResult results = searcher.substructure("C1=CC=CC=C1");
+                SearchResult results = searcher.substructure("C1=CC=CC=C1");
 
                 assertEquals(17, results.numberOfResults());
                 TestFacetUtil.assertFacetsMatch(TestFacetUtil.createExpectedRep90Facets(), results);

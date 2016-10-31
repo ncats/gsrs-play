@@ -4,26 +4,26 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import ix.AbstractGinasServerTest;
+import ix.core.factories.IndexValueMakerFactory;
 import ix.core.search.text.IndexValueMaker;
-import ix.core.search.text.IndexValueMakerFactory;
 import ix.core.search.text.IndexableValue;
 import ix.core.search.text.ReflectingIndexValueMaker;
+import ix.core.util.EntityUtils;
 import ix.test.server.GinasTestServer;
 import play.Configuration;
+import play.Play;
 
 
 /**
@@ -38,7 +38,7 @@ import play.Configuration;
  */
 @Ignore
 public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<T>> extends AbstractGinasServerTest{
-	
+
 	@Override
 	public GinasTestServer createGinasTestServer(){
 		return new GinasTestServer(()->{
@@ -63,23 +63,29 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 
 	@Test
 	public void testIndexMakerIsDifferentFromDefaultForEntity(){
-		IndexValueMaker<? extends T> ivm =IndexValueMakerFactory.forClass(getEntityClass());
+		IndexValueMaker<? extends T> ivm =IndexValueMakerFactory
+											.getInstance(Play.application())
+											.getSingleResourceFor(getEntityClass());
 		assertNotEquals(ReflectingIndexValueMaker.class,ivm.getClass());
 	}
 	
 	@Test
 	public void testIndexMakerIsRegisteredForEntity(){
-		List<Class<?>> ivm =IndexValueMakerFactory.getIndexValueMakersForClass(getEntityClass())
+		IndexValueMakerFactory ivmf=IndexValueMakerFactory.getInstance(Play.application());
+		List<Class<?>> ivm =ivmf
+							.getRegisteredResourcesFor(getEntityClass())
 							.stream()
 							.map(iv->iv.getClass())
 							.collect(Collectors.toList());
 		assertTrue("Could not find: " +getEntityClass().toString() + " in:" + ivm.toString(), ivm.contains(getIndexMakerClass()));
-		assertTrue(IndexValueMakerFactory.isRegisteredFor(getEntityClass(), getIndexMakerClass()));
+		assertTrue(ivmf.isRegisteredFor(EntityUtils.getEntityInfoFor(getEntityClass()), getIndexMakerClass()));
 	}
 
 
 	public void testIndexableValuesMatchCriteria(T t, Predicate<Stream<IndexableValue>> matches){
-		IndexValueMaker<T> ivm =(IndexValueMaker<T>) IndexValueMakerFactory.forClass(getEntityClass());
+		IndexValueMaker<T> ivm =(IndexValueMaker<T>) IndexValueMakerFactory
+														.getInstance(Play.application())
+														.getSingleResourceFor(getEntityClass());
 
 		List<IndexableValue> ivs = new ArrayList<IndexableValue>();
 
@@ -92,7 +98,6 @@ public abstract class AbstractIndexerValueMakerTest<T,U extends IndexValueMaker<
 			throw tt;
 		}
 	}
-	
 	
 	
 	public void testIndexableValuesHasFacet(T t, String facetName, Object facetValue ){

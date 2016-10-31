@@ -1,90 +1,63 @@
 package ix.core.search;
 
-import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import ix.utils.Util;
 import play.Logger;
-import play.Play;
-import play.libs.Akka;
 
 /**
  * Structure searching
  */
-public abstract class SearchResultProcessor<T, R> {
-	public static final long debugDealy = Play.application().configuration().getLong("ix.settings.debug.processordelay");
+public abstract class SearchResultProcessor<T, R> implements ResultProcessor<T, R> {
 	
-	
-    protected Enumeration<T> results;
-    final SearchResultContext context = new SearchResultContext ();
+    protected Iterator<T> results;
+    
+    final SearchResultContext context = new SearchResultContext (); 
     boolean wait=false;
     
-    public SearchResultProcessor () {
-    }
+    public SearchResultProcessor () {}
     
-    public void setWait(boolean wait){
-    	this.wait=wait;
-    }
+    @Deprecated
+    public void setWait(boolean wait) {
+		this.wait=wait;
+	}
 
-    public void setResults (int rows, Enumeration<T> results)
-        throws Exception {
-        this.results = results;
-        
-        context.start = System.currentTimeMillis();
-        if(wait){
-        	
-        	process();
-        	context.setStatus(SearchResultContext.Status.Determined);
-        	context.stop = System.currentTimeMillis();
-            
-        }else{
-            // the idea is to generate enough results for 1 page, and 1 extra record
-        	// (enough to show pagination) and return immediately. as the user pages,
-            // the background job will fill in the rest of the results.
-        	int count = process (rows+1);
-            
-            // while we continue to fetch the rest of the results in the
-            // background
-            ActorRef handler = Akka.system().actorOf
-                (Props.create(SearchResultHandler.class));
-            handler.tell(this, ActorRef.noSender());
-            Logger.debug("## search results submitted: "+handler);
-        }
-    }
-    
-    public SearchResultContext getContext () { return context; }
-    public boolean isDone () { return false; }
 
-    public int process () throws Exception {
-        return process (0);
-    }
-    
-    public int process (int max) throws Exception {
-    	
-        while (results.hasMoreElements()
-               && !isDone () 
-               && (max <= 0 || context.getCount() < max)) {
-            T r = results.nextElement();
-            // This will simulate a slow structure processing (e.g. slow database fetch)
-            // This should be used in conjunction with another debugSpin in TextIndexer
-            // to simulate both slow fetches and slow lucene processing
-            //System.out.println("Processing:" + r);
-            
-            Util.debugSpin(debugDealy);
-            
-            try {
-                R obj = instrument (r);
-                if (obj != null) {
-                    context.add(obj);
-                }
-            }catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("Can't process structure search result", ex);
-            }
-        }
-        return context.getCount();
-    }
-    
-    protected abstract R instrument (T r) throws Exception;
+    @Deprecated
+	public boolean isWait() {
+		return wait;
+	}
+
+
+	@Override
+	public SearchResultContext getContext() {
+		return context;
+	}
+
+
+	@Override
+	public void setUnadaptedResults(Iterator<T> results) {
+		this.results=results;
+	}
+	
+	@Override
+	public Iterator<T> getUnadaptedResults() {
+		return this.results;
+	}
+
+
+	@Override
+	public Stream<R> map(T result) {
+		try{
+			R r=instrument(result);
+			if(r==null)return Stream.empty();
+			return Stream.of(r);
+		}catch(Exception e){
+			Logger.error("error processing record", e);
+			return Stream.empty();
+		}
+	}
+	
+	protected abstract R instrument(T result) throws Exception;
+	
 }

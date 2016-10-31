@@ -22,17 +22,17 @@ public class SubstanceReIndexer {
     }
 
     public void reindex() throws IOException{
-        HtmlPage page = session.submit(session.newGetRequest("ginas/app/_updateIndex/_monitor"));
+        HtmlPage page = session.submit(session.newGetRequest("ginas/app/_updateIndex/_monitor").get());
 
         String relativeUrl = parseRebuildIndexURL(page);
         System.out.println("relativeURL = " + relativeUrl);
-        HtmlPage reindexPage = session.submit(session.newGetRequest(relativeUrl));
+        HtmlPage reindexPage = session.submit(session.newGetRequest(relativeUrl).get());
 
         waitForReindexToComplete();
     }
 
     private void waitForReindexToComplete() throws IOException{
-        HtmlPage page = session.submit(session.newGetRequest("ginas/app/_updateIndex/_monitor"));
+        HtmlPage page = session.submit(session.newGetRequest("ginas/app/_updateIndex/_monitor").get());
 
         while(!page.asXml().contains("Completed Substance reindexing.")){
             try {
@@ -40,7 +40,7 @@ public class SubstanceReIndexer {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            page = session.submit(session.newGetRequest("ginas/app/_updateIndex/_monitor"));
+            page = session.submit(session.newGetRequest("ginas/app/_updateIndex/_monitor").get());
         }
     }
 

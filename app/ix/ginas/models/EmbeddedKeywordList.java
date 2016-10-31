@@ -150,5 +150,9 @@ public class EmbeddedKeywordList implements List<Keyword>, Serializable{
 	public List<Keyword> subList(int fromIndex, int toIndex) {
 		return keywords.subList(fromIndex, toIndex);
 	}
+	
+	public String toString(){
+		return keywords.toString();
+	}
 
 }

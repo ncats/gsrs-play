@@ -30,7 +30,8 @@ public class Moiety extends CommonDataElementOfCollection {
 	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
-    @JsonUnwrapped
+    @JsonUnwrapped //TODO: Probably not covered well 
+                   // by some other tools
     public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Count")

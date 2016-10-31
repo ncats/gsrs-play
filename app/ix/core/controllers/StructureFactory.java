@@ -1,17 +1,22 @@
 package ix.core.controllers;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-
-import ix.core.models.Payload;
-import ix.core.models.Structure;
 import ix.core.NamedResource;
+import ix.core.UserFetcher;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.StructureProcessor;
+import ix.core.models.Structure;
+import ix.core.plugins.IxCache;
+import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityWrapper;
+import ix.utils.UUIDUtil;
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
 
 
 @NamedResource(name="structures",
@@ -60,36 +65,57 @@ public class StructureFactory extends EntityFactory {
         return field (id, path, finder);
     }
 
-    public static Result create () {
-        return create (Structure.class, finder);
-    }
-
-    public static Result delete (UUID id) {
-        return delete (id, finder);
-    }
 
     public static Result edits (UUID id) {
         return edits (id, Structure.class);
     }
-
-    public static Result update (UUID id, String field) {
-        return update (id, field, Structure.class, finder);
-    }
-
-    public static Result updateEntity () {
-        return EntityFactory.updateEntity(Structure.class);
-    }
-    
-
     
     public static void saveTempStructure(Structure s){
-    	//s.save();
     	if(s.id==null)s.id=UUID.randomUUID();
-        AccessLogger.info("searched for:" + s.id + ":" + s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
-    	play.cache.Cache.set(s.id.toString(), s);
+        
+        AccessLogger.info("{} {} {} {} \"{}\"", 
+        		UserFetcher.getActingUser(true).username, 
+        		"unknown", 
+        		"unknown",
+        		"structure search:" + s.id,
+        		s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
+    	IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toFullJson());
     }
     
     public static Structure getTempStructure(String uuid){
-    	return (Structure)play.cache.Cache.get(uuid);
+    	String jsn = (String)IxCache.getTemp(uuid);
+    	if(jsn==null)return null;
+    	try{
+    		return EntityUtils.getEntityInfoFor(Structure.class).fromJson(jsn);
+    	}catch(Exception e){
+    		Logger.error("Error deserializing structure", e);
+    		return null;
+    	}	
+    }
+    
+    public static Structure getStructureFrom(String str, boolean store) {
+        Objects.requireNonNull(str);
+        if (UUIDUtil.isUUID(str)) {
+            Structure s = StructureFactory.getStructure(str);
+            if (s != null) {
+                return s;
+            }
+        }
+        try {
+            List<Structure> moieties = new ArrayList<Structure>();
+            String payload = ChemCleaner.getCleanMolfile(str);
+            Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
+                                                                                       // standardize!
+            if (payload.contains("\n") && payload.contains("M  END")) {
+                struc.molfile = payload;
+            }
+
+            if(store){
+                StructureFactory.saveTempStructure(struc);
+            }
+            return struc;
+        } catch (Exception e) {
+            throw new IllegalStateException("Can not parse structure from:" + str);
+        }
     }
 }

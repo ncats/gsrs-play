@@ -6,14 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.UUID;
-
-import javax.persistence.Entity;
 
 import org.reflections.Reflections;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Transaction;
 import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.event.TransactionEventListener;
@@ -21,6 +16,7 @@ import com.avaje.ebean.event.TransactionEventListener;
 import ix.core.NamedResource;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
+import ix.core.controllers.v1.InstantiatedNamedResource;
 import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
@@ -29,9 +25,7 @@ import ix.core.util.EntityUtils.EntityWrapper;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
-import play.Play;
 import play.api.mvc.EssentialFilter;
-import play.db.ebean.EbeanPlugin;
 import play.filters.gzip.GzipFilter;
 import play.libs.F.Promise;
 import play.mvc.Action;
@@ -42,19 +36,23 @@ import play.mvc.Result;
 import scala.collection.JavaConverters;
 
 public class Global extends GlobalSettings {
+	
 	public static final Logger.ALogger PersistFailLogger = Logger.of("persistFail");
 	public static final Logger.ALogger TransformFailLogger = Logger.of("transformFail");
 	public static final Logger.ALogger ExtractFailLogger = Logger.of("extractFail");
 
 	static Global _instance;
+	
+	Application app;
+	
 
 	public static Global getInstance() {
 		return _instance;
 	}
 
-	// lookup of class name to resource
-	private Map<String, String> names = new TreeMap<String, String>();
-	private Set<Class<?>> resources;
+//	// lookup of class name to resource
+//	private Map<String, String> names = new TreeMap<String, String>();
+	//private Set<Class<?>> resources;
 	private IxContext ctx;
 
 	public static Date epoch;
@@ -69,6 +67,7 @@ public class Global extends GlobalSettings {
 
 	@Override
 	public void onStart(Application app) {
+		this.app=app;
 		ServerConfig sc = new ServerConfig();
 		sc.add(new TransactionEventListener() {
 
@@ -93,26 +92,12 @@ public class Global extends GlobalSettings {
 			Logger.trace("Can't initialize app!", ex);
 		}
 
-		/**
-		 * default/global entities factory
-		 */
-		Reflections reflections = new Reflections("ix");
-		resources = reflections.getTypesAnnotatedWith(NamedResource.class);
-
-		Logger.info(resources.size() + " named resources...");
-		for (Class c : resources) {
-			NamedResource res = (NamedResource) c.getAnnotation(NamedResource.class);
-			Logger.info("+ " + c.getName() + "\n  => " + ctx.context() + ctx.api() + "/" + res.name() + "["
-					+ res.type().getName() + "]");
-			names.put(res.type().getName(), res.name());
-			RouteFactory.register(res.name(), c);
-		}
-
+		RouteFactory._registry.get();
 		loadDefaultUsers();
 	}
 
 	void loadDefaultUsers() {
-		List<Object> ls = Play.application().configuration().getList("ix.core.users", null);
+		List<Object> ls = app.configuration().getList("ix.core.users", null);
 
 		if (ls != null) {
 			for (Object o : ls) {
@@ -207,18 +192,12 @@ public class Global extends GlobalSettings {
 	 * Return the registered NamedResource given a class name
 	 */
 	public static String getResource(Class<?> cls) {
-		Global g = getInstance();
-		String name = g.names.get(cls.getName());
-
-		if (name == null) {
-			// climb up the inheritance ladder to find the first matches
-			for (Class c = cls.getSuperclass(); name == null && c != null; c = c.getSuperclass()) {
-				name = g.names.get(c.getName());
-				// Logger.debug(c.getName() +" => "+name);
-			}
-		}
-
-		return name;
+		InstantiatedNamedResource resource = RouteFactory._registry
+									.get()
+									.getResourceFor(cls);
+		
+		if(resource==null) return null;
+		return resource.getName();
 	}
 
 	public static boolean DEBUG(int level) {
