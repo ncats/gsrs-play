@@ -59,7 +59,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
         public MyLock(Key thekey) {
             this.thekey = thekey;
         }
-
+        
         public boolean isLocked(){
         	return this.lock.isLocked();
         }
@@ -176,7 +176,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     	Objects.requireNonNull(ew);
     	String oldJSON = ew.toFullJson();
     	
-    	Edit e = new Edit(ew.getClazz(),ew.getKey().getIdString());
+    	Edit e = new Edit(ew.getEntityClass(),ew.getKey().getIdString());
     	e.oldValue=oldJSON;
     	e.path=null;
     	
@@ -220,6 +220,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     	return performChange(wrapped.getKey(),changeOp);
     }
     
+    
     @Deprecated
     public static <T> EntityWrapper performChange(Key key, ChangeOperation<T> changeOp){
     	return EntityPersistAdapter.getInstance().change(key, changeOp);
@@ -228,7 +229,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     
     
     public <T> EntityWrapper change(Key key, ChangeOperation<T> changeOp){
-        // Objects.requireNonNull(id);
          Objects.requireNonNull(key);
          Objects.requireNonNull(changeOp);
          
@@ -457,7 +457,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
                     	// then start one and save it. Otherwise just ignore
                     	// the edit piece.
 						if (!isEditPresentUpdate(key)) { 
-							Edit edit = new Edit(ew.getClazz(), key.getIdString());
+							Edit edit = new Edit(ew.getEntityClass(), key.getIdString());
 							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
 							edit.version = ew.getVersion().orElse(null);
 							edit.comments= ew.getChangeReason().orElse(null);

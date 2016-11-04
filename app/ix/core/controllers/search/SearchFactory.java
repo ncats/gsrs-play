@@ -377,7 +377,7 @@ public class SearchFactory extends EntityFactory {
     		
     		SearchResult results = ctx.getAdapted(searchRequest);
     		
-    		PojoPointer pp = PojoPointer.fromUriPath(field);
+    		PojoPointer pp = PojoPointer.fromURIPath(field);
     		
     		List<Object> resultSet = new ArrayList<Object>();
     		

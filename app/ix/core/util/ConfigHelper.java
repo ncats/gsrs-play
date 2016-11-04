@@ -101,7 +101,7 @@ public class ConfigHelper {
         }
 
         Object o = EntityWrapper.of(Play.application().configuration().asMap())
-                .at(PojoPointer.fromUriPath(key.replace(".", "/"))) // This is a
+                .at(PojoPointer.fromURIPath(key.replace(".", "/"))) // This is a
                                                                     // silly way
                 .map(e -> (Object) e.getValue()) // ... but it works
                 .orElse(d);

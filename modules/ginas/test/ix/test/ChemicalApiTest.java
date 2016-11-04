@@ -40,6 +40,8 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 	final File chemicalResource=new File("test/testJSON/editChemical.json");
 	final File molformfile=new File("test/molforms.txt");
 	
+	
+	
     
     @Test   
     public void testMolfileMoietyDecomposeGetsCorrectCounts() throws Exception {
@@ -489,6 +491,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 	}
 	
 	/*
+	 * TODO:
 	 * Here's a test.
 	 * 
 	 * How about adding 10,000 substances. Then, go to the browse page.
@@ -499,7 +502,6 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 	 * 
 	 * #1. How long does it take to go the last page?
 	 * #2. How much memory is being taken up at this time?
-	 * #3.
 	 * 
 	 * 
 	 */

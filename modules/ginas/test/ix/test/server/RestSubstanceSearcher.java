@@ -101,6 +101,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
                             .get()
                             .get(REST_TIMEOUT)
                             .asJson();
+        
         return processAsyncRequest(jsn);
     }
 

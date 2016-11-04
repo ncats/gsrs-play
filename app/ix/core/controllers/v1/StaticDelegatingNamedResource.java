@@ -1,6 +1,7 @@
 package ix.core.controllers.v1;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.util.CachedSupplier;
+import play.Logger;
 import play.mvc.Result;
 
 /**
@@ -55,7 +57,7 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 						return CachedSupplier.ofCallable(()->(Result)m.invoke(null, raw)).get();
 					});
 				}catch(Exception e){
-					//System.out.println("Not found operation:" +op.getOperationName() + " in " + factory.getName());
+				    Logger.info("Not found operation:" +op.getOperationName() + " in " + factory.getName());
 				}
 			});
 		

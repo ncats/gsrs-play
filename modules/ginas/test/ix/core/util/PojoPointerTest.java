@@ -135,8 +135,8 @@ public class PojoPointerTest extends AbstractGinasTest{
 	public JsonNode getObjectAt(Object o, PojoPointer pp){
 		if(pw == POINT_WITH.URI_POINTER){
 			String uripath=pp.toURIpath();
-			System.out.println(pp.toJsonPointer().toString() + "=>" + uripath + "=>" + PojoPointer.fromUriPath(pp.toURIpath()).toJsonPointer());
-			pp=PojoPointer.fromUriPath(pp.toURIpath());
+			System.out.println(pp.toJsonPointer().toString() + "=>" + uripath + "=>" + PojoPointer.fromURIPath(pp.toURIpath()).toJsonPointer());
+			pp=PojoPointer.fromURIPath(pp.toURIpath());
 		}
 		return fw.getObjectAt(o, pp);
 	}

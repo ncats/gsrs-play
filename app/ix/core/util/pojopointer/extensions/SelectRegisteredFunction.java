@@ -46,7 +46,7 @@ public class SelectRegisteredFunction implements RegisteredFunction<SelectPath, 
 		return LambdaArgumentParser.SINGLE_STRING_ARGUMENT_PARSER(name, (s)->{
 			String[] args = s.split(",");
 			List<PojoPointer> pplist = Arrays.stream(args)
-				.map(PojoPointer::fromUriPath)
+				.map(PojoPointer::fromURIPath)
 				.collect(Collectors.toList());
 			return new SelectPath(pplist);	
 		});

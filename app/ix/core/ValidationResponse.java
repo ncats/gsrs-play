@@ -2,9 +2,11 @@ package ix.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import ix.core.ValidationMessage.MESSAGE_TYPE;
 import ix.core.models.BeanViews;
 
 public class ValidationResponse<T> {
@@ -13,7 +15,11 @@ public class ValidationResponse<T> {
 	private T newObject;
 	
 	public ValidationResponse(T obj){
-		this.newObject=obj;
+		setNewObject(obj);
+	}
+	
+	public void setNewObject(T obj){
+	    this.newObject=obj;
 	}
 	
 	public void addValidationMessage(ValidationMessage vm){
@@ -24,7 +30,9 @@ public class ValidationResponse<T> {
 	}
 	
 	public List<ValidationMessage> getValidationMessages(){
-		return validationMessages;
+	    return validationMessages.stream()
+		                .sorted()
+		                .collect(Collectors.toList());
 	}
 	
 	public void setInvalid(){
@@ -39,6 +47,18 @@ public class ValidationResponse<T> {
 		return valid;
 	}
 	
+	public boolean hasProblem(){
+	    return this.getValidationMessages()
+	                .stream()
+	                .anyMatch(vm->vm.getMessageType().isProblem());
+	}
+	
+	public boolean hasError(){
+        return this.getValidationMessages()
+                    .stream()
+                    .anyMatch(vm->vm.getMessageType()== MESSAGE_TYPE.ERROR);
+    }
+	
 	
 	@JsonView(BeanViews.Full.class)
 	public T getNewObect(){
@@ -50,12 +70,6 @@ public class ValidationResponse<T> {
 		ValidationResponse<K> vr=new ValidationResponse<K>(obj);
 		vr.setValid();
 		vr.addValidationMessage(new ValidationMessage(){
-
-			@Override
-			public boolean isError() {
-				return false;
-			}
-
 			@Override
 			public String getMessage() {
 				return "SUCCESS";

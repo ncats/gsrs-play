@@ -628,7 +628,20 @@ public class RouteFactory extends Controller {
         try {
             return _registry.get()
                     .getResource(context)
-                    .update(id, field);
+                    .update(EntityFactory.toUUID(id), field);
+        }catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return _apiInternalServerError (ex);
+        }
+    }
+    
+    @Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
+    public static Result patchUUID (String context, String id) {
+        try {
+            return _registry.get()
+                    .getResource(context)
+                    .patch(EntityFactory.toUUID(id));
         }catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return _apiInternalServerError (ex);

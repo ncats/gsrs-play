@@ -8,8 +8,15 @@ public class ArrayPath extends AbstractPath{
 	public int getIndex(){
 		return this.index;
 	}
+	
+	public boolean isVirtualEnd(){
+	    return (this.index==-1);
+	}
 	@Override
 	protected String thisJsonPointerString() {
+	    if(isVirtualEnd()){
+	        return "/" + "-";
+	    }
 		return "/" + this.index;
 	}
 

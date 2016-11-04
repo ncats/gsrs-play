@@ -379,6 +379,17 @@ public class ValidationUtils {
 						n.languages.add(new Keyword("en"));
 					}
 				}
+				if (n.type == null) {
+                    GinasProcessingMessage mes = GinasProcessingMessage
+                            .WARNING_MESSAGE(
+                                    "Must specify a name type for each name. Defaults to \"Common Name\" (cn)")
+                            .appliableChange(true);
+                    gpm.add(mes);
+                    strat.processMessage(mes);
+                    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+                        n.type="cn";
+                    }
+                }
 			}
 			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.FAIL)) {
 				return false;
@@ -612,9 +623,9 @@ public class ValidationUtils {
 					for (Substance s : sr) {
 						if (proteinsubstance.getUuid() == null
 								|| !s.getUuid()
-										.toString()
-										.equals(proteinsubstance.getUuid()
-												.toString())) {
+									 .toString()
+									 .equals(proteinsubstance.getUuid()
+									 .toString())) {
 
 							if (dupes <= 0) {
 								mes = GinasProcessingMessage
@@ -633,13 +644,13 @@ public class ValidationUtils {
 							mes.addLink(GinasUtils.createSubstanceLink(s));
 						}
 					}
-					if (dupes > 0) {
-
-						if (dupes > 1)
+					if(dupes > 0) {
+						if(dupes > 1){
 							mes.message = "There are "
 									+ dupes
 									+ " substances with a similar sequence to subunit ["
 									+ su.subunitIndex + "]:";
+						}
 						gpm.add(mes);
 					}
 				}

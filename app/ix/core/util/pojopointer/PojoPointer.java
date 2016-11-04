@@ -1,5 +1,8 @@
 package ix.core.util.pojopointer;
 
+import java.io.IOException;
+import java.io.Serializable;
+
 import com.fasterxml.jackson.core.JsonPointer;
 
 /**
@@ -20,7 +23,8 @@ import com.fasterxml.jackson.core.JsonPointer;
  * @author peryeata
  *
  */
-public interface PojoPointer{
+public interface PojoPointer extends Serializable{
+    
 	/**
 	 * Parses the supplied JsonPointer into a PojoPointer.
 	 * 
@@ -38,9 +42,12 @@ public interface PojoPointer{
 			final String prop=jp.getMatchingProperty();
 			final int pp=jp.getMatchingIndex();
 			PojoPointer c=null;
+			
 			if(pp>=0){
 				c = new ArrayPath(pp);
-			}else{
+			}else if("-".equals(prop)){
+			    c = new ArrayPath(-1);
+            }else{
 				c = new ObjectPath(prop);
 			}
 			parent.tail(c);
@@ -65,30 +72,30 @@ public interface PojoPointer{
 	/**
 	 * ABNF:
 	 * <pre>
-	 *URIPOJOPOINTER   = *( OBJECTLOCATOR *SPECIALLOCATOR)
-	 *SPECIALLOCATOR   = ARRAYLOCATOR / FILTERLOCATOR / FUNCTIONLOCATOR / IDLOCATOR
-	 *FILTERLOCATOR    = "(" URIPOJOPOINTER ":" FUNCTIONARGUMENT ")"
-	 *IDLOCATOR        = "(" ID ")"
-	 *FUNCTIONLOCATOR  = "!" FUNCTIONNAME "(" FUNCTIONARGUMENT ")"
-	 *FUNCTIONNAME     = *FIELDCHAR
-	 *FUNCTIONARGUMENT = "(" FUNCTIONARGUMENT ")" / *ALLOWEDCHARS
-	 *ALLOWEDCHARS     = DIGIT / ALPHA / "$" / "/" / "!" / ":" / "-" / "=" / "^" / "*" / "~" / "_"
-	 *OBJECTLOCATOR    = *("/" *1RAWSIGNIFIER FIELDSIGNIFIER) 
-	 *FIELDSIGNIFIER   = [STARTFIELD *FIELDCHAR]
-	 *STARTFIELD       = ALPHA
-	 *FIELDCHAR        = ALPHA / DIGIT / "$" / "_"
-	 *RAWSIGNIFIER     = "$"
-	 *ARRAYLOCATOR     = "($" 1*DIGIT ")"
-	 *ID               = 1*(ALPHA / DIGIT / "-")
-	 *ALPHA            = %x41-5A / %x61-7A   ; A-Z / a-z
-	 *DIGIT            = %x30-39             ; 0-9
+	 *  URIPOJOPOINTER   = *( OBJECTLOCATOR *SPECIALLOCATOR)
+	 *  SPECIALLOCATOR   = ARRAYLOCATOR / FILTERLOCATOR / FUNCTIONLOCATOR / IDLOCATOR
+	 *  FILTERLOCATOR    = "(" URIPOJOPOINTER ":" FUNCTIONARGUMENT ")"
+	 *  IDLOCATOR        = "(" ID ")"
+	 *  FUNCTIONLOCATOR  = "!" FUNCTIONNAME "(" FUNCTIONARGUMENT ")"
+	 *  FUNCTIONNAME     = *FIELDCHAR
+	 *  FUNCTIONARGUMENT = "(" FUNCTIONARGUMENT ")" / *ALLOWEDCHARS
+	 *  ALLOWEDCHARS     = DIGIT / ALPHA / "$" / "/" / "!" / ":" / "-" / "=" / "^" / "*" / "~" / "_" / "," / " "
+	 *  OBJECTLOCATOR    = *("/" *1RAWSIGNIFIER FIELDSIGNIFIER) 
+	 *  FIELDSIGNIFIER   = [STARTFIELD *FIELDCHAR]
+	 *  STARTFIELD       = ALPHA
+	 *  FIELDCHAR        = ALPHA / DIGIT / "$" / "_"
+	 *  RAWSIGNIFIER     = "$"
+	 *  ARRAYLOCATOR     = "($" 1*DIGIT ")"
+	 *  ID               = 1*(ALPHA / DIGIT / "-")
+	 *  ALPHA            = %x41-5A / %x61-7A   ; A-Z / a-z
+	 *  DIGIT            = %x30-39             ; 0-9
 	 * </pre> 
 	 * 
 	 *  
 	 * @param uripath
 	 * @return
 	 */
-	public static PojoPointer fromUriPath(String uripath){
+	public static PojoPointer fromURIPath(String uripath){
 		return URIPojoPointerParser.fromURI(uripath);
 	}
 
@@ -110,7 +117,24 @@ public interface PojoPointer{
 	public void setRaw(boolean raw);
 	public void tail(PojoPointer pp);
 	public PojoPointer tail();
+	
+	default PojoPointer headOnly(){
+	    PojoPointer pclone = fromURIPath(toURIpath());
+	    while(pclone instanceof IdentityPath){
+	        pclone = pclone.tail();
+	    }
+	    pclone.tail(null);
+	    return pclone;
+	}
+	
 	public JsonPointer toJsonPointer();
+	
 	public String toURIpath();
-
+	
+	default void writeObject(java.io.ObjectOutputStream out) throws IOException{
+	    out.writeUTF(toURIpath());
+	}
+	
+	
+	
 }

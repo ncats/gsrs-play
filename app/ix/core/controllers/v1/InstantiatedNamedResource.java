@@ -33,6 +33,8 @@ public interface InstantiatedNamedResource<I,V> {
         CREATE_OPERATION(new Operation("create")),
         VALIDATE_OPERATION(new Operation("validate")),
         UPDATE_ENTITY_OPERATION(new Operation("updateEntity")),
+        PATCH_OPERATION(new Operation("patch",
+                Argument.of(null, Id.class, "id"))),
         COUNT_OPERATION(new Operation("count")),
         STREAM_OPERATION(new Operation("stream", 
                 Argument.of(null, String.class, "field"),
@@ -52,9 +54,11 @@ public interface InstantiatedNamedResource<I,V> {
                 Argument.of(null, Id.class, "id"))),
         APPROVE_OPERATION(new Operation("approve", 
                 Argument.of(null, Id.class, "id"))),
-        UPDATE_OPERATION(new Operation("approve", 
+        UPDATE_OPERATION(new Operation("update", 
                 Argument.of(null, Id.class, "id"),
-                Argument.of(null, String.class, "field"))),
+                Argument.of(null, String.class, "field")
+                
+                )),
         FIELD_OPERATION(new Operation("field", 
                 Argument.of(null, Id.class, "id"),
                 Argument.of(null, String.class, "field"))),
@@ -184,13 +188,20 @@ public interface InstantiatedNamedResource<I,V> {
 		return operate(Operations.VALIDATE_OPERATION.with());
 	}
 	
+	
 	default Result approve(I id){
 		return operate(Operations.APPROVE_OPERATION.with(id));
 	}
 	
 	default Result update(I id, String field){
+	    System.out.println("Calling update method");
 		return operate(Operations.UPDATE_OPERATION.with(id,field));
 	}
+	
+
+    default Result patch(I id){
+        return operate(Operations.PATCH_OPERATION.with(id));
+    }
 	
 	default Result updateEntity(){
 		return operate(Operations.UPDATE_ENTITY_OPERATION.with());

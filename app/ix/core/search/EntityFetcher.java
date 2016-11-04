@@ -23,7 +23,7 @@ import ix.utils.Util;
  * @param <K>
  */
 public class EntityFetcher<K> implements NamedCallable<Key,K>{
-	public static final long debugDealy = ConfigHelper.getLong("ix.settings.debug.dbdelay",0);
+	public static final long debugDelay = ConfigHelper.getLong("ix.settings.debug.dbdelay",0);
 
 
 	public enum CacheType{
@@ -172,7 +172,7 @@ public class EntityFetcher<K> implements NamedCallable<Key,K>{
         //it's only here for debugging
         //Specifically, we are testing if delayed adding
         //of objects causes a problem for accurate paging.
-        Util.debugSpin(debugDealy);
+        Util.debugSpin(debugDelay);
         //System.out.println("added:" + matches.size());
 		return (K) theKey.fetch().get().getValue();
     }

@@ -30,7 +30,9 @@ public interface Validator<T> {
 	 * @param validation
 	 * @return
 	 */
-	public ValidationResponse<T> validate(T objnew);
+	default ValidationResponse<T> validate(T objnew){
+	    return validate(objnew, null);
+	}
 	
 	
 }

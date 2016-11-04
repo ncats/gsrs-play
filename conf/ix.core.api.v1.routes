@@ -69,8 +69,10 @@ GET     /$id<[a-fA-F0-9\-]+>/*field  ix.core.controllers.v1.RouteFactory._fieldU
 GET     /$id<[a-fA-F0-9\-]+>*field  ix.core.controllers.v1.RouteFactory._fieldUUID(id: String, field: String)
 GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}>)/*field      ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
 GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}>)*field      ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
-PUT     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
-PUT     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
+PUT     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>*field        ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
+PUT     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
+PATCH   /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>              ix.core.controllers.v1.RouteFactory.patchUUID(context: String, id:String)
+PATCH   /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)             ix.core.controllers.v1.RouteFactory.patchUUID(context: String, id:String)
 
 
 

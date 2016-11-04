@@ -12,7 +12,7 @@ public class FieldBasedLambdaArgumentParser<T extends PojoPointer> extends Lambd
 	}
 	@Override
 	public T parse(final String t) {
-		return this.fun.apply(PojoPointer.fromUriPath(t));
+		return this.fun.apply(PojoPointer.fromURIPath(t));
 	}
 	
 	public static <T extends PojoPointer> FieldBasedLambdaArgumentParser<T> of(String key, final Function<PojoPointer,T> fun){

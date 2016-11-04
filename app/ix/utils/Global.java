@@ -216,7 +216,7 @@ public class Global extends GlobalSettings {
 			throw new IllegalArgumentException("Instance is not an Entity");
 		}
 
-		String name = getResource(ew.getClazz());
+		String name = getResource(ew.getEntityClass());
 		
 		if (name == null) {
 			return null;

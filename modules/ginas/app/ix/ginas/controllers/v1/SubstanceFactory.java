@@ -35,9 +35,10 @@ import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
-
+import ix.core.util.pojopointer.PojoPointer;
 import ix.ginas.controllers.GinasApp.StructureSearchResultProcessor;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
@@ -343,23 +344,45 @@ public class SubstanceFactory extends EntityFactory {
 		Class<? extends Substance> subClass = getClassFromJson(json);
 		return updateEntity(json, subClass, sv);
 	}
-
-	public static Result update(UUID uuid, String field) {
+	
+	
+	public static Result patch(UUID uuid) throws Exception {
+	    DefaultSubstanceValidator sv = DefaultSubstanceValidator
+                .UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+	    
+	    Key k = Key.of(Substance.class, uuid);
+	    return EntityFactory.patch(k, sv);
+	}
+	
+	
+	
+	public static Result update(UUID uuid, String field) throws Exception {
 		DefaultSubstanceValidator sv = DefaultSubstanceValidator
 				.UPDATE_SUBSTANCE_VALIDATOR(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+		if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest("Only PUT is accepted!");
+        }
 
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0 && content.indexOf("text/json") < 0)) {
+            return badRequest("Mime type \"" + content + "\" not supported!");
+        }
+		
 		// if(true)return ok("###");
 		try {
 			JsonNode value = request().body().asJson();
 			Class<? extends Substance> subClass = getClassFromJson(value);
-			return update(uuid, field, subClass, finder.get(), new GinasV1ProblemHandler(), sv);
+			System.out.println("Got:" + value.toString());
+			Key k=Key.of(subClass, uuid);
+			PojoPointer pp = PojoPointer.fromURIPath(field);
+			
+			return EntityFactory.updateField(k, pp, value, sv);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
 		}
 	}
 
-	// silly test
 	// silly test
 	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
 		// System.out.println("Dupe chack");

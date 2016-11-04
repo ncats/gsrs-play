@@ -80,7 +80,6 @@ public class URIPojoPointerParser {
 					}
 
 					final String key = parse("_" + lambdaString, 0).get().v();
-					System.out.println("Found key:" + key);
 
 					final PojoPointer pp = LambdaParseRegistry
 											.getPojoPointerParser(key)
@@ -90,9 +89,16 @@ public class URIPojoPointerParser {
 
 					break;
 				case LOCATOR:
-					System.out.println("It's:" + root.toURIpath());
-
-					final boolean isNumber = tup.v().chars().skip(1).allMatch(Character::isDigit);
+					int offset=1;
+					if(tup.v().length()>=2){
+					    if(tup.v().charAt(1)=='-'){
+					        offset++;
+					    }
+					}
+					final boolean isNumber = tup.v().chars()
+					                    .skip(offset)
+					                    .allMatch(c->Character.isDigit(c))
+					                    ;
 					if (tup.v().startsWith("" + URIPojoPointerParser.ARRAY_CHAR) && isNumber) {
 						final ArrayPath ap = new ArrayPath(Integer.parseInt(tup.v().substring(1)));
 						parent.tail(ap);
@@ -107,14 +113,12 @@ public class URIPojoPointerParser {
 						parent.tail(fp);
 						parent = fp;
 					}
-					System.out.println("Now it's:" + root.toURIpath());
 					break;
 				default:
 					break;
 
 				}
 			}
-
 			if (raw) {
 				parent.setRaw(true);
 			}

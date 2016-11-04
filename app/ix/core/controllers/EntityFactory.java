@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,16 +38,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.jsonpatch.JsonPatch;
 
+import ix.core.CacheStrategy;
 import ix.core.DefaultValidator;
 import ix.core.ExceptionValidationMessage;
 import ix.core.ValidationResponse;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.adapters.InxightTransaction;
+import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.BeanViews;
 import ix.core.models.ETag;
 import ix.core.models.Edit;
+import ix.core.plugins.IxCache;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.ArgumentAdapter;
 import ix.core.search.text.TextIndexer;
@@ -314,20 +319,6 @@ public class EntityFactory extends Controller {
         
         Object returnObj = streamop.apply(results);
         
-        
-//        final ETag etag = new ETag ();
-//        etag.top = options.top;
-//        etag.skip = options.skip;
-//        etag.query = Util.canonicalizeQuery (request ());
-//        etag.count = results.size();
-//        etag.uri = Global.getHost()+request().uri();
-//        etag.path = request().path();
-//        // only include query parameters that fundamentally alters the
-//        // number of results
-//        etag.sha1 = Util.sha1(request(), "filter");
-//        etag.method = request().method();
-//        etag.filter = options.filter;
-        
         final ETag etag = new ETag.Builder()
         		.fromRequest(request())
 				.options(options)
@@ -467,6 +458,7 @@ public class EntityFactory extends Controller {
         }
 
         List results = new ArrayList ();
+        
         if (cons.isEmpty()) {
             Logger.warn("Can't filter by example because JSON"
                         +" doesn't contain any primitive field!");
@@ -482,7 +474,7 @@ public class EntityFactory extends Controller {
     }
 
     protected static <K,T> Result stream (String field, int top, int skip , Model.Finder<K, T> finder) {
-    	PojoPointer pojoPoint = PojoPointer.fromUriPath(field);
+    	PojoPointer pojoPoint = PojoPointer.fromURIPath(field);
         return page (top,skip,null, finder, l->{
         	return EntityWrapper.of(l)
         						.at(pojoPoint)
@@ -583,7 +575,7 @@ public class EntityFactory extends Controller {
     protected static Result field (Object inst, String field) {
     	//return fieldOld(inst,field);
     	try{
-	    	Object o = atFieldSerialized(inst,PojoPointer.fromUriPath(field));
+	    	Object o = atFieldSerialized(inst,PojoPointer.fromURIPath(field));
 	    	if(o instanceof JsonNode){
 	        	return ok((JsonNode)o);
 	        }else{
@@ -654,13 +646,11 @@ public class EntityFactory extends Controller {
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
             if(validator!=null){
-		            ValidationResponse vr=validator.validate(inst);
-		            
-	            	if(!vr.isValid()){
+		            ValidationResponse<T> vr=validator.validate(inst);
+		            if(!vr.isValid()){
 		            	return badRequest(validationResponse(vr));
 		            }
             }
-           
             
             inst.save();
             tx.commit();
@@ -683,20 +673,66 @@ public class EntityFactory extends Controller {
     	MESSAGES
     }
 
+    protected static <T extends Model> Result validate(JsonNode node, Class<T> type, Validator<T> validator,RESPONSE_TYPE rept) {
+        
+        try {
+
+            ObjectMapper mapper = new ObjectMapper();
+            //Why don't we use this in the other place?
+            mapper.addHandler(new DeserializationProblemHandler() {
+                public boolean handleUnknownProperty(
+                        DeserializationContext ctx, JsonParser parser,
+                        JsonDeserializer deser, Object bean, String property) {
+                    try {
+                        Logger.warn("Unknown property \"" + property
+                                + "\" (token=" + parser.getCurrentToken()
+                                + ") while parsing " + bean + "; skipping it..");
+                        parser.skipChildren();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        Logger.error("Unable to handle unknown property!", ex);
+                        return false;
+                    }
+                    return true;
+                }
+            });
+
+            T inst = mapper.treeToValue(node, type);
+
+
+            //gets the value (if exists)
+            Optional<EntityWrapper<?>> oldValue = getCurrentValue(inst);
+
+            ValidationResponse<T> vr;
+
+            //If it's present
+            if(oldValue.isPresent()){
+                //Validate using it and the new value
+                vr= validator.validate(inst,(T)oldValue.map(o -> o.getValue()).get());  
+            }else{
+                //Validate using only new value
+                vr= validator.validate(inst,null);
+            } 
+
+            if(rept==RESPONSE_TYPE.FULL){
+                return ok(prepareValidationResponse(vr,true));
+            }else{
+                return ok(prepareValidationResponse(vr,false));
+            }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            ValidationResponse vr = new ValidationResponse(null);
+            vr.setInvalid();
+            vr.addValidationMessage(new ExceptionValidationMessage(ex));
+            //should this be ok? Or internalServerError?
+            return ok(prepareValidationResponse(vr,false));
+        }
+    }
+    
     protected static <K, T extends Model> Result validate(Class<T> type,
                                                           Model.Finder<K, T> finder, Validator<T> validator) {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest("Only POST is accepted!");
-        }
-        
-        String returnType=request().getQueryString(RESPONSE_TYPE_PARAMETER);
-        
-        RESPONSE_TYPE rept= RESPONSE_TYPE.MESSAGES;
-        
-        try{
-        	rept=RESPONSE_TYPE.valueOf(returnType.toUpperCase());
-        }catch(Exception e){
-        	
         }
         
         String content = request().getHeader("Content-Type");
@@ -705,61 +741,10 @@ public class EntityFactory extends Controller {
                 .indexOf("text/json") < 0)) {
             return badRequest("Mime type \"" + content + "\" not supported!");
         }
-
-        try {
-        	
-            ObjectMapper mapper = new ObjectMapper();
-            //Why don't we use this in the other place?
-            mapper.addHandler(new DeserializationProblemHandler() {
-                    public boolean handleUnknownProperty(
-                                                         DeserializationContext ctx, JsonParser parser,
-                                                         JsonDeserializer deser, Object bean, String property) {
-                        try {
-                            Logger.warn("Unknown property \"" + property
-                                        + "\" (token=" + parser.getCurrentToken()
-                                        + ") while parsing " + bean + "; skipping it..");
-                            parser.skipChildren();
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                            Logger.error("Unable to handle unknown property!", ex);
-                            return false;
-                        }
-                        return true;
-                    }
-                });
-            
-            JsonNode node = request().body().asJson();
-            
-            T inst = mapper.treeToValue(node, type);
-            
-            
-            //gets the value (if exists)
-            Optional<EntityWrapper<?>> oldValue = getCurrentValue(inst);
-            
-            ValidationResponse<T> vr;
-            
-            //If it's present
-            if(oldValue.isPresent()){
-            	//Validate using it and the new value
-            	vr= validator.validate(inst,(T)oldValue.map(o -> o.getValue()).get());	
-            }else{
-            	//Validate using only new value
-            	vr= validator.validate(inst,null);
-            } 
-
-            if(rept==RESPONSE_TYPE.FULL){
-            	return ok(prepareValidationResponse(vr,true));
-            }else{
-            	return ok(prepareValidationResponse(vr,false));
-            }
-        } catch (Throwable ex) {
-        	ex.printStackTrace();
-        	ValidationResponse vr = new ValidationResponse(null);
-        	vr.setInvalid();
-        	vr.addValidationMessage(new ExceptionValidationMessage(ex));
-        	//should this be ok? Or internalServerError?
-            return ok(prepareValidationResponse(vr,false));
-        }
+        JsonNode node = request().body().asJson();
+        
+        return validate(node,type,validator,RESPONSE_TYPE.MESSAGES);
+        
     }
     
     public static UUID toUUID (String id) {
@@ -771,13 +756,13 @@ public class EntityFactory extends Controller {
         return UUID.fromString(id);
     }
     
-    protected static JsonNode validationResponse(ValidationResponse vr){
+    protected static <T> JsonNode validationResponse(ValidationResponse<T> vr){
     	return prepareValidationResponse(vr,false);
     }
-    protected static JsonNode prepareValidationResponse(ValidationResponse vr, boolean full){
-    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
+    protected static <T> JsonNode prepareValidationResponse(ValidationResponse<T> vr, boolean full){
+    	EntityMapper mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
     	if(full){
-    		mapper = EntityMapper.COMPACT_ENTITY_MAPPER();
+    		mapper = EntityMapper.FULL_ENTITY_MAPPER();
     	}
     	return mapper.valueToTree(vr);
     }
@@ -859,11 +844,16 @@ public class EntityFactory extends Controller {
      * @param type
      * @param finder
      * @return
+     * @throws Exception 
      */
     @Deprecated
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
-                return update (id,field,type,finder, null, null);
+        try{
+            return update (id,field,type,finder, null, null);
+        }catch(Exception e){
+            return RouteFactory._apiBadRequest(e);
+        }
     }
     
     
@@ -880,26 +870,203 @@ public class EntityFactory extends Controller {
     @Deprecated
     protected static <K, T extends Model, V extends T> Result update 
         (K id, String field, Class<V> type, Model.Finder<K, T> finder,
-         DeserializationProblemHandler deserializationHandler, Validator<T> validator) {
+         DeserializationProblemHandler deserializationHandler, Validator<T> validator) throws Exception {
     	
-    	return forbidden ("Update field methods not available at this time");
+        PojoPointer pp = PojoPointer.fromURIPath(field);
+        JsonNode json = request().body().asJson();
+        Key k = Key.of(type, id);
+        
+        return updateField(k,pp,json,validator);
     }
     
     
+    
+    
+    
+    /**
+     * Update to a field (PUT) is a special form of a PATCH, which is
+     * just a REPLACE operation at a specified PATH.
+     * @param k
+     * @param path
+     * @param replace
+     * @param validator
+     * @return
+     * @throws Exception
+     */
     @Deprecated
-    protected static <T> Result updateField 
-        (Key k, PojoPointer path, JsonNode replace, Validator<T> validator) {
+    protected static <T extends Model,V> Result updateField 
+        (Key k, PojoPointer path, JsonNode replace, Validator<T> validator) throws Exception {
     	
-//    	EntityWrapper ewOld = k.fetch().get();
-//    	
-//    	Object o = atFieldSerialized(ewOld.getValue(),path);
-//    	if(o instanceof JsonNode){
-//    		
-//    	}
-    	
-    	
-    	return forbidden ("Update field methods not available at this time");
+        PatchChanges changes = new PatchChanges()
+                                                  .replace(path, replace);
+        
+        return patch(k,changes,validator);
     }
+    
+   // public static Map<String,StagedChange> stagedChanges= new ConcurrentHashMap<>();
+    
+    @CacheStrategy(evictable=false)
+    public static class StagedChange{
+        private static final long serialVersionUID = 1L;
+        
+        private String key;
+        private String version;
+        private PatchChanges changes;
+        
+        public StagedChange(String version, PatchChanges changes){
+            this.changes=changes;
+            this.version=version;
+            this.key = UUID.randomUUID()
+                           .toString();
+        }
+        
+        
+    }
+    
+    public static class UpdateResponse<T>{
+        public static enum COMMIT_TYPE{
+            SUBMITTED,
+            STAGED,
+            REJECTED
+        }
+
+        private COMMIT_TYPE commitType;
+        private ValidationResponse<T> validationResponse;
+        private String stagedKey;
+        private Key key;
+        
+        public COMMIT_TYPE getCommitType() {
+            return commitType;
+        }
+        public ValidationResponse<T> getValidationResponse() {
+            return validationResponse;
+        }
+        
+        public String getStagedKey() {
+            return stagedKey;
+        }
+        private boolean isStaged(){
+            return (commitType == COMMIT_TYPE.STAGED);
+        }
+        
+        public String getCommitURL() {
+            if(isStaged()){
+                return key.asResourcePath() + "?key=" + stagedKey;
+            }else{
+                return null;
+            }
+        }
+        
+        public String getCommitMethod() {
+            if(isStaged()){
+                return "PATCH";
+            }else{
+                return null;
+            }
+        }
+        public UpdateResponse(COMMIT_TYPE type, ValidationResponse<T> resp, String stagedKey, Key key){
+            this.commitType=type;
+            this.validationResponse=resp;
+            this.stagedKey=stagedKey;
+            this.key=key;
+        }
+    }
+    
+    protected static <T extends Model> Result patch(Key k, Validator<T> validator) throws Exception {
+        if (!request().method().equalsIgnoreCase("PATCH")) {
+            return badRequest ("Only PATCH is accepted!");
+        }
+        String key = request().getQueryString("key");
+        if(key!=null){
+            StagedChange staged= (StagedChange) IxCache.get(key);
+            if(staged!=null){
+                return patch(k,staged.changes, validator, staged.version, true, false);
+            }else{
+                throw new IllegalStateException("Key\""+key+"\" not found as a staged commit!");
+            }
+        }else{
+            String content = request().getHeader("Content-Type");
+            if (content == null || (content.indexOf("application/json") < 0
+                                    && content.indexOf("text/json") < 0)) {
+                throw new IllegalStateException("Mime type \""+content+"\" not supported!");
+            }
+            JsonNode json = request().body().asJson();
+            ObjectMapper om = new ObjectMapper();
+            PatchChanges changes=om.treeToValue(json, PatchChanges.class);
+            return patch(k, changes, validator);
+        }
+    }
+    
+    protected static <T extends Model,V> Result patch
+    (Key k, PatchChanges changes, Validator<T> validator, String version, boolean force, boolean validate) throws Exception {
+        
+        EntityWrapper<T> oldWrapped    = (EntityWrapper<T>)k.fetch().get();
+        EntityWrapper<T> clonedWrapped =  EntityWrapper.of(oldWrapped.getClone());
+        
+        
+        clonedWrapped.getEntityInfo()
+                     .getVersionField()
+                     .get();
+        
+        JsonPatch patch = changes.asJsonPatch(clonedWrapped);
+        
+        JsonNode clonedJson =clonedWrapped.toFullJsonNode();
+        clonedWrapped.getEntityInfo()
+            .getVersionField()
+            .ifPresent(f->{
+                if(!validate){
+                    ((ObjectNode)clonedJson).put(f.getJsonFieldName(),version);
+                }
+            });
+        
+        
+        JsonNode changedJson = patch.apply(clonedJson);
+        if(!validate){
+            StagedChange stagedChange = new StagedChange(version, changes);
+            
+            //Forces all problems to be errors by default
+            ValidationResponse<T> resp = updateEntityValidated(changedJson,clonedWrapped.getEntityClass(),(t1,t2)->{
+                ValidationResponse<T> vr=validator.validate(t1, t2);
+                if(!force && vr.hasProblem()){
+                    vr.setInvalid();
+                }
+                return vr;
+            });
+            
+            UpdateResponse<T> upResp;
+            
+            if(resp.isValid()){
+                upResp = new UpdateResponse<T>(UpdateResponse.COMMIT_TYPE.SUBMITTED, resp, null,k);
+            }else{
+                if(resp.hasError()){
+                    upResp = new UpdateResponse<T>(UpdateResponse.COMMIT_TYPE.REJECTED, resp, null,k);
+                }else{
+                    IxCache.set(stagedChange.key, stagedChange);
+                    upResp = new UpdateResponse<T>(UpdateResponse.COMMIT_TYPE.STAGED, resp, stagedChange.key,k);
+                }
+            }
+            EntityMapper em = getEntityMapper();
+            
+            return Java8Util.ok(em.valueToTree(upResp));
+        }else{
+            return validate(changedJson,clonedWrapped.getEntityClass(),validator,RESPONSE_TYPE.MESSAGES);
+        }
+    }
+    
+    protected static <T extends Model,V> Result patch
+        (Key k, PatchChanges changes, Validator<T> validator) throws Exception {
+        
+        String version = request().getQueryString("version");
+        boolean validate = Optional
+                                .ofNullable(request().getQueryString("validate"))
+                                .isPresent();
+        
+        
+        return patch(k, changes, validator, version, false, validate);
+    }
+    
+    
+    
     
     
     protected static Result updateEntity (Class<?> type) {
@@ -918,21 +1085,25 @@ public class EntityFactory extends Controller {
     }
     
     
-    protected static Result updateEntity (JsonNode json, Class<?> type) {
-        return updateEntity (json, type, new DefaultValidator());
+    protected static <T> Result updateEntity (JsonNode json, Class<T> type) {
+        return updateEntity (json, type, new DefaultValidator<T>());
     }
     
     
-    //Typically mutates, but doesn't sometimes -- I know, but we delete/create sometimes instead
-    public static EntityWrapper calculateAndApplyDiff(EntityWrapper oWrap, EntityWrapper nWrap) throws Exception{
+    //Typically mutates, but doesn't sometimes 
+    //This is not ideal. 
+    //Also, the generic "T" here really doesn't do anything
+    //as the contract has no enforcement.
+    //
+    public static <T> EntityWrapper<T> calculateAndApplyDiff(EntityWrapper<? extends T> oWrap, EntityWrapper<? extends T> nWrap) throws Exception{
     	 boolean usePojoPatch=false;
-         if(oWrap.getClazz().equals(nWrap.getClazz())){ //only use POJO patch if the entities are the same type
+         if(oWrap.getEntityClass().equals(nWrap.getEntityClass())){ //only use POJO patch if the entities are the same type
          	usePojoPatch=true;
          }
          
          if(usePojoPatch){
          	doPojoPatch(oWrap,nWrap); //saves too!
-         	return oWrap; //Mutated
+         	return (EntityWrapper<T>)oWrap; //Mutated
          }else{
          	
          	Model oldValue=(Model)oWrap.getValue();
@@ -952,7 +1123,7 @@ public class EntityFactory extends Controller {
          	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, oldValue);
          	
          	//This doesn't morph the object, so we're in trouble
-         	return nWrap; //Delete & Create
+         	return (EntityWrapper<T>)nWrap; //Delete & Create
          }
     }
     
@@ -999,79 +1170,108 @@ public class EntityFactory extends Controller {
     			   ew.delete();
     		   });
     }
+    
+    
+    /**
+     * Performs the actual update of a record, returning a {@link ValidationResponse}
+     * which explains what went wrong (if something went wrong), and contains the 
+     * new updated form of the object committed, or the object for which the commit
+     * was attempted but failed. If the returned object has 
+     * {@link ValidationResponse#isValid()}, then it was committed. 
+     * @param json
+     * @param type
+     * @param validator
+     * @return
+     * @throws Exception
+     */
+    protected static <T> ValidationResponse<T> updateEntityValidated(JsonNode json, Class<? extends T> type, Validator<T> validator ) throws Exception{
+        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
 
+        //Get NEW object from JSON
+        Object newValue = mapper.treeToValue(json, type);
+
+        //Fetch old value
+        EntityWrapper<?> eg =  getCurrentValue(newValue)
+                .orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
+
+        //validation response holder
+        //TODO: This is a side-effect, which is not desired
+        //in general.
+        final List<ValidationResponse<T>> vrlist = new ArrayList<>();
+
+
+        //Do we still need this???
+        //EditHistory eh = new EditHistory (json.toString());
+
+        EntityWrapper<T> savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
+            EntityWrapper<T> og= EntityWrapper.of((T)ov);
+
+            ValidationResponse<T> vrr=validator.validate((T)newValue,(T)og.getValue());
+            vrlist.add(vrr);
+            if(!vrr.isValid()){
+                return Optional.empty();
+            }
+            
+            EntityWrapper entityThatWasSaved=null;
+
+            InxightTransaction tx = InxightTransaction.beginTransaction();
+            try{
+                entityThatWasSaved=calculateAndApplyDiff(og,EntityWrapper.of(newValue)); //saving happens here
+                tx.commit();
+
+                // This was added because there are times
+                // when the parent entity isn't actually
+                // updated at all, at least from the ebean perspective
+                // so this forces the reindexing, at least
+
+                EntityPersistAdapter.getInstance().deepreindex(entityThatWasSaved);
+            }catch(Exception e){
+                Logger.error("Error updating entity", e);
+            }finally{
+                tx.end();
+            }
+            
+            return Optional.ofNullable(entityThatWasSaved);
+        });
+
+
+        if(vrlist.isEmpty()){
+            throw new IllegalStateException("Validation Response could not be generated");
+        }
+        
+        ValidationResponse<T> vrresp = vrlist.get(0);
+        if(vrresp.isValid()){
+            vrresp.setNewObject(savedVersion.getValue());
+        }
+        if(vrresp.getNewObect()==null){
+            vrresp.setInvalid();
+        }
+        return vrresp;
+    }
+
+    
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
      * then we just need to store the old JSON, and the new.
      * 
      */
     protected static <T> Result updateEntity (JsonNode json, Class<? extends T> type, Validator<T> validator ) {
-        
-    	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
-    	
-    	//EntityWrapper oldValuaeContainer = null;
-//    	EntityWrapper<?> eg=null;
+        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
         try {       
-        	
-        	//Get NEW object from JSON
-            Object newValue = mapper.treeToValue(json, type);
-            
-            //Fetch old value
-            EntityWrapper<?> eg =  getCurrentValue(newValue)
-            		.orElseThrow(()->new IllegalStateException("Cannot update a non-existing record"));
-            
-            //validation response holder
-            List<ValidationResponse<T>> vrlist = new ArrayList<>();
-            
-            
-            //Do we still need this???
-            //EditHistory eh = new EditHistory (json.toString());
-            
-            EntityWrapper<T> savedVersion = EntityPersistAdapter.performChange(eg.getKey(),ov->{
-            	EntityWrapper<T> og= EntityWrapper.of((T)ov);
-
-            	ValidationResponse<T> vrr=validator.validate((T)newValue,(T)og.getValue());
-            	vrlist.add(vrr);
-                if(!vrr.isValid()){
-                	return Optional.empty();
-                }
-                EntityWrapper entityThatWasSaved=null;
-                
-                InxightTransaction tx = InxightTransaction.beginTransaction();
-                try{
-                	entityThatWasSaved=calculateAndApplyDiff(og,EntityWrapper.of(newValue)); //saving happens here
-	                tx.commit();
-
-	                // This was added because there are times
-	                // when the parent entity isn't actually
-	                // updated at all, at least from the ebean perspective
-	                // so this forces the reindexing, at least
-	                
-	                EntityPersistAdapter.getInstance().deepreindex(entityThatWasSaved);
-                }catch(Exception e){
-                	Logger.error("Error updating entity", e);
-                }finally{
-                	tx.end();
-                }
-                return Optional.ofNullable(entityThatWasSaved);
-            });
-            
-            
-            if(vrlist.isEmpty()){
-            	return badRequest("Validation Response could not be generated");
-            }else if(!vrlist.get(0).isValid()){
-	            return badRequest(prepareValidationResponse(vrlist.get(0),false));
-	        }else if(savedVersion == null){ 				 //Couldn't happen for some reason
-	        	return internalServerError ("unsuccessful"); //TODO: make this follow a better contract
-	        }
-            
-            return Java8Util.ok (savedVersion.toJson(mapper));
+            ValidationResponse<T> response = updateEntityValidated(json,type,validator);
+            if(!response.isValid()){
+                //TODO: Should this be OK ... probably not
+                return ok(prepareValidationResponse(response,false));
+            }
+            return Java8Util.ok (mapper.valueToTree(response.getNewObect()));
         }catch (Exception ex) {
         	Logger.error("Error updating record", ex);
             ex.printStackTrace();
-            return internalServerError (ex.getMessage());
+            return RouteFactory._apiBadRequest("Error updating record");
         }
     }
+    
+    
 
     
     

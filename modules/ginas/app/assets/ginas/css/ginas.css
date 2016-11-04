@@ -1240,12 +1240,6 @@ span#record-count {
     border-top: 1px solid #DADADA;
 }
 
-span.key-value {
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
 .name-details{
 	font-size: 8pt;
 	background-color: rgb(249, 249, 249);

@@ -102,6 +102,7 @@ import ix.core.util.pojopointer.ObjectPath;
 import ix.core.util.pojopointer.PojoPointer;
 import ix.core.util.pojopointer.SkipPath;
 import ix.core.util.pojopointer.SortPath;
+import ix.utils.Global;
 import ix.utils.LinkedReferenceSet;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -452,7 +453,7 @@ public class EntityUtils {
 			return ei.ignorePostUpdateHooks();
 		}
 
-		public Class<?> getClazz() {
+		public Class<T> getEntityClass() {
 			return ei.getEntityClass();
 		}
 
@@ -586,6 +587,17 @@ public class EntityUtils {
 			}
 		}
 		
+		public Stream<T> streamArrayElements(Class<T> type) {
+            if(!this.isArrayOrCollection()){
+                return Stream.empty();
+            }
+            if(this.getValue() instanceof Collection){
+                return ((Collection<T>)this.getValue()).stream();
+            }else{
+                return (Arrays.stream((T[])this.getValue()));
+            }
+        }
+		
 		/**
 		 * Same as {@link #streamArrayElements()} only the elements
 		 * are contained in {@link EntityWrapper} as a stream
@@ -597,13 +609,13 @@ public class EntityUtils {
 		
 		
 		
+		
 		private static 
 		CachedSupplier<Map<String,BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>>>>
 			finders = CachedSupplier.of(()->{
-				Map<String,BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>>>
+				Map<String, BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>>>
 					registry= new HashMap<>();
 				
-				//ObjectPath locator
 				registry.put(IdentityPath.class.getName(), (cpath,current)->{
 					return Optional.of(current);
 				});
@@ -624,12 +636,14 @@ public class EntityUtils {
 				//ArrayPath locator
 				registry.put(ArrayPath.class.getName(), (cpath,current)->{
 					ArrayPath ap = (ArrayPath)cpath;
-	        		Optional<Object> value =current.getArrayElementAt(ap.getIndex());
+					
+					Optional<Object> value =current.getArrayElementAt(ap.getIndex());
 	        		if(!value.isPresent()){
 	        			return Optional.empty();
 	        		}
 	        		return Optional.of(EntityWrapper.of(value.get()));
 				});
+				
 				//IDPath locator
 				registry.put(IDFilterPath.class.getName(), (cpath,current)->{
 					IDFilterPath idp = (IDFilterPath)cpath;
@@ -822,6 +836,7 @@ public class EntityUtils {
 	        	BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>> finder=
 	        	finders.get().get(cpath.getClass().getName());
 	        	if(finder!=null){
+	        	    System.out.println("Fetching:" + cpath.toURIpath() + " from " + this.getEntityClass());
 	        		Optional<EntityWrapper<?>> found=finder.apply(cpath, current);
 	        		if(!found.isPresent())return found;
 	        		current=(EntityWrapper<Object>) found.get();
@@ -1322,6 +1337,12 @@ public class EntityUtils {
 		    if(this.versionField==null)return null;
 		    return this.versionField.getValue(entity).orElse(null);
 		}
+		
+		public Optional<MethodOrFieldMeta> getVersionField() {
+            if(this.hasVersion())return Optional.of(versionField);
+            return Optional.empty();
+        }
+		
 
 		public String getVersionAsStringFor(Object entity) {
 			Object o = getVersionFor(entity);
@@ -2385,6 +2406,11 @@ public class EntityUtils {
 				// better that
 				// could be done
 			}
+		}
+		
+		
+		public String asResourcePath(){
+		    return Global.getRef(kind.getEntityClass(), this._id);
 		}
 
         public static <T> Key of(Class<T> class1, Object id) {

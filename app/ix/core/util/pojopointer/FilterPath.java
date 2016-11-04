@@ -13,7 +13,7 @@ public class FilterPath extends LambdaPath{
 		if(fsplit.length!=2){
 			throw new IllegalStateException("Filters must specify one field, and one value");
 		}
-		setField(PojoPointer.fromUriPath(fsplit[0]));
+		setField(PojoPointer.fromURIPath(fsplit[0]));
 		setValue(fsplit[1]);
 	}
 

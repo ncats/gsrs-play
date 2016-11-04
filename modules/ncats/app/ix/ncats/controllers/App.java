@@ -1006,16 +1006,16 @@ public class App extends Authentication {
 		if (type != null && query != null) {
 			try {
 				String key = null;
-				if (type.equalsIgnoreCase("substructure")) {
+				if (type.toLowerCase().startsWith("sub")) {
 					String sq = getSmiles(request().getQueryString("q"));
 					key = "substructure/"+Util.sha1(sq + request().getQueryString("order"));
 				}
-				else if (type.equalsIgnoreCase("similarity")) {
+				else if (type.toLowerCase().startsWith("sim")) {
 					String c = request().getQueryString("cutoff");
 					String sq = getSmiles(request().getQueryString("q"));
 					key = "similarity/"+getKey (sq + request().getQueryString("order"), Double.parseDouble(c));
 				}
-				else if (type.equalsIgnoreCase("sequence")) {
+				else if (type.toLowerCase().startsWith("seq")) {
 					String iden = request().getQueryString("identity");
 					if (iden == null) {
 						iden = "0.5";
@@ -1026,17 +1026,17 @@ public class App extends Authentication {
 					}
 					key = "sequence/"+getKey (getSequence(request().getQueryString("q")) +idenType + request().getQueryString("order"), Double.parseDouble(iden));
 
-				}else if(type.equalsIgnoreCase("flex")) {
+				}else if(type.toLowerCase().startsWith("flex")) {
 					String sq = getSmiles(request().getQueryString("q"));
 					key = "flex/"+Util.sha1(sq + request().getQueryString("order"));
-				}else if(type.equalsIgnoreCase("exact")) {
+				}else if(type.toLowerCase().startsWith("exact")) {
 					String sq = getSmiles(request().getQueryString("q"));
 					key = "exact/"+Util.sha1(sq + request().getQueryString("order"));
 				}else{
 					key = type + "/"+Util.sha1(query);
 				}
 
-				return key;
+				return Util.sha1(key);
 
 			}catch (Exception ex) {
 				Logger.error("Error creating key for request" , ex);

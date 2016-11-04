@@ -92,7 +92,7 @@ public class FunctionalPointerTest extends AbstractGinasClassServerTest{
 		}
 
 		public static <T> LambdaTest<T> ofObj(final T t, final String pp, final Object expected, final String name){
-			return ofObj(t, PojoPointer.fromUriPath(pp),expected, name);
+			return ofObj(t, PojoPointer.fromURIPath(pp),expected, name);
 		}
 	}
 
@@ -272,10 +272,10 @@ public class FunctionalPointerTest extends AbstractGinasClassServerTest{
 	public void evaluateFunctionPointerAfterRewrite() throws JsonProcessingException, IOException{
 		final String oldURI = this.currentLambdaTest.getPointer().toURIpath();
 
-		assertEquals(oldURI,PojoPointer.fromUriPath(oldURI).toURIpath());
+		assertEquals(oldURI,PojoPointer.fromURIPath(oldURI).toURIpath());
 
 		evaluateEquals(this.currentLambdaTest.getObject(),
-				PojoPointer.fromUriPath(oldURI),
+				PojoPointer.fromURIPath(oldURI),
 				this.currentLambdaTest.getExpected());
 	}
 
