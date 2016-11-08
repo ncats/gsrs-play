@@ -802,6 +802,11 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
                 n.note += "\n" + mes.text;
             }
         }
+        for(Note n2:this.notes) {
+            if (n.note.equals(n2.note)) {
+                return null;
+            }
+        }
         n.addReference(r);
         this.notes.add(n);
         return n;
@@ -1203,11 +1208,17 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
         r.addRestrictGroup(GROUP_ADMIN);
         r.documentDate = TimeUtil.getCurrentDate();
         this.references.add(r);
+        boolean added = false;
+
         for(GinasProcessingMessage message: gpm){
             Note n=this.addValidationNote(message, r);
             if(n!=null){
                 n.addRestrictGroup(GROUP_ADMIN);
+                added = true;
             }
+        }
+        if(!added){
+            this.references.remove(r);
         }
     }
 

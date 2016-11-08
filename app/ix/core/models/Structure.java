@@ -333,15 +333,22 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
 	@Override
 	public void forceUpdate() {
 		lastEdited=new Date();
-		super.update();
+		super.save();
 	}
 
 	@Override
 	public boolean tryUpdate() {
 		long ov=version;
-		super.update();
+		super.save();
 		return ov!=version;
 	}
+
+
+    public void setId(UUID newid){
+        if(this.id==null){
+            this.id=newid;
+        }
+    }
 
     @JsonIgnore
     @Transient

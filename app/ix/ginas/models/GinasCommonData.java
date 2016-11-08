@@ -118,7 +118,9 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     }
 
     public void setUuid(UUID uuid) {
-        this.uuid = uuid;
+        if(this.uuid == null) {
+            this.uuid = uuid;
+        }
     }
 
     public Date getCreated() {

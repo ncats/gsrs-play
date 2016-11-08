@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.SingleParent;
 import ix.core.models.VIntArray;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.IntArrayDeserializer;
@@ -35,6 +36,7 @@ import ix.ginas.models.serialization.IntArraySerializer;
  * it is the repeated portion, aka a Structural Repeat Unit (SRU). {@link Unit}s
  * but may only be a fragment of an SRU that doesn't repeat.
  */
+@SingleParent
 @Entity
 @Table(name="ix_ginas_unit")
 public class Unit extends GinasCommonSubData {
@@ -131,13 +133,13 @@ public class Unit extends GinasCommonSubData {
     	set1.add(rgroup2);
     	setAttachmentMap(amap);
     }
-    
-    
+
+
     @JsonIgnore
     public Polymer getPolymer(){
         return this.owner;
-    }
-    
+		}
+
 
     public Unit () {}
 }

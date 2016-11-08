@@ -70,10 +70,10 @@ public class Reference extends GinasCommonData {
 
 	public static String PUBLIC_DOMAIN_REF="PUBLIC_DOMAIN_RELEASE";
 
-    public Reference () {
+/*    public Reference () {
     	this.setUuid(UUID.randomUUID());
     	
-    }
+    }*/
     
     public static Reference SYSTEM_ASSUMED(){
     	Reference r = new Reference();

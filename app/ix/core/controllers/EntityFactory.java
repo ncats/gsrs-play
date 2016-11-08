@@ -1240,7 +1240,7 @@ public class EntityFactory extends Controller {
         }
         
         ValidationResponse<T> vrresp = vrlist.get(0);
-        if(vrresp.isValid()){
+        if(vrresp.isValid() && savedVersion!=null){
             vrresp.setNewObject(savedVersion.getValue());
         }
         if(vrresp.getNewObect()==null){
