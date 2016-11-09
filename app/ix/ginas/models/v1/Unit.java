@@ -36,6 +36,7 @@ import ix.ginas.models.serialization.IntArraySerializer;
  * it is the repeated portion, aka a Structural Repeat Unit (SRU). {@link Unit}s
  * but may only be a fragment of an SRU that doesn't repeat.
  */
+@SingleParent
 @Entity
 @Table(name="ix_ginas_unit")
 @SingleParent
@@ -133,13 +134,13 @@ public class Unit extends GinasCommonSubData {
     	set1.add(rgroup2);
     	setAttachmentMap(amap);
     }
-    
-    
+
+
     @JsonIgnore
     public Polymer getPolymer(){
         return this.owner;
-    }
-    
+		}
+
 
     public Unit () {}
 }

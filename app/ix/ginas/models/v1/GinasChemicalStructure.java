@@ -162,11 +162,10 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	}
 
 
-    
-   
-    
     public void setId(UUID uuid){
-    	this.id=uuid;
+		if(this.id == null) {
+			this.id = uuid;
+		}
     }
     
     

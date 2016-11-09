@@ -70,7 +70,6 @@ public class Reference extends GinasCommonData {
 
 	public static String PUBLIC_DOMAIN_REF="PUBLIC_DOMAIN_RELEASE";
 
-       
     public static Reference SYSTEM_ASSUMED(){
     	Reference r = new Reference();
 		r.citation="Assumed or asserted";

@@ -74,8 +74,10 @@
                     }
                     <li role="presentation"><a href="#refs" prevent-default="" ng-click="scrollTo('refs')">
                         References <span class="badge pull-right">@sub.references.size()</span></a></li>
+                    @if(sub.getEdits().size() > 0) {
                     <li role="presentation"><a href="#history" prevent-default="" ng-click="scrollTo('history')">
-                        History </a></li>
+                            History <span class="badge pull-right">@sub.getEdits().size()</span></a></li>
+                    }
                 </ul>
             </nav>
         </div>
@@ -243,11 +245,13 @@
                     <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
                     </div>
             </div>
+
+            @if(sub.getEdits().size() > 0) {
 			<div class="row info" id="history">
 		                <button ng-init="historyscollapse=true" class="btn btn-primary label-offset det" ng-click = "historyscollapse = !historyscollapse">
 		                    <i ng-show="historyscollapse" class="fa fa-caret-right"></i>
 		                    <i ng-hide="historyscollapse" class="fa fa-caret-down"></i>
-		                   History</button>
+		                   History&nbsp;<span class="badge"> @sub.getEdits.size()</span></button>
 		                <div class="col-md-12 table-responsive" uib-collapse = "historyscollapse">
 		                	<div>
 	                            <div class="row">
@@ -293,7 +297,8 @@
                             </div>
 		                </div>
 		           </div>
-            
+            }
+
         </div>
 </div>
 }
