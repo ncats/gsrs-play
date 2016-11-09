@@ -797,24 +797,44 @@
                 scope.stage = true;
 
                 scope.fetch = function (term, skip) {
+                    console.log(scope);
                     if (_.isUndefined(scope.referenceobj) || scope.referenceobj == null) {
                         scope.referenceobj = {};
                     }
                     spinnerService.show('subrefSpinner');
                     substanceFactory.getSubstances(scope.q).then(function (response) {
+                        console.log(response);
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
-                        template = angular.element('<substance-viewer data = data obj =referenceobj format= "subref"></substance-viewer>');
-                        toggler.refresh(scope, scope.formname, template);
+                        if(scope.data.length == 1){
+                            scope.createSubref(scope.data[0]);
+                        }else {
+                            scope.showSubrefViewer();
+                        }
                     });
                 };
 
+                scope.showSubrefViewer = function(){
+                    template = angular.element('<substance-viewer data = data obj = referenceobj format= "subref"></substance-viewer>');
+                    toggler.refresh(scope, scope.formname, template);
+                };
+
+                scope.selectTypeahead = function($item, $model, $label, $event){
+                    console.log($item);
+                    console.log($model);
+                    console.log($label);
+                    console.log($event);
+                    scope.q = $item.key;
+                    scope.fetch();
+                };
+;
                 scope.getSuggestions = function(query){
                     var ret = typeaheadService.search(query);
                     return ret;
                 };
 
                 scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;

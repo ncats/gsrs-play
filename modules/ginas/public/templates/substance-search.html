@@ -6,7 +6,10 @@
         </div>
     </a>
     <spinner name="subrefSpinner"><loading></loading><br/></spinner>
+<!--
     <div class="input-group" ng-show="!referenceobj[field]"  id="{{field}}">
+-->
+    <div ng-show="!referenceobj[field]"  id="{{field}}">
         <input type="text"
                class="form-control"
                ng-model= q
@@ -18,10 +21,11 @@
                uib-typeahead="r.key as r.key for r in getSuggestions($viewValue)"
                typeahead-loading="loadingSuggest"
                typeahead-focus-first ="false"
+               typeahead-on-select = "selectTypeahead($item, $event);"
                autocomplete="off">
-          <span class="input-group-btn">
+         <!-- <span class="input-group-btn">
         <button class ="btn btn-default" ng-click ="fetch()" uib-tooltip="search for substance" aria-label="Search"><span class="sr-only">Search gsrs</span>
             <i class="fa fa-search"></i></button>
-              </span>
+              </span>-->
     </div>
 </div>
