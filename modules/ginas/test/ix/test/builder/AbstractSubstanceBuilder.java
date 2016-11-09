@@ -266,7 +266,7 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 
 
     public T setUUID(UUID uuid) {
-       return andThen(s -> {s.setUuid(uuid);});
+       return andThen(s -> {s.uuid=uuid;});
     }
 
     public T setName(String name) {
