@@ -36,7 +36,6 @@ import ix.ginas.models.serialization.IntArraySerializer;
  * it is the repeated portion, aka a Structural Repeat Unit (SRU). {@link Unit}s
  * but may only be a fragment of an SRU that doesn't repeat.
  */
-@SingleParent
 @Entity
 @Table(name="ix_ginas_unit")
 @SingleParent
