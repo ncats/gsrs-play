@@ -836,8 +836,7 @@ public class EntityUtils {
 	        	BiFunction<PojoPointer, EntityWrapper<?>, Optional<EntityWrapper<?>>> finder=
 	        	finders.get().get(cpath.getClass().getName());
 	        	if(finder!=null){
-	        	    System.out.println("Fetching:" + cpath.toURIpath() + " from " + this.getEntityClass());
-	        		Optional<EntityWrapper<?>> found=finder.apply(cpath, current);
+	        	    Optional<EntityWrapper<?>> found=finder.apply(cpath, current);
 	        		if(!found.isPresent())return found;
 	        		current=(EntityWrapper<Object>) found.get();
 	        	}else{
@@ -1000,24 +999,27 @@ public class EntityUtils {
 			kind = cls.getName();
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);
-			fields = Arrays.stream(cls.getFields()).map(f2 -> new FieldMeta(f2, dyna)).peek(f -> {
-				if (f.isId()) {
-					idField = f;
-				} else if (f.isDynamicFacetLabel()) {
-					dynamicLabelField = f;
-				} else if (f.isDynamicFacetValue()) {
-					dynamicValueField = f;
-				}
-				if (f.isDataVersion()) {
-					versionField = f;
-				}
-				if (f.isDataValidationFlag()){
-					validatedField = f;
-				}
-				if (f.isChangeReason()){
-					this.changeReasonField=f;
-				}
-			}).collect(Collectors.toList());
+			fields = Arrays.stream(cls.getFields())
+					.map(f2 -> new FieldMeta(f2, dyna))
+					.peek(f -> {
+						if (f.isId()) {
+							idField = f;
+						} else if (f.isDynamicFacetLabel()) {
+							dynamicLabelField = f;
+						} else if (f.isDynamicFacetValue()) {
+							dynamicValueField = f;
+						}
+						if (f.isDataVersion()) {
+							versionField = f;
+						}
+						if (f.isDataValidationFlag()){
+							validatedField = f;
+						}
+						if (f.isChangeReason()){
+							this.changeReasonField=f;
+						}
+					})
+					.collect(Collectors.toList());
 
 			
 			

@@ -1143,10 +1143,13 @@ public class EntityFactory extends Controller {
 				if("remove".equals(c.op)){
 					removed.add(c.oldValue);
 				}
+				System.out.println(c.op + "\t" + c.oldValue + "\t" + c.newValue);
         });
         if(changeStack.isEmpty()){
         	throw new IllegalStateException("No change detected");
-        };
+        }else{
+        	System.out.println("Found:" + changeStack.size() + " changes");
+        }
         
     	while(!changeStack.isEmpty()){
     		Object v=changeStack.pop();
@@ -1240,10 +1243,10 @@ public class EntityFactory extends Controller {
         }
         
         ValidationResponse<T> vrresp = vrlist.get(0);
-        if(vrresp.isValid()){
+        if(vrresp.isValid() && savedVersion!=null){
             vrresp.setNewObject(savedVersion.getValue());
         }
-        if(vrresp.getNewObect()==null){
+        if(vrresp.getNewObect()==null || savedVersion==null){
             vrresp.setInvalid();
         }
         return vrresp;
@@ -1261,7 +1264,7 @@ public class EntityFactory extends Controller {
             ValidationResponse<T> response = updateEntityValidated(json,type,validator);
             if(!response.isValid()){
                 //TODO: Should this be OK ... probably not
-                return ok(prepareValidationResponse(response,false));
+                return internalServerError(prepareValidationResponse(response,false));
             }
             return Java8Util.ok (mapper.valueToTree(response.getNewObect()));
         }catch (Exception ex) {

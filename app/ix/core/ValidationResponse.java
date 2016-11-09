@@ -10,7 +10,7 @@ import ix.core.ValidationMessage.MESSAGE_TYPE;
 import ix.core.models.BeanViews;
 
 public class ValidationResponse<T> {
-	private List<ValidationMessage> validationMessages;
+	private List<ValidationMessage> validationMessages= new ArrayList<>();
 	private boolean valid;
 	private T newObject;
 	

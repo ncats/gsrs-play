@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.SingleParent;
 import ix.core.models.VIntArray;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.serialization.IntArrayDeserializer;
@@ -37,6 +38,7 @@ import ix.ginas.models.serialization.IntArraySerializer;
  */
 @Entity
 @Table(name="ix_ginas_unit")
+@SingleParent
 public class Unit extends GinasCommonSubData {
 	@ManyToOne(cascade = CascadeType.PERSIST)
 	private Polymer owner;
