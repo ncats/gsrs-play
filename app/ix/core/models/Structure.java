@@ -86,13 +86,7 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
             return new Stereo(node.asText());
         }
     }
-    
-    
-    public void setId(UUID newid){
-    	if(this.id!=null){
-    		this.id=newid;
-    	}
-    }
+   
     
     @JsonSerialize(using = StereoSerializer.class)
     @JsonDeserialize(using = StereoDeserializer.class)
