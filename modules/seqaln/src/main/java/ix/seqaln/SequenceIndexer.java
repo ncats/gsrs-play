@@ -63,13 +63,13 @@ public class SequenceIndexer {
     static CacheManager CACHE_MANAGER;
 
     /**
-     * A slightly slimmed down form of {@link CachedSupplier},
+     * A slightly slimmed down form of CachedSupplier,
      * only repeated here because the seqaln module 
      * can't see the Util class.
      * 
      * @author peryeata
      *
-     * @param <T>
+     * @param <T> THe type to be supplied
      */
     public static class CachedSup<T> implements Supplier<T>{
         private static AtomicLong generatedVersion= new AtomicLong();
