@@ -2166,7 +2166,7 @@ public class GinasApp extends App {
                 Substance s = substances.get(0);
                 SubstanceFactory.approveSubstance(s);
                 s.save();
-                String resp = "Substance approved with approvalID:" + s.approvalID;
+                String resp = "Substance approved with Approval ID: " + s.approvalID;
                 return ok(ix.ginas.views.html.response.render(resp));
             }
             throw new IllegalStateException("More than one substance matches that term");

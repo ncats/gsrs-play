@@ -1,5 +1,6 @@
 package ix.test;
 
+import ix.core.util.RunOnly;
 import static ix.test.SubstanceJsonUtil.ensureFailure;
 import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertEquals;
@@ -318,6 +319,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 
 			updated = new JsonUtil.JsonNodeBuilder(updated).remove("/access/0").build();
 
+			
 			ensureFailure(normalAPI.updateSubstance(updated));
 			ensurePass(superAPI.updateSubstance(updated));
 		}
@@ -519,6 +521,7 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 	}
 
 	@Test   
+	//@RunOnly
 	public void testAddAccessGroupToNewProtein() throws Exception {
 		try (RestSession session = ts.newRestSession(fakeUser1)) {
 			SubstanceAPI api = new SubstanceAPI(session);
@@ -527,7 +530,6 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 			String uuid = entered.get("uuid").asText();
 			addAccessGroupThenRegister(api, entered);
 		}
-
 	}
 
 	@Test   

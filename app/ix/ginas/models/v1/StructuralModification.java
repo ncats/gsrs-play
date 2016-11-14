@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import ix.core.SingleParent;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -14,9 +15,12 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.SingleParent;
+
 @Entity
 @Table(name="ix_ginas_structuralmod")
 @JSONEntity(title = "Structural Modification", isFinal = true)
+@SingleParent
 public class StructuralModification extends GinasCommonSubData {
 	
 	@ManyToOne(cascade = CascadeType.PERSIST)

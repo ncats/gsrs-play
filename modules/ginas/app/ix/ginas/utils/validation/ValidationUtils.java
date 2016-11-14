@@ -541,6 +541,13 @@ public class ValidationUtils {
 					mes.appliedChange = true;
 				}
 			}
+			if (n.relatedSubstance == null) {
+				GinasProcessingMessage mes = GinasProcessingMessage
+						.ERROR_MESSAGE(
+								"Relationships must specify a related substance");
+				gpm.add(mes);
+				strat.processMessage(mes);
+			}
 			if (!validateReferenced(s, n, gpm, strat, ReferenceAction.ALLOW)) {
 				return false;
 			}

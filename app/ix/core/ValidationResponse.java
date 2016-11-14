@@ -10,7 +10,7 @@ import ix.core.ValidationMessage.MESSAGE_TYPE;
 import ix.core.models.BeanViews;
 
 public class ValidationResponse<T> {
-	private List<ValidationMessage> validationMessages;
+	private final List<ValidationMessage> validationMessages = new ArrayList<>();
 	private boolean valid;
 	private T newObject;
 	
@@ -23,16 +23,13 @@ public class ValidationResponse<T> {
 	}
 	
 	public void addValidationMessage(ValidationMessage vm){
-		if(validationMessages==null){
-			validationMessages=new ArrayList<ValidationMessage>();
-		}
 		this.validationMessages.add(vm);
 	}
 	
-	public List<ValidationMessage> getValidationMessages(){
-	    return validationMessages.stream()
-		                .sorted()
-		                .collect(Collectors.toList());
+	public List<ValidationMessage> getValidationMessages() {
+			return validationMessages.stream()
+					.sorted()
+					.collect(Collectors.toList());
 	}
 	
 	public void setInvalid(){
