@@ -94,10 +94,13 @@ public class ConfigHelper {
 
     private final static BiFunction<Tuple<String, Class<?>>, Object, Object> PLAY_CONFIG_RESOLVER = ((f, d) -> {
         String key = f.k();
-        Class cls = f.v();
+        Class<?> cls = f.v();
 
         if (cls.isAssignableFrom(Long.class)) {
             return Play.application().configuration().getLong(key, (Long) d);
+        }
+        if (cls.isAssignableFrom(Boolean.class)) {
+            return Play.application().configuration().getBoolean(key, (Boolean) d);
         }
 
         Object o = EntityWrapper.of(Play.application().configuration().asMap())
@@ -105,15 +108,7 @@ public class ConfigHelper {
                                                                     // silly way
                 .map(e -> (Object) e.getValue()) // ... but it works
                 .orElse(d);
-        if(!cls.isAssignableFrom(o.getClass())){
-            if(cls == Boolean.class){
-                if(o.toString().toLowerCase().equals("false")){
-                    return false;
-                }else if(o.toString().toLowerCase().equals("true")){
-                    return true;
-                }
-            }
-        }
+        
         
         return o;
 
