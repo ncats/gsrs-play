@@ -105,7 +105,16 @@ public class ConfigHelper {
                                                                     // silly way
                 .map(e -> (Object) e.getValue()) // ... but it works
                 .orElse(d);
-
+        if(!cls.isAssignableFrom(o.getClass())){
+            if(cls == Boolean.class){
+                if(o.toString().toLowerCase().equals("false")){
+                    return false;
+                }else if(o.toString().toLowerCase().equals("true")){
+                    return true;
+                }
+            }
+        }
+        
         return o;
 
     });
