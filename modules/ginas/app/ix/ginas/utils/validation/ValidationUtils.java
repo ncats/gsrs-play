@@ -793,6 +793,7 @@ public class ValidationUtils {
 			gpm.add(GinasProcessingMessage
 					.ERROR_MESSAGE("Polymer substance must have a polymer element"));
 		} else {
+			cs.polymer.displayStructure=null;
 			boolean withDisplay = !isNull(cs.polymer.displayStructure);
 			boolean withIdealized = !isNull(cs.polymer.idealizedStructure);
 			if (!withDisplay && !withIdealized) {

@@ -1107,7 +1107,11 @@
                               var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
                     if (!_.isUndefined(scope.ctx)) {
                         url += '&context={{ctx}}';
+                    }else{
+                        url += '&context=' + Math.random();
+
                     }
+
                     if (attrs.smiles) {
                         var smiles = attrs.smiles
                                                         .replace(/[;]/g,'%3B')

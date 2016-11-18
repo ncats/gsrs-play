@@ -545,7 +545,7 @@ public class RouteFactory extends Controller {
     public static Result page (String context, int top,
             int skip, String filter) {
         try {
-            System.out.println("Setting topskip:" + top + ":" + skip);
+           // System.out.println("Setting topskip:" + top + ":" + skip);
             return _registry.get()
                     .getResource(context)
                     .page(top, skip, filter);
