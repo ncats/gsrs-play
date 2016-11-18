@@ -61,8 +61,11 @@ my $abs_path = abs_path($outputPath. "/$subDir");
 					
 #chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
+my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
+#my $ginasFileDump = "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
 
-my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.admin=true -Dix.authentication.allownonauthenticated=false";
+my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.ginas.load.file=$ginasFileDump";
+#-Dix.admin=true -Dix.authentication.allownonauthenticated=false";
 
 my $daemon = Proc::Daemon->new(
         work_dir => $abs_path,
@@ -75,6 +78,10 @@ my $daemon = Proc::Daemon->new(
     
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
+
+#sleep for 4hrs since the load takes a long time to run
+#sleep(60*60*4);
+sleep(60*10);
 
 
 my $ua = LWP::UserAgent->new;
@@ -99,8 +106,7 @@ my $stdErr = toString($abs_path . "/daemon.err");
 
 
 
-#my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
-my $ginasFileDump = "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
+
 if(-e $ginasFileDump){
 	print "file exists\n";
 }else{
