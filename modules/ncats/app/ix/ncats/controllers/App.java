@@ -758,7 +758,7 @@ public class App extends Authentication {
 		String key = Util.sha1(value)+"::"+size;
 		try {
 
-			byte[] resp = getOrElse (0l, key, TypedCallable.of(() ->{
+			byte[] resp = getOrElse (getTextIndexer().lastModified(), key, TypedCallable.of(() ->{
 				MolHandler mh = new MolHandler (value);
 				Molecule mol = mh.getMolecule();
 				if (mol.getDim() < 2) {

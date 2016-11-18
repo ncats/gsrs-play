@@ -477,14 +477,16 @@
             },
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
-                scope.addLink = function (form, path) {
-                    scope.addNew(form, path);
+                console.log(scope);
+
+                scope.addLink = function (form, path) {scope.addNew(form, path);
                 };
 
                 scope.removeUsed = function(){
                     var ret = [];
 
                     var cys = angular.copy(scope.cysteines);
+
                     //this sets the array of used sites
                     _.forEach(scope.parent.protein.disulfideLinks, function (link) {
                         _.forEach(link.sites, function (site) {
@@ -500,7 +502,6 @@
                     });
                     //set the cv to be the copied array
                     scope.cysteines = cys;
-
                 };
 
                 //this is called before the object is deleted, so removing used doesn't work
@@ -542,21 +543,29 @@
                             }
                         });
                     });
-                }
+               }
 
-                scope.$watch(function(scope){return scope.parent.protein.subunits;}, function (newValue, oldValue, scope) {
+                var ff = function (newValue, oldValue, scope) {
                     //this will update the cv on subunit change, excluding used subunits.
                     //this doesn't remove them from the cv if they are added to the disulfide links
 
                     //have to use angular.copy so the display value doesn't change for the subunit display
                     var t = angular.copy(siteAdder.getAllSitesWithValue('C', scope.parent.protein.subunits));
-                        _.forEach(t, function (site) {
-                                _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
-                                _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
-                        });
+                    _.forEach(t, function (site) {
+                        _.set(site, 'display', site.subunitIndex + '_' + site.residueIndex);
+                        _.set(site, 'value', site.subunitIndex + '_' + site.residueIndex);
+                    });
                     scope.cysteines= t;
                     scope.removeUsed();
-                }, true);
+                };
+                scope.$watch(function(scope){
+                        return _.get(scope.parent, "protein.subunits",null);
+
+                }, ff, true);
+
+
+                ff(scope.parent.protein.subunits,null, scope);
+                scope.clean();
             }
         }
     });
@@ -767,13 +776,17 @@
         };
 
         
-        this.getAllSitesWithValue = function (residue, display) {
+        this.getAllSitesWithValue = function (residue, subunits) {
             var ret = [];
-            _.forEach(display, function (subunit) {
-               var temp = _.filter(_.flattenDeep(subunit.$$subunitDisplay), function (su) {
-                    return su.value === residue;
-                });
-                ret = _.concat(ret, temp);
+            _.forEach(subunits, function (subunit) {
+                var si = subunit.subunitIndex;
+
+                for(var i=0;i<subunit.sequence.length;i++){
+                    var r=subunit.sequence[i];
+                    if(r === residue){
+                      ret.push({subunitIndex:si, residueIndex:i+1});
+                    }
+                }
             });
             return ret;
         };
