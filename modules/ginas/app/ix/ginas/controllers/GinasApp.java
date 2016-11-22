@@ -1018,8 +1018,8 @@ public class GinasApp extends App {
             return result;
         }catch (Exception ex) {
             Logger.error("Unable to perform search", ex);
+            throw new IllegalStateException(ex);
         }
-        return null;
     }
 
     /**
