@@ -521,6 +521,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     	operate(bean,Java8ForOldEbeanHelper.processorCallableFor(PostLoad.class),false);
     }
 
+    /**
+     * perform a hook operation on the given bean.
+     * @param bean the bean to opperate on.
+     * @param function takes the bean and the EntityProcessor and returns a Callable. This Callable is actually usually
+     *                 just the method on the EntityProcesor to call but we had to have a workaround since
+     *                 our version of Play and ebean could not handle Java 8 method references.
+     *
+     * @param fail should it throw an exception if there is a problem with this operation.
+     */
     public void operate(Object bean, BiFunction<Object,EntityProcessor, Callable> function, boolean fail){
     	EntityInfo<?> emeta = EntityUtils.getEntityInfoFor(bean.getClass());
         EntityProcessor ep = entityProcessors.get(emeta);
