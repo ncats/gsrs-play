@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
+import ix.core.util.RunOnly;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -52,22 +54,24 @@ public class TextIndexerTest extends AbstractGinasServerTest{
 		
 	}
 
-	@Test
-	public void testCreateTextIndexerTemporary() throws IOException {
-			TextIndexer.getInstance(tmpDir.getRoot());
+	private TextIndexer ti;
 
-
+	@Before
+	public void createTextIndexer() throws IOException{
+		ti = TextIndexer.getInstance(tmpDir.getRoot());
 	}
+
+
 	
 	@Test
 	public void testIndexEmptyStringField() throws IOException {
 			String value="VALUEIWILLSEARCHFOR";
 
-			TextIndexer ti = TextIndexer.getInstance(tmpDir.getRoot());
+
 			ti.add(EntityWrapper.of(new MySpecialTestClass("id", value)));
 			
 			SearchResult sr= ti.search(value, 2);
-			assertEquals(1,sr.count());
+			assertEquals(1,sr.getCount());
 
 	}
 	
@@ -75,13 +79,78 @@ public class TextIndexerTest extends AbstractGinasServerTest{
 	public void testIndexEmptyStringWithAllowedEmptyShouldBeSearchable() throws IOException {
 					String value="VALUEIWILLSEARCHFOR";
 
-			
-			TextIndexer ti = TextIndexer.getInstance(tmpDir.getRoot());
 			EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
 			ti.add(ew);
 			SearchResult sr= ti.search("EMPTYONE", 2);
-			assertEquals(1,sr.count());
+			assertEquals(1,sr.getCount());
     }
 
-	
+    @Test
+    public void noResults() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        SearchResult sr= ti.search("something completly different", 2);
+        assertEquals(0,sr.getCount());
+    }
+
+    @Test
+    public void prefixSearch() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        SearchResult sr= ti.search("VALUE*", 2);
+        assertEquals(1,sr.getCount());
+    }
+
+    @Test
+    public void suffixSearch() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        SearchResult sr= ti.search("*FOR", 2);
+        assertEquals(1,sr.getCount());
+    }
+
+    @Test
+    public void middleSearchWithWildCards() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        SearchResult sr= ti.search("*WILL*", 2);
+        assertEquals(1,sr.getCount());
+    }
+    @Test
+    public void middleSearchWithoutWildCardsWillNotFindAnything() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        SearchResult sr= ti.search("WILL", 2);
+        assertEquals(0,sr.getCount());
+    }
+    @Test
+    public void middleSearchWithoutDoubleSidedAstrixShouldNotFindAnything() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        assertEquals(0,ti.search("*WILL", 2).getCount());
+        assertEquals(0,ti.search("WILL*", 2).getCount());
+    }
+
+    @Test
+    public void fieldSpecification() throws IOException {
+        String value="VALUEIWILLSEARCHFOR";
+
+        EntityWrapper<MySpecialTestClass> ew = EntityWrapper.of(new MySpecialTestClass("id2", value));
+        ti.add(ew);
+        ti.add(EntityWrapper.of(new MySpecialTestClass("id1", "somethingCompletelyDifferent")));
+        SearchResult sr= ti.search("normalField:*WILL*", 2);
+        assertEquals(1,sr.getCount());
+    }
 }
