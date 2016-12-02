@@ -61,8 +61,17 @@ my $abs_path = abs_path($outputPath. "/$subDir");
 					
 #chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
+#my $ginasFileDump = abs_path("modules/ginas/test/testdumps/rep90.ginas");
+my $ginasFileDump = abs_path("modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz");
 
-my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.admin=true -Dix.authentication.allownonauthenticated=false";
+print "$ginasFileDump\n";
+if(-e $ginasFileDump){
+	print "file exists\n";
+}else{
+	die "FILE DOES NOT EXIST!!!!";
+}
+my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.ginas.load.file=$ginasFileDump";
+#-Dix.admin=true -Dix.authentication.allownonauthenticated=false";
 
 my $daemon = Proc::Daemon->new(
         work_dir => $abs_path,
@@ -75,6 +84,13 @@ my $daemon = Proc::Daemon->new(
     
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
+
+#just exit for now don't worry about the graph for now
+exit;
+
+#sleep for 4hrs since the load takes a long time to run
+#sleep(60*60*4);
+sleep(5);
 
 
 my $ua = LWP::UserAgent->new;
@@ -99,15 +115,10 @@ my $stdErr = toString($abs_path . "/daemon.err");
 
 
 
-#my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
-my $ginasFileDump = "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
-if(-e $ginasFileDump){
-	print "file exists\n";
-}else{
-	print "FILE DOES NOT EXIST!!!!";
-}
 
-system "curl -v -F file-type=JSON -F file-name=@" ."$ginasFileDump http://localhost:$port/dev/ginas/app/load";
+
+
+#system "curl -v -F file-type=JSON -F file-name=@" ."$ginasFileDump http://localhost:$port/dev/ginas/app/load";
 
 
 print "=======================\n";
@@ -118,7 +129,8 @@ my $res;
 my $done=undef;
 while (!$done){
 	sleep(5);
-	
+	print "status URL =  $statusURL\n";
+
 	# Create a request
 	my $req = HTTP::Request->new(GET => $statusURL);
 	# Pass request to the user agent and get a response back
@@ -164,6 +176,9 @@ close RECORD_TIME;
 
 sub getValue($$){
 	my ($json, $key) = @_;
+
+	print "json = \n$json\n";
+
 	if($json =~/\"$key\"\:\"(\S+?)\"/){
 		return $1;	
 	}

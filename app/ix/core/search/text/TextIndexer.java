@@ -1295,6 +1295,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
     		} else {
     			try {
     				QueryParser parser = new IxQueryParser(FULL_TEXT_FIELD, indexAnalyzer);
+                    turnOnSuffixSearchIfNeeded(qtext, parser);
     				query = parser.parse(qtext);
     			} catch (ParseException ex) {
     				ex.printStackTrace();
@@ -1622,7 +1623,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		long start = TimeUtil.getCurrentTimeMillis();
 
 		final TopDocs hits;
-		
+
 		try (TaxonomyReader taxon = new DirectoryTaxonomyReader(taxonWriter)) {
 		    hits=firstPassLuceneSearch(searcher,taxon,searchResult,filter, query);
 		}
@@ -1735,7 +1736,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			.map(k-> new TermsFilter(new Term(k.getField(), k.getTerm())))
 			.forEach(f->filtersFromOptions.add(f));
 		
-		
+
 		Query qactual = query;
 			
 		//Collect the range filters into one giant filter.
@@ -1813,7 +1814,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 		}
 
-		
+
 		LuceneSearchProviderResult lspResult=lsp.search(searcher, taxon,qactual,facetCollector);
 		hits=lspResult.getTopDocs();
 		
@@ -1877,12 +1878,28 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 	
 	public Query parseQuery(String q) throws Exception{
-		Query q1=getQueryParser().parse(q);
+        QueryParser parser = getQueryParser();
+        turnOnSuffixSearchIfNeeded(q, parser);
+
+
+        Query q1=parser.parse(q);
 		//return q1;
 		return withSearcher(s -> q1.rewrite(s.getIndexReader()));
 	}
-	
-	/**
+
+    private void turnOnSuffixSearchIfNeeded(String q, QueryParser parser) {
+
+        if(q ==null || q.isEmpty()){
+            return;
+        }
+        String queryPart = q.substring(q.indexOf(':')+1);
+        if(queryPart.charAt(0) == '*'){
+            //suffix search
+            parser.setAllowLeadingWildcard(true);
+        }
+    }
+
+    /**
 	 * Prepare a given query to be more specified by restricting it to the field
 	 * provided, and using 
 	 * @param q
@@ -2210,7 +2227,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			
 			
 			HashMap<String,List<TextField>> fullText = new HashMap<>();
-			Document doc = new Document();
+            Document doc = new Document();
 			
 			Consumer<IndexableField> fieldCollector = f->{
 					if(f instanceof TextField || f instanceof StringField){
@@ -2258,7 +2275,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					//This is a test of a terrible idea, which just. might. work.
 					fullText.forEach((name,group)->{
 							try{
-								Document fielddoc = new Document();
+                                Document fielddoc = new Document();
 								fielddoc.add(toAnalyze);
 								fielddoc.add(docParent);
 								fielddoc.add(docParentFacet);
@@ -2297,7 +2314,6 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	// 3. in fact... it's already maybe present ...
 
 	public void addDoc(Document doc) throws IOException {
-		
 		doc = facetsConfig.build(taxonWriter, doc);
 		if (DEBUG(2))
 			Logger.debug("++ adding document " + doc);
