@@ -781,10 +781,12 @@
             _.forEach(subunits, function (subunit) {
                 var si = subunit.subunitIndex;
 
-                for(var i=0;i<subunit.sequence.length;i++){
-                    var r=subunit.sequence[i];
-                    if(r === residue){
-                      ret.push({subunitIndex:si, residueIndex:i+1});
+                if(subunit.sequence) {
+                    for (var i = 0; i < subunit.sequence.length; i++) {
+                        var r = subunit.sequence[i];
+                        if (r === residue) {
+                            ret.push({subunitIndex: si, residueIndex: i + 1});
+                        }
                     }
                 }
             });

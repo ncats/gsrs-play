@@ -172,6 +172,10 @@ public class BuildInfo {
     libraryDependencies += "org.apache.poi" % "poi" % "3.14",
     libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.14",
     libraryDependencies += "org.apache.poi" % "poi-ooxml-schemas" % "3.14",
+    //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12",
+    libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12" exclude("org.reflections", "reflections"),
+    libraryDependencies += "org.reflections" % "reflections" % "0.9.8" notTransitive () ,
+    libraryDependencies += "org.webjars" % "swagger-ui" % "2.1.8-M1",
 
 	  javaOptions ++= Seq("-Xmx4096M", "-Xms512M", "-XX:MaxPermSize=2048M"),
       javacOptions in (Compile, compile) ++= javaBuildOptions,

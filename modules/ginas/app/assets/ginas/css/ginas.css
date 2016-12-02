@@ -1321,3 +1321,9 @@ span.nowrap-list {
 .badge-wrapper{
 	text-align:left;
 }
+.sequence-edit{
+    font-family: monospace;
+}
+.align-right{
+    float: right;
+}

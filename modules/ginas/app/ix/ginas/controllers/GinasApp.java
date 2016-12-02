@@ -130,6 +130,7 @@ import play.mvc.Call;
 import play.mvc.Result;
 import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
+import com.wordnik.swagger.annotations.*;
 
 /**
  * GinasApp is mostly a utility class for UI-related elements of the ginas
@@ -141,6 +142,7 @@ import tripod.chem.indexer.StructureIndexer;
  * @author tyler
  *
  */
+@Api(value = "/api/v1/substances", description = "Operations with substances")
 public class GinasApp extends App {
 
     private static final String CAN_T_DISPLAY_RECORD = "Can't display record:";
@@ -547,6 +549,11 @@ public class GinasApp extends App {
         return ok(ix.ginas.views.html.admin.profile.render(user));
     }
 
+
+    @ApiOperation(value = "get All Subsatnces",
+            notes = "Returns List of all Substances",
+            response = Substance.class,
+            httpMethod = "GET")
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows, final int page) {
         String type = request().getQueryString("type");

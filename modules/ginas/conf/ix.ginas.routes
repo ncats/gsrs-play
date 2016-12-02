@@ -43,9 +43,15 @@ POST        /admin/user/:id	            ix.ginas.controllers.GinasApp.updatePrin
 GET         /admin/user/:id	            ix.ginas.controllers.GinasApp.editPrincipal(id:Long)
 POST        /admin/users/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
 
-GET			/setExportDirect			ix.ginas.controllers.GinasApp.export(id: String, format: String)			
+GET			/setExportDirect			ix.ginas.controllers.GinasApp.export(id: String, format: String)
 
 ->      /   ix.ncats.Routes	
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
+
+#GET     /assets/*file               @controllers.Assets.at(path="/public", file)
+#GET     /api-docs                   @controllers.ApiHelpController.getResources
+
+#GET     /api-docs/api/v1/substances         @controllers.ApiHelpController.getResource(path = "/api/v1/substances")
+
 
 

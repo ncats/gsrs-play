@@ -1569,7 +1569,15 @@
                             element.html(template).show();
                             $compile(element.contents())(scope);
                         });
-                    } else {
+                    } else if (scope.acidClass === 'plain') {
+
+                        $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template-plain.html").then(function (html) {
+                            template = angular.element(html);
+                            element.html(template).show();
+                            $compile(element.contents())(scope);
+                        });
+
+                    } else{
                         
                         $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
                             template = angular.element(html);
@@ -1625,9 +1633,38 @@
                     scope.obj.subunitIndex = _.toInteger(scope.index);
                 }
 
+                scope.preformatSeq = function(seq){
+                    var ret="";
+                    if(seq) {
+                        for (var i = 0; i < seq.length; i += 10) {
+                            if(i%60==0){
+                                ret+="\n";
+                            }
+                            ret += seq.substr(i, 10) + "     ";
+
+                        }
+                    }
+                    return ret.trim();
+                };
+
+                scope.postFormatSeq = function(seq){
+                    return seq.replace(/\s/g,"");
+                };
+
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
+                    if(scope.edit){ //edit starts
+                        scope.startEdit();
+                    }else{ //edit is done
+                        scope.obj.sequence=scope.postFormatSeq(scope.obj.$sequence);
+                        scope.parseSubunit();
+                    }
+
                 };
+
+                scope.startEdit = function () {
+                    scope.obj.$sequence=scope.preformatSeq(scope.obj.sequence);
+                }
 
                 scope.isSelected = function (site){                
                         if(!scope.selected)return;
@@ -1678,15 +1715,24 @@
                         }
                         subunitParser.getResidues(sclass).then(function (){
 	                    	scope.parseSubunit();
+                            if(_.isUndefined(scope.obj.sequence)) {
+                                scope.edit=true;
+                                scope.startEdit();
+                            }
                  		});
                         //scope.parseSubunit();
                     });
                 } else {
                 	subunitParser.getResidues(sclass).then(function (){
 	                    scope.parseSubunit();
+                        if(_.isUndefined(scope.obj.sequence)) {
+                            scope.edit=true;
+                            scope.startEdit();
+                        }
+
                  	});
                 }
-
+                scope.edit = false;
             },
             templateUrl: baseurl + "assets/templates/elements/subunit.html"
         };
@@ -1767,8 +1813,9 @@
                                 scope.parent.polymer.idealizedStructure = data.structure;
                                 scope.structure = data.structure;
                                 CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
+                                    var cv = response.data.content[0].terms;
                                     for (var i in data.structuralUnits) {
-                                        var cv = response.data.content[0].terms;
+                                       // var cv = response.data.content[0].terms;
                                         data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
                                     }
                                     polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
