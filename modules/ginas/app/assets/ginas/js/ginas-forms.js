@@ -479,7 +479,9 @@
             link: function (scope, element, attrs) {
                 console.log(scope);
 
-                scope.addLink = function (form, path) {scope.addNew(form, path);
+                scope.addLink = function (form, path) {
+                    scope.removeUsed();
+                    scope.addNew(form, path);
                 };
 
                 scope.removeUsed = function(){
@@ -532,6 +534,12 @@
                    scope.removeUsed();
                    subunitParser.parseSubunits(scope.parent);
                 };
+
+                scope.remove = function(tag){
+                    scope.removeUsed();
+                    scope.cysteines.push(tag);
+                    scope.cysteines  = _.orderBy(scope.cysteines, 'value');
+                }
 
                 //set the views on loading/editing a substance
                 if (scope.parent.protein.disulfideLinks) {
@@ -1492,7 +1500,13 @@
             link: function (scope, element, attrs) {
                 scope.substanceClass = scope.parent.$$getClass();
                 scope.numbers = true;
-
+                scope.viewchange = function(){
+                    if(!scope.numbers){
+                        console.log("fasta view");
+                    }else{
+                        console.log("number view");
+                    }
+                }
                 scope.addNewSubunit = function (form) {
                     var r = scope.substanceClass + '.subunits';
                     scope.addNew(form, r);

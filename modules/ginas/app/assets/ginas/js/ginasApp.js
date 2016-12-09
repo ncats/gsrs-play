@@ -1651,6 +1651,28 @@
                     return seq.replace(/\s/g,"");
                 };
 
+                scope.fastaFormat = function(){
+                    var seq = scope.obj.sequence;
+
+                    var ret="";
+                    if(seq) {
+                        seq = seq.replace(/\s/g,"");
+                        ret+="\n";
+                        for (var i = 0; i < seq.length; i += 60) {
+                            if(i+60 < seq.length)
+                            {
+                                ret += seq.substr(i, 60) + "\n";
+                            }else{
+                                ret += seq.substr(i, 60) + "*";
+                            }
+                        }
+                    }
+                    console.log("seq:" + ret);
+                    return ret;
+                };
+
+                scope.fastaview = scope.fastaFormat();
+
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
                     if(scope.edit){ //edit starts
@@ -1658,6 +1680,7 @@
                     }else{ //edit is done
                         scope.obj.sequence=scope.postFormatSeq(scope.obj.$sequence);
                         scope.parseSubunit();
+                        scope.fastaview = scope.fastaFormat();
                     }
 
                 };

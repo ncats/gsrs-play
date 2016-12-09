@@ -4,7 +4,7 @@
             <strong>
                 Subunit {{index}}
             </strong>
-            <div ng-if="view !== 'subunits'">
+            <div ng-if="view !== 'subunits' && numbers">
                 <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits" showlabel="false"
                                class="subunitButtons"></delete-button>
                 <a ng-click="cleanSequence()" uib-tooltip="Clean sequence" class="subunitButtons"><i
@@ -16,8 +16,14 @@
         </div>
     </div>
     <div ng-hide="edit" class="row">
-        <div class="col-lg-2 col-md-3 col-sm-3 subunit-chunk" ng-repeat="(index, chunk) in obj.$$subunitDisplay">
-            <span class="pull-right count" ng-show=numbers>{{($index)*10 + chunk.length}}</span><br>
+        <div class="col-md-12" ng-show=!numbers>
+            <span class="pull-left">
+                <pre>&gt;Subunit {{index}}
+                    {{fastaview}}
+                </pre>
+       </span></div>
+        <div class="col-lg-2 col-md-3 col-sm-3 subunit-chunk" ng-repeat="(index, chunk) in obj.$$subunitDisplay" ng-show=numbers>
+            <span class="pull-right count">{{($index)*10 + chunk.length}} </span><br>
             <span ng-repeat="(index, aa) in chunk track by $index">
             	<span ng-switch on="isSelected(aa)">
             			<amino-acid ng-switch-when="true" class="selected-acid" acid=aa index = {{index}}></amino-acid>
