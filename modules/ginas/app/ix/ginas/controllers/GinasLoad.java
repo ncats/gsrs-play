@@ -114,7 +114,7 @@ public class GinasLoad extends App {
 	@Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result load() {
 		if (!GinasLoad.config.get().ALLOW_LOAD) {
-			return redirect(ix.ginas.controllers.routes.GinasFactory.index());
+			return redirect(ix.ginas.controllers.routes.GinasApp.index());
 		}
 		return ok(ix.ginas.views.html.admin.load.render());
 	}

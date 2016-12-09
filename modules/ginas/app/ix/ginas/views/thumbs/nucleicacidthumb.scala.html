@@ -34,7 +34,7 @@
                             <modal-button type= "export" structureid ="'@nuc.getUuid()'" format="fas" ></modal-button>
                         </li>
                         <li>
-                            <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(nuc.nucleicAcid.getSubunits().get(0).sequence)" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
+                            <a href="@ix.ginas.controllers.routes.GinasApp.sequence(nuc.nucleicAcid.getSubunits().get(0).sequence)" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
                         </li>
                         @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                             <li>
