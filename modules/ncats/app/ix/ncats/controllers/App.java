@@ -139,6 +139,8 @@ public class App extends Authentication {
 	 * @return
 	 */
 	public static int[] paging (int rowsPerPage, int page, int total) {
+		//bug fix - make sure rowsPerPage doesn't cause divide by 0 below
+		rowsPerPage = Math.max(1, rowsPerPage);
 		int MAX_ARRAY=11;
 		int MAX_SHOW=8;
 		//last page
@@ -1373,7 +1375,7 @@ public class App extends Authentication {
 
 			int i = (page - 1) * rows;
 
-			if (i < 0 || i >= count) {
+			if (i < 0 || (i >= count && i !=0)) {
 				if(isDetermined){
 					throw new BogusPageException ("Bogus page " + page);
 				}else{
