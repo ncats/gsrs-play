@@ -53,7 +53,7 @@
                                 <modal-button type= "export" structureid ="'@chem.uuid'" format="sdf" ></modal-button>
                             </li>
                             <li>
-                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch(chem.structure.id.toString())" target="_self" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">
+                                <a ng-href="@ix.ginas.controllers.routes.GinasApp.structuresearch(chem.structure.id.toString())" target="_self" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">
                                     Search for Structure</span><span class="fa fa-search fa-2x success"></span></a>
                             </li>
                             @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {

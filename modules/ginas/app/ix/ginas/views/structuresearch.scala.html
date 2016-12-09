@@ -81,14 +81,23 @@
             <form-header type="Get Structure from Name"></form-header>
         </div>
         <div class="col-md-12">
+
+            <div style="margin-top:10px;">
+            </div>
             <ng-form novalidate>
+
+
+                <form>
                 <div class ="col-md-2">
-                    <gsrs-input type = "text" ng-model="name" field="name" label="Name"></gsrs-input>
+                    <input type = "text" ng-model="name" field="name" label="Name" />
+                    <!--<gsrs-input type = "text" ng-model="name" field="name" label="Name"></gsrs-input>-->
                 </div>
                 <div class ="col-md-2">
-                    <a class="btn btn-primary" id="resolverButton" ng-click="resolveName(name, 'structureSearch')">
-                        Resolve Name</a>
+                    <button class="btn btn-primary" id="resolverButton" ng-click="resolveName(name, 'structureSearch')" type = "submit" style="margin-left: 10px;">
+                        Resolve Name</button>
                 </div>
+
+                </form>
             </ng-form>
         </div>
         <div class="col-md-12">

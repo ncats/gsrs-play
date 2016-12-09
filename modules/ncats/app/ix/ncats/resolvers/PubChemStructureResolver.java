@@ -7,7 +7,7 @@ import ix.utils.Util;
 
 public class PubChemStructureResolver extends AbstractStructureResolver {
     public static final String PUBCHEM_RESOLVER = 
-        "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name";
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name";
     
     public PubChemStructureResolver () {
         super ("PubChem");

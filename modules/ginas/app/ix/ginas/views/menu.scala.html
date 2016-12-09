@@ -12,7 +12,7 @@
                 <span class="icon-bar"></span> <span class="icon-bar"></span> <span
             class="icon-bar"></span>
             </button>
-            <a class="navbar-brand navbar-nav" href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home">
+            <a class="navbar-brand navbar-nav" href="@ix.ginas.controllers.routes.GinasApp.index()" target="_self" alt ="Home" aria-label="Return Home">
                 <span class="sr-only">Return Home</span>
                 <img src="@routes.Assets.at("ginas/images/gsrs-logo.svg")" alt="ginas logo" class="img-responsive" id="logo">
             </a>
@@ -25,10 +25,10 @@
             <ul class="nav navbar-nav pull-left" id = "left-menu">
                 <li ng-class="getClass('substances')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
                 @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li ng-class="getClass('register')"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>
+                    <li ng-class="getClass('register')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.register()" target="_self"><span>
                         Register Substance</span></a></li>
                 }
-                <li ng-class="getClass('structure')"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
+                <li ng-class="getClass('structure')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
                 <li ng-class="getClass('sequence')"><a ng-href="@ix.ginas.controllers.routes.GinasApp.sequenceSearch" ng-click="clearStructure()" target="_self"><span>Sequence Search</span></a></li>
                 @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li ng-class="getClass('admin')"><a ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">

@@ -2,23 +2,23 @@
 # GINAS
 #
 
-GET         /                            ix.ginas.controllers.GinasFactory.index
+GET         /                            ix.ginas.controllers.GinasApp.index
 GET         /lock                        ix.ginas.controllers.GinasFactory.lock(uuid: String ?= null)
-GET         /register                    ix.ginas.controllers.GinasFactory.register
-GET         /structure                   ix.ginas.controllers.GinasFactory.structuresearch(q: String ?= null)
+GET         /register                    ix.ginas.controllers.GinasApp.register
+GET         /structure                   ix.ginas.controllers.GinasApp.structuresearch(q: String ?= null)
 POST	 	/structure					 ix.ginas.controllers.GinasApp.interpretMolfile
 POST        /structureSearch			 ix.ginas.controllers.GinasApp.structureSearchPost
 GET         /substance/:name             ix.ginas.controllers.GinasApp.substance(name: String)
 GET         /substance/:name/v/:version  ix.ginas.controllers.GinasApp.substanceVersion(name: String, version: String)
 GET         /substance/:name/edit        ix.ginas.controllers.GinasFactory.edit(name: String)
-GET         /substance/:name/approve     ix.ginas.controllers.GinasFactory.approve(name: String)
+GET         /substance/:name/approve     ix.ginas.controllers.GinasApp.approve(name: String)
 GET         /substances                  ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
-GET         /sequence                    ix.ginas.controllers.GinasFactory.sequence(id: String ?= null)
+GET         /sequence                    ix.ginas.controllers.GinasApp.sequence(id: String ?= null)
 POST        /sequence			         ix.ginas.controllers.GinasApp.sequenceSearch
-GET         /wizard                      ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
+GET         /wizard                      ix.ginas.controllers.GinasApp.wizard(kind: String ?= null)
 POST        /load                        ix.ginas.controllers.GinasLoad.loadJSON
 POST        /upload                      ix.ginas.controllers.GinasLoad.uploadFile
-POST        /cv/upload                   ix.ginas.controllers.GinasFactory.loadCV
+POST        /cv/upload                   ix.ginas.controllers.GinasApp.loadCV
 GET         /load                        ix.ginas.controllers.GinasLoad.load
 POST        /loadSDF/:payloadID          ix.ginas.controllers.GinasLoad.loadSDF(payloadID : String)
 GET         /monitor                     ix.ginas.controllers.GinasLoad.jobs(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
