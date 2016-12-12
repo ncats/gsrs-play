@@ -1652,8 +1652,8 @@
                 };
 
                 scope.fastaFormat = function(){
+                    if(!scope.obj)return "";
                     var seq = scope.obj.sequence;
-
                     var ret="";
                     if(seq) {
                         seq = seq.replace(/\s/g,"");
@@ -1667,11 +1667,8 @@
                             }
                         }
                     }
-                    console.log("seq:" + ret);
                     return ret;
                 };
-
-                scope.fastaview = scope.fastaFormat();
 
                 scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
@@ -1743,6 +1740,7 @@
                                 scope.startEdit();
                             }
                  		});
+                        scope.fastaview = scope.fastaFormat();
                         //scope.parseSubunit();
                     });
                 } else {
@@ -1752,6 +1750,7 @@
                             scope.edit=true;
                             scope.startEdit();
                         }
+                        scope.fastaview = scope.fastaFormat();
 
                  	});
                 }
