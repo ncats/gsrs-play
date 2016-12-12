@@ -1,6 +1,4 @@
 
-    <a href="" class ="aminoAcid plain {{acidClass}}" tooltip-class= "white" prevent-default="" ng-click ="clicked()" tooltip-popup-close-delay='100' uib-tooltip-template="baseurl +'app/assets/templates/tooltips/{{acidClass}}-tooltip.html'">{{acid.value}}</a>
-
-
-
-
+    <a href="" class ="aminoAcid plain {{acidClass}}" tooltip-class= "white" prevent-default="" ng-click ="clicked()"
+       tooltip-popup-close-delay='100' tooltip-placement="auto" ng-mouseleave="$parent.highlight(acid)"
+        uib-tooltip-template="baseurl +'app/assets/templates/tooltips/{{acidClass}}-tooltip.html'">{{acid.value}}</a>

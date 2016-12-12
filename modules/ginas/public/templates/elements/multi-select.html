@@ -20,6 +20,7 @@
             key-property="value"
             ng-required="required"
             max-tags={{::max}}
+            on-tag-removed="tagRemove({model:$tag});"
             enforce-max-tags
     >
         <!--addFromAutocompleteOnly="true"-->
