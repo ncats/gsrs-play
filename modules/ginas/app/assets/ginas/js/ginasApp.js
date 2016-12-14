@@ -251,7 +251,6 @@
                     });
                 }
             }
-            console.log(sub);
             return sub;
         };
 
@@ -1763,20 +1762,22 @@
 
     //this is solely to set the molfile in the sketcher externally
     ginasApp.service('molChanger', function ($http, CVFields, UUID) {
-        var sketcher;
+
+        var sk;
+
         this.setSketcher = function (sketcherInstance) {
-            sketcher = sketcherInstance;
+            sk = sketcherInstance;
         };
         this.setMol = function (mol) {
-            sketcher.setMolfile(mol);
+            sk.sketcher.setMolfile(mol);
         };
 
         this.getMol = function () {
-            return sketcher.getMolfile();
+            return sk.getMol();
         };
 
         this.getSmiles = function () {
-            return sketcher.getSmiles();
+            return sk.sketcher.getSmiles();
         };
     });
 
@@ -1880,17 +1881,31 @@
                 scope.sketcher = new JSDraw("sketcherForm");
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
+		scope.clean = function (mol){
+
+		  //remove "mul" from multiple amount
+		  mol = mol.replace(/M[ ]*SMT.*mul.*/g,"@")
+			   .replace(/\n/g,"|_|")
+			   .replace(/[@][|][_][|]/g,"")
+			   .replace(/[|][_][|]/g,"\n");
+
+			return mol;
+		};
+		scope.getMol = function(){
+			return scope.clean(scope.sketcher.getMolfile());
+		}
+
                 scope.sketcher.options.ondatachange = function () {
-                    scope.mol = scope.sketcher.getMolfile();
+                    scope.mol = scope.getMol();
                     if(attrs.ajax == 'false') {
                         $timeout(function() {
-                            _.set(scope.parent, 'q', scope.sketcher.getMolfile());
+                            _.set(scope.parent, 'q', scope.mol);
                         }, 0);
                     }else{
                         scope.updateMol();
                     }
                 };
-                molChanger.setSketcher(scope.sketcher);
+                molChanger.setSketcher(scope);
                 var structureid = (localStorageService.get('structureid') || false);
 
                 if (localStorageService.get('editID')) {
