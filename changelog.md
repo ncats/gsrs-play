@@ -1,26 +1,35 @@
-GSRSv1.3.01RC1
-===============
+GSRS v1.3
+============
 Changes:
 
 Enchancements
 -------------
-1. Added new facets - Record Level Access,
-Display Name Level Access, Definiton Level Access
-2. Improved exception throwing to handle situation when
-we error out of page the first time
-3. Fetch users by case insensitive criteria
-4. Refactored pojopointer and authenticators
-5. Fixed substance searcher to parse images correctly
-6. Added flex/exact structure search to rest API
-7. Allow PUT and PATCH for granular changes
-8. REST API timeout extended
-9. Typeahead select creates subref
-10. Added suffix searching support now *foo and *foo* are supported
-11. Added a FASTA view for the sequence in proteins
-12. Clicking on search result Substructure query smiles now will take you back to the
-search form with the structure pre-populated. Also changed pubchem url to be https and
-hitting enter on resolve name button now resolves the name.
-
+1.  Added new facets - Record Level Access,
+    Display Name Level Access, Definiton Level Access
+2.  REST API now supports PATCH and PUT operations
+    for granular changes (needed for form and
+    webservice improvements.
+3.  Validation messages no longer are duplicated if
+    the same error happens more than once.
+4.  Structure search now available via REST API (needed
+    for ajaxing advanced searches)
+5.  REST API can now explore facet values granularly,
+    allowing for finding rare facet values (needed for
+    expanding the facet values on browse/search).
+6.  REST API now shows simplified data by default for
+    many collections.
+7.  REST API now allows selecting specific sub elements
+    and some basic processing functions.
+8.  REST API supports asynchronous calls
+9.  REST API allows for new configurable function calls
+10. Simplified authentication, to allow more flexibility / extensibility.
+11. Cache now honors evictable and non-evictable entries.
+12. Pass-through write-to-disk cache now is preserved between restarts.
+13. Structure images cached are invalidated after changes.
+14. Subref (e.g. relationships) search select upon clicking type-ahead value
+15. Additional validation rules stop null relationships from being added.
+16. Improvements to codebase which reduce redundancy, improve performance.
+17. Added 500+ additional automated tests
 
 Bug Fixes
 ----------
@@ -28,16 +37,10 @@ Bug Fixes
     trying to view a substance that I approved
 2. issue # GSRS-184 - SSG1 Submission
    failed without any error. Added validation for SSG1
-3. issue # GSRS-179 - Could not submit a polymer record (We did a hot fix for this one on 10/28)
-4. Attempt to fix the LuceneSearchSuggestreindex test failure on windows
-5. Fix cv typo in jurisdiction fields
-6. Fixed issue GSRS-189 - download button doesnt work on IE
-7. Fixed the issue GSRS-190 - Cannot add a code system term / a CV term (We did a hot fix for this one on 10/28)
-8. Fixed the issue - cant edit polymers
-9. Fixed the validation error from protein edit
-10. Fixed the issue with the disulfide links when updating a sequence (pointed out by Larry)
-11. Bug fix to prevent 500 error when searches returned 0 results
-
+3. issue # GSRS-179 - Could not submit a polymer record
+4. issue # ???????? - Last Edited By facets are wrong / sometimes break
+5. issue # ???????? - Updates to CV now allowed.
+6. issue # GSRS-189 - download button doesnt work on IE
 
 GSRS v1.2.08
 ============
