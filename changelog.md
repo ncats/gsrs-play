@@ -1,11 +1,25 @@
-GSRS v???
-============
+GSRSv1.3.01RC1
+===============
 Changes:
 
 Enchancements
 -------------
 1. Added new facets - Record Level Access,
 Display Name Level Access, Definiton Level Access
+2. Improved exception throwing to handle situation when
+we error out of page the first time
+3. Fetch users by case insensitive criteria
+4. Refactored pojopointer and authenticators
+5. Fixed substance searcher to parse images correctly
+6. Added flex/exact structure search to rest API
+7. Allow PUT and PATCH for granular changes
+8. REST API timeout extended
+9. Typeahead select creates subref
+10. Added suffix searching support now *foo and *foo* are supported
+11. Added a FASTA view for the sequence in proteins
+12. Clicking on search result Substructure query smiles now will take you back to the
+search form with the structure pre-populated. Also changed pubchem url to be https and
+hitting enter on resolve name button now resolves the name.
 
 
 Bug Fixes
@@ -14,7 +28,17 @@ Bug Fixes
     trying to view a substance that I approved
 2. issue # GSRS-184 - SSG1 Submission
    failed without any error. Added validation for SSG1
-3. issue # GSRS-179 - Could not submit a polymer record
+3. issue # GSRS-179 - Could not submit a polymer record (We did a hot fix for this one on 10/28)
+4. Attempt to fix the LuceneSearchSuggestreindex test failure on windows
+5. Fix cv typo in jurisdiction fields
+6. Fixed issue GSRS-189 - download button doesnt work on IE
+7. Fixed the issue GSRS-190 - Cannot add a code system term / a CV term (We did a hot fix for this one on 10/28)
+8. Fixed for the issue - cant edit polymers
+9. Fixed the validation error from protein edit
+10. Fixed the issue with the Dysulfide links when updating a sequence (pointed out by Larry)
+11. Bug fix to prevent 500 error when searches returned 0 results
+12. Fix for - Multiple group Brackets in JSDraw doesn't export
+
 
 
 
