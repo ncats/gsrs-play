@@ -4,8 +4,8 @@
                      iscollapsed="iscollapsed"></form-header>
 
         <div class="col-md-3 col-md-offset-5 text-right align-right" id="formSwitch">
-            <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>'
-                    off='<i class="fa fa-bars fa-2x"></i>'></switch>
+            <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-bars fa-2x"></i>'
+                    off='<i class="fa fa-list-ol fa-2x"></i>' ng-change="viewchange()"></switch>
         </div>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">

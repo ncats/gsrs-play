@@ -310,7 +310,8 @@
                 changeFunction:'&?', //validators happen in the background, and mainly set validation, so scope variable changes should go here
                 //change functions happen before the field is set, so you can't get the new value without a watch
                 required: '=?',  //optional variable that enables required form validation
-                values: '=?' //array that can be passed with a custom cv for dropdowns and multi select
+                values: '=?' ,  //array that can be passed with a custom cv for dropdowns and multi select
+                tagRemove: '&?' //called when tag is removed
             },
             link: function (scope, element, attrs, ngModelCtrl) {
 
@@ -1291,11 +1292,14 @@
             link: function(scope, element, attrs, ngCtrl) {
                 var maxTags = attrs.maxTags ? parseInt(attrs.maxTags, '10') : null;
                 ngCtrl.$validators.checkLength = function(value) {
-                    if (value && maxTags && value.length > maxTags) {
-/*
-                        errors.push({text: 'Max number allowed is '+maxTags , type: 'danger'});
-*/
-                        value.splice(value.length - 1, 1);
+                    if (value && maxTags)
+                    {
+                        if(value.length > maxTags) {
+                            //errors.push({text: 'Max number allowed is '+maxTags , type: 'danger'});
+                            value.splice(value.length - 1, 1);
+                        }  else if(value && maxTags && value.length == maxTags) {
+                            scope.edit = false;
+                        }
                     }
                     return value;
                 };

@@ -3,9 +3,7 @@
         <form-header type="disulfideLinks" path ="protein.disulfideLinks" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-<!--
-        <span>Number of unspecified Cysteine residues: {{getAllCysteinesWithoutLinkage()}}</span>
--->
+        <span><strong>Select exactly two sites for each link</strong></span><br>
         <span>Number of unspecified Cysteine residues: {{cysteines.length}}</span>
         <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
             <div ng-repeat="(index,obj) in parent.protein.disulfideLinks">
@@ -24,7 +22,8 @@
                                             max = 2
                                             enforce = true
                                             required="true"
-                                            formname=form>
+                                            formname=form
+                                            tag-remove="remove(model)">
                                 </gsrs-input>
                             </div>
                                 </div>

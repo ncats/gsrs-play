@@ -1,12 +1,35 @@
-GSRS v???
+GSRS v1.3
 ============
 Changes:
 
 Enchancements
 -------------
-1. Added new facets - Record Level Access,
-Display Name Level Access, Definiton Level Access
-
+1.  Added new facets - Record Level Access,
+    Display Name Level Access, Definiton Level Access
+2.  REST API now supports PATCH and PUT operations
+    for granular changes (needed for form and
+    webservice improvements.
+3.  Validation messages no longer are duplicated if
+    the same error happens more than once.
+4.  Structure search now available via REST API (needed
+    for ajaxing advanced searches)
+5.  REST API can now explore facet values granularly,
+    allowing for finding rare facet values (needed for
+    expanding the facet values on browse/search).
+6.  REST API now shows simplified data by default for
+    many collections.
+7.  REST API now allows selecting specific sub elements
+    and some basic processing functions.
+8.  REST API supports asynchronous calls
+9.  REST API allows for new configurable function calls
+10. Simplified authentication, to allow more flexibility / extensibility.
+11. Cache now honors evictable and non-evictable entries.
+12. Pass-through write-to-disk cache now is preserved between restarts.
+13. Structure images cached are invalidated after changes.
+14. Subref (e.g. relationships) search select upon clicking type-ahead value
+15. Additional validation rules stop null relationships from being added.
+16. Improvements to codebase which reduce redundancy, improve performance.
+17. Added 500+ additional automated tests
 
 Bug Fixes
 ----------
@@ -15,8 +38,9 @@ Bug Fixes
 2. issue # GSRS-184 - SSG1 Submission
    failed without any error. Added validation for SSG1
 3. issue # GSRS-179 - Could not submit a polymer record
-
-
+4. issue # ???????? - Last Edited By facets are wrong / sometimes break
+5. issue # ???????? - Updates to CV now allowed.
+6. issue # GSRS-189 - download button doesnt work on IE
 
 GSRS v1.2.08
 ============
