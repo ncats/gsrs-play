@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import play.Logger;
 
@@ -25,7 +26,7 @@ public abstract class ArgumentAdapter implements Consumer<String[]>,
  	};
  	
 	public static final Function<String[], List<String>> stringListParser = s->{
- 		return Arrays.asList(s);
+ 		return Arrays.stream(s).collect(Collectors.toList());
  	};
  	public static final Function<List<String>, String[]> stringListParserInv = l->{
  		return l.stream().toArray(i->new String[i]);
