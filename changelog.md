@@ -30,6 +30,8 @@ Enchancements
 15. Additional validation rules stop null relationships from being added.
 16. Improvements to codebase which reduce redundancy, improve performance.
 17. Added 500+ additional automated tests
+18. Added suffix searching support now *foo and *foo* are supported
+19. Added a FASTA view for the sequence in proteins
 
 Bug Fixes
 ----------
@@ -39,8 +41,14 @@ Bug Fixes
    failed without any error. Added validation for SSG1
 3. issue # GSRS-179 - Could not submit a polymer record
 4. issue # ???????? - Last Edited By facets are wrong / sometimes break
-5. issue # ???????? - Updates to CV now allowed.
+5. issue # GSRS-190 - Updates to CV now allowed.
 6. issue # GSRS-189 - download button doesnt work on IE
+7. Fixed the LuceneSearchSuggestreindex test failure on windows
+8. Fixed the CV typo in jurisdiction fields
+9. Fixed the issue - cant edit polymers
+10. Fixed the validation error from protein edit
+11. Fixed the issue with the disulfide links when updating a sequence (pointed out by Larry)
+12. Bug fix to prevent 500 error when searches returned 0 results
 
 GSRS v1.2.08
 ============
