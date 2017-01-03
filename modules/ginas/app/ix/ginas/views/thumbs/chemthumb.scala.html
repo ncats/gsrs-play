@@ -14,6 +14,7 @@
                 <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" uib-tooltip="view record details" target="_self">
                     <code>@chem.approvalID</code></a></p>
         </div>
+
         <div class="panel-body struc-img">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" uib-tooltip="view record details" target="_self">
                 <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
@@ -43,6 +44,20 @@
                 </div>
 
             </div>
+        </div>
+        <div>
+        @defining(GinasApp.getChemSimilarity(ctx, chem)) { sim =>
+            @if(sim != null) {
+                <br>
+                <em>Similarity</em> <code>
+                @{
+                    "%.3f".format(sim)
+                }
+                </code>
+            } else {
+
+            }
+        }
         </div>
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@chem.getName()">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
