@@ -46,7 +46,9 @@ public class SearchResult {
 	private SearchOptions options;
 	final long timestamp = TimeUtil.getCurrentTimeMillis();
 	final AtomicLong stop = new AtomicLong();
+	
 	Comparator<Key> idComparator = null;
+	
 	private String generatingUrl;
 
 	private final List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
@@ -344,12 +346,15 @@ public class SearchResult {
 			return result; // return if ready
 		boolean finished = finished();
 
+
+        if (idComparator != null) {
+            matches.sortByNames(idComparator);
+        }
 		if (finished) {
-			if (idComparator != null) {
-				matches.sortByNames(idComparator);
-			}
+		    
 			result = matches;
 		}
+		
 		return matches;
 	}
 

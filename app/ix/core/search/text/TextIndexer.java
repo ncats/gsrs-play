@@ -1312,11 +1312,12 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				if (!terms.isEmpty()){
 					f = new TermsFilter(terms);
 				}
-				if(options.getOrder().isEmpty()){
+				if(options.getOrder().isEmpty() || 
+				   options.getOrder().stream().collect(Collectors.joining("_")).equals("default")){
 					Stream<Key> ids = subset.stream()
 											.map(o->EntityWrapper.of(o).getKey());
-					
 					Comparator<Key> comp=Util.comparator(ids);
+					
 					searchResult.setRank(comp);
 				}
 			} else if (options.getKind() != null) {
@@ -1443,7 +1444,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 					Logger.debug("Sort field (rev=" + rev + "): " + sf);
 					fields.add(sf);
 				} else {
-					System.out.println("Couldn't find sorter:" + f + " in " + sorters.keySet().toString());
+					//System.out.println("Couldn't find sorter:" + f + " in " + sorters.keySet().toString());
 					Logger.warn("Unknown sort field: \"" + f + "\"");
 				}
 			}
@@ -1725,6 +1726,8 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		// This may change in the future
 
 		Sort sorter = createSorterFromOptions(options);
+		
+		
 		List<Filter> filtersFromOptions = createAndRemoveRangeFiltersFromOptions(options)
 				.values()
 				.stream()

@@ -640,6 +640,10 @@
 		//(which can cause latency problems), or we can have it pre-stored 
 		//server-side, and injected.
         $scope.sortValues = [
+         	{  
+               "value":  "default",
+               "display": "Relevance"
+            },
             {  
                "value": "^Display Name",
                "display": "Display Name, A-Z"
@@ -679,6 +683,7 @@
         };
 
         $scope.sortSubstances = function(model) {
+        	
             $location.search("order",$scope.selectedSort.value);
             window.location = $location.absUrl();
         };

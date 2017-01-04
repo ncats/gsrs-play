@@ -110,7 +110,9 @@ public class LazyList<N,T> implements List<T>{
 
 	@Override
 	public boolean add(T e) {
-		return _internalList.add(new DefaultNamedCallable(e));
+	    synchronized(_internalList){
+	        return _internalList.add(new DefaultNamedCallable(e));
+	    }
 	}
 
 	@Override
@@ -286,8 +288,12 @@ public class LazyList<N,T> implements List<T>{
 	 * @return
 	 */
 	public boolean addCallable(NamedCallable<N,T> c){
-		return this._internalList.add(c);
+	    synchronized(_internalList){
+	        return this._internalList.add(c);
+	    }
 	}
+	
+	
 	
 	public void sortByNames(Comparator<N> c) {
 		
@@ -304,10 +310,14 @@ public class LazyList<N,T> implements List<T>{
 				N n2= c2.getName();
 				return rawComparator.compare(n1, n2);
 			});
-        ListIterator<NamedCallable<N,T>> i = _internalList.listIterator();
-        for (NamedCallable<N,T> e : a) {
-            i.next();
-            i.set(e);
+        
+        synchronized(_internalList){
+            ListIterator<NamedCallable<N,T>> i = _internalList.listIterator();
+            
+            for (NamedCallable<N,T> e : a) {
+                i.next();
+                i.set(e);
+            }
         }
     }
 	
