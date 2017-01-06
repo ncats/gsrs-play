@@ -567,16 +567,16 @@ public class GinasApp extends App {
                     flash("qStructureID", qStructure.id.toString());
                     switch (stype) {
                     case SUBSTRUCTURE:
-                        return substructure(qStructure.smiles, rows, page);
+                        return substructure(qStructure.molfile, rows, page);
                     case SIMILARITY:
                         double thres = Math.max(.3, Math.min(1., Double.parseDouble(cutoff)));
-                        return similarity(qStructure.smiles, thres, rows, page);
+                        return similarity(qStructure.molfile, thres, rows, page);
                     case FLEX:
-                        return lychimatch(qStructure.smiles, rows, page, false);
+                        return lychimatch(qStructure.molfile, rows, page, false);
                     case EXACT:
-                        return lychimatch(qStructure.smiles, rows, page, true);
+                        return lychimatch(qStructure.molfile, rows, page, true);
                     default:
-                        return substructure(qStructure.smiles, rows, page);
+                        return substructure(qStructure.molfile, rows, page);
                     }
                 } catch (Exception e) {
                     Logger.error(e.getMessage(), e);
