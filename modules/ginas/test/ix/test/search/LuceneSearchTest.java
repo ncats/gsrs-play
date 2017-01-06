@@ -43,6 +43,9 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 	SubstanceAPI api;
 	BrowserSubstanceSearcher searcher;
 
+	String aspirinCalcium = "ASPIRIN CACLIUM";
+	String aspirin = "ASPIRIN";
+
 	@Before
 	public void setup() {
 		u = ts.getFakeUser1();
@@ -77,62 +80,60 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 	@Test
 	public void testTwoWordLuceneNameSearchShouldReturn() throws Exception {
-			String theName = "ASPIRIN CACLIUM";
-			new SubstanceBuilder()
-				.addName(theName)
-				.buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
-			String html = api.getTextSearchHTML(theName);
+
+			api.submitSubstance( b-> b.addName(aspirinCalcium));
+
+
+			String html = api.getTextSearchHTML(aspirinCalcium);
 			assertRecordCount(html, 1);
 	}
 
 
 	@Test
 	public void testSearchForWordPresentIn2RecordsNamesShouldReturnBoth() throws Exception {
-		
-			String aspirinCalcium = "ASPIRIN CACLIUM";
-			String aspirin = "ASPIRIN";
 
-			new SubstanceBuilder().addName(aspirinCalcium).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		loadSubstances(aspirin, aspirinCalcium);
 
-			new SubstanceBuilder().addName(aspirin).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		String html = api.getTextSearchHTML(aspirin);
+		assertRecordCount(html, 2);
+	}
 
-			String html = api.getTextSearchHTML(aspirin);
-			assertRecordCount(html, 2);
+	private void loadSubstances(String...names){
+		for(String n : names){
+			api.submitSubstance( b-> b.addName(n));
+		}
 	}
 
 	@Test
 	public void testExactSearchForWordPresentIn2RecordsNamesShouldReturnOnlyExact() throws Exception {
-			String aspirinCalcium = "ASPIRIN CACLIUM";
-			String aspirin = "ASPIRIN";
-			String q = new SimpleQueryBuilder().where().globalMatchesExact(aspirin).build();
 
-			new SubstanceBuilder().addName(aspirinCalcium).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		String q = new SimpleQueryBuilder().where().globalMatchesExact(aspirin).build();
 
-			new SubstanceBuilder().addName(aspirin).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
-			String html = api.getTextSearchHTML(q);
-			assertRecordCount(html, 1);
-			SearchResult r = searcher.exactSearch(aspirin);
-			assertEquals(1, r.getUuids().size());
+
+		loadSubstances(aspirin, aspirinCalcium);
+
+		String html = api.getTextSearchHTML(q);
+		assertRecordCount(html, 1);
+		SearchResult r = searcher.exactSearch(aspirin);
+		assertEquals(1, r.getUuids().size());
 	}
 
 	@Test
 	public void exactNormalNameSearchWhenlevosIndexedTooShouldNotReturnLevo() throws Exception {
 			String ibuprofen = "IBUPROFEN";
 			
-			new SubstanceBuilder().addName(ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
-			new SubstanceBuilder().addName("(-)-" + ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		loadSubstances(ibuprofen, "(-)-" + ibuprofen);
 
-			
-				SearchResult r = searcher.exactSearch(ibuprofen);
-				assertEquals(1, r.getUuids().size());
+		SearchResult r = searcher.exactSearch(ibuprofen);
+		assertEquals(1, r.getUuids().size());
 
-				ts.doAsUser(u, () -> {
-					Substance s = r.getSubstances().findFirst().get();
+		ts.doAsUser(u, () -> {
+			Substance s = r.getSubstances().findFirst().get();
 
-					assertEquals(ibuprofen, s.getName());
-				});
+			assertEquals(ibuprofen, s.getName());
+		});
 	}
 
 	@Test
@@ -140,16 +141,11 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 			String prefix = "fooLong";
 
-			new SubstanceBuilder().addName(prefix + "bar").buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
 
-			new SubstanceBuilder().addName(prefix + "baz").buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		loadSubstances(prefix + "bar",
+				prefix + "baz",
+				"notA" + prefix);
 
-			new SubstanceBuilder().addName("notA" + prefix).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
-
-			
-				SearchResult r = searcher.nameSearch(prefix);
-				// assertEquals(3, r.getUuids().size());
-				System.out.println("===========");
 				SearchResult r2 = searcher.nameRawSearch(prefix + "*");
 				assertEquals(2, r2.getUuids().size());
 
@@ -167,38 +163,29 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 		
 			String ibuprofen = "IBUPROFEN";
 			String levo = "(-)-" + ibuprofen;
+			String dextro = "(+)-" + ibuprofen;
 
+		loadSubstances(ibuprofen, levo, dextro);
 
-			new SubstanceBuilder().addName(ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		SearchResult r = searcher.exactSearch(levo);
+		assertEquals(1, r.getUuids().size());
 
-			new SubstanceBuilder().addName(levo).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		ts.doAsUser(u, () -> {
+			Substance s = r.getSubstances().findFirst().get();
 
-			new SubstanceBuilder().addName("(+)-" + ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
-
-			
-				SearchResult r = searcher.exactSearch(levo);
-				assertEquals(1, r.getUuids().size());
-
-				ts.doAsUser(u, () -> {
-					Substance s = r.getSubstances().findFirst().get();
-
-					assertEquals(levo, s.getName());
-				});
+			assertEquals(levo, s.getName());
+		});
 			
 
 	}
 
 	@Test
 	public void exactDextroNameSearchWhenLevosIndexedTooShouldOnlyReturnDextro() throws Exception {
-			String ibuprofen = "IBUPROFEN";
-			String levo = "(-)-" + ibuprofen;
-			String dextro = "(+)-" + ibuprofen;
+		String ibuprofen = "IBUPROFEN";
+		String levo = "(-)-" + ibuprofen;
+		String dextro = "(+)-" + ibuprofen;
 
-			new SubstanceBuilder().addName(ibuprofen).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
-
-			new SubstanceBuilder().addName(levo).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
-
-			new SubstanceBuilder().addName(dextro).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+		loadSubstances(ibuprofen, levo, dextro);
 
 			
 				SearchResult r = searcher.exactSearch(dextro);
@@ -216,7 +203,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			String pre = "IBUP";
 			String ib2 = "IBUPROFEN";
 
-			new SubstanceBuilder().addName(ib2).buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));
+			loadSubstances(ib2);
 
 			JsonNode suggest = api.getSuggestPrefixJson(pre);
 			assertEquals(1, suggest.at("/Name").size());
@@ -236,8 +223,9 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			String ib2 = "IBUPROFEN";
 			String name2 = "ASPIRIN";
 
-			JsonNode submit = new SubstanceBuilder().addName(ib2).generateNewUUID().buildJson();
-			ensurePass(api.submitSubstance(submit));
+		JsonNode submit = api.submitSubstance(b -> b.addName(ib2)
+													.generateNewUUID());
+
 
 			JsonNode suggestBefore = api.getSuggestPrefixJson(pre);
 			assertEquals(1, suggestBefore.at("/Name").size());

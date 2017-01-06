@@ -192,12 +192,26 @@ public class StreamUtil {
      * @return
      */
     public static <T> Stream<T> cycle(T ... elements){
-        final int[] index = new int[]{0};
-        return Stream.generate(()->{
-            return elements[(index[0]++)%elements.length];
-        });
+        return Stream.generate(RolloverIterator.create(elements)::next);
     }
-    
+
+
+    private static final class RolloverIterator<T> {
+        private final T[] elements;
+
+        int index=0;
+        private static <T> RolloverIterator<T> create(T[] elements){
+            return new RolloverIterator<>(elements);
+        }
+        private  RolloverIterator(T[] elements){
+            this.elements = elements;
+        }
+
+
+        public T next() {
+            return elements[(index++)%elements.length];
+        }
+    }
     
     /**
      * Returns a supplier from the stream, which will return
