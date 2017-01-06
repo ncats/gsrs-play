@@ -1,5 +1,6 @@
 package ix.test.server;
 
+import static ix.test.SubstanceJsonUtil.ensurePass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,7 @@ import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.test.SubstanceJsonUtil;
+import ix.test.builder.SubstanceBuilder;
 import play.libs.ws.WSRequestHolder;
 import play.libs.ws.WSResponse;
 
@@ -84,6 +87,22 @@ public class SubstanceAPI {
 
     public WSResponse submitSubstance(JsonNode js) {
         return session.createRequestHolder(API_URL_SUBMIT_SUBSTANCE).post(js).get(timeout);
+    }
+
+    public JsonNode submitSubstance(Consumer<SubstanceBuilder> substanceFunction){
+        SubstanceBuilder b = new SubstanceBuilder();
+        substanceFunction.accept(b);
+
+        JsonNode[] ret = new JsonNode[1];
+
+        b.buildJsonAnd(j -> {
+            ret[0] = j;
+            ensurePass(submitSubstance(j));
+        });
+        return ret[0];
+    }
+    public void submitSubstance(SubstanceBuilder substanceBuilder){
+        substanceBuilder.buildJsonAnd(j -> ensurePass(submitSubstance(j)));
     }
 
     public JsonNode submitSubstanceJson(JsonNode js) {
