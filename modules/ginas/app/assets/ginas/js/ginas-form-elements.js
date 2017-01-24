@@ -591,6 +591,7 @@
                     return scope.length;
                 };
                 scope.toggle = function () {
+                    console.log(scope);
                     scope.iscollapsed = !scope.iscollapsed;
                 };
 
@@ -600,7 +601,7 @@
                     scope.path = scope.type;
                 }
                 scope.length = scope.getLength();
-                scope.iscollapsed = true;
+              //  scope.iscollapsed = true;
             /*    if (scope.length == 0) {
                     scope.iscollapsed = true;
                 }*/

@@ -1,13 +1,15 @@
 <div>
     <div class="modal-header">
         <div class="row">
+<!--
             <form-header type="references" parent="parent"></form-header>
+-->
             <a type="button" class="close" ng-click="close()" uib-tooltip="Close" aria-label="Close"><i
                     class="fa fa-times danger"></i></a>
         </div>
     </div>
     <div class="modal-body">
-        <reference-form referenceobj=referenceobj parent=parent apply=true ng-cloak></reference-form>
+        <reference-form referenceobj=referenceobj parent=parent iscollapsed="false" apply=true ng-cloak></reference-form>
         <br>
     </div>
     <div class="modal-footer">

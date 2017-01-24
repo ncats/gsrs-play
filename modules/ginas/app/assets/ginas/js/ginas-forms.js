@@ -1305,8 +1305,8 @@
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '=?'//,// this is the object from the form that is getting the references added to it
-                //iscollapsed: '=?'
+                referenceobj: '=?',// this is the object from the form that is getting the references added to it
+                iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
