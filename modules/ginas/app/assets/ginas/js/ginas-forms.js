@@ -64,7 +64,8 @@
 
 
     //generic controller that all forms will have. has acces to specific form scopes, and the more specific forms can call these methods
-    ginasForms.controller('formController', function ($scope, $http) {
+    ginasForms.controller('formController', function ($scope, $http, $anchorScroll, $location) {
+        $scope.iscollapsed = true;
 
         //mainform is the form obj
         //location is the string of the array, can be nested
@@ -112,6 +113,10 @@
                 _.set(obj, '$$uploadFile', false);
             });
             delete $scope.$$uploadFile;
+        };
+
+        $scope.scrollTo = function (prmElementToScrollTo) {
+            $anchorScroll(prmElementToScrollTo);
         };
     });
 
@@ -1300,7 +1305,8 @@
             controller: 'formController',
             scope: {
                 parent: '=',
-                referenceobj: '=?'// this is the object from the form that is getting the references added to it
+                referenceobj: '=?'//,// this is the object from the form that is getting the references added to it
+                //iscollapsed: '=?'
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {

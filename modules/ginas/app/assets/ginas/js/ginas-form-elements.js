@@ -600,10 +600,10 @@
                     scope.path = scope.type;
                 }
                 scope.length = scope.getLength();
-
-                if (scope.length == 0) {
+                scope.iscollapsed = true;
+            /*    if (scope.length == 0) {
                     scope.iscollapsed = true;
-                }
+                }*/
 
                 $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
                     template = angular.element(html);

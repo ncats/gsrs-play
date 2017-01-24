@@ -4,6 +4,12 @@
                      iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <br>
+        <button class="btn btn-primary"  ng-if = "!iscollapsed && parent.modifications.agentModifications.length > 2" ng-click="addNew(agentModForm, 'modifications.agentModifications'); scrollTo('agent-bottom')"><i
+                class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.modifications.agentModifications.length>0">nother</span> modification
+        </button>
         <form class="form-horizontal" name="agentModForm" id="addAgentModForm" role="form" novalidate>
             <div ng-repeat="(index, obj) in parent.modifications.agentModifications">
                 <ng-form name="form">
@@ -80,7 +86,7 @@
                     <hr>
                 </ng-form>
             </div>
-            <div class = "agentModForm"></div>
+            <div class = "agentModForm" id = "agent-bottom"></div>
         </form>
         <br>
         <br>

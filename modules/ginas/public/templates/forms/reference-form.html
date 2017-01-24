@@ -3,6 +3,11 @@
         <form-header type="references" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <br>
+        <button class="btn btn-primary" ng-if="!iscollapsed && parent.references.length>2" ng-click="addNewRef(refOnlyForm, 'references'); scrollTo('references-bottom')"><i class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.references.length>0">nother</span> reference
+        </button>
         <form class="form-horizontal" name="refOnlyForm" role="form" id="addRefOnlyForm" novalidate>
             <div ng-repeat="(index, obj) in parent.references">
                 <ng-form name="form">
@@ -120,6 +125,7 @@
                 </ng-form>
             </div>
         </form>
+<div id= "references-bottom"></div>
         <br>
         <br>
         <button class="btn btn-primary" ng-click="addNewRef(refOnlyForm, 'references')"><i class="fa fa-plus"></i> Add

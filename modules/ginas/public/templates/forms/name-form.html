@@ -3,6 +3,10 @@
         <form-header type="names" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <br>
+        <button class="btn btn-primary" ng-if = "!iscollapsed && parent.names.length > 2" ng-click="addNew(nameForm, 'names'); scrollTo('name-bottom')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="parent.names.length>0">nother</span> name
+        </button>
         <form class="form-horizontal" name="nameForm" role="form" id="addNameForm" novalidate>
             <div ng-repeat="(index,obj) in parent.names">
                 <ng-form name="form">
@@ -126,10 +130,10 @@
                 </ng-form>
             </div>
         </form>
-        <div class="nameForm"></div>
+        <div class="nameForm" id = "name-bottom"></div>
         <br>
         <br>
-        <button class="btn btn-primary" ng-click="addNew(nameForm, 'names')"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary" ng-if = "!iscollapsed" ng-click="addNew(nameForm, 'names')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.names.length>0">nother</span> name
         </button>
     </div>

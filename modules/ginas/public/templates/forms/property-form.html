@@ -3,6 +3,11 @@
         <form-header type="properties" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <br>
+        <button class="btn btn-primary"  ng-if=" !iscollapsed && parent.properties.length>2" ng-click="addNew(propertyForm, 'properties'); scrollTo('property-bottom')"><i class="fa fa-plus"></i> Add
+            a<span
+                    ng-if="parent.properties.length>0">nother</span> property
+        </button>
         <form class="form-horizontal" name="propertyForm" role="form" id="addPropertyForm" novalidate>
             <div ng-repeat="(index,obj) in  parent.properties">
                 <ng-form name="form">
@@ -101,6 +106,7 @@
                 </ng-form>
             </div>
         </form>
+        <div id = "property-bottom"></div>
         <br>
         <br>
         <button class="btn btn-primary" ng-click="addNew(propertyForm, 'properties')"><i class="fa fa-plus"></i> Add
