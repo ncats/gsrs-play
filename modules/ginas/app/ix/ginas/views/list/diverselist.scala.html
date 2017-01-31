@@ -8,6 +8,9 @@
 @(sub: StructurallyDiverseSubstance)
 
 @commonlist(sub) {
+    <div class="badge-wrapper">
+        <span class="label label-primary label-offset list-view-badge">STRUCTURALLY DIVERSE</span>
+    </div>
 				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt ="structurally diverse" src="@routes.Assets.at("ginas/images/structurally-diverse.svg")" />
                 @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <div class = "row">

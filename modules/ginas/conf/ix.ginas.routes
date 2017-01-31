@@ -44,6 +44,8 @@ GET         /admin/user/:id	            ix.ginas.controllers.GinasApp.editPrinci
 POST        /admin/users/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
 
 GET			/setExportDirect			ix.ginas.controllers.GinasApp.export(id: String, format: String)
+GET         /logs                     ix.ginas.controllers.GinasApp.downloadFile(fName: String)
+GET         /testChemical            ix.ginas.controllers.GinasApp.createTestChemical()
 
 ->      /   ix.ncats.Routes	
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

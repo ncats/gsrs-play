@@ -8,14 +8,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.FileWriter;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ix.ginas.models.v1.*;
+import ix.test.builder.ChemicalSubstanceBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -29,7 +28,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import ix.AbstractGinasServerTest;
 import ix.core.models.Role;
 import ix.core.plugins.ConsoleFilterPlugin;
-import ix.ginas.models.v1.NameOrg;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
 import ix.test.server.JsonHistoryResult;
@@ -37,10 +35,7 @@ import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import ix.test.util.TestNamePrinter;
 import ix.test.util.TestUtil;
-import util.json.ChangeFilters;
-import util.json.Changes;
-import util.json.ChangesBuilder;
-import util.json.JsonUtil;
+import util.json.*;
 
 /**
  * 
@@ -52,6 +47,7 @@ import util.json.JsonUtil;
 public class EditingWorkflowTest extends AbstractGinasServerTest {
 
 	final File resource = new File("test/testJSON/toedit.json");
+	final File chemResource = new File("test/testJSON/testChemical.json");
 
 	private GinasTestServer.User fakeUser1, fakeUser2;
 
@@ -59,6 +55,58 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 	public void getUsers() {
 		fakeUser1 = ts.getFakeUser1();
 		fakeUser2 = ts.getFakeUser2();
+	}
+
+	@Test
+	@RunOnly
+	public void testCreateLargeChemical() throws Exception {
+		String structure="C1CCCCC1";
+		ChemicalSubstanceBuilder csbuild=new SubstanceBuilder()
+				.asChemical()
+				.setStructure(structure)
+				.addName("Test")
+				.generateNewUUID();
+
+		List<Reference> refList = new ArrayList<>();
+		for(int i=0;i<1000;i++){
+			Reference r = new Reference();
+			r.citation="Reference " + i;
+			r.getOrGenerateUUID();
+			r.docType = "SRS";
+			refList.add(r);
+			csbuild.addReference(r);
+		}
+
+		for(int i=0; i<1000; i++){
+			Name n = new Name();
+			n.name = "Test Name" +i;
+			n.addReference(refList.get(i));
+			csbuild.addName(n);
+		}
+		//Substance s=csbuild.build();
+
+		JsonNode node = csbuild.buildJson();
+		String uuid = node.get("uuid").asText();
+
+	/*	try(FileWriter writer = new FileWriter("./testchemical.json")){
+			writer.write(node.toString());
+
+		} catch(Exception e){
+			e.printStackTrace();
+		}*/
+
+
+		try (RestSession session = ts.newRestSession(fakeUser1)) {
+
+
+			SubstanceAPI api = new SubstanceAPI(session);
+			ensurePass(api.submitSubstance(node));
+
+			ChemicalSubstance returned = api.fetchSubstanceObjectByUuid(uuid, ChemicalSubstance.class);
+			System.out.println(returned.getReferenceCount());
+		}
+
+		//assertTrue(true);
 	}
 
 	@Test   
