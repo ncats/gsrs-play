@@ -598,9 +598,10 @@ public class GinasApp extends App {
      * @param extension
      * @return
      */
-    public static Result generateExportFileUrl(String collectionID, String extension) {
+
+    public static Result generateExportFileUrl(String collectionID, String extension, int publicOnly) {
         ObjectNode on = EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
-        on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension).url().toString());
+        on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension, publicOnly).url().toString());
 
         on.put("isReady", factoryPlugin.get().isReady());
         on.put("isCached", false);
@@ -644,10 +645,10 @@ public class GinasApp extends App {
      *            The format extension (e.g. sdf, csv, etc)
      * @return
      */
-    public static Result export(String collectionID, String extension) {
+    public static Result export(String collectionID, String extension, int publicOnlyFlag) {
 
         try {
-            return export(getExportStream(collectionID), extension);
+            return export(getExportStream(collectionID), extension, publicOnlyFlag==1);
         } catch (Exception e) {
             Logger.error(e.getMessage(), e);
             return error(404, e.getMessage());
@@ -709,7 +710,7 @@ public class GinasApp extends App {
      * @return
      * @throws Exception
      */
-    public static Result export(Stream<Substance> tstream, String extension) throws Exception {
+    public static Result export(Stream<Substance> tstream, String extension, boolean publicOnly) throws Exception {
 
         Objects.requireNonNull(tstream, "Invalid stream");
 
@@ -720,7 +721,7 @@ public class GinasApp extends App {
         final VisiblePipedInputStream pis = new VisiblePipedInputStream();
         final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
 
-        Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
+        Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos, publicOnly);
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String fname = "export-" + sdf.format(new Date()) + "." + extension;
 
@@ -755,7 +756,7 @@ public class GinasApp extends App {
         return ok(pis);
     }
 
-    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos)
+    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos, boolean publicOnly)
             throws IOException {
 
         if (factoryPlugin.get() == null) {
@@ -763,7 +764,7 @@ public class GinasApp extends App {
         }
 
         SubstanceExporterFactory.Parameters params = new SubstanceParameters(
-                factoryPlugin.get().getFormatFor(extension));
+                factoryPlugin.get().getFormatFor(extension),publicOnly);
 
         SubstanceExporterFactory factory = factoryPlugin.get().getExporterFor(params);
         if (factory == null) {
@@ -777,14 +778,21 @@ public class GinasApp extends App {
     private static class SubstanceParameters implements SubstanceExporterFactory.Parameters {
         private final SubstanceExporterFactory.OutputFormat format;
 
-        SubstanceParameters(SubstanceExporterFactory.OutputFormat format) {
+        private final boolean publicOnly;
+        SubstanceParameters(SubstanceExporterFactory.OutputFormat format, boolean publicOnly) {
             Objects.requireNonNull(format);
             this.format = format;
+            this.publicOnly = publicOnly;
         }
 
         @Override
         public SubstanceExporterFactory.OutputFormat getFormat() {
             return format;
+        }
+
+        @Override
+        public boolean publicOnly() {
+            return publicOnly;
         }
     }
 

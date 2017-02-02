@@ -30,7 +30,7 @@ GET         /relationships/:uuid         ix.ginas.controllers.GinasApp.relations
 GET         /cv/:field                   ix.ginas.controllers.GinasApp.getCVField(field: String)
 GET         /img/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structure(id: String, format: String, size: Int ?= 150, context: String ?= null)
 GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv|fas)>   ix.ginas.controllers.GinasApp.structureExport(id: String, format: String, context: String ?= null)
-GET         /setExport                   ix.ginas.controllers.GinasApp.generateExportFileUrl(id: String, format: String)
+GET         /setExport                   ix.ginas.controllers.GinasApp.generateExportFileUrl(id: String, format: String, publicOnly: Int ?=1)
 POST        /register/duplicateCheck     ix.ginas.controllers.GinasFactory.validateChemicalDuplicates
 GET         /_updateIndex/:key           ix.ginas.controllers.GinasApp.updateIndex(key: String)
 
@@ -43,7 +43,7 @@ POST        /admin/user/:id	            ix.ginas.controllers.GinasApp.updatePrin
 GET         /admin/user/:id	            ix.ginas.controllers.GinasApp.editPrincipal(id:Long)
 POST        /admin/users/:id/delete	        ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
 
-GET			/setExportDirect			ix.ginas.controllers.GinasApp.export(id: String, format: String)
+GET			/setExportDirect			ix.ginas.controllers.GinasApp.export(id: String, format: String, publicOnly: Int ?=1)
 GET         /logs                     ix.ginas.controllers.GinasApp.downloadFile(fName: String)
 GET         /testChemical            ix.ginas.controllers.GinasApp.createTestChemical()
 

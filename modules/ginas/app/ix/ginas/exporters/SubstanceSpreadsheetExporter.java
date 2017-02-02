@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
  * Substance Exporter that writes out data to a Spreadsheet.
@@ -98,7 +99,7 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
             }
         });
 
-       // DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHI, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHI));
+        // DEFAULT_RECIPE_MAP.put(DefaultColumns.STD_INCHI, new  ChemicalExportRecipe(Chemical.FORMAT_STDINCHI));
 
 
         DEFAULT_RECIPE_MAP.put(DefaultColumns.CAS, new CodeSystemRecipe("CAS"));
@@ -108,51 +109,51 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
         DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, new CodeSystemRecipe("USDA PLANTS"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe("INN"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe("NCI_THESAURUS"));
-        
-        
+
+
         //Lazy place to put new default columns
         DEFAULT_RECIPE_MAP.put(DefaultColumns.PROTEIN_SEQUENCE, (s, cell) ->{
             if(s instanceof ProteinSubstance){
                 List<Subunit> subunits=((ProteinSubstance)s).protein.getSubunits();
                 StringBuilder sb = new StringBuilder();
                 for(Subunit su:subunits){
-                	if(sb.length()!=0){
-                		sb.append("|");	
-                	}
-                	sb.append(su.sequence);
+                    if(sb.length()!=0){
+                        sb.append("|");
+                    }
+                    sb.append(su.sequence);
                 }
                 cell.writeString(sb.toString());
             }
         });
-        
+
         DEFAULT_RECIPE_MAP.put(DefaultColumns.NUCLEIC_ACID_SEQUENCE, (s, cell) ->{
             if(s instanceof NucleicAcidSubstance){
                 List<Subunit> subunits=((NucleicAcidSubstance)s).nucleicAcid.getSubunits();
-                
+
                 StringBuilder sb = new StringBuilder();
-                
+
                 for(Subunit su:subunits){
-                	if(sb.length()!=0){
-                		sb.append("|");	
-                	}
-                	sb.append(su.sequence);
+                    if(sb.length()!=0){
+                        sb.append("|");
+                    }
+                    sb.append(su.sequence);
                 }
                 cell.writeString(sb.toString());
             }
         });
         DEFAULT_RECIPE_MAP.put(DefaultColumns.RECORD_ACCESS_GROUPS, (s, cell) ->{
-        	StringBuilder sb = new StringBuilder();
-        	for(Group g:s.getAccess()){
-        		if(sb.length()!=0){
-            		sb.append("|");	
-            	}
-            	sb.append(g.name);
-        	}
-        	cell.writeString(sb.toString());
+            StringBuilder sb = new StringBuilder();
+            for(Group g:s.getAccess()){
+                if(sb.length()!=0){
+                    sb.append("|");
+                }
+                sb.append(g.name);
+            }
+            cell.writeString(sb.toString());
         });
-        
 
-        
+
+
     }
 
     private static class ChemicalExportRecipe implements ColumnValueRecipe<Substance>{
@@ -179,15 +180,31 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
     private static class CodeSystemRecipe implements ColumnValueRecipe<Substance>{
 
         private final String codeSystemToFind;
+        private final boolean publicOnly;
 
         public CodeSystemRecipe(String codeSystemToFind) {
+            this(codeSystemToFind, false);
+        }
+
+
+
+        public CodeSystemRecipe(String codeSystemToFind, boolean publicOnly) {
             this.codeSystemToFind = codeSystemToFind;
+            this.publicOnly = publicOnly;
+        }
+
+
+        public CodeSystemRecipe asPublicOnly(){
+            return new CodeSystemRecipe(codeSystemToFind, true);
         }
 
         @Override
         public void writeValue(Substance s, SpreadsheetCell cell) {
             String bestCode=null;
             for(Code cd: s.codes){
+                if(publicOnly && !cd.isPublic()){
+                    continue;
+                }
                 if(cd.codeSystem.equals(codeSystemToFind)){
                     if("PRIMARY".equals(cd.type)){
                         bestCode = cd.code;
@@ -211,6 +228,8 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
     public static class Builder{
         private final Map<String, ColumnValueRecipe<Substance>> columns = new LinkedHashMap<>();
         private final Spreadsheet spreadsheet;
+
+        private boolean publicOnly = false;
 
         /**
          * Create a new Builder that uses the given Spreadsheet to write to.
@@ -248,7 +267,23 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
         }
 
         public SubstanceSpreadsheetExporter build(){
+
+            if(publicOnly){
+                for(Map.Entry<String, ColumnValueRecipe<Substance>> entry : columns.entrySet()){
+                    ColumnValueRecipe<Substance> value = entry.getValue();
+                    if(value instanceof CodeSystemRecipe){
+                        entry.setValue(((CodeSystemRecipe) value).asPublicOnly());
+                    }
+                }
+            }
+
             return new SubstanceSpreadsheetExporter(this);
         }
+
+        public Builder includePublicDataOnly(boolean publicOnly){
+            this.publicOnly = publicOnly;
+            return this;
+        }
+
     }
 }
