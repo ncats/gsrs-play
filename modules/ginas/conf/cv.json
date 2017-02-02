@@ -437,7 +437,7 @@
         "created": 1473429305482,
         "modified": 1473429305495,
         "deprecated": false,
-        "value": "names.nameJurisdication",
+        "value": "names.nameJurisdiction",
         "display": "JURISDICTION",
         "hidden": false,
         "selected": false,
