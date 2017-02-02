@@ -65,7 +65,7 @@
     <div class="row info" id="subunits">
         <div class = "row">
             <div class="col-md-4">
-                <button class="btn btn-primary label-offset det" ng-click = "subunitscollapse = !subunitscollapse">
+                <button class="btn btn-primary label-offset det" ng-init="subunitscollapse=true" ng-click = "subunitscollapse = !subunitscollapse">
                     <i ng-show="subunitscollapse" class="fa fa-caret-right"></i>
                     <i ng-hide="subunitscollapse" class="fa fa-caret-down"></i>
                     Subunits&nbsp;<span class="badge head"> @sub.protein.getSubunits().size()</span></button>
@@ -85,7 +85,7 @@
     @defining(sub.protein.getDisulfideLinks().length) { count =>
         @if(count > 0) {
             <div class="row info" id="disulfide">
-                <button class="btn btn-primary label-offset det" ng-click = "disulfidescollapse = !disulfidescollapse">
+                <button class="btn btn-primary label-offset det" ng-init="disulfidescollapse=true" ng-click = "disulfidescollapse = !disulfidescollapse">
                     <i ng-show="disulfidescollapse" class="fa fa-caret-right"></i>
                     <i ng-hide="disulfidescollapse" class="fa fa-caret-down"></i>
                     Disulfide Links&nbsp;<span class="badge head"> @count</span></button>
@@ -115,7 +115,7 @@
     @defining(sub.protein.otherLinks.length) { count =>
         @if(count > 0) {
             <div class="row info" id="otherLinks">
-                <button class="btn btn-primary label-offset det" ng-click = "othersscollapse = !othersscollapse">
+                <button class="btn btn-primary label-offset det" ng-init = "othersscollapse=true" ng-click = "othersscollapse = !othersscollapse">
                     <i ng-show="othersscollapse" class="fa fa-caret-right"></i>
                     <i ng-hide="othersscollapse" class="fa fa-caret-down"></i>
                     Other Links&nbsp;<span class="badge head"> @count</span></button>
@@ -147,7 +147,7 @@
    @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
         @if(count > 0) {
             <div class="row info" id="glycosylation">
-                <button class="btn btn-primary label-offset det" ng-click = "glycoscollapse = !glycoscollapse">
+                <button class="btn btn-primary label-offset det" ng-init = "glycoscollapse =true" ng-click = "glycoscollapse = !glycoscollapse">
                     <i ng-show="glycoscollapse" class="fa fa-caret-right"></i>
                     <i ng-hide="glycoscollapse" class="fa fa-caret-down"></i>
                     Glycosylation&nbsp;<span class="badge head">@(GinasApp.getCount(sub.protein.glycosylation)) </span></button>

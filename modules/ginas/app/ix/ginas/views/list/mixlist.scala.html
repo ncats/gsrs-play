@@ -6,6 +6,9 @@
 @(sub: MixtureSubstance)
 
 @commonlist(sub) {
+    <div class="badge-wrapper">
+        <span class="label label-primary label-offset list-view-badge">MIXTURE</span>
+    </div>
 				<img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="mixture" src="@routes.Assets.at("ginas/images/mixture.svg")"  />
                 @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <div class = "row">

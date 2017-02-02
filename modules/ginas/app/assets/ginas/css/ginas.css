@@ -104,17 +104,12 @@ nav#breadcrumb {
 }
 
 .list-view-badge {
-    font-size: 18px;
+    font-size: 16px;
     margin-left: -20px
 }
 
 .det {
     font-size: 18px;
-}
-
-.list-view-badge {
-    font-size: 18px;
-    margin-left: -20px
 }
 
 #version {
