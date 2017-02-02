@@ -688,9 +688,16 @@
             window.location = $location.absUrl();
         };
 
+        $scope.showPriv = function(){
+            $scope.showprivates = !$scope.showprivates;
+        };
 
+       // $scope.showprivates = false;
 	//Perpare an export file for download
         $scope.downloadFile = function (url) {
+            if($scope.showprivates){
+                url = url + '&publicOnly=' + (!$scope.showprivates ? 1: 0) ;
+            }
 		$http.get(url)
 		  .then(function(response) {
       			var dl = response.data;

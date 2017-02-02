@@ -28,6 +28,8 @@ public interface SubstanceExporterFactory {
         default boolean shouldCompress(){
             return false;
         }
+
+        default boolean publicOnly(){ return false;}
     }
 
     /**
