@@ -30,7 +30,7 @@
                 </div>
 
                 <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
-                    <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>
+                    <rendered id = '@chem.structure.id' ctx='@ctx' title="click to enlarge" ></rendered>
                 </div>
                 <div>
                 @defining(GinasApp.getChemSimilarity(ctx, chem)) { sim =>

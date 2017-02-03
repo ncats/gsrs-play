@@ -128,7 +128,7 @@
                 </ng-form>
             </div>
         </form>
-        <button class="btn btn-primary" ng-click="addNewRef(refOnlyForm, 'references')"><i class="fa fa-plus"></i> Add
+        <button class="btn btn-primary" ng-click="addNewRef(refOnlyForm, 'references')" ng-hide="parent.references.length <= 3"><i class="fa fa-plus"></i> Add
             a<span
                     ng-if="parent.references.length>0">nother</span> reference
         </button>

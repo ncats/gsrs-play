@@ -128,7 +128,7 @@
             </div>
         </form>
         <div class="nameForm" id = "name-bottom"></div>
-        <button class="btn btn-primary" ng-if = "!iscollapsed" ng-click="addNew(nameForm, 'names')"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary" ng-if = "!iscollapsed" ng-click="addNew(nameForm, 'names')" ng-hide="parent.names.length<=3"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.names.length>0">nother</span> name
         </button>
     </div>
