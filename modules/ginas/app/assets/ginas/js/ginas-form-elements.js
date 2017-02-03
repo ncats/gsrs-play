@@ -591,7 +591,6 @@
                     return scope.length;
                 };
                 scope.toggle = function () {
-                    console.log(scope);
                     scope.iscollapsed = !scope.iscollapsed;
                 };
 
@@ -799,13 +798,11 @@
                 scope.stage = true;
 
                 scope.fetch = function (term, skip) {
-                    console.log(scope);
                     if (_.isUndefined(scope.referenceobj) || scope.referenceobj == null) {
                         scope.referenceobj = {};
                     }
                     spinnerService.show('subrefSpinner');
                     substanceFactory.getSubstances(scope.q).then(function (response) {
-                        console.log(response);
                         scope.data = response.data.content;
                         spinnerService.hide('subrefSpinner');
                         if(scope.data.length == 1){
@@ -822,10 +819,6 @@
                 };
 
                 scope.selectTypeahead = function($item, $model, $label, $event){
-                    console.log($item);
-                    console.log($model);
-                    console.log($label);
-                    console.log($event);
                     scope.q = $item.key;
                     scope.fetch();
                 };
@@ -836,7 +829,6 @@
                 };
 
                 scope.createSubref = function (selectedItem) {
-                    console.log(selectedItem);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
@@ -1030,7 +1022,6 @@
                 var url = baseurl + "assets/templates/info/audit-info.html";
 
                 scope.showAuditInfo = function () {
-                    console.log(scope);
                     toggler.show(scope, scope.type, url);
                 };
             }
@@ -1068,7 +1059,6 @@
 
 
                 scope.showInfo = function () {
-                    console.log(scope);
                     toggler.show(scope, scope.type, url);
                 };
             }
@@ -1139,7 +1129,6 @@
 
             controller: function ($scope, $element, $attrs) {
 
-                                
                 $scope.opened=false;
                 var modalInstance;
 
@@ -1156,8 +1145,6 @@
                     $scope.$broadcast('cancel');
                     modalInstance.close();
                 };
-
-
 
                 $scope.open = function () {
                     modalInstance = $uibModal.open({
@@ -1237,6 +1224,8 @@
                 var uuid;
                 var index;
                 var template;
+
+                scope.obj.$$apply = false;
 
                 if (_.isUndefined(scope.referenceobj)) {
                     scope.referenceobj = {};

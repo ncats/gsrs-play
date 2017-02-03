@@ -2199,7 +2199,7 @@ public class GinasApp extends App {
         return ok(file);
     }
 
-    public static Result createTestChemical(){
+    public static Result createTestChemical(int count){
         String structure="C1CCCCC1";
         ChemicalSubstance chem = new ChemicalSubstance();
         chem.getOrGenerateUUID();
@@ -2208,7 +2208,7 @@ public class GinasApp extends App {
 
         List<Reference> refList = new ArrayList<>();
         List<Name> nameList = new ArrayList<>();
-        for(int i=0;i<1000;i++){
+        for(int i=0;i<count;i++){
             Reference r = new Reference();
             r.citation="Reference " + i;
             r.getOrGenerateUUID();
@@ -2216,7 +2216,7 @@ public class GinasApp extends App {
             refList.add(r);
         }
 
-        for(int i=0; i<1000; i++){
+        for(int i=0; i<count; i++){
             Name n = new Name();
             n.name = "Test Name" +i;
             n.addReference(refList.get(i));

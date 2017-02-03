@@ -70,7 +70,7 @@
         //mainform is the form obj
         //location is the string of the array, can be nested
         //obj is a modified object that will be added
-        $scope.addNew = function (mainForm, location, obj) {
+        $scope.addNew = function (mainForm, location, obj, begin) {
             var temp = {};
             if (obj) {
                 temp = obj;
@@ -80,11 +80,19 @@
                 if (mainForm.form && mainForm.form.$invalid) {
                     mainForm.form.$flagged = true;
                 }
+                if(begin){
+                    listObj.unshift(temp);
+                }else {
                 listObj.push(temp);
+                }
                 _.set($scope.parent, location, listObj);
             } else {
                 listObj = [];
+                if(begin){
+                    listObj.unshift(temp);
+                }else {
                 listObj.push(temp);
+                }
                 _.set($scope.parent, location, listObj);
             }
         };
@@ -482,8 +490,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
-
                 scope.addLink = function (form, path) {
                     scope.removeUsed();
                     scope.addNew(form, path);
@@ -1312,13 +1318,13 @@
             link: function (scope, element, attrs) {
 
 
-                scope.addNewRef = function (mainform, list) {
+                scope.addNewRef = function (mainform, list, begin) {
                     //passes a new uuid for reference tracking
                     var obj = {
                         uuid: UUID.newID(),
                         $$apply: true
                     };
-                    scope.addNew(mainform, list, obj);
+                    scope.addNew(mainform, list, obj, begin);
                 };
                 scope.applyRefs = attrs.apply;
 

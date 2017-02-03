@@ -6,7 +6,7 @@
 
 
 @(relationships: List[Relationship], title: String, id:String, full:Boolean = true)
-<button class="btn btn-primary label-offset det" ng-click = "@title.replace(' ', '.')= !@title.replace(' ', '.')">
+<button class="btn btn-primary label-offset det" ng-init = "@title.replace(' ', '.')=true" ng-click = "@title.replace(' ', '.')= !@title.replace(' ', '.')">
     <i ng-show="@title.replace(' ', '.')" class="fa fa-caret-right"></i>
     <i ng-hide="@title.replace(' ', '.')" class="fa fa-caret-down"></i>
     @title&nbsp;<span class="badge"> @relationships.length</span></button>

@@ -3,7 +3,7 @@
 
 @(properties: List[Property], id: String)
 
-<button class="btn btn-primary label-offset det" ng-click = "propertiescollapse = !propertiescollapse">
+<button class="btn btn-primary label-offset det" ng-init = "propertiescollapse =true" ng-click = "propertiescollapse = !propertiescollapse">
     <i ng-show="propertiescollapse" class="fa fa-caret-right"></i>
     <i ng-hide="propertiescollapse" class="fa fa-caret-down"></i>
     Properties&nbsp;<span class="badge"> @properties.length</span></button>

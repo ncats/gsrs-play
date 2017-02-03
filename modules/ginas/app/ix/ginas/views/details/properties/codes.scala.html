@@ -3,7 +3,7 @@
 @import ix.ginas.models.v1.Code
 
 @(codes: List[Code], id: String)
-<button class="btn btn-primary label-offset det" ng-click = "codescollapse = !codescollapse">
+<button class="btn btn-primary label-offset det" ng-init = "codescollapse =true" ng-click = "codescollapse = !codescollapse">
     <i ng-show="codescollapse" class="fa fa-caret-right"></i>
     <i ng-hide="codescollapse" class="fa fa-caret-down"></i>
     Codes&nbsp;<span class="badge"> @codes.length</span></button>

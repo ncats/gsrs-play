@@ -1,16 +1,11 @@
 <div class="row info">
     <div class="row">
         <form-header class="col-md-2" type="names" parent="parent" iscollapsed="iscollapsed"></form-header>
-        <button class="btn btn-primary pull-left" ng-click="addNew(nameForm, 'names'); iscollapsed=false; scrollTo('name-bottom')"><i class="fa fa-plus"></i>Add name</button>
+        <button class="btn btn-primary pull-left" ng-click="addNew(nameForm, 'names', null, true); iscollapsed=false" style="margin-top: 18px;">
+            <i class="fa fa-plus"></i> Add name</button>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <br>
-        <button class="btn btn-primary" ng-if = "!iscollapsed && parent.names.length > 2" ng-click="addNew(nameForm, 'names'); scrollTo('name-bottom')"><i class="fa fa-plus"></i> Add a<span
-                ng-if="parent.names.length>0">nother</span> name
-        </button>
-        <div class="nameForm" id = "name-bottom"></div>
-        <br>
-        <br>
+
         <form class="form-horizontal" name="nameForm" role="form" id="addNameForm" novalidate>
             <div ng-repeat="(index,obj) in parent.names">
                 <ng-form name="form">
@@ -19,25 +14,32 @@
                             <div class="col-md-1 text-center">
                                 <delete-button delete="obj" path="names"></delete-button>
                             </div>
-                <div class="col-md-9">
+                <div class="col-md-8">
                     <div class="row">
-                        <div class="col-md-7">
-<!--                        <gsrs-input type="text"
+                <div class="col-md-9">
+                            <gsrs-input type="text"
                                     ng-model="obj.name"
                                     field="name"
                                     required="true"
-                                    validator="duplicateCheck(model)"
                                     formname=form>
-                        </gsrs-input>  -->
-                            <gsrs-input type="text"
-                                        ng-model="obj.name"
-                                        field="name"
+                            </gsrs-input>
+                        </div>
+                            <div class="col-md-3">
+                                <gsrs-input type="dropdown"
+                                            ng-model="obj.type"
+                                            field="type"
+                                            cv="NAME_TYPE"
                                         required="true"
                                         formname=form>
                             </gsrs-input>
-                            <br>
+                            </div>
                             <button class="btn btn-default" ng-click="duplicateCheck(obj.name)" ng-if="parent.substanceClass=='chemical'">Resolve Name</button>
+
+
                         </div>
+                    <br>
+
+                    <div class="row" ng-if="obj.$details">
                         <div class="col-md-3">
                             <gsrs-input type = "multi"
                                         ng-model= obj.languages
@@ -51,18 +53,6 @@
                         </div>
                         <div class="col-md-1">
                             <check-box ng-model="obj.preferred" field="preferred" ></check-box>
-                        </div>
-                        </div>
-                    <br>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <gsrs-input type="dropdown"
-                                        ng-model="obj.type"
-                                        field="type"
-                                        cv="NAME_TYPE"
-                                        required="true"
-                                        formname=form>
-                            </gsrs-input>
                         </div>
                         <div ng-if="obj.type.value=='of'">
                             <div class="col-md-3">
@@ -88,31 +78,6 @@
                                 </gsrs-input>
                             </div>
                         </div>
-
-                    </div>
-                </div>
-                        <div class="col-md-1 pull-right">
-                            <modal-form-button type="access"
-                                               referenceobj="obj"
-                                               parent="parent">
-                            </modal-form-button>
-                              <!--  <audit-info-button obj="obj"
-                                                   type="nameAudit-{{index}}">
-                                </audit-info-button>-->
-                        </div>
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="reference"
-                                                   referenceobj="obj"
-                                                   parent="parent"
-                                                   required = true
-                                                   formname=form>
-                                </modal-form-button>
-                </div>
-                            </div>
-                        <spinner name="nameSpinner"><loading></loading><br/></spinner>
-                        <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>
-
-                        <br>
                         <div class="row">
                             <div class="col-md-12">
                                 <div ng-if="obj.created">
@@ -130,10 +95,39 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                        <div class="col-md-1">
+                            <modal-form-button type="reference"
+                                               referenceobj="obj"
+                                               parent="parent"
+                                               required = true
+                                               formname=form>
+                            </modal-form-button>
+
+
+                        </div>
+                            <div class="col-md-1">
+                                <modal-form-button type="access"
+                                                   referenceobj="obj"
+                                                   parent="parent">
+                                </modal-form-button>
+                            </div>
+                            <div class="col-md-1">
+                                    <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>
+                            </div>
+
+
+
+                        </div>
+                        <spinner name="nameSpinner"><loading></loading><br/></spinner>
+                        <spinner name="drawSpinner"><loading></loading><br/>drawing</spinner>
+                    </div>
                     <hr>
                 </ng-form>
             </div>
         </form>
+        <div class="nameForm" id = "name-bottom"></div>
         <button class="btn btn-primary" ng-if = "!iscollapsed" ng-click="addNew(nameForm, 'names')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.names.length>0">nother</span> name
         </button>

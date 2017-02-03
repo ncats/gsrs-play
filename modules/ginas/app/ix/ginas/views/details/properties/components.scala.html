@@ -3,7 +3,7 @@
 @import ix.ginas.models.v1.Component
 
 @(components: List[Component])
-<button class="btn btn-primary label-offset det" ng-click = "componentscollapse = !componentscollapse">
+<button class="btn btn-primary label-offset det" ng-init = "componentscollapse =true" ng-click = "componentscollapse = !componentscollapse">
     <i ng-show="componentscollapse" class="fa fa-caret-right"></i>
     <i ng-hide="componentscollapse" class="fa fa-caret-down"></i>
     Components&nbsp;<span class="badge"> @components.length</span></button>
