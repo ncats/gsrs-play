@@ -1,4 +1,26 @@
-GSRS v1.3
+GSRS v1.3.0-RC2
+============
+Changes:
+
+Enchancements
+-------------
+1. Added support for including private commonData in spreadsheet exporter. Added checkbox to export drop down
+2. Added silimarity in grid view, sort by similarity as default for similarity search
+3. Improvements in test code - Added helper methods to SubstanceAPI to submit from builder
+
+Bug Fixes
+---------
+1. Added "Add" buttons to top of the forms
+2. Fixed few display issues 
+    -  In the Substance details page - Audit info should be visible only to admin and should be moved down
+    -  In the Substance details page - All the expand sections should be collapsed by default
+    - Few button name changes to more meaningful name to make it more uniform across the application
+    - Register substances - Required buttons were hidden. Fixed the issue
+    - Cleaned the forms by hiding the additional information by default. Added 'Show Details' link to view the additional information
+3. Fixed the issue with applying references
+
+
+GSRS v1.3.0-RC1
 ============
 Changes:
 
@@ -49,6 +71,8 @@ Bug Fixes
 10. Fixed the validation error from protein edit
 11. Fixed the issue with the disulfide links when updating a sequence (pointed out by Larry)
 12. Bug fix to prevent 500 error when searches returned 0 results
+  
+    
 
 GSRS v1.2.08
 ============
