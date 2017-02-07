@@ -205,7 +205,6 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     }
     
     private SearchResult performSearchRequest(WrappedWebRequest req) throws IOException {
-    System.out.println(req);
 
         int page=1;
 
