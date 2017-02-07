@@ -1,9 +1,9 @@
 package ix.ginas.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -78,33 +78,7 @@ import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.Exporter;
 import ix.ginas.exporters.SubstanceExporterFactory;
-import ix.ginas.models.v1.Amount;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.Component;
-import ix.ginas.models.v1.ControlledVocabulary;
-import ix.ginas.models.v1.DisulfideLink;
-import ix.ginas.models.v1.GinasChemicalStructure;
-import ix.ginas.models.v1.Glycosylation;
-import ix.ginas.models.v1.Linkage;
-import ix.ginas.models.v1.MixtureSubstance;
-import ix.ginas.models.v1.Modifications;
-import ix.ginas.models.v1.Moiety;
-import ix.ginas.models.v1.NucleicAcid;
-import ix.ginas.models.v1.NucleicAcidSubstance;
-import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.Protein;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.models.v1.Site;
-import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
-import ix.ginas.models.v1.StructuralModification;
-import ix.ginas.models.v1.StructurallyDiverseSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.Subunit;
-import ix.ginas.models.v1.Sugar;
-import ix.ginas.models.v1.Unit;
-import ix.ginas.models.v1.VocabularyTerm;
+import ix.ginas.models.v1.*;
 import ix.ginas.utils.reindex.MultiReIndexListener;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.ginas.utils.reindex.ReIndexService;
@@ -624,9 +598,10 @@ public class GinasApp extends App {
      * @param extension
      * @return
      */
-    public static Result generateExportFileUrl(String collectionID, String extension) {
+
+    public static Result generateExportFileUrl(String collectionID, String extension, int publicOnly) {
         ObjectNode on = EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
-        on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension).url().toString());
+        on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension, publicOnly).url().toString());
 
         on.put("isReady", factoryPlugin.get().isReady());
         on.put("isCached", false);
@@ -670,10 +645,10 @@ public class GinasApp extends App {
      *            The format extension (e.g. sdf, csv, etc)
      * @return
      */
-    public static Result export(String collectionID, String extension) {
+    public static Result export(String collectionID, String extension, int publicOnlyFlag) {
 
         try {
-            return export(getExportStream(collectionID), extension);
+            return export(getExportStream(collectionID), extension, publicOnlyFlag==1);
         } catch (Exception e) {
             Logger.error(e.getMessage(), e);
             return error(404, e.getMessage());
@@ -735,7 +710,7 @@ public class GinasApp extends App {
      * @return
      * @throws Exception
      */
-    public static Result export(Stream<Substance> tstream, String extension) throws Exception {
+    public static Result export(Stream<Substance> tstream, String extension, boolean publicOnly) throws Exception {
 
         Objects.requireNonNull(tstream, "Invalid stream");
 
@@ -746,7 +721,7 @@ public class GinasApp extends App {
         final VisiblePipedInputStream pis = new VisiblePipedInputStream();
         final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
 
-        Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos);
+        Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos, publicOnly);
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String fname = "export-" + sdf.format(new Date()) + "." + extension;
 
@@ -781,7 +756,7 @@ public class GinasApp extends App {
         return ok(pis);
     }
 
-    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos)
+    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos, boolean publicOnly)
             throws IOException {
 
         if (factoryPlugin.get() == null) {
@@ -789,7 +764,7 @@ public class GinasApp extends App {
         }
 
         SubstanceExporterFactory.Parameters params = new SubstanceParameters(
-                factoryPlugin.get().getFormatFor(extension));
+                factoryPlugin.get().getFormatFor(extension),publicOnly);
 
         SubstanceExporterFactory factory = factoryPlugin.get().getExporterFor(params);
         if (factory == null) {
@@ -803,14 +778,21 @@ public class GinasApp extends App {
     private static class SubstanceParameters implements SubstanceExporterFactory.Parameters {
         private final SubstanceExporterFactory.OutputFormat format;
 
-        SubstanceParameters(SubstanceExporterFactory.OutputFormat format) {
+        private final boolean publicOnly;
+        SubstanceParameters(SubstanceExporterFactory.OutputFormat format, boolean publicOnly) {
             Objects.requireNonNull(format);
             this.format = format;
+            this.publicOnly = publicOnly;
         }
 
         @Override
         public SubstanceExporterFactory.OutputFormat getFormat() {
             return format;
+        }
+
+        @Override
+        public boolean publicOnly() {
+            return publicOnly;
         }
     }
 
@@ -2187,6 +2169,68 @@ public class GinasApp extends App {
     public static Result loadCV() {
         ControlledVocabularyFactory.loadCVFile();
         return ok(ix.ginas.views.html.index.render());
+    }
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Map ListLogFiles() {
+        Path directory = Paths.get("./logs");
+        Map<String, String> fileList = new TreeMap();
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            Files.list(directory).forEach(file -> {
+                String modifiedDate = sdf.format(file.toFile().lastModified());
+                String fileSize = Long.toString(file.toFile().length());
+                String dateSize = modifiedDate + "size" + fileSize;
+                fileList.put(file.toFile().getName(), dateSize );
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fileList;
+    }
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result downloadFile(String fName){
+        response().setContentType("application/x-download");
+        response().setHeader("Content-disposition","attachment; filename=" + fName);
+        File file = new File("./logs/" + fName);
+        return ok(file);
+    }
+
+    public static Result createTestChemical(int count){
+        String structure="C1CCCCC1";
+        ChemicalSubstance chem = new ChemicalSubstance();
+        chem.getOrGenerateUUID();
+      //  chem.structure = (GinasChemicalStructure)getStructureFrom(structure);
+
+
+        List<Reference> refList = new ArrayList<>();
+        List<Name> nameList = new ArrayList<>();
+        for(int i=0;i<count;i++){
+            Reference r = new Reference();
+            r.citation="Reference " + i;
+            r.getOrGenerateUUID();
+            r.docType = "SRS";
+            refList.add(r);
+        }
+
+        for(int i=0; i<count; i++){
+            Name n = new Name();
+            n.name = "Test Name" +i;
+            n.addReference(refList.get(i));
+            nameList.add(n);
+        }
+
+        chem.names = nameList;
+        chem.references = refList;
+
+        JsonNode node = new ObjectMapper().valueToTree(chem);
+        response().setContentType("application/x-download");
+        response().setHeader("Content-disposition","attachment; filename=chemicaljson");
+        //System.out.println("node:" + node);
+        return ok(node);
     }
 
 }

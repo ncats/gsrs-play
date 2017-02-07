@@ -10,3 +10,8 @@ GET        /webjars/*file        controllers.WebJarAssets.at(file)
 ->         /api                  ix.core.api.Routes
 ->         /admin                ix.core.admin.Routes
 
+GET        /api-docs             controllers.ApiHelpController.getResources
+#GET        /swagger-ui/*file     controllers.Assets.at(path="/public/swagger-ui", file)
+#GET        /api-docs/*file        controllers.Assets.at(path="/public", file)
+#GET        /docs                  controllers.Assets.at(path="/public", file="index.html")
+#GET     /api-docs/api/v1/substances         controllers.ApiHelpController.getResource(path = "/api/v1/substances")

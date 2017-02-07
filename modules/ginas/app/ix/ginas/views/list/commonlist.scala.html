@@ -17,7 +17,9 @@
             	@contentDetails
             </div>
             <div class = "col-md-3">
-                @commonliststatus(sub)
+                @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                    @commonliststatus(sub)
+                }
             </div>
         </div>
         @contentFooter

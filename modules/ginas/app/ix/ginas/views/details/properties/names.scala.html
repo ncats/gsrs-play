@@ -79,7 +79,7 @@
             <tr ng-if="audit == true"><td  colspan = "4">Created by <code>@n.createdBy</code> on <code>@n.created</code> , Edited by <code>@n.lastEditedBy</code> on <code>@n.lastEdited</code></td></tr>
 }
 
-<button class="btn btn-primary label-offset det" ng-click = "namescollapse = !namescollapse">
+<button class="btn btn-primary label-offset det" ng-init = "namescollapse=true" ng-click = "namescollapse = !namescollapse">
     <i ng-show="namescollapse" class="fa fa-caret-right"></i>
     <i ng-hide="namescollapse" class="fa fa-caret-down"></i>
     Names&nbsp;<span class="badge"> @names.length</span></button>

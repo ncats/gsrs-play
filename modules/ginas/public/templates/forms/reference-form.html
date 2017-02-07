@@ -1,6 +1,8 @@
 <div class="row info">
-    <div class="row" ng-if="!applyRefs">
-        <form-header type="references" parent="parent" iscollapsed="iscollapsed"></form-header>
+    <div class="row">
+        <form-header class="col-md-2" type="references" parent="parent" iscollapsed="iscollapsed"></form-header>
+        <button class="btn btn-primary pull-left" ng-click="addNewRef(refOnlyForm, 'references', true); iscollapsed=false" style="margin-top: 18px;">
+            <i class="fa fa-plus"></i> Add reference</button>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="refOnlyForm" role="form" id="addRefOnlyForm" novalidate>
@@ -12,7 +14,7 @@
                                 <reference-apply ng-if ="applyRefs" ng-model="obj.$$apply" obj=obj referenceobj=referenceobj parent=parent></reference-apply>
                                 <delete-button ng-if ="!applyRefs" path="references"></delete-button>
                             </div>
-                            <div class="col-md-10">
+                            <div class="col-md-8">
                                 <div class="row">
                                     <div class="col-md-3">
                                         <gsrs-input type="dropdown"
@@ -24,6 +26,29 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
+                                    <div class="col-md-5">
+                                        <gsrs-input type="text-box"
+                                                    ng-model="obj.citation"
+                                                    field="citation"
+                                                    label="Source Text / Citation"
+                                                    required="true"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <modal-form-button type="access"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>
+                                    </div>
+
+                                </div>
+                                <div class="row" ng-if="obj.$details">
+                                    <br/>
                                     <div class="col-md-3">
                                         <gsrs-input type="dropdown"
                                                     ng-model="obj.$$systemCategory"
@@ -63,17 +88,6 @@
                                             <br>
                                         </ng-form>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-3 url">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.citation"
-                                                    field="citation"
-                                                    label="Source Text / Citation"
-                                                    required="true"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
 
                                     <div class="col-md-2">
                                         <gsrs-input type="multi"
@@ -89,16 +103,6 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="access"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
-                            </div>
-                        </div>
-                        <br>
                         <div class="row">
                             <div class="col-md-12">
                                 <div ng-if="obj.created">
@@ -115,14 +119,16 @@
                                 </div>
                             </div>
                         </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class=reference-{{index}}></div>
                     </div>
                     <hr>
                 </ng-form>
             </div>
         </form>
-        <br>
-        <br>
-        <button class="btn btn-primary" ng-click="addNewRef(refOnlyForm, 'references')"><i class="fa fa-plus"></i> Add
+        <button class="btn btn-primary" ng-click="addNewRef(refOnlyForm, 'references')" ng-hide="parent.references.length <= 3"><i class="fa fa-plus"></i> Add
             a<span
                     ng-if="parent.references.length>0">nother</span> reference
         </button>

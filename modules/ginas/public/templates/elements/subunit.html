@@ -8,10 +8,9 @@
                 <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits" showlabel="false"
                                class="subunitButtons"></delete-button>
                 <a ng-click="cleanSequence()" uib-tooltip="Clean sequence" class="subunitButtons"><i
-                        class="fa fa-magic fa-2x success"></i></a>
+                        class="fa fa-magic fa-2x"></i></a>
                 <a ng-click="toggleEdit()" uib-tooltip="Edit sequence" class="subunitButtons" ng-if="!edit"><i
-                        class="fa fa-pencil fa-2x"></i></a>
-
+                        class="fa fa-pencil fa-2x success"></i></a>
             </div>
         </div>
     </div>
@@ -47,7 +46,7 @@
                 name="sequence"
                 rows=10
         ></textarea>
-            <button class="btn btn-primary align-right" ng-click="toggleEdit()">Ok</button>
+            <button class="btn btn-primary align-right" ng-click="toggleEdit()">Save Sequence</button>
         </div>
     </div>
 </div>

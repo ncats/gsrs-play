@@ -21,7 +21,7 @@
         <tr><td class ="'@sub.getUuid()'" colspan="2"></td></tr>
     }
     @if(sub.mixture.getParentSubstance!= null){
-        <button class="btn btn-primary label-offset det" ng-click = "sourcecollapse = !sourcecollapse">
+        <button class="btn btn-primary label-offset det" ng-init = "sourcecollapse =true" ng-click = "sourcecollapse = !sourcecollapse">
             <i ng-show="sourcecollapse" class="fa fa-caret-right"></i>
             <i ng-hide="sourcecollapse" class="fa fa-caret-down"></i>
             Source Material Parent</button>

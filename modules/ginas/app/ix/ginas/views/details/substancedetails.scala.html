@@ -20,9 +20,6 @@
                     <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
                         {{_.startCase('@sub.substanceClass')}} Details</a></li>
 
-                    <li role="presentation"><a href="#audit" prevent-default="" ng-click="scrollTo('audit')">
-                        Audit Information </a></li>
-
                     @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                         <li role="presentation" ><a href="#altrelationships" prevent-default="" ng-click="scrollTo('altrelationships')">
                             Alt Definitions <span class="badge pull-right">@sub.getAlternativeDefinitionRelationships().size()</span></a></li>
@@ -78,6 +75,10 @@
                     <li role="presentation"><a href="#history" prevent-default="" ng-click="scrollTo('history')">
                             History <span class="badge pull-right">@sub.getEdits().size()</span></a></li>
                     }
+                    @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                        <li role="presentation"><a href="#audit" prevent-default="" ng-click="scrollTo('audit')">
+                            Audit Information </a></li>
+                    }
                 </ul>
             </nav>
         </div>
@@ -124,32 +125,6 @@
                     </div>
                 </div>
             </div>
-             			
-              <div class="row info" id="audit">
-		                <button ng-init="auditscollapse=true" class="btn btn-primary label-offset det" ng-click = "auditscollapse = !auditscollapse">
-		                    <i ng-show="auditscollapse" class="fa fa-caret-right"></i>
-		                    <i ng-hide="auditscollapse" class="fa fa-caret-down"></i>
-		                   Audit Information</button>
-		                <div class="col-md-12 table-responsive" uib-collapse = "auditscollapse">
-		                	<div class="row small-spacer">
-			                    <table class="table table-striped keyvalue">
-			                    <tbody>
-			                    	@if(sub.approved!=null){
-			                        	<tr><td> Approved </td><td>@sub.approved</td></tr>
-			                        	<tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
-			                        }
-			                        <tr><td> Created </td><td>@sub.created</td></tr>
-			                        <tr><td> Created By </td><td>@sub.createdBy</td></tr>
-			                        <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
-			                        <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
-			                        @if(sub.changeReason != null){
-			                            <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
-			                        }
-			                	</tbody>
-			                	</table>
-		                	</div>
-		                </div>
-		           </div>
 
          @if(sub.getAlternativeDefinitionRelationships().size() > 0) {
                 <div class="row info table-responsive" id="altrelationships">
@@ -167,7 +142,7 @@
             @if(sub.hasModifications()) {
 
                 <div class="row info" id="modification">
-                    <button class="btn btn-primary label-offset det" ng-click = "modscollapse = !modscollapse">
+                    <button class="btn btn-primary label-offset det" ng-init="modscollapse=true" ng-click = "modscollapse = !modscollapse">
                         <i ng-show="modscollapse" class="fa fa-caret-right"></i>
                         <i ng-hide="modscollapse" class="fa fa-caret-down"></i>
                         Modifications&nbsp;<span class="badge head">
@@ -237,7 +212,7 @@
             }
 
             <div class="row info" id="refs">
-                <button class="btn btn-primary label-offset det" ng-click = "referencescollapse = !referencescollapse">
+                <button class="btn btn-primary label-offset det" ng-init="referencescollapse=true" ng-click = "referencescollapse = !referencescollapse">
                     <i ng-show="referencescollapse" class="fa fa-caret-right"></i>
                     <i ng-hide="referencescollapse" class="fa fa-caret-down"></i>
                     References&nbsp;<span class="badge"> @sub.references.size()</span></button>
@@ -297,6 +272,33 @@
                             </div>
 		                </div>
 		           </div>
+            }
+            @dynamic(name = IxDynamicResourceHandler.IS_ADMIN, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
+                <div class="row info" id="audit">
+                    <button ng-init="auditscollapse=true" class="btn btn-primary label-offset det" ng-click = "auditscollapse = !auditscollapse">
+                        <i ng-show="auditscollapse" class="fa fa-caret-right"></i>
+                        <i ng-hide="auditscollapse" class="fa fa-caret-down"></i>
+                        Audit Information</button>
+                    <div class="col-md-12 table-responsive" uib-collapse = "auditscollapse">
+                        <div class="row small-spacer">
+                            <table class="table table-striped keyvalue">
+                                <tbody>
+                                    @if(sub.approved != null) {
+                                        <tr><td> Approved </td><td>@sub.approved</td></tr>
+                                        <tr><td> Approved By </td><td>@sub.approvedBy</td></tr>
+                                    }
+                                    <tr><td> Created </td><td>@sub.created</td></tr>
+                                    <tr><td> Created By </td><td>@sub.createdBy</td></tr>
+                                    <tr><td> lastEdited </td><td>@sub.lastEdited</td></tr>
+                                    <tr><td> lastEdited By </td><td>@sub.lastEditedBy</td></tr>
+                                    @if(sub.changeReason != null) {
+                                        <tr><td>Change Reason</td><td>@sub.changeReason</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             }
 
         </div>

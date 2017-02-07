@@ -3,6 +3,10 @@
         <form-header type="notes" parent="parent" iscollapsed="iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <br>
+        <button class="btn btn-primary" ng-if="!iscollapsed && parent.notes.length > 2" ng-click="addNew(noteForm, 'notes'); scrollTo('note-bottom')"><i class="fa fa-plus"></i> Add a<span
+                ng-if="parent.notes.length>0">nother</span> note
+        </button>
         <form class="form-horizontal" name="noteForm" role="form" id="addNoteForm" novalidate>
             <div ng-repeat="(index,obj) in parent.notes">
                 <ng-form name="form">
@@ -56,6 +60,7 @@
                 </ng-form>
             </div>
         </form>
+        <div id ="note-bottom"></div>
         <br>
         <br>
         <button class="btn btn-primary" ng-click="addNew(noteForm, 'notes')"><i class="fa fa-plus"></i> Add a<span

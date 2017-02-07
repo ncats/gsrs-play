@@ -221,7 +221,7 @@
     <div></div>
 } {
     <div class="row info" id="structureDetails">
-        <button class="btn btn-primary label-offset det" ng-click = "polystrucscollapse = !polystrucscollapse">
+        <button class="btn btn-primary label-offset det" ng-init = "polystrucscollapse =true" ng-click = "polystrucscollapse = !polystrucscollapse">
             <i ng-show="polystrucscollapse" class="fa fa-caret-right"></i>
             <i ng-hide="polystrucscollapse" class="fa fa-caret-down"></i>
             Display Structure&nbsp;</button>
@@ -244,7 +244,7 @@
     </div>
     @if(sub.polymer.monomers!=null && sub.polymer.monomers.length > 0) {
         <div class="row info" id="monoxmers">
-            <button class="btn btn-primary label-offset det" ng-click = "monomerscollapse = !monomerscollapse">
+            <button class="btn btn-primary label-offset det" ng-init = "monomerscollapse =true" ng-click = "monomerscollapse = !monomerscollapse">
                 <i ng-show="monomerscollapse" class="fa fa-caret-right"></i>
                 <i ng-hide="monomerscollapse" class="fa fa-caret-down"></i>
                 Monomers&nbsp;<span class="badge"> @sub.polymer.monomers.length</span></button>
@@ -255,7 +255,7 @@
     }
     @if(sub.polymer.structuralUnits.length > 0) {
         <div class="row info" id="srus">
-            <button class="btn btn-primary label-offset det" ng-click = "sruscollapse = !sruscollapse">
+            <button class="btn btn-primary label-offset det" ng-init = "sruscollapse =true" ng-click = "sruscollapse = !sruscollapse">
                 <i ng-show="sruscollapse" class="fa fa-caret-right"></i>
                 <i ng-hide="sruscollapse" class="fa fa-caret-down"></i>
                 Structural Units&nbsp;<span class="badge"> @sub.polymer.structuralUnits.length</span></button>

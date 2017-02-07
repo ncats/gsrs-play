@@ -39,9 +39,9 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
     private static final OutputFormat XLSX = new SpreadsheetFormat("xlsx", "Excel (xlsx) File"){
         Spreadsheet createSpeadsheet(OutputStream out) {
 
-                return new ExcelSpreadsheet.Builder(out)
-                        .maxRowsInMemory(100)
-                        .build();
+            return new ExcelSpreadsheet.Builder(out)
+                    .maxRowsInMemory(100)
+                    .build();
 
         }
     };
@@ -82,8 +82,7 @@ public class DefaultSubstanceSpreadsheetExporterFactory implements SubstanceExpo
     }
 
     protected void configure(SubstanceSpreadsheetExporter.Builder builder, Parameters params){
-        //no-op
-
+        builder.includePublicDataOnly(params.publicOnly());
     }
 
     private static abstract class SpreadsheetFormat extends OutputFormat{

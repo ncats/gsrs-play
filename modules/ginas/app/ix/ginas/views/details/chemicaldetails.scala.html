@@ -21,7 +21,7 @@
     <div></div>
 } {
     <div class="row info" id="structureDetails">
-        <button class="btn btn-primary label-offset det" ng-click = "structurescollapse = !structurescollapse">
+        <button class="btn btn-primary label-offset det" ng-init = "structurescollapse =true" ng-click = "structurescollapse = !structurescollapse">
             <i ng-show="structurescollapse" class="fa fa-caret-right"></i>
             <i ng-hide="structurescollapse" class="fa fa-caret-down"></i>
             Structure&nbsp;</button>
@@ -109,7 +109,7 @@
 
     @if(sub.moieties.size > 0) {
         <div class="row info" id="moieties">
-            <button class="btn btn-primary label-offset det" ng-click = "moietiescollapse = !moietiescollapse">
+            <button class="btn btn-primary label-offset det" ng-init = "moietiescollapse =true" ng-click = "moietiescollapse = !moietiescollapse">
                 <i ng-show="moietiescollapse" class="fa fa-caret-right"></i>
                 <i ng-hide="moietiescollapse" class="fa fa-caret-down"></i>
                 Moieties&nbsp;<span class="badge"> @sub.moieties.size</span></button>

@@ -1,3 +1,5 @@
+@import ix.ginas.controllers.GinasApp
+
 @ix.ginas.views.html.ginas("Admin Portal", "null") {
     @ix.ginas.views.html.menu()
 } {
@@ -25,6 +27,31 @@
                 Rebuild Index <i class ="fa fa-refresh fa-2x"></i>
             </uib-tab-heading>
             @rebuild()
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                Log Files <i class="fa fa-download fa-2x"></i>
+            </uib-tab-heading>
+            <p>Click on the log file to download</p>
+
+            <div class="row info">
+                <div class="col-md-9">
+                    <table class="table table-striped keyvalue">
+                        <tr><th><strong>File Name</strong></th>
+                            <th><strong>Last Updated Date</strong></th>
+                        <th><strong>File Size (in bytes)</strong></th></tr>
+                        @for(file <- GinasApp.ListLogFiles().keys) {
+                            <tr>
+                                <td><a href="@ix.ginas.controllers.routes.GinasApp.downloadFile(file.toString())" target="_self">@file</a></td>
+                                @defining(GinasApp.ListLogFiles().get(file).toString().split("size")) { case Array(x1, x2) =>
+                                    <td>@x1</td>
+                                    <td>@x2</td>
+                                }
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
         </uib-tab>
     </uib-tabset>
 }
