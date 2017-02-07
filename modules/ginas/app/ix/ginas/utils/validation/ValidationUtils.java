@@ -441,7 +441,22 @@ public class ValidationUtils {
 			strat.processMessage(mes);
 		}
 
+		Set<String> nameSet = new HashSet<String>();
+		
+		
 		for (Name n : s.names) {
+		    if(nameSet.contains(n.getName().toUpperCase())){
+		        GinasProcessingMessage mes = GinasProcessingMessage
+                        .WARNING_MESSAGE(
+                                "Name '"
+                                        + n.getName()
+                                        + "' is a duplicate name in the record.")
+                        ;
+                gpm.add(mes);
+                strat.processMessage(mes);
+		    }
+		    nameSet.add(n.getName().toUpperCase());
+		    //nameSet.add(n.getName());
 			try {
 				List<Substance> sr = ix.ginas.controllers.v1.SubstanceFactory
 						.getSubstancesWithExactName(100, 0, n.name);

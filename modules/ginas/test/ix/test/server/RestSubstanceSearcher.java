@@ -31,7 +31,7 @@ import play.libs.ws.WSRequestHolder;
  */
 public class RestSubstanceSearcher implements SubstanceSearcher{
     private String defaultSearchOrder =null;
-    private static final long REST_TIMEOUT=5000; //5 seconds
+    private static final long REST_TIMEOUT=10000; //10 seconds
 
     private RestSession session;
 
