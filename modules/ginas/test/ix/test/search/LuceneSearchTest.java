@@ -1,39 +1,29 @@
 package ix.test.search;
 
-import static ix.test.SubstanceJsonUtil.ensurePass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
 import ix.AbstractGinasServerTest;
 import ix.core.util.ExpectFailureChecker.ExpectedToFail;
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.Substance;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.query.builder.SubstanceCondition;
-import ix.test.server.BrowserSession;
+import ix.test.server.*;
 import ix.test.server.GinasTestServer.User;
-import ix.test.server.RestSession;
-import ix.test.server.SearchResult;
-import ix.test.server.SubstanceAPI;
-import ix.test.server.SubstanceReIndexer;
-import ix.test.server.BrowserSubstanceSearcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import play.libs.ws.WSResponse;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static ix.test.SubstanceJsonUtil.ensurePass;
+import static org.junit.Assert.*;
 
 public class LuceneSearchTest extends AbstractGinasServerTest {
 
@@ -639,30 +629,40 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 	public void testBrowsingWithDisplayNameOrderingShouldOrderAlphabetically() throws Exception {
 		
 			final String prefix = "MYSPECIALSUFFIX";
-			List<String> addedName = new ArrayList<String>();
 
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().mapToObj(i -> ((char) i) + prefix).forEach(n -> {
-				addedName.add(n);
+			List<String> uuids = new ArrayList<>();
+				IntStream.range('A', 'Z').mapToObj(i -> ((char) i) + prefix).forEach(n -> {
+
+				//api.submitSubstance(new SubstanceBuilder().addName(n));
 				new SubstanceBuilder().addName(n).buildJsonAnd(j -> {
-					ensurePass(api.submitSubstance(j));
+					//System.out.println("json input = " + j);
+
+					WSResponse response = api.submitSubstance(j);
+					ensurePass(response);
+					String uuid = response.asJson().get("uuid").asText();
+					uuids.add(uuid.substring(0,8));
+					//this sleep is just to make sure
+					//the timestamps for each created substance are different
+					//since we will sort by create time.
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				});
+
 			});
 
-			String html = api.fetchSubstancesUISearchHTML(null, null, "^Display Name");
-			String rhtml = api.fetchSubstancesUISearchHTML(null, null, "$Display Name");
-			int rows = 16;
+			for(SubstanceSearcher.SearchOrderDirection dir : SubstanceSearcher.SearchOrderDirection.values()){
+				searcher.setSearchOrder("created", dir);
 
-			addedName.stream().limit(rows)
-					.forEachOrdered(n -> assertTrue("Sorting alphabetical should show:" + n, html.contains(n)));
-			addedName.stream().skip(rows)
-					.forEachOrdered(n -> assertFalse("Sorting alphabetical shouldn't show:" + n, html.contains(n)));
+				List<String> actualSortedUuids = searcher.all().getUuids().stream().collect(Collectors.toList());
 
-			Collections.reverse(addedName);
+				List<String> expctedSortedUuids = new ArrayList<>(uuids);
+				dir.reorder(expctedSortedUuids);
+				assertEquals(dir.name(), expctedSortedUuids, actualSortedUuids);
 
-			addedName.stream().limit(16)
-					.forEachOrdered(n -> assertTrue("Sorting rev alphabetical should show:" + n, rhtml.contains(n)));
-			addedName.stream().skip(16).forEachOrdered(
-					n -> assertFalse("Sorting rev alphabetical shouldn't show:" + n, rhtml.contains(n)));
+			}
 
 	}
 }

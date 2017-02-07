@@ -426,6 +426,7 @@ public class SearchResultContext {
     	SerailizedSearchResultContext serial=null;
         try {
             Object value = IxCache.get(key);
+			System.out.println("cache value " + value);
             if (value != null) {
             	if(value instanceof SearchResultContext){
                     context = (SearchResultContext)value;
@@ -438,6 +439,9 @@ public class SearchResultContext {
             }else{
             	String spkey  = SearchResultContext.getSerializedKey(key);
             	Object value2 = IxCache.getRaw(spkey);
+
+				System.out.println("serialized key " + spkey);
+				System.out.println("value2 " + value2);
             	if(value2 !=null && value2 instanceof SerailizedSearchResultContext){
             		serial=(SerailizedSearchResultContext)value2;
             	}

@@ -1,15 +1,7 @@
 package ix.test.server;
 
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Stream;
 
 import ix.core.search.SearchResultContext;
@@ -64,8 +56,16 @@ public class SearchResult {
 
 	public Stream<Substance> getSubstances() {
 		SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
+		if(src == null){
+			throw new NullPointerException("null searchResultContext for " + searchKey);
+		}
+		//src.getCall()
+		Collection results = src.getResults();
+		if(results == null){
+			throw new NullPointerException("null results for " + searchKey + src.getMessage());
+		}
+		return results.stream().map(o -> (Substance) o);
 
-		return src.getResults().stream().map(o -> (Substance) o);
 	}
 
 	public InputStream export(String format) {
