@@ -629,7 +629,6 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 	}
 	@Test
-	@RunOnly
 	public void testBrowsingWithDifferentOrderingShouldOrderAsRequested() throws Exception {
 		
 			final String prefix = "MYSPECIALSUFFIX";
