@@ -4,19 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ix.AbstractGinasServerTest;
 import ix.core.util.ExpectFailureChecker.ExpectedToFail;
 import ix.core.util.RunOnly;
+import ix.core.util.TimeTraveller;
 import ix.ginas.models.v1.Substance;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.query.builder.SubstanceCondition;
 import ix.test.server.*;
 import ix.test.server.GinasTestServer.User;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import play.libs.ws.WSResponse;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -36,6 +36,9 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 	String aspirinCalcium = "ASPIRIN CACLIUM";
 	String aspirin = "ASPIRIN";
 
+
+	@Rule
+	public TimeTraveller timeTraveller = new TimeTraveller();
 	@Before
 	public void setup() {
 		u = ts.getFakeUser1();
@@ -626,17 +629,16 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 	}
 	@Test
-	public void testBrowsingWithDisplayNameOrderingShouldOrderAlphabetically() throws Exception {
+	@RunOnly
+	public void testBrowsingWithDifferentOrderingShouldOrderAsRequested() throws Exception {
 		
 			final String prefix = "MYSPECIALSUFFIX";
 
 			List<String> uuids = new ArrayList<>();
 				IntStream.range('A', 'Z').mapToObj(i -> ((char) i) + prefix).forEach(n -> {
 
-				//api.submitSubstance(new SubstanceBuilder().addName(n));
-				new SubstanceBuilder().addName(n).buildJsonAnd(j -> {
-					//System.out.println("json input = " + j);
-
+				new SubstanceBuilder().addName(n)
+						.buildJsonAnd(j -> {
 					WSResponse response = api.submitSubstance(j);
 					ensurePass(response);
 					String uuid = response.asJson().get("uuid").asText();
@@ -644,19 +646,15 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 					//this sleep is just to make sure
 					//the timestamps for each created substance are different
 					//since we will sort by create time.
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					timeTraveller.jumpAhead(1, TimeUnit.DAYS);
 				});
 
 			});
 
 			for(SubstanceSearcher.SearchOrderDirection dir : SubstanceSearcher.SearchOrderDirection.values()){
 				searcher.setSearchOrder("created", dir);
-
-				List<String> actualSortedUuids = searcher.all().getUuids().stream().collect(Collectors.toList());
+				List<String> actualSortedUuids = new ArrayList<>();
+				searcher.all().getUuids().stream().forEachOrdered( s-> actualSortedUuids.add(s));
 
 				List<String> expctedSortedUuids = new ArrayList<>(uuids);
 				dir.reorder(expctedSortedUuids);

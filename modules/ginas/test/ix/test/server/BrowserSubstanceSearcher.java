@@ -205,6 +205,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     }
     
     private SearchResult performSearchRequest(WrappedWebRequest req) throws IOException {
+    System.out.println(req);
 
         int page=1;
 
@@ -330,7 +331,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
                 .map(Util.getMatchingGroup(SUBSTANCE_LINK_HREF_PATTERN, 1))
                 .filter(o->o.isPresent())
                 .map(o->o.get())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
     
     private Tuple<String,Set<String>> getSubstancesFrom(HtmlPage page){
@@ -348,7 +349,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
      * @return
      */
     private Set<String> getSpecialMatchesFrom(HtmlPage page){
-        Set<String> set = new HashSet<>();
+        Set<String> set = new LinkedHashSet<>();
         DomNode dn = page.querySelector(".specialmatches");
         
         if(dn!=null){
@@ -361,7 +362,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         Set<String> substances = page.querySelectorAll("img[src*=\"ginas/app/img\"]")
         .stream()
         .map(m->m.getAttributes().getNamedItem("src").getNodeValue())
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(LinkedHashSet::new));
         
         return substances;
     }
