@@ -75,7 +75,17 @@ public interface SubstanceSearcher {
         public abstract SearchOrderDirection getOtherDirection();
 
     }
-    void setSearchOrder(String order);
+
+    /**
+     * Set the search order term sorted in FORWARD DIRECTION.
+     * This is the same as {@link #setSearchOrder(String, SearchOrderDirection), setSearchOrder(term, SearchOrderDirection.FORWARD)}
+     * @param term the search term to use; can not be null.
+     *
+     * @throws NullPointerException if either parameter is null.
+     */
+    default void setSearchOrder(String term){
+        setSearchOrder(term, SearchOrderDirection.FORWARD);
+    }
 
     /**
      * Set the search order term AND the direction results should be sorted by.
@@ -84,10 +94,7 @@ public interface SubstanceSearcher {
      *
      * @throws NullPointerException if either parameter is null.
      */
-    default void setSearchOrder(String term, SearchOrderDirection dir){
-        Objects.requireNonNull(term);
-        setSearchOrder(dir.formatQuery(term));
-    }
+    void setSearchOrder(String term, SearchOrderDirection dir);
 
     /**
      * Get the UUIDs of all the loaded substances that have this substructure.

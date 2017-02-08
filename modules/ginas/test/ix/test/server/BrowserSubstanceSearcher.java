@@ -54,8 +54,9 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
      * @see ix.test.server.SubstanceSearcherIFace#setSearchOrder(java.lang.String)
      */
     @Override
-    public void setSearchOrder(String order){
-    	this.defaultSearchOrder=order;
+    public void setSearchOrder(String term, SearchOrderDirection dir){
+        Objects.requireNonNull(term);
+    	this.defaultSearchOrder=dir.formatQuery(term);
     }
     
     /* (non-Javadoc)

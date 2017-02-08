@@ -4,11 +4,7 @@ package ix.test.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,8 +44,9 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
 
 
     @Override
-    public void setSearchOrder(String order) {
-        defaultSearchOrder=order;
+    public void setSearchOrder(String term, SearchOrderDirection dir) {
+        Objects.requireNonNull(term);
+        defaultSearchOrder=dir.formatQuery(term);
     }
 
     @Override
