@@ -58,7 +58,6 @@ public class EditingWorkflowTest extends AbstractGinasServerTest {
 	}
 
 	@Test
-	@RunOnly
 	public void testCreateLargeChemical() throws Exception {
 		String structure="C1CCCCC1";
 		ChemicalSubstanceBuilder csbuild=new SubstanceBuilder()
