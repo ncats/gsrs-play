@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-md-12" uib-collapse="iscollapsed">
+    <div class="col-md-12">
         <form class="form-horizontal" name="nameOrgForm" role="form" id="addNameOrgForm" novalidate>
             <div ng-repeat="(index,obj) in parent.nameOrgs">
                 <ng-form name="form">
@@ -48,10 +48,10 @@
                 </ng-form>
             </div>
         </form>
+    </div>
         <br>
         <br>
         <button class="btn btn-primary" ng-click="addNew(nameOrgForm, 'nameOrgs')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.nameOrgs.length>0">nother</span> naming org
         </button>
-    </div>
 </div>
