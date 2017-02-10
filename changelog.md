@@ -4,14 +4,14 @@ Changes:
 
 Enhancements
 -------------
-1. issue inxight-1042 - Added support for including private commonData in spreadsheet exporter. Added checkbox to export drop down
+1. issue inxight-#1042 - Added support for including private commonData in spreadsheet exporter. Added checkbox to export drop down
 2. Added similarity in grid view, sort by similarity as default for similarity search
 3. Improvements in test code - Added helper methods to SubstanceAPI to submit from builder
 
 Bug Fixes
 ---------
 1. Added "Add" buttons to top of the forms
-2. inxight-#1032, 1039 - Fixed few display issues
+2. inxight-#1032, #1039 - Fixed few display issues
     -  In the Substance details page - Audit info should be visible only to admin and should be moved down
     -  In the Substance details page - All the expand sections should be collapsed by default
     - Few button name changes to a more meaningful name and to make it uniform across the application
