@@ -2305,7 +2305,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				Logger.debug("<<< " + ew.getValue());
 		}catch(Exception e){
 			e.printStackTrace();
-			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems");
+			Logger.error("Error indexing record [" + ew.toString() + "] This may cause consistency problems", e);
 		}finally{
 			//System.out.println("||| " + ew.getKey());
 		}
