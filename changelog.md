@@ -2,7 +2,7 @@ GSRS v1.3.0-RC2
 ============
 Changes:
 
-Enchancements
+Enhancements
 -------------
 1. issue inxight-1042 - Added support for including private commonData in spreadsheet exporter. Added checkbox to export drop down
 2. Added similarity in grid view, sort by similarity as default for similarity search
@@ -24,7 +24,7 @@ GSRS v1.3.0-RC1
 ============
 Changes:
 
-Enchancements
+Enhancements
 -------------
 1.  Added new facets - Record Level Access,
     Display Name Level Access, Definiton Level Access
