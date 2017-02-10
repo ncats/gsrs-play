@@ -11,14 +11,14 @@ Enhancements
 Bug Fixes
 ---------
 1. Added "Add" buttons to top of the forms
-2. Fixed few display issues 
+2. inxight-#1032, 1039 - Fixed few display issues
     -  In the Substance details page - Audit info should be visible only to admin and should be moved down
     -  In the Substance details page - All the expand sections should be collapsed by default
     - Few button name changes to a more meaningful name and to make it uniform across the application
     - Register substances - Some Add buttons were hidden. Fixed the issue
     - Cleaned the forms by hiding the additional information by default. Added 'Show Details' link to view the additional information
-    - substance class should be put over the icon (inxight-issue#1039)
-    - Protein Edit - Relationships: "Add a Reference" tooltip flickering which sometimes prevents from adding a new Reference (inxight-issue#1032)
+    - substance class should be put over the icon
+    - Protein Edit - Relationships: "Add a Reference" tooltip flickering which sometimes prevents from adding a new Reference
 3. Fixed the issue with applying references
 
 
