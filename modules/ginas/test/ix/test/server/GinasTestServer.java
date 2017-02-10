@@ -448,14 +448,27 @@ public class GinasTestServer extends ExternalResource{
         cacheManager = CacheManager.getInstance();
         cacheManager.removalAll();
         cacheManager.shutdown();
-        
+
+        extendedBefore(ConfigUtil.getDefault().getConfig());
+
         testSpecificAdditionalConfiguration.put("ix.cache.clearpersist",true);
         start();
         testSpecificAdditionalConfiguration.remove("ix.cache.clearpersist");
         
         
    }
-    
+
+    /**
+     * Override this method to add any additional setup as part
+     * of the Before phase for example to add additional tables
+     * to the database.
+     * @param defaultConfig the default config being used can be used
+     *                      to get the config properties.  This doesn't include any additional config overrides
+     */
+    protected void extendedBefore(Config defaultConfig){
+
+    }
+
     
 
     private void initializeControllers() {
