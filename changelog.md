@@ -2,7 +2,7 @@ GSRS v1.3.0-RC2
 ============
 Changes:
 
-Enchancements
+Enhancements
 -------------
 1. issue inxight-1042 - Added support for including private commonData in spreadsheet exporter. Added checkbox to export drop down
 2. Added similarity in grid view, sort by similarity as default for similarity search
@@ -14,9 +14,11 @@ Bug Fixes
 2. Fixed few display issues 
     -  In the Substance details page - Audit info should be visible only to admin and should be moved down
     -  In the Substance details page - All the expand sections should be collapsed by default
-    - Few button name changes to more meaningful name to make it more uniform across the application
-    - Register substances - Required buttons were hidden. Fixed the issue
+    - Few button name changes to a more meaningful name and to make it uniform across the application
+    - Register substances - Some Add buttons were hidden. Fixed the issue
     - Cleaned the forms by hiding the additional information by default. Added 'Show Details' link to view the additional information
+    - substance class should be put over the icon (inxight-issue#1039)
+    - Protein Edit - Relationships: "Add a Reference" tooltip flickering which sometimes prevents from adding a new Reference (inxight-issue#1032)
 3. Fixed the issue with applying references
 
 
@@ -24,7 +26,7 @@ GSRS v1.3.0-RC1
 ============
 Changes:
 
-Enchancements
+Enhancements
 -------------
 1.  Added new facets - Record Level Access,
     Display Name Level Access, Definiton Level Access
@@ -53,7 +55,7 @@ Enchancements
 16. Improvements to codebase which reduce redundancy, improve performance.
 17. Added 500+ additional automated tests
 18. Added suffix searching support now *foo and *foo* are supported
-19. Added a FASTA view for the sequence in proteins
+19. inxight#1026 - Added a FASTA view for the sequence in proteins
 
 Bug Fixes
 ----------
