@@ -338,14 +338,28 @@ public class GinasTestServer extends ExternalResource{
     }
 
     @FunctionalInterface
-    public interface UserAction<E extends Exception>{
+    public interface VoidUserAction<E extends Exception>{
         void doIt() throws E;
     }
-    public  <E extends Exception> void doAsUser(User user, UserAction<E> action) throws E{
+
+    @FunctionalInterface
+    public interface UserAction<R, E extends Exception>{
+        R doIt() throws E;
+    }
+    public static <E extends Exception> void doAsUser(User user, VoidUserAction<E> action) throws E{
         Principal oldP = UserFetcher.getActingUser();
         try{
             UserFetcher.setLocalThreadUser(user.asPrincipal());
             action.doIt();
+        }finally{
+            UserFetcher.setLocalThreadUser(oldP);
+        }
+    }
+    public static <R, E extends Exception> R doAsUser(User user, UserAction<R, E> action) throws E{
+        Principal oldP = UserFetcher.getActingUser();
+        try{
+            UserFetcher.setLocalThreadUser(user.asPrincipal());
+            return action.doIt();
         }finally{
             UserFetcher.setLocalThreadUser(oldP);
         }

@@ -131,7 +131,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
             }
         }while(substances.addAll(tmp.v()));
 
-        SearchResult results = new SearchResult(keyString, substances,this);
+        SearchResult results = new SearchResult(keyString, substances,this, session.getUser());
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);
         }
@@ -177,7 +177,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     
     public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
         Tuple<String,Set<String>> set = getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait));
-    	return new SearchResult(set.k(),set.v(),this);
+    	return new SearchResult(set.k(),set.v(),this, session.getUser());
     }
     
     
@@ -253,6 +253,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         
         SearchResult results = new SearchResult.Builder()
                                         .searcher(this)
+                                        .username(this.session.getUser())
                                         .searchKey(keyString)
                                         .uuids(substances)
                                         .specialUuids(specialMatches)

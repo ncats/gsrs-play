@@ -122,4 +122,6 @@ public final class SubstanceJsonUtil {
 	public static String getTypeOnFirstRelationship(JsonNode js){
 		return js.at("/relationships/0/type").asText();
 	}
+
+
 }

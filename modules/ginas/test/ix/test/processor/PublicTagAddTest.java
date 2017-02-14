@@ -5,9 +5,11 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import ix.test.server.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,11 +26,7 @@ import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.processors.PublicTagFlagger;
 import ix.test.builder.SubstanceBuilder;
-import ix.test.server.GinasTestServer;
 import ix.test.server.GinasTestServer.User;
-import ix.test.server.RestSession;
-import ix.test.server.SubstanceAPI;
-import ix.test.server.SubstanceLoader;
 import org.junit.rules.TemporaryFolder;
 import play.Configuration;
 
@@ -77,15 +75,11 @@ public class PublicTagAddTest extends AbstractGinasServerTest{
 	 * @throws IOException
 	 */
 	public File asLoadFile(Stream<Substance> substances) throws IOException{
-		JsonExporterFactory jef = new JsonExporterFactory();
-
 		File f =tmpDir.newFile();
-		try {
-			Exporter<Substance> export = jef.createNewExporter(new FileOutputStream(f), null);
-			export.exportForEachAndClose(substances.iterator());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		try (JsonSubstanceWriter writer = new JsonSubstanceWriter(f)) {
+			writer.writeAll(substances);
+		};
+
 		return f;
 
 	}
