@@ -4,6 +4,12 @@ Changes:
 
 Enhancements
 -------------
+1.issue inxight#1046 - Differentiate same facets by path will let us avoid having too high a count for lastEditedBy
+  in the search results.
+
+2. improvements to test code - makes loading json data simplier.
+3. improvements to test code- makes parsing search results and getting substances easier.
+
 
 Bug Fixes
 ---------
