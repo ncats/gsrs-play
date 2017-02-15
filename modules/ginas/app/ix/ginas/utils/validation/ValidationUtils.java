@@ -508,6 +508,20 @@ public class ValidationUtils {
 					gpm.add(mes);
 					
 				}
+				
+				if (cd.codeSystem == null || cd.codeSystem.equals("")) {
+                    GinasProcessingMessage mes = GinasProcessingMessage
+                            .ERROR_MESSAGE(
+                                    "'Code System' should not be null in code objects")
+                            .appliableChange(true);
+                    strat.processMessage(mes);
+                    if (mes.actionType == GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE) {
+                        cd.codeSystem="<no system>";
+                        mes.appliedChange = true;
+                    }
+                    gpm.add(mes);
+                    
+                }
 			}
 			if (!validateReferenced(s, cd, gpm, strat, ReferenceAction.FAIL)) {
 				return false;
