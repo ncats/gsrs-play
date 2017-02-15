@@ -6,10 +6,13 @@ import org.apache.lucene.index.IndexableField;
 
 public interface IndexableValue {
 	
-	public String path();
-	public String name();
-	public Object value();
-	
+	String path();
+	String name();
+	Object value();
+
+
+	default boolean useFullPath(){ return false; }
+
 	default boolean isDynamicFacet(){
 		return false;
 	}

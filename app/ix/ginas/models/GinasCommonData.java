@@ -71,7 +71,7 @@ public class GinasCommonData extends BaseModel implements GinasAccessControlled,
     
     //TP: why is this one-to-one?
     @OneToOne()
-    @Indexable(facet = true, name = "Last Edited By", sortable=true, recurse=false)
+    @Indexable(facet = true, name = "Last Edited By", sortable=true, recurse=false, useFullPath = true)
     public Principal lastEditedBy;
     
     @JsonDeserialize(using = PrincipalDeserializer.class)

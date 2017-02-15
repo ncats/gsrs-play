@@ -22,7 +22,12 @@ public class IndexableValueFromIndexable implements IndexableValue{
 	public static IndexableValueFromIndexable of(String name, Object value,String path,  InstantiatedIndexable ii){
 		return new IndexableValueFromIndexable(name,path,value,ii);
 	}
-	
+
+	@Override
+	public boolean useFullPath() {
+		return ii.useFullPath();
+	}
+
 	public boolean indexed() {
 		return ii.indexed();
 	}

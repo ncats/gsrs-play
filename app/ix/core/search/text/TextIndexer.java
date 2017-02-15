@@ -2865,14 +2865,25 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			}
 			
 			if (indexableValue.facet() || indexableValue.taxonomy()) {
-				facetsConfig.setMultiValued(dim, true);
-				facetsConfig.setRequireDimCount(dim, true);
+
 
 				if (indexableValue.taxonomy()) {
+                    facetsConfig.setMultiValued(dim, true);
+                    facetsConfig.setRequireDimCount(dim, true);
 					facetsConfig.setHierarchical(dim, true);
+
 					fields.accept(new FacetField(dim, indexableValue.splitPath(text)));
 				} else {
-					fields.accept(new FacetField(dim, text));
+//                    System.out.println("full index path = " + full + "  = " + text + " fname = " + fname + " raw name = " + name);
+                    if(indexableValue.useFullPath()){
+                        facetsConfig.setMultiValued(full, true);
+                        facetsConfig.setRequireDimCount(full, true);
+                        fields.accept(new FacetField(full, text));
+                    }else {
+                        facetsConfig.setMultiValued(dim, true);
+                        facetsConfig.setRequireDimCount(dim, true);
+                        fields.accept(new FacetField(dim, text));
+                    }
 				}
 			}
 

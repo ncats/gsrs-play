@@ -1978,6 +1978,9 @@ public class EntityUtils {
 			this.index=index;
 			p = Pattern.compile(index.pathsep());
 		}
+		public boolean useFullPath() {
+			return index.useFullPath();
+		}
 		public boolean indexed() {
 			return index.indexed();
 		}

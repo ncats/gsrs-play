@@ -25,4 +25,16 @@ public @interface Indexable {
 	boolean indexEmpty() default false; //allow indexing of ""
 	
 	String emptyString() default "<EMTPY>"; //String to use on empty
+
+    /**
+     * Use the full path to this field
+     * as the value to be indexed.
+     * This is useful when several of the same Indexable are present
+     * in the object graph and you want to differentiate them
+     * in the index.
+     *
+     * defaults to {@code false}.
+     * @return
+     */
+    boolean useFullPath() default false;
 }

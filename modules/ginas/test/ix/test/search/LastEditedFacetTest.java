@@ -6,14 +6,15 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ix.core.controllers.EntityFactory;
 import ix.core.util.RunOnly;
+import ix.ginas.models.v1.Code;
+import ix.test.SubstanceJsonUtil;
 import ix.test.server.*;
 import org.junit.After;
 import org.junit.Ignore;
@@ -126,6 +127,96 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         };
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void LastEditedFacetOnlyShowsEditForRootSubstanceNotAllSubelements() throws IOException, InterruptedException {
+
+
+        ts.stop(true);
+        ts.modifyConfig("ix.ginas.facets.substance.default", Arrays.asList("root_lastEditedBy", "root_codes_lastEditedBy"));
+
+        ts.start();
+
+
+        GinasTestServer.User otherUser = ts.getFakeUser2();
+        GinasTestServer.User user3 = ts.getFakeUser3();
+        File loadFile = tmpDir.newFile();
+        try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
+            Code codeA = new Code("codeA", "codesystem");
+            codeA.setLastEditedBy(user3.asPrincipal());
+
+
+            writer.write(new SubstanceBuilder().addName("nameA").setLastEditedBy(otherUser)
+                        .addCode(codeA)
+                    .build());
+
+            Code codeB = new Code("codeB", "codesystem");
+            //codeB does not set last Edited by so the loader will set it to whoever is loading the record (admin)
+
+            writer.write(new SubstanceBuilder().addName("nameB").setLastEditedBy(otherUser)
+                    .addCode(codeB)
+                    .build());
+        }
+
+
+
+        session = ts.newBrowserSession(admin);
+
+        SubstanceLoader loader = new SubstanceLoader(session);
+        loader.loadJson(loadFile, new SubstanceLoader.LoadOptions()
+                .preserveAuditInfo(true)
+        );
+
+
+        searcher = new BrowserSubstanceSearcher(session);
+        SearchResult results = searcher.all();
+
+
+        Map<String, Map<String, Integer>> actual = results.getAllFacets();
+
+        Map<String, Map<String, Integer>> expected = new HashMap<>();
+
+        expected.put("root_lastEditedBy", asMap(    keys(otherUser.getUserName()),
+                                                    values(2)));
+
+        expected.put("root_codes_lastEditedBy", asMap(    keys(admin.getUserName(), user3.getUserName()),
+                                                            values(1,1)));
+
+        assertEquals(expected, actual);
+
+//        Map<String, Long> actual = results.getSubstances()
+//                .peek(s -> {
+//                    try{
+//                    System.out.println(EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().writer().writeValueAsString(s));
+//                }catch(Exception e){}})
+//                .map(s -> s.getLastEditedBy().username)
+//                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+//        Map<String, Long> expected = new HashMap<String, Long>(){{
+//            put(otherUser.getUserName(), 2L);
+//        }
+//        };
+
+
+//        assertEquals(expected, actual);
+    }
+
+    private static <T> List<T> keys(T...ts){
+        return Arrays.asList(ts);
+    }
+
+    private static <T> List<T> values(T...ts){
+        return Arrays.asList(ts);
+    }
+    private static  <K, V>  Map<K, V> asMap(List<K> keys, List<V> values){
+        Map<K, V> map = new HashMap<>();
+        Iterator<K> ks = keys.iterator();
+        Iterator<V> vs = values.iterator();
+
+        while(ks.hasNext() && vs.hasNext()){
+            map.put(ks.next(), vs.next());
+        }
+        return map;
     }
 
 

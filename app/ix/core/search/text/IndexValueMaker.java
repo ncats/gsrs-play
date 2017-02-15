@@ -24,7 +24,7 @@ public interface IndexValueMaker<T> {
 	 * @param t
 	 * @param consumer
 	 */
-	public void createIndexableValues(T t, Consumer<IndexableValue> consumer);
+	void createIndexableValues(T t, Consumer<IndexableValue> consumer);
 	
 	
 	/**
