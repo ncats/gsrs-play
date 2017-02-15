@@ -54,8 +54,9 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
      * @see ix.test.server.SubstanceSearcherIFace#setSearchOrder(java.lang.String)
      */
     @Override
-    public void setSearchOrder(String order){
-    	this.defaultSearchOrder=order;
+    public void setSearchOrder(String term, SearchOrderDirection dir){
+        Objects.requireNonNull(term);
+    	this.defaultSearchOrder=dir.formatQuery(term);
     }
     
     /* (non-Javadoc)
@@ -130,7 +131,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
             }
         }while(substances.addAll(tmp.v()));
 
-        SearchResult results = new SearchResult(keyString, substances,this);
+        SearchResult results = new SearchResult(keyString, substances,this, session.getUser());
         if(results.numberOfResults() >0){
             parseFacets(results, firstPage);
         }
@@ -176,7 +177,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     
     public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
         Tuple<String,Set<String>> set = getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait));
-    	return new SearchResult(set.k(),set.v(),this);
+    	return new SearchResult(set.k(),set.v(),this, session.getUser());
     }
     
     
@@ -252,6 +253,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         
         SearchResult results = new SearchResult.Builder()
                                         .searcher(this)
+                                        .username(this.session.getUser())
                                         .searchKey(keyString)
                                         .uuids(substances)
                                         .specialUuids(specialMatches)
@@ -330,7 +332,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
                 .map(Util.getMatchingGroup(SUBSTANCE_LINK_HREF_PATTERN, 1))
                 .filter(o->o.isPresent())
                 .map(o->o.get())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
     
     private Tuple<String,Set<String>> getSubstancesFrom(HtmlPage page){
@@ -348,7 +350,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
      * @return
      */
     private Set<String> getSpecialMatchesFrom(HtmlPage page){
-        Set<String> set = new HashSet<>();
+        Set<String> set = new LinkedHashSet<>();
         DomNode dn = page.querySelector(".specialmatches");
         
         if(dn!=null){
@@ -361,7 +363,7 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         Set<String> substances = page.querySelectorAll("img[src*=\"ginas/app/img\"]")
         .stream()
         .map(m->m.getAttributes().getNamedItem("src").getNodeValue())
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(LinkedHashSet::new));
         
         return substances;
     }

@@ -7,9 +7,16 @@ import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import ix.core.util.RunOnly;
+import ix.test.server.*;
+import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -22,13 +29,7 @@ import ix.core.util.TimeUtil;
 import ix.ginas.models.v1.Substance;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.load.AbstractLoadDataSetTest;
-import ix.test.server.BrowserSession;
-import ix.test.server.GinasTestServer;
-import ix.test.server.RestSession;
-import ix.test.server.SearchResult;
-import ix.test.server.SubstanceAPI;
-import ix.test.server.SubstanceLoader;
-import ix.test.server.BrowserSubstanceSearcher;
+import org.junit.rules.TemporaryFolder;
 
 public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
@@ -40,7 +41,92 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
 
     @Rule
+    public TemporaryFolder tmpDir = new TemporaryFolder();
+
+    @After
+    public void tearDown(){
+        if(session !=null){
+            session.close();
+        }
+
+    }
+    @Rule
     public TimeTraveller timeTraveller = new TimeTraveller();
+
+
+    @Test
+    public void loadWithoutPreserveAuditFlagWillSetLastEditedToUserDoingTheLoading() throws IOException, InterruptedException {
+
+        GinasTestServer.User otherUser = ts.getFakeUser2();
+
+        File loadFile = tmpDir.newFile();
+        try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
+            writer.write(new SubstanceBuilder().addName("nameA").setLastEditedBy(otherUser).build());
+            writer.write(new SubstanceBuilder().addName("nameB").setLastEditedBy(otherUser).build());
+        }
+
+
+
+        session = ts.newBrowserSession(admin);
+
+        SubstanceLoader loader = new SubstanceLoader(session);
+        loader.loadJson(loadFile, new SubstanceLoader.LoadOptions()
+                //.preserveAuditInfo(true)
+        );
+
+
+        searcher = new BrowserSubstanceSearcher(session);
+        SearchResult results = searcher.all();
+
+
+
+        Map<String, Long> actual = results.getSubstances()
+                                .map(s -> s.getLastEditedBy().username)
+                                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        Map<String, Long> expected = new HashMap<String, Long>(){{
+            put(admin.getUserName(), 2L);
+        }
+        };
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void loadWithPreserveAuditFlagWillSetLastEditedToWhatJsonSays() throws IOException, InterruptedException {
+
+        GinasTestServer.User otherUser = ts.getFakeUser2();
+
+        File loadFile = tmpDir.newFile();
+        try (JsonSubstanceWriter writer = new JsonSubstanceWriter(loadFile)) {
+            writer.write(new SubstanceBuilder().addName("nameA").setLastEditedBy(otherUser).build());
+            writer.write(new SubstanceBuilder().addName("nameB").setLastEditedBy(otherUser).build());
+        }
+
+
+
+        session = ts.newBrowserSession(admin);
+
+        SubstanceLoader loader = new SubstanceLoader(session);
+        loader.loadJson(loadFile, new SubstanceLoader.LoadOptions()
+                .preserveAuditInfo(true)
+        );
+
+
+        searcher = new BrowserSubstanceSearcher(session);
+        SearchResult results = searcher.all();
+
+
+
+        Map<String, Long> actual = results.getSubstances()
+                .map(s -> s.getLastEditedBy().username)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        Map<String, Long> expected = new HashMap<String, Long>(){{
+            put(otherUser.getUserName(), 2L);
+        }
+        };
+
+        assertEquals(expected, actual);
+    }
 
 
     @Test
@@ -90,7 +176,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         loader = new SubstanceLoader(session);
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
-        loader.loadJson(f, 0, 20);
+        loader.loadJson(f, new SubstanceLoader.LoadOptions()
+                                                .numRecordsToLoad(20));
 
         searcher = new BrowserSubstanceSearcher(session);
 
@@ -145,7 +232,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         loader = new SubstanceLoader(session);
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
-        loader.loadJson(f, 0, 20);
+        loader.loadJson(f, new SubstanceLoader.LoadOptions()
+                                                .numRecordsToLoad(20));
 
         searcher = new BrowserSubstanceSearcher(session);
 
@@ -208,7 +296,8 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
 
         loader = new SubstanceLoader(session);
         File f = new File(TEST_TESTDUMPS_REP90_PART1_GINAS);
-        loader.loadJson(f, 0, 20);
+        loader.loadJson(f, new SubstanceLoader.LoadOptions()
+                                             .numRecordsToLoad(20));
 
         searcher = new BrowserSubstanceSearcher(session);
 

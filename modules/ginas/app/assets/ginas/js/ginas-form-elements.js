@@ -359,7 +359,7 @@
                     //toggles the undo button for editing
                     scope.change = function () {
                         if (scope.obj) {
-                            scope.edit = false;
+                           // scope.edit = false;
                             if (!_.isEmpty(temp) && temp.value) {
                                 scope.changed = true;
                             }

@@ -152,7 +152,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             assertEquals("Should have 2 results for flex match, but found something else",2,sresult.getUuids().size());
         }
    	}
-    @Test   
+    @Test
    	public void testBadFlexMatchReturnsNothing() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
         try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {

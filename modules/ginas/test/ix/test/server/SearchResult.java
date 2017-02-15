@@ -1,21 +1,15 @@
 package ix.test.server;
 
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Stream;
 
+import ix.core.plugins.IxCache;
 import ix.core.search.SearchResultContext;
 import ix.ginas.models.v1.Substance;
 import ix.test.server.BrowserSubstanceSearcher.Order;
 import ix.test.server.BrowserSubstanceSearcher.SortByValueComparator;
+import ix.utils.Util;
 
 public class SearchResult {
 	private final Set<String> uuids;
@@ -24,14 +18,15 @@ public class SearchResult {
 	private final BrowserSubstanceSearcher searcher;
 
 	private String searchKey;
-	
+
+    private final GinasTestServer.User username;
 	
 	//TODO: Refactor
 	public SearchResult(){
-	    this("",new HashSet<String>(),null);
+	    this("",new HashSet<String>(),null, null);
 	}
 
-	public SearchResult(String searchKey, Set<String> uuids, BrowserSubstanceSearcher searcher) {
+	public SearchResult(String searchKey, Set<String> uuids, BrowserSubstanceSearcher searcher, GinasTestServer.User user) {
 		Objects.requireNonNull(uuids);
 		try {
 			Objects.requireNonNull(searchKey);
@@ -44,6 +39,16 @@ public class SearchResult {
 		this.searchKey = searchKey;
 		this.uuids = Collections.unmodifiableSet(new LinkedHashSet<>(uuids));
 		this.searcher=searcher;
+        this.username = user;
+	}
+
+	private SearchResult(Builder builder) {
+		this.uuids = builder.uuids;
+		this.specialUuids.addAll(builder.specialUuids);
+		this.facetMap.putAll(builder.facetMap);
+		this.searcher = builder.searcher;
+        this.username = builder.username;
+		this.searchKey = builder.searchKey;
 	}
 
 	public String getKey() {
@@ -63,9 +68,24 @@ public class SearchResult {
 	}
 
 	public Stream<Substance> getSubstances() {
-		SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
 
-		return src.getResults().stream().map(o -> (Substance) o);
+//        String adaptedKey = "!"+ searchKey + "#"+ Util.sha1(username);
+//
+//        SearchResultContext src = new SearchResultContext((ix.core.search.SearchResult) IxCache.getRaw(adaptedKey));
+//        Collection results =  src.getResults();
+
+        return GinasTestServer.doAsUser(username, ()-> {
+            SearchResultContext src = SearchResultContext.getSearchResultContextForKey(searchKey);
+            if (src == null) {
+                throw new NullPointerException("null searchResultContext for " + searchKey);
+            }
+            //src.getCall()
+            Collection results = src.getResults();
+            if (results == null) {
+                throw new NullPointerException("null results for " + searchKey + src.getMessage());
+            }
+            return results.stream().map(o -> (Substance) o);
+        });
 	}
 
 	public InputStream export(String format) {
@@ -98,10 +118,19 @@ public class SearchResult {
 		private BrowserSubstanceSearcher searcher;
 		private String searchKey;
 
+
+        private GinasTestServer.User  username;
+
+
 		public Builder uuids(Set<String> uuids) {
 			this.uuids = uuids;
 			return this;
 		}
+
+        public Builder username(GinasTestServer.User  username){
+            this.username = username;
+            return this;
+        }
 
 		public Builder specialUuids(Set<String> specialUuids) {
 			this.specialUuids = specialUuids;
@@ -128,11 +157,5 @@ public class SearchResult {
 		}
 	}
 
-	private SearchResult(Builder builder) {
-		this.uuids = builder.uuids;
-		this.specialUuids.addAll(builder.specialUuids);
-		this.facetMap.putAll(builder.facetMap);
-		this.searcher = builder.searcher;
-		this.searchKey = builder.searchKey;
-	}
+
 }

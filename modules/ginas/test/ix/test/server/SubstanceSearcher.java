@@ -2,8 +2,9 @@ package ix.test.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.UUID;
+import java.util.*;
 
+import chemaxon.sss.search.Search;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.test.query.builder.SimpleQueryBuilder;
@@ -13,8 +14,87 @@ import ix.utils.Tuple;
 import play.libs.ws.WSResponse;
 
 public interface SubstanceSearcher {
+    /**
+     * Abstraction of how ginas encodes search orders.
+     */
+    enum SearchOrderDirection{
+        /**
+         * Order the search results in forward order.
+         */
+        FORWARD('^'){
+            @Override
+            public <T> void reorder(List<T> list) {
+                //no-op
+            }
+            @Override
+            public SearchOrderDirection getOtherDirection() {
+                return REVERSE;
+            }
+        },
+        /**
+         * Order the search results in reverse order.
+         */
+        REVERSE('$'){
+            @Override
+            public <T> void reorder(List<T> list) {
+                Collections.reverse(list);
+            }
 
-    void setSearchOrder(String order);
+            @Override
+            public SearchOrderDirection getOtherDirection() {
+                return FORWARD;
+            }
+        };
+
+        private final char c;
+        private SearchOrderDirection(char c){
+            this.c = c;
+        }
+
+
+        public String formatQuery(String query){
+            return c + query;
+        }
+
+        /**
+         * Take the input list and modify it in place to
+         * re order the elements to match the search order.
+         * For example calling this method for #REVERSE will reverse
+         * the given list.
+         *
+         * @param forwardList the list of items in the original forward
+         *                    search result order.
+         * @param <T> the type being ordered.
+         */
+        public abstract <T> void reorder(List<T> forwardList);
+
+        /**
+         * Get the opposite search order direction programmatically.
+         * @return the other SearchOrderDirection will never be null.
+         */
+        public abstract SearchOrderDirection getOtherDirection();
+
+    }
+
+    /**
+     * Set the search order term sorted in FORWARD DIRECTION.
+     * This is the same as {@link #setSearchOrder(String, SearchOrderDirection), setSearchOrder(term, SearchOrderDirection.FORWARD)}
+     * @param term the search term to use; can not be null.
+     *
+     * @throws NullPointerException if either parameter is null.
+     */
+    default void setSearchOrder(String term){
+        setSearchOrder(term, SearchOrderDirection.FORWARD);
+    }
+
+    /**
+     * Set the search order term AND the direction results should be sorted by.
+     * @param term the search term to use; can not be null.
+     * @param dir the SearchOrderDirection to use can not be null.
+     *
+     * @throws NullPointerException if either parameter is null.
+     */
+    void setSearchOrder(String term, SearchOrderDirection dir);
 
     /**
      * Get the UUIDs of all the loaded substances that have this substructure.

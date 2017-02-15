@@ -124,6 +124,13 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     		wq.setCharset("UTF-8");
     		return wq;
     	}
+
+        @Override
+        public String toString() {
+            return "WrappedWebRequest{" +
+                    "wq=" + wq +
+                    '}';
+        }
     }
     public WrappedWebRequest newGetRequest(String path) throws MalformedURLException {
         return new WrappedWebRequest(new WebRequest(new URL(constructUrlFor(path)), HttpMethod.GET));
