@@ -1,3 +1,15 @@
+GSRS v1.3.0-RC3
+============
+Changes:
+
+Enhancements
+-------------
+
+Bug Fixes
+---------
+1. Fixed bug with upgrading concept to different substance class
+
+
 GSRS v1.3.0-RC2
 ============
 Changes:
