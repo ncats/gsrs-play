@@ -451,7 +451,7 @@
         };
     });
 
-    ginasForms.directive('conceptUpgradeForm', function ($window, localStorageService) {
+    ginasForms.directive('conceptUpgradeForm', function ($window, $location, localStorageService) {
         return {
             restrict: 'E',
             replace: true,
@@ -470,7 +470,9 @@
                     var upgradeSub = scope.parent.$$setClass(newClass);
                     _.set(upgradeSub, 'update', true);
                     localStorageService.set('tempsubstance', upgradeSub);
-                    $window.location.href = $window.location.origin + baseurl + "wizard?kind=" + newClass;
+                    
+                    $location.search("kind",newClass);
+                    window.location = $location.absUrl();
                 };
             }
         };

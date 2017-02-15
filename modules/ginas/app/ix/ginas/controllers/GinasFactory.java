@@ -1,9 +1,12 @@
 package ix.ginas.controllers;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -19,13 +22,12 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
-
-import ix.core.util.EntityUtils;
 import ix.core.util.Java8Util;
 import ix.core.util.TimeUtil;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Substance.SubstanceClass;
 import ix.ginas.models.v1.Unit;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
@@ -246,9 +248,13 @@ public class GinasFactory extends EntityFactory {
 		}
 
 	}
+	
+	public static Result edit(String substanceId) {
+	    return edit(substanceId,null);
+	}
 
 	@Dynamic(value = IxDynamicResourceHandler.CAN_UPDATE, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-	public static Result edit(String substanceId) {
+	public static Result edit(String substanceId, String sclass) {
 		List<Substance> substances = GinasApp.resolveName(substanceId);
 
 		try {
@@ -267,9 +273,18 @@ public class GinasFactory extends EntityFactory {
 						}
 						// there's a user editting this
 					}
+					if(sclass==null){
+                        sclass=s.substanceClass.toString();
+                    }
+					s.substanceClass=SubstanceClass.valueOf(sclass);
+					
 					EntityMapper om = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 					String json = om.toJson(s);
-					return ok(ix.ginas.views.html.wizard.render(substances.get(0).substanceClass.toString(), json,
+					
+					
+					
+					return ok(ix.ginas.views.html.wizard.render(sclass,
+					        json,
 							elock));
 				}
 			} else if (substances.size() == 0) {
@@ -282,6 +297,8 @@ public class GinasFactory extends EntityFactory {
 			return GinasApp._internalServerError(ex);
 		}
 	}
+	
+	
 
 	/**
 	 * @deprecated Use {@link GinasApp#approve(String)} instead
