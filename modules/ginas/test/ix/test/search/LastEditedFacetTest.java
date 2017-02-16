@@ -176,8 +176,9 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         Map<String, Map<String, Integer>> actual = results.getAllFacets();
 
         Map<String, Map<String, Integer>> expected = new HashMap<>();
-
-        expected.put("root_lastEditedBy", asMap(    keys(otherUser.getUserName()),
+        //ginas will rename this
+        //TODO refactor to reuse abstraction so when we change the translation it doesn't break tests
+        expected.put("Last Edited By", asMap(    keys(otherUser.getUserName()),
                                                     values(2)));
 
         expected.put("root_codes_lastEditedBy", asMap(    keys(admin.getUserName(), user3.getUserName()),
