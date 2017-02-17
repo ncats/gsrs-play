@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import ix.core.controllers.EntityFactory;
 import ix.core.util.RunOnly;
+import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.Code;
 import ix.test.SubstanceJsonUtil;
 import ix.test.server.*;
@@ -178,28 +179,13 @@ public class LastEditedFacetTest extends AbstractLoadDataSetTest {
         Map<String, Map<String, Integer>> expected = new HashMap<>();
         //ginas will rename this
         //TODO refactor to reuse abstraction so when we change the translation it doesn't break tests
-        expected.put("Last Edited By", asMap(    keys(otherUser.getUserName()),
+        expected.put(GinasApp.translateFacetName("root_lastEditedBy"), asMap(    keys(otherUser.getUserName()),
                                                     values(2)));
 
-        expected.put("root_codes_lastEditedBy", asMap(    keys(admin.getUserName(), user3.getUserName()),
+        expected.put(GinasApp.translateFacetName("root_codes_lastEditedBy"), asMap(    keys(admin.getUserName(), user3.getUserName()),
                                                             values(1,1)));
 
         assertEquals(expected, actual);
-
-//        Map<String, Long> actual = results.getSubstances()
-//                .peek(s -> {
-//                    try{
-//                    System.out.println(EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().writer().writeValueAsString(s));
-//                }catch(Exception e){}})
-//                .map(s -> s.getLastEditedBy().username)
-//                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-//        Map<String, Long> expected = new HashMap<String, Long>(){{
-//            put(otherUser.getUserName(), 2L);
-//        }
-//        };
-
-
-//        assertEquals(expected, actual);
     }
 
     private static <T> List<T> keys(T...ts){

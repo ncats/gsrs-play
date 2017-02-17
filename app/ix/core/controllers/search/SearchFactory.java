@@ -252,7 +252,7 @@ public class SearchFactory extends EntityFactory {
                 List<SuggestResult> results =
                         getTextIndexer().suggest(f, q, max);
                 if (!results.isEmpty())
-                    node.put(f, mapper.valueToTree(results));
+                    node.set(f, mapper.valueToTree(results));
             }
             //Logger.info(node.toString());
             return ok (node);
