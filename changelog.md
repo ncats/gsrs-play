@@ -25,6 +25,7 @@ Enhancements
 1. issue inxight-#1042 - Added support for including private commonData in spreadsheet exporter. Added checkbox to export drop down
 2. Added similarity in grid view, sort by similarity as default for similarity search
 3. Improvements in test code - Added helper methods to SubstanceAPI to submit from builder
+4. issue inxight- #990 Improved suggestions during text box entries to show exact matches first.
 
 Bug Fixes
 ---------
