@@ -297,6 +297,9 @@ public class GinasApp extends App {
         if ("Substance Class".equalsIgnoreCase(n)) {
             return "Substance Type";
         }
+        if("root_lastEditedBy".equalsIgnoreCase(n)){
+            return "Last Edited By";
+        }
         return n.trim();
     }
 
