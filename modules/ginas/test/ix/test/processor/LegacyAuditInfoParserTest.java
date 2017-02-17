@@ -10,7 +10,6 @@ import java.util.Date;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,7 +19,10 @@ import com.typesafe.config.ConfigFactory;
 import ix.AbstractGinasServerTest;
 import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.Note;
+import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.processors.LegacyAuditInfoProcessor;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.GinasTestServer;
@@ -155,6 +157,9 @@ public class LegacyAuditInfoParserTest extends AbstractGinasServerTest{
 		ensurePass(api.submitSubstance(jsn));
 		assertEquals(forcedApprovedBy, api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText()).at("/approvedBy").asText());
 	}
+	
+	
+	
 	@Test
 	public void tryForcingModifiedByInLegacyNote() {
 		String theName = "Simple Named Concept";
@@ -265,4 +270,49 @@ public class LegacyAuditInfoParserTest extends AbstractGinasServerTest{
 
 		assertEquals(session.getUserName(),api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText()).at("/createdBy").asText());
 	}
+	
+	@Test
+    public void ensureSubmittingRelatedRecordPreservesOldAuditInfo() throws InterruptedException {
+
+        String theName = "Simple Named Concept";
+        Date d = new Date();
+        d.setYear(1989);
+
+
+        JsonNode jsn = new SubstanceBuilder()
+                .addName(theName)
+                .generateNewUUID()
+                .addNote(new Note(new AuditNoteBuilder()
+                        .withModifiedBy("Some Guy")
+                        .withCreatedBy("")
+                        .withCreatedDate(d)
+                        .buildNoteText()))
+                .buildJson();
+        
+        ensurePass(api.submitSubstance(jsn));
+        
+        Relationship r2 = new Relationship();
+        r2.relatedSubstance=new SubstanceReference();
+        r2.relatedSubstance.refuuid=jsn.at("/uuid").asText();
+        r2.relatedSubstance.refPname=jsn.at("/names/0/name").asText();
+        r2.type="SOME TYPE->TEST";
+        
+        
+        JsonNode jsn2 = new SubstanceBuilder()
+                .addName(theName + " 2")
+                .generateNewUUID()
+                .addRelationship(r2)
+                .addNote(new Note(new AuditNoteBuilder()
+                        .withModifiedBy("Some Guy")
+                        .withCreatedBy("")
+                        .withCreatedDate(d)
+                        .buildNoteText()))
+                .buildJson();
+        
+        ensurePass(api.submitSubstance(jsn2));
+        
+        assertEquals("Some Guy",api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText()).at("/lastEditedBy").asText());
+        assertEquals("2",api.fetchSubstanceJsonByUuid(jsn.at("/uuid").asText()).at("/version").asText());
+        
+    }
 }
