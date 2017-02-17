@@ -107,52 +107,64 @@
 
         substance.$$setClass = function (subClass) {
             var substanceClass = subClass;
+            substance.substanceClass = substanceClass;
             switch (substanceClass) {
                 case "chemical":
-                    substance.substanceClass = substanceClass;
-                    substance.structure = {};
-                    _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
-                    substance.moieties = [];
+                	if(!substance.structure){
+                		substance.structure = {};
+                		_.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
+                		substance.moieties = [];
+                	}
                     break;
                 case "protein":
-                    substance.substanceClass = substanceClass;
-                    substance.protein = {};
-                    substance.protein.subunits = [];
-                    substance.protein.glycosylation = {
-                        'CGlycosylationSites': [],
-                        'NGlycosylationSites': [],
-                        'OGlycosylationSites': []
-                    };
+                	if(!substance.protein){
+	                    substance.protein = {};
+	                    substance.protein.subunits = [];
+	                    substance.protein.glycosylation = {
+	                        'CGlycosylationSites': [],
+	                        'NGlycosylationSites': [],
+	                        'OGlycosylationSites': []
+	                    };
+                	}
                     break;
                 case "structurallyDiverse":
-                    substance.substanceClass = substanceClass;
-                    substance.structurallyDiverse = {};
+                	if(!substance.structurallyDiverse){
+                		substance.structurallyDiverse = {};
+                	}
                     break;
                 case "nucleicAcid":
-                    substance.substanceClass = substanceClass;
-                    substance.nucleicAcid = {};
-                    substance.nucleicAcid.subunits = [];
+                	if(!substance.nucleicAcid){
+                		substance.nucleicAcid = {};
+                		substance.nucleicAcid.subunits = [];
+                	}
                     break;
                 case "mixture":
-                    substance.substanceClass = substanceClass;
-                    substance.mixture = {};
+                	if(!substance.mixture){
+                		substance.mixture = {};
+                	}
                     break;
                 case "polymer":
-                    substance.substanceClass = substanceClass;
-                    substance.polymer = {};
+                	if(!substance.polymer){
+                		substance.polymer = {};
+                	}
                     break;
                 case "specifiedSubstanceG1":
-                    substance.substanceClass = substanceClass;
-                    substance.specifiedSubstance = {};
+                	if(!substance.specifiedSubstance){
+                		substance.specifiedSubstance = {};
+                	}
                     break;
                 default:
-                    substance.substanceClass = substanceClass;
                     break;
             }
+            
             if (!substance.references) {
                 substance.references = [];
             }
-            substance.access = [{value: 'protected', display: 'PROTECTED'}];
+            
+            if(!substance.access){
+            	substance.access = [{value: 'protected', display: 'PROTECTED'}];	
+            }
+            
             return substance;
         };
 
@@ -170,6 +182,7 @@
                 _.set(substance, key, value);
             });
             return $q.when(expandCV(substance));
+            
         };
 
         //returns a flattened clone of the substance
@@ -559,6 +572,7 @@
             JSON.stringify($window.loadjson) !== "{}") {
             Substance.$$setSubstance($window.loadjson).then(function(data){
                 _.set(data, '$$update', true);
+                data=data.$$setClass(data.$$getClass());
                 $scope.substance = data;
             });
         } else {
