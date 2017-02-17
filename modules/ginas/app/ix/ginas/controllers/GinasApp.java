@@ -725,8 +725,10 @@ public class GinasApp extends App {
         final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
 
         Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos, publicOnly);
-        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String fname = "export-" + sdf.format(new Date()) + "." + extension;
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmm");
+        String fname = "export-" 
+                    + sdf.format(new Date()) 
+                    + "." + extension;
 
         factoryPlugin.get().submit(() -> {
             try {
