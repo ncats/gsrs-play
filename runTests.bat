@@ -60,6 +60,7 @@ sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.search.LastEditedFacetTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.search.LuceneSearchTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.search.SponsoredResultsTest"
+sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.search.SuggestFieldExactNameTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.seqaln.EndToEndSequenceAlignmentTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.seqaln.SequenceIndexerTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.server.CrossOriginsTest"
