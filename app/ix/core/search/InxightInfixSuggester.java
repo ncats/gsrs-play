@@ -50,17 +50,19 @@ public class InxightInfixSuggester extends AnalyzingInfixSuggester{
 			while(iter.hasNext()){
 				LookupResult r2 = iter.next();
 				String r2Key = r2.key.toString();
+
 				if(doHighlight){
 					//for some reason the super lookup's key is the highlight!!
 					//which adds bold tag around the match
-					r2Key = r2Key.replaceFirst("<b>", "");
-					r2Key = r2Key.replaceFirst("</b>", "");
+					r2Key = r2Key.replaceAll("<b>(.+?)</b>", "$1");
 				}
 				if(rKey.equalsIgnoreCase(r2Key)){
 					//duplicate
 					iter.remove();
+
 				}
 			}
+
 		});
 
 
