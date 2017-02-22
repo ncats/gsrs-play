@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <br>
-        <button class="btn btn-primary"  ng-if="!iscollapsed && parent.relationships.length>2" ng-click="addNew(relationshipForm, 'relationships'); scrollTo('relationship-bottom')"><i class="fa fa-plus"></i> Add a<span
+        <button class="btn btn-primary"  ng-if="!iscollapsed && parent.relationships.length>2" ng-click="addNew(relationshipForm, 'relationships')"><i class="fa fa-plus"></i> Add a<span
                 ng-if="parent.relationships.length>0">nother</span> relationship
         </button>
         <form class="form-horizontal" name="relationshipForm" role="form" id="addRelationshipForm" novalidate>
@@ -24,28 +24,36 @@
                                                             type="search">
                                 </substance-chooser-selector>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-8">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <gsrs-input type="dropdown"
                                                     ng-model="obj.type"
                                                     field="type"
                                                     cv="RELATIONSHIP_TYPE"
-                                                    formname=form>
+                                                    formname=form
+                                                    required="true">
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-6">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.interactionType"
-                                                    field="interactionType"
-                                                    cv="INTERACTION_TYPE"
-                                                    formname=form>
-                                        </gsrs-input>
+                                    <div class="col-md-1">
+                                        <modal-form-button type="reference"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <modal-form-button type="access"
+                                                           referenceobj="obj"
+                                                           parent="parent">
+                                        </modal-form-button>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>
                                     </div>
                                 </div>
                                 <br/>
-                                <div class="row">
-                                    <div class="col-md-6">
+                                <div class="row" ng-if="obj.$details">
+                                    <div class="col-md-5">
                                         <gsrs-input type="dropdown"
                                                     ng-model="obj.qualification"
                                                     field="qualification"
@@ -53,58 +61,55 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
+                                        <gsrs-input type="dropdown"
+                                                    ng-model="obj.interactionType"
+                                                    field="interactionType"
+                                                    cv="INTERACTION_TYPE"
+                                                    formname=form>
+                                        </gsrs-input>
+                                    </div>
+                                    <div class="col-md-2 text-center">
                                         <modal-form-button type="amount"
                                                            referenceobj="obj"
                                                            parent="parent">
                                         </modal-form-button>
                                     </div>
+                                    <div class="col-md-5">
+                                        <substance-chooser-selector referenceobj="obj" field="mediatorSubstance"
+                                                                    name="mediatorSubstance" formname="relationshipForm"
+                                                                    label="Mediator Substance"
+                                                                    type="search">
+                                        </substance-chooser-selector>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-2">
-                                <substance-chooser-selector referenceobj="obj" field="mediatorSubstance"
-                                                            name="mediatorSubstance" formname="relationshipForm"
-                                                            label="Mediator Substance"
-                                                            type="search">
-                                </substance-chooser-selector>
-                            </div>
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="access"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
-                            </div>
-                            <div class="col-md-1 pull-right">
-                                <modal-form-button type="reference"
-                                                   referenceobj="obj"
-                                                   parent="parent">
-                                </modal-form-button>
                             </div>
                         </div>
 
                         <br>
                         <div class="row">
                             <div class="col-md-12">
-                                <div ng-if="obj.created">
-                                    <label>Created:</label> {{::obj.created | date: 'medium'}}
-                                </div>
-                                <div ng-if="obj.createdBy">
+                                <span ng-if="obj.createdBy">
                                     <label>Created By:</label> {{::obj.createdBy}}
-                                </div>
-                                <div ng-if="obj.lastEdited">
-                                    <label>Last Edited:</label> {{::obj.lastEdited | date: 'medium'}}
-                                </div>
-                                <div ng-if="obj.lastEditedBy">
-                                    <label>Last Edited By:</label> {{::obj.lastEditedBy}}
-                                </div>
+                                </span>
+                                <span ng-if="obj.created">
+                                    <label>On:</label> {{::obj.created | date: 'medium'}}
+                                </span>
+
+                                <span ng-if="obj.lastEditedBy">
+                                    <label> - Last Edited By:</label> {{::obj.lastEditedBy}}
+                                </span>
+                                <span ng-if="obj.lastEdited">
+                                    <label>On:</label> {{::obj.lastEdited | date: 'medium'}}
+                                </span>
                             </div>
                         </div>
-                        <div class="relationshipForm" id = "relationship-bottom"></div>
                     </div>
                     <hr>
                 </ng-form>
             </div>
         </form>
+        <div class="relationshipForm"></div>
         <br>
         <br>
         <button class="btn btn-primary" ng-click="addNew(relationshipForm, 'relationships')"><i class="fa fa-plus"></i> Add a<span

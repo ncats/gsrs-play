@@ -148,7 +148,10 @@
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
            // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
-            return $http.get(url + "root_names_name=\"^" + name + "$\"", {cache: true}, {
+            var searchStr = "root_names_name:\"^" + name + "$\" OR " +
+                            "root_approvalID:\"^" + name + "$\"";
+
+           return $http.get(url + searchStr, {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -1226,10 +1229,12 @@
                 var template;
 
                 scope.obj.$$apply = false;
+                console.log(scope);
 
                 if (_.isUndefined(scope.referenceobj)) {
                     scope.referenceobj = {};
                 }
+
 
                 if (_.isUndefined(scope.referenceobj.references)) {
                     var x = [];
@@ -1259,6 +1264,7 @@
                     _.set(scope.obj, '$$apply', index >= 0);
                     //this sorts the list of references so that the applied ones show up first
                     scope.parent.references = _.orderBy(scope.parent.references, ['$$apply'], ['desc']);
+                    scope.parent.references = _.orderBy(scope.parent.references, ['$$update'], ['asc']);
                 }
 
                 //this pushes a new reference to the refobject. probably shouldn't be done in the apply directive...

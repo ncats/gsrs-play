@@ -51,17 +51,17 @@ public class Amount extends GinasCommonSubData {
     public String toString(){
     	String val="";
     	if(highLimit!=null && lowLimit==null && average==null){
-    		val=">"+highLimit;
+    		val="<"+highLimit;
     	}else if(highLimit==null && lowLimit==null && average!=null){
     		val=average+"";
     	}else if(highLimit==null && lowLimit!=null && average==null){
-    		val="<" + lowLimit;
+    		val=">" + lowLimit;
     	}else if(highLimit!=null && lowLimit!=null && average!=null){
     		val=average + "[" + lowLimit + " to " + highLimit + "]";
     	}else if(highLimit!=null && lowLimit==null && average!=null){
-    		val=average + "[>" + highLimit + "]";
+    		val=average + "[<" + highLimit + "]";
     	}else if(highLimit==null && lowLimit!=null && average!=null){
-    		val=average + "[<" + lowLimit + "]";
+    		val=average + "[>" + lowLimit + "]";
     	}
     	if(nonNumericValue!=null){
     		val+=" { " + nonNumericValue + " }";

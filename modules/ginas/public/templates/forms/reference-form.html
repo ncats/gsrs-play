@@ -11,7 +11,7 @@
                     <div class="form-div" ng-class="{'bg-warning' : form.$invalid && form.$flagged}">
                         <div class="row">
                             <div class="col-md-1 text-center">
-                                <reference-apply ng-if ="applyRefs" ng-model="obj.$$apply" obj=obj referenceobj=referenceobj parent=parent></reference-apply>
+                                <reference-apply ng-if ="applyRefs" ng-model="obj.$$apply" obj=obj referenceobj=referenceobj parent=parent update ="obj.$$update"></reference-apply>
                                 <delete-button ng-if ="!applyRefs" path="references"></delete-button>
                             </div>
                             <div class="col-md-8">
@@ -35,90 +35,96 @@
                                                     formname=form>
                                         </gsrs-input>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-2 text-center">
                                         <modal-form-button type="access"
                                                            referenceobj="obj"
                                                            parent="parent">
                                         </modal-form-button>
                                     </div>
-
                                     <div class="col-md-2">
                                         <button ng-click="obj.$details=!obj.$details">{{obj.$details?"Hide Details":"Show Details"}}</button>
                                     </div>
 
                                 </div>
                                 <div class="row" ng-if="obj.$details">
-                                    <br/>
-                                    <div class="col-md-3">
-                                        <gsrs-input type="dropdown"
-                                                    ng-model="obj.$$systemCategory"
-                                                    field="$$systemCategory"
-                                                    cv="DOCUMENT_SYSTEM_TYPE"
-                                                    filter="obj.docType"
-                                                    label="Source Class"
-                                                    class="disabled"
-                                                    uib-tooltip="not editable"
-                                                    disabled>
-                                        </gsrs-input>
+                                    <br>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <gsrs-input type="dropdown"
+                                                        ng-model="obj.$$systemCategory"
+                                                        field="$$systemCategory"
+                                                        cv="DOCUMENT_SYSTEM_TYPE"
+                                                        filter="obj.docType"
+                                                        label="Source Class"
+                                                        class="disabled"
+                                                        uib-tooltip="not editable"
+                                                        disabled>
+                                            </gsrs-input>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <gsrs-input type="text"
+                                                        ng-model="obj.url"
+                                                        field="url"
+                                                        formname=form>
+                                            </gsrs-input>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <gsrs-input type="text"
+                                                        ng-model="obj.id"
+                                                        field="id"
+                                                        label="Source Id"
+                                                        formname=form>
+                                            </gsrs-input>
+                                        </div>
                                     </div>
-                                    <div class="col-md-2">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.id"
-                                                    field="id"
-                                                    label="Source Id"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <check-box ng-model="obj.publicDomain" field="publicDomain"
-                                                   label="Public Domain"></check-box>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
-                                            <label id="upload">Upload a Document</label><br>
-                                            <a ng-href={{obj.uploadedFile}} target ="_blank" ng-if="obj.uploadedFile">
-                                                <i class="fa fa-file-text fa-stack-2x success"></i>
-                                            </a>
-                                            <file-field ng-show="!obj.uploadedFile && !obj.$$uploadFile"
-                                                        ng-change="submitFile(obj)" ng-model="obj.$$uploadFile"
-                                                        id="upload"><i class="fa fa-folder-open fa-lg"></i> Browse
-                                            </file-field>
-                                            <br>
-                                            {{obj.uploadedFile.name}}
-                                            <br>
-                                        </ng-form>
+                                    <div class="row">
+                                        <br>
+                                        <div class="col-md-3">
+                                            <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
+                                                <label id="upload">Upload a Document</label><br>
+                                                <a ng-href={{obj.uploadedFile}} target ="_blank" ng-if="obj.uploadedFile">
+                                                    <i class="fa fa-file-text fa-stack-2x success"></i>
+                                                </a>
+                                                <file-field ng-show="!obj.uploadedFile && !obj.$$uploadFile"
+                                                            ng-change="submitFile(obj)" ng-model="obj.$$uploadFile"
+                                                            id="upload"><i class="fa fa-folder-open fa-lg"></i> Browse
+                                                </file-field>
+                                                <br>
+                                                {{obj.uploadedFile.name}}
+                                                <br>
+                                            </ng-form>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <check-box ng-model="obj.publicDomain" field="publicDomain"
+                                                       label="Public Domain"></check-box>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <gsrs-input type="multi"
+                                                        ng-model=obj.tags
+                                                        field="tags"
+                                                        cv="DOCUMENT_COLLECTION">
+                                            </gsrs-input>
+                                        </div>
                                     </div>
 
-                                    <div class="col-md-2">
-                                        <gsrs-input type="multi"
-                                                    ng-model=obj.tags
-                                                    field="tags"
-                                                    cv="DOCUMENT_COLLECTION">
-                                        </gsrs-input>
+                                    <div class="row">
+                                        <br>
+                                        <div class="col-md-12">
+                                        <span ng-if="obj.createdBy">
+                                            <label>Created By:</label> {{::obj.createdBy}}
+                                        </span>
+                                                    <span ng-if="obj.created">
+                                            <label>On:</label> {{::obj.created | date: 'medium'}}
+                                        </span>
+
+                                                    <span ng-if="obj.lastEditedBy">
+                                            <label> - Last Edited By:</label> {{::obj.lastEditedBy}}
+                                        </span>
+                                                    <span ng-if="obj.lastEdited">
+                                            <label>On:</label> {{::obj.lastEdited | date: 'medium'}}
+                                        </span>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <gsrs-input type="text"
-                                                    ng-model="obj.url"
-                                                    field="url"
-                                                    formname=form>
-                                        </gsrs-input>
-                                    </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div ng-if="obj.created">
-                                    <label>Created:</label> {{::obj.created | date: 'medium'}}
-                                </div>
-                                <div ng-if="obj.createdBy">
-                                    <label>Created By:</label> {{::obj.createdBy}}
-                                </div>
-                                <div ng-if="obj.lastEdited">
-                                    <label>Last Edited:</label> {{::obj.lastEdited | date: 'medium'}}
-                                </div>
-                                <div ng-if="obj.lastEditedBy">
-                                    <label>Last Edited By:</label> {{::obj.lastEditedBy}}
-                                </div>
-                            </div>
-                        </div>
                                 </div>
                             </div>
                         </div>

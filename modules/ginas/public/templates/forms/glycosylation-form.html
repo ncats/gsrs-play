@@ -48,18 +48,18 @@
             <br>
             <div class="row">
                 <div class="col-md-12">
-                    <div ng-if="parent.protein.glycosylation.created">
-                        <label>Created:</label> {{::parent.protein.glycosylation.created | date: 'medium'}}
-                    </div>
-                    <div ng-if="parent.protein.glycosylation.createdBy">
+                    <span ng-if="parent.protein.glycosylation.createdBy">
                         <label>Created By:</label> {{::parent.protein.glycosylation.createdBy}}
-                    </div>
-                    <div ng-if="parent.protein.glycosylation.lastEdited">
-                        <label>Last Edited:</label> {{::parent.protein.glycosylation.lastEdited | date: 'medium'}}
-                    </div>
-                    <div ng-if="parent.protein.glycosylation.lastEditedBy">
-                        <label>Last Edited By:</label> {{::parent.protein.glycosylation.lastEditedBy}}
-                    </div>
+                    </span>
+                    <span ng-if="parent.protein.glycosylation.created">
+                        <label>On:</label> {{::parent.protein.glycosylation.created | date: 'medium'}}
+                    </span>
+                    <span ng-if="parent.protein.glycosylation.lastEditedBy">
+                        <label> - Last Edited By:</label> {{::parent.protein.glycosylation.lastEditedBy}}
+                    </span>
+                    <span ng-if="parent.protein.glycosylation.lastEdited">
+                        <label>On:</label> {{::parent.protein.glycosylation.lastEdited | date: 'medium'}}
+                    </span>
                 </div>
             </div>
         </form>
