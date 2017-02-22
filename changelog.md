@@ -5,17 +5,18 @@ Changes:
 
 Enhancements
 -------------
-1. Added validation to require Type in the Relationships
-2. Displayed the audit information in single line
-3. Added the 'Search' button for Subref search (since the type ahead displays only first 10 matches). Also added the ability to search by 'Approval ID'.
-4. Autocomplete shows exact matches first
+1. For 'Tags' dropdown - the 'X' button (to clear the selected value) is hidden if the value is too long. We couldn't move the 'X' to the beginning of the value as it is part of a java script library. To correct the issue I increased the width of the 'Tags' drop down under 'References' 
+2. Relationships: Cleaned up the Relationships form. Showing only Type, Related Substance, References and Access. Added a 'Show Details' button to show the rest of the fields.
+3. Added Validation for "Type" as required field under "Relationships" 
+4. Add a tooltip to "click link" under Codes in Substance View
+5. Cleaned up the Audit information by displaying everything in a single line
+6. Added the 'Search' button for Subref search (since the type ahead displays only first 10 matches). Also added the ability to search by 'Approval ID'.
+7. Autocomplete shows exact matches first
 
 Bug Fixes
 ---------
 1. Removed extra amount view from relationships (wrong sign for high/low)
 2. Allow promoted concepts to have definitional references
-
-
 
 
 GSRS v1.3.0-RC3
