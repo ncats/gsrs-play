@@ -523,7 +523,7 @@ public class ValidationUtils {
                     
                 }
 			}
-			if (!validateReferenced(s, cd, gpm, strat, ReferenceAction.FAIL)) {
+			if (!validateReferenced(s, cd, gpm, strat, ReferenceAction.ALLOW)) {
 				return false;
 			}
 
@@ -574,6 +574,13 @@ public class ValidationUtils {
 				GinasProcessingMessage mes = GinasProcessingMessage
 						.ERROR_MESSAGE(
 								"Relationships must specify a related substance");
+				gpm.add(mes);
+				strat.processMessage(mes);
+			}
+			if(n.type == null){
+				GinasProcessingMessage mes = GinasProcessingMessage
+						.ERROR_MESSAGE(
+								"Relationships must specify a type");
 				gpm.add(mes);
 				strat.processMessage(mes);
 			}

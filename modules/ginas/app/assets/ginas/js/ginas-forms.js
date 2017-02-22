@@ -1319,12 +1319,13 @@
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
 
-
+                console.log(scope);
                 scope.addNewRef = function (mainform, list, begin) {
                     //passes a new uuid for reference tracking
                     var obj = {
                         uuid: UUID.newID(),
-                        $$apply: true
+                        $$apply: true,
+                        $$update: true
                     };
                     scope.addNew(mainform, list, obj, begin);
                 };

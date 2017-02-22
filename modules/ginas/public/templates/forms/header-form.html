@@ -45,20 +45,20 @@
             </div>
             <br>
             <div class="row">
-                <div class="col-md-12">
-                    <div ng-if="parent.created">
-                        <label>Created:</label> {{::parent.created | date: 'medium'}}
-                    </div>
-                    <div ng-if="parent.createdBy">
-                        <label>Created By:</label> {{::parent.createdBy}}
-                    </div>
-                    <div ng-if="parent.lastEdited">
-                        <label>Last Edited:</label> {{::parent.lastEdited | date: 'medium'}}
-                    </div>
-                    <div ng-if="parent.lastEditedBy">
-                        <label>Last Edited By:</label> {{::parent.lastEditedBy}}
-                    </div>
-                </div>
+              <div class="col-md-12">
+                <span ng-if="parent.createdBy">
+                  <label>Created By:</label> {{::parent.createdBy}}
+                </span>
+                <span ng-if="parent.created">
+                  <label>On:</label> {{::parent.created | date: 'medium'}}
+                </span>
+                <span ng-if="parent.lastEditedBy">
+                  <label> - Last Edited By:</label> {{::parent.lastEditedBy}}
+                </span>
+                <span ng-if="parent.lastEdited">
+                  <label>On:</label> {{::parent.lastEdited | date: 'medium'}}
+                </span>
+              </div>
             </div>
             <div class="headerForm"></div>
         </form>

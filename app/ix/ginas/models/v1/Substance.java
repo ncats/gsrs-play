@@ -634,7 +634,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public List<SubstanceReference> getChildConceptReferences() {
         List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
         for (Relationship r : relationships) {
-            if (r.type.equals("SUB_CONCEPT->SUBSTANCE")) {
+            if (r.type != null && r.type.equals("SUB_CONCEPT->SUBSTANCE")) {
                 subConcepts.add(r.relatedSubstance);
             }
         }
@@ -645,7 +645,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public List<SubstanceReference> getAlternativeDefinitionReferences() {
         List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
         for (Relationship r : relationships) {
-            if (r.type.equals(ALTERNATE_SUBSTANCE_REL)) {
+            if (r.type != null && r.type.equals(ALTERNATE_SUBSTANCE_REL)) {
                 subConcepts.add(r.relatedSubstance);
             }
         }
@@ -655,7 +655,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     public List<Relationship> getAlternativeDefinitionRelationships() {
         List<Relationship> subConcepts = new ArrayList<Relationship>();
         for (Relationship r : relationships) {
-            if (r.type.equals(ALTERNATE_SUBSTANCE_REL)) {
+            if (r.type != null && r.type.equals(ALTERNATE_SUBSTANCE_REL)) {
                 subConcepts.add(r);
             }
         }
@@ -665,7 +665,7 @@ public class Substance extends GinasCommonData implements ValidationMessageHolde
     @JsonIgnore
     public SubstanceReference getPrimaryDefinitionReference() {
         for (Relationship r : relationships) {
-            if (r.type.equals(PRIMARY_SUBSTANCE_REL)) {
+            if (r.type != null && r.type.equals(PRIMARY_SUBSTANCE_REL)) {
                 return r.relatedSubstance;
             }
         }

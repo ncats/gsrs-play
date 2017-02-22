@@ -1,3 +1,21 @@
+GSRS v1.3.0-RC4
+============
+
+Changes:
+
+Enhancements
+-------------
+1. Added validation to require Type in the Relationships
+2. Displayed the audit information in single line
+3. Added the 'Search' button for Subref search (since the type ahead displays only first 10 matches). Also added the ability to search by 'Approval ID'.
+
+
+Bug Fixes
+---------
+
+
+
+
 GSRS v1.3.0-RC3
 ============
 Changes:
