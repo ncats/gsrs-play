@@ -82,12 +82,8 @@
                                                                     type="search">
                                         </substance-chooser-selector>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <br>
-                        <div class="row">
+                                    <br>
+                                    <div class="row">
                             <div class="col-md-12">
                                 <span ng-if="obj.createdBy">
                                     <label>Created By:</label> {{::obj.createdBy}}
@@ -102,6 +98,9 @@
                                 <span ng-if="obj.lastEdited">
                                     <label>On:</label> {{::obj.lastEdited | date: 'medium'}}
                                 </span>
+                            </div>
+                        </div>
+                                </div>
                             </div>
                         </div>
                     </div>
