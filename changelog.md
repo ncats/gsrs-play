@@ -8,10 +8,12 @@ Enhancements
 1. Added validation to require Type in the Relationships
 2. Displayed the audit information in single line
 3. Added the 'Search' button for Subref search (since the type ahead displays only first 10 matches). Also added the ability to search by 'Approval ID'.
-
+4. Autocomplete shows exact matches first
 
 Bug Fixes
 ---------
+1. Removed extra amount view from relationships (wrong sign for high/low)
+2. Allow promoted concepts to have definitional references
 
 
 
