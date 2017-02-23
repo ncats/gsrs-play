@@ -16,7 +16,7 @@ class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
 		Objects.requireNonNull(result);
 		this.result = result;
         waitForAll = true;
-        latch = new CountDownLatch(1);
+        latch = new CountDownLatch(result.finished()? 0 :1);
 
 		this.result.addListener(this);
 	}
@@ -25,8 +25,9 @@ class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
         Objects.requireNonNull(result);
         this.result = result;
         //can't have negative counts
+
         int count = Math.max(0, numberOfRecords - result.size());
-        latch = new CountDownLatch(count);
+        latch = new CountDownLatch(result.finished()? 0 : count);
         waitForAll = false;
 
         this.result.addListener(this);
@@ -34,8 +35,10 @@ class WaitForSearchCallable implements Callable<List>, SearchResultDoneListener{
 	@Override
 	public List call() throws Exception {
 		if(latch.getCount()>0 && !result.finished()){
+//            System.out.println("awaiting....");
 			latch.await();
 		}
+//        System.out.println("done await!!!");
         result.removeListener(this);
 		return result.getMatches();
 	}
