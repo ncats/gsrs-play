@@ -1,19 +1,20 @@
 package ix.core.search;
 
-import java.io.IOException;
-import java.util.*;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.sorter.EarlyTerminatingSortingCollector;
+import org.apache.lucene.search.suggest.Lookup.LookupResult;
 import org.apache.lucene.search.*;
-import org.apache.lucene.search.suggest.Lookup;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
+
+import java.io.IOException;
+import java.util.*;
 
 public class InxightInfixSuggester extends AnalyzingInfixSuggester{
 	private static final Sort SORT2 = new Sort(new SortField("weight", SortField.Type.LONG, true));
