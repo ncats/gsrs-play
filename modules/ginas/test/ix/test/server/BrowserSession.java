@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
@@ -51,6 +52,14 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 		authenticationStrategy.login(user);
 
     }
+
+
+    @Override
+    public void close() {
+        super.close();
+        webClient.close();
+    }
+
     @Override
     public WSResponse get(String path){
         return get(path, timeout);
@@ -150,10 +159,10 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     public HtmlPage submit(WebRequest request) throws IOException{
         Objects.requireNonNull(request);
         Objects.requireNonNull(webClient, "webclient is null!!!!!!!");
-        
-        HtmlPage page= webClient.getPage(request);
-        webClient.closeAllWindows();
-        return page;
+            HtmlPage page = webClient.getPage(request);
+            return page;
+
+
     }
 
     
@@ -182,7 +191,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
     }
 
 
-    private static enum NullAuthenticationStrategy implements AuthenticationStrategy{
+    private enum NullAuthenticationStrategy implements AuthenticationStrategy{
         INSTANCE;
 
         @Override
