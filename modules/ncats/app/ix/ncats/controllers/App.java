@@ -1301,12 +1301,7 @@ public class App extends Authentication {
 					SearchResult searchResult =null;
 					
 					if (results.isEmpty()) {
-					    System.out.println("Got nothing");
-					    searchResult= new SearchResult.Builder()
-					                    .count(0)
-					                    .result(new ArrayList<Object>())
-					                    .options(req.getOptions())
-					                    .stop(TimeUtil.getCurrentTimeMillis())
+					    searchResult= SearchResult.createEmptyBuilder(req.getOptions())
 					                    .build();
 					}else{
 					    
@@ -1315,7 +1310,7 @@ public class App extends Authentication {
 	                            +key+" size="+results.size()
 	                            +" class="+searchResult);
 					}
-					
+
 					// make an alias for the context.id to this search
 					// result
 					return cacheKey (searchResult, ctx.getId());

@@ -154,6 +154,9 @@ public class SearchResult {
 	 */
 	public int copyTo(List list, int start, int count, boolean wait) {
 
+		if(this.count ==0 || count ==0){
+			return 0;
+		}
 		// It may be that the page that is being fetched is not yet
 		// complete. There are 2 options here then. The first is to
 		// return whatever is ready now immediately, and report the
@@ -541,91 +544,125 @@ public class SearchResult {
 	 * @author peryeata
 	 *
 	 */
-	public static class Builder {
+	public static class BasicBuilder extends AbstractBuilder<BasicBuilder> {
+
+
+		protected BasicBuilder getThis(){
+			return this;
+		}
+
+	}
+
+	/**
+	 * A Builder for {@link SearchResult}. This builder
+	 * uses fields which will be passed through to build
+	 * a {@link SearchResult}.
+	 * @author peryeata
+	 *
+	 */
+	public static  abstract class AbstractBuilder<B extends AbstractBuilder<B>> {
 		private String key;
 		private String query;
 		private List<Facet> facets;
 		private List<FieldedQueryFacet> suggestFacets;
 		private LazyList<Key,Object> matches;
 		private List<?> result;
-		private int count;
+		private int count =-1;
 		private SearchOptions options;
 		private long stop =-1;
 		private Comparator<Key> idComparator;
 		private List<SoftReference<SearchResultDoneListener>> listeners;
 		private Map<Key, NamedCallable<Key,Object>> sponsored;
 
-		public Builder key(String key) {
+		protected abstract  B getThis();
+
+		public B key(String key) {
 			this.key = key;
-			return this;
+			return getThis();
 		}
 
-		public Builder query(String query) {
+		public B query(String query) {
 			this.query = query;
-			return this;
+			return getThis();
 		}
 
-		public Builder facets(List<Facet> facets) {
+		public B facets(List<Facet> facets) {
 			this.facets = facets;
-			return this;
+			return getThis();
 		}
 
-		public Builder suggestFacets(List<FieldedQueryFacet> suggestFacets) {
+		public B suggestFacets(List<FieldedQueryFacet> suggestFacets) {
 			this.suggestFacets = suggestFacets;
-			return this;
+			return getThis();
 		}
 
-		public Builder matches(LazyList<Key,Object> matches) {
+		public B matches(LazyList<Key,Object> matches) {
 			this.matches = matches;
-			return this;
+			return getThis();
 		}
 
-		public Builder result(List<?> result) {
+		public B result(List<?> result) {
 			this.result = result;
-			return this;
+			return getThis();
 		}
 
-		public Builder count(int count) {
+		public B count(int count) {
+			if(count < 0){
+				throw new IllegalArgumentException("count can not be negative");
+			}
 			this.count = count;
-			return this;
+			return getThis();
 		}
 
-		public Builder options(SearchOptions options) {
+		public B options(SearchOptions options) {
 			this.options = options;
-			return this;
+			return getThis();
 		}
 
-		public Builder stop(long stop) {
+		public B stop(long stop) {
 			this.stop = stop;
-			return this;
+			return getThis();
 		}
 
-		public Builder idComparator(Comparator<Key> idComparator) {
+		public B idComparator(Comparator<Key> idComparator) {
 			this.idComparator = idComparator;
-			return this;
+			return getThis();
 		}
 
-		public Builder listeners(List<SoftReference<SearchResultDoneListener>> listeners) {
+		public B listeners(List<SoftReference<SearchResultDoneListener>> listeners) {
 			this.listeners = listeners;
-			return this;
+			return getThis();
 		}
 
-		public Builder sponsored(Map<Key, NamedCallable<Key,Object>> sponsored) {
+		public B sponsored(Map<Key, NamedCallable<Key,Object>> sponsored) {
 			this.sponsored = sponsored;
-			return this;
+			return getThis();
 		}
+
 
 		public SearchResult build() {
 			return new SearchResult(this);
 		}
 	}
 
-	private SearchResult(Builder builder) {
+	public static class EmptyBuilder extends AbstractBuilder<EmptyBuilder>{
+
+		@Override
+		protected EmptyBuilder getThis() {
+			return this;
+		}
+
+		public SearchResult build() {
+			return new EmptySearchResult(this);
+		}
+	}
+
+	private SearchResult(AbstractBuilder builder) {
 		this.key = builder.key;
 		this.query = builder.query;
 		
 		this.result = builder.result;
-		this.count = builder.count;
+		this.count = Math.max(0, builder.count);
 		this.options = builder.options;
 		if(builder.stop>0){
 		    this.stop.set(builder.stop);
@@ -663,8 +700,7 @@ public class SearchResult {
                             .of(ctx.getResults(),o->EntityWrapper.of(o).getKey());
         
         
-        return new SearchResult.Builder()
-                
+        return createBuilder()
                     .options(options)
                     .stop(TimeUtil.getCurrentTimeMillis())
                     .matches(ll)
@@ -673,4 +709,37 @@ public class SearchResult {
                     .count(ll.size())
                     .build();
     }
+
+
+	public static AbstractBuilder<?> createBuilder(){
+		return new BasicBuilder();
+	}
+
+	public static AbstractBuilder<?> createEmptyBuilder(SearchOptions options){
+		return new EmptyBuilder()
+
+				.options(options)
+				.stop(TimeUtil.getCurrentTimeMillis())
+				;
+	}
+
+	private static class EmptySearchResult extends SearchResult{
+		public EmptySearchResult(AbstractBuilder builder) {
+			super(builder);
+		}
+
+		public EmptySearchResult(SearchOptions options, String query) {
+			super(options, query);
+		}
+
+		@Override
+		public int copyTo(List list, int start, int count, boolean wait) {
+			return 0;
+		}
+
+		@Override
+		public List getMatches() {
+			return Collections.emptyList();
+		}
+	}
 }
