@@ -34,6 +34,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ix.core.search.*;
+import ix.core.util.*;
+import net.sf.ehcache.search.impl.SearchManager;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -98,6 +101,7 @@ import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.suggest.DocumentDictionary;
+import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
@@ -118,25 +122,12 @@ import ix.core.FieldNameDecorator;
 import ix.core.factories.FieldNameDecoratorFactory;
 import ix.core.factories.IndexValueMakerFactory;
 import ix.core.plugins.IxCache;
-import ix.core.search.EntityFetcher;
-import ix.core.search.FieldedQueryFacet;
 import ix.core.search.FieldedQueryFacet.MATCH_TYPE;
-import ix.core.search.InxightInfixSuggester;
-import ix.core.search.LazyList;
-import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.DrillAndPath;
-import ix.core.search.SearchResult;
-import ix.core.search.SuggestResult;
 import ix.core.search.text.TextIndexer.IxQueryParser;
-import ix.core.util.CachedSupplier;
-import ix.core.util.ConfigHelper;
-import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.StopWatch;
-import ix.core.util.StreamUtil;
-import ix.core.util.TimeUtil;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.utils.Global;
 import ix.utils.Tuple;
@@ -758,7 +749,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		String name;
 		File dir;
 		AtomicBoolean dirty = new AtomicBoolean(false);
-		InxightInfixSuggester lookup;
+        ExactMatchSuggesterDecorator lookup;
 		long lastRefresh;
 
 		ConcurrentHashMap<String, Addition> additions = new ConcurrentHashMap<String, Addition>();
@@ -789,8 +780,15 @@ public class TextIndexer implements Closeable, ReIndexListener {
 			} else if (!dir.isDirectory())
 				throw new IllegalArgumentException("Not a directory: " + dir);
 
-			lookup = new InxightInfixSuggester(LUCENE_VERSION,
-					new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
+
+            AnalyzingInfixSuggester suggester = new AnalyzingInfixSuggester(LUCENE_VERSION,
+                    new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
+
+
+//			lookup = new InxightInfixSuggester(LUCENE_VERSION,
+//					new NIOFSDirectory(dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
+
+            lookup = new ExactMatchSuggesterDecorator(suggester,()-> ReflectionUtil.getFieldValue(suggester, "searcherMgr"));
 
 			// If there's an error getting the index count, it probably wasn't
 			// saved properly. Treat it as new if an error is thrown.
@@ -848,12 +846,12 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				BytesRef ref = new BytesRef(add.text);
 				add.addToWeight(lookup.getWeightFor(ref));
 				//lookup.
-				lookup.update(ref, null, add.weight.get(), ref);
+                ((AnalyzingInfixSuggester)lookup.getDelegate()).update(ref, null, add.weight.get(), ref);
 				additionIterator.remove();
 			}
 
 			long start = System.currentTimeMillis();
-			lookup.refresh();
+            ((AnalyzingInfixSuggester)lookup.getDelegate()).refresh();
 			lastRefresh = System.currentTimeMillis();
 			Logger.debug(lookup.getClass().getName() + " refreshs " + lookup.getCount() + " entries in "
 					+ String.format("%1$.2fs", 1e-3 * (lastRefresh - start)));
@@ -864,7 +862,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		@Override
 		public void close() throws IOException {
 			refreshIfDirty();
-			lookup.close();
+            ((AnalyzingInfixSuggester)lookup.getDelegate()).close();
 		}
 
 		long build() throws IOException {
