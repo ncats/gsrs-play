@@ -96,10 +96,10 @@ public class ConfigHelper {
         String key = f.k();
         Class<?> cls = f.v();
 
-        if (cls.isAssignableFrom(Long.class)) {
+        if (Long.class.isAssignableFrom(cls)) {
             return Play.application().configuration().getLong(key, (Long) d);
         }
-        if (cls.isAssignableFrom(Boolean.class)) {
+        if (Boolean.class.isAssignableFrom(cls)) {
             return Play.application().configuration().getBoolean(key, (Boolean) d);
         }
 
