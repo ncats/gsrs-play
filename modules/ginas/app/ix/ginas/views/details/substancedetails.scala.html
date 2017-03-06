@@ -96,7 +96,10 @@
                                 <select aria-label="version" ng-init ="versionNumber = '@sub.version'" ng-model = "versionNumber" ng-model-options="{ getterSetter: true }" ng-change = "redirectVersion()">
                                     <option ngCloak ng-repeat="v in getRange(1, '@sub.version');">{{v}}</option></select>
                             </code><br/>
-                        <div>View audit details:  <input type="checkbox" ng-model="audit"></div>
+                            <div>View audit details:  <input type="checkbox" ng-model="audit"></div>
+                            @if(sub.isDeprecated()) {
+                                <code class="text-uppercase">Deprecated</code>
+                            }
                         </div>
                         <div class = "col-md-3 pull-right">
                             <h5>Substance ID:</h5>
