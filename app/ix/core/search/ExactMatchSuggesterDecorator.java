@@ -10,7 +10,7 @@ import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 import org.apache.lucene.util.BytesRef;
-
+import org.apache.lucene.search.suggest.Lookup.LookupResult;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
