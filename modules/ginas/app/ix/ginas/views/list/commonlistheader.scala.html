@@ -5,8 +5,13 @@
 <div class="panel-heading prot-title">
 
     <div class = "row">
-        <div class = "col-md-10">
+        <div class = "col-md-5">
             <h3 class="title-name"> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">@sub.getName()</a></h3>
+        </div>
+        <div class="col-md-5 prot-approvID">
+            @if(sub.getRecordAccess().getAccess().size() > 0){
+                <h4><code>Not a public record</code></h4>
+            }
         </div>
         <div class = "col-md-2 prot-approvID">
             <h4 class= "text-right">
