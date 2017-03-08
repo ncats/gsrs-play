@@ -24,6 +24,8 @@ import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
+import ix.core.adapters.EntityPersistAdapter;
+import ix.core.factories.EntityProcessorFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.w3c.dom.Document;
@@ -110,6 +112,10 @@ public class GinasTestServer extends ExternalResource{
 	 public static final String FAKE_PASSWORD_3="madeup3";
 
 
+    public static final String FAKE_ADMIN = "fakeAdmin1";
+
+
+
     private final BrowserSession defaultBrowserSession;
     private final RestSession defaultRestSession;
 
@@ -141,6 +147,8 @@ public class GinasTestServer extends ExternalResource{
     public URL getHomeUrl() throws IOException{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
+
+
 
 
     public static class User{
@@ -324,6 +332,8 @@ public class GinasTestServer extends ExternalResource{
         UserProfileFactory.addActiveUser(FAKE_USER_2,FAKE_PASSWORD_2, superUserRoles,groups);
 
         UserProfileFactory.addActiveUser(FAKE_USER_3,FAKE_PASSWORD_3,normalUserRoles,groups);
+
+        UserProfileFactory.addActiveUser(FAKE_ADMIN,FAKE_PASSWORD_1, adminUserRoles,groups);
     }
 
 
@@ -335,6 +345,10 @@ public class GinasTestServer extends ExternalResource{
     }
     public User getFakeUser3(){
         return new User(FAKE_USER_3,FAKE_PASSWORD_3);
+    }
+
+    public User getAdmin() {
+        return new User(FAKE_ADMIN,FAKE_PASSWORD_1);
     }
 
     @FunctionalInterface
@@ -462,6 +476,8 @@ public class GinasTestServer extends ExternalResource{
         cacheManager = CacheManager.getInstance();
         cacheManager.removalAll();
         cacheManager.shutdown();
+
+        EntityProcessorFactory.clearInstance();
 
         extendedBefore(ConfigUtil.getDefault().getConfig());
 

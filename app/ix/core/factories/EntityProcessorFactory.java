@@ -14,8 +14,16 @@ import play.Logger;
 
 public class EntityProcessorFactory extends AccumlatingInternalMapEntityResourceFactory<EntityProcessor>{
 
-	private static EntityProcessorFactory _instance = null;  
-	
+	private static EntityProcessorFactory _instance = null;
+
+	/**
+	 * Remove the instance returned by {@link #getInstance(Application)}
+	 * this should only be used in tests.
+	 */
+	public static synchronized void clearInstance() {
+		_instance=null;
+	}
+
 	private static class EntityProcessorConfig{
 		String entityClassName;
 		String processorClassName;
@@ -55,7 +63,15 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 		if(_instance!=null){
 			return _instance;
 		}
-		return new EntityProcessorFactory(app);
+		synchronized (EntityProcessorFactory.class) {
+
+			if(_instance!=null){
+				return _instance;
+			}
+			_instance = new EntityProcessorFactory(app);
+
+			return _instance;
+		}
 	}
 
 	
@@ -69,6 +85,7 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 				EntityProcessor ep =epc.getEntityProcessor();
 				return Tuple.of(epc.entityClassName, ep);
 			}catch(Exception e){
+				e.printStackTrace();
 				Logger.warn("Unable to make processor:" + e.getMessage());
 			}
 			return null;

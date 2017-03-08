@@ -37,7 +37,7 @@ public class UserProfileFactory extends EntityFactory {
 	
 	public static UserProfile addActiveUser(Principal newUser, String password, List rolesChecked, List groupsChecked ) {
 		
-        
+
         if(groupsChecked==null){
         	groupsChecked=new ArrayList<>();
         }

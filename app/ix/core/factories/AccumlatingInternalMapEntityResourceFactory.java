@@ -14,7 +14,7 @@ public abstract class AccumlatingInternalMapEntityResourceFactory<T> extends Int
 		return this.getRegisteredResourcesFor(ei)
 			.stream()
 			.reduce(this::accumulate)
-			.get();
+			.orElseGet(()->null);
 	}
 	
 	public abstract T accumulate(T t1, T t2);

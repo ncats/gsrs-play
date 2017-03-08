@@ -23,6 +23,7 @@ import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.java8Util.Java8ForOldEbeanHelper;
@@ -325,11 +326,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     	EntityInfo<?> emeta = EntityUtils.getEntityInfoFor(cls);
         if(!emeta.isEntity())return false;
 
-        EntityProcessorFactory epf=EntityProcessorFactory
-        		.getInstance(this.application);
-        
-        if(emeta.hasBackup()){
-        	epf.register(emeta, BackupProcessor.getInstance(),false);
+
+        EntityProcessorFactory epf=EntityProcessorFactory.getInstance(this.application);
+        if (emeta.hasBackup()) {
+            epf.register(emeta, BackupProcessor.getInstance(), false);
         }
         if(emeta.shouldIndex()){
         	epf.register(emeta, IndexingProcessor.getInstance(),false);
@@ -532,7 +532,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
      */
     public void operate(Object bean, BiFunction<Object,EntityProcessor, Callable> function, boolean fail){
     	EntityInfo<?> emeta = EntityUtils.getEntityInfoFor(bean.getClass());
-        EntityProcessor ep = entityProcessors.get(emeta);
+        EntityProcessor ep = EntityProcessorFactory.getInstance(this.application).getSingleResourceFor(emeta);
         try {
  			if(ep!=null){
  				function.apply(bean, ep).call();

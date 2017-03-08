@@ -42,7 +42,7 @@ public class Administration extends App {
 
     //TODO:
     // Look at this
-    public static List<UserProfile> principalsList() {
+    public synchronized static List<UserProfile> principalsList() {
         List<Principal> users = PrincipalFactory.all();
         List<UserProfile> profiles = StreamUtil.forIterator(UserProfileFactory.users()).collect(Collectors.toList());
         
