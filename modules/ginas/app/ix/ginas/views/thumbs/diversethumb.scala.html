@@ -9,9 +9,13 @@
     <div class="panel panel-default">
         <div class="panel-heading">
 
-            <p class="text-right" data-toggle="tooltip" title="Approval ID">
-                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">
-                    <code> @sub.approvalID</code></a></p>
+            <p data-toggle="tooltip" title="Approval ID">
+                <a class="text-right" href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">
+                    <code> @sub.approvalID</code></a> <br>
+                @if(sub.getRecordAccess().getAccess().size() > 0){
+                    <code>Not a public record</code>
+                }
+            </p>
         </div>
         <div class="panel-body struc-img diverse">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">
