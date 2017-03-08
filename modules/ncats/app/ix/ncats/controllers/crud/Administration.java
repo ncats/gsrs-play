@@ -50,7 +50,8 @@ public class Administration extends App {
             UserProfile pri = p.getUserProfile();
             if (pri == null) {
                 UserProfile prof = new UserProfile(p);
-                prof.active = true;
+                //dkatzel - ne user profiles should default to not active
+                prof.active = false;
                 prof.save();
                 profiles.add(prof);
             }

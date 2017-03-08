@@ -63,7 +63,7 @@ public class AddUserTest extends AbstractAddUserTest {
         List<UserResult> actual = queryAllCurrentUsers();
 
         List<UserResult> expected = new ArrayList(DEFAULT_USERS);
-        expected.add(new UserResult("fakeUser", true,null));
+        expected.add(new UserResult("fakeUser", false,null));
         assertEquals(expected, actual);
 
         assertEquals(1, StreamUtil.forIterator(UserProfileFactory.users()).filter(up -> up.user.username.equals("fakeUser"))

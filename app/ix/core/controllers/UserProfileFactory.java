@@ -35,7 +35,7 @@ public class UserProfileFactory extends EntityFactory {
 		return profile;
 	}
 	
-	public static UserProfile addActiveUser(Principal newUser, String password, List rolesChecked, List groupsChecked ) {
+	public synchronized static UserProfile addActiveUser(Principal newUser, String password, List rolesChecked, List groupsChecked ) {
 		
 
         if(groupsChecked==null){

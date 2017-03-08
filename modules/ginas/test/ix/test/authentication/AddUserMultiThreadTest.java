@@ -60,22 +60,17 @@ public class AddUserMultiThreadTest extends AbstractAddUserTest {
                     e.printStackTrace();
                 }
                 queryAllCurrentUsers(session2);
-                System.out.println("done thread");
             }
         }catch(IOException e){throw new UncheckedIOException(e); }};
 
 
        new Thread(r).start();
         new Thread(r).start();
-        System.out.println("querying");
-       // queryAllCurrentUsers();
-        System.out.println("awiting.....");
-        //BlockingUserProfileEntityProcessor.latch.await();
         List<UserResult> actual = queryAllCurrentUsers();
         System.out.println("done");
 
         List<UserResult> expected = new ArrayList(DEFAULT_USERS);
-        expected.add(new UserResult("fakeUser", true,null));
+        expected.add(new UserResult("fakeUser", false,null));
         assertEquals(expected, actual);
 
         assertEquals(1, StreamUtil.forIterator(UserProfileFactory.users()).filter(up -> up.user.username.equals("fakeUser"))
@@ -83,25 +78,6 @@ public class AddUserMultiThreadTest extends AbstractAddUserTest {
     }
 
 
-//    public static class BlockingUserProfileEntityProcessor implements EntityProcessor<UserProfile>{
-//        static final CountDownLatch latch = new CountDownLatch(2);
-//
-//        public BlockingUserProfileEntityProcessor() {
-//            System.out.println("CREATING ENENTITY PROCESSOR");
-//        }
-//
-//        @Override
-//        public void prePersist(UserProfile obj) throws FailProcessingException {
-//            System.out.println("counting down...");
-//            latch.countDown();
-//            try {
-//                latch.await();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//            System.out.println("done thread");
-//        }
-//    }
 }
 
 
