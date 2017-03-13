@@ -6,6 +6,8 @@ import ix.core.controllers.BackupFactory;
 import ix.core.models.BackupEntity;
 import ix.core.models.BaseModel;
 
+import java.util.Optional;
+
 public class BackupProcessor implements EntityProcessor<BaseModel>{
 	
 	@Override
@@ -23,17 +25,26 @@ public class BackupProcessor implements EntityProcessor<BaseModel>{
 	@Override
 	public void postUpdate(BaseModel obj) {
 		try{
-			BackupEntity be=BackupFactory.getByRefId(obj.fetchGlobalId());
-			be.setInstantiated(obj);
-			be.save();
+			Optional<BackupEntity> be=BackupFactory.getByRefId(obj.fetchGlobalId());
+			if(be.isPresent()) {
+				BackupEntity entity = be.get();
+				entity.setInstantiated(obj);
+				entity.save();
+			}else{
+				//for some reason the previous version
+				//didn't save...so create a new record.
+				postPersist(obj);
+			}
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
 	@Override
 	public void postRemove(BaseModel obj) {
-		BackupEntity be=BackupFactory.getByRefId(obj.fetchGlobalId());
-		be.delete();
+		Optional<BackupEntity> be=BackupFactory.getByRefId(obj.fetchGlobalId());
+		if(be.isPresent()){
+			be.get().delete();
+		}
 		
 	}
 

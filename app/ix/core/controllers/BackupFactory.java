@@ -1,5 +1,6 @@
 package ix.core.controllers;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,9 +38,10 @@ public class BackupFactory extends EntityFactory {
             ("Unable to fullfil request: "+request().uri());
     }
     
-    public static BackupEntity getByRefId(String refid){
+    public static Optional<BackupEntity> getByRefId(String refid){
+
     	BackupEntity be = finder.where().eq("refid", refid).findUnique();
-    	return be;
+    	return Optional.ofNullable(be);
     }
     
     
@@ -47,7 +49,7 @@ public class BackupFactory extends EntityFactory {
     public static BackupEntity getByKey(Key k){
     	if(k.getIdNative() instanceof UUID ||
     			k.getIdNative() instanceof String){
-    		return getByRefId(k.getIdString()); //TODO: this part is inconsistent
+    		return getByRefId(k.getIdString()).orElse(null); //TODO: this part is inconsistent
 			//because the UUIDs considered unique
 			//globally, but other IDs are not 
 			//considered globally unique
@@ -88,9 +90,7 @@ public class BackupFactory extends EntityFactory {
         return page (top, skip, filter, finder);
     }
     
-    public static BackupEntity fetchBackupVersion(BaseModel bm){
-    	return getByRefId(bm.fetchGlobalId()); // should probably use "Key" here instead
-    }
+
     
     
     
