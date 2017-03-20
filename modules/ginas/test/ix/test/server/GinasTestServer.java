@@ -5,12 +5,10 @@ import static play.test.Helpers.fakeApplication;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -457,7 +455,25 @@ public class GinasTestServer extends ExternalResource{
         return dbUrl.contains("jdbc:oracle:thin");
     }
 
+    protected void createExtraTables(Supplier<Connection> con) throws Throwable{
 
+    }
+
+    protected void dropExtraTables(Supplier<Connection> con) throws Throwable{
+
+    }
+
+    public DataSource getDataSource() {
+        Config confFile = ConfigUtil.getDefault().getConfig();
+        String source = "default";
+        Config dbconf = confFile.getConfig("db");
+        Config db = dbconf.getConfig(source);
+        BoneCPDataSource ds = new BoneCPDataSource();
+        ds.setJdbcUrl(db.getString("url"));
+        ds.setUsername(db.getString("user"));
+        ds.setPassword(db.getString("password"));
+        return ds;
+    }
 
     @Override
     protected void before() throws Throwable {
@@ -506,27 +522,39 @@ public class GinasTestServer extends ExternalResource{
     	CachedSup.resetAllCaches();
     }
 
-    private void deleteH2Db() throws IOException {
+    private void deleteH2Db() throws Throwable {
+        DataSource ds = getDataSource();
+
+        dropExtraTables(createConnection(ds));
         File home = ConfigUtil.getDefault().getValueAsFile("ix.home");
         TestUtil.tryToDeleteRecursively(home);
+
+
+        createExtraTables(createConnection(ds));
+
+    }
+
+    private static Supplier<Connection> createConnection(DataSource ds){
+       return () -> {
+           try {
+               return ds.getConnection();
+           } catch (SQLException e) {
+               throw new RuntimeException(e);
+           }
+       };
     }
 
 
+    public void dropOracleDb() throws Throwable {
 
-    public void dropOracleDb() throws IOException {
-        Config confFile = ConfigUtil.getDefault().getConfig();
-        String source = "default";
-        Config dbconf = confFile.getConfig("db");
-        Config db = dbconf.getConfig(source);
-        BoneCPDataSource ds = new BoneCPDataSource();
-        ds.setJdbcUrl(db.getString("url"));
-        ds.setUsername(db.getString("user"));
-        ds.setPassword(db.getString("password"));
-        DataSource datasource = ds;
+
+        BoneCPDataSource datasource = (BoneCPDataSource)getDataSource();
+
+
 
         try {
 
-            Connection con = datasource.getConnection();
+            final Connection con = datasource.getConnection();
             Statement stm = con.createStatement();
 
             String evolutionContent = FileUtils.readFileToString(new File("conf/evolutions/default/1.sql"));
@@ -561,7 +589,7 @@ public class GinasTestServer extends ExternalResource{
                }
             }
 
-            PreparedStatement ps1 = con.prepareStatement("select SEQUENCE_NAME from dba_sequences where SEQUENCE_OWNER = '" + ds.getUsername() +"'");
+            PreparedStatement ps1 = con.prepareStatement("select SEQUENCE_NAME from dba_sequences where SEQUENCE_OWNER = '" + datasource.getUsername() +"'");
             ResultSet rs1 = ps1.executeQuery();
             while(rs1.next())
             {
@@ -579,6 +607,7 @@ public class GinasTestServer extends ExternalResource{
                 }
             }
 
+            dropExtraTables(() -> con);
            System.out.println("CREATE TABLES XXXXXXXXXXXXXXXXXX");
            for(int i = 0; i<ups.length; i++)
             {
@@ -590,7 +619,9 @@ public class GinasTestServer extends ExternalResource{
                     System.out.println("query - " + ups[i] +" : " + e.getMessage());
                 }
             }
-        }catch(Exception e){
+
+            createExtraTables(() -> con);
+        }catch(Throwable e){
             e.printStackTrace();
         }
     }

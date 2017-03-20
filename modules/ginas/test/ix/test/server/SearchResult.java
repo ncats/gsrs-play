@@ -88,8 +88,12 @@ public class SearchResult {
         });
 	}
 
+    public BrowserSubstanceSearcher.WebExportRequest newExportRequest(String format) {
+        return searcher.getExport(format, searchKey);
+    }
+
 	public InputStream export(String format) {
-		return searcher.getExport(format, searchKey).getInputStream();
+		return newExportRequest(format).getInputStream();
 	}
 
 	public Map<String, Integer> getFacet(String facetName) {

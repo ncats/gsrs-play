@@ -372,15 +372,19 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	private String format;
     	private String key;
     	private long timeout;
-    	
-    	public WebExportRequest(){
-    		
-    	}
+        private boolean publicOnly=true;
+
+
     	public WebExportRequest(String key, String format, long timeout){
     		this.format=format;
     		this.key=key;
     		this.timeout=timeout;
     	}
+
+        public WebExportRequest setPublicOnly(boolean publicOnly){
+            this.publicOnly = publicOnly;
+            return this;
+        }
     	
     	public WebExportRequest setTimeout(long t){
     		this.timeout=t;
@@ -405,7 +409,10 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	}
     	
     	public JsonNode getMeta(){
-        	WSResponse resp = BrowserSubstanceSearcher.this.session.get("ginas/app/setExport?id="+key + "&format="+format, timeout);
+        	WSResponse resp = BrowserSubstanceSearcher.this.session.get("ginas/app/setExport?id="+key
+                    + "&format="+format + "&publicOnly=" + (publicOnly?1:0)
+
+                    , timeout);
             return resp.asJson();
         }
     	

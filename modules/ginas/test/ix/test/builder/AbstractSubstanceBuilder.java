@@ -1,9 +1,6 @@
 package ix.test.builder;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -11,6 +8,7 @@ import java.util.function.Supplier;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.models.Group;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
 import ix.ginas.models.v1.Code;
@@ -191,7 +189,15 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
         return andThen(s -> {s.properties.add(p);});
     }
     public T addName(Name name) {
-        return andThen(s -> {s.names.add(name);});
+        return andThen(s -> {
+            s.names =  addToNewList(s.names, name);
+        });
+    }
+
+    private <T> List<T> addToNewList(List<T> oldList, T newElement){
+        List<T> newList = new ArrayList<>(oldList);
+        newList.add(newElement);
+        return newList;
     }
 
     public T addCode(Code code) {
@@ -220,19 +226,34 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 	public Function<S, S> afterCreate(){
 		return andThen;
 	}
-	
+
+    public T addName(String name, Set<Group> access){
+       return createAndAddBasicName(name, n-> n.setAccess(access));
+    }
+
+
+    private Name createName(Substance s, String name){
+        Name n=new Name(name);
+        n.addLanguage("en");
+        n.addReference(getOrAddFirstReference(s));
+        return n;
+    }
+    private T createAndAddBasicName(String name){
+        return createAndAddBasicName(name, null);
+    }
+    private T createAndAddBasicName(String name, Consumer<Name> additionalNameOpperations){
+        return andThen(s->{
+
+
+            Name n = createName(s, name);
+            if(additionalNameOpperations !=null){
+                additionalNameOpperations.accept(n);
+            }
+            s.names =  addToNewList(s.names, n);
+        });
+    }
 	public T addName(String name){
-		return andThen(s->{
-
-
-			Name n=new Name(name);
-			n.addLanguage("en");
-			n.addReference(getOrAddFirstReference(s));
-
-            List<Name> newList = new ArrayList(s.names);
-            newList.add(n);
-            s.names =  newList;
-		});
+        return createAndAddBasicName(name);
 	}
 	
 	public T addCode(String codeSystem, String code){

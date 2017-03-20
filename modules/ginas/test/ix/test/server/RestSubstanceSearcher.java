@@ -183,6 +183,11 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             return sr.export(format);
         }
 
+        @Override
+        public BrowserSubstanceSearcher.WebExportRequest newExportRequest(String format) {
+            return sr.newExportRequest(format);
+        }
+
         public Map<String, Integer> getFacet(String facetName) {
             return sr.getFacet(facetName);
         }
