@@ -99,6 +99,7 @@ import play.Play;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.ebean.Model.Finder;
+import play.libs.F;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
@@ -532,43 +533,46 @@ public class GinasApp extends App {
             response = Substance.class,
             httpMethod = "GET")
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result substances(final String q, final int rows, final int page) {
+    public static F.Promise<Result> substances(final String q, final int rows, final int page) {
         String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
         SearchType stype = SearchType.valueFor(type);
-        try {
-            if (stype.isStructureSearch()) {
-                String cutoff = request().getQueryString("cutoff");
-                try {
-                    Structure qStructure = getStructureFrom(q);
-                    flash("qStructureID", qStructure.id.toString());
-                    switch (stype) {
-                    case SUBSTRUCTURE:
-                        return substructure(qStructure.molfile, rows, page);
-                    case SIMILARITY:
-                        double thres = Math.max(.3, Math.min(1., Double.parseDouble(cutoff)));
-                        return similarity(qStructure.molfile, thres, rows, page);
-                    case FLEX:
-                        return lychimatch(qStructure.molfile, rows, page, false);
-                    case EXACT:
-                        return lychimatch(qStructure.molfile, rows, page, true);
-                    default:
-                        return substructure(qStructure.molfile, rows, page);
+
+        return F.Promise.promise( ()-> {
+            try {
+                if (stype.isStructureSearch()) {
+                    String cutoff = request().getQueryString("cutoff");
+                    try {
+                        Structure qStructure = getStructureFrom(q);
+                        flash("qStructureID", qStructure.id.toString());
+                        switch (stype) {
+                            case SUBSTRUCTURE:
+                                return substructure(qStructure.molfile, rows, page);
+                            case SIMILARITY:
+                                double thres = Math.max(.3, Math.min(1., Double.parseDouble(cutoff)));
+                                return similarity(qStructure.molfile, thres, rows, page);
+                            case FLEX:
+                                return lychimatch(qStructure.molfile, rows, page, false);
+                            case EXACT:
+                                return lychimatch(qStructure.molfile, rows, page, true);
+                            default:
+                                return substructure(qStructure.molfile, rows, page);
+                        }
+                    } catch (Exception e) {
+                        Logger.error(e.getMessage(), e);
                     }
-                } catch (Exception e) {
-                    Logger.error(e.getMessage(), e);
+                    return notFound(ix.ginas.views.html.error.render(400, "Invalid search parameters: type=\"" + type
+                            + "\"; q=\"" + q + "\" cutoff=\"" + cutoff + "\"!"));
+                } else if (stype.isSequenceSearch()) {
+                    return sequences(q, rows, page);
+                } else {
+                    return _substances(q, rows, page);
                 }
-                return notFound(ix.ginas.views.html.error.render(400, "Invalid search parameters: type=\"" + type
-                        + "\"; q=\"" + q + "\" cutoff=\"" + cutoff + "\"!"));
-            } else if (stype.isSequenceSearch()) {
-                return sequences(q, rows, page);
-            } else {
-                return _substances(q, rows, page);
+            } catch (Exception ex) {
+                Logger.error(ex.getMessage(), ex);
+                return _internalServerError(ex);
             }
-        } catch (Exception ex) {
-            Logger.error(ex.getMessage(), ex);
-            return _internalServerError(ex);
-        }
+        });
     }
 
     /**
@@ -648,14 +652,15 @@ public class GinasApp extends App {
      *            The format extension (e.g. sdf, csv, etc)
      * @return
      */
-    public static Result export(String collectionID, String extension, int publicOnlyFlag) {
-
-        try {
-            return export(getExportStream(collectionID), extension, publicOnlyFlag==1);
-        } catch (Exception e) {
-            Logger.error(e.getMessage(), e);
-            return error(404, e.getMessage());
-        }
+    public static F.Promise<Result> export(String collectionID, String extension, int publicOnlyFlag) {
+        return F.Promise.promise(() -> {
+            try {
+                return export(getExportStream(collectionID), extension, publicOnlyFlag == 1);
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
     }
 
     /**
@@ -704,6 +709,17 @@ public class GinasApp extends App {
         }
     }
 
+    static OutputStream createOutputStreamForExport(String extension) throws IOException{
+        String username =getUser().username;
+
+        File userExportArea = new File(ConfigHelper.getOrDefault("path.to.export.root", ""), username);
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmm");
+        File outputFile = File.createTempFile("export-" + sdf.format(new Date()) , extension,  userExportArea);
+        //TODO should we buffer?
+        return new FileOutputStream(outputFile);
+    }
+
+
     /**
      * Directly export the provided stream, using an exporter that matches
      * extension
@@ -724,7 +740,33 @@ public class GinasApp extends App {
         final VisiblePipedInputStream pis = new VisiblePipedInputStream();
         final VisiblePipedOutputStream pos = new VisiblePipedOutputStream(pis);
 
+
+
+        //OutputStream out = createOutputStreamForExport(extension);
+        ExportListener listener = new ExportListener() {
+            @Override
+            public void exportStarted() {
+
+            }
+
+            @Override
+            public void exportHalted(String reason) {
+
+            }
+
+            @Override
+            public void exportHalted(Throwable reason) {
+
+            }
+
+            @Override
+            public void exportCompleted() {
+
+            }
+        };
         Exporter<Substance> exporter = getSubstanceExporterFor(extension, pos, publicOnly);
+
+//        LocalExportWriter writer = new LocalExportWriter(out, listener);
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmm");
         String fname = "export-" 
                     + sdf.format(new Date()) 
@@ -732,6 +774,7 @@ public class GinasApp extends App {
 
         factoryPlugin.get().submit(() -> {
             try {
+                listener.exportStarted();
                 tstream.forEach(s -> {
                     try {
                         exporter.export(s);
@@ -761,7 +804,7 @@ public class GinasApp extends App {
         return ok(pis);
     }
 
-    private static Exporter<Substance> getSubstanceExporterFor(String extension, PipedOutputStream pos, boolean publicOnly)
+    private static Exporter<Substance> getSubstanceExporterFor(String extension, OutputStream pos, boolean publicOnly)
             throws IOException {
 
         if (factoryPlugin.get() == null) {
@@ -801,24 +844,29 @@ public class GinasApp extends App {
         }
     }
 
-    public static Result sequences(final String q, final int rows, final int page) {
-        String param = request().getQueryString("identity");
-        double identity = 0.5;
-        if (param != null) {
+    private static double parseDoubleOrElse(String value, double defaultValue){
+        if(value !=null){
             try {
-                identity = Double.parseDouble(param);
-            } catch (NumberFormatException ex) {
-                Logger.error("Bogus identity value: " + param);
+                return Double.parseDouble(value);
+            }catch(NumberFormatException ex){
+                Logger.error("Bogus identity value: " + value);
             }
         }
+        //if we get here either we didn't have a value or it errord out
+        return defaultValue;
+    }
+    public static Result sequences(final String q, final int rows, final int page) {
+        double identity = parseDoubleOrElse(request().getQueryString("identity"),  0.5);
 
-        String seq = GinasFactory.getSequence(q);
-        if (seq != null) {
-            Logger.debug("sequence: " + seq.substring(0, Math.min(seq.length(), 20)) + "; identity=" + identity);
-            return _sequences(seq, identity, rows, page);
-        }
 
-        return internalServerError("Unable to retrieve sequence for " + q);
+            String seq = GinasFactory.getSequence(q);
+            if (seq != null) {
+                Logger.debug("sequence: " + seq.substring(0, Math.min(seq.length(), 20)) + "; identity=" + identity);
+                return _sequences(seq, identity, rows, page);
+            }
+
+            return internalServerError("Unable to retrieve sequence for " + q);
+
     }
 
     public static Result _sequences(final String seq, final double identity, final int rows, final int page) {
@@ -1035,27 +1083,30 @@ public class GinasApp extends App {
 
         // if there's a provided query, or there's a facet specified,
         // do a text search
-        if (!forcesql) {
-            final SearchResult result = getSubstanceSearchResult(q, total);
-            Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + result + " finished? "
-                    + result.finished());
-            if (result.finished()) {
-                final String k = key + "/result";
 
-                return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(result, rows, page), Result.class));
+            if (!forcesql) {
+
+                final SearchResult result = getSubstanceSearchResult(q, total);
+                Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + result + " finished? "
+                        + result.finished());
+                if (result.finished()) {
+                    final String k = key + "/result";
+
+                    return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(result, rows, page), Result.class));
+                }
+                return createSubstanceResult(result, rows, page);
+                // otherwise, just show the first substances
+            } else {
+                return getOrElse(key, () -> {
+                    SubstanceResultRenderer srr = new SubstanceResultRenderer();
+                    List<Facet> defFacets = getSubstanceFacets(30, request().queryString());
+                    int nrows = Math.max(Math.min(total, rows), 1);
+                    int[] pages = paging(nrows, page, total);
+                    List<Substance> substances = SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
+                    return srr.render(null, page, nrows, total, pages, defFacets, substances);
+                });
             }
-            return createSubstanceResult(result, rows, page);
-            // otherwise, just show the first substances
-        } else {
-            return getOrElse(key, () -> {
-                SubstanceResultRenderer srr = new SubstanceResultRenderer();
-                List<Facet> defFacets = getSubstanceFacets(30, request().queryString());
-                int nrows = Math.max(Math.min(total, rows), 1);
-                int[] pages = paging(nrows, page, total);
-                List<Substance> substances = SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
-                return srr.render(null, page, nrows, total, pages, defFacets, substances);
-            });
-        }
+
     }
 
     static Result createSubstanceResult(SearchResult result, int rows, int page) throws Exception {
@@ -1142,17 +1193,21 @@ public class GinasApp extends App {
     }
 
     public static Result similarity(final String query, final double threshold, int rows, int page) {
-        try {
-            SearchResultContext context = similarity(query, threshold, rows, page,
-                    new StructureSearchResultProcessor());
-            return fetchResult(context, rows, page, new SubstanceResultRenderer());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error("Can't perform similarity search: " + query, ex);
-        }
 
-        return internalServerError(
-                ix.ginas.views.html.error.render(500, "Unable to perform similarity search: " + query));
+               try {
+                   SearchResultContext context = similarity(query, threshold, rows, page,
+                           new StructureSearchResultProcessor());
+                   return fetchResult(context, rows, page, new SubstanceResultRenderer());
+               } catch (Exception ex) {
+                   ex.printStackTrace();
+                   Logger.error("Can't perform similarity search: " + query, ex);
+               }
+
+
+
+            return internalServerError(
+                    ix.ginas.views.html.error.render(500, "Unable to perform similarity search: " + query));
+
     }
 
     public static Result lychimatch(final String query, int rows, int page, boolean exact) {
@@ -1171,18 +1226,20 @@ public class GinasApp extends App {
     }
 
     public static Result substructure(final String query, final int rows, final int page) {
-        try {
-            SearchResultContext context = App.substructure(query, rows, page,
-                    new StructureSearchResultProcessor());
-            return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
-        } catch (BogusPageException ex) {
-            return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error("Can't perform substructure search", ex);
-        }
-        return internalServerError(
-                ix.ginas.views.html.error.render(500, "Unable to perform substructure search: " + query));
+
+            try {
+                SearchResultContext context = App.substructure(query, rows, page,
+                        new StructureSearchResultProcessor());
+                return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
+            } catch (BogusPageException ex) {
+                return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't perform substructure search", ex);
+            }
+            return internalServerError(
+                    ix.ginas.views.html.error.render(500, "Unable to perform substructure search: " + query));
+
     }
 
     /**
@@ -1930,6 +1987,14 @@ public class GinasApp extends App {
     public static boolean isSingleSignOn() {
         return isSingleSignOn.get();
     }
+
+    public  interface ExportListener{
+        void exportStarted();
+        void exportHalted(String reason);
+        void exportHalted(Throwable reason);
+        void exportCompleted();
+    }
+
 
     private static class SubstanceReIndexListener implements ReIndexListener {
 
