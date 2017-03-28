@@ -26,6 +26,8 @@ my $zipName = basename($zipFile);
 
 my $outputPathRoot = $ENV{JENKINS_GINAS_DEPLOY_ROOT};
 my $port = $ENV{JENKINS_GINAS_DEPLOY_PORT};
+#set the loadFile to the value of the environment variable or our default value if not set (falsy)
+my $loadFile = $ENV{JENKINS_GINAS_LOAD_FILE} || "modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz";
 print "output root = ". $outputPathRoot ."\n";
 die "no deploy root specified" unless(defined $outputPathRoot);
 die "no deploy port specified" unless(defined $port);
@@ -62,7 +64,7 @@ my $abs_path = abs_path($outputPath. "/$subDir");
 #chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
 #my $ginasFileDump = abs_path("modules/ginas/test/testdumps/rep90.ginas");
-my $ginasFileDump = abs_path("modules/ginas/test/testdumps/jsonDumpINN_3000.txt.gz");
+my $ginasFileDump = abs_path($loadFile);
 
 print "$ginasFileDump\n";
 if(-e $ginasFileDump){
