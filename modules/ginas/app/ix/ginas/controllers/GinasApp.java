@@ -2223,8 +2223,7 @@ public class GinasApp extends App {
         try {
             if (substances.size() == 1) {
                 Substance s = substances.get(0);
-                SubstanceFactory.approveSubstance(s);
-                s.save();
+                s=SubstanceFactory.approve(s);
                 String resp = "Substance approved with Approval ID: " + s.approvalID;
                 return ok(ix.ginas.views.html.response.render(resp));
             }
