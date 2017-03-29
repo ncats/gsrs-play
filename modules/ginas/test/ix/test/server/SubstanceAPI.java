@@ -40,6 +40,7 @@ public class SubstanceAPI {
     private static final String API_URL_SUBMIT_SUBSTANCE = "ginas/app/api/v1/substances";
     private static final String API_URL_SUBMIT_CV = "ginas/app/api/v1/vocabularies";
     private static final String API_URL_FETCH = "ginas/app/api/v1/substances($UUID$)?view=full";
+    private static final String API_URL_FETCH_BASIC = "ginas/app/api/v1/substances($UUID$)";
     private static final String API_URL_HISTORY = "ginas/app/api/v1/substances($UUID$)/@edits";
     private static final String API_URL_MOL = "ginas/app/structure";
 
@@ -149,6 +150,10 @@ public class SubstanceAPI {
 
     public WSResponse fetchSubstanceByUuid(String uuid){
         return session.createRequestHolder(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
+    }
+    
+    public String fetchSubstanceLychiv4ByUuid(String uuid){
+    	return session.extractJSON(session.createRequestHolder(API_URL_FETCH_BASIC.replace("$UUID$", uuid)+"/structure/properties(label:LyChI_L4)!(term)($0)").get().get(timeout)).asText();
     }
     public JsonNode fetchSubstanceJsonByUuid(String uuid){
         return session.extractJSON(fetchSubstanceByUuid(uuid));

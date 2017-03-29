@@ -1,5 +1,6 @@
 package ix.core.util;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -213,6 +214,11 @@ public class StreamUtil {
         }
     }
     
+    public static Stream<String> lines(String text){
+    	return Arrays.stream(text.split("\n"));
+    }
+    
+    
     /**
      * Returns a supplier from the stream, which will return
      * the results of the stream, in order. Will return null
@@ -302,6 +308,8 @@ public class StreamUtil {
             return (enumeration.hasMoreElements())?enumeration.nextElement():null;
         });
     }
+    
+    
 
 
     /**
