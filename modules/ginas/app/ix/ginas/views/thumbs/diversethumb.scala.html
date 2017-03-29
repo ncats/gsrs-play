@@ -12,7 +12,7 @@
             <p data-toggle="tooltip" title="Approval ID">
                 <a class="text-right" href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" uib-tooltip="view record details" target="_self">
                     <code> @sub.approvalID</code></a> <br>
-                @if(sub.getRecordAccess().getAccess().size() > 0){
+                @if(sub.getAccess().size() > 0){
                     <code>Not a public record</code>
                 }
             </p>
