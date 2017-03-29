@@ -99,8 +99,7 @@ public class Authentication extends Controller {
         
         UserProfile profile= getUserProfileOrElse(username, ()->{
         	if(autoRegister.get()){
-        		Transaction tx = Ebean.beginTransaction();
-        		try{
+        		try(Transaction tx = Ebean.beginTransaction()){
 	        		Logger.info("Autoregistering user:" + username);
 	        		Principal p = new Principal(username, email);
 	        		p= PrincipalFactory.registerIfAbsent(p);
@@ -121,8 +120,6 @@ public class Authentication extends Controller {
         		}catch(Exception e){
         			Logger.error("Error creating profile", e);
         			return null;
-        		}finally{
-        			Ebean.endTransaction();
         		}
         	}else{
         		Logger.info("No user found, and autoregistering is not allowed");

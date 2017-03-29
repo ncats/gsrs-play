@@ -1,5 +1,6 @@
 package ix.core.adapters;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import javax.persistence.RollbackException;
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 
-public class InxightTransaction {
+public class InxightTransaction implements Closeable{
 	private static ConcurrentHashMap<Transaction, InxightTransaction> _instances=
 			new ConcurrentHashMap<Transaction, InxightTransaction>();
 

@@ -94,8 +94,8 @@ public class GinasUtils {
 
 	
 	public static boolean persistSubstances(Collection<Substance> subs){
-		Transaction tx = Ebean.beginTransaction();
-		try{
+		
+		try(Transaction tx = Ebean.beginTransaction()){
 			for(Substance s: subs){
 				s.save();
 			}
@@ -103,8 +103,6 @@ public class GinasUtils {
 			return true;
 		}catch(Exception ex){
 			return false;
-		}finally{
-			tx.end();
 		}
 	}
 	
