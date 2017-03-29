@@ -239,7 +239,7 @@ public class EntityUtils {
 		private EntityInfo<T> ei;
 
 		public static <T> EntityWrapper<T> of(T bean) {
-			Objects.requireNonNull(bean);
+			Objects.requireNonNull(bean, "wrapped object is null");
 			if (bean instanceof EntityWrapper) {
 				return (EntityWrapper) bean;
 			}
