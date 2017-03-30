@@ -12,7 +12,7 @@ By downloading or otherwise receiving the Software, Recipient agrees to abide by
 
 “This Software was developed at the National Center for Advancing Translational Sciences (NCATS) as a work of the United States Government. Source code produced by the United States Government is in the public domain and may be reproduced or copied without permission from NCATS. Citation of the source is appreciated.”
 
-4. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE NCI, SAIC-F OR THE INDIVIDUAL DEVELOPERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY OF ANY KIND.  USE OF THE SOFTWARE BY RECIPIENT IS AT RECIPIENT’S OWN RISK.
+4. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL NCATS OR THE INDIVIDUAL DEVELOPERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY OF ANY KIND.  USE OF THE SOFTWARE BY RECIPIENT IS AT RECIPIENT’S OWN RISK.
 
 5. By conveying the Software herein, NCATS and the individual developers shall be under no obligation to provide to the Recipient or any other party support in any form nor be under an obligation to replace Software should it become erased or otherwise destroyed.  Accordingly, NCATS and the individual developers shall be under no obligation to provide Recipient any service, guidance, updates or assistance.
 
