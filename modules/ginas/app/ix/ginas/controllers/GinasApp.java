@@ -852,7 +852,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> sequences(final String q, final int rows, final int page) {
         double identity = parseDoubleOrElse(request().getQueryString("identity"),  0.5);
 
-            return Workers.SIMPLE_READ_ONLY.promise( () -> {
+            return Workers.WorkerPool.DB_SIMPLE_READ_ONLY.newJob( () -> {
                 String seq = GinasFactory.getSequence(q);
                 if (seq != null) {
                     Logger.debug("sequence: " + seq.substring(0, Math.min(seq.length(), 20)) + "; identity=" + identity);
@@ -860,7 +860,7 @@ public class GinasApp extends App {
                 }
 
                 return internalServerError("Unable to retrieve sequence for " + q);
-            });
+            }).toPromise();
 
     }
 
@@ -1080,32 +1080,23 @@ public class GinasApp extends App {
         // do a text search
 
             if (!forcesql) {
+               return  Workers.WorkerPool.CPU_INTENSIVE.newJob(() -> getSubstanceSearchResult(q, total))
+                        .andThen(Workers.WorkerPool.DB_EXPENSIVE_READ_ONLY, (r ->  {
+                            Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + r + " finished? "
+                                    + r.finished());
+                            if (r.finished()) {
+                                final String k = key + "/result";
 
-                F.Promise<SearchResult> result = Workers.CPU_INTENSIVE.promise( () -> getSubstanceSearchResult(q, total));
-                return Workers.EXPENSIVE_READ_ONLY.andThen(result, (r ->  {
-                    Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + result + " finished? "
-                            + r.finished());
-                    if (r.finished()) {
-                        final String k = key + "/result";
-
-                        return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(r, rows, page), Result.class));
-                    }
-                    return createSubstanceResult(r, rows, page);
-                }));
+                                return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(r, rows, page), Result.class));
+                            }
+                            return createSubstanceResult(r, rows, page);
+                        }))
+                .toPromise();
 
 
-//                final SearchResult result = getSubstanceSearchResult(q, total);
-//                Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + result + " finished? "
-//                        + result.finished());
-//                if (result.finished()) {
-//                    final String k = key + "/result";
-//
-//                    return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(result, rows, page), Result.class));
-//                }
-//                return createSubstanceResult(result, rows, page);
                 // otherwise, just show the first substances
             } else {
-                return F.Promise.promise( () ->
+                return Workers.WorkerPool.DB_EXPENSIVE_READ_ONLY.newJob( () ->
                     getOrElse(key, () -> {
                         SubstanceResultRenderer srr = new SubstanceResultRenderer();
                         List<Facet> defFacets = getSubstanceFacets(30, request().queryString());
@@ -1114,7 +1105,7 @@ public class GinasApp extends App {
                         List<Substance> substances = SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
                         return srr.render(null, page, nrows, total, pages, defFacets, substances);
                     })
-                );
+                ).toPromise();
             }
 
     }
@@ -1203,7 +1194,7 @@ public class GinasApp extends App {
     }
 
     public static F.Promise<Result> similarity(final String query, final double threshold, int rows, int page) {
-                return Workers.CPU_INTENSIVE.promise( () -> {
+                return Workers.WorkerPool.CPU_INTENSIVE.newJob( () -> {
                     try {
                         SearchResultContext context = similarity(query, threshold, rows, page,
                                 new StructureSearchResultProcessor());
@@ -1216,7 +1207,7 @@ public class GinasApp extends App {
 
                     return internalServerError(
                             ix.ginas.views.html.error.render(500, "Unable to perform similarity search: " + query));
-                });
+                }).toPromise();
 
     }
 
