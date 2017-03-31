@@ -230,7 +230,7 @@ public class SubstanceFactory extends EntityFactory {
 		try {
 			return getCount(finder.get());
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			Logger.error("Error getting count for substances", ex);
 		}
 		return null;
 	}

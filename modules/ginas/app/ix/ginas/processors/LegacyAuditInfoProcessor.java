@@ -61,7 +61,10 @@ public class LegacyAuditInfoProcessor implements EntityProcessor<Substance>{
 		}
 	}
 	public void preFlightFormat(Substance obj){
-		//String legacy_audit_ref=null;
+		//If this is an old substance, don't save it.
+		if(obj.version != null && !obj.version.equals("1")){
+			return;
+		}
 		
 		obj.notes.stream()
 			.filter(n->(n.note!=null && n.note.startsWith(START_LEGACY_REF)))
