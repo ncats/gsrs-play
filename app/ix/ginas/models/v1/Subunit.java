@@ -25,7 +25,11 @@ public class Subunit extends GinasCommonSubData {
     public Subunit () {}
     
     public int getLength(){
-    	return sequence.length();
+    	if(sequence!=null){
+    		return sequence.length();
+    	}else{
+    		return 0;
+    	}
     }
     
 //    public List<char[]> getCharArr(){
