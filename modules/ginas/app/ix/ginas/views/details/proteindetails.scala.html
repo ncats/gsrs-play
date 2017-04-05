@@ -76,7 +76,7 @@
         </div>
         <div class = "col-md-12" uib-collapse = "subunitscollapse">
         @for(i <- 0 until sub.protein.subunits.size()) {
-            <subunit uuid="'@sub.getUuid'" index ='@i' view='subunits' numbers="numbers" subclass="protein"></subunit>
+            <subunit uuid="'@sub.getUuid'" index ='@i' version='@sub.version' view='subunits' numbers="numbers" subclass="protein"></subunit>
         }
         </div>
 
