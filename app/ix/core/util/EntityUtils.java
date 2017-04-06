@@ -934,10 +934,11 @@ public class EntityUtils {
 		Map<String,MethodOrFieldMeta> jsonGetters;
 
 		//Some simple factory helper methods
-		public List<String> getSponsoredFields() {
+		public Set<String> getSponsoredFields() {
 			return SpecialFieldFactory
 					.getInstance(Play.application())
-					.getRegisteredResourcesFor(this);
+					.getRegisteredResourcesFor(this)
+					;
 		}
 
 		public FieldNameDecorator getFieldNameDecorator() {

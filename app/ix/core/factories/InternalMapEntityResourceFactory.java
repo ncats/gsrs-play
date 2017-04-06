@@ -1,38 +1,36 @@
 package ix.core.factories;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import ix.core.util.EntityUtils.EntityInfo;
+import ix.utils.Util;
 import play.Application;
 
 public abstract class InternalMapEntityResourceFactory<T> implements EntityResourceFactory<T>{
 	
-	Map<String, List<T>> internalMap = new ConcurrentHashMap<>();
+	private final Map<String, Set<T>> internalMap;
 	
 	public InternalMapEntityResourceFactory(Application app){
+		internalMap = new ConcurrentHashMap<>();
 		initialize(app);
 	}
 	
 	public abstract void initialize(Application app);
 	
 	@Override
-	public List<T> getRegisteredResourcesFor(EntityInfo<?> emeta) {
+	public Set<T> getRegisteredResourcesFor(EntityInfo<?> emeta) {
 		return internalMap.computeIfAbsent(emeta.getName(), k-> getDefaultListFor(emeta));
 	}
 
 	@Override
 	public <V extends T> void register(EntityInfo<?> emeta, V resource) {
-		internalMap.computeIfAbsent(emeta.getName(), k->getDefaultListFor(emeta))
-					.add(resource);
+		internalMap.computeIfAbsent(emeta.getName(), k->getDefaultListFor(emeta)).add(resource);
 	}
 	
-	public List<T> getDefaultListFor(EntityInfo<?> emeta){
-		ArrayList<T> tlist= new ArrayList<T>();
+	public Set<T> getDefaultListFor(EntityInfo<?> emeta){
+		Set<T> tlist= new LinkedHashSet<>();
 		T def=getDefaultResourceFor(emeta);
 		if(def!=null){
 			tlist.add(def);

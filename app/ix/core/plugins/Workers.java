@@ -7,36 +7,31 @@ import play.libs.F;
 import play.libs.HttpExecution;
 import scala.concurrent.ExecutionContext;
 
+import java.util.function.Predicate;
+
 /**
  * Created by katzelda on 3/28/17.
  */
 public class Workers extends Plugin{
 
-//    private ExecutionContext readOnlyExecutionContext, expensiveReadOnlyExecutionContext, writeExecutionContext, cpuIntensive;
-
-    private static Workers instance;
-//
-//    public static Worker SIMPLE_READ_ONLY, EXPENSIVE_READ_ONLY, WRITE, CPU_INTENSIVE;
     public Workers (Application app) {
-        System.out.println("HERE!!!!!! IN WORKER");
     }
 
     @Override
     public void onStart() {
 
-        System.out.println("STARTING WORKERS!!!!!!");
 //        cpuIntensive = HttpExecution.fromThread(play.libs.Akka.system().dispatchers().lookup("contexts.expensive-cpu-operations"));
 //        readOnlyExecutionContext = HttpExecution.fromThread(play.libs.Akka.system().dispatchers().lookup("contexts.simple-db-lookups"));
 //        expensiveReadOnlyExecutionContext = HttpExecution.fromThread(play.libs.Akka.system().dispatchers().lookup("contexts.expensive-db-lookups"));
 //
 //        writeExecutionContext = HttpExecution.fromThread(play.libs.Akka.system().dispatchers().lookup("contexts.db-write-operations"));
-        instance=this;
+//        instance=this;
     }
 
     @Override
     public void onStop() {
        //TODO how do we stop our executor?
-        instance =null;
+//        instance =null;
     }
 
     @Override
@@ -72,6 +67,8 @@ public class Workers extends Plugin{
             ExecutionContext myEc = HttpExecution.fromThread(workerPool.context);
             return new Worker<T>(promise.map(function, myEc), myEc);
         }
+
+
     }
 
 

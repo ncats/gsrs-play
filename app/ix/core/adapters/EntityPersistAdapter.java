@@ -532,7 +532,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
      */
     public void operate(Object bean, BiFunction<Object,EntityProcessor, Callable> function, boolean fail){
     	EntityInfo<?> emeta = EntityUtils.getEntityInfoFor(bean.getClass());
-        EntityProcessor ep = EntityProcessorFactory.getInstance(this.application).getSingleResourceFor(emeta);
+//        EntityProcessor ep = EntityProcessorFactory.getInstance(this.application).getSingleResourceFor(emeta);
+        EntityProcessor ep = entityProcessors.get(emeta);
         try {
  			if(ep!=null){
  				function.apply(bean, ep).call();

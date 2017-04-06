@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import ix.core.NamedResource;
@@ -69,7 +70,8 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 						(String)args.get(0).getValue(),
 						(int)args.get(1).getValue(),
 						(int)args.get(2).getValue(),
-						(int)args.get(3).getValue());
+						(int)args.get(3).getValue())
+						.get(1, TimeUnit.HOURS);
 			};
 		});
 	}

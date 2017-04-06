@@ -1,11 +1,10 @@
 package ix.core.controllers.search;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Supplier;
 
+import ix.core.plugins.Workers;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 
@@ -37,6 +36,7 @@ import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
+import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Result;
 
@@ -127,7 +127,7 @@ public class SearchFactory extends EntityFactory {
     	return search(getTextIndexer(), request);
     }
         
-    public static Result searchREST (String q, int top, int skip, int fdim) {
+    public static F.Promise<Result> searchREST (String q, int top, int skip, int fdim) {
         return searchREST (null, q, top, skip, fdim);
     }
     
@@ -153,49 +153,109 @@ public class SearchFactory extends EntityFactory {
 
     }
         
-    public static Result searchREST (Class<?> kind, String q, int top, int skip, int fdim) {
+    public static F.Promise<Result> searchREST (Class<?> kind, String q, int top, int skip, int fdim) {
         if (Global.DEBUG(1)) {
             Logger.debug("SearchFactory.search: kind="
                          +(kind != null ? kind.getName():"")+" q="
                          +q+" top="+top+" skip="+skip+" fdim="+fdim);
         }
+        return Workers.WorkerPool.DB_EXPENSIVE_READ_ONLY.newJob(new F.Function0<SearchResultPair>() {
+            @Override
+            public SearchResultPair apply() {
+                SearchResult result = null;
+                try {
+                    result = search(kind,q,top,skip,fdim);
+                } catch (IOException e) {
+                   return new SearchResultPair(SearchResult.createErrorResult(e), Collections.emptyList() );
+                }
 
-        try {
-        					
-        	
-            SearchResult result = search(kind,q,top,skip,fdim);
-            
-            List<Object> results = new ArrayList<Object>();
-            
-            result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
-            									  //anything, but it's actually right,
-                        						  //because the original request did the skipping.
-             									  //This mechanism should probably be worked out
-                                                  //better, as it's not consistent.
-            
-            final ETag etag = new ETag.Builder()
-            		.fromRequest(request())
-    				.options(result.getOptions())
-    				.count(results.size()) 
-    				.total(result.getCount())
-    				.sha1OfRequest("q", "facet")
-    				.build();
-            
-            
-            etag.save();
-            etag.setContent(results);
-            etag.setFacets(result.getFacets());
-            etag.setSelected(result.getOptions().getFacets(), result.getOptions().isSideway());
-            
-            
-            EntityMapper mapper = getEntityMapper ();
-            return Java8Util.ok (mapper.valueToTree(etag));
-        }
-        catch (IOException ex) {
-            return badRequest (ex.getMessage());
+                List<Object> results = new ArrayList<Object>();
+
+                result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
+                //anything, but it's actually right,
+                //because the original request did the skipping.
+                //This mechanism should probably be worked out
+                //better, as it's not consistent.
+                return new SearchResultPair(result, results);
+            }
+
+        }).andThen(Workers.WorkerPool.DB_WRITE, pair -> {
+//
+                SearchResult result = pair.searchResult;
+                if (result.hasError()) {
+                    return (Result) badRequest(result.getThrowable().get().getMessage());
+                }
+                 return saveAsEtag(pair.resultList, result);
+            }
+        )
+                .toPromise();
+
+//        ;
+//        try {
+//
+//
+//            SearchResult result = search(kind,q,top,skip,fdim);
+//
+//            List<Object> results = new ArrayList<Object>();
+//
+//            result.copyTo(results, 0, top, true); //this looks wrong, because we're not skipping
+//            									  //anything, but it's actually right,
+//                        						  //because the original request did the skipping.
+//             									  //This mechanism should probably be worked out
+//                                                  //better, as it's not consistent.
+//
+//            final ETag etag = new ETag.Builder()
+//            		.fromRequest(request())
+//    				.options(result.getOptions())
+//    				.count(results.size())
+//    				.total(result.getCount())
+//    				.sha1OfRequest("q", "facet")
+//    				.build();
+//
+//
+//            etag.save();
+//            etag.setContent(results);
+//            etag.setFacets(result.getFacets());
+//            etag.setSelected(result.getOptions().getFacets(), result.getOptions().isSideway());
+//
+//
+//            EntityMapper mapper = getEntityMapper ();
+//            return Java8Util.ok (mapper.valueToTree(etag));
+//        }
+//        catch (IOException ex) {
+//            return badRequest (ex.getMessage());
+//        }
+    }
+
+    private static class SearchResultPair{
+        SearchResult searchResult;
+        List<Object> resultList;
+
+        public SearchResultPair( SearchResult searchResult, List<Object> resultList) {
+            this.resultList = resultList;
+            this.searchResult = searchResult;
         }
     }
-    
+    private static Result saveAsEtag(List<Object> results, SearchResult result) {
+        final ETag etag = new ETag.Builder()
+                .fromRequest(request())
+                .options(result.getOptions())
+                .count(results.size())
+                .total(result.getCount())
+                .sha1OfRequest("q", "facet")
+                .build();
+
+
+        etag.save();
+        etag.setContent(results);
+        etag.setFacets(result.getFacets());
+        etag.setSelected(result.getOptions().getFacets(), result.getOptions().isSideway());
+
+
+        EntityMapper mapper = getEntityMapper();
+        return Java8Util.ok(mapper.valueToTree(etag));
+    }
+
     public static Result searchRESTFacets (Class<?> kind, String q, String facetField, int fdim, int fskip, String ffilter) {
       
         try {

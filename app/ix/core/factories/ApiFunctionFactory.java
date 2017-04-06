@@ -1,6 +1,7 @@
 package ix.core.factories;
 
 import java.util.List;
+import java.util.Set;
 
 import ix.core.util.CachedSupplier;
 import ix.core.util.pojopointer.extensions.RegisteredFunction;
@@ -29,7 +30,7 @@ public class ApiFunctionFactory extends InternalMapEntityResourceFactory<Registe
 			});
 	}
 	
-	public List<RegisteredFunction> getRegisteredFunctions(){
+	public Set<RegisteredFunction> getRegisteredFunctions(){
 		return this.getRegisteredResourcesFor(RegisteredFunction.class);
 	}
 	

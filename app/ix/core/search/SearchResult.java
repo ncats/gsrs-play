@@ -1,14 +1,7 @@
 package ix.core.search;
 
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -53,13 +46,20 @@ public class SearchResult {
 
 	private final List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
 
+
 	public SearchResult(SearchOptions options, String query) {
 		this.options = options;
 		this.query = query;
 	}
 
 	
-	
+	public boolean hasError(){
+		return false;
+	}
+
+	public Optional<Throwable> getThrowable(){
+		return Optional.empty();
+	}
 	
 	/**
      * Returns a list of FieldFacets which help to explain why and how
@@ -740,6 +740,36 @@ public class SearchResult {
 		@Override
 		public List getMatches() {
 			return Collections.emptyList();
+		}
+	}
+
+
+	public static SearchResult createErrorResult(Throwable t){
+		return new ErrorSearchResult(new EmptyBuilder(), t);
+	}
+
+	private static class ErrorSearchResult extends EmptySearchResult{
+
+		private final Throwable error;
+
+		public ErrorSearchResult(AbstractBuilder builder, Throwable error) {
+			super(builder);
+			this.error = error;
+		}
+
+		public ErrorSearchResult(SearchOptions options, String query, Throwable error) {
+			super(options, query);
+			this.error = error;
+		}
+
+		@Override
+		public boolean hasError() {
+			return error !=null;
+		}
+
+		@Override
+		public Optional<Throwable> getThrowable() {
+			return Optional.ofNullable(error);
 		}
 	}
 }

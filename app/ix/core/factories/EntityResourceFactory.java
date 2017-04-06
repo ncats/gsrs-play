@@ -1,6 +1,7 @@
 package ix.core.factories;
 
 import java.util.List;
+import java.util.Set;
 
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
@@ -9,17 +10,17 @@ import ix.core.util.EntityUtils.EntityWrapper;
 
 public interface EntityResourceFactory<T> {
 	
-	public List<T> getRegisteredResourcesFor(EntityInfo<?> emeta);
+	Set<T> getRegisteredResourcesFor(EntityInfo<?> emeta);
 	
-	default List<T> getRegisteredResourcesFor(Class<?> cls){
+	default Set<T> getRegisteredResourcesFor(Class<?> cls){
 		return getRegisteredResourcesFor(EntityUtils.getEntityInfoFor(cls));
 	}
 	
-	default List<T> getRegisteredResourcesFor(String clsName) throws ClassNotFoundException{
+	default Set<T> getRegisteredResourcesFor(String clsName) throws ClassNotFoundException{
 		return getRegisteredResourcesFor(EntityUtils.getEntityInfoFor(clsName));
 	}
 	
-	default List<T> getRegisteredResourcesFor(EntityWrapper<?> ew) throws ClassNotFoundException{
+	default Set<T> getRegisteredResourcesFor(EntityWrapper<?> ew) throws ClassNotFoundException{
 		return getRegisteredResourcesFor(ew.getEntityInfo());
 	}
 	

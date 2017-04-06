@@ -15,6 +15,7 @@ import javax.persistence.RollbackException;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
+import ix.utils.Util;
 
 public class InxightTransaction {
 	private static ConcurrentHashMap<Transaction, InxightTransaction> _instances=
@@ -76,6 +77,10 @@ public class InxightTransaction {
 	public InxightTransaction(Transaction t){
 		this.t=t;
 		_instances.put(t, this);
+//		System.out.println("instances map = " + _instances);
+//		if(_instances.size() >1){
+//			Util.printExecutionStackTrace();
+//		}
 	}
 	
 	

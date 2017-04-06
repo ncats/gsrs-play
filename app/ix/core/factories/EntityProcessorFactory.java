@@ -59,11 +59,11 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 		super(app);
 	}
 
-	public static EntityProcessorFactory getInstance(Application app){
+	public synchronized  static EntityProcessorFactory getInstance(Application app){
 		if(_instance!=null){
 			return _instance;
 		}
-		synchronized (EntityProcessorFactory.class) {
+
 
 			if(_instance!=null){
 				return _instance;
@@ -71,7 +71,7 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 			_instance = new EntityProcessorFactory(app);
 
 			return _instance;
-		}
+
 	}
 
 	

@@ -1772,7 +1772,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 		//Promote special matches
 		if(searchResult.getOptions().getKindInfo() !=null){
 		    //Special "promoted" match types
-			List<String> sponsoredFields = searchResult.getOptions()
+			Set<String> sponsoredFields = searchResult.getOptions()
 			                                           .getKindInfo()
 			                                           .getSponsoredFields();
 

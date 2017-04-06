@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.GinasProcessingMessage;
 import ix.core.ValidationMessage;
 import ix.core.controllers.EntityFactory;
+import ix.core.util.EntityUtils;
 import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.test.SubstanceJsonUtil;
@@ -103,6 +104,10 @@ public class SubstanceAPI {
     }
     public void submitSubstance(SubstanceBuilder substanceBuilder){
         substanceBuilder.buildJsonAnd(j -> ensurePass(submitSubstance(j)));
+    }
+
+    public void submitSubstance(Substance s){
+        ensurePass(submitSubstance(EntityUtils.EntityWrapper.of(s).toFullJsonNode()));
     }
 
     public JsonNode submitSubstanceJson(JsonNode js) {
