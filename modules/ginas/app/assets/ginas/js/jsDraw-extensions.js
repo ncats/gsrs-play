@@ -98,6 +98,8 @@ function afterLoad(){
 	if(!JSDraw2.PT.Br.iso)JSDraw2.PT.Br.iso={};JSDraw2.PT.Br.iso[76]=75.9245416219965;
 	if(!JSDraw2.PT.Br.iso)JSDraw2.PT.Br.iso={};JSDraw2.PT.Br.iso[83]=82.9151803504017;
 	if(!JSDraw2.PT.Br.iso)JSDraw2.PT.Br.iso={};JSDraw2.PT.Br.iso[75]=74.9257762037705;
+	//this one is not accurate
+    if(!JSDraw2.PT.C.iso)JSDraw2.PT.C.iso={};JSDraw2.PT.C.iso[11]=10.99997;
 	if(!JSDraw2.PT.C.iso)JSDraw2.PT.C.iso={};JSDraw2.PT.C.iso[12]=12;
 	if(!JSDraw2.PT.C.iso)JSDraw2.PT.C.iso={};JSDraw2.PT.C.iso[13]=13.0033548156856;
 	if(!JSDraw2.PT.C.iso)JSDraw2.PT.C.iso={};JSDraw2.PT.C.iso[14]=14.0032419926769;

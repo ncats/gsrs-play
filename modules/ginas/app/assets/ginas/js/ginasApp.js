@@ -932,8 +932,10 @@
             //this is the api error checking
             //  $scope.checkErrors();
             $scope.submitting = true;
+            var url1 = baseurl + "assets/templates/modals/submission-loader.html";
+            $scope.open(url1);
+
             if (_.has($scope.substance, '$$update')) {
-                    
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
@@ -943,11 +945,13 @@
                     $scope.updateNav = false;
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
+                    $scope.close(url1);
                     $scope.open(url);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
+                    $scope.close(url1);
                     $scope.open(url);
                 });
             } else {
@@ -963,11 +967,13 @@
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.submitting = false;
+                    $scope.close(url1);
                     $scope.open(url);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
+                    $scope.close(url1);
                     $scope.open(url);
                 });
             }

@@ -70,6 +70,12 @@
 	@if(showSketcher){
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
     <script src='@routes.Assets.at("javascripts/JSDraw4.0.7/Scilligence.JSDraw2.Pro.js")'></script>
+    <script src='@routes.Assets.at("ginas/js/jsDraw-extensions.js")'></script>
+        <script>
+                $(document).ready(function(){
+                afterLoad();
+                });
+        </script>
     }
     <script type="text/javascript">
         var session = {
@@ -99,6 +105,9 @@
 		  }
 	  })
   });
+
+
+
   var onResize = function() {
 	  // apply dynamic padding at the top of the body according to the fixed navbar height
 	  $("body").css("padding-top", $(".navbar-fixed-top").height());

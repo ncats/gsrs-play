@@ -1347,6 +1347,7 @@ span.nowrap-list {
     top:50%;
     left: 50%;
     align: center;
+    z-index: 1000;
 }
 
 @keyframes spin {
