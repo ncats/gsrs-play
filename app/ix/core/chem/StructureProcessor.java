@@ -4,8 +4,10 @@ import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Text;
 import ix.core.models.Value;
+import ix.core.util.StreamUtil;
 
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import lychi.LyChIStandardizer;
 import lychi.util.ChemUtil;
@@ -104,11 +107,21 @@ public class StructureProcessor {
         try {
             MolHandler mh = new MolHandler (mol);
             instrument (struc, components, mh.getMolecule(), standardize);
-        }
-        catch (Exception ex) {
+        }catch (Exception ex) {
+        	
         	System.err.println("Trouble reading structure:");
         	System.err.println(mol);
-            throw new IllegalArgumentException (ex);
+        	System.err.println("Attempting to eliminate SGROUPS");
+        	String nmol = StreamUtil.lines(mol)
+        	          				.filter(l->!l.matches("^M  S.*$"))
+        	          				.collect(Collectors.joining("\n"));
+        	try{
+        		MolHandler mh = new MolHandler (nmol);
+            	instrument (struc, components, mh.getMolecule(), standardize);
+        	}catch(Exception e){
+            	System.err.println("Attempt failed");
+        		throw new IllegalArgumentException (e);	
+        	}
         }
         return struc;
     }
@@ -170,6 +183,7 @@ public class StructureProcessor {
         mol.dearomatize();
 
         struc.molfile = mol.toFormat("mol");
+        
         MolAtom[] atoms = mol.getAtomArray();
         int stereo = 0, def = 0, charge = 0;
         

@@ -2,7 +2,10 @@
     <div class="col-md-12">
         <form class="form-horizontal" name="headerForm" id="addHeaderForm" role="form" novalidate>
             <div class="row form-row">
-                <h1><span>{{::formType}}</span> <code>{{::name}}</code></h1>
+                <div class="col-md-4">
+                <h2><span>{{::formType}}</span> <code>{{::name}}</code></h2>
+                </div>
+                <div class="col-md-2 pull-right"><h3> <code>{{::parent.approvalID}}</code></h3></div>
             </div>
             <div class="row form-row">
                 <div class="col-md-3">

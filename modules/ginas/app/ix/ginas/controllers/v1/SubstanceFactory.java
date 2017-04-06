@@ -50,6 +50,7 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Substance.SubstanceClass;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingStrategy;
@@ -229,7 +230,7 @@ public class SubstanceFactory extends EntityFactory {
 		try {
 			return getCount(finder.get());
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			Logger.error("Error getting count for substances", ex);
 		}
 		return null;
 	}
@@ -496,7 +497,7 @@ public class SubstanceFactory extends EntityFactory {
 		return values;
 	}
 
-	public static synchronized void approveSubstance(Substance s) {
+	private static synchronized void approveSubstance(Substance s) {
 
 		UserProfile up = UserFetcher.getActingUserProfile(false);
 		Principal user = null;
@@ -519,7 +520,7 @@ public class SubstanceFactory extends EntityFactory {
 		if (!s.isPrimaryDefinition()) {
 			throw new IllegalStateException("Cannot approve non-primary definitions.");
 		}
-		if (s.isNonSubstanceConcept()) {
+		if (s.substanceClass.equals(SubstanceClass.concept)) {
 			throw new IllegalStateException("Cannot approve non-substance concepts.");
 		}
 		for (SubstanceReference sr : s.getDependsOnSubstanceReferences()) {

@@ -611,14 +611,14 @@ public class EntityFactory extends Controller {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest ("Only POST is accepted!");
         }
-        InxightTransaction tx = InxightTransaction.beginTransaction();
-        
+
         String content = request().getHeader("Content-Type");
         if (content == null || (content.indexOf("application/json") < 0
                                 && content.indexOf("text/json") < 0)) {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
-        
+
+        InxightTransaction tx = InxightTransaction.beginTransaction();        
         try {
             EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
             mapper.addHandler(new DeserializationProblemHandler () {

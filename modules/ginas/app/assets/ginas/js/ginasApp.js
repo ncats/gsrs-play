@@ -932,8 +932,10 @@
             //this is the api error checking
             //  $scope.checkErrors();
             $scope.submitting = true;
+            var url1 = baseurl + "assets/templates/modals/submission-loader.html";
+            $scope.open(url1);
+
             if (_.has($scope.substance, '$$update')) {
-                    
                 sub = angular.toJson($scope.substance.$$flattenSubstance());
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
@@ -943,11 +945,13 @@
                     $scope.updateNav = false;
                     url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
+                    $scope.close(url1);
                     $scope.open(url);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
+                    $scope.close(url1);
                     $scope.open(url);
                 });
             } else {
@@ -963,11 +967,13 @@
                     $scope.postRedirect = response.data.uuid;
                     var url = baseurl + "assets/templates/modals/submission-success.html";
                     $scope.submitting = false;
+                    $scope.close(url1);
                     $scope.open(url);
                 }, function (response) {
                     $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
+                    $scope.close(url1);
                     $scope.open(url);
                 });
             }
@@ -1508,15 +1514,71 @@
 
     ginasApp.service('APIFetcher', function ($http) {
         var url = baseurl + "api/v1/substances(";
+        var versionurl = baseurl + "api/v1/substances($UUID$)/version";
+        var editurl = baseurl + "api/v1/edits($UUID$)/$oldValue";
         var fetcher = {
-            fetch: function (uuid) {
-                return $http.get(url + uuid + ")",{cache: true},{
+            fetchCurrentVersion(uuid){
+                var url2 = versionurl.replace("$UUID$",uuid);
+                return $http.get(url2,{cache: true},{
                     headers: {
                         'Content-Type': 'text/plain'
                     }
                 }).then(function (response) {
                     return response.data;
                 });
+            },
+            fetch: function (uuid, version) {
+                if(version){
+                    return fetcher.fetchVersion(uuid,version);
+                }
+
+                var url2 = url + uuid + ")";
+                return $http.get(url2,{cache: true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response) {
+                    return response.data;
+                });
+            },
+            fetchVersion: function(uuid, version){
+                return fetcher.fetchCurrentVersion(uuid)
+                              .then(function (r){
+                                    if(r+""===version +""){
+                                        return fetcher.fetch(uuid);
+                                    }else{
+                                        var url2 =url + uuid + ")/@edits";
+                                        return $http.get(url2,{cache: true},{
+                                            headers: {
+                                                'Content-Type': 'text/plain'
+                                            }
+                                        }).then(function (response) {
+                                            console.log("ERROR");
+                                            console.log(response);
+                                            var oversion = _.chain(response.data)
+                                             .filter(function(edit){return version+"" === edit.version;})
+                                             .value();
+
+                                            if(oversion.length>=1){
+                                                var nurl = oversion[0].oldValue;
+                                                nurl = editurl.replace("$UUID$",nurl.split("(")[1].split(")")[0]);
+                                                
+                                                return $http.get(nurl,{cache: true},{
+                                                                headers: {
+                                                                    'Content-Type': 'text/plain'
+                                                                }
+                                                             }).then(function (response) {
+                                                                    return response.data;
+                                                             });
+                                            }else{
+                                                return fetcher.fetch(uuid);
+                                            }
+                                        });
+                                    }
+                               });
+                
+
+                
             }
         };
         return fetcher;
@@ -1635,6 +1697,7 @@
                 obj: '=?',
                 uuid: '=',
                 index: '@',
+                version: '=?',
                 view: '@',
                 numbers: '=',
                 selected: '='
@@ -1743,7 +1806,7 @@
 
                 var display = [];
                 if (_.isUndefined(scope.parent)) {
-                    APIFetcher.fetch(scope.uuid).then(function (data) {
+                    APIFetcher.fetch(scope.uuid, scope.version).then(function (data) {
                         scope.parent = data;
                         var sclass;
                         if (_.has(data, 'protein')) {

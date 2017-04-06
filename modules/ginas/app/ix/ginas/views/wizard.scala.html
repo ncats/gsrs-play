@@ -12,6 +12,8 @@
     @ginas("Register", kind, true) {
         @menu()
     } {
+
+    <div class="loading"><h1>&nbsp;</h1></div>
         <div ng-cloak="" ng-init="form={}">
             <form class="form-horizontal" name ="substanceForm" role ="form" novalidate>
 @*
@@ -194,7 +196,14 @@
 	        			});
 	        			
 	        			},20000);
-	        	} 
+	        	}
+
+                window.onload = function(){
+                    $('.loading').animate({'opacity': 0},200, function() {
+                        $('.loading').hide();
+                        console.info('Loading complete.');
+                    });
+                };
         </script>
     }
 
