@@ -1517,7 +1517,7 @@
         var versionurl = baseurl + "api/v1/substances($UUID$)/version";
         var editurl = baseurl + "api/v1/edits($UUID$)/$oldValue";
         var fetcher = {
-            fetchCurrentVersion(uuid){
+            fetchCurrentVersion: function(uuid){
                 var url2 = versionurl.replace("$UUID$",uuid);
                 return $http.get(url2,{cache: true},{
                     headers: {
