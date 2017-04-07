@@ -53,6 +53,15 @@ public class EntityProcessorFactory extends AccumlatingInternalMapEntityResource
 				return (EntityProcessor) processorCls.newInstance();
 			}
 		}
+
+		@Override
+		public String toString() {
+			return "EntityProcessorConfig{" +
+					"entityClassName='" + entityClassName + '\'' +
+					", processorClassName='" + processorClassName + '\'' +
+					", with=" + with +
+					'}';
+		}
 	}
 	
 	public EntityProcessorFactory(Application app){

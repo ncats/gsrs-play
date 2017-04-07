@@ -666,7 +666,6 @@ public class GinasTestServer extends ExternalResource{
         try {
             Map<String, Object> map = new HashMap<>(additionalConfiguration);
             map.putAll(testSpecificAdditionalConfiguration);
-
             ts = new TestServer(port, fakeApplication(unflatten(map)));
             ts.start();
 
@@ -788,6 +787,8 @@ public class GinasTestServer extends ExternalResource{
                     sessions.clear();
                     //explicitly shutdown indexer to clear file locks
                     App.getTextIndexer().shutdown();
+
+                    EntityProcessorFactory.clearInstance();
                 } finally {
                     ts.stop();
                 }

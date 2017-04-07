@@ -17,11 +17,12 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 	private CodeSequentialGenerator seqGen=null;
 	private String codeSystem;
 	public UniqueCodeGenerator(){
-		
+
 	}
 	
 	
 	public UniqueCodeGenerator(Map m){
+
 		codeSystem = 				(String)  m.get("codesystem");
         String codeSystemSuffix = 	(String)  m.get("suffix");
         int length = 				(Integer) m.get("length");
@@ -37,7 +38,6 @@ public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 
 			@Override
 			public void run() {
-				//System.out.println("Adding code system");
 				if(codeSystem!= null){
 					ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
 					boolean addNew=true;

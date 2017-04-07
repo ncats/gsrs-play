@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigParseOptions;
 import ix.AbstractGinasServerTest;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Role;
+import ix.core.util.RunOnly;
 import ix.ginas.models.v1.Substance;
 import ix.test.server.ControlledVocab;
 import ix.test.server.GinasTestServer;
@@ -86,7 +87,6 @@ public class IntegrationTest extends AbstractGinasServerTest {
 		}});
 
 		ts.modifyConfig("ix.core.entityprocessors", processors);
-
 		ts.start();
 		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/search?q=terms_value:BDNUM");
 		assertFalse( SubstanceJsonUtil.isLiteralNull(result));
