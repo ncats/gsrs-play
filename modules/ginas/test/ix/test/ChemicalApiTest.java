@@ -500,6 +500,33 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 			assertEquals(1, result.getUuids().size());
 		}
 	}
+	
+	@Test
+	public void testCarbonSubstructureSearchDoesNotLimitToAliphaticCarbon() throws Exception {
+		// JsonNode entered = parseJsonFile(resource);
+		
+		String searchFor="\n" + 
+				"   JSDraw204101717192D\n" + 
+				"\n" + 
+				"  1  0  0  0  0  0              0 V2000\n" + 
+				"  409.0000 -142.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+				"M  END";
+		
+		try (RestSession session = ts.newRestSession(ts.getFakeUser1());
+				BrowserSession bsession = ts.newBrowserSession(ts.getFakeUser1())) {
+			SubstanceAPI api = new SubstanceAPI(session);
+
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("c1ccccc1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("Cc1ccccc1")));
+
+			RestSubstanceSearcher searcher = new RestSubstanceSearcher(session);
+			BrowserSubstanceSearcher bsearcher = new BrowserSubstanceSearcher(bsession);
+
+			SearchResult result = bsearcher.substructure(searcher.getStructureAsUUID(searchFor));
+			assertEquals(2, result.getUuids().size());
+		}
+	}
+	
 
     @Test   
     public void ensureWarningOnPentavalentCarbon(){
@@ -516,6 +543,25 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
 															.findAny();
 
 			assertTrue("Pentavalent carbon should issue a warning message", desiredWarning.isPresent());
+            
+        }
+    }
+    
+    @Test   
+    public void ensureWarningOnNetChargeStructure(){
+    	try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode pentaCarbon = makeChemicalSubstanceJSON("[CH3+]");
+
+			SubstanceAPI.ValidationResponse validationResponse = api.validateSubstance(pentaCarbon);
+
+			List<ValidationMessage> messages = validationResponse.getMessages();
+
+			Optional<ValidationMessage>  desiredWarning = messages.stream()
+															.filter(msg -> msg.getMessageType() == ValidationMessage.MESSAGE_TYPE.WARNING &&  msg.getMessage().contains("charged balanced"))
+															.findAny();
+
+			assertTrue("Net charged structure should issue a warning message", desiredWarning.isPresent());
             
         }
     }

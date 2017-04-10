@@ -380,7 +380,6 @@ public class StructureProcessor {
         if(!query){
             struc.smiles = ChemUtil.canonicalSMILES(mol);
         }
-        System.out.println("Canonical:" + struc.smiles);
         
         calcStereo (struc);
         
