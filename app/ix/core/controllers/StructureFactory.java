@@ -9,6 +9,7 @@ import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.StructureProcessor;
+import ix.core.chem.StructureProcessorTask;
 import ix.core.models.Structure;
 import ix.core.plugins.IxCache;
 import ix.core.util.EntityUtils;
@@ -30,14 +31,14 @@ public class StructureFactory extends EntityFactory {
         new Model.Finder(UUID.class, Structure.class);
     
     public static Structure getStructure (UUID id) {
-    	Structure s=getTempStructure(id.toString());
-    	if(s!=null)return s;
+        Structure s=getTempStructure(id.toString());
+        if(s!=null)return s;
         return getEntity (id, finder);
     }
 
     public static Structure getStructure (String id) {
-    	Structure s=getTempStructure(id);
-    	if(s!=null)return s;
+        Structure s=getTempStructure(id);
+        if(s!=null)return s;
         return getEntity (toUUID (id), finder);
     }
     
@@ -71,26 +72,26 @@ public class StructureFactory extends EntityFactory {
     }
     
     public static void saveTempStructure(Structure s){
-    	if(s.id==null)s.id=UUID.randomUUID();
+        if(s.id==null)s.id=UUID.randomUUID();
         
         AccessLogger.info("{} {} {} {} \"{}\"", 
-        		UserFetcher.getActingUser(true).username, 
-        		"unknown", 
-        		"unknown",
-        		"structure search:" + s.id,
-        		s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
-    	IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toFullJson());
+                UserFetcher.getActingUser(true).username, 
+                "unknown", 
+                "unknown",
+                "structure search:" + s.id,
+                s.molfile.trim().replace("\n", "\\n").replace("\r", ""));
+        IxCache.setTemp(s.id.toString(), EntityWrapper.of(s).toFullJson());
     }
     
     public static Structure getTempStructure(String uuid){
-    	String jsn = (String)IxCache.getTemp(uuid);
-    	if(jsn==null)return null;
-    	try{
-    		return EntityUtils.getEntityInfoFor(Structure.class).fromJson(jsn);
-    	}catch(Exception e){
-    		Logger.error("Error deserializing structure", e);
-    		return null;
-    	}	
+        String jsn = (String)IxCache.getTemp(uuid);
+        if(jsn==null)return null;
+        try{
+            return EntityUtils.getEntityInfoFor(Structure.class).fromJson(jsn);
+        }catch(Exception e){
+            Logger.error("Error deserializing structure", e);
+            return null;
+        }    
     }
     
     public static Structure getStructureFrom(String str, boolean store) {
@@ -102,14 +103,22 @@ public class StructureFactory extends EntityFactory {
             }
         }
         try {
-            List<Structure> moieties = new ArrayList<Structure>();
-            String payload = ChemCleaner.getCleanMolfile(str);
-            Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
-                                                                                       // standardize!
-            if (payload.contains("\n") && payload.contains("M  END")) {
-                struc.molfile = payload;
+            Structure struc = new Structure();
+            StructureProcessorTask.Builder taskBuilder = new StructureProcessorTask.Builder()
+                                                                    .mol(str)
+                                                                    .structure(struc)
+                                                                    .query(true)
+                                                                    .standardize(false);
+            
+            //If it doesn't work once, try after removing SGROUPS
+            try{
+                struc = taskBuilder.build().instrument();
+            }catch(Exception e){
+                struc = taskBuilder.mol(ChemCleaner.removeSGroups(str))
+                                   .build()
+                                   .instrument();
             }
-
+            
             if(store){
                 StructureFactory.saveTempStructure(struc);
             }

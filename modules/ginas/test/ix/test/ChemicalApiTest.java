@@ -26,6 +26,8 @@ import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.util.RunOnly;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.test.builder.SubstanceBuilder;
+import ix.test.server.BrowserSession;
+import ix.test.server.BrowserSubstanceSearcher;
 import ix.test.server.RestSession;
 import ix.test.server.RestSubstanceSearcher;
 import ix.test.server.SearchResult;
@@ -453,6 +455,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
         }
    	}
     
+    
     @Test   
    	public void testSubstructureSearchSpecificity() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -470,7 +473,34 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             assertEquals(1, result.getUuids().size());
         }
    	}
-    
+
+	@Test
+	public void testQueryAtomCachingAndSpecificity() throws Exception {
+		// JsonNode entered = parseJsonFile(resource);
+		try (RestSession session = ts.newRestSession(ts.getFakeUser1());
+				BrowserSession bsession = ts.newBrowserSession(ts.getFakeUser1())) {
+			SubstanceAPI api = new SubstanceAPI(session);
+
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)OCCC")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)OC1CC1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccccc1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccc(C)cc1")));
+			ensurePass(api.submitSubstance(makeChemicalSubstanceJSON("S(=O)(=O)(O)Oc1ccc(O)cc1")));
+
+			RestSubstanceSearcher searcher = new RestSubstanceSearcher(session);
+			BrowserSubstanceSearcher bsearcher = new BrowserSubstanceSearcher(bsession);
+
+			SearchResult result = bsearcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC[#6]"));
+			assertEquals(2, result.getUuids().size());
+
+			result = bsearcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC@:[#6]"));
+			assertEquals(3, result.getUuids().size());
+
+			result = bsearcher.substructure(searcher.getStructureAsUUID("S(=O)(=O)(O)OC@-[#6]"));
+			assertEquals(1, result.getUuids().size());
+		}
+	}
+
     @Test   
     public void ensureWarningOnPentavalentCarbon(){
     	try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
@@ -478,7 +508,6 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             JsonNode pentaCarbon = makeChemicalSubstanceJSON("C(C)(C)(C)(C)C");
 
 			SubstanceAPI.ValidationResponse validationResponse = api.validateSubstance(pentaCarbon);
-
 
 			List<ValidationMessage> messages = validationResponse.getMessages();
 

@@ -323,11 +323,11 @@ public class SearchResultContext {
     //TODO: rewrite this to allow moving to core
     @JsonProperty("url")
     public String getUrl(){
-    	return getCall().absoluteURL(Controller.request());
+    	return Global.getHost() + getCall().url();
     }
     @JsonProperty("results")
     public String getResultUrl(){
-    	return getResultCall().absoluteURL(Controller.request());
+    	return Global.getHost() + getResultCall().url();
     }
     @JsonProperty("generatingUrl")
     public String getGeneratingUrl(){

@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -26,6 +27,7 @@ import chemaxon.struc.MolAtom;
 import chemaxon.struc.MolBond;
 import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
+import gov.nih.ncgc.jchemical.Jchemical;
 
 
 public class StructureProcessor {
@@ -108,20 +110,18 @@ public class StructureProcessor {
             MolHandler mh = new MolHandler (mol);
             instrument (struc, components, mh.getMolecule(), standardize);
         }catch (Exception ex) {
-        	
-        	System.err.println("Trouble reading structure:");
-        	System.err.println(mol);
-        	System.err.println("Attempting to eliminate SGROUPS");
-        	String nmol = StreamUtil.lines(mol)
-        	          				.filter(l->!l.matches("^M  S.*$"))
-        	          				.collect(Collectors.joining("\n"));
-        	try{
-        		MolHandler mh = new MolHandler (nmol);
-            	instrument (struc, components, mh.getMolecule(), standardize);
-        	}catch(Exception e){
-            	System.err.println("Attempt failed");
-        		throw new IllegalArgumentException (e);	
-        	}
+            
+            System.err.println("Trouble reading structure:");
+            System.err.println(mol);
+            System.err.println("Attempting to eliminate SGROUPS");
+            String nmol = ChemCleaner.removeSGroups(mol);
+            try{
+                MolHandler mh = new MolHandler (nmol);
+                instrument (struc, components, mh.getMolecule(), standardize);
+            }catch(Exception e){
+                System.err.println("Attempt failed");
+                throw new IllegalArgumentException (e);    
+            }
         }
         return struc;
     }
@@ -153,19 +153,17 @@ public class StructureProcessor {
         instrument (struc, components, mol, true);
     }
     
+    
     /**
-     * This should return a decomposed version of a structure for G-SRS.
-     * 
-     * This means that a molfile should come back with moieties
-     * and a structure, with statistics and predicted stereo
-     * 
-     * @param struc
-     * @param components
-     * @param mol
-     * @param standardize
+     * All instrument calls lead to this one
+     * @param settings
      */
-    static void instrument (Structure struc, Collection<Structure> components,
-                            Molecule mol, boolean standardize) {
+    static void instrument (StructureProcessorTask settings) {
+        Structure struc = settings.getStructure();
+        Collection<Structure> components = settings.getComponents();
+        Molecule mol = settings.getMolecule();
+        boolean standardize = settings.isStandardize();
+        boolean query = settings.isQuery();
         
         if (struc.digest == null) {
             struc.digest = digest (mol);
@@ -175,6 +173,11 @@ public class StructureProcessor {
             mol.clean(2, null);
         }
         
+        if(query){
+            struc.molfile = mol.toFormat("mol");
+            struc.smiles = createQuery(struc.molfile);
+        }
+        
         // no explicit Hs
         mol.hydrogenize(false);
         
@@ -182,7 +185,9 @@ public class StructureProcessor {
         mol.aromatize();
         mol.dearomatize();
 
-        struc.molfile = mol.toFormat("mol");
+        if(!query){
+            struc.molfile = mol.toFormat("mol");
+        }
         
         MolAtom[] atoms = mol.getAtomArray();
         int stereo = 0, def = 0, charge = 0;
@@ -371,9 +376,40 @@ public class StructureProcessor {
         //struc.formula = mol.getFormula();
         Chem.setFormula(struc);
         struc.mwt = mol.getMass();
-        struc.smiles = ChemUtil.canonicalSMILES(mol);
+        
+        if(!query){
+            struc.smiles = ChemUtil.canonicalSMILES(mol);
+        }
+        System.out.println("Canonical:" + struc.smiles);
         
         calcStereo (struc);
+        
+        
+    }
+  
+    
+    /**
+     * This should return a decomposed version of a structure for G-SRS.
+     * 
+     * This means that a molfile should come back with moieties
+     * and a structure, with statistics and predicted stereo
+     * 
+     * @param struc
+     * @param components
+     * @param mol
+     * @param standardize
+     */
+    static void instrument (Structure struc, 
+                            Collection<Structure> components,
+                            Molecule mol, 
+                            boolean standardize) {
+        StructureProcessorTask settings = new StructureProcessorTask.Builder()
+                                                            .structure(struc)
+                                                            .query(false)
+                                                            .mol(mol)
+                                                            .components(components)
+                                                            .build();
+        instrument(settings);
     }
 
     static void calcStereo (Structure struc) {

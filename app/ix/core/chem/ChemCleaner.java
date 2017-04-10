@@ -1,12 +1,13 @@
 package ix.core.chem;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import ix.core.util.StreamUtil;
 
 public class ChemCleaner {
 	/**
@@ -78,5 +79,11 @@ public class ChemCleaner {
 		}
 		mfile+="M  END";
 		return mfile;
+	}
+	
+	public static String removeSGroups(String mol){
+		return StreamUtil.lines(mol)
+  				.filter(l->!l.matches("^M  S.*$"))
+  				.collect(Collectors.joining("\n"));
 	}
 }

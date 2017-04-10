@@ -19,7 +19,9 @@ import ix.core.util.CachedSupplier;
 import ix.core.util.StreamUtil;
 import ix.ginas.models.v1.Substance;
 import ix.utils.Tuple;
+import ix.utils.Util;
 import play.libs.ws.WSRequestHolder;
+import play.libs.ws.WSResponse;
 
 /**
  * REST-based form of a {@link SubstanceSearcher}.
@@ -27,13 +29,17 @@ import play.libs.ws.WSRequestHolder;
  */
 public class RestSubstanceSearcher implements SubstanceSearcher{
     private String defaultSearchOrder =null;
+    private RestSession session;
+    private boolean fetchUUID=false;
+    
+    
     private static final long REST_TIMEOUT=60_000; //1 min
 
-    private RestSession session;
-
     private static final String BASE_URL = "ginas/app/";
-
+    private static final String API_STRUCTURE_SEARCH_POST = BASE_URL + "structureSearch";
     private static final String API_STRUCTURE_SEARCH = BASE_URL + "api/v1/substances/structureSearch";
+    
+    
     private static final String API_TEXT_SEARCH = BASE_URL + "api/v1/substances/search";
     private static final String API_SEQUENCE_SEARCH = BASE_URL + "api/v1/substances/sequenceSearch";
     private static final String API_ALL_BROWSE = BASE_URL + "api/v1/substances/sequenceSearch";
@@ -48,11 +54,54 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
         Objects.requireNonNull(term);
         defaultSearchOrder=dir.formatQuery(term);
     }
+    
+    
+    public void setUsePOST(boolean usePost) {
+    	fetchUUID=usePost;
+    }
+    
+    
+    
+    /**
+     * In case of large structures, they can't be sent via GET requests.
+     * The API does not currently support POST, but it does support searching
+     * for a structure via UUID. This mechanism just registers the structure,
+     * and fetches it via UUID. 
+     * 
+     * 
+     * 
+     * @param str
+     * @return
+     */
+    public String getStructureAsUUID(String str){
+    	Map<String,String[]> originalParams = new LinkedHashMap<String,String[]>();
+    	String post=new Util.QueryStringManipulator(originalParams)
+    	        .toggleInclusion("q", str)
+    	        .toggleInclusion("type", "Flex")
+    		    .toQueryString();
+        WSResponse resp= this.session.getRequest(API_STRUCTURE_SEARCH_POST)
+        		.setContentType("application/x-www-form-urlencoded")
+                .post(post)
+                .get(REST_TIMEOUT);
+        
+        String uuid=resp.getUri().toString().split("[?]q=")[1].split("&")[0];
+        return uuid;
+    }
+    
+    private String getStructure(String str){
+    	if(fetchUUID){
+    		return getStructureAsUUID(str);
+    	}else{
+    		return str;
+    	}
+    }
+    
 
     @Override
     public RestSearchResult substructure(String smiles) throws IOException {
-        JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
-                .setQueryParameter("q", smiles)
+    	
+    	JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
+                .setQueryParameter("q", getStructure(smiles))
                 .setQueryParameter("type", "Substructure")
                 .get()
                 .get(REST_TIMEOUT)
@@ -80,7 +129,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
     @Override
     public RestSearchResult similarity(String smiles, double cutoff) throws IOException {
         JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
-                .setQueryParameter("q", smiles)
+                .setQueryParameter("q", getStructure(smiles))
                 .setQueryParameter("type", "Similarity")
                 .setQueryParameter("cutoff", cutoff+"")
                 .get()
@@ -93,7 +142,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
     @Override
     public SearchResult flex(String smiles) throws IOException {
         JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
-                            .setQueryParameter("q", smiles)
+                            .setQueryParameter("q", getStructure(smiles))
                             .setQueryParameter("type", "Flex")
                             .get()
                             .get(REST_TIMEOUT)
@@ -106,7 +155,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
     @Override
     public RestSearchResult exact(String smiles) throws IOException {
         JsonNode jsn= this.session.getRequest(API_STRUCTURE_SEARCH)
-                .setQueryParameter("q", smiles)
+                .setQueryParameter("q", getStructure(smiles))
                 .setQueryParameter("type", "Exact")
                 .get()
                 .get(REST_TIMEOUT)

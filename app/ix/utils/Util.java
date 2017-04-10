@@ -662,7 +662,7 @@ public class Util {
 			this.originalParams=params;
 		}
 		
-		public void toggleInclusion(String key, String value){
+		public QueryStringManipulator toggleInclusion(String key, String value){
 			List<String> list=params.get().computeIfAbsent(key, k-> new ArrayList<String>());
 			//TODO: could be optimized 
 			if(list.contains(value)){
@@ -670,6 +670,7 @@ public class Util {
 			}else{
 				list.add(value);
 			}
+			return this;
 		}
 		
 		public String toQueryString(){

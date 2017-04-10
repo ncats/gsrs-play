@@ -25,7 +25,6 @@ public class ApiFunctionFactory extends InternalMapEntityResourceFactory<Registe
 			.filter(p->!p.getThrown().isPresent())
 			.map(o->(RegisteredFunction)o.get())
 			.forEach(rf->{
-				System.out.println("Found:" + rf.toString() + " to add to registry");
 				this.register(RegisteredFunction.class, rf, false);
 			});
 	}

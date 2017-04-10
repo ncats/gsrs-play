@@ -31,6 +31,7 @@ import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
+import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
@@ -473,14 +474,13 @@ public class GinasApp extends App {
 
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, maxLength = 50_000)
     public static Result structureSearchPost() {
-
+    
         if (request().body().isMaxSizeExceeded()) {
             return badRequest("Structure is too large!");
         }
-
         
         Map<String, String[]> params = request().body().asFormUrlEncoded();
-
+        
         String[] values = params.get("q");
         String[] type = params.get("type");
         if (type == null || type.length == 0) {
@@ -1480,30 +1480,14 @@ return F.Promise.<Result>promise( () -> {
         return ok(node);
     }
 
+    /**
+     * Simply delegates to {@link StructureFactory.getStructureFrom}.
+     * @param str
+     * @return
+     */
     public static Structure getStructureFrom(String str) {
-        if (str == null)
-            return null;
-        if (UUIDUtil.isUUID(str)) {
-            Structure s = StructureFactory.getStructure(str);
-            if (s != null) {
-                return s;
-            }
-        }
-        try {
-            List<Structure> moieties = new ArrayList<Structure>();
-            String payload = ChemCleaner.getCleanMolfile(str);
-            Structure struc = StructureProcessor.instrument(payload, moieties, false); // don't
-                                                                                       // standardize!
-            if (payload.contains("\n") && payload.contains("M  END")) {
-                struc.molfile = payload;
-            }
-
-            StructureFactory.saveTempStructure(struc);
-            return struc;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Can not parse structure from:" + str);
-        }
+    if(str==null)return null;
+    return StructureFactory.getStructureFrom(str, true);
     }
 
     public static class StructureSearchResultProcessor

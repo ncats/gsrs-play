@@ -9,13 +9,20 @@ import gov.nih.ncgc.jchemical.Jchemical;
 import ix.core.GinasProcessingMessage;
 import ix.core.models.Structure;
 
+import lychi.util.ChemUtil;
+
 //All of the code below should be changed to use
 //chemkit eventually
 
-
 public class ChemUtils {
-	
-	
+
+	/**
+	 * Checks for basic valence problems on structure, adding warnings to the
+	 * supplied list
+	 * 
+	 * @param newstr
+	 * @param gpm
+	 */
 	public static void checkValance(Structure newstr, List<GinasProcessingMessage> gpm) {
 		Chemical c = newstr.toChemical();
 		Molecule m = Jchemical.makeJchemical(c).getMol();
@@ -31,12 +38,19 @@ public class ChemUtils {
 			}
 		}
 	}
-	
+
+	/**
+	 * Checks for basic charge balance of structure, warn if not 0
+	 * 
+	 * @param newstr
+	 * @param gpm
+	 */
 	public static void checkChargeBalance(Structure newstr, List<GinasProcessingMessage> gpm) {
-		if(newstr.charge!=0){
+		if (newstr.charge != 0) {
 			GinasProcessingMessage mes = GinasProcessingMessage
 					.WARNING_MESSAGE("Structure is not charged balanced, net charge of: " + newstr.charge);
 			gpm.add(mes);
 		}
 	}
+
 }
