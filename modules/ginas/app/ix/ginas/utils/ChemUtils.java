@@ -16,7 +16,7 @@ import ix.core.models.Structure;
 public class ChemUtils {
 	
 	
-	public static void CheckValanace(Structure newstr, List<GinasProcessingMessage> gpm) {
+	public static void checkValance(Structure newstr, List<GinasProcessingMessage> gpm) {
 		Chemical c = newstr.toChemical();
 		Molecule m = Jchemical.makeJchemical(c).getMol();
 		m.valenceCheck();
@@ -29,6 +29,14 @@ public class ChemUtils {
 						.WARNING_MESSAGE("Valence Error on " + ma.getSymbol() + " atom (" + (i + 1) + ") ");
 				gpm.add(mes);
 			}
+		}
+	}
+	
+	public static void checkChargeBalance(Structure newstr, List<GinasProcessingMessage> gpm) {
+		if(newstr.charge!=0){
+			GinasProcessingMessage mes = GinasProcessingMessage
+					.WARNING_MESSAGE("Structure is not charged balanced, net charge of: " + newstr.charge);
+			gpm.add(mes);
 		}
 	}
 }

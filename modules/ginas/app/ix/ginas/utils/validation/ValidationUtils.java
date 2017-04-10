@@ -1249,7 +1249,7 @@ public class ValidationUtils {
 					|| cs.moieties.size() != moietiesForSub.size()) {
 
 				GinasProcessingMessage mes = GinasProcessingMessage
-						.WARNING_MESSAGE("Incorrect number of moeities")
+						.WARNING_MESSAGE("Incorrect number of moieties")
 						.appliableChange(true);
 				gpm.add(mes);
 				strat.processMessage(mes);
@@ -1277,6 +1277,10 @@ public class ValidationUtils {
 			}
 			strat.addAndProcess(
 					validateChemicalStructure(cs.structure, struc, strat), gpm);
+			
+			ChemUtils.checkChargeBalance(cs.structure, gpm);
+			
+			
 			validateReferenced((Substance) cs,
 					(GinasAccessReferenceControlled) cs.structure, gpm, strat,
 					ReferenceAction.FAIL);
@@ -1354,7 +1358,8 @@ public class ValidationUtils {
 			oldstr.charge = newstr.charge;
 		}
 
-		ChemUtils.CheckValanace(newstr, gpm);
+		ChemUtils.checkValance(newstr, gpm);
+		
 
 		return gpm;
 	}
