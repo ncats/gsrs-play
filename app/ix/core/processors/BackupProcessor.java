@@ -12,7 +12,6 @@ public class BackupProcessor implements EntityProcessor<BaseModel>{
 	
 	@Override
 	public void postPersist(BaseModel obj) {
-		
 		try{
 			BackupEntity be = new BackupEntity();
 			be.setInstantiated(obj);
@@ -50,12 +49,8 @@ public class BackupProcessor implements EntityProcessor<BaseModel>{
 
 
 	private static BackupProcessor _processor=new BackupProcessor();
-	public synchronized static BackupProcessor getInstance(){
-		if(_processor==null){
-			_processor=new BackupProcessor();
-		}
+	public static BackupProcessor getInstance(){
 		return _processor;
 	}
-	
 
 }

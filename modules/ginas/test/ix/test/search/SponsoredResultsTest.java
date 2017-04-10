@@ -11,9 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import ix.core.util.RunOnly;
+import org.junit.*;
 
 import ix.AbstractGinasClassServerTest;
 import ix.core.factories.SpecialFieldFactory;
@@ -32,13 +31,13 @@ import play.Play;
 public class SponsoredResultsTest extends AbstractGinasClassServerTest{
     static List<String> specialFields;
 		
-	static BrowserSession bsession;
-	static RestSession    rsession;
-	static BrowserSubstanceSearcher    searcher;
-	static SubstanceAPI api;
+	BrowserSession bsession;
+	RestSession    rsession;
+	BrowserSubstanceSearcher    searcher;
+	SubstanceAPI api;
 	
-	@BeforeClass
-	public static void buildup(){
+	@Before
+	public void buildup(){
 		Map<String,Object> add=new HashMap<>();
 		List<Map> special=new ArrayList<>();
 		Map<String,Object> keyValue=new HashMap<>();
@@ -60,8 +59,8 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 		api = new SubstanceAPI(rsession);
 		
 	}
-	@AfterClass
-	public static void breakdown(){
+	@After
+	public void breakdown(){
 	    bsession.close();
 	    rsession.close();
 	}
@@ -76,25 +75,28 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 	@Test
 	public void specialFieldsAreRegisteredInFactoryForEntity(){
 		EntityInfo<Substance> sinfo=EntityUtils.getEntityInfoFor(Substance.class);
-		List<String> specialFound=SpecialFieldFactory.getInstance(Play.application())
-		                .getRegisteredResourcesFor(sinfo);
+		List<String> specialFound=new ArrayList<>(SpecialFieldFactory.getInstance(Play.application())
+		                .getRegisteredResourcesFor(sinfo));
 		assertEquals(specialFields,specialFound);
 	}
 	
 	@Test
+	@RunOnly
     public void exactMatchOnSpecialFieldsShowFirst() throws IOException{
+
 	        String theName = "ANYTHING";
             for(int i=0;i<50;i++){
-                new SubstanceBuilder()
-                    .addName(theName + " some extra stuff " + i)
-                    .buildJsonAnd(j -> ensurePass(api.submitSubstance(j)));            
+                api.submitSubstance(new SubstanceBuilder()
+                    .addName(theName + " " + i)); // we need the space for lucene to correctly tokenize
             }
             Substance special =new SubstanceBuilder()
                 .addName(theName)
-                .generateNewUUID()
+					.generateNewUUID() // need to explicitly put this here so we have a reference to it.
                 .build();
-            ensurePass(api.submitSubstance(EntityWrapper.of(special).toFullJsonNode()));
+           api.submitSubstance(special);
+
             SearchResult sr=searcher.query(theName);
+
             assertEquals(51,sr.getUuids().size());
             Set<String> specialUUIDs = sr.getSpecialUuids();
             assertEquals(special.getUuid().toString().split("-")[0],

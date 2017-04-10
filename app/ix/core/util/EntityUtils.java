@@ -239,7 +239,7 @@ public class EntityUtils {
 		private EntityInfo<T> ei;
 
 		public static <T> EntityWrapper<T> of(T bean) {
-			Objects.requireNonNull(bean);
+			Objects.requireNonNull(bean, "wrapped object is null");
 			if (bean instanceof EntityWrapper) {
 				return (EntityWrapper) bean;
 			}
@@ -934,10 +934,11 @@ public class EntityUtils {
 		Map<String,MethodOrFieldMeta> jsonGetters;
 
 		//Some simple factory helper methods
-		public List<String> getSponsoredFields() {
+		public Set<String> getSponsoredFields() {
 			return SpecialFieldFactory
 					.getInstance(Play.application())
-					.getRegisteredResourcesFor(this);
+					.getRegisteredResourcesFor(this)
+					;
 		}
 
 		public FieldNameDecorator getFieldNameDecorator() {

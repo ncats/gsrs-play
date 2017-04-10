@@ -1,9 +1,6 @@
 package ix.ncats.controllers.auth;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 import com.avaje.ebean.Ebean;
@@ -257,7 +254,7 @@ public class Authentication extends Controller {
 
         AuthenticationCredentials cred=AuthenticationCredentials.create(ctx());
         
-        List<Authenticator> authenticators= AuthenticatorFactory
+        Set<Authenticator> authenticators= AuthenticatorFactory
         	.getInstance(Play.application())
         	.getRegisteredResourcesFor(AuthenticatorFactory.RESOURCE_CLASS);
         

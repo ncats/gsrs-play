@@ -7,9 +7,7 @@ import ix.core.util.EntityUtils.EntityWrapper;
 
 public class IndexingProcessor<T> implements EntityProcessor<T>{
 	private static IndexingProcessor _instance;
-	public IndexingProcessor(){
-		_instance=this;
-	}
+
 	
 	
 	@Override
@@ -37,8 +35,10 @@ public class IndexingProcessor<T> implements EntityProcessor<T>{
 	}
 
 	
-	public static IndexingProcessor getInstance(){
-		if(_instance!=null)return _instance;
-		return new IndexingProcessor();
+	public synchronized static IndexingProcessor getInstance(){
+		if(_instance==null){
+			_instance = new IndexingProcessor();
+		}
+		return _instance;
 	}
 }

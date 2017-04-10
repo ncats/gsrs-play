@@ -220,6 +220,7 @@ public class GinasGlobal extends Global {
 	}
 	
 	public static void runAfterStart(Runnable r){
+		System.out.println("run after start is Running = " + isRunning);
 		if(isRunning){
 			r.run();
 		}else{

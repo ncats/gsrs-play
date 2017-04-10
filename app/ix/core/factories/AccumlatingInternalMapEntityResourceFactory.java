@@ -3,6 +3,8 @@ package ix.core.factories;
 import ix.core.util.EntityUtils.EntityInfo;
 import play.Application;
 
+import java.util.Optional;
+
 public abstract class AccumlatingInternalMapEntityResourceFactory<T> extends InternalMapEntityResourceFactory<T> implements SingleEntityResourceFactory<T>{
 	public AccumlatingInternalMapEntityResourceFactory(Application app) {
 		super(app);

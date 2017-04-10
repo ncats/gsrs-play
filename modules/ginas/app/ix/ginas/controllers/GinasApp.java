@@ -5,20 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalField;
-import java.time.temporal.WeekFields;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +47,6 @@ import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.EntityFetcher;
 import ix.core.search.SearchOptions;
-import ix.core.search.SearchOptions.SearchTermFilter;
 import ix.core.search.SearchResult;
 import ix.core.search.SearchResultContext;
 import ix.core.search.SearchResultProcessor;
@@ -70,6 +62,7 @@ import ix.core.util.EntityUtils.Key;
 import ix.core.util.Java8Util;
 import ix.core.util.ModelUtils;
 import ix.core.util.TimeUtil;
+import ix.core.plugins.Workers;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
@@ -86,12 +79,10 @@ import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
 import ix.ncats.controllers.crud.Administration;
-import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.CallableUtil.TypedCallable;
-import ix.utils.Tuple;
 import ix.utils.UUIDUtil;
 import ix.utils.Util;
 import play.Logger;
@@ -310,6 +301,8 @@ public class GinasApp extends App {
     }
 
     static class GinasFacetDecorator extends FacetDecorator {
+
+        private static final Pattern RANGE_PATTERN = Pattern.compile("^[>]*[<]*[0-9][0-9]*[:]*[0-9]*$");
         private GinasFacetDecorator(Facet facet) {
             super(facet, true, 10);
 
@@ -317,7 +310,8 @@ public class GinasApp extends App {
             // look for range filter to sort by value
             // uses regex now
             for (FV fv : facet.getValues()) {
-                if (!fv.getLabel().matches("^[>]*[<]*[0-9][0-9]*[:]*[0-9]*$")) {
+//                if (!fv.getLabel().matches("^[>]*[<]*[0-9][0-9]*[:]*[0-9]*$")) {
+                if(!RANGE_PATTERN.matcher(fv.getLabel()).matches()){
                     isrange = false;
                     break;
                 }
@@ -538,7 +532,7 @@ public class GinasApp extends App {
         Logger.debug("Substances: rows=" + rows + " page=" + page);
         SearchType stype = SearchType.valueFor(type);
 
-        return F.Promise.promise( ()-> {
+//        return F.Promise.promise( ()-> {
             try {
                 if (stype.isStructureSearch()) {
                     String cutoff = request().getQueryString("cutoff");
@@ -561,8 +555,8 @@ public class GinasApp extends App {
                     } catch (Exception e) {
                         Logger.error(e.getMessage(), e);
                     }
-                    return notFound(ix.ginas.views.html.error.render(400, "Invalid search parameters: type=\"" + type
-                            + "\"; q=\"" + q + "\" cutoff=\"" + cutoff + "\"!"));
+                    return  F.Promise.promise(() -> (Result) notFound(ix.ginas.views.html.error.render(400, "Invalid search parameters: type=\"" + type
+                            + "\"; q=\"" + q + "\" cutoff=\"" + cutoff + "\"!")));
                 } else if (stype.isSequenceSearch()) {
                     return sequences(q, rows, page);
                 } else {
@@ -570,9 +564,9 @@ public class GinasApp extends App {
                 }
             } catch (Exception ex) {
                 Logger.error(ex.getMessage(), ex);
-                return _internalServerError(ex);
+                return F.Promise.promise( () -> _internalServerError(ex));
             }
-        });
+//        });
     }
 
     /**
@@ -855,17 +849,18 @@ public class GinasApp extends App {
         //if we get here either we didn't have a value or it errord out
         return defaultValue;
     }
-    public static Result sequences(final String q, final int rows, final int page) {
+    public static F.Promise<Result> sequences(final String q, final int rows, final int page) {
         double identity = parseDoubleOrElse(request().getQueryString("identity"),  0.5);
 
+            return Workers.WorkerPool.DB_SIMPLE_READ_ONLY.newJob( () -> {
+                String seq = GinasFactory.getSequence(q);
+                if (seq != null) {
+                    Logger.debug("sequence: " + seq.substring(0, Math.min(seq.length(), 20)) + "; identity=" + identity);
+                    return _sequences(seq, identity, rows, page);
+                }
 
-            String seq = GinasFactory.getSequence(q);
-            if (seq != null) {
-                Logger.debug("sequence: " + seq.substring(0, Math.min(seq.length(), 20)) + "; identity=" + identity);
-                return _sequences(seq, identity, rows, page);
-            }
-
-            return internalServerError("Unable to retrieve sequence for " + q);
+                return internalServerError("Unable to retrieve sequence for " + q);
+            }).toPromise();
 
     }
 
@@ -1074,7 +1069,7 @@ public class GinasApp extends App {
      * @return
      * @throws Exception
      */
-    static Result _substances(String q, final int rows, final int page) throws Exception {
+    static F.Promise<Result> _substances(String q, final int rows, final int page) throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(), 1);
         final String key = "substances/" + Util.sha1(request());
 
@@ -1085,26 +1080,32 @@ public class GinasApp extends App {
         // do a text search
 
             if (!forcesql) {
+               return  Workers.WorkerPool.CPU_INTENSIVE.newJob(() -> getSubstanceSearchResult(q, total))
+                        .andThen(Workers.WorkerPool.DB_EXPENSIVE_READ_ONLY, (r ->  {
+                            Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + r + " finished? "
+                                    + r.finished());
+                            if (r.finished()) {
+                                final String k = key + "/result";
 
-                final SearchResult result = getSubstanceSearchResult(q, total);
-                Logger.debug("_substance: q=" + q + " rows=" + rows + " page=" + page + " => " + result + " finished? "
-                        + result.finished());
-                if (result.finished()) {
-                    final String k = key + "/result";
+                                return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(r, rows, page), Result.class));
+                            }
+                            return createSubstanceResult(r, rows, page);
+                        }))
+                .toPromise();
 
-                    return getOrElse(k, TypedCallable.of(() -> createSubstanceResult(result, rows, page), Result.class));
-                }
-                return createSubstanceResult(result, rows, page);
+
                 // otherwise, just show the first substances
             } else {
-                return getOrElse(key, () -> {
-                    SubstanceResultRenderer srr = new SubstanceResultRenderer();
-                    List<Facet> defFacets = getSubstanceFacets(30, request().queryString());
-                    int nrows = Math.max(Math.min(total, rows), 1);
-                    int[] pages = paging(nrows, page, total);
-                    List<Substance> substances = SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
-                    return srr.render(null, page, nrows, total, pages, defFacets, substances);
-                });
+                return Workers.WorkerPool.DB_EXPENSIVE_READ_ONLY.newJob( () ->
+                    getOrElse(key, () -> {
+                        SubstanceResultRenderer srr = new SubstanceResultRenderer();
+                        List<Facet> defFacets = getSubstanceFacets(30, request().queryString());
+                        int nrows = Math.max(Math.min(total, rows), 1);
+                        int[] pages = paging(nrows, page, total);
+                        List<Substance> substances = SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
+                        return srr.render(null, page, nrows, total, pages, defFacets, substances);
+                    })
+                ).toPromise();
             }
 
     }
@@ -1192,25 +1193,25 @@ public class GinasApp extends App {
         return new SubstanceVersionFetcher(version).get(name);
     }
 
-    public static Result similarity(final String query, final double threshold, int rows, int page) {
+    public static F.Promise<Result> similarity(final String query, final double threshold, int rows, int page) {
+                return Workers.WorkerPool.CPU_INTENSIVE.newJob( () -> {
+                    try {
+                        SearchResultContext context = similarity(query, threshold, rows, page,
+                                new StructureSearchResultProcessor());
+                        return fetchResult(context, rows, page, new SubstanceResultRenderer());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Logger.error("Can't perform similarity search: " + query, ex);
+                    }
 
-               try {
-                   SearchResultContext context = similarity(query, threshold, rows, page,
-                           new StructureSearchResultProcessor());
-                   return fetchResult(context, rows, page, new SubstanceResultRenderer());
-               } catch (Exception ex) {
-                   ex.printStackTrace();
-                   Logger.error("Can't perform similarity search: " + query, ex);
-               }
 
-
-
-            return internalServerError(
-                    ix.ginas.views.html.error.render(500, "Unable to perform similarity search: " + query));
+                    return internalServerError(
+                            ix.ginas.views.html.error.render(500, "Unable to perform similarity search: " + query));
+                }).toPromise();
 
     }
 
-    public static Result lychimatch(final String query, int rows, int page, boolean exact) {
+    public static F.Promise<Result> lychimatch(final String query, int rows, int page, boolean exact) {
         try {
             Structure struc2 = StructureProcessor.instrument(query, null, true); // don't
                                                                                  // standardize
@@ -1222,24 +1223,24 @@ public class GinasApp extends App {
         } catch (Exception e) {
             Logger.error("lychi match error", e);
         }
-        return internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform flex search: " + query));
+        return F.Promise.promise( () ->internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform flex search: " + query)));
     }
 
-    public static Result substructure(final String query, final int rows, final int page) {
-
-            try {
-                SearchResultContext context = App.substructure(query, rows, page,
-                        new StructureSearchResultProcessor());
-                return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
-            } catch (BogusPageException ex) {
-                return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("Can't perform substructure search", ex);
-            }
-            return internalServerError(
-                    ix.ginas.views.html.error.render(500, "Unable to perform substructure search: " + query));
-
+    public static F.Promise<Result> substructure(final String query, final int rows, final int page) {
+return F.Promise.<Result>promise( () -> {
+    try {
+        SearchResultContext context = App.substructure(query, rows, page,
+                new StructureSearchResultProcessor());
+        return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
+    } catch (BogusPageException ex) {
+        return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        Logger.error("Can't perform substructure search", ex);
+    }
+    return internalServerError(
+            ix.ginas.views.html.error.render(500, "Unable to perform substructure search: " + query));
+});
     }
 
     /**
