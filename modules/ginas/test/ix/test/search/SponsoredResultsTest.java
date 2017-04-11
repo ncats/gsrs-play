@@ -48,7 +48,6 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 				"root_approvalID",
 				"not_actually_present"
 				);
-		System.out.println("Setting:" + specialFields.toString());
 		keyValue.put("fields",specialFields);
 		special.add(keyValue);
 		add.put(SpecialFieldFactory.IX_CORE_EXACTSEARCHFIELDS, special);

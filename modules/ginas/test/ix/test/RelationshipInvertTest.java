@@ -2,8 +2,7 @@ package ix.test;
 
 import static ix.test.SubstanceJsonUtil.ensureFailure;
 import static ix.test.SubstanceJsonUtil.ensurePass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 
@@ -14,6 +13,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.AbstractGinasServerTest;
+import ix.core.util.RunOnly;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import util.json.Change;
@@ -206,6 +206,77 @@ public class RelationshipInvertTest extends AbstractGinasServerTest {
     	
     }
     
+
+    
+    @Test 
+    public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistoryOnlyOnce()   throws Exception {
+    	
+    		//This is very hard to read right now. A substanceBuilder would make this easy.
+    		
+        //submit primary
+        JsonNode js = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate1));
+        JsonNode newRelate = js.at("/relationships/0");
+        js=new JsonUtil.JsonNodeBuilder(js)
+							.remove("/relationships/1")
+							.remove("/relationships/0")
+							.ignoreMissing()
+							.build();
+        
+        String uuid = js.get("uuid").asText();
+        SubstanceAPI.ValidationResponse validationResult = api.validateSubstance(js);
+            assertTrue(validationResult.isValid());
+        ensurePass(api.submitSubstance(js));
+        js =api.fetchSubstanceJsonByUuid(uuid);
+        
+        
+        //submit alternative
+        JsonNode jsA = SubstanceJsonUtil.prepareUnapprovedPublic(JsonUtil.parseJsonFile(invrelate2));
+        String uuidA = jsA.get("uuid").asText();
+            SubstanceAPI.ValidationResponse validationResultA = api.validateSubstance(js);
+            assertTrue(validationResultA.isValid());
+        ensurePass(api.submitSubstance(jsA));
+        JsonNode beforeA = api.fetchSubstanceJsonByUuid(uuidA);
+        
+        
+       
+        //add relationship To
+        JsonNode updated=new JsonUtil.JsonNodeBuilder(js)
+								.add("/relationships/-", newRelate)
+								.ignoreMissing()
+								.build();
+        
+        //update the substance for real
+        ensurePass(api.updateSubstance(updated));
+        
+        
+        String type1=SubstanceJsonUtil.getTypeOnFirstRelationship(updated);
+        String[] parts=type1.split("->");
+        
+        //check inverse relationship with primary
+        JsonNode fetchedA = api.fetchSubstanceJsonByUuid(uuidA);
+        String refUuidA = SubstanceJsonUtil.getRefUuidOnFirstRelationship(fetchedA);
+        
+        assertTrue(refUuidA.equals(uuid));
+        assertEquals(parts[1] + "->" + parts[0],SubstanceJsonUtil.getTypeOnFirstRelationship(fetchedA));
+    	assertEquals("2",fetchedA.at("/version").asText());
+    	
+    	
+    	//This part is broken?
+    	//Doesn't even return? 
+    	//Probably not actually being considered an edit!
+    	JsonNode historyFetchedForFirst=api.fetchSubstanceJsonByUuid(uuid, 1).getOldValue();
+    	
+    	
+    	Exception thrown = null;
+    	try{
+    		api.fetchSubstanceJsonByUuid(uuidA, 2);
+    	}catch(Exception e){
+    		thrown = e;
+    	}
+    	
+    	assertNotNull("Version 2 of edit should not exist in the history table",thrown);
+    	
+    }
     
     @Test 
     public void addRelationshipAfterAddingEachSubstanceShouldAddInvertedRelationshipAndShouldBeInHistory()   throws Exception {

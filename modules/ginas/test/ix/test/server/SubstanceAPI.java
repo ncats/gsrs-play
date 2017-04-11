@@ -266,7 +266,8 @@ public class SubstanceAPI {
     public WSResponse fetchSubstanceHistory(String uuid, int version){
         return session.createRequestHolder(API_URL_HISTORY.replace("$UUID$", uuid))
                 .setQueryParameter("filter","path=null AND version=\'" + version + "\'") //intentionally null
-                .get().get(timeout);
+                .get()
+                .get(timeout);
     }
     
     

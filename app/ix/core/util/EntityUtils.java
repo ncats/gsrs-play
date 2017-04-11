@@ -66,6 +66,7 @@ import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 
 import ix.core.FieldNameDecorator;
 import ix.core.IgnoredModel;
+import ix.core.History;
 import ix.core.ResourceReference;
 import ix.core.SingleParent;
 import ix.core.controllers.EntityFactory;
@@ -501,6 +502,10 @@ public class EntityUtils {
 		public boolean isIgnoredModel() {
 			return this.ei.isIgnoredModel();
 		}
+		
+		public boolean storeHistory() {
+			return this.ei.storeHistory();
+		}
 
 		public String getInternalIdField() {
 			return this.ei.getInternalIdField();
@@ -873,6 +878,8 @@ public class EntityUtils {
 			}
 			return this.getValue();
 		}
+
+		
 	}
 
 	public static class EntityInfo<T> {
@@ -924,6 +931,7 @@ public class EntityUtils {
 		private boolean isIgnoredModel = false;
 
 		private boolean hasBackup = false;
+		private boolean storeHistory = true;
 		private EntityInfo<?> ancestorInherit;
 
 		private boolean isExplicitDeletable=false;
@@ -939,6 +947,10 @@ public class EntityUtils {
 					.getInstance(Play.application())
 					.getRegisteredResourcesFor(this)
 					;
+		}
+
+		public boolean storeHistory() {
+			return storeHistory;
 		}
 
 		public FieldNameDecorator getFieldNameDecorator() {
@@ -996,7 +1008,11 @@ public class EntityUtils {
 				    ancestorInherit = ei.ancestorInherit;
 				}
 			}
-
+			History history = (History) cls.getAnnotation(History.class);
+			
+			if(history!=null){
+				this.storeHistory = history.store();
+			}
 			kind = cls.getName();
 			// ixFields.add(new FacetField(DIM_CLASS, kind));
 			dyna = (DynamicFacet) cls.getAnnotation(DynamicFacet.class);

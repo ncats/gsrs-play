@@ -54,6 +54,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
 
         private volatile boolean preUpdateWasCalled=false;
         private volatile boolean postUpdateWasCalled=false;
+        
+        private Runnable onPostUpdate = null;
+        
 
         private final Key thekey;
 
@@ -88,7 +91,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
             }
             preUpdateWasCalled=false;
             postUpdateWasCalled=false;
-            
+        }
+        
+        
+        public MyLock setOnPostUpdate(Runnable r){
+        	this.onPostUpdate=r;
+        	return this;
         }
 
         public void release(){
@@ -111,7 +119,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
         }
         
         public void markPostUpdateCalled(){
+        	if(postUpdateWasCalled==false && this.onPostUpdate!=null){
+        		onPostUpdate.run();
+        	}
         	postUpdateWasCalled=true;
+        	
         }
         
         public boolean hasPreUpdateBeenCalled(){
@@ -201,7 +213,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
      * @param <T>
      */
     public interface ChangeOperation<T>{
-        Optional apply(T obj) throws Exception; //Can't be of T type, unfortunately ... may return different thing
+        Optional<?> apply(T obj) throws Exception; //Can't be of T type, unfortunately ... may return different thing
     }
 
     /**
@@ -246,6 +258,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
 
          Edit e=null;
          lock.acquire(); //acquire the lock (blocks)
+         boolean worked=false;
          try{
              EntityWrapper<T> ew = (EntityWrapper<T>)key.fetch().get(); //supplies the object to be edited,
              //you could have a different supplier
@@ -254,7 +267,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
              e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
                                                       //existence of an active edit
              								   		 //let's hope it works anyway!
-             
+             lock.setOnPostUpdate(new Runnable(){
+				@Override
+				public void run() {
+					 popEditForUpdate(key);
+				}
+            	 
+             });
              Optional op = changeOp.apply((T)ew.getValue()); //saving happens here
              												//So should anything with the edit
              												//inside of a post Update hook
@@ -273,6 +292,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
  			e.newValue = saved.toFullJson();
  			e.comments= ew.getChangeReason().orElse(null);
  			e.save();
+ 			worked=true;
  			
              return saved;
          }catch(Exception ex){
@@ -280,7 +300,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
              throw new IllegalStateException(ex);
          }finally{
              if(e !=null) {
-                 popEditForUpdate(key); //When we're all done, release it
+            	 if(!worked){
+            		 popEditForUpdate(key); //When we're all done, release it
+            	 }
              }
              lock.release(); //release the lock
          }
@@ -289,11 +311,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     
     private void storeEditForUpdate(Key k, Edit e){
     	if(editMap.containsKey(k))throw new IllegalStateException("Concurrent edit may have occured, bailing out");
+    	Logger.info("starting edit for: " + k);
     	editMap.put(k,e);
     }
     
     
     public Edit popEditForUpdate(Key key){
+    	Logger.info("finished edit for: " + key);
     	return editMap.remove(key);	
     }
     public boolean isEditPresentUpdate(Key key){
@@ -451,7 +475,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
         }
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
                 try {
-                    if (ew.isEntity() && ew.hasKey()) {
+                    if (ew.isEntity() && ew.storeHistory() && ew.hasKey() ) {
                     	Key key = ew.getKey();
                     	// If we didn't already start an edit for this
                     	// then start one and save it. Otherwise just ignore

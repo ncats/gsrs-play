@@ -844,6 +844,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
         JsonNode entered = em.valueToTree(cs);
         return entered;
     }
+   
     
     public static ChemicalSubstance makeChemicalSubstance(String smiles){
     	return new SubstanceBuilder()

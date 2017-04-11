@@ -13,11 +13,13 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.History;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.utils.Util;
 
 @Entity
 @Table(name="ix_core_backup")
+@History(store=false)
 public class BackupEntity extends IxModel{
 	
 	public static final EntityMapper em = EntityMapper.INTERNAL_ENTITY_MAPPER();
