@@ -8,11 +8,13 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import ix.core.History;
 import ix.core.util.TimeUtil;
 
 @Entity
 @Table(name="ix_core_session")
 @Indexable(indexed=false)
+@History(store=false)
 public class Session extends BaseModel {
     @Id public UUID id;
     @OneToOne(cascade=CascadeType.ALL)
