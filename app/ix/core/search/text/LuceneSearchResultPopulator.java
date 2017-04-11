@@ -29,7 +29,7 @@ class LuceneSearchResultPopulator {
 	TopDocs hits;
 	IndexSearcher searcher;
 	SearchOptions options;
-	int total, offset;
+	int total, offset, last=0;
 	
 	LuceneSearchResultPopulator(SearchResult result, TopDocs hits, IndexSearcher searcher) {
 		this.result = result;
@@ -57,19 +57,24 @@ class LuceneSearchResultPopulator {
 	void fetch(int size) throws IOException, InterruptedException {
 		size = Math.min(options.getTop(), Math.min(total - offset, size));
 		
-		for (int i = result.size(); i < size; ++i) {
-			if (Thread.interrupted()) {
-				throw new InterruptedException();
+		int i=last;
+		try{
+			for (i = last; i < size; ++i) {
+				if (Thread.interrupted()) {
+					throw new InterruptedException();
+				}
+				Document doc = searcher.doc(hits.scoreDocs[i + offset].doc); //bad idea
+				try {
+					
+					Key k = Key.of(doc);
+					result.addNamedCallable(new EntityFetcher<>(k));
+				} catch (Exception e) {
+					e.printStackTrace();
+					Logger.error(e.getMessage());
+				}
 			}
-			Document doc = searcher.doc(hits.scoreDocs[i + offset].doc); //bad idea
-			try {
-				
-				Key k = Key.of(doc);
-				result.addNamedCallable(new EntityFetcher<>(k));
-			} catch (Exception e) {
-				e.printStackTrace();
-				Logger.error(e.getMessage());
-			}
+		}finally{
+			this.last=i;
 		}
 	}
 }

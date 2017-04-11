@@ -414,7 +414,6 @@ public class SearchResult {
             String newQueryString =qManip.toQueryString();
 
             if(newQueryString.length()<=0){
-                System.out.println(newQueryString);
                 return Global.getHost() + base;
             }
             return Global.getHost() + base + "?" + newQueryString;
@@ -452,7 +451,6 @@ public class SearchResult {
 			String newQueryString =qManip.toQueryString();
 
 			if(newQueryString.length()<=0){
-				System.out.println(newQueryString);
 				return Global.getHost() + base;
 			}
 			return Global.getHost() + base + "?" + newQueryString;
@@ -471,6 +469,12 @@ public class SearchResult {
 		processAddition(c);
 	}
 
+	/**
+	 * Use {@link #addNamedCallable(NamedCallable)} instead.
+	 * 
+	 * @deprecated
+	 * @param obj
+	 */
 	protected void add(Object obj) {
 		matches.add(obj);
 		processAddition(() -> obj);
@@ -545,12 +549,9 @@ public class SearchResult {
 	 *
 	 */
 	public static class BasicBuilder extends AbstractBuilder<BasicBuilder> {
-
-
 		protected BasicBuilder getThis(){
 			return this;
 		}
-
 	}
 
 	/**
