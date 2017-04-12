@@ -15,7 +15,7 @@ public abstract class AbstractGinasServerTest extends AbstractGinasTest{
 	 public GinasTestServer ts = createGinasTestServer();
 	 
 	 public GinasTestServer createGinasTestServer(){
-		 return new GinasTestServer(9001);
+		 return new GinasTestServer();
 	 }
 	 
 }

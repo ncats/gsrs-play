@@ -95,7 +95,7 @@ import play.test.TestServer;
 public class GinasTestServer extends ExternalResource{
 
 
-    public static int DEFAULT_PORT = 9001;
+    public static int DEFAULT_PORT = 9005;
 
      private static final String FAKE_USERNAME_PREFIX="FAKE";
      private static final String FAKE_PASSWORD_PREFIX="pa$$word";
