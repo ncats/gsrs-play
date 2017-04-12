@@ -7,6 +7,6 @@ import ix.test.server.GinasTestServer;
 public abstract class AbstractGinasClassServerTest extends AbstractGinasTest {
 
 	@ClassRule
-	public static GinasTestServer ts = new GinasTestServer(9001);
+	public static GinasTestServer ts = new GinasTestServer();
 	 
 }
