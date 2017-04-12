@@ -965,7 +965,7 @@
                         }
 
                         if (navigator.appVersion.toString().indexOf('.NET') > 0) {
-                            window.navigator.msSaveBlob(b, "results.json");
+                            window.navigator.msSaveBlob(b, "results." + fileType);
                         }
                         else {
                             scope.url = URL.createObjectURL(b);
