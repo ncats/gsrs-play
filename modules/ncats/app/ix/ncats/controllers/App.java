@@ -37,6 +37,8 @@ import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalAtom;
+import ix.core.chem.Chem;
+import gov.nih.ncgc.chemical.ChemicalGroup;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.chemical.ChemicalRenderer;
 import gov.nih.ncgc.chemical.DisplayParams;
@@ -822,10 +824,24 @@ public class App extends Authentication {
 			}
 		}
 		dp = preProcessChemical(chem,dp);
-		if(size>250 && !highlight){
-			if(chem.hasStereoIsomers())
-				dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+		
+		if(Chem.isProblem(chem)){
+			dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, false);
+		}else{
+			if(size>250 && !highlight){
+				try{
+					if(chem.hasStereoIsomers()){
+						dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+					Logger.error("Can't generate stereo flags for structure", e);
+				}
+			}
 		}
+		
+		
+		
 
 		/*
         DisplayParams displayParams = new DisplayParams ();
@@ -838,10 +854,13 @@ public class App extends Authentication {
 
 		ChemicalRenderer render = new NchemicalRenderer ();
 
+		
 		render.setDisplayParams(dp);
 		render.addDisplayProperty("TOP_TEXT");
 		render.addDisplayProperty("BOTTOM_TEXT");
 		ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
+		
+		
 		if (format.equals("svg")) {
 			SVGGraphics2D svg = new SVGGraphics2D
 					(bos, new Dimension (size, size));
@@ -899,6 +918,8 @@ public class App extends Authentication {
 				newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
 		}
 		if(newDisplay.size()==0)newDisplay=null;
+
+		
 		return render (mol, format, size, amap,newDisplay);
 	}
 
@@ -1635,6 +1656,7 @@ public class App extends Authentication {
 				seq= id;
 			}else{
 				Structure structure=StructureFactory.getStructure(id);
+				
 				if(structure!=null){
 					seq = structure.smiles;
 				}
@@ -1768,9 +1790,11 @@ public class App extends Authentication {
 	//SHOULD MOVE
 	//
 	//===========================================================================================
-
+	
 	private static DisplayParams preProcessChemical(Chemical c, DisplayParams dp){
 		if(c!=null){
+			
+			
 			boolean compColor=false;
 			boolean fuse=false;
 			boolean hasRgroups=hasRGroups(c);
@@ -1796,10 +1820,14 @@ public class App extends Authentication {
 					}
 				}
 			}
-
+			
 		}
 		return dp;
 	}
+	
+	
+	
+	
 	public static boolean hasRGroups(Chemical c){
 		boolean r=false;
 		for(ChemicalAtom ca:c.getAtomArray()){

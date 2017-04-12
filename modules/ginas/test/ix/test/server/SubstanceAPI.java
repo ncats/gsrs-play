@@ -60,6 +60,7 @@ public class SubstanceAPI {
     private static final String UI_URL_SUBSTANCE="ginas/app/substance/$ID$";
     private static final String UI_URL_SUBSTANCE_VERSION="ginas/app/substance/$ID$/v/$VERSION$";
     private static final String EXPORT_URL="ginas/app/export/$ID$.$FORMAT$";
+    private static final String IMAGE_URL="ginas/app/img/$ID$.$FORMAT$";
 
 
     private static final JsonPointer VALIDATION_MESSAGE_PATH = JsonPointer.valueOf("/validationMessages");
@@ -370,6 +371,18 @@ public class SubstanceAPI {
 	
 	public String exportHTML(String id, String format) {
 		return export(id,format).getBody();
+	}
+	
+	public WSResponse image(String id, String format, int size) {
+		return session.createRequestHolder(IMAGE_URL.replace("$ID$", id).replace("$FORMAT$", format) + "?size=" + size)
+				.get()
+				.get(timeout);
+
+	}
+	
+	public String imageSVG(String id, int size) {
+		return image(id,"svg",size).getBody();
+
 	}
 
 	public JsonNode fetchStructureBrowseJSON() {

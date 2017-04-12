@@ -28,8 +28,10 @@ import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.AbstractValueDeserializer;
 import ix.core.GinasProcessingMessage;
+import ix.core.chem.Chem;
 import ix.core.util.TimeUtil;
 import ix.utils.Global;
+import ix.core.chem.ChemCleaner;
 
 @MappedSuperclass
 @Entity
@@ -363,7 +365,18 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
         Chemical c;
         String mfile = molfile;
         Objects.requireNonNull(molfile);
+        
+        
+        
         c = DEFAULT_READER_FACTORY.createChemical(mfile, Chemical.FORMAT_SDF);
+        
+        if(Chem.isProblem(c)){
+        	messages.add(GinasProcessingMessage
+                    .WARNING_MESSAGE("Structure format modified due to standardization"));
+        	c = DEFAULT_READER_FACTORY.createChemical(ChemCleaner.removeSGroups(mfile), Chemical.FORMAT_SDF);
+        	c.setProperty("WARNING", "Structure format modified due to standardization: removed SGROUPs");
+        }
+        
         if (stereoChemistry != null)
             c.setProperty("STEREOCHEMISTRY", stereoChemistry.toString());
         if (opticalActivity != null)
