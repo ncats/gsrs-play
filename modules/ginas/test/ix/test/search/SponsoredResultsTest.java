@@ -7,19 +7,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import ix.AbstractGinasClassServerTest;
+import ix.AbstractGinasServerTest;
 import ix.core.factories.SpecialFieldFactory;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
-import ix.core.util.RunOnly;
 import ix.ginas.models.v1.Substance;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.server.BrowserSession;
@@ -29,8 +30,8 @@ import ix.test.server.SearchResult;
 import ix.test.server.SubstanceAPI;
 import play.Play;
 
-public class SponsoredResultsTest extends AbstractGinasClassServerTest{
-    static List<String> specialFields;
+public class SponsoredResultsTest extends AbstractGinasServerTest{
+    static Set<String> specialFields;
 		
 	BrowserSession bsession;
 	RestSession    rsession;
@@ -47,7 +48,9 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 				"root_codes_code",
 				"root_approvalID",
 				"not_actually_present"
-				);
+				)
+		        .stream()
+		        .collect(Collectors.toSet());
 		keyValue.put("fields",specialFields);
 		special.add(keyValue);
 		add.put(SpecialFieldFactory.IX_CORE_EXACTSEARCHFIELDS, special);
@@ -75,29 +78,41 @@ public class SponsoredResultsTest extends AbstractGinasClassServerTest{
 	@Test
 	public void specialFieldsAreRegisteredInFactoryForEntity(){
 		EntityInfo<Substance> sinfo=EntityUtils.getEntityInfoFor(Substance.class);
-		List<String> specialFound=new ArrayList<>(SpecialFieldFactory.getInstance(Play.application())
+		Set<String> specialFound=new HashSet<>(SpecialFieldFactory.getInstance(Play.application())
 		                .getRegisteredResourcesFor(sinfo));
 		assertEquals(specialFields,specialFound);
 	}
 	
 	@Test
-    public void exactMatchOnSpecialFieldsShowFirst() throws IOException{
+    public void exactMatchOnSpecialFieldsShowFirst() throws IOException, InterruptedException{
 
 	        String theName = "ANYTHING";
-            for(int i=0;i<50;i++){
+	        Set<String> uuids = new HashSet<String>();
+	        int max=3;
+            for(int i=0;i<max;i++){
                 api.submitSubstance(new SubstanceBuilder()
+                	.generateNewUUID() // need to explicitly put this here so we have a reference to it.
+                	.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
                     .addName(theName + " " + i)); // we need the space for lucene to correctly tokenize
             }
             Substance special =new SubstanceBuilder()
                 .addName(theName)
-					.generateNewUUID() // need to explicitly put this here so we have a reference to it.
+                .generateNewUUID() // need to explicitly put this here so we have a reference to it.
+				.andThen(s->{uuids.add(s.getUuid().toString().split("-")[0]);})
                 .build();
             
+            
+            
             api.submitSubstance(special);
-
             SearchResult sr=searcher.query(theName);
-
-            assertEquals(51,sr.getUuids().size());
+            Set<String> searchUUIDs = new HashSet<>(sr.getUuids());
+            searchUUIDs.removeAll(uuids);
+            
+            System.out.println("Extras");
+            System.out.println(searchUUIDs);
+            
+            assertEquals(uuids,sr.getUuids());
+            assertEquals(max+1,sr.getUuids().size());
             Set<String> specialUUIDs = sr.getSpecialUuids();
             assertEquals(special.getUuid().toString().split("-")[0],
                          specialUUIDs.iterator().next());

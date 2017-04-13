@@ -868,8 +868,7 @@ public class App extends Authentication {
 			render.renderChem(svg, chem, size, size, false);
 			svg.endExport();
 			svg.dispose();
-		}
-		else {
+		}else {
 			BufferedImage bi = render.createImage(chem, size);
 			ImageIO.write(bi, "png", bos); 
 		}
