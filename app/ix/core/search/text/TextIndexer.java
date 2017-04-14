@@ -2574,13 +2574,23 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public void newReindex() {
 
 		flushDaemon.lockFlush();
+        closeAndClear(lookups);
 		//we have to clear our suggest fields since they are about to be completely replaced
-		lookups.clear();
+		//lookups.clear();
 		sorters.clear();
 		isReindexing = true;
 		flushDaemon.unLockFlush();
 	}
 
+    private <K, V extends Closeable> void closeAndClear(Map<K, V> map){
+        Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
+        while(iter.hasNext()){
+            closeAndIgnore(iter.next().getValue());
+            iter.remove();
+
+        }
+
+    }
 	@Override
 	public void doneReindex() {
 		isReindexing = false;
