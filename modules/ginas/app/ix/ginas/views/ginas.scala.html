@@ -37,7 +37,7 @@
     
     
     
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
    
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("moment.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
@@ -88,6 +88,7 @@
     	var baseurl = "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/";
     </script>
 </head>
+<!-- do you see me? -->
 <body scroll-spy="breadcrumb" data-target="#breadcrumb" ng-controller ="GinasController as GinasCtrl">
    	<div class="row-fluid" id="main-menu">@menu</div>
     <div class="container" id="content" >

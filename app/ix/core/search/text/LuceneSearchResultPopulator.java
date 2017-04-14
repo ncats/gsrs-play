@@ -59,13 +59,12 @@ class LuceneSearchResultPopulator {
 		
 		int i=last;
 		try{
-			for (i = last; i < size; ++i) {
+			for (i = last; (i < size) && (i + offset<hits.scoreDocs.length); ++i) {
 				if (Thread.interrupted()) {
 					throw new InterruptedException();
 				}
 				Document doc = searcher.doc(hits.scoreDocs[i + offset].doc); //bad idea
 				try {
-					
 					Key k = Key.of(doc);
 					result.addNamedCallable(new EntityFetcher<>(k));
 				} catch (Exception e) {

@@ -3,19 +3,26 @@ package ix.test.simple;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 
-import chemaxon.formats.MolImporter;
-import chemaxon.struc.MolAtom;
-import chemaxon.struc.MolBond;
 import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
+import ix.AbstractGinasServerTest;
+import ix.AbstractGinasTest;
 import ix.core.chem.StructureProcessor;
+import ix.core.controllers.StructureFactory;
+import ix.core.models.Session;
 import ix.core.models.Structure;
+import ix.core.util.RunOnly;
+import ix.ncats.controllers.App;
+import ix.test.server.BrowserSession;
+import ix.test.server.RestSession;
+import ix.test.server.SubstanceAPI;
 
 /**
  * Simple tests to make sure that molfiles
@@ -25,7 +32,129 @@ import ix.core.models.Structure;
  * @author tyler
  *
  */
-public final class OddMolfileParserTest {
+public final class OddMolfileParserTest extends AbstractGinasServerTest{
+	private static String RENDER_PROBLEM_STUCTURE= "\n" + 
+			"  Symyx   04061703382D 1   1.00000     0.00000     0\n" + 
+			"\n" + 
+			" 45 42  0     0  0            999 V2000\n" + 
+			"   10.0343   -5.1728    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"   -0.5823   -4.1478    0.0000 N   0  0  0  0  0  0           0  0  0\n" + 
+			"    0.0718   -4.5395    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    0.0718   -5.3062    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -0.5657   -5.7020    0.0000 N   0  0  0  0  0  0           0  0  0\n" + 
+			"   -1.2324   -5.3062    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -1.2324   -4.5395    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    2.4051   -5.0603    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.0384   -4.6937    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.0384   -3.9562    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.6717   -5.0561    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.3051   -4.6895    0.0000 C   0  0  3  0  0  0           0  0  0\n" + 
+			"    4.9384   -5.0520    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    5.5759   -4.6854    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    6.2092   -5.0478    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    5.5759   -3.9520    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.3051   -3.9561    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.3051   -5.4228    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.7802   -5.9437    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.9343   -5.7895    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    2.4051   -5.0603    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.0384   -4.6937    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.0384   -3.9562    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.6717   -5.0561    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.3051   -4.6895    0.0000 C   0  0  3  0  0  0           0  0  0\n" + 
+			"    4.9384   -5.0520    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    5.5759   -4.6854    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    6.2092   -5.0478    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    5.5759   -3.9520    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.3051   -3.9561    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.3051   -5.4228    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    3.7802   -5.9437    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"    4.9343   -5.7895    0.0000 O   0  0  0  0  0  0           0  0  0\n" + 
+			"   -0.5823   -4.1478    0.0000 N   0  0  0  0  0  0           0  0  0\n" + 
+			"    0.0718   -4.5395    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    0.0718   -5.3062    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -0.5657   -5.7020    0.0000 N   0  0  0  0  0  0           0  0  0\n" + 
+			"   -1.2324   -5.3062    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -1.2324   -4.5395    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -0.5823   -4.1478    0.0000 N   0  0  0  0  0  0           0  0  0\n" + 
+			"    0.0718   -4.5395    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"    0.0718   -5.3062    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -0.5657   -5.7020    0.0000 N   0  0  0  0  0  0           0  0  0\n" + 
+			"   -1.2324   -5.3062    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"   -1.2324   -4.5395    0.0000 C   0  0  0  0  0  0           0  0  0\n" + 
+			"  7  2  1  0     0  0\n" + 
+			"  3  2  1  0     0  0\n" + 
+			"  4  3  1  0     0  0\n" + 
+			"  5  4  1  0     0  0\n" + 
+			"  6  5  1  0     0  0\n" + 
+			"  6  7  1  0     0  0\n" + 
+			"  8  9  1  0     0  0\n" + 
+			"  9 10  2  0     0  0\n" + 
+			"  9 11  1  0     0  0\n" + 
+			" 11 12  1  0     0  0\n" + 
+			" 12 13  1  0     0  0\n" + 
+			" 13 14  1  0     0  0\n" + 
+			" 14 15  1  0     0  0\n" + 
+			" 21 22  1  0     0  0\n" + 
+			" 22 23  2  0     0  0\n" + 
+			" 22 24  1  0     0  0\n" + 
+			" 24 25  1  0     0  0\n" + 
+			" 25 26  1  0     0  0\n" + 
+			" 26 27  1  0     0  0\n" + 
+			" 27 28  1  0     0  0\n" + 
+			" 27 29  2  0     0  0\n" + 
+			" 25 30  1  0     0  0\n" + 
+			" 25 31  1  0     0  0\n" + 
+			" 31 32  2  0     0  0\n" + 
+			" 31 33  1  0     0  0\n" + 
+			" 14 16  2  0     0  0\n" + 
+			" 12 17  1  0     0  0\n" + 
+			" 12 18  1  0     0  0\n" + 
+			" 18 19  2  0     0  0\n" + 
+			" 18 20  1  0     0  0\n" + 
+			" 39 34  1  0     0  0\n" + 
+			" 35 34  1  0     0  0\n" + 
+			" 36 35  1  0     0  0\n" + 
+			" 37 36  1  0     0  0\n" + 
+			" 38 37  1  0     0  0\n" + 
+			" 38 39  1  0     0  0\n" + 
+			" 45 40  1  0     0  0\n" + 
+			" 41 40  1  0     0  0\n" + 
+			" 42 41  1  0     0  0\n" + 
+			" 43 42  1  0     0  0\n" + 
+			" 44 43  1  0     0  0\n" + 
+			" 44 45  1  0     0  0\n" + 
+			"M  STY  6   1 MUL   2 GEN   3 MUL   4 GEN   5 DAT   6 DAT\n" + 
+			"M  SLB  6   1   1   2   2   3   4   4   5   5   6   6   7\n" + 
+			"M  SAL   1 15   2   3   4   5   6   7  34  35  36  37  38  39  40  41  42\n" + 
+			"M  SAL   1  3  43  44  45\n" + 
+			"M  SPA   1  6   2   3   4   5   6   7\n" + 
+			"M  SMT   1 3\n" + 
+			"M  SDI   1  4   -1.6700   -6.0400   -1.6700   -3.7200\n" + 
+			"M  SDI   1  4    0.3800   -3.7200    0.3800   -6.0400\n" + 
+			"M  SAL   2  1   1\n" + 
+			"M  SDI   2  4    9.6200   -5.8000    9.6200   -4.7400\n" + 
+			"M  SDI   2  4   10.8700   -4.7400   10.8700   -5.8000\n" + 
+			"M  SAL   3 15   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22\n" + 
+			"M  SAL   3 11  23  24  25  26  27  28  29  30  31  32  33\n" + 
+			"M  SPA   3 13   8   9  10  11  12  13  14  15  16  17  18  19  20\n" + 
+			"M  SMT   3 2\n" + 
+			"M  SDI   3  4    1.4100   -6.3900    1.4100   -3.5000\n" + 
+			"M  SDI   3  4    7.2400   -3.5400    7.2400   -6.4300\n" + 
+			"M  SAL   4 15   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16\n" + 
+			"M  SAL   4 15  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31\n" + 
+			"M  SAL   4 14  32  33  34  35  36  37  38  39  40  41  42  43  44  45\n" + 
+			"M  SDI   4  4   -2.2400   -7.1200   -2.2400   -2.8900\n" + 
+			"M  SDI   4  4    8.2300   -2.8900    8.2300   -7.1200\n" + 
+			"M  SDT   5 fdareg_sgroup                 T\n" + 
+			"M  SDD   5    10.9100   -5.9400    DA    ALL  1       5\n" + 
+			"M  SED   5 B\n" + 
+			"M  SDT   6 FDAREG_SGROUP\n" + 
+			"M  SDD   6     8.4400   -7.0900    DA    ALL  1       5\n" + 
+			"M  SED   6 A\n" + 
+			"M  SPL  2   5   2   6   4\n" + 
+			"M  END";
+	
 	String ODD_MOLFILE_BRACKETS="\n" + 
 			"  Symyx   03161717412D 1   1.00000     0.00000     0\n" + 
 			"\n" + 
@@ -270,5 +399,60 @@ public final class OddMolfileParserTest {
 			throw e;
 		}
 	}
+	
+	
+	
+	
+	@Test
+	public void renderOddMolfile() throws Exception{
+		try {
+			List<Structure> slist = new ArrayList<>();
+			Structure s = StructureProcessor.instrument(RENDER_PROBLEM_STUCTURE, slist, true);
+			s.molfile=RENDER_PROBLEM_STUCTURE;
+			StructureFactory.saveTempStructure(s);
+			String sid = s.getId();
+			
+			try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+	        	SubstanceAPI api = new SubstanceAPI(session);
+	        	String svg = api.imageSVG(sid, 400);
+				System.out.println(svg);
+	        	assertTrue("SVG export should work, even with 0 atom brackets", svg.contains("FreeHEP Graphics2D"));
+	        }
+			
+		} catch (Throwable e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
 
+	
+	
+    /**
+     * Certain problem molfiles (such as those with sgroups containing empty atom 
+     * lists) will break. We need to fix these.
+     * 
+     * @throws Exception
+     */
+	@Test
+	public void testExportZeroAtomBracketMolfileDoesNotFail() throws Exception{
+		try {
+			List<Structure> slist = new ArrayList<>();
+			Structure s = StructureProcessor.instrument(RENDER_PROBLEM_STUCTURE, slist, true);
+			s.molfile=RENDER_PROBLEM_STUCTURE;
+			StructureFactory.saveTempStructure(s);
+			String sid = s.getId();
+			
+			try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+	        	SubstanceAPI api = new SubstanceAPI(session);
+	        	String sdf = api.exportHTML(sid, "sdf");
+				System.out.println(sdf);
+	        	assertTrue("SDF export should work, even with 0 atom brackets", sdf.contains("M  END"));
+	        }
+		} catch (Throwable e) {
+			e.printStackTrace();
+			throw e;
+		}
+		
+        
+	}
 }

@@ -7,6 +7,10 @@ import chemaxon.struc.Molecule;
 import chemaxon.struc.MolAtom;
 import ix.core.models.Structure;
 
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+
+import play.Logger;
 /**
  * Chemistry utilities
  */
@@ -57,5 +61,41 @@ public class Chem {
         return FormulaInfo.toCanonicalString(sb.toString());
     }
     
-    
+    /**
+     * Returns true if there is a problem exporting this chemical object
+     * @param c
+     * @return
+     */
+	public static boolean isProblem(Chemical c){
+		boolean problem = false;
+		
+		try{
+			String o=c.export(Chemical.FORMAT_SDF);
+		}catch(Exception e){
+			Logger.warn("Error exporting molecule", e);
+			problem=true;
+		}
+		return problem;
+	}
+	
+	
+	/**
+     * Returns true if there is a problem importing or 
+     * exporting this chemical object
+     * @param c
+     * @return
+     */
+	public static boolean isProblem(String molfile){
+		boolean problem = false;
+		
+		try{
+			Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+					                    .createChemical(molfile, Chemical.FORMAT_AUTO);
+			String o=c.export(Chemical.FORMAT_SDF);
+		}catch(Exception e){
+			Logger.warn("Error exporting molecule", e);
+			problem=true;
+		}
+		return problem;
+	}
 }

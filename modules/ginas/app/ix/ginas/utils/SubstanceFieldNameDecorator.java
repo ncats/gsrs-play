@@ -26,6 +26,8 @@ public class SubstanceFieldNameDecorator implements FieldNameDecorator{
 			m.put("root_codes_type" , "Code Type"); 
 			m.put("root_codes_url" , "Code URL"); 
 			m.put("root_names_name" , "Any Name"); 
+			m.put("root_names_stdName" , "Standardized Name");
+			m.put("root_names_stdName" , "Standardized Name");
 			m.put("root_Display Name","Display Name"); 
 			m.put("root_names_languages_GInAS Language","Language Code"); 
 			m.put("root_mixture_components_substance_approvalID" , "Mixture Component ApprovalID"); 
@@ -109,9 +111,19 @@ public class SubstanceFieldNameDecorator implements FieldNameDecorator{
 			m.put("root_protein_modifications_structuralModifications_extentAmount_units" , "Structural Modification Extent Amount Units"); 
 			m.put("root_protein_modifications_structuralModifications_residueModified" , "Structural Modification Residue"); 
 			m.put("root_protein_modifications_structuralModifications_molecularFragment_refPname" , "Structural Modification Substance Name"); 
-			m.put("root_protein_modifications_structuralModifications_structuralModificationType" , "Structural Modification Type"); 
-			m.put("root_structurallyDiverse_parentSubstance_approvalID" , "Structurally Diverse Parent Approval ID"); 
-			m.put("root_structurallyDiverse_parentSubstance_refPname" , "Structurally Diverse Parent Substance Name"); 
+			m.put("root_protein_modifications_structuralModifications_structuralModificationType" , "Structural Modification Type");
+			
+			
+			m.put("root_structurallyDiverse_parentSubstance_approvalID" , "St. Div. Parent Approval ID"); 
+			m.put("root_structurallyDiverse_parentSubstance_refPname" , "St. Div. Parent Substance Name"); 
+			
+			m.put("root_structurallyDiverse_hybridSpeciesPaternalOrganism_approvalID" , "St. Div. Hybrid Parent (p) Approval ID"); 
+			m.put("root_structurallyDiverse_hybridSpeciesPaternalOrganism_refPname" , "St. Div. Hybrid Parent (p) Substance Name"); 
+			
+			m.put("root_structurallyDiverse_hybridSpeciesMaternalOrganism_approvalID" , "St. Div. Hybrid Parent (m) Approval ID"); 
+			m.put("root_structurallyDiverse_hybridSpeciesMaternalOrganism_refPname" , "St. Div. Hybrid Parent (m) Substance Name"); 
+			
+			
 			m.put("root_structurallyDiverse_part_Parts" , "Structurally Diverse Part"); 
 			m.put("root_moieties_structure_properties_text" , "Structure Created By"); 
 			m.put("root_structure_createdBy" , "Structure Created By"); 

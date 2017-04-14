@@ -52,10 +52,20 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
         private Counter count = new Counter();
         private ReentrantLock lock = new ReentrantLock();
 
-        private volatile boolean preUpdateWasCalled=false;
-        private volatile boolean postUpdateWasCalled=false;
         
-        private Runnable onPostUpdate = null;
+        private Edit edit=null;
+        
+        private boolean preUpdateWasCalled=false;
+        private boolean postUpdateWasCalled=false;
+        
+        private Runnable onPostUpdate = new Runnable(){
+
+			@Override
+			public void run() {
+				
+			}
+        	
+        };
         
 
         private final Key thekey;
@@ -64,12 +74,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
             this.thekey = thekey;
         }
         
+        public boolean hasEdit(){
+        	return this.edit!=null;
+        }
+        
         public boolean isLocked(){
         	return this.lock.isLocked();
         }
         
         public boolean tryLock(){
         	return this.lock.tryLock();
+        }
+        
+        public MyLock addEdit(Edit e){
+        	this.edit=e;
+        	return this;
         }
         
 
@@ -83,19 +102,30 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
                         break;
                     }else{
                     	Logger.warn("still waiting for lock with key " + thekey);
-                        System.out.println("still waiting for lock with key " + thekey);
                     }
                 } catch (InterruptedException e) {
                    throw new RuntimeException(e);
                 }
             }
+            
+            //reset
             preUpdateWasCalled=false;
             postUpdateWasCalled=false;
+            this.edit=null;
         }
         
         
-        public MyLock setOnPostUpdate(Runnable r){
-        	this.onPostUpdate=r;
+        public MyLock addOnPostUpdate(Runnable r){
+        	Runnable rold=this.onPostUpdate;
+        	this.onPostUpdate=new Runnable(){
+
+				@Override
+				public void run() {
+					rold.run();
+					r.run();
+				}
+        		
+        	};
         	return this;
         }
 
@@ -159,7 +189,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     
     //Do we need both?
     private Map<Key, MyLock> lockMap= new ConcurrentHashMap<>();
-    private ConcurrentHashMap<Key, Edit> editMap= new ConcurrentHashMap<>();
+    //private ConcurrentHashMap<Key, Edit> editMap= new ConcurrentHashMap<>();
     
     private TextIndexerPlugin textIndexerPlugin;
     
@@ -185,20 +215,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
      * @param ew
      * @return
      */
-    private Edit createAndPushEditForWrappedEntity(EntityWrapper ew){
+    private Edit createAndPushEditForWrappedEntity(EntityWrapper ew, MyLock lock){
     	Objects.requireNonNull(ew);
     	String oldJSON = ew.toFullJson();
     	
     	Edit e = new Edit(ew.getEntityClass(),ew.getKey().getIdString());
     	e.oldValue=oldJSON;
     	e.path=null;
+    	e.version="unknown";
     	
     	if(ew.getVersion().isPresent()){
     		e.version=ew.getVersion().get().toString();
     		//TODO: consider this
     		//e.comments = e.version + " comment";
     	}
-    	storeEditForUpdate(ew.getKey(),e);
+    	lock.addEdit(e);
     	return e;
     }
 
@@ -264,19 +295,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
              //you could have a different supplier
              //for this, but it's nice to be sure
              //that the object can't be stale
-             e=createAndPushEditForWrappedEntity(ew); //Doesn't block, or even check for 
-                                                      //existence of an active edit
-             								   		 //let's hope it works anyway!
-             lock.setOnPostUpdate(new Runnable(){
-				@Override
-				public void run() {
-					 popEditForUpdate(key);
-				}
-            	 
-             });
+             e=createAndPushEditForWrappedEntity(ew, lock); //Doesn't block, or even check for 
+                                                            //existence of an active edit
+             								   		        //let's hope it works anyway!
+             
+             
+             
              Optional op = changeOp.apply((T)ew.getValue()); //saving happens here
-             												//So should anything with the edit
-             												//inside of a post Update hook
+             												 //So should anything with the edit
+             												 //inside of a post Update hook
              EntityWrapper saved=null;
              
              
@@ -299,34 +326,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
              ex.printStackTrace();
              throw new IllegalStateException(ex);
          }finally{
-             if(e !=null) {
-            	 if(!worked){
-            		 popEditForUpdate(key); //When we're all done, release it
-            	 }
-             }
              lock.release(); //release the lock
          }
      }
 
     
-    private void storeEditForUpdate(Key k, Edit e){
-    	if(editMap.containsKey(k))throw new IllegalStateException("Concurrent edit may have occured, bailing out");
-    	Logger.info("starting edit for: " + k);
-    	editMap.put(k,e);
-    }
-    
-    
-    public Edit popEditForUpdate(Key key){
-    	Logger.info("finished edit for: " + key);
-    	return editMap.remove(key);	
-    }
-    public boolean isEditPresentUpdate(Key key){
-    	return editMap.containsKey(key);
-    }
-    
-    public int getEditUpdateCount(){
-    	return editMap.size();
-    }
 
     public EntityPersistAdapter () {
     	this(Play.application());
@@ -480,10 +484,12 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
                     	// If we didn't already start an edit for this
                     	// then start one and save it. Otherwise just ignore
                     	// the edit piece.
-						if (!isEditPresentUpdate(key)) { 
+						if (ml==null || !ml.hasEdit()) { 
 							Edit edit = new Edit(ew.getEntityClass(), key.getIdString());
-							edit.oldValue = EntityWrapper.of(oldvalues).toFullJson();
-							edit.version = ew.getVersion().orElse(null);
+							EntityWrapper<?> ewold=EntityWrapper.of(oldvalues);
+							
+							edit.oldValue = ewold.toFullJson();
+							edit.version = ewold.getVersion().orElse(null);
 							edit.comments= ew.getChangeReason().orElse(null);
 							edit.kind = ew.getKind();
 							edit.newValue = ew.toFullJson(); 

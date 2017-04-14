@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.gargoylesoftware.htmlunit.AjaxController;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -31,7 +32,7 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 
     private static final long TIMEOUT = 10_000L;
 
-    private WebClient webClient;
+    private final WebClient webClient;
     private String sessionCookie;
     private AuthenticationStrategy authenticationStrategy = NullAuthenticationStrategy.INSTANCE;
 
@@ -39,6 +40,14 @@ public class BrowserSession extends AbstractSession<WSResponse>{
         super(port);
         
         webClient = new WebClient();
+        
+        webClient.setAjaxController(new AjaxController(){
+			@Override
+			public boolean processSynchron(HtmlPage page, WebRequest request, boolean async) {
+				return true;
+			}
+        	
+        });
       //  webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
     }
     public BrowserSession(GinasTestServer.User user, int port) {
@@ -50,6 +59,14 @@ public class BrowserSession extends AbstractSession<WSResponse>{
 		authenticationStrategy = authenticationStrategyFactory.newInstance(this, webClient);
 
 		authenticationStrategy.login(user);
+		 
+        webClient.setAjaxController(new AjaxController(){
+			@Override
+			public boolean processSynchron(HtmlPage page, WebRequest request, boolean async) {
+				return true;
+			}
+        	
+        });
 
     }
 
