@@ -30,8 +30,14 @@ import ix.core.AbstractValueDeserializer;
 import ix.core.GinasProcessingMessage;
 import ix.core.chem.Chem;
 import ix.core.util.TimeUtil;
+import ix.utils.Util;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.utils.Global;
 import ix.core.chem.ChemCleaner;
+import ix.core.controllers.StructureFactory;
+
+
+import play.Logger;
 
 @MappedSuperclass
 @Entity
@@ -352,6 +358,36 @@ public class Structure extends BaseModel implements ForceUpdatableModel{
             this.id=newid;
         }
     }
+    
+    
+    /**
+     * This is used to get a form of the structure which is guaranteed
+     * to be present in an accessible way via ID. This is necessary only
+     * when there is an ID which may not be present (anymore) in the database,
+     * or not easily accessible due to some transient state.
+     * @return
+     */
+    
+    @JsonIgnore
+    public Structure getDisplayStructure(){
+    	Structure sfetch = StructureFactory.getStructure(this.id);
+    	
+    	if(sfetch==null || !sfetch.version.equals(this.version)){
+    		try{
+	    		Structure s=EntityWrapper.of(this).getClone();
+	    		s.id = Util.sha1UUID(s.molfile+":" + s.digest);
+	    		StructureFactory.saveTempStructure(s);
+	    		return s;
+    		}catch(Exception e){
+    			Logger.error("Error saving display structure" , e);
+    			StructureFactory.saveTempStructure(this);
+    			return this;
+    		}
+    	}
+    	return this;
+    	
+    }
+    
 
     @JsonIgnore
     @Transient

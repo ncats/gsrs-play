@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -108,6 +109,17 @@ public class Util {
     
     public static void printExecutionStackTrace(){
     	System.out.println(getExecutionPath());
+    }
+    
+    public static UUID sha1UUID(String seed){
+    	try{
+    		MessageDigest md = MessageDigest.getInstance("SHA1");	
+        	md.update(seed.getBytes("utf8"));
+        	return UUID.nameUUIDFromBytes(md.digest());
+    	}catch(Exception e){
+    		UUID uuid = new UUID(seed.hashCode(), (seed+"?!").hashCode());
+    		return uuid;
+    	}
     }
     
     public static String sha1 (Http.Request req) {

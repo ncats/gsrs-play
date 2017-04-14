@@ -104,6 +104,8 @@ public class App extends Authentication {
 	static final String APP_CACHE = App.class.getName();
 	public static final int FACET_DIM = 20;
 	public static final int MAX_SEARCH_RESULTS = 1000;
+	
+	
 
 	public static CachedSupplier<PayloadPlugin> _payloader = 
 			CachedSupplier.of(()->Play.application().plugin(PayloadPlugin.class)) ;
@@ -875,7 +877,7 @@ public class App extends Authentication {
 
 		return bos.toByteArray();
 	}
-
+ 
 	public static byte[] render (Structure struc, String format, int size, int[] amap)
 			throws Exception {
 		Map newDisplay = new HashMap();
@@ -950,8 +952,10 @@ public class App extends Authentication {
 	 * @return
 	 */
 	public static Result structure (final String id,
-			final String format, final int size,
+			final String format, 
+			final int size,
 			final String atomMap) {
+		
 
 		final int[] amap = stringToIntArray(atomMap);
 		if (format.equals("svg") || format.equals("png")) {
@@ -1017,6 +1021,59 @@ public class App extends Authentication {
 			}
 		}
 		return notFound ("Not a valid structure "+id);
+	}
+	
+	/**
+	 * Export a structure to a given format (usually an image)
+	 * @param struc
+	 * @param format
+	 * @param size
+	 * @param atomMap
+	 * @return
+	 */
+	public static Result structure(Structure struc, final String format, final int size, final String atomMap) {
+
+		final int[] amap = stringToIntArray(atomMap);
+		if (format.equals("svg") || format.equals("png")) {
+			final String key = Structure.class.getName() + "/" + size + "/" + struc.id + "." + format + ":" + atomMap
+					+ "|" + struc.version;
+			String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+			try {
+				byte[] result = getOrElse(key, TypedCallable.of(() -> {
+					return render(struc, format, size, amap);
+				}, byte[].class));
+				if (result != null) {
+					response().setContentType(mime);
+					return ok(result);
+				}
+			} catch (Exception ex) {
+				Logger.error("Can't generate image for structure " + struc.id + " format=" + format + " size=" + size, ex);
+				return internalServerError("Unable to retrieve image for structure " + struc.id);
+			}
+		} else {
+			final String key = Structure.class.getName() + "/" + struc.id + "." + format + ":" + atomMap + "|"
+					+ struc.version;
+			try {
+				response().setContentType("text/plain");
+				return getOrElse(key, () -> {
+					if (format.equals("mrv")) {
+						MolHandler mh = new MolHandler(struc.molfile);
+						if (mh.getMolecule().getDim() < 2) {
+							mh.getMolecule().clean(2, null);
+						}
+						return ok(mh.getMolecule().toFormat("mrv"));
+					} else if (format.equals("mol") || format.equals("sdf")) {
+						return struc.molfile != null ? ok(struc.molfile) : noContent();
+					} else {
+						return struc.smiles != null ? ok(struc.smiles) : noContent();
+					}
+				});
+			} catch (Exception ex) {
+				Logger.error("Can't convert format " + format + " for structure " + struc.id, ex);
+				return internalServerError("Unable to convert structure " + struc.id + " to format " + format);
+			}
+		}
+		return notFound("Not a valid structure " + struc.id);
 	}
 
 	public static String getKeyForCurrentRequest(){
@@ -1411,9 +1468,6 @@ public class App extends Authentication {
 			// this may be an acceptable lack of responsiveness
 			result.copyTo(results, i, rows, true);
 			facets.addAll(result.getFacets());
-
-
-
 
 			// If the context was determined, now we can mark it as done.
 			if(stat == SearchResultContext.Status.Determined){
