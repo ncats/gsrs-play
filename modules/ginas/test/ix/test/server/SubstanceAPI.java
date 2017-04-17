@@ -69,7 +69,8 @@ public class SubstanceAPI {
     private final RestSession session;
 
     private final long timeout = 10_000L;
-
+    private final long update_timeout = 60_000L;
+    
     public SubstanceAPI(RestSession session) {
         Objects.requireNonNull(session);
         this.session = session;
@@ -117,7 +118,7 @@ public class SubstanceAPI {
     }
 
     public WSResponse updateSubstance(JsonNode js) {
-        return session.createRequestHolder(API_URL_UPDATE).put(js).get(timeout);
+        return session.createRequestHolder(API_URL_UPDATE).put(js).get(update_timeout);
 
     }
 

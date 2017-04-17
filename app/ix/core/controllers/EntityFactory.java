@@ -1136,10 +1136,8 @@ public class EntityFactory extends Controller {
          	//     get called twice?
          	
          	Model newValue = (Model)nWrap.getValue();
-         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
-         	
+         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue,null);
          	newValue.save(); 
-         	
          	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, oldValue);
          	
          	//This doesn't mutate the object, so we're in trouble
