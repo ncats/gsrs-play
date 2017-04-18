@@ -6,8 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -23,7 +21,6 @@ import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
-import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.java8Util.Java8ForOldEbeanHelper;
@@ -48,138 +45,7 @@ import tripod.chem.indexer.StructureIndexer;
 
 public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexListener{
 
-    private class MyLock{
-        private Counter count = new Counter();
-        private ReentrantLock lock = new ReentrantLock();
 
-        
-        private Edit edit=null;
-        
-        private boolean preUpdateWasCalled=false;
-        private boolean postUpdateWasCalled=false;
-        
-        private Runnable onPostUpdate = new Runnable(){
-
-			@Override
-			public void run() {
-				
-			}
-        	
-        };
-        
-
-        private final Key thekey;
-
-        public MyLock(Key thekey) {
-            this.thekey = thekey;
-        }
-        
-        public boolean hasEdit(){
-        	return this.edit!=null;
-        }
-        
-        public boolean isLocked(){
-        	return this.lock.isLocked();
-        }
-        
-        public boolean tryLock(){
-        	return this.lock.tryLock();
-        }
-        
-        public MyLock addEdit(Edit e){
-        	this.edit=e;
-        	return this;
-        }
-        
-
-        public void acquire(){
-            synchronized (count){
-                count.increment();
-            }
-            while(true){
-                try {
-                    if(lock.tryLock(1, TimeUnit.MINUTES)){
-                        break;
-                    }else{
-                    	Logger.warn("still waiting for lock with key " + thekey);
-                    }
-                } catch (InterruptedException e) {
-                   throw new RuntimeException(e);
-                }
-            }
-            
-            //reset
-            preUpdateWasCalled=false;
-            postUpdateWasCalled=false;
-            this.edit=null;
-        }
-        
-        
-        public MyLock addOnPostUpdate(Runnable r){
-        	Runnable rold=this.onPostUpdate;
-        	this.onPostUpdate=new Runnable(){
-
-				@Override
-				public void run() {
-					rold.run();
-					r.run();
-				}
-        		
-        	};
-        	return this;
-        }
-
-        public void release(){
-            synchronized (count) {
-                count.decrementAndGet();
-            }
-            lock.unlock();
-            synchronized (count) {
-                int value = count.intValue();
-                if(value ==0){
-                    //no more blocking records?
-                    //remove ourselves from the map to free memory
-                    lockMap.remove(thekey);
-                }
-            }
-        }
-        
-        public void markPreUpdateCalled(){
-        	preUpdateWasCalled=true;
-        }
-        
-        public void markPostUpdateCalled(){
-        	if(postUpdateWasCalled==false && this.onPostUpdate!=null){
-        		onPostUpdate.run();
-        	}
-        	postUpdateWasCalled=true;
-        	
-        }
-        
-        public boolean hasPreUpdateBeenCalled(){
-        	return preUpdateWasCalled;
-        }
-        
-        public boolean hasPostUpdateBeenCalled(){
-        	return postUpdateWasCalled;
-        }
-    }
-
-    private static class Counter{
-        private int count=0;
-
-        public void increment(){
-            count++;
-        }
-
-        public int decrementAndGet(){
-            return --count;
-        }
-
-        public int intValue(){
-            return count;
-        }
-    }
 
 	private static EntityPersistAdapter _instance =null;
 	
@@ -281,7 +147,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
          MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
              @Override
              public MyLock apply(Key key) {
-                 return new MyLock(key); //This should work, but feels wrong
+                 return new MyLock(key, lockMap); //This should work, but feels wrong
              }
          });
 
