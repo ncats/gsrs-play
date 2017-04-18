@@ -600,8 +600,18 @@
                 }
             });
 
-        $scope.type = 'Substructure';
-        $scope.cutoff = 0.8;
+        $scope.type = $location.search().type;
+        
+        if(!$scope.type){
+        	$scope.type="Substructure";
+        }
+        
+        $scope.cutoff = $location.search().cutoff-0;
+        if(!Number.isFinite($scope.cutoff)){
+        	$scope.cutoff=0.8;
+        }
+        
+        
         $scope.stage = true;
         $scope.gridView = localStorageService.get('gridView') || false;
         $scope.diff = false;
@@ -1102,6 +1112,20 @@
         };
     });
 
+    ginasApp.directive('stringToNumber', function() {
+    	  return {
+    	    require: 'ngModel',
+    	    link: function(scope, element, attrs, ngModel) {
+    	      ngModel.$parsers.push(function(value) {
+    	        return '' + value;
+    	      });
+    	      ngModel.$formatters.push(function(value) {
+    	        return parseFloat(value);
+    	      });
+    	    }
+    	  };
+    	});
+    
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function (value) {

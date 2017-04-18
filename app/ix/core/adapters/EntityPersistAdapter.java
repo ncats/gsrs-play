@@ -22,6 +22,7 @@ import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
 import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.crud.EditLock;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.java8Util.Java8ForOldEbeanHelper;
 import ix.core.models.Edit;

@@ -1,5 +1,6 @@
-package ix.core.adapters;
+package ix.core.crud;
 
+import ix.core.adapters.InxightTransaction;
 import ix.core.models.Edit;
 import ix.core.util.EntityUtils;
 import play.Logger;
@@ -11,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by katzelda on 4/18/17.
  */
-class EditLock {
+public class EditLock {
 
     private static class Counter{
         private int count=0;
@@ -86,10 +87,6 @@ class EditLock {
             count.increment();
         }
         while (true) {
-
-            if (lock.isHeldByCurrentThread()) {
-                System.out.println("Yes, we got this twice.");
-            }
             try {
                 if (lock.tryLock(1, TimeUnit.SECONDS)) {
                     break;
@@ -111,14 +108,9 @@ class EditLock {
 
     public EditLock addOnPostUpdate(Runnable r) {
         Runnable rold = this.onPostUpdate;
-        this.onPostUpdate = new Runnable() {
-
-            @Override
-            public void run() {
-                rold.run();
-                r.run();
-            }
-
+        this.onPostUpdate = ()->{
+        	rold.run();
+        	r.run();
         };
         return this;
     }
