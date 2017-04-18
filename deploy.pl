@@ -72,7 +72,7 @@ if(-e $ginasFileDump){
 }else{
 	die "FILE DOES NOT EXIST!!!!";
 }
-my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app -Dix.ginas.load.file=$ginasFileDump";
+my $command = "$abs_path/bin/ginas -mem 4096 -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.host=https://tripod.nih.gov/ -Dapplication.context=/dev/ginas/app -Dix.ginas.load.file=$ginasFileDump";
 #-Dix.admin=true -Dix.authentication.allownonauthenticated=false";
 
 my $daemon = Proc::Daemon->new(
