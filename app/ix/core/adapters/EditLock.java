@@ -4,6 +4,7 @@ import ix.core.models.Edit;
 import ix.core.util.EntityUtils;
 import play.Logger;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -11,9 +12,27 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by katzelda on 4/18/17.
  */
 class EditLock {
-    private EntityPersistAdapter.Counter count = new EntityPersistAdapter.Counter();
+
+    private static class Counter{
+        private int count=0;
+
+        public void increment(){
+            count++;
+        }
+
+        public int decrementAndGet(){
+            return --count;
+        }
+
+        public int intValue(){
+            return count;
+        }
+    }
+    private Counter count = new Counter();
     private ReentrantLock lock = new ReentrantLock();
 
+
+    private final  Map<EntityUtils.Key, EditLock> lockMap;
 
     private InxightTransaction transaction = null;
     private Edit edit = null;
@@ -21,17 +40,14 @@ class EditLock {
     private boolean preUpdateWasCalled = false;
     private boolean postUpdateWasCalled = false;
 
-    private Runnable onPostUpdate = new Runnable() {
-        @Override
-        public void run() {
-        }
-    };
+    private Runnable onPostUpdate = () -> {}; //no-op
 
 
     private final EntityUtils.Key thekey;
 
-    public EditLock(EntityUtils.Key thekey) {
+    public EditLock(EntityUtils.Key thekey, Map<EntityUtils.Key, EditLock> lockMap) {
         this.thekey = thekey;
+        this.lockMap = lockMap;
     }
 
 
