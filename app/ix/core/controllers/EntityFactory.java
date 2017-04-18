@@ -1089,12 +1089,30 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, new DefaultValidator<T>());
     }
     
-    
-    //Typically mutates, but doesn't sometimes 
+  //Typically mutates, but doesn't sometimes 
     //This is not ideal. 
     //Also, the generic "T" here really doesn't do anything
     //as the contract has no enforcement.
     //
+    
+    /**
+     * Takes an entity (wrapped in an {@link EntityWrapper}) as an original state,
+     * as well as a target state entity (also wrapped in an {@link EntityWrapper}),
+     * and will perform the update necessary to the database for the new target to be
+     * saved. Returns the entity which was saved.
+     * 
+     * <p>
+     * Currently, this method preferentially mutates the old object to
+     * conform to the new object (using {@link PojoPatch}), and then performs
+     * an update operation. 
+     * </p>
+     * 
+     *  
+     * @param oWrap
+     * @param nWrap
+     * @return
+     * @throws Exception
+     */
     public static <T> EntityWrapper<T> calculateAndApplyDiff(EntityWrapper<? extends T> oWrap, EntityWrapper<? extends T> nWrap) throws Exception{
     	 boolean usePojoPatch=false;
          if(oWrap.getEntityClass().equals(nWrap.getEntityClass())){ //only use POJO patch if the entities are the same type
@@ -1118,11 +1136,11 @@ public class EntityFactory extends Controller {
          	//     get called twice?
          	
          	Model newValue = (Model)nWrap.getValue();
-         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue);
+         	EntityPersistAdapter.getInstance().preUpdateBeanDirect(newValue,null);
          	newValue.save(); 
          	EntityPersistAdapter.getInstance().postUpdateBeanDirect(newValue, oldValue);
          	
-         	//This doesn't morph the object, so we're in trouble
+         	//This doesn't mutate the object, so we're in trouble
          	return (EntityWrapper<T>)nWrap; //Delete & Create
          }
     }

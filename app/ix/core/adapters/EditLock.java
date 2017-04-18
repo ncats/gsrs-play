@@ -4,44 +4,36 @@ import ix.core.models.Edit;
 import ix.core.util.EntityUtils;
 import play.Logger;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created by katzelda on 4/14/17.
+ * Created by katzelda on 4/18/17.
  */
-class MyLock {
-    private Counter count = new Counter();
+class EditLock {
+    private EntityPersistAdapter.Counter count = new EntityPersistAdapter.Counter();
     private ReentrantLock lock = new ReentrantLock();
 
-    private final Map<EntityUtils.Key, MyLock> lockMap;
 
+    private InxightTransaction transaction = null;
     private Edit edit = null;
 
     private boolean preUpdateWasCalled = false;
     private boolean postUpdateWasCalled = false;
 
     private Runnable onPostUpdate = new Runnable() {
-
         @Override
         public void run() {
-
         }
-
     };
 
 
     private final EntityUtils.Key thekey;
 
-    public MyLock(EntityUtils.Key thekey, Map<EntityUtils.Key, MyLock> lockMap) {
+    public EditLock(EntityUtils.Key thekey) {
         this.thekey = thekey;
-        this.lockMap = lockMap;
     }
 
-    public boolean hasEdit() {
-        return this.edit != null;
-    }
 
     public boolean isLocked() {
         return this.lock.isLocked();
@@ -51,8 +43,24 @@ class MyLock {
         return this.lock.tryLock();
     }
 
-    public MyLock addEdit(Edit e) {
+    public boolean hasEdit() {
+        return this.edit != null;
+    }
+
+    public EditLock addEdit(Edit e) {
+        if (hasEdit()) {
+            System.out.println("Existing edit will be overwritten");
+        }
         this.edit = e;
+        return this;
+    }
+
+    public InxightTransaction getTransaction() {
+        return this.transaction;
+    }
+
+    public EditLock setTransaction(InxightTransaction it) {
+        this.transaction = it;
         return this;
     }
 
@@ -62,8 +70,12 @@ class MyLock {
             count.increment();
         }
         while (true) {
+
+            if (lock.isHeldByCurrentThread()) {
+                System.out.println("Yes, we got this twice.");
+            }
             try {
-                if (lock.tryLock(1, TimeUnit.MINUTES)) {
+                if (lock.tryLock(1, TimeUnit.SECONDS)) {
                     break;
                 } else {
                     Logger.warn("still waiting for lock with key " + thekey);
@@ -77,10 +89,11 @@ class MyLock {
         preUpdateWasCalled = false;
         postUpdateWasCalled = false;
         this.edit = null;
+
     }
 
 
-    public MyLock addOnPostUpdate(Runnable r) {
+    public EditLock addOnPostUpdate(Runnable r) {
         Runnable rold = this.onPostUpdate;
         this.onPostUpdate = new Runnable() {
 
@@ -127,22 +140,5 @@ class MyLock {
 
     public boolean hasPostUpdateBeenCalled() {
         return postUpdateWasCalled;
-    }
-
-
-    private static class Counter{
-        private int count=0;
-
-        public void increment(){
-            count++;
-        }
-
-        public int decrementAndGet(){
-            return --count;
-        }
-
-        public int intValue(){
-            return count;
-        }
     }
 }

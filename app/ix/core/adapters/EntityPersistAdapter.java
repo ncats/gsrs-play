@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -21,6 +23,7 @@ import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.factories.EntityProcessorFactory;
 import ix.core.java8Util.Java8ForOldEbeanHelper;
@@ -36,6 +39,7 @@ import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
+import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.reindex.ReIndexListener;
 import ix.seqaln.SequenceIndexer;
 import play.Application;
@@ -45,7 +49,155 @@ import tripod.chem.indexer.StructureIndexer;
 
 public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexListener{
 
+    private class EditLock{
+        private Counter count = new Counter();
+        private ReentrantLock lock = new ReentrantLock();
 
+        
+        private InxightTransaction transaction = null;
+        private Edit edit=null;
+        
+        private boolean preUpdateWasCalled=false;
+        private boolean postUpdateWasCalled=false;
+        
+        private Runnable onPostUpdate = new Runnable(){
+			@Override
+			public void run() {
+			}
+        };
+        
+
+        private final Key thekey;
+
+        public EditLock(Key thekey) {
+            this.thekey = thekey;
+        }
+        
+        
+        
+        public boolean isLocked(){
+        	return this.lock.isLocked();
+        }
+        
+        public boolean tryLock(){
+        	return this.lock.tryLock();
+        }
+        
+        public boolean hasEdit(){
+        	return this.edit!=null;
+        }
+        
+        public EditLock addEdit(Edit e){
+        	if(hasEdit()){
+        		System.out.println("Existing edit will be overwritten");
+        	}
+        	this.edit=e;
+        	return this;
+        }
+        
+        public InxightTransaction getTransaction(){
+        	return this.transaction;
+        }
+        
+        public EditLock setTransaction(InxightTransaction it){
+        	this.transaction=it;
+        	return this;
+        }
+        
+
+        public void acquire(){
+            synchronized (count){
+                count.increment();
+            }
+            while(true){
+            	
+            	if(lock.isHeldByCurrentThread()){
+            		System.out.println("Yes, we got this twice.");
+            	}
+                try {
+                    if(lock.tryLock(1, TimeUnit.SECONDS)){
+                        break;
+                    }else{
+                    	Logger.warn("still waiting for lock with key " + thekey);
+                    }
+                } catch (InterruptedException e) {
+                   throw new RuntimeException(e);
+                }
+            }
+            
+            //reset
+            preUpdateWasCalled=false;
+            postUpdateWasCalled=false;
+            this.edit=null;
+            
+        }
+        
+        
+        public EditLock addOnPostUpdate(Runnable r){
+        	Runnable rold=this.onPostUpdate;
+        	this.onPostUpdate=new Runnable(){
+
+				@Override
+				public void run() {
+					rold.run();
+					r.run();
+				}
+        		
+        	};
+        	return this;
+        }
+
+        public void release(){
+            synchronized (count) {
+                count.decrementAndGet();
+            }
+            lock.unlock();
+            synchronized (count) {
+                int value = count.intValue();
+                if(value ==0){
+                    //no more blocking records?
+                    //remove ourselves from the map to free memory
+                    lockMap.remove(thekey);
+                }
+            }
+        }
+        
+        public void markPreUpdateCalled(){
+        	preUpdateWasCalled=true;
+        }
+        
+        public void markPostUpdateCalled(){
+        	if(postUpdateWasCalled==false && this.onPostUpdate!=null){
+        		onPostUpdate.run();
+        	}
+        	postUpdateWasCalled=true;
+        	
+        }
+        
+        public boolean hasPreUpdateBeenCalled(){
+        	return preUpdateWasCalled;
+        }
+        
+        public boolean hasPostUpdateBeenCalled(){
+        	return postUpdateWasCalled;
+        }
+    }
+
+    private static class Counter{
+        private int count=0;
+
+        public void increment(){
+            count++;
+        }
+
+        public int decrementAndGet(){
+            return --count;
+        }
+
+        public int intValue(){
+            return count;
+        }
+    }
 
 	private static EntityPersistAdapter _instance =null;
 	
@@ -54,7 +206,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
 	private Map<EntityInfo, EntityProcessor> entityProcessors = new ConcurrentHashMap<>();
     
     //Do we need both?
-    private Map<Key, MyLock> lockMap= new ConcurrentHashMap<>();
+    private Map<Key, EditLock> lockMap= new ConcurrentHashMap<>();
     //private ConcurrentHashMap<Key, Edit> editMap= new ConcurrentHashMap<>();
     
     private TextIndexerPlugin textIndexerPlugin;
@@ -81,7 +233,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
      * @param ew
      * @return
      */
-    private Edit createAndPushEditForWrappedEntity(EntityWrapper ew, MyLock lock){
+    private Edit createAndPushEditForWrappedEntity(EntityWrapper ew, EditLock lock){
     	Objects.requireNonNull(ew);
     	String oldJSON = ew.toFullJson();
     	
@@ -144,10 +296,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
          
          
          
-         MyLock lock = lockMap.computeIfAbsent(key, new Function<Key, MyLock>() {
+         EditLock lock = lockMap.computeIfAbsent(key, new Function<Key, EditLock>() {
              @Override
-             public MyLock apply(Key key) {
-                 return new MyLock(key, lockMap); //This should work, but feels wrong
+             public EditLock apply(Key key) {
+                 return new EditLock(key); //This should work, but feels wrong
              }
          });
 
@@ -181,18 +333,20 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
              }else{
              	saved = EntityWrapper.of(op.get());
  			}
- 			e.kind = saved.getKind();
- 			e.newValue = saved.toFullJson();
- 			e.comments= ew.getChangeReason().orElse(null);
- 			e.save();
- 			worked=true;
+ 			 e.kind = saved.getKind();
+ 			 e.newValue = saved.toFullJson();
+ 			 e.comments= ew.getChangeReason().orElse(null);
+ 			 e.save();
+ 			 worked=true;
  			
              return saved;
          }catch(Exception ex){
              ex.printStackTrace();
              throw new IllegalStateException(ex);
          }finally{
-             lock.release(); //release the lock
+             if(lock.getTransaction()==null){
+            	 lock.release(); //release the lock
+             }
          }
      }
 
@@ -247,16 +401,28 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     }
     @Override
     public boolean preUpdate (BeanPersistRequest<?> request) {
+    	
+    	
         Object bean = request.getBean();
-        return preUpdateBeanDirect(bean);
+        
+        return preUpdateBeanDirect(bean, request);
     }
     
-    public boolean preUpdateBeanDirect(Object bean){
+    public boolean preUpdateBeanDirect(Object bean, BeanPersistRequest<?> request){
     	EntityWrapper ew = EntityWrapper.of(bean);
-    	MyLock ml = lockMap.get(ew.getKey());
-        if(ml!=null && ml.hasPreUpdateBeenCalled()){
+    	EditLock ml = lockMap.get(ew.getKey());
+    	if(ml!=null && ml.hasPreUpdateBeenCalled()){
          	return true; // true?
         }
+    	if(ml!=null && request!=null){
+    		InxightTransaction it = InxightTransaction.getTransaction(request.getTransaction());
+    		ml.setTransaction(it);
+    		it.addFinallyRun(new Runnable(){
+    			public void run(){
+    				ml.release();
+    			}
+    		});
+    	}
         
         operate(bean,Java8ForOldEbeanHelper.processorCallableFor(PreUpdate.class),true);
         
@@ -336,7 +502,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){
     	EntityWrapper<?> ew= EntityWrapper.of(bean);
-    	MyLock ml = lockMap.get(ew.getKey());
+    	EditLock ml = lockMap.get(ew.getKey());
         if(ml!=null && ml.hasPostUpdateBeenCalled()){
         	return;
         }

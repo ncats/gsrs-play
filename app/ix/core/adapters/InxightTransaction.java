@@ -55,6 +55,7 @@ public class InxightTransaction implements Closeable{
 	private boolean enhanced=true;
 	
 	private List<Callable> afterCommit=new ArrayList<Callable>();
+	private List<Callable> afterEverything=new ArrayList<Callable>();
 	
 	public void addPostCommitCall(Callable c){
 			afterCommit.add(c);
@@ -94,7 +95,14 @@ public class InxightTransaction implements Closeable{
 	}
 
 	public void close() throws IOException {
+		try{
+			t.end();
+		}catch(Exception e){
+			
+		}
 		t.close();
+		
+		
 		
 	}
 
@@ -104,7 +112,17 @@ public class InxightTransaction implements Closeable{
 	}
 
 	public void end() throws PersistenceException {
-		t.end();
+		try{
+			t.end();
+		}finally{
+			for(Callable c:afterEverything){
+				try {
+					c.call();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		//System.out.println("Destroy explicit");
 		destroy();
 	}
@@ -197,6 +215,18 @@ public class InxightTransaction implements Closeable{
 	}
 	public void setEnhanced(boolean enhanced) {
 		this.enhanced = enhanced;
+	}
+
+	public void addFinallyRun(Runnable r) {
+		afterEverything.add(new Callable(){
+
+			@Override
+			public Object call() throws Exception {
+				r.run();
+				return null;
+			}
+			
+		});
 	}
 	
 

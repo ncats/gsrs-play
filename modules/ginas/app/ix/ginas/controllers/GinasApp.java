@@ -1678,7 +1678,7 @@ return F.Promise.<Result>promise( () -> {
      * @return
      */
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result structure(final String id, final String format, final int size, final String contextId) {
+    public static Result structure(final String id, final String format, final int size, final String contextId, final String version) {
         if (!UUIDUtil.isUUID(id)) {
             return App.render(id, size);
         }
@@ -1689,10 +1689,27 @@ return F.Promise.<Result>promise( () -> {
         String atomMap = contextId;
         
         
+        boolean history = (version!=null);
+        
         Substance cs = getSubstanceForSubstanceOrStructureID(uuid);
         
+        
+        
+        
         if(cs!=null){ //Can get a unique substance from the ID
-            cs.setMatchContextFromID(contextId);
+        	
+        	
+        	//History view
+        	if(history && !cs.version.equals(version)){
+        		cs=SubstanceFactory.getSubstanceVersion(cs.getUuid().toString(), version);
+        		if(cs==null){
+        			return placeHolderImage(cs);
+        		}
+        	}
+        	
+            
+        	//Highlighting
+        	cs.setMatchContextFromID(contextId);
             int[] amaps=cs.getMatchContextPropertyOr("atomMaps", null);
             if(amaps!=null){
                 atomMap=Arrays
@@ -1700,9 +1717,17 @@ return F.Promise.<Result>promise( () -> {
                         .mapToObj(i->i+"")
                         .collect(Collectors.joining(","));
             }
+            
+            
+            
             if(cs instanceof ChemicalSubstance){
-                structureID=((ChemicalSubstance)cs).structure.id.toString();
-                return App.structure(structureID, format, size, atomMap);
+            	Structure struc = ((ChemicalSubstance)cs).structure;
+            	if(!history){
+            		structureID=struc.id.toString();
+            		return App.structure(structureID, format, size, atomMap);
+            	}else{
+            		return App.structure(struc, format, size, atomMap);
+            	}
             }else{
                 return placeHolderImage(cs);
             }
@@ -1725,10 +1750,6 @@ return F.Promise.<Result>promise( () -> {
         }
     }
 
-    public static Result structure2(final String id) {
-        return structure(id, "svg", 150, null);
-
-    }
 
     public static Result placeHolderImage(Substance s) {
         String placeholderFile = "polymer.svg";

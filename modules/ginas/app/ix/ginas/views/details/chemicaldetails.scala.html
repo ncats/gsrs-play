@@ -5,9 +5,9 @@
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
 
-@structureImage(s: Structure, size: Integer) = {
+@structureImage(s: Structure, size: Integer, version: String) = {
     <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
-    src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size)'>
+    src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size, null, version)'>
 }
 
 @substancedetails(sub) {
@@ -28,7 +28,7 @@
         <div class="col-md-12 table-responsive" uib-collapse = "structurescollapse">
             <div class="col-md-5">
                 <div class = "row">
-                @structureImage(sub.structure, 400)
+                @structureImage(sub.structure, 400, sub.version)
                 </div>
                 <div class = "row">
                     <div class = "col-md-6 col-md-offset-6">
@@ -118,7 +118,7 @@
                 <div class ="row">
                     <hr>
                     <div class="col-md-4">
-                        <rendered id= '@m.structure.id' size ="300"></rendered>
+                        <rendered id= '@m.structure.getDisplayStructure().id' size ="300"></rendered>
                     </div>
                     <div class ="col-md-8">
                         <div class = "row">
