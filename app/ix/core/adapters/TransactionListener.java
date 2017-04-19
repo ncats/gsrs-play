@@ -12,12 +12,15 @@ public class TransactionListener implements TransactionEventListener {
 			it.runCommits();
 			it.destroy();
 		}
+		it.runFinally();
+		
 		
 	}
 
 	@Override
 	public void postTransactionRollback(Transaction arg0, Throwable arg1) {
-		
+		InxightTransaction it=InxightTransaction.getTransaction(arg0);
+		it.runFinally();
 	}
 
 }

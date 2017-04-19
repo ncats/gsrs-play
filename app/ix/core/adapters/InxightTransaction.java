@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import javax.persistence.OptimisticLockException;
@@ -112,17 +113,8 @@ public class InxightTransaction implements Closeable{
 	}
 
 	public void end() throws PersistenceException {
-		try{
-			t.end();
-		}finally{
-			for(Callable c:afterEverything){
-				try {
-					c.call();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		t.end();
+		runFinally();
 		//System.out.println("Destroy explicit");
 		destroy();
 	}
@@ -227,6 +219,22 @@ public class InxightTransaction implements Closeable{
 			}
 			
 		});
+	}
+
+	private boolean finished=false;
+	
+	//Not thread safe
+	public void runFinally() {
+		if(!finished){
+			finished=true;
+			for(Callable c:afterEverything){
+				try {
+					c.call();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 

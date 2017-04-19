@@ -86,6 +86,7 @@ public class EditLock {
         synchronized (count) {
             count.increment();
         }
+        
         while (true) {
             try {
                 if (lock.tryLock(1, TimeUnit.SECONDS)) {
@@ -119,7 +120,12 @@ public class EditLock {
         synchronized (count) {
             count.decrementAndGet();
         }
-        lock.unlock();
+        try{
+        	lock.unlock();
+        }catch(Exception e){
+        	e.printStackTrace();
+        	throw e;
+        }
         synchronized (count) {
             int value = count.intValue();
             if (value == 0) {
@@ -149,4 +155,9 @@ public class EditLock {
     public boolean hasPostUpdateBeenCalled() {
         return postUpdateWasCalled;
     }
+
+
+	public int getCount() {
+		return count.intValue();
+	}
 }
