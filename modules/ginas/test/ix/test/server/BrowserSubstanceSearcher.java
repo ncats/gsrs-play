@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -176,7 +177,10 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     
     
     public SearchResult getSubstructureSearch(String smiles, int rows, int page, boolean wait) throws IOException{
-        Tuple<String,Set<String>> set = getSubstancesFrom(getSubstructurePage(smiles,rows,page, wait));
+        HtmlPage htmlpage=getSubstructurePage(smiles,rows,page, wait);
+        Tuple<String,Set<String>> set = getSubstancesFrom(htmlpage);
+        //String html=htmlpage.asXml();
+        //System.out.println(html);
     	return new SearchResult(set.k(),set.v(),this, session.getUser());
     }
     
@@ -364,6 +368,23 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
         .stream()
         .map(m->m.getAttributes().getNamedItem("src").getNodeValue())
         .collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        if(substances.isEmpty()){
+            page.querySelectorAll("rendered")
+                .stream()
+                .map(m->{
+                    String id=m.getAttributes().getNamedItem("id").getNodeValue();
+                    String ctx= Optional.ofNullable(m.getAttributes().getNamedItem("ctx"))
+                            .map(n->n.getNodeValue())
+                            .orElse(null);
+                    return new String[]{id,ctx};
+                    
+                })
+                .forEach(s->{
+                    substances.add("ginas/app/img/" + s[0] + ".svg?context=" + s[1]);
+                });     
+        }
+        
         
         return substances;
     }
