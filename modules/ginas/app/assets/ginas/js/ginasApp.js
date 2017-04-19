@@ -1009,8 +1009,31 @@
         $scope.approveSubstance = function () {
             $scope.updateNav = false;
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
-            var keyid = $scope.substance.uuid.substr(0, 8);
-            location.href = baseurl + "substance/" + keyid + "/approve";
+            var keyid = $scope.substance.uuid;
+            var approveURL= baseurl + "api/v1/substances(" + keyid + ")/@approve";
+            
+             $scope.submitting = true;
+            $http.get(approveURL,{cache: false},{
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function (response) {
+                    $scope.updateNav = false;
+                    url = baseurl + "assets/templates/modals/update-success.html";
+                    $scope.postRedirect = response.data.uuid;
+                    //$scope.close(url1);
+                    $scope.open(url);
+                }, function (response) {
+                    if(response.data && response.data.validationMessages){
+                        $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    }
+                    url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
+                    //$scope.close(url1);
+                    $scope.open(url);
+                });
+            
+            
         };
 
         $scope.removeItem = function (list, item) {
