@@ -1019,7 +1019,7 @@
                     }
                 }).then(function (response) {
                     $scope.updateNav = false;
-                    url = baseurl + "assets/templates/modals/update-success.html";
+                    var url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
                     //$scope.close(url1);
                     $scope.open(url);
@@ -1027,7 +1027,7 @@
                     if(response.data && response.data.validationMessages){
                         $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     }
-                    url = baseurl + "assets/templates/modals/submission-failure.html";
+                    var url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
                     //$scope.close(url1);
                     $scope.open(url);
