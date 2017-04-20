@@ -109,7 +109,6 @@ public class InxightTransaction implements Closeable{
 
 	public void commit() throws RollbackException {
 		t.commit();
-		runCommits();
 	}
 
 	public void end() throws PersistenceException {
