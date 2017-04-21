@@ -47,6 +47,11 @@ GET			/setExportDirect			ix.ginas.controllers.GinasApp.export(id: String, format
 GET         /logs                     ix.ginas.controllers.GinasApp.downloadFile(fName: String)
 GET         /testChemical               ix.ginas.controllers.GinasApp.createTestChemical(count: Int ?= 500)
 
+
+GET         /myDownloads/:collectionId   ix.ginas.controllers.GinasApp.downloadExport(collectionId: String, extension: String, publicOnly: Int ?=1)
+GET         /myDownloads/status/:collectionId   ix.ginas.controllers.GinasApp.getStatusFor(collectionId: String, extension: String, publicOnly: Int ?=1)
+
+
 ->      /   ix.ncats.Routes	
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
 

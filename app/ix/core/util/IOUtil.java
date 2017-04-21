@@ -1,9 +1,6 @@
 package ix.core.util;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -119,5 +116,13 @@ public final class IOUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static BufferedOutputStream newBufferedOutputStream(File outputFile) throws IOException {
+        File parent = outputFile.getParentFile();
+        if(parent !=null){
+            Files.createDirectories(parent.toPath());
+        }
+        return new BufferedOutputStream(new FileOutputStream(outputFile));
     }
 }

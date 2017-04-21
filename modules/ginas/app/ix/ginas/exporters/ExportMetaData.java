@@ -1,29 +1,37 @@
 package ix.ginas.exporters;
 
 import ix.core.models.Principal;
+import ix.ginas.models.utils.JSONEntity;
 
 import java.time.LocalDateTime;
 
 /**
  * Created by katzelda on 4/18/17.
  */
+@JSONEntity(name = "metadata")
 public class ExportMetaData {
     public int numRecords;
-    public final String collectionId;
-    public final  String originalQuery;
-    public final  Principal principal;
-    public final  boolean publicOnly;
-    public final  String extension;
+    public String collectionId;
+    public  String originalQuery;
+    public  String username;
+    public  boolean publicOnly;
+    public  String extension;
 
 
-    public LocalDateTime started,finished;
+    public Long started,finished;
+
+    public ExportMetaData(){}
 
     public ExportMetaData(String collectionId, String originalQuery, Principal principal, boolean publicOnly, String extension) {
         this.collectionId = collectionId;
         this.originalQuery = originalQuery;
-        this.principal = principal;
+        this.username = principal.username;
         this.publicOnly = publicOnly;
         this.extension = extension;
+    }
+
+    public String getCollectionId() {
+        return collectionId;
     }
 
     @Override
@@ -38,7 +46,7 @@ public class ExportMetaData {
         if (!collectionId.equals(that.collectionId)) return false;
         if (originalQuery != null ? !originalQuery.equals(that.originalQuery) : that.originalQuery != null)
             return false;
-        if (principal != null ? !principal.equals(that.principal) : that.principal != null) return false;
+        if (username != null ? !username.equals(that.username) : that.username != null) return false;
         if (extension != null ? !extension.equals(that.extension) : that.extension != null) return false;
         if (started != null ? !started.equals(that.started) : that.started != null) return false;
         return finished != null ? finished.equals(that.finished) : that.finished == null;
@@ -50,7 +58,7 @@ public class ExportMetaData {
         int result = numRecords;
         result = 31 * result + collectionId.hashCode();
         result = 31 * result + (originalQuery != null ? originalQuery.hashCode() : 0);
-        result = 31 * result + (principal != null ? principal.hashCode() : 0);
+        result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (publicOnly ? 1 : 0);
         result = 31 * result + (extension != null ? extension.hashCode() : 0);
         result = 31 * result + (started != null ? started.hashCode() : 0);

@@ -668,6 +668,43 @@ public class GinasApp extends App {
         });
     }
 
+
+    //public static InputStream download(String username, String collectionId, String extension, boolean publicOnly) throws IOException{
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> downloadExport(String collectionID, String extension, int publicOnlyFlag){
+        return F.Promise.promise(() -> {
+            try {
+                InputStream in= ExportProcessFactory.download(Authentication.getUser().username, collectionID, extension, publicOnlyFlag==1);
+                response().setContentType("application/x-download");
+                response().setHeader("Content-disposition", "attachment; filename=" + collectionID+"."+extension);
+                return ok(in);
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
+    }
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> getStatusFor(String collectionID, String extension, int publicOnlyFlag){
+        return F.Promise.promise(() -> {
+            try {
+                Optional<ExportProcess.State>state = ExportProcessFactory.getStatusFor(
+                       Authentication.getUser().username, collectionID, extension, publicOnlyFlag==1);
+
+                if(state.isPresent()){
+                    //poor man's json
+                    //TODO turn this into a real object when we add more fields
+                    return ok("{"+ state.get().name()+"}");
+                }
+                return error(404, "download file not found");
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
+    }
+
     /**
      * PipiedInputStream that allows probing into whether it's closed yet or
      * not.

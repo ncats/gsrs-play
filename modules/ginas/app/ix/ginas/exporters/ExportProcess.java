@@ -55,6 +55,9 @@ public class ExportProcess {
             exporter = exporterFunction.apply(out);
 
             currentState = State.RUNNING;
+            metaData.started = TimeUtil.getCurrentTimeMillis();
+
+            IOUtil.closeQuietly(this::writeMetaDataFile);
             //make another final reference to outputstream
             //so we can reference it in the lambda for submit
 //            final OutputStream fout = out;
@@ -84,12 +87,12 @@ public class ExportProcess {
     private void writeMetaDataFile() throws IOException{
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(metaDataFile))){
 
-            metaData.finished = TimeUtil.getCurrentLocalDateTime();
+            metaData.finished = TimeUtil.getCurrentTimeMillis();
             EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().writer().writeValue(writer, metaData);
         }
     }
     private OutputStream createOutputFileStream() throws IOException{
-        return new BufferedOutputStream(new FileOutputStream(outputFile));
+        return IOUtil.newBufferedOutputStream(outputFile);
     }
 
     public File getOutputFile() {
