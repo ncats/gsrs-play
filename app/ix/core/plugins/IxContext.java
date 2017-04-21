@@ -180,7 +180,7 @@ public class IxContext extends Plugin {
     public final static ExceptionHandler PRINT_EXCEPTION_HANDLER= new ExceptionHandler(){
 		@Override
 		public void handleException(Exception e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
     };
     

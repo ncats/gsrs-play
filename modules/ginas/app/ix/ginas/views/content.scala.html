@@ -75,60 +75,60 @@
                             @request().getQueryString("type") match {
                                 case "sequence" => {
                                     <span><h4>Sequence Query:&nbsp;
-                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a> </h4>
+                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code> (edit search)</a> </h4>
                                     </span> <div id="searching"></div>
                                 }
                                 case "Substructure" => {
                                     <span><h4>Substructure Query:&nbsp; <a
                                     target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)"
+                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Substructure"
                                     data-toggle="popover"
                                     data-animation="true"
                                     data-placement="bottom"
                                     data-trigger="click hover focus"
                                     data-title=""
                                     data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
 
                                     </span> <div id="searching"></div>
                                 }
                                 case "Similarity" => {
                                     <span><h4>Similarity Query:&nbsp; <a
                                     target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)"
+                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Similarity&cutoff=@request().getQueryString("cutoff")"
                                     data-toggle="popover"
                                     data-animation="true"
                                     data-placement="bottom"
                                     data-trigger="click hover focus"
                                     data-title=""
                                     data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a> &ge; @request().getQueryString("cutoff")</h4>
                                     </span> <div id="searching"></div>
                                 }
                                 case "Exact" => {
                                     <span><h4>Exact Structure Query:&nbsp; <a
                                     target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)"
+                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Exact"
                                     data-toggle="popover"
                                     data-animation="true"
                                     data-placement="bottom"
                                     data-trigger="click hover focus"
                                     data-title=""
                                     data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
                                     </span> <div id="searching"></div>
                                 }
                                 case "Flex" => {
                                     <span><h4>Flex Structure Query:&nbsp; <a
                                     target="_self"
-                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)"
+                                    href="@ix.ginas.controllers.routes.GinasApp.structuresearch(qStructureID)&type=Flex"
                                     data-toggle="popover"
                                     data-animation="true"
                                     data-placement="bottom"
                                     data-trigger="click hover focus"
                                     data-title=""
                                     data-html="true"
-                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code></a></h4>
+                                    data-content="<img src= '@ix.ginas.controllers.routes.GinasApp.structure(qStructureID, "svg", 150, null)'>"><code>@ix.ginas.controllers.GinasFactory.getSmiles(request().getQueryString("q"), 15)</code> (edit search)</a></h4>
                                     </span> <div id="searching"></div>
                                 }
                                 case _ => {

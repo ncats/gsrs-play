@@ -36,30 +36,33 @@
                             <option value="Flex">Flex</option>
                         </select>
                         </div>
-                <div class="col-md-2" ng-if="type=='Similarity'">
-                <label class="sr-only" for="tanimoto-cutoff">Tanimoto threshold</label>
-                        <input class="form-control"
-                        type="number" step=".1"
-                        min="0" max="1"
+                <div class="col-md-3" ng-if="type=='Similarity'">
+                
+                <label for="tanimoto-cutoff">Similarity cutoff (tanimoto)</label>
+                		<div class="row">
+                        <span class="col-md-8">
+                        <input 
+                        
+                        type="range" 
+                        step=".05" min="0.4" max="1"
                         name="cutoff"
+                        string-to-number
                         id="tanimoto-cutoff"
-                        data-toggle="tooltip"
-                        title="Tanimoto threshold"
                         ng-model="cutoff"
                         >
-                    </div>
-                    <div class="col-md-2" ng-if="type=='Exact'">
-                    <input class="form-control"
-                        type="number"
-                        name="cutoff"
-                        id="tanimoto-cutoff"
-                        data-toggle="tooltip"
-                        title="Tanimoto threshold"
-                        ng-hide = "true"
-                        ng-init ="cutoff = 1"
+                        </span>
+                        <span  class="col-md-4">
+                        <input 
+                       
+                        type="number" 
+                        string-to-number
+						step=".05" min="0" max="1"
                         ng-model="cutoff"
                         >
+                        </span>
                         </div>
+                    </div>
+                    <div class="col-md-2" ng-if="type=='Exact'"></div>
                         <textarea type="text" class="form-control"
                         data-toggle="tooltip"
                         title="Query structure"
@@ -90,7 +93,6 @@
                 <form>
                 <div class ="col-md-2">
                     <input type = "text" ng-model="name" field="name" label="Name" />
-                    <!--<gsrs-input type = "text" ng-model="name" field="name" label="Name"></gsrs-input>-->
                 </div>
                 <div class ="col-md-2">
                     <button class="btn btn-primary" id="resolverButton" ng-click="resolveName(name, 'structureSearch')" type = "submit" style="margin-left: 10px;">

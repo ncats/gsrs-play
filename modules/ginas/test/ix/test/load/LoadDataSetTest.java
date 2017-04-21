@@ -70,7 +70,16 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     	SearchResult results1 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 1,false);
     	//System.out.println("This was the first uuid:" + results1.getUuids().toString());
     	
+    	
+    	try{
+    	    Thread.sleep(1_000);
+    	}catch(Exception e){}
+    	
     	SearchResult results2 =searcher.getSubstructureSearch("CC1=CC=CC=C1", 1, 15,true);
+    	
+    	
+    	
+    	
     	//System.out.println("Found results size:" + results2.getUuids().toString());
     	assertEquals(1, results2.getUuids().size());
     	String findUUID="445d5a83";
@@ -95,7 +104,15 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     	
     	SearchResult resultsFirst =searcher.getSubstructureSearch("C1=CC=CC=C1", 1, 1,false);
     	HtmlPage lastResults =searcher.getSubstructurePage("C1=CC=CC=C1", 1, 10,true);
+//    	System.out.println(lastResults.asXml());
     	Set<String> img_urls= BrowserSubstanceSearcher.getStructureImagesFrom(lastResults);
+//    	try {
+//            Thread.sleep(1200_000);
+//        } catch (InterruptedException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//            throw new IOException(e);
+//        }
     	assertEquals(1,img_urls.size());
     	RestSession rs=ts.newRestSession(session.getUser());
     	
