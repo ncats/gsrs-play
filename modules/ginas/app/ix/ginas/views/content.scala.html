@@ -178,6 +178,7 @@
                         </div>
                         <div class="row">
                             <div class = "col-md-3">
+                            @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                                 <div class="btn-group">
                                     <button ng-click="showExport=true" type="button" uib-tooltip="Download Results" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fa fa-download" ></i>&nbsp; <span class="caret"></span>
@@ -190,6 +191,7 @@
                                     </ul>
 
                                 </div>
+                            }
                             </div>
                             <div class="col-md-7  text-left row">
                                 <div class="col-md-4">
