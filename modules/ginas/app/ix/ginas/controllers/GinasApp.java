@@ -31,7 +31,6 @@ import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
-import ix.core.chem.StructureProcessorTask;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
@@ -54,15 +53,10 @@ import ix.core.search.SearchResultProcessor;
 import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
-import ix.core.util.CachedSupplier;
-import ix.core.util.ConfigHelper;
-import ix.core.util.EntityUtils;
+import ix.core.util.*;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.core.util.Java8Util;
-import ix.core.util.ModelUtils;
-import ix.core.util.TimeUtil;
 import ix.core.plugins.Workers;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.controllers.v1.CV;
@@ -70,8 +64,7 @@ import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
-import ix.ginas.exporters.Exporter;
-import ix.ginas.exporters.SubstanceExporterFactory;
+import ix.ginas.exporters.*;
 import ix.ginas.models.v1.*;
 import ix.ginas.utils.reindex.MultiReIndexListener;
 import ix.ginas.utils.reindex.ReIndexListener;
@@ -79,6 +72,7 @@ import ix.ginas.utils.reindex.ReIndexService;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
+import ix.ncats.controllers.auth.Authentication;
 import ix.ncats.controllers.crud.Administration;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
@@ -647,10 +641,27 @@ public class GinasApp extends App {
      * @return
      */
     public static F.Promise<Result> export(String collectionID, String extension, int publicOnlyFlag) {
+//        return F.Promise.promise(() -> {
+//            try {
+//                return export(getExportStream(collectionID), extension, publicOnlyFlag == 1);
+//            } catch (Exception e) {
+//                Logger.error(e.getMessage(), e);
+//                return error(404, e.getMessage());
+//            }
+//        });
+        //(String collectionId, String originalQuery, Principal principal, boolean publicOnly, String extension) {
         return F.Promise.promise(() -> {
             try {
-                return export(getExportStream(collectionID), extension, publicOnlyFlag == 1);
+                boolean publicOnlyBool = publicOnlyFlag ==1;
+               ExportProcess p = new ExportProcessFactory().getProcess(
+                       new ExportMetaData(collectionID, "?", Authentication.getUser(), publicOnlyBool, extension),
+                       ()->getExportStream(collectionID)
+                       );
+                p.run( out -> Unchecked.uncheck(() ->getSubstanceExporterFor(extension, out, publicOnlyBool)));
+
+                return ok("output will be written to : " + p.getOutputFile().getAbsolutePath());
             } catch (Exception e) {
+                e.printStackTrace();
                 Logger.error(e.getMessage(), e);
                 return error(404, e.getMessage());
             }
@@ -813,7 +824,6 @@ public class GinasApp extends App {
             // TODO handle null couldn't find factory for params
             throw new IllegalArgumentException("could not find suitable factory for " + params);
         }
-
         return factory.createNewExporter(pos, params);
     }
 

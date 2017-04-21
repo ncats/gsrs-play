@@ -1,7 +1,9 @@
 package ix.core.util;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,5 +103,21 @@ public final class IOUtil {
             }
 
         });
+    }
+
+    /**
+     * Close the given closeable with supress any errors that are
+     * thrown.
+     * @param c the closeable to close; if null, then do nothing.
+     */
+    public static void closeQuietly(Closeable c) {
+        if(c ==null){
+            return;
+        }
+        try {
+            c.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
