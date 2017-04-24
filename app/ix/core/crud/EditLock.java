@@ -66,7 +66,7 @@ public class EditLock {
 
     public EditLock addEdit(Edit e) {
         if (hasEdit()) {
-            System.out.println("Existing edit will be overwritten");
+            Logger.warn("Existing edit will be overwritten");
         }
         this.edit = e;
         return this;
@@ -86,6 +86,7 @@ public class EditLock {
         synchronized (count) {
             count.increment();
         }
+        
         while (true) {
             try {
                 if (lock.tryLock(1, TimeUnit.SECONDS)) {
@@ -96,6 +97,9 @@ public class EditLock {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }
+        if(count.intValue()>1){
+        	Logger.warn(this.thekey + ": has more than 1 lock active:" + count.intValue());
         }
 
         //reset
@@ -119,13 +123,18 @@ public class EditLock {
         synchronized (count) {
             count.decrementAndGet();
         }
-        lock.unlock();
+        try{
+        	lock.unlock();
+        }catch(Exception e){
+        	e.printStackTrace();
+        	throw e;
+        }
         synchronized (count) {
             int value = count.intValue();
             if (value == 0) {
                 //no more blocking records?
                 //remove ourselves from the map to free memory
-                lockMap.remove(thekey);
+            	lockMap.remove(thekey);
             }
         }
     }
@@ -149,4 +158,9 @@ public class EditLock {
     public boolean hasPostUpdateBeenCalled() {
         return postUpdateWasCalled;
     }
+
+
+	public int getCount() {
+		return count.intValue();
+	}
 }

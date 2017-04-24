@@ -8,16 +8,17 @@ public class TransactionListener implements TransactionEventListener {
 	@Override
 	public void postTransactionCommit(Transaction arg0) {
 		InxightTransaction it=InxightTransaction.getTransaction(arg0);
-		if(!it.isEnhanced()){
-			it.runCommits();
-			it.destroy();
-		}
+		it.runCommits();
+		it.destroy();
+		it.runFinally();
+		
 		
 	}
 
 	@Override
 	public void postTransactionRollback(Transaction arg0, Throwable arg1) {
-		
+		InxightTransaction it=InxightTransaction.getTransaction(arg0);
+		it.runFinally();
 	}
 
 }
