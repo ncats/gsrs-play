@@ -194,6 +194,9 @@ public class ExportProcessFactory {
                              return em2;
                          }
                      })
+                     .sorted((m1,m2)->{
+                    	return (int) (m1.started-m2.started);
+                     })
                      .collect(Collectors.toList());
     }
 

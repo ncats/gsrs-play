@@ -451,7 +451,7 @@ public class ValidationUtils {
                                 "Name '"
                                         + n.getName()
                                         + "' is a duplicate name in the record.")
-                        ;
+                        .markPossibleDuplicate();
                 gpm.add(mes);
                 strat.processMessage(mes);
 		    }
