@@ -1,19 +1,23 @@
 package ix.ginas.exporters;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
-import ix.core.controllers.EntityFactory;
-import ix.core.util.*;
-import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
-import ix.ginas.models.v1.Substance;
-import play.Play;
-
-import java.io.*;
-import java.time.LocalDateTime;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import ix.core.controllers.EntityFactory;
+import ix.core.util.CachedSupplier;
+import ix.core.util.IOUtil;
+import ix.core.util.TimeUtil;
+import ix.core.util.Unchecked;
+import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
+import ix.ginas.models.v1.Substance;
+import play.Play;
 
 /**
  * Created by katzelda on 4/18/17.
@@ -21,11 +25,15 @@ import java.util.stream.Stream;
 public class ExportProcess {
     private static CachedSupplier<GinasSubstanceExporterFactoryPlugin> factoryPlugin = CachedSupplier
             .of(() -> Play.application().plugin(GinasSubstanceExporterFactoryPlugin.class));
-    private final File outputFile, metaDataFile;
+    private final File outputFile;
+    private final File metaDataFile;
 
     private final ExportMetaData metaData;
 
     private State currentState = State.INITIALIZED;
+    
+    
+    
     private Exporter<Substance> exporter;
     private final Supplier<Stream<Substance>> substanceSupplier;
 
@@ -60,17 +68,23 @@ public class ExportProcess {
             IOUtil.closeQuietly(this::writeMetaDataFile);
             //make another final reference to outputstream
             //so we can reference it in the lambda for submit
-//            final OutputStream fout = out;
+            //final OutputStream fout = out;
+            
             factoryPlugin.get().submit( ()->{
                 try{
-                    substanceSupplier.get().forEach(s -> Unchecked.ioException( () -> exporter.export(s)));
+                    System.out.println("Starting export");
+                    substanceSupplier.get().forEach(s -> {
+                        Unchecked.ioException( () -> exporter.export(s));
+                        this.metaData.numRecords++;
+                    });
+                    
                     currentState = State.DONE;
                 }catch(Throwable t){
-//                    IOUtil.closeQuietly(fout);
+                    t.printStackTrace();
                     currentState = State.ERRORED_OUT;
-
                     throw t;
-                 }finally{
+                }finally{
+                    metaData.finished=TimeUtil.getCurrentTimeMillis();
                     IOUtil.closeQuietly(this::writeMetaDataFile);
                     IOUtil.closeQuietly(exporter);
                 }
@@ -86,8 +100,6 @@ public class ExportProcess {
 
     private void writeMetaDataFile() throws IOException{
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(metaDataFile))){
-
-            metaData.finished = TimeUtil.getCurrentTimeMillis();
             EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().writer().writeValue(writer, metaData);
         }
     }
@@ -105,6 +117,5 @@ public class ExportProcess {
         RUNNING,
         DONE,
         ERRORED_OUT;
-
     }
 }

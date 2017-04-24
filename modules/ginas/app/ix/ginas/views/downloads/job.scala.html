@@ -1,0 +1,9 @@
+@import ix.ginas.exporters.ExportMetaData
+
+@(job: ExportMetaData)
+
+@ix.ginas.views.html.ginas("View Download", "null") {
+    @ix.ginas.views.html.menu()
+} {
+    @joblist(job,"true")
+}

@@ -1,0 +1,25 @@
+@import ix.ncats.controllers.FacetDecorator
+@import ix.ncats.controllers.App
+@import ix.ginas.exporters.ExportMetaData
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+        facets: Array[FacetDecorator], jobList: List[ExportMetaData])
+
+@ix.ginas.views.html.content("My Downloads", "ix.ginas.exporters.ExportMetaData", ix.ginas.controllers.routes.GinasApp.downloadsView().url,
+    current, rows, total, pages, facets) {
+    @ix.ginas.views.html.menu()
+} {
+    <div class= "panel-body">
+        <div class = "row hidden-xs" ng-show="enabled" id ="grid">
+               @for(job <- jobList) {
+                    @joblist(job)
+                }
+        </div>
+
+        <div class = "row in" ng-show="!enabled" id ="list">
+            @for(job <- jobList) {
+                    @joblist(job)
+                }
+        </div>
+    </div>
+}

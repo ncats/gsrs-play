@@ -40,6 +40,7 @@ import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Principal;
+import ix.core.models.ProcessingJob;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
@@ -641,25 +642,39 @@ public class GinasApp extends App {
      * @return
      */
     public static F.Promise<Result> export(String collectionID, String extension, int publicOnlyFlag) {
-//        return F.Promise.promise(() -> {
-//            try {
-//                return export(getExportStream(collectionID), extension, publicOnlyFlag == 1);
-//            } catch (Exception e) {
-//                Logger.error(e.getMessage(), e);
-//                return error(404, e.getMessage());
-//            }
-//        });
-        //(String collectionId, String originalQuery, Principal principal, boolean publicOnly, String extension) {
+
         return F.Promise.promise(() -> {
             try {
-                boolean publicOnlyBool = publicOnlyFlag ==1;
-               ExportProcess p = new ExportProcessFactory().getProcess(
-                       new ExportMetaData(collectionID, "?", Authentication.getUser(), publicOnlyBool, extension),
-                       ()->getExportStream(collectionID)
-                       );
-                p.run( out -> Unchecked.uncheck(() ->getSubstanceExporterFor(extension, out, publicOnlyBool)));
+                boolean publicOnlyBool = publicOnlyFlag == 1;
+                
+                
+//                SearchResultContext src = SearchResultContext.getSearchResultContextForKey(collectionID);
+//                if(src!=null){
+//                   System.out.println(src.getAdapted(opt));
+//                }
+                
+                //Dummy version for query
+                ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+                String fname=request().getQueryString("filename");
+                String qgen=request().getQueryString("genUrl");
+                
+                if(fname!=null){
+                    emd.setDisplayFilename(fname);
+                }
+                
+                if(qgen!=null){
+                    emd.originalQuery=qgen;
+                }
+                //Not ideal, but gets around user problem
+                Stream<Substance> mstream = getExportStream(collectionID);
+                
+                
+                ExportProcess p = new ExportProcessFactory().getProcess(emd,
+                        () -> mstream);
+                
+                p.run(out -> Unchecked.uncheck(() -> getSubstanceExporterFor(extension, out, publicOnlyBool)));
 
-                return ok("output will be written to : " + p.getOutputFile().getAbsolutePath());
+                return ok(EntityWrapper.of(p.getMetaData()).toFullJsonNode());
             } catch (Exception e) {
                 e.printStackTrace();
                 Logger.error(e.getMessage(), e);
@@ -668,15 +683,26 @@ public class GinasApp extends App {
         });
     }
 
+    
 
     //public static InputStream download(String username, String collectionId, String extension, boolean publicOnly) throws IOException{
     @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static F.Promise<Result> downloadExport(String collectionID, String extension, int publicOnlyFlag){
+    public static F.Promise<Result> downloadExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                InputStream in= ExportProcessFactory.download(Authentication.getUser().username, collectionID, extension, publicOnlyFlag==1);
+                String username=Authentication.getUser().username;
+                String filename=request().getQueryString("filename");
+                
+                Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+                ExportMetaData data=emeta.get();
+                
+                if(filename==null){
+                    filename=data.getDisplayFilename();
+                }
+                
+                InputStream in= ExportProcessFactory.download(username, data.getFilename());
                 response().setContentType("application/x-download");
-                response().setHeader("Content-disposition", "attachment; filename=" + collectionID+"."+extension);
+                response().setHeader("Content-disposition", "attachment; filename=" + filename);
                 return ok(in);
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
@@ -685,19 +711,83 @@ public class GinasApp extends App {
         });
     }
 
+    
     @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static F.Promise<Result> getStatusFor(String collectionID, String extension, int publicOnlyFlag){
+    public static F.Promise<Result> downloadsView(int rows,int page){
         return F.Promise.promise(() -> {
             try {
-                Optional<ExportProcess.State>state = ExportProcessFactory.getStatusFor(
-                       Authentication.getUser().username, collectionID, extension, publicOnlyFlag==1);
+                String username=Authentication.getUser().username;
+                
+                List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
+                return createDownloadsResult(list,rows,page);
+                
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
+    }
+    static Result createDownloadsResult(List<ExportMetaData> result, int rows,
+            int page) {
+        
+        List<ExportMetaData> jobs = new ArrayList<ExportMetaData>();
+        int[] pages = new int[0];
+        if (result.size() > 0) {
+            rows = Math.min(result.size(), Math.max(1, rows));
+            pages = paging(rows, page, result.size());
+            for (int i = (page - 1) * rows, j = 0; j < rows
+                    && i < result.size(); ++j, ++i) {
+                jobs.add(result.get(i));
+            }
+        }
 
-                if(state.isPresent()){
-                    //poor man's json
-                    //TODO turn this into a real object when we add more fields
-                    return ok("{"+ state.get().name()+"}");
+        return ok(ix.ginas.views.html.downloads.jobs.render(page, rows,
+                result.size(), pages, new FacetDecorator[]{}, jobs));
+
+    }
+    
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> downloadView(String downloadID){
+        return F.Promise.promise(() -> {
+            String username=Authentication.getUser().username;
+            Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+
+            if(emeta.isPresent()){
+                return ok(ix.ginas.views.html.downloads.job.render(emeta.get()));
+            }
+            return error(404, "download file not found");
+        });
+    }
+    
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> getStatusFor(String downloadID){
+        return F.Promise.promise(() -> {
+            try {
+                String username=Authentication.getUser().username;
+                
+                Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+
+                if(emeta.isPresent()){
+                    return ok(EntityWrapper.of(emeta.get()).toFullJsonNode());
                 }
                 return error(404, "download file not found");
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
+    }
+    
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> listDownloads(){
+        return F.Promise.promise(() -> {
+            try {
+                String username=Authentication.getUser().username;
+                
+                List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
+                
+                return ok(EntityWrapper.of(list).toFullJsonNode());
+                
             } catch (Exception e) {
                 Logger.error(e.getMessage(), e);
                 return error(404, e.getMessage());

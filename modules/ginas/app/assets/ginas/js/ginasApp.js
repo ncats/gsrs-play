@@ -717,7 +717,7 @@
         };
 
        // $scope.showprivates = false;
-	//Perpare an export file for download
+	//Prepare an export file for download
         $scope.downloadFile = function (url) {
             if($scope.showprivates){
                 url = url + '&publicOnly=' + (!$scope.showprivates ? 1: 0) ;
@@ -727,7 +727,14 @@
       			var dl = response.data;
 			if(dl){
 				if(dl.isReady){
-					window.location.href=dl.url;
+					var nurl=dl.url + "&genUrl=" + encodeURIComponent(window.location.href);
+					//alert(nurl);
+					$http.get(nurl).then(function(rep){
+						var meta=rep.data;
+						window.location.href=baseurl + "myDownloads/" + meta.id;
+					}, function(rep){
+						$scope.exportUnavailableWarning();
+					});
 				}else if(dl.isPresent){ //busy
 					$scope.exportUnavailableWarning();
 				}else{ //unknown result set

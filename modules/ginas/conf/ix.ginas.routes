@@ -48,8 +48,13 @@ GET         /logs                     ix.ginas.controllers.GinasApp.downloadFile
 GET         /testChemical               ix.ginas.controllers.GinasApp.createTestChemical(count: Int ?= 500)
 
 
-GET         /myDownloads/:collectionId   ix.ginas.controllers.GinasApp.downloadExport(collectionId: String, extension: String, publicOnly: Int ?=1)
-GET         /myDownloads/status/:collectionId   ix.ginas.controllers.GinasApp.getStatusFor(collectionId: String, extension: String, publicOnly: Int ?=1)
+GET         /myDownloads   			            ix.ginas.controllers.GinasApp.downloadsView(rows: Int ?= 16, page: Int ?= 1)
+GET         /myDownloads/:downloadID            ix.ginas.controllers.GinasApp.downloadView(downloadID: String)
+
+
+GET         /downloads   			            ix.ginas.controllers.GinasApp.listDownloads()
+GET         /downloads/:downloadID/download     ix.ginas.controllers.GinasApp.downloadExport(downloadID: String)
+GET         /downloads/:downloadID              ix.ginas.controllers.GinasApp.getStatusFor(downloadID: String)
 
 
 ->      /   ix.ncats.Routes	

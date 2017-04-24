@@ -1,21 +1,61 @@
 package ix.ginas.exporters;
 
+import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.models.Principal;
 import ix.ginas.models.utils.JSONEntity;
-
-import java.time.LocalDateTime;
+import ix.utils.Global;
 
 /**
  * Created by katzelda on 4/18/17.
  */
 @JSONEntity(name = "metadata")
 public class ExportMetaData {
-    public int numRecords;
+    
+    
+    public String id = UUID.randomUUID().toString();
+    
+    public long numRecords;
+    public Long totalRecotds=null;
+    
+    
     public String collectionId;
-    public  String originalQuery;
-    public  String username;
-    public  boolean publicOnly;
-    public  String extension;
+    public String originalQuery;
+    public String username;
+    public boolean publicOnly;
+    public String extension;
+    
+    
+    public String filename;
+    
+    public String displayfilename;
+    
+    
+
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+    
+    
+    public void setDisplayFilename(String filename) {
+        this.displayfilename = filename;
+    }
+    
+    public String getDisplayFilename() {
+        if(this.displayfilename!=null){
+            return this.displayfilename;
+        }else{
+            return this.getFilename();
+        }
+    }
+
 
 
     public Long started,finished;
@@ -29,6 +69,39 @@ public class ExportMetaData {
         this.publicOnly = publicOnly;
         this.extension = extension;
     }
+    
+    
+    public boolean isComplete(){
+        return this.finished!=null;
+    }
+    
+    //TODO: move status info here for better details
+    public String getStatus(){
+        if(this.isComplete()){
+            return "COMPLETE";
+        }else{
+            return "RUNNING";
+        }
+    }
+    
+    
+    public String getSelf(){
+        return Global.getHost() + ix.ginas.controllers.routes.GinasApp.getStatusFor(this.id).url();
+    }
+    
+    
+    public String getDownloadUrl(){
+        if(this.isComplete()){
+            return Global.getHost() + ix.ginas.controllers.routes.GinasApp.downloadExport(this.id).url();    
+        }else{
+            return null;
+        }
+        
+    }
+    
+    
+    
+    
 
     public String getCollectionId() {
         return collectionId;
@@ -52,10 +125,12 @@ public class ExportMetaData {
         return finished != null ? finished.equals(that.finished) : that.finished == null;
 
     }
+    
+    
 
     @Override
     public int hashCode() {
-        int result = numRecords;
+        long result = numRecords;
         result = 31 * result + collectionId.hashCode();
         result = 31 * result + (originalQuery != null ? originalQuery.hashCode() : 0);
         result = 31 * result + (username != null ? username.hashCode() : 0);
@@ -63,6 +138,6 @@ public class ExportMetaData {
         result = 31 * result + (extension != null ? extension.hashCode() : 0);
         result = 31 * result + (started != null ? started.hashCode() : 0);
         result = 31 * result + (finished != null ? finished.hashCode() : 0);
-        return result;
+        return (int) result;
     }
 }
