@@ -5,9 +5,22 @@
             </div>
             
             <div ng-if="exportData.cached">
-            	<span>An export was prepared with this criteria <i>{{moment(exportData.cached.started)}}</i>. You can retrieve this export, or start a new one by entering a filename below.
-            		<a href="myDownloads/{{exportData.cached.id}}" target="_self">View old version</a>
-            	</span>
+            	<div style="padding:10px;">
+            		<div class="alert alert-info alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                            </button>
+                            <span><h4>Info</h4>
+                                <span>An export was prepared with this criteria <strong>{{moment(exportData.cached.started)}}</strong>. You can retrieve this export, or start a new one by entering a filename below.
+			            		
+			            		<div>
+			            			<a class = "btn btn-default" href="{{baseurl}}myDownloads/{{exportData.cached.id}}" target="_self">View old version</a>
+			            			<br>
+			            		</div>
+			            		
+			            		</span>
+                                </span>
+                    </div>
+                 </div>
             </div>
             <div class="modal-body">
                 <div class = "row">   
