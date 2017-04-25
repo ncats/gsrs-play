@@ -40,61 +40,9 @@ public class ExportProcessFactory {
 
     //need to synchronize
     public synchronized ExportProcess getProcess(ExportMetaData metaData, Supplier<Stream<Substance>> substanceSupplier) throws Exception{
-        String key = getKey(metaData);
-
-        return IxCache.getOrElse(key, CallableUtil.TypedCallable.of(()->createExportProcessFor(metaData, substanceSupplier), ExportProcess.class));
+        return createExportProcessFor(metaData, substanceSupplier);
     }
 
-    public static String getKeyFor(String collectionId,String extension, boolean publicOnly){
-       // return new StringBuilder().append(collectionId).append('/').append(extension).append('/').append(publicOnly).toString();
-        StringBuilder builder = new StringBuilder(collectionId);
-
-        if(!publicOnly){
-            builder.append("_private");
-        }
-        builder.append('.').append(extension);
-
-        return builder.toString();
-    }
-
-    public static Optional<ExportProcess.State> getStatusFor(String username, String collectionId, String extension, boolean publicOnly) throws IOException{
-        String key = getKeyFor(collectionId, extension, publicOnly);
-
-        //don't need to get check the cache just the file system
-
-        File[] files = getFiles(getExportDirFor(username), key);
-        File metaDataFile = files[1];
-        if(!metaDataFile.exists()){
-            return Optional.empty();
-        }
-        try {
-            ExportMetaData metaData = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER().readValue(metaDataFile, ExportMetaData.class);
-            System.out.println("metaData Finished = " + metaData.finished);
-            if (metaData.finished != null) {
-                //guess it's done
-                return Optional.of(ExportProcess.State.DONE);
-            }
-
-        }catch(Exception e){
-            //something happened when trying to read
-            //maybe other thread edited it while we were reading?
-            //or only wrote partial file?
-            e.printStackTrace();
-        }
-        return Optional.ofNullable(ExportProcess.State.RUNNING);
-    }
-
-    public static InputStream download(String username, String collectionId, String extension, boolean publicOnly) throws IOException{
-        String key = getKeyFor(collectionId, extension, publicOnly);
-
-        //don't need to get check the cache just the file system
-        File[] files = getFiles(getExportDirFor(username), key);
-        File downloadFile = files[0];
-        if(downloadFile.exists()){
-            return new BufferedInputStream(new FileInputStream(downloadFile));
-        }
-        throw new FileNotFoundException("could not find file for user "+ username + " collectionId" + collectionId + " extension " + extension + ((!publicOnly)?" with private data" : ""));
-    }
     
     public static InputStream download(String username, String fname) throws FileNotFoundException{
         File[] files = getFiles(getExportDirFor(username), fname);
@@ -113,11 +61,6 @@ public class ExportProcessFactory {
         //but I don't think Path's path can contain null
         String username = metadata.username;
         File[] filename = getFiles(metadata, username);
-        
-        
-        if(metadata.getFilename()==null){
-            metadata.setFilename(filename[0].getName());
-        }
         
         inProgress.put(metadata.id, metadata);
         
@@ -141,33 +84,19 @@ public class ExportProcessFactory {
     }
 
     private File[] createFilesFrom(File parent, ExportMetaData metadata) {
-        String key = getKey(metadata);
-
-        return getFiles(parent, key);
-
+        return getFiles(parent, metadata.getFilename());
     }
 
-    private static File[] getFiles(File exportDir, String key) {
+    private static File[] getFiles(File exportDir, String fname) {
         
         File metaDirectory = getExportMetaDirFor(exportDir);
         
         return new File[]{
-                (new File(exportDir, key)),
-                (new File(metaDirectory, key+".metadata"))
+                (new File(exportDir, fname)),
+                (new File(metaDirectory, fname + ".metadata"))
         };
     }
 
-    private String getKey(ExportMetaData metadata) {
-//        StringBuilder builder = new StringBuilder(metadata.collectionId);
-//
-//        if(!metadata.publicOnly){
-//            builder.append("_private");
-//        }
-//        builder.append('.').append(metadata.extension);
-//
-//        return builder.toString();
-        return getKeyFor(metadata.collectionId, metadata.extension, metadata.publicOnly);
-    }
     
     //TODO: probably change the way this is stored to make it a little easier
     //the use of metadata files, right now, is probably overkill
@@ -195,7 +124,8 @@ public class ExportProcessFactory {
                          }
                      })
                      .sorted((m1,m2)->{
-                    	return (int) (m1.started-m2.started);
+                    	 //Newest first
+                    	return (int) (m2.started-m1.started);
                      })
                      .collect(Collectors.toList());
     }
@@ -212,5 +142,14 @@ public class ExportProcessFactory {
         });
         return Optional.ofNullable(emeta);
     }
+    
+    
+    public static Optional<ExportMetaData> getMetaForLatestKey(String username,String emetaKey) {
+    	return getExplicitExportMetaData(username).stream()
+    							.filter(em->em.getKey().equals(emetaKey))
+    							.findFirst();
+    }
+    
+    
     
 }

@@ -732,6 +732,15 @@
 					var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
 					var proposedfname="export-" + datestr + "." +  dl.url.split("format=")[1].split("&")[0];
 					
+					
+					$scope.exportData={};
+					if(dl.isCached){
+						console.log(dl.cached);
+						$scope.exportData.cached=dl.cached;
+					}
+					
+					
+					
 					$scope.fileNamePrompt(proposedfname, function(fname){
 						
 						

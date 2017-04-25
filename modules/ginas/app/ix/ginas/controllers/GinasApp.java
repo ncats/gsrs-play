@@ -598,9 +598,22 @@ public class GinasApp extends App {
     public static Result generateExportFileUrl(String collectionID, String extension, int publicOnly) {
         ObjectNode on = EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
         on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension, publicOnly).url().toString());
-
+        
         on.put("isReady", factoryPlugin.get().isReady());
-        on.put("isCached", false);
+        
+        
+        boolean publicOnlyBool = publicOnly == 1;
+        ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+        String username=emd.username;
+        Optional<ExportMetaData> existing= new ExportProcessFactory().getMetaForLatestKey(username, emd.getKey());
+        
+        if(existing.isPresent()){
+        	on.put("isCached", true);
+        	on.put("cached", EntityWrapper.of(existing.get()).toFullJsonNode());
+        }else{
+        	on.put("isCached", false);	
+        }
+                
         try {
             // make sure it's present
             getExportStream(collectionID);
@@ -654,7 +667,10 @@ public class GinasApp extends App {
 //                }
                 
                 //Dummy version for query
+                
+                
                 ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+                
                 String fname=request().getQueryString("filename");
                 String qgen=request().getQueryString("genUrl");
                 
@@ -665,6 +681,8 @@ public class GinasApp extends App {
                 if(qgen!=null){
                     emd.originalQuery=qgen;
                 }
+                
+                
                 //Not ideal, but gets around user problem
                 Stream<Substance> mstream = getExportStream(collectionID);
                 
@@ -753,6 +771,7 @@ public class GinasApp extends App {
             Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
 
             if(emeta.isPresent()){
+            	
                 return ok(ix.ginas.views.html.downloads.job.render(emeta.get()));
             }
             return error(404, "download file not found");

@@ -3,7 +3,7 @@
 @import ix.ginas.exporters.ExportMetaData
 @import ix.core.util.EntityUtils.EntityWrapper
 
-@(job: ExportMetaData, poll: String = "false")
+@(job: ExportMetaData, poll: String = "false", linkback: String = "false")
 
 <div class="panel panel-default sub-list">
     <div class= "panel-body list-item">
@@ -70,3 +70,6 @@
     </div>
     
 </div>
+@if(linkback.equals("true")){
+	<a href="@ix.ginas.controllers.routes.GinasApp.downloadsView()" target="_self">See all Downloads</a>
+}

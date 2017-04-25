@@ -30,13 +30,17 @@ public class ExportMetaData {
     
     public String filename;
     
+    @JsonIgnore
     public String displayfilename;
     
     
 
 
     public String getFilename() {
-        return filename;
+    	if(this.filename==null){
+    		return this.id + "." +this.extension;
+    	}
+    	return this.filename;
     }
 
     public void setFilename(String filename) {
@@ -82,6 +86,16 @@ public class ExportMetaData {
         }else{
             return "RUNNING";
         }
+    }
+    
+    /**
+     * This key is meant to be the same if the generating query and output format is
+     * the same.  
+     * @return
+     */
+    @JsonIgnore
+    public String getKey(){
+    	return getKeyFor(this.collectionId,this.extension, this.publicOnly);
     }
     
     
@@ -140,4 +154,17 @@ public class ExportMetaData {
         result = 31 * result + (finished != null ? finished.hashCode() : 0);
         return (int) result;
     }
+    
+    
+    private static String getKeyFor(String collectionId,String extension, boolean publicOnly){
+        // return new StringBuilder().append(collectionId).append('/').append(extension).append('/').append(publicOnly).toString();
+         StringBuilder builder = new StringBuilder(collectionId);
+
+         if(!publicOnly){
+             builder.append("_private");
+         }
+         builder.append('.').append(extension);
+
+         return builder.toString();
+     }
 }

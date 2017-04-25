@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.IOUtil;
 import ix.core.util.TimeUtil;
@@ -87,6 +88,7 @@ public class ExportProcess {
                     metaData.finished=TimeUtil.getCurrentTimeMillis();
                     IOUtil.closeQuietly(this::writeMetaDataFile);
                     IOUtil.closeQuietly(exporter);
+                    //IxCache.remove(metaData.getKey());
                 }
             });
             return this;
