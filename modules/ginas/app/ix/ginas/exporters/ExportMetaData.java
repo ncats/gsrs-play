@@ -34,6 +34,13 @@ public class ExportMetaData {
     public String displayfilename;
     
     
+    public boolean cancelled=false;
+    
+    
+    
+    public String sha1;
+    
+    
 
 
     public String getFilename() {
@@ -42,6 +49,8 @@ public class ExportMetaData {
     	}
     	return this.filename;
     }
+    
+   
 
     public void setFilename(String filename) {
         this.filename = filename;
@@ -81,8 +90,12 @@ public class ExportMetaData {
     
     //TODO: move status info here for better details
     public String getStatus(){
-        if(this.isComplete()){
+        if(this.isComplete() && this.sha1!=null && !cancelled){
             return "COMPLETE";
+        }else if(this.cancelled==true){
+            return "CANCELLED";
+        }else if(this.isComplete() && this.sha1==null){
+            return "ERROR";
         }else{
             return "RUNNING";
         }
@@ -93,7 +106,6 @@ public class ExportMetaData {
      * the same.  
      * @return
      */
-    @JsonIgnore
     public String getKey(){
     	return getKeyFor(this.collectionId,this.extension, this.publicOnly);
     }
@@ -110,7 +122,22 @@ public class ExportMetaData {
         }else{
             return null;
         }
-        
+    }
+    
+    public String getCancelUrl(){
+        if(!this.isComplete()){
+            return Global.getHost() + ix.ginas.controllers.routes.GinasApp.cancelExport(this.id).url();    
+        }else{
+            return null;
+        }
+    }
+    
+    public String getRemoveUrl(){
+        if(this.isComplete()){
+            return Global.getHost() + ix.ginas.controllers.routes.GinasApp.removeExport(this.id).url();    
+        }else{
+            return null;
+        }
     }
     
     
@@ -167,4 +194,8 @@ public class ExportMetaData {
 
          return builder.toString();
      }
+    
+    public void cancel(){
+        this.cancelled=true;
+    }
 }

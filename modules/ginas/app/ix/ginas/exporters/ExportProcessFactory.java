@@ -150,6 +150,14 @@ public class ExportProcessFactory {
     							.findFirst();
     }
     
+    public static void remove(ExportMetaData meta){
+        inProgress.remove(meta.id);
+        File[] files = getFiles(getExportDirFor(meta.username), meta.getFilename());
+        files[0].delete();
+        files[1].delete();
+        
+    }
+    
     
     
 }

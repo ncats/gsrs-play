@@ -728,15 +728,67 @@ public class GinasApp extends App {
             }
         });
     }
+    
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> cancelExport(String downloadID){
+        return F.Promise.promise(() -> {
+            try {
+                String username=Authentication.getUser().username;
+                Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+                ExportMetaData data=emeta.get();
+                if(data.isComplete()){
+                   throw new IllegalStateException("Can not cancel a completed export.");
+                }
+                data.cancel();
+                return ok(EntityWrapper.of(data).toFullJsonNode());
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
+    }
+    
+    @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static F.Promise<Result> removeExport(String downloadID){
+        return F.Promise.promise(() -> {
+            try {
+                String username=Authentication.getUser().username;
+                Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
+                ExportMetaData data=emeta.get();
+                if(!data.isComplete()){
+                   throw new IllegalStateException("Can not delete an unfinished export.");
+                }
+                
+                ExportProcessFactory.remove(data);
+                
+                ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+                ObjectNode node = mapper.createObjectNode();
+                node.put("message", "removed export");
+                return ok(node);
+            } catch (Exception e) {
+                Logger.error(e.getMessage(), e);
+                return error(404, e.getMessage());
+            }
+        });
+    }
 
     
     @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static F.Promise<Result> downloadsView(int rows,int page){
         return F.Promise.promise(() -> {
             try {
+                String key=request().getQueryString("q");
+                
                 String username=Authentication.getUser().username;
                 
                 List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
+                
+                if(key!=null){
+                    list=list.stream()
+                        .filter(m->m.getKey().equals(key))
+                        .collect(Collectors.toList());
+                }
+                
                 return createDownloadsResult(list,rows,page);
                 
             } catch (Exception e) {

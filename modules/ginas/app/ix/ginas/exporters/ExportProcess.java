@@ -18,6 +18,7 @@ import ix.core.util.TimeUtil;
 import ix.core.util.Unchecked;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.models.v1.Substance;
+import ix.utils.Util;
 import play.Play;
 
 /**
@@ -74,9 +75,12 @@ public class ExportProcess {
             factoryPlugin.get().submit( ()->{
                 try{
                     System.out.println("Starting export");
-                    substanceSupplier.get().forEach(s -> {
+                    substanceSupplier.get().peek(s -> {
                         Unchecked.ioException( () -> exporter.export(s));
                         this.metaData.numRecords++;
+                    })
+                    .anyMatch(m->{
+                     return this.metaData.cancelled;   
                     });
                     
                     currentState = State.DONE;
@@ -85,9 +89,19 @@ public class ExportProcess {
                     currentState = State.ERRORED_OUT;
                     throw t;
                 }finally{
+                    
+                    
+                    try {
+                        metaData.sha1=Util.sha1(this.getOutputFile());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     metaData.finished=TimeUtil.getCurrentTimeMillis();
+                    
                     IOUtil.closeQuietly(this::writeMetaDataFile);
                     IOUtil.closeQuietly(exporter);
+                    
+                    
                     //IxCache.remove(metaData.getKey());
                 }
             });

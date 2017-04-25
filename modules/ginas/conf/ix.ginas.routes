@@ -55,6 +55,8 @@ GET         /myDownloads/:downloadID            ix.ginas.controllers.GinasApp.do
 GET         /downloads   			            ix.ginas.controllers.GinasApp.listDownloads()
 GET         /downloads/:downloadID/download     ix.ginas.controllers.GinasApp.downloadExport(downloadID: String)
 GET         /downloads/:downloadID              ix.ginas.controllers.GinasApp.getStatusFor(downloadID: String)
+GET         /downloads/:downloadID/@cancel      ix.ginas.controllers.GinasApp.cancelExport(downloadID: String)
+GET         /downloads/:downloadID/@remove      ix.ginas.controllers.GinasApp.removeExport(downloadID: String)
 
 
 ->      /   ix.ncats.Routes	
