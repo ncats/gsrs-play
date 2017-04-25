@@ -1,0 +1,98 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.GinasLoad
+@import ix.ginas.exporters.ExportMetaData
+@import ix.core.util.EntityUtils.EntityWrapper
+
+@(job: ExportMetaData, poll: String = "false", linkback: String = "false")
+
+<div class="panel panel-default sub-list">
+    <div class= "panel-body list-item">
+    	<div ng-controller="ExportJobController" ng-init="init(@EntityWrapper.of(job).toFullJson(), @poll)">
+    	<div ng-if="visible">
+    	<div class="panel-heading sub-title">
+	        <div class = "row">
+	            <div class = "col-md-10">
+	                <h3><a href="@ix.ginas.controllers.routes.GinasApp.downloadView(job.id)" target="_self">@job.getDisplayFilename()</a></h3>
+	            </div>
+	            <div class = "col-md-2 prot-approvID">
+	                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.downloadView(job.id)" target="_self"><code>{{state.status}}</code></a></h4>
+	            </div>
+	        </div>
+	    </div>
+        <div class = "row">
+            <div class = "col-md-3">
+                <div class ="row">
+                    <div class = "col-md-8 col-md-offset-1 text-center">
+                          <div ng-if="!state.complete">
+                                <i class="fa fa-cog fa-5x fa-spin"></i>
+                                <div>Processing export ... </div>
+                                <button class="btn" ng-click="cancel()">
+                                	(click to cancel)
+                                </button>
+                          </div>
+                          <div ng-if="state.complete">
+                                <a href="{{state.downloadUrl}}" target="_self">
+                                <i class="fa fa-download fa-5x"></i>
+                                <div>(click to download)</div>
+                                </a>
+                          </div>
+                          
+                          
+                    </div>
+                </div>
+            </div>
+            <div class = "col-md-7">
+            
+            <div class="table-responsive">          
+			  <table class="table">
+			  <tr>
+			  	<td><strong>Number of Records:</strong></td>
+			  	<td>{{state.numRecords}}</td>
+			  </tr>
+			  <tr ng-if="state.originalQuery">
+				  <td><strong>Original URL:</strong></td>
+				  <td><a href="{{state.originalQuery}}" target="_self">{{state.originalQuery}}</a></td>
+			  </tr>
+			  <tr>
+				  <td><strong>Previous versions</strong></td>
+				  <td><a href="@ix.ginas.controllers.routes.GinasApp.downloadsView()?q={{state.key}}" target="_self">See other versions of this export.</a></td>
+			  </tr>
+			  <tr ng-if="state.sha1">
+				  <td><strong>SHA-1</strong></td>
+				  <td>{{state.sha1}}</td>
+			  </tr>
+			  </table>
+			</div>
+                
+            </div>
+            <div class = "col-md-2">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date started: <h6>{{moment(state.started)}}</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date ended: <h6>{{moment(state.finished)}}</h6>
+                    </div>
+                </div>
+                <div ng-if="state.removeUrl">
+                                <button class="btn" ng-click="remove()">
+                                	(click to delete)
+                                </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center" ng-if="!visible">
+    	(deleted record)
+    </div>
+    	</div>
+    
+    </div>
+    
+</div>
+@if(linkback.equals("true")){
+	<a href="@ix.ginas.controllers.routes.GinasApp.downloadsView()" target="_self">See all Downloads</a>
+}

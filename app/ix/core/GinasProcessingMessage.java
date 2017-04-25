@@ -22,6 +22,8 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public boolean suggestedChange=false;
 	public boolean appliedChange=false;
 	public List<Link> links = new ArrayList<Link>();
+	
+	private boolean possibleDuplicate=false;
 
 	public GinasProcessingMessage(){}
 
@@ -88,10 +90,15 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public MESSAGE_TYPE getMessageType() {
 		return this.messageType;
 	}
+	
+	public GinasProcessingMessage markPossibleDuplicate(){
+		possibleDuplicate=true;
+		return this;
+	}
 
 	@JsonIgnore
 	public boolean isPossibleDuplicate(){
-		return !this.links.isEmpty();
+		return possibleDuplicate || !this.links.isEmpty();
 	}
 
 	public void makeError() {

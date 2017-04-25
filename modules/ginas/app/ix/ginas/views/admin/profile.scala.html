@@ -9,7 +9,7 @@
     <uib-tabset>
         <uib-tab>
             <uib-tab-heading>
-                User Info <i class ="fa fa-users fa-2x"></i>
+               <i class ="fa fa-users fa-2x"></i> User Info 
             </uib-tab-heading>
             <div class="row info">
                 <div class="col-md-4">
@@ -22,12 +22,29 @@
                 </div>
                 <div class = "col-md-8">
             <h6>Roles: @ix.ncats.controllers.auth.Authentication.getUser().getUserProfile().getRoles()</h6>
-           @user.username
-           @user.selfie
-           @user.email
+	           @user.username
+	           @user.selfie
+	           @user.email
                     </div>
-</div>
+           
+	</div>
+	
         </uib-tab>
+        
+         <uib-tab select="">
+            <uib-tab-heading>
+              <i class="fa fa-download fa-2x"></i>  My Downloads 
+            </uib-tab-heading>
+            <div class="row info">
+            <div class = "col-md-12">
+            <div style="padding:10px;text-align:center;">
+           <a class = "btn btn-default center-text" href="@ix.ginas.controllers.routes.GinasApp.downloadsView(16,1)" target="_self"><i class="fa fa-download "></i>&nbsp;View My Downloads</a>
+           </span>
+           </div>
+           </div>
+        </uib-tab>
+        
+        <!-- 
         <uib-tab select="">
             <uib-tab-heading>
                 Structure Preferences <i class="fa fa-cogs fa-2x"></i>
@@ -46,5 +63,6 @@
             </uib-tab-heading>
             <p>Coming Soon</p>
         </uib-tab>
+        -->
     </uib-tabset>
 }

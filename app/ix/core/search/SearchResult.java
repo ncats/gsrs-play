@@ -46,7 +46,9 @@ public class SearchResult {
 
 	private final List<SoftReference<SearchResultDoneListener>> listeners = new ArrayList<>();
 
-
+	public SearchResult(SearchOptions options) {
+		this(options, null);
+	}
 	public SearchResult(SearchOptions options, String query) {
 		this.options = options;
 		this.query = query;

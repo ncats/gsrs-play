@@ -115,6 +115,7 @@ public class Util {
     	try{
     		MessageDigest md = MessageDigest.getInstance("SHA1");	
         	md.update(seed.getBytes("utf8"));
+        	
         	return UUID.nameUUIDFromBytes(md.digest());
     	}catch(Exception e){
     		UUID uuid = new UUID(seed.hashCode(), (seed+"?!").hashCode());
@@ -219,7 +220,6 @@ public class Util {
         
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            
             md.update(bytes);
             return toHex (md.digest());
         }
@@ -229,6 +229,24 @@ public class Util {
         return null;
     }
 
+    
+    public static String sha1(File file) throws Exception  {
+        MessageDigest digest = MessageDigest.getInstance("SHA-1");
+        try(InputStream fis = new FileInputStream(file)){
+            int n = 0;
+            byte[] buffer = new byte[8192];
+            while (n != -1) {
+                n = fis.read(buffer);
+                if (n > 0) {
+                    digest.update(buffer, 0, n);
+                }
+            }
+        }
+        return sha1(digest.digest());
+    }
+    
+    
+    
     public static String URLEncode (String value) {
         try {
             String decode = URLDecoder.decode(value, "UTF-8");
