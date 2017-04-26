@@ -52,8 +52,7 @@ import play.db.ebean.Model;
  * Created by katzelda on 5/16/16.
  */
 public class ProcessExecutionService {
-
-    private static final Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
+	private static final Model.Finder<Long,BackupEntity> finder = new Model.Finder(Long.class, BackupEntity.class);
 
     private final ExecutorService executor;
 
@@ -78,17 +77,7 @@ public class ProcessExecutionService {
     			
     			Stream<T> stream = StreamUtil.forIterator(ci);
         		
-        		return stream.onClose(()->{
-        			System.out.println("Closing");
-        			if(ci instanceof Closeable){
-        				try{
-        					((Closeable)ci).close();
-        				}catch(IOException e){
-        					//not sure about this
-        					throw new RuntimeException(e);
-        				}
-        			}
-        		});	
+        		return stream;
     		};
     	}
     	
@@ -186,7 +175,6 @@ public class ProcessExecutionService {
     		
     		executor.shutdown();
             executor.awaitTermination(1, TimeUnit.DAYS);
-            stream.close();
     		
     	}catch(InterruptedException e){
     		e.printStackTrace();
@@ -366,6 +354,40 @@ public class ProcessExecutionService {
     								   .map(o->(T)o);
     	}
     	
+    	
+    	
+    	/**
+    	 * Create an {@link EntityStreamSupplier} for the given type,
+    	 * which will use the native Ebean finder to find and fetch
+    	 * all instances. In addition, use an {@link EntityFetcher}
+    	 * to fetch each returned entity in the stream. This extra
+    	 * step is done as Ebean sometimes lazy-loads the records
+    	 * in ways that can be problematic for some common consumers.
+    	 * 
+    	 * @param cls
+    	 * @param datasource Ebean datasource to use
+    	 * @return
+    	 */
+    	public static <T> EntityStreamSupplier<T> allForDeep(Class<T> cls, String datasource){    		
+    		return allFor(cls,datasource)
+    			       .map(o->(T)EntityWrapper.of(o).getKey().getFetcher(datasource).call());
+    	}
+    	
+    	/**
+    	 * Create an {@link EntityStreamSupplier} for the given type,
+    	 * which will use the native Ebean finder to find and fetch
+    	 * all instances. 
+    	 * 
+    	 * @param cls
+    	 * @param datasource Ebean datasource to use
+    	 * @return
+    	 */
+    	public static <T> EntityStreamSupplier<T> allFor(Class<T> cls, String datasource){    		
+    		Model.Finder<?,?> mfinder = EntityUtils.getEntityInfoFor(cls).getInherittedRootEntityInfo().getFinder(datasource);
+    		return EntityStreamSupplier.ofIterator(()->mfinder.findIterate())
+    								   .total(()->(long)mfinder.findRowCount())
+    								   .map(o->(T)o);
+    	}
     	
     	public static EntityStreamSupplier<Object> allBackups(){
     		return EntityStreamSupplier.ofIterator(()->finder.findIterate())

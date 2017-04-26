@@ -39,4 +39,46 @@ public interface ProcessListener {
     void totalRecordsToProcess(int total);
 
     void countSkipped(int numSkipped);
+    
+    
+    public static ProcessListener doNothingListener(){
+    	return new ProcessListener(){
+			@Override
+			public void newProcess() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void doneProcess() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void recordProcessed(Object o) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void error(Throwable t) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void totalRecordsToProcess(int total) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void countSkipped(int numSkipped) {
+				// TODO Auto-generated method stub
+				
+			}
+    		
+    	};
+    }
 }

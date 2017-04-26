@@ -67,9 +67,11 @@ import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.*;
 import ix.ginas.models.v1.*;
+import ix.core.utils.executor.ProcessExecutionService.CommonStreamSuppliers;
 import ix.core.utils.executor.MultiProcessListener;
 import ix.core.utils.executor.ProcessListener;
 import ix.core.utils.executor.ProcessExecutionService;
+import ix.core.utils.executor.ProcessExecutionService.CommonConsumers;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
@@ -2275,15 +2277,50 @@ return F.Promise.<Result>promise( () -> {
                 .mapToObj(i -> new Site(subunitIndex, i + 1))
                 .collect(ModelUtils.toShorthand());
     }
+    
+    public static void sillyTest(){
+    	EntityUtils.getEntityInfoFor(ix.ginas.models.test.TestModel.class)
+    		    .getFinder()
+		    	.all()
+		    	.stream()
+		    	.forEach(t->{
+		    		System.out.println(EntityWrapper.of(t).toFullJson());					
+		    	});
 
-    // TODO: move to Ginas App
-    // ***************
+
+    	try{
+    		new ProcessExecutionService(5,10).process(CommonStreamSuppliers.allForDeep(ix.ginas.models.test.TestModel.class), CommonConsumers.REINDEX_COMPLETE, ProcessListener.doNothingListener());
+
+
+
+    		SearchRequest request = new SearchRequest.Builder()
+    				.top(16)
+    				.kind(ix.ginas.models.test.TestModel.class)
+    				.fdim(FACET_DIM)
+    				.query("Y4907O6MFD")
+    				.build();
+
+
+    		SearchResult result = SearchFactory.search(request);
+
+    		System.out.println("Tested:" + result.count());
+    		result.getMatches().stream().forEach(t->{
+    			System.out.println(EntityWrapper.of(t).toFullJson());	
+
+    		});
+
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    }
+
     public static Result index() {
+    	sillyTest();
         return ok(ix.ginas.views.html.index.render());
     }
 
     public static Result app() {
-        return ok(ix.ginas.views.html.index.render());
+        return index();
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)

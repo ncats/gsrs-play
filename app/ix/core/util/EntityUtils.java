@@ -308,6 +308,10 @@ public class EntityUtils {
 		public Finder<?,T> getFinder() {
 			return ei.getNativeSpecificFinder();
 		}
+		
+		public Finder<?,T> getFinder(String datasource) {
+			return ei.getNativeSpecificFinder(datasource);
+		}
 
 		public boolean isValidated(){
 			if(!ei.hasValidationField()){
@@ -1191,10 +1195,23 @@ public class EntityUtils {
 		public Model.Finder<Object,?> getFinder() {
 			return (Finder<Object, ?>) this.getInherittedRootEntityInfo().getNativeSpecificFinder();
 		}
+		
+		
+		public Model.Finder<Object,?> getFinder(String datasource) {
+			return (Finder<Object, ?>) this.getInherittedRootEntityInfo().getNativeSpecificFinder(datasource);
+		}
 
 		public Model.Finder<Object,T> getNativeSpecificFinder() {
 			if(this.nativeVerySpecificFinder==null)return null;
 			return (Finder<Object, T>) this.nativeVerySpecificFinder.get();
+		}
+		
+		
+		private Map<String, Model.Finder<Object,T>> findermap = new ConcurrentHashMap<>();
+		
+		public Model.Finder<Object,T> getNativeSpecificFinder(String datasource) {
+			if(this.nativeVerySpecificFinder==null)return null;
+			return findermap.computeIfAbsent(datasource,(k)->new Model.Finder(k, idType, this.cls));
 		}
 
 		public Object formatIdToNative(String id) {
@@ -1408,6 +1425,10 @@ public class EntityUtils {
 		public T findById(String id) {
 			//Object nativeId=formatIdToNative(id);
 			return (T) this.getFinder().byId(id);
+		}
+		
+		public T findById(String id, String datasource) {
+			return (T) this.getFinder(datasource).byId(id);
 		}
 
 		public T fromJson(String oldValue) throws JsonParseException, JsonMappingException, IOException {
@@ -2364,11 +2385,28 @@ public class EntityUtils {
 		private Object nativeFetch(){
 			return kind.getFinder().byId(this.getIdNative());
 		}
+		
+		/**
+		 * Returns null if not present
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		private Object nativeFetch(String datasource){
+			return kind.getFinder(datasource).byId(this.getIdNative());
+		}
 
 
 		// fetches from finder
 		public Optional<EntityWrapper<?>> fetch() {
+			if(ds!=null)return fetch(ds);
 			Object o=nativeFetch();
+			if(o==null)return Optional.empty();
+			return Optional.of(EntityWrapper.of(o));
+		}
+
+		// fetches from finder
+		public Optional<EntityWrapper<?>> fetch(String datasource) {
+			Object o=nativeFetch(datasource);
 			if(o==null)return Optional.empty();
 			return Optional.of(EntityWrapper.of(o));
 		}
@@ -2447,6 +2485,25 @@ public class EntityUtils {
         
         public EntityFetcher getFetcher(CacheType ct) throws Exception{
             return EntityFetcher.of(this, ct);
+        }
+        
+        public EntityFetcher getFetcher(String datasource) throws Exception{
+        	Key dupe=Key.of(this.getEntityInfo(), this.getIdNative());
+        	dupe.setDefaultDS(datasource);
+        	
+            return EntityFetcher.of(dupe);
+        }
+        
+        public EntityFetcher getFetcher(String datasource,CacheType ct) throws Exception{
+        	Key dupe=Key.of(this.getEntityInfo(), this.getIdNative());
+        	dupe.setDefaultDS(datasource);
+            return EntityFetcher.of(dupe, ct);
+        }
+        
+        
+        private String ds = null;
+        private void setDefaultDS(String datasource){
+        	this.ds=datasource;
         }
 	}
 
