@@ -8,5 +8,5 @@ import ix.core.util.CloseableIterator;
  */
 public interface ReindexQuery {
 
-    CloseableIterator<BackupEntity> query(ReIndexListener listener);
+    CloseableIterator<BackupEntity> query(ProcessListener listener);
 }

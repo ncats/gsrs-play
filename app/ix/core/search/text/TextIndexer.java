@@ -128,7 +128,7 @@ import ix.core.search.text.TextIndexer.IxQueryParser;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.ginas.utils.reindex.ReIndexListener;
+import ix.ginas.utils.reindex.ProcessListener;
 import ix.utils.Global;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -138,7 +138,7 @@ import play.Play;
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer implements Closeable, ReIndexListener {
+public class TextIndexer implements Closeable, ProcessListener {
 	private static final String TERM_VEC_PREFIX = "F";
 
     public static final String IX_BASE_PACKAGE = "ix";
@@ -2571,7 +2571,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 
 	@Override
-	public void newReindex() {
+	public void newProcess() {
 
 		flushDaemon.lockFlush();
         closeAndClear(lookups);
@@ -2592,18 +2592,18 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
     }
 	@Override
-	public void doneReindex() {
+	public void doneProcess() {
 		isReindexing = false;
 	}
 
 	@Override
-	public void recordReIndexed(Object o) {	}
+	public void recordProcessed(Object o) {	}
 
 	@Override
 	public void error(Throwable t) {	}
 
 	@Override
-	public void totalRecordsToIndex(int total) {	}
+	public void totalRecordsToProcess(int total) {	}
 
 	@Override
 	public void countSkipped(int numSkipped) {	}

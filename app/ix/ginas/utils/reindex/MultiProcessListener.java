@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A {@link ReIndexListener} that wraps several listeners behind a single
+ * A {@link ProcessListener} that wraps several listeners behind a single
  * interface so notifying this one listener notifies all the wrapped listeners.
  *
  * This is useful for when you want to notify several listeners at the same time
@@ -14,9 +14,9 @@ import java.util.Objects;
  *
  * Created by katzelda on 8/30/16.
  */
-public class MultiReIndexListener implements ReIndexListener {
+public class MultiProcessListener implements ProcessListener {
 
-    private final List<ReIndexListener> listeners;
+    private final List<ProcessListener> listeners;
     /**
      * Create a new instance that will wrap the given listeners.
      * @param listeners the list of listeners to wrap.  Can not be null
@@ -24,7 +24,7 @@ public class MultiReIndexListener implements ReIndexListener {
      *
      * @throws NullPointerException if the list or any element are null.
      */
-    public MultiReIndexListener(ReIndexListener... listeners) {
+    public MultiProcessListener(ProcessListener... listeners) {
         this(Arrays.asList(listeners));
     }
 
@@ -35,27 +35,27 @@ public class MultiReIndexListener implements ReIndexListener {
      *
      * @throws NullPointerException if the list or any element are null.
      */
-    public MultiReIndexListener(List<ReIndexListener> listeners) {
+    public MultiProcessListener(List<ProcessListener> listeners) {
         //defensive copy
         this.listeners = new ArrayList<>(listeners);
-        for(ReIndexListener l : listeners){
+        for(ProcessListener l : listeners){
             Objects.requireNonNull(l, "listener can not be null");
         }
     }
 
     @Override
-    public void newReindex() {
-        listeners.forEach(ReIndexListener::newReindex);
+    public void newProcess() {
+        listeners.forEach(ProcessListener::newProcess);
     }
 
     @Override
-    public void doneReindex() {
-        listeners.forEach(ReIndexListener::doneReindex);
+    public void doneProcess() {
+        listeners.forEach(ProcessListener::doneProcess);
     }
 
     @Override
-    public void recordReIndexed(Object o) {
-        listeners.forEach(l -> l.recordReIndexed(o));
+    public void recordProcessed(Object o) {
+        listeners.forEach(l -> l.recordProcessed(o));
     }
 
     @Override
@@ -64,8 +64,8 @@ public class MultiReIndexListener implements ReIndexListener {
     }
 
     @Override
-    public void totalRecordsToIndex(int total) {
-        listeners.forEach(l -> l.totalRecordsToIndex(total));
+    public void totalRecordsToProcess(int total) {
+        listeners.forEach(l -> l.totalRecordsToProcess(total));
     }
 
     @Override

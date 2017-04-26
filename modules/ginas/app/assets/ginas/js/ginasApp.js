@@ -734,6 +734,7 @@
 					
 					
 					$scope.exportData={};
+					
 					if(dl.isCached){
 						console.log(dl.cached);
 						$scope.exportData.cached=dl.cached;

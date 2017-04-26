@@ -38,7 +38,7 @@ import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.reindex.ReIndexListener;
+import ix.ginas.utils.reindex.ProcessListener;
 import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
 import play.Application;
@@ -46,7 +46,7 @@ import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 
-public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexListener{
+public class EntityPersistAdapter extends BeanPersistAdapter implements ProcessListener{
 
 
 
@@ -352,6 +352,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
     }
     
     public void postUpdateBeanDirect(Object bean, Object oldvalues){
+    	postUpdateBeanDirect(bean,oldvalues,true);
+    }
+    
+    public void postUpdateBeanDirect(Object bean, Object oldvalues, boolean storeEdit){
     	EntityWrapper<?> ew= EntityWrapper.of(bean);
     	EditLock ml = lockMap.get(ew.getKey());
         if(ml!=null && ml.hasPostUpdateBeenCalled()){
@@ -362,7 +366,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
         }
     	EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
                 try {
-                    if (ew.isEntity() && ew.storeHistory() && ew.hasKey() ) {
+                    if (storeEdit && (ew.isEntity() && ew.storeHistory() && ew.hasKey()) ) {
                     	Key key = ew.getKey();
                     	// If we didn't already start an edit for this
                     	// then start one and save it. Otherwise just ignore
@@ -503,25 +507,25 @@ public class EntityPersistAdapter extends BeanPersistAdapter implements ReIndexL
 
 	
 	@Override
-	public void newReindex() {
+	public void newProcess() {
 		isReindexing=true;
     	alreadyLoaded.clear();
 	}
 
 	@Override
-	public void doneReindex() {
+	public void doneProcess() {
 		isReindexing=false;
         alreadyLoaded.clear();
 	}
 
 	@Override
-	public void recordReIndexed(Object o) {}
+	public void recordProcessed(Object o) {}
 
 	@Override
 	public void error(Throwable t) {}
 
 	@Override
-	public void totalRecordsToIndex(int total) {}
+	public void totalRecordsToProcess(int total) {}
 
 	@Override
 	public void countSkipped(int numSkipped) {}
