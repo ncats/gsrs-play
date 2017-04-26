@@ -1783,7 +1783,6 @@ return F.Promise.<Result>promise( () -> {
         return sub.getMatchContextPropertyOr("similarity", null);
     }
     
-    
     static public Substance resolve(Relationship rel) {
         Substance relsub = null;
         try {

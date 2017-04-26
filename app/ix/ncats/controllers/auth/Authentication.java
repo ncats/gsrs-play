@@ -1,7 +1,11 @@
 package ix.ncats.controllers.auth;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
@@ -23,7 +27,6 @@ import ix.core.util.ConfigHelper;
 import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.utils.Util;
-import net.sf.ehcache.CacheManager;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -348,9 +351,11 @@ public class Authentication extends Controller {
 			
 		}
 		
-		return StreamUtil.forIterator(UserProfileFactory.users())
-			.filter(up->up.hasRole(Role.Admin))
-			.findFirst()
-			.orElse(null);
+		try(Stream<UserProfile> users= UserProfileFactory.userStream()){
+			return users.filter(up->up.hasRole(Role.Admin))
+					.findFirst()
+					.orElse(null);
+		}
+			
 	}
 }

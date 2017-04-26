@@ -72,25 +72,22 @@ public class CodeFactory extends EntityFactory {
     }
     
     public static Optional<Tuple<Long,Code>> getHighestValueCode(String codeSystem, String suffix){
-    	Stream<Code> codes=StreamUtil.forIterator(
+    	try(Stream<Code> codes=StreamUtil.forIterator(
     				finder.where()
     				.and(com.avaje.ebean.Expr.like("code","%" + suffix), com.avaje.ebean.Expr.eq("codeSystem",codeSystem))
-    				.findIterate());
+    				.findIterate())){
     	
-    
-    	Optional<Tuple<Long,Code>> max=codes
-    		.map(cd-> 
-    			new Tuple<Long,Code>(
-    					new Long(Long.parseLong(cd.code.replace(suffix, "")))
-    					,cd)
-    			)
-    		.max((l1,l2)->(int)(l1.k()-l2.k()));
-    	
-    	if(max.isPresent()){
-    		Logger.info("################# FOUND CODE:" + max.get().v().code);
-    	}else{
-    		Logger.info("################# NO CODE!");
+	    
+	    	Optional<Tuple<Long,Code>> max=codes
+	    		.map(cd-> Tuple.of(new Long(Long.parseLong(cd.code.replace(suffix, ""))),cd))
+	    		.max((l1,l2)->(int)(l1.k()-l2.k()));
+	    	
+	    	if(max.isPresent()){
+	    		Logger.info("################# FOUND CODE:" + max.get().v().code);
+	    	}else{
+	    		Logger.info("################# NO CODE!");
+	    	}
+	    	return max;
     	}
-    	return max;
     }
 }

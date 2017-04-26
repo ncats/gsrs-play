@@ -1,5 +1,7 @@
 package ix.core.util;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -24,7 +26,14 @@ import java.util.stream.StreamSupport;
 public class StreamUtil {
 
     public static <T> Stream<T> forIterator(Iterator<T> it){
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.IMMUTABLE), false);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.IMMUTABLE), false)
+        		            .onClose(()->{
+        		            	if(it instanceof Closeable){
+        		            		Unchecked.ioException(()->{
+        		            			((Closeable)it).close();
+        		            		});
+        		            	}
+        		            });
     }
 
     /**

@@ -3,12 +3,14 @@ package ix.core.controllers;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.core.util.CachedSupplier;
+import ix.core.util.StreamUtil;
 import ix.utils.Util;
 import play.db.ebean.Model;
 
@@ -109,7 +111,8 @@ public class UserProfileFactory extends EntityFactory {
         return addActiveUser(newUser,password,rolesChecked,groupsChecked);
     }
     
-    public static Iterator<UserProfile> users(){
-    	return finder.get().findIterate();
+    public static Stream<UserProfile> userStream(){
+    	Iterator<UserProfile> profiles= finder.get().findIterate();
+    	return StreamUtil.forIterator(profiles);
     }
 }

@@ -73,9 +73,9 @@ public class ExportProcess {
             //final OutputStream fout = out;
             
             factoryPlugin.get().submit( ()->{
-                try{
+                try(Stream<Substance> sstream = substanceSupplier.get()){
                     System.out.println("Starting export");
-                    substanceSupplier.get().peek(s -> {
+                    sstream.peek(s -> {
                         Unchecked.ioException( () -> exporter.export(s));
                         this.metaData.numRecords++;
                     })

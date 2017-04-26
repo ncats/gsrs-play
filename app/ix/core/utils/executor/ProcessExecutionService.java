@@ -78,7 +78,8 @@ public class ProcessExecutionService {
     			
     			Stream<T> stream = StreamUtil.forIterator(ci);
         		
-        		stream.onClose(()->{
+        		return stream.onClose(()->{
+        			System.out.println("Closing");
         			if(ci instanceof Closeable){
         				try{
         					((Closeable)ci).close();
@@ -87,8 +88,7 @@ public class ProcessExecutionService {
         					throw new RuntimeException(e);
         				}
         			}
-        		});
-        		return stream;	
+        		});	
     		};
     	}
     	
@@ -186,10 +186,14 @@ public class ProcessExecutionService {
     		
     		executor.shutdown();
             executor.awaitTermination(1, TimeUnit.DAYS);
+            stream.close();
     		
     	}catch(InterruptedException e){
+    		e.printStackTrace();
+    		
             listener.error(e);
         }catch(Throwable t){
+        	t.printStackTrace();
             listener.error(t);
             throw t;
         }finally {
