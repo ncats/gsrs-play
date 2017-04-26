@@ -34,6 +34,7 @@ import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.EntityFetcher;
 import ix.core.util.BlockingSubmitExecutor;
 import ix.core.util.CloseableIterator;
 import ix.core.util.EntityUtils;
@@ -255,6 +256,52 @@ public class ProcessExecutionService {
     }
     
     
+    public class Process<T>{
+    	private Consumer<T> consumer;
+    	private EntityStreamSupplier<T> supplier;
+    	private ProcessListener listener;
+    	
+    	public Process(EntityStreamSupplier<T> supplier, Consumer<T> consumer,ProcessListener listener){
+    		this.supplier=supplier;
+    		this.consumer=consumer;
+    		this.listener=listener;
+    	}
+    	
+    	public void execute() throws IOException{
+    		process(supplier,consumer,listener);
+    	}
+    	
+    }
+    
+    public class ProcessBulder<T>{
+    	private Consumer<T> consumer;
+    	private EntityStreamSupplier<T> supplier;
+    	private ProcessListener listener;
+    	
+    	public ProcessBulder(){}
+    	
+    	public ProcessBulder<T> consumer(Consumer<T> consumer){
+    		this.consumer=consumer;
+    		return this;
+    	}
+    	
+    	public ProcessBulder<T> streamSupplier(EntityStreamSupplier<T> supplier){
+    		this.supplier=supplier;
+    		return this;
+    	}
+    	
+    	public ProcessBulder<T> listener(ProcessListener listener){
+    		this.listener=listener;
+    		return this;
+    	}
+    	
+    	public Process<T> build(){
+    		return new Process(supplier, consumer,listener);    		
+    	}
+    	
+    }
+    
+    
     
     public static class CommonConsumers{
     	public static Consumer<Object> REINDEX_FAST = t->{
@@ -284,20 +331,43 @@ public class ProcessExecutionService {
     }
     
     public static class CommonStreamSuppliers{
+    	/**
+    	 * Create an {@link EntityStreamSupplier} for the given type,
+    	 * which will use the native Ebean finder to find and fetch
+    	 * all instances. In addition, use an {@link EntityFetcher}
+    	 * to fetch each returned entity in the stream. This extra
+    	 * step is done as Ebean sometimes lazy-loads the records
+    	 * in ways that can be problematic for some common consumers.
+    	 * 
+    	 * @param cls
+    	 * @return
+    	 */
+    	public static <T> EntityStreamSupplier<T> allForDeep(Class<T> cls){    		
+    		return allFor(cls)
+    			       .map(o->(T)EntityWrapper.of(o).getKey().getFetcher().call());
+    	}
+    	
+    	/**
+    	 * Create an {@link EntityStreamSupplier} for the given type,
+    	 * which will use the native Ebean finder to find and fetch
+    	 * all instances.
+    	 * 
+    	 * @param cls
+    	 * @return
+    	 */
     	public static <T> EntityStreamSupplier<T> allFor(Class<T> cls){    		
     		Model.Finder<?,?> mfinder = EntityUtils.getEntityInfoFor(cls).getInherittedRootEntityInfo().getFinder();
     		return EntityStreamSupplier.ofIterator(()->mfinder.findIterate())
     								   .total(()->(long)mfinder.findRowCount())
-    								   .map(o->(T)EntityWrapper.of(o).getKey().getFetcher().call());
+    								   .map(o->(T)o);
     	}
+    	
+    	
     	public static EntityStreamSupplier<Object> allBackups(){
     		return EntityStreamSupplier.ofIterator(()->finder.findIterate())
 			        .total((long)finder.findRowCount())
 			        .map(o->o.getInstantiated());
     	}
+    	
     }
-    
-    
-
-
 }
