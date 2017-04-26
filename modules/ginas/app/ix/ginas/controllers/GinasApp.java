@@ -67,9 +67,9 @@ import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.*;
 import ix.ginas.models.v1.*;
-import ix.ginas.utils.reindex.MultiProcessListener;
-import ix.ginas.utils.reindex.ProcessListener;
-import ix.ginas.utils.reindex.ProcessExecutionService;
+import ix.core.utils.executor.MultiProcessListener;
+import ix.core.utils.executor.ProcessListener;
+import ix.core.utils.executor.ProcessExecutionService;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
@@ -1007,7 +1007,7 @@ public class GinasApp extends App {
         return ok(pis);
     }
 
-    private static Exporter<Substance> getSubstanceExporterFor(String extension, OutputStream pos, boolean publicOnly)
+    public static Exporter<Substance> getSubstanceExporterFor(String extension, OutputStream pos, boolean publicOnly)
             throws IOException {
 
         if (factoryPlugin.get() == null) {

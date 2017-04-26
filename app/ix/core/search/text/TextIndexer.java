@@ -128,7 +128,7 @@ import ix.core.search.text.TextIndexer.IxQueryParser;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.ginas.utils.reindex.ProcessListener;
+import ix.core.utils.executor.ProcessListener;
 import ix.utils.Global;
 import ix.utils.Tuple;
 import ix.utils.Util;

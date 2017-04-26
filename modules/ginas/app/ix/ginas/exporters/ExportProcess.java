@@ -92,7 +92,10 @@ public class ExportProcess {
                     
                     
                     try {
-                        metaData.sha1=Util.sha1(this.getOutputFile());
+                    	File f=this.getOutputFile();
+                    	
+                        metaData.sha1=Util.sha1(f);
+                        metaData.size=f.length();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

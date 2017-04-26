@@ -1,4 +1,4 @@
-package ix.ginas.utils.reindex;
+package ix.core.utils.executor;
 
 import java.util.ArrayList;
 import java.util.Arrays;

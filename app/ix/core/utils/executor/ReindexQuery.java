@@ -1,4 +1,4 @@
-package ix.ginas.utils.reindex;
+package ix.core.utils.executor;
 
 import ix.core.models.BackupEntity;
 import ix.core.util.CloseableIterator;

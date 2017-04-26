@@ -1,4 +1,4 @@
-package ix.ginas.utils.reindex;
+package ix.core.utils.executor;
 
 import com.avaje.ebean.QueryIterator;
 import ix.core.models.Backup;

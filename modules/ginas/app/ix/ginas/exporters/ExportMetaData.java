@@ -39,6 +39,7 @@ public class ExportMetaData {
     
     
     public String sha1;
+    public long size;
     
     
 

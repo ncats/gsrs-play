@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -15,11 +16,13 @@ import ix.core.auth.UserTokenAuthenticator;
 import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Payload;
 import ix.core.models.UserProfile;
+import ix.core.models.Principal;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadProcessor;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.stats.Statistics;
+import ix.ginas.models.v1.Substance;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.fda.TrustHeaderAuthenticator;
@@ -34,6 +37,14 @@ import play.libs.F.Promise;
 import play.mvc.Action;
 import play.mvc.Http;
 import play.mvc.Result;
+import ix.core.util.scheduler.Scheduler;
+import ix.core.utils.executor.ProcessExecutionService;
+import ix.ginas.exporters.ExportMetaData;
+import ix.ginas.exporters.ExportProcess;
+import ix.ginas.exporters.ExportProcessFactory;
+import ix.core.util.*;
+import ix.ginas.controllers.GinasApp;
+
 
 public class GinasGlobal extends Global {
 	Application app;
@@ -211,6 +222,47 @@ public class GinasGlobal extends Global {
 		isRunning=true;
 		
 		loadStartFile();
+		
+		Scheduler.ScheduledTask task=new Scheduler.ScheduledTask.Builder()
+						.every(60, TimeUnit.SECONDS)
+						.runnable(()->{
+							 	System.out.println("Running export");
+							 
+							 	try{
+							    Principal user = new Principal("admin",null);
+							    
+							    String collectionID="WHATEVER";
+							    String extension="sdf";
+							    boolean publicOnlyBool=true;
+							    
+							    
+							    ExportMetaData emd=new ExportMetaData(collectionID, null, user, publicOnlyBool, extension);
+				                
+				                String fname="madeup.sdf";
+				                String qgen ="http://localhost:9000/ginas/app/substances";
+				                emd.setDisplayFilename(fname);
+				                emd.originalQuery=qgen;
+				                
+				                
+				                
+				                
+				                
+				                //Not ideal, but gets around user problem
+				                
+				                
+				                ExportProcess p = new ExportProcessFactory().getProcess(emd,
+				                		ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
+				                
+				                p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)));
+							 	}catch(Exception e){
+							 		e.printStackTrace();
+							 	}
+				                
+						})
+						.build();
+		
+		Scheduler.addTask(task);
+		
 	}
 	
 	@Override

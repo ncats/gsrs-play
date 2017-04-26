@@ -1,7 +1,6 @@
 package ix.ginas.controllers;
 
-import ix.ginas.utils.reindex.ProcessListener;
-
+import ix.core.utils.executor.ProcessListener;
 import play.Logger;
 
 class SubstanceReIndexListener implements ProcessListener {
