@@ -22,8 +22,8 @@ import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity (title = "Code", isFinal = true)
-@Entity
-@Table(name="TEST_SUB3")
+//@Entity
+//@Table(name="TEST_SUB3")
 public class TestModel extends BaseModel
 {
 	

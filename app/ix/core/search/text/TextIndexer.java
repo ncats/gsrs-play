@@ -2335,7 +2335,14 @@ public class TextIndexer implements Closeable, ProcessListener {
 	public void remove(EntityWrapper ew) throws Exception {
 		if (ew.shouldIndex()) {
 			if (ew.hasKey()) {
-				Key key= ew.getKey();
+				remove(ew.getKey());
+			} else {
+				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
+			}
+		}
+	}
+	
+	public void remove(Key key) throws Exception {
 				Tuple<String,String> docKey=key.asLuceneIdTuple();
 				if (DEBUG(2)){
 					Logger.debug("Deleting document " + docKey.k() + "=" + docKey.v() + "...");
@@ -2343,21 +2350,16 @@ public class TextIndexer implements Closeable, ProcessListener {
 				
 				BooleanQuery q = new BooleanQuery();
 				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(FIELD_KIND, key.getKind())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
 					qa.add(new TermQuery(new Term(ANALYZER_VAL_PREFIX+docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
-					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + key.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
 				markChange();
-				
-			} else {
-				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
-			}
-		}
 	}
 
 	public void remove(String text) throws Exception {

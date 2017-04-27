@@ -1734,6 +1734,7 @@ return F.Promise.<Result>promise( () -> {
                     matchingContext.put("atomMaps", amap);
                 }
                 matchingContext.put("similarity", similarity);
+                //Util.debugSpin(100);
                 
                 IxCache.setMatchingContext(this.getContext(), k, matchingContext);
             }
