@@ -2316,7 +2316,7 @@ return F.Promise.<Result>promise( () -> {
     }
 
     public static Result index() {
-    	sillyTest();
+    	//sillyTest();
         return ok(ix.ginas.views.html.index.render());
     }
 
