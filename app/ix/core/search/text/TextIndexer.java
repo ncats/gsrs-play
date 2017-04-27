@@ -2361,6 +2361,16 @@ public class TextIndexer implements Closeable, ProcessListener {
 				}
 				markChange();
 	}
+	
+	public void removeAllType(EntityInfo<?> ei) throws Exception{
+		TermQuery q = new TermQuery(new Term(FIELD_KIND, ei.getName()));
+		indexWriter.deleteDocuments(q);
+		markChange();
+	}
+	
+	public void removeAllType(Class<?> type) throws Exception{
+		removeAllType(EntityUtils.getEntityInfoFor(type));
+	}
 
 	public void remove(String text) throws Exception {
 		try {

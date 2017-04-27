@@ -43,6 +43,7 @@ import ix.core.util.StreamUtil;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.StreamUtil.ThrowableFunction;
 import ix.ginas.models.v1.Substance;
+import ix.core.controllers.search.SearchFactory;
 import play.Application;
 import play.Logger;
 import play.Play;
@@ -244,14 +245,20 @@ public class ProcessExecutionService {
     
 
     public void reindexAll(ProcessListener listener) throws Exception{
-		process(CommonStreamSuppliers.allBackups().before(ProcessExecutionService::nukeEverything), CommonConsumers.REINDEX_FAST, listener);
+    	buildProcess(Object.class)
+    		.consumer(CommonConsumers.REINDEX_FAST)
+    		.streamSupplier(CommonStreamSuppliers.allBackups())
+    		.before(ProcessExecutionService::nukeEverything)
+    		.listener(listener)
+    		.build()
+    		.execute();
     }
     
     
     public class Process<T>{
     	private Consumer<T> consumer;
     	private EntityStreamSupplier<T> supplier;
-    	private ProcessListener listener;
+    	private ProcessListener listener= ProcessListener.doNothingListener();
     	
     	public Process(EntityStreamSupplier<T> supplier, Consumer<T> consumer,ProcessListener listener){
     		this.supplier=supplier;
@@ -268,9 +275,10 @@ public class ProcessExecutionService {
     public class ProcessBulder<T>{
     	private Consumer<T> consumer;
     	private EntityStreamSupplier<T> supplier;
-    	private ProcessListener listener;
+    	private ProcessListener listener = ProcessListener.doNothingListener();
     	
     	public ProcessBulder(){}
+    	public ProcessBulder(Class<T> cls){}
     	
     	public ProcessBulder<T> consumer(Consumer<T> consumer){
     		this.consumer=consumer;
@@ -280,6 +288,15 @@ public class ProcessExecutionService {
     	public ProcessBulder<T> streamSupplier(EntityStreamSupplier<T> supplier){
     		this.supplier=supplier;
     		return this;
+    	}
+    	
+    	public ProcessBulder<T> before(Runnable r){
+    		this.supplier=supplier.before(r);
+    		return this;
+    	}
+    	
+    	public ProcessBulder<T> before(Before b){
+    		return before(b);
     	}
     	
     	public ProcessBulder<T> listener(ProcessListener listener){
@@ -292,6 +309,27 @@ public class ProcessExecutionService {
     	}
     	
     }
+    
+    public <T> ProcessExecutionService.ProcessBulder<T> buildProcess(Class<T> cls){
+    	return new ProcessExecutionService.ProcessBulder<T>();
+    }
+    
+    
+    public static interface Before extends Runnable{
+    	
+    	public static <T> Before removeIndexFor(Class<T> cls){
+    		return ()->{
+    			try{
+    				SearchFactory.getTextIndexer().removeAllType(cls);
+    			}catch(Exception e){
+    				throw new RuntimeException(e);
+    			}
+    		};
+    	}
+    }
+    
+    
+    
     
     
     
