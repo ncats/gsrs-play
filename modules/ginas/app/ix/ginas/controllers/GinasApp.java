@@ -26,6 +26,7 @@ import chemaxon.struc.MolAtom;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import ix.core.GinasProcessingMessage;
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
@@ -598,6 +599,7 @@ public class GinasApp extends App {
      */
 
     public static Result generateExportFileUrl(String collectionID, String extension, int publicOnly) {
+    	try{
         ObjectNode on = EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
         on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension, publicOnly).url().toString());
         
@@ -605,7 +607,10 @@ public class GinasApp extends App {
         
         
         boolean publicOnlyBool = publicOnly == 1;
-        ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+        Principal prof = UserFetcher.getActingUser(true);
+        System.out.println("Getting url for:" + prof.username);
+        ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
+        
         String username=emd.username;
         Optional<ExportMetaData> existing= new ExportProcessFactory().getMetaForLatestKey(username, emd.getKey());
         
@@ -626,6 +631,10 @@ public class GinasApp extends App {
             on.put("isReady", false);
         }
         return ok(on);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw new RuntimeException(e);
+    	}
     }
 
     /**
@@ -670,8 +679,9 @@ public class GinasApp extends App {
                 
                 //Dummy version for query
                 
-                
-                ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+                Principal prof = UserFetcher.getActingUser(true);
+                System.out.println("User is:" + prof.username);
+                ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
                 
                 String fname=request().getQueryString("filename");
                 String qgen=request().getQueryString("genUrl");
@@ -710,7 +720,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> downloadExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+                String username=UserFetcher.getActingUser(true).username;
                 String filename=request().getQueryString("filename");
                 
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
@@ -735,7 +745,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> cancelExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
                 ExportMetaData data=emeta.get();
                 if(data.isComplete()){
@@ -754,7 +764,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> removeExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
                 ExportMetaData data=emeta.get();
                 if(!data.isComplete()){
@@ -781,7 +791,7 @@ public class GinasApp extends App {
             try {
                 String key=request().getQueryString("q");
                 
-                String username=Authentication.getUser().username;
+                String username=UserFetcher.getActingUser(true).username;
                 
                 List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
                 
@@ -821,7 +831,7 @@ public class GinasApp extends App {
     @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static F.Promise<Result> downloadView(String downloadID){
         return F.Promise.promise(() -> {
-            String username=Authentication.getUser().username;
+        	String username=UserFetcher.getActingUser(true).username;
             Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
 
             if(emeta.isPresent()){
@@ -836,7 +846,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> getStatusFor(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
 
@@ -855,7 +865,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> listDownloads(){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 
                 List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
                 
@@ -2278,7 +2288,6 @@ return F.Promise.<Result>promise( () -> {
                 .mapToObj(i -> new Site(subunitIndex, i + 1))
                 .collect(ModelUtils.toShorthand());
     }
-    
     
 
     public static Result index() {
