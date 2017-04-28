@@ -22,6 +22,7 @@ import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import ix.core.util.TimeUtil;
 import ix.test.server.BrowserSession.WrappedWebRequest;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -426,13 +427,30 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	}
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
-    		return BrowserSubstanceSearcher.this.session.get(url, timeout);
+    		
+    		
+    		JsonNode status =  BrowserSubstanceSearcher.this.session.get(url, timeout).asJson();
+    		
+    		String pingUrl = status.at("/self").asText();
+    		
+    		long timeoutTime = System.currentTimeMillis()+10_000;
+    		while(System.currentTimeMillis()<timeoutTime){
+    			if(status.at("/complete").asBoolean()){
+    				String dl=status.at("/downloadUrl").asText();
+    				return BrowserSubstanceSearcher.this.session.get(dl, timeout);
+    			}
+    			System.out.println("Loading:" + pingUrl);
+    			status = BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson();
+    			
+    		}  		
+    		
+    		throw new IllegalStateException("Export timed out");
+    		
     	}
     	
     	public JsonNode getMeta(){
         	WSResponse resp = BrowserSubstanceSearcher.this.session.get("ginas/app/setExport?id="+key
                     + "&format="+format + "&publicOnly=" + (publicOnly?1:0)
-
                     , timeout);
             return resp.asJson();
         }

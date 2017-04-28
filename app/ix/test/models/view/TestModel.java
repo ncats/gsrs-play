@@ -1,4 +1,4 @@
-package ix.ginas.models.test;
+package ix.test.models.view;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -20,14 +20,13 @@ import ix.core.models.Indexable;
 import ix.ginas.models.CommonDataElementOfCollection;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
+import play.db.ebean.Model;
 
 @JSONEntity (title = "Code", isFinal = true)
-//@Entity
-//@Table(name="TEST_SUB3")
-public class TestModel extends BaseModel
-{
-	
-    
+@Entity
+@Table(name="TEST_SUB")
+
+public class TestModel extends Model{
 	@Id
     @Column(name="uuid")
     @Indexable(name="UUID_TEST", suggest=true)
