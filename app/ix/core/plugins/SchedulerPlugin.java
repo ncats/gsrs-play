@@ -1,25 +1,34 @@
 package ix.core.plugins;
 
-import java.util.*;
-import java.util.function.Consumer;
-import java.sql.*;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.UUID;
+import java.util.function.Supplier;
+
 import javax.sql.DataSource;
 
+import org.quartz.CronExpression;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.ScheduleBuilder;
+import org.quartz.Scheduler;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.utils.ConnectionProvider;
+
+import ix.utils.Tuple;
+import play.Application;
 import play.Logger;
 import play.Plugin;
-import play.Application;
 import play.db.DB;
-import play.db.ebean.Model;
-import play.db.ebean.Transactional;
-
-import org.quartz.*;
-import org.quartz.impl.StdSchedulerFactory;
-import org.quartz.utils.DBConnectionManager;
-import org.quartz.utils.ConnectionProvider;
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.*;
-
-import ix.core.chem.StructureProcessor;
 
 public class SchedulerPlugin extends Plugin {
 
@@ -135,7 +144,10 @@ public class SchedulerPlugin extends Plugin {
     }
     
     public static class ScheduledTask{
-    	private Runnable r;
+    	private Runnable r=()->{};
+    	
+    	private Supplier<Boolean> check = ()->true;
+    	
     	private ScheduleBuilder sched=SimpleScheduleBuilder.repeatSecondlyForTotalCount(1);
     	private String key= UUID.randomUUID().toString();
     	
@@ -154,6 +166,11 @@ public class SchedulerPlugin extends Plugin {
     		return this;
     	}
     	
+    	public ScheduledTask onlyIf(Supplier<Boolean> onlyIf){
+            this.check=onlyIf;
+            return this;
+        }
+    	
     	public ScheduledTask schedule(ScheduleBuilder s){
     		this.sched=s;
     		return this;
@@ -169,7 +186,11 @@ public class SchedulerPlugin extends Plugin {
     	}
     	
     	public Runnable getRunnable(){
-    		return this.r;
+    		return ()->{
+    		    if(check.get()){
+    		        this.r.run();
+    		    }
+    		};
     	}
     	
 
@@ -204,10 +225,28 @@ public class SchedulerPlugin extends Plugin {
     		return atCronTab(cron.getString());
     	}
     	
-    	public static ScheduledTask of(Runnable r){
-    		return new ScheduledTask(r);
+    	
+    	
+    	
+    	public Tuple<JobDetail,Trigger> getJob(){
+    	    JobDataMap jdm = new JobDataMap();
+            jdm.put("run", this.getRunnable());
+
+            String key = this.getKey();
+            JobDetail job = newJob(JobRunnable.class)
+                                .setJobData(jdm)
+                                .withIdentity(key)
+                                .build();
+            Trigger trigger = newTrigger().withIdentity(key)
+                                .forJob(job)
+                                .withSchedule(this.getSchedule())
+                                .build();
+            return Tuple.of(job,trigger);
     	}
     	
+    	public static ScheduledTask of(Runnable r){
+            return new ScheduledTask(r);
+        }
     	
     	public static enum CRON_EXAMPLE{
     		EVERY_SECOND         ("* * * * * ? *"),
@@ -235,13 +274,9 @@ public class SchedulerPlugin extends Plugin {
     public void submit (ScheduledTask task) {
     	
 		try {
-			JobDataMap jdm = new JobDataMap();
-			jdm.put("run", task.getRunnable());
-
-			String key = task.getKey();
-			JobDetail job = newJob(JobRunnable.class).setJobData(jdm).withIdentity(key).build();
-			Trigger trigger = newTrigger().withIdentity(key).forJob(job).withSchedule(task.getSchedule()).build();
-			scheduler.scheduleJob(job, trigger);
+		    task.getJob().consume((j,t)->{
+		        scheduler.scheduleJob(j, t);
+		    });
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

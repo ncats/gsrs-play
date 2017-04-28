@@ -1,4 +1,4 @@
-package ix.test.models3;
+package ix.test.modelsb;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -6,15 +6,13 @@ import javax.persistence.PostPersist;
 import javax.persistence.Table;
 
 import ix.core.models.BaseModel;
+import ix.core.models.Indexable;
 import ix.core.util.EntityUtils.EntityWrapper;
+import ix.ginas.models.v1.Substance.SubstanceClass;
 
 @Entity
 @Table(name = "ix_some_table2")
-public class Wat extends BaseModel
-{
-    
-    
-    
+public class Wat extends BaseModel{
     /**
      * 
      */
@@ -27,17 +25,18 @@ public class Wat extends BaseModel
     public String id;
     
     public String t;
+    public int type;
     
     
-    //@Override
+    @Indexable(facet=true)
+    public String getSubstanceClass(){
+        return SubstanceClass.values()[type].name();
+    }
+    
+    
+    @Override
     public String fetchGlobalId() {
-        // TODO Auto-generated method stub
         return this.getClass().getName() + ":" + id;
     }
     
-    
-    @PostPersist
-    public void test(){
-        System.out.println("Saved:" + EntityWrapper.of(this).getKey());
-    }
 }

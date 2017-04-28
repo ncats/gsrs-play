@@ -1,11 +1,11 @@
 package ix.ginas.controllers.tests;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Principal;
 import ix.core.plugins.SchedulerPlugin;
@@ -13,7 +13,6 @@ import ix.core.plugins.SchedulerPlugin.ScheduledTask;
 import ix.core.search.SearchResult;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
-import ix.core.util.StreamUtil;
 import ix.core.util.TimeUtil;
 import ix.core.util.Unchecked;
 import ix.core.utils.executor.ProcessExecutionService;
@@ -25,7 +24,7 @@ import ix.ginas.exporters.ExportMetaData;
 import ix.ginas.exporters.ExportProcess;
 import ix.ginas.exporters.ExportProcessFactory;
 import ix.ginas.models.v1.Substance;
-import ix.test.models3.Wat;
+import ix.test.modelsb.Wat;
 import play.Application;
 import play.db.DB;
 
@@ -52,8 +51,6 @@ public class Debug {
                 
                 emd.setDisplayFilename(fname);
                 emd.originalQuery = null;
-
-                // Not ideal, but gets around user problem
 
                 ExportProcess p = new ExportProcessFactory().getProcess(emd,
                         ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
@@ -89,7 +86,7 @@ public class Debug {
         String db=EntityUtils.getEntityInfoFor(Wat.class).getDatasource();
         try(Connection c=DB.getDataSource(db).getConnection()){
             
-            c.createStatement().execute("CREATE OR REPLACE VIEW ix_some_table2 AS SELECT uuid||'G123' as id, approval_id as t FROM ix_ginas_substance;");
+            c.createStatement().execute("CREATE OR REPLACE VIEW ix_some_table2 AS SELECT uuid||'G123' as id, approval_id as t, class as type FROM ix_ginas_substance;");
 //            ResultSet rs=c.createStatement().executeQuery("Select * FROM ix_ginas_substance;");
 //            StreamUtil.from(rs)
 //            .streamWhile(r->Unchecked.uncheck(()->r.next()))
@@ -102,22 +99,27 @@ public class Debug {
             e.printStackTrace();
         }
         
-        EntityUtils.getEntityInfoFor(Wat.class)
+        List<Wat> subset = EntityUtils.getEntityInfoFor(Wat.class)
                 .getFinder()
                 .all()
                 .stream()
-                .forEach(t->{
-                    System.out.println(EntityWrapper.of(t).toFullJson());                   
-                });
+                .map(w->(Wat)w)
+                .filter(w->w.type==1)
+                .collect(Collectors.toList());
+//                .stream()
+//                .forEach(t->{
+//                    System.out.println(EntityWrapper.of(t).toFullJson());                   
+//                });
 
 
         try{
             
             SearchRequest request = new SearchRequest.Builder()
+//                    .withRequest(req)
                     .top(16)
                     .kind(Wat.class)
+                    .subset(subset)
                     .fdim(10)
-                    .query("*:*")
                     .build();
             
             new ProcessExecutionService(1,1).buildProcess(Wat.class)
@@ -128,17 +130,38 @@ public class Debug {
             System.out.println("First:" + request.execute().getCount());
             
             new ProcessExecutionService(5,10).buildProcess(Wat.class)
-                .streamSupplier(CommonStreamSuppliers.allFrom(Wat.class, f->f.query().where().eq("t", "Y4907O6MFD"))) 
+//                .streamSupplier(CommonStreamSuppliers.allFrom(Wat.class, f->f.query().where().eq("t", "Y4907O6MFD")))
+                .streamSupplier(CommonStreamSuppliers.allFor(Wat.class))
                 .consumer(CommonConsumers.REINDEX_COMPLETE())
                 .build()
                 .execute();
             
-            System.out.println("Second:" + request.execute().getCount());
-
+            
+            SearchResult sr = request.execute();
+            System.out.println("Second:" + sr.getCount());
+            
+            
+            sr.getMatches()
+                   .forEach(t->{
+                       System.out.println(EntityWrapper.of(t).toFullJson());  
+                   });
+            
+            
+            sr.getFacets().forEach(f->{
+               System.out.println(f.getName());
+               System.out.println("==============");
+               f.getValues().forEach(fv->{
+                   System.out.println(fv.getLabel() + ":" + fv.getCount());
+               });
+            });
 
 
         }catch(Exception e){
             e.printStackTrace();
         }
     }
+    
+    
+    
+    
 }
