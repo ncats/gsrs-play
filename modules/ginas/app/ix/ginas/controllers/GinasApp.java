@@ -2279,41 +2279,7 @@ return F.Promise.<Result>promise( () -> {
                 .collect(ModelUtils.toShorthand());
     }
     
-    public static void sillyTest(){
-    	EntityUtils.getEntityInfoFor(ix.ginas.models.test.TestModel.class)
-    		    .getFinder()
-		    	.all()
-		    	.stream()
-		    	.forEach(t->{
-		    		System.out.println(EntityWrapper.of(t).toFullJson());					
-		    	});
-
-
-    	try{
-    		new ProcessExecutionService(5,10).process(CommonStreamSuppliers.allForDeep(ix.ginas.models.test.TestModel.class), CommonConsumers.REINDEX_COMPLETE, ProcessListener.doNothingListener());
-
-
-
-    		SearchRequest request = new SearchRequest.Builder()
-    				.top(16)
-    				.kind(ix.ginas.models.test.TestModel.class)
-    				.fdim(FACET_DIM)
-    				.query("Y4907O6MFD")
-    				.build();
-
-
-    		SearchResult result = SearchFactory.search(request);
-
-    		System.out.println("Tested:" + result.count());
-    		result.getMatches().stream().forEach(t->{
-    			System.out.println(EntityWrapper.of(t).toFullJson());	
-
-    		});
-
-    	}catch(Exception e){
-    		e.printStackTrace();
-    	}
-    }
+    
 
     public static Result index() {
     	//sillyTest();

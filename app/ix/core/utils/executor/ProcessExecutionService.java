@@ -26,6 +26,9 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import com.avaje.ebean.Expression;
+import com.avaje.ebean.ExpressionList;
+import com.avaje.ebean.Query;
 import com.avaje.ebean.QueryIterator;
 
 import ix.core.adapters.EntityPersistAdapter;
@@ -43,11 +46,13 @@ import ix.core.util.StreamUtil;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.StreamUtil.ThrowableFunction;
 import ix.ginas.models.v1.Substance;
+import ix.test.models3.Wat;
 import ix.core.controllers.search.SearchFactory;
 import play.Application;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
+import play.db.ebean.Model.Finder;
 
 /**
  * Created by katzelda on 5/16/16.
@@ -70,6 +75,10 @@ public class ProcessExecutionService {
     		return -1;
     	}
     	
+    	
+    	public static <T> EntityStreamSupplier<T> nothing(){
+            return ()->Stream.empty();
+        }
     	   	
     	public static <T> EntityStreamSupplier<T> ofIterator(Supplier<Iterator<T>> source){
     		return ()->{
@@ -173,7 +182,6 @@ public class ProcessExecutionService {
     				}
     			});
     		});
-    		
     		executor.shutdown();
             executor.awaitTermination(1, TimeUnit.DAYS);
     		
@@ -197,7 +205,7 @@ public class ProcessExecutionService {
     								.map(o->o.getInstantiated());
     	
     	    	
-    	process(streamSupplier, CommonConsumers.REINDEX_COMPLETE ,listener);
+    	process(streamSupplier, CommonConsumers.REINDEX_COMPLETE() ,listener);
     }
     
     
@@ -246,7 +254,7 @@ public class ProcessExecutionService {
 
     public void reindexAll(ProcessListener listener) throws Exception{
     	buildProcess(Object.class)
-    		.consumer(CommonConsumers.REINDEX_FAST)
+    		.consumer(CommonConsumers.REINDEX_FAST())
     		.streamSupplier(CommonStreamSuppliers.allBackups())
     		.before(ProcessExecutionService::nukeEverything)
     		.listener(listener)
@@ -256,9 +264,9 @@ public class ProcessExecutionService {
     
     
     public class Process<T>{
-    	private Consumer<T> consumer;
-    	private EntityStreamSupplier<T> supplier;
-    	private ProcessListener listener= ProcessListener.doNothingListener();
+        private Consumer<T> consumer = CommonConsumers.doNothing();
+        private EntityStreamSupplier<T> supplier = CommonStreamSuppliers.doNothing();
+        private ProcessListener listener= ProcessListener.doNothingListener();
     	
     	public Process(EntityStreamSupplier<T> supplier, Consumer<T> consumer,ProcessListener listener){
     		this.supplier=supplier;
@@ -267,14 +275,15 @@ public class ProcessExecutionService {
     	}
     	
     	public void execute() throws IOException{
+    	    System.out.println("Going to execute");
     		process(supplier,consumer,listener);
     	}
     	
     }
     
     public class ProcessBulder<T>{
-    	private Consumer<T> consumer;
-    	private EntityStreamSupplier<T> supplier;
+    	private Consumer<T> consumer = CommonConsumers.doNothing();
+    	private EntityStreamSupplier<T> supplier = CommonStreamSuppliers.doNothing();
     	private ProcessListener listener = ProcessListener.doNothingListener();
     	
     	public ProcessBulder(){}
@@ -296,8 +305,13 @@ public class ProcessExecutionService {
     	}
     	
     	public ProcessBulder<T> before(Before b){
-    		return before(b);
+    		return before((Runnable)b);
     	}
+    	
+    	public ProcessBulder<T> filter(Predicate<T> filter){
+    	    this.supplier=supplier.filter(filter);
+            return this;
+        }
     	
     	public ProcessBulder<T> listener(ProcessListener listener){
     		this.listener=listener;
@@ -313,6 +327,7 @@ public class ProcessExecutionService {
     public <T> ProcessExecutionService.ProcessBulder<T> buildProcess(Class<T> cls){
     	return new ProcessExecutionService.ProcessBulder<T>();
     }
+    
     
     
     public static interface Before extends Runnable{
@@ -334,30 +349,33 @@ public class ProcessExecutionService {
     
     
     public static class CommonConsumers{
-    	public static Consumer<Object> REINDEX_FAST = t->{
+    	public static <T> Consumer<T> REINDEX_FAST(){
+    	    return (t->EntityPersistAdapter.getInstance().deepreindex(t, DO_NOT_DELETE_FIRST));
+    	}
     		
-    		EntityPersistAdapter.getInstance().deepreindex(t, DO_NOT_DELETE_FIRST);
+        public static <T> Consumer<T> REINDEX_COMPLETE(){
+    		return t->EntityPersistAdapter.getInstance().deepreindex(t, DELETE_FIRST);
     	};
     	
-    	public static Consumer<Object> REINDEX_COMPLETE = t->{
-    		EntityPersistAdapter.getInstance().deepreindex(t, DELETE_FIRST);
+        public static <T> Consumer<T> POST_UPDATES(){
+            return t->EntityPersistAdapter.getInstance().postUpdateBeanDirect(t, null, false);
     	};
     	
-    	public static Consumer<Object> POST_UPDATES = t->{
-    		EntityPersistAdapter.getInstance().postUpdateBeanDirect(t, null, false);
+        public static <T> Consumer<T> POST_INSERTS(){
+            return t->EntityPersistAdapter.getInstance().postInsertBeanDirect(t);
     	};
     	
-    	public static Consumer<Object> POST_INSERTS = t->{
-    		EntityPersistAdapter.getInstance().postInsertBeanDirect(t);
-    	};
+        public static <T> Consumer<T> POST_DELETES(){
+    		return t->EntityPersistAdapter.getInstance().postDeleteBeanDirect(t);
+    	}
     	
-    	public static Consumer<Object> POST_DELETES = t->{
-    		EntityPersistAdapter.getInstance().postDeleteBeanDirect(t);
-    	};
-    	
-    	public static Consumer<Object> POST_LOADS = t->{
-    		EntityPersistAdapter.getInstance().postLoad(t, null);
-    	};
+        public static <T> Consumer<T> POST_LOADS(){ 
+            return t->EntityPersistAdapter.getInstance().postLoad(t, null);
+    	}
+
+        public static <T> Consumer<T> doNothing() {
+            return (t)->{};
+        }
     }
     
     public static class CommonStreamSuppliers{
@@ -391,6 +409,38 @@ public class ProcessExecutionService {
     								   .total(()->(long)mfinder.findRowCount())
     								   .map(o->(T)o);
     	}
+    	
+    	/**
+         * Create an {@link EntityStreamSupplier} for the given type,
+         * which will use the native Ebean finder to find and fetch
+         * all instances matching the provided {@link Expression}.
+         * 
+         * @param cls
+         * @return
+         */
+        public static <T> EntityStreamSupplier<T> allWhere(Class<T> cls, Expression e){         
+            return allFromQuery(cls, f->f.query().where(e));
+        }
+        
+        /**
+         * Create an {@link EntityStreamSupplier} for the given type,
+         * which will use the native Ebean {@link Finder}. The provided {@link Function}
+         * will extract a query from that {@link Finder} to use.
+         * 
+         * @param cls
+         * @return
+         */
+        public static <T> EntityStreamSupplier<T> allFromQuery(Class<T> cls, Function<Finder<?,T>,Query<T>> qp){         
+            Model.Finder<?,T> mfinder = (Finder<?, T>) EntityUtils.getEntityInfoFor(cls).getInherittedRootEntityInfo().getFinder();
+            
+            return EntityStreamSupplier.ofIterator(()->qp.apply(mfinder).findIterate())
+                                       .total(()->(long)mfinder.findRowCount())
+                                       .map(o->(T)o);
+        }
+        
+        public static <T> EntityStreamSupplier<T> allFrom(Class<T> cls, Function<Finder<?,T>,ExpressionList<T>> e){         
+            return allFromQuery(cls,e.andThen(el->el.query()));
+        }
     	
     	
     	
@@ -427,11 +477,15 @@ public class ProcessExecutionService {
     								   .map(o->(T)o);
     	}
     	
-    	public static EntityStreamSupplier<Object> allBackups(){
+    	public static <T> EntityStreamSupplier<T> allBackups(){
     		return EntityStreamSupplier.ofIterator(()->finder.findIterate())
 			        .total((long)finder.findRowCount())
-			        .map(o->o.getInstantiated());
+			        .map(o->(T)o.getInstantiated());
     	}
+    	
+    	public static <T> EntityStreamSupplier<T> doNothing(){
+            return EntityStreamSupplier.nothing();
+        }
     	
     }
 }

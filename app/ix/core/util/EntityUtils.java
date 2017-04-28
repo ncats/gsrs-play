@@ -883,10 +883,17 @@ public class EntityUtils {
 			return this.getValue();
 		}
 
+        public String getDataSource() {
+            return this.ei.datasource;
+        }
+
 		
 	}
 
 	public static class EntityInfo<T> {
+	    
+	    private String datasource=null;
+	    
 		private final Class<T> cls;
 		private final String kind;
 		private final DynamicFacet dyna;
@@ -1115,7 +1122,13 @@ public class EntityUtils {
 				idType = idField.getType();
 
 				if (idField != null) {
-					nativeVerySpecificFinder = CachedSupplier.of(()->new Model.Finder(idType, this.cls));
+					nativeVerySpecificFinder = CachedSupplier.of(()->{
+					    if(this.datasource==null){
+					        return new Model.Finder(idType, this.cls);  
+					    }else{
+					        return new Model.Finder(this.datasource,idType, this.cls);
+					    }
+					});
 				}
 			}
 
@@ -1141,6 +1154,46 @@ public class EntityUtils {
 			isExplicitDeletable=(!cls.isAnnotationPresent(IgnoredModel.class) &&
 					 cls.isAnnotationPresent(SingleParent.class));
 			isExplicitDeletable &= Model.class.isAssignableFrom(cls);
+			
+			
+			if(this.isEntity()){
+    			Map m = new HashMap();
+    			
+    			Map mm=ConfigHelper.getOrDefault("ebean", m);
+    			
+    			mm.forEach((k,v)->{
+    			   List<String> classes= new ArrayList<>();
+    			   if(v instanceof String){
+    			       classes= Arrays.stream(((String) v).split(","))
+    			             .map(s->s.trim())
+    			             .collect(Collectors.toList());
+    			   }else if(v instanceof List){
+    			       classes= ((List<Object>)v).stream()
+    			             .map(o->o.toString().trim())
+    			             .collect(Collectors.toList());
+    			       
+    			                       
+    			   }
+    			    
+    			   Optional<String> p = classes.stream()
+    			           .map(s->s.replace(".*", ""))
+    			           .filter(s->{
+    			               return this.getName().startsWith(s);
+    			          }).findFirst();
+    			   
+    			   if(p.isPresent()){
+    			       if(!k.toString().equals("default")){
+    			           this.datasource=k.toString();
+    			       }
+    			      // System.out.println(this.getName() + ":" + p.get() + "->" + k);
+    			   }else{
+    			       
+    			   }
+
+    			          
+    			   
+    			});
+			}
 
 		}
 
@@ -1450,6 +1503,11 @@ public class EntityUtils {
 		public T getInstance() throws Exception{
 			return (T) this.getEntityClass().newInstance();
 		}
+
+        public String getDatasource() {
+           if(this.datasource==null)return "default";
+           return datasource;
+        }
 
 
 

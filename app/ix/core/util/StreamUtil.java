@@ -144,6 +144,7 @@ public class StreamUtil {
         private StreamGenerator(K k){
             this.k=k;
         }
+        
 
         /**
          * Create a stream, where the seed value given is used

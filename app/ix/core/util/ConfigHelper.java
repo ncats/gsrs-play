@@ -72,6 +72,8 @@ public class ConfigHelper {
             return resolver.apply(Tuple.of(path, cls), def);
         });
     }
+    
+    
 
     /**
      * Explicitly set a configuration variable

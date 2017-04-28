@@ -13,11 +13,3 @@ CREATE INDEX qualification_index on ix_ginas_relationship (qualification);
 CREATE INDEX type_index on ix_ginas_relationship (type);
 CREATE INDEX sub_ref_index on ix_ginas_substanceref (refuuid);
 CREATE INDEX relate_originate_index on ix_ginas_relationship (originator_uuid);
-
-
-
-
-CREATE VIEW TEST_SUB AS SELECT uuid, approval_id FROM ix_ginas_substance;
-
-
-CREATE VIEW TEST_SUB3 AS SELECT uuid||'G123' as uuid, approval_id FROM ix_ginas_substance;

@@ -32,6 +32,7 @@ import ix.core.plugins.SchedulerPlugin.ScheduledTask.CRON_EXAMPLE;
 import ix.core.stats.Statistics;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.controllers.GinasApp;
+import ix.ginas.controllers.tests.Debug;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.fda.TrustHeaderAuthenticator;
 import ix.ncats.controllers.auth.Authentication;
@@ -230,44 +231,9 @@ public class GinasGlobal extends Global {
 		
 		loadStartFile();
 		
-		
-		
-		ScheduledTask task = ScheduledTask.of(() -> {
-			System.out.println("Running export");
-			try {
-				
-				Principal user = new Principal("admin", null);
-				String collectionID = "export-all-gsrs";
-				String extension = "gsrs";
-				boolean publicOnlyBool = false;
-
-				ExportMetaData emd = new ExportMetaData(collectionID, null, user, publicOnlyBool, extension);
-
-				LocalDate ld=TimeUtil.getCurrentLocalDate();
-				String date=ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
-				String fname = "auto-export-" + date + ".gsrs";
-				
-				emd.setDisplayFilename(fname);
-				emd.originalQuery = null;
-
-				// Not ideal, but gets around user problem
-
-				ExportProcess p = new ExportProcessFactory().getProcess(emd,
-						ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
-
-				p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		})
-		.dailyAtHourAndMinute(16, 42);
-		
-		
-		
-		
-		SchedulerPlugin sched = app.plugin(SchedulerPlugin.class);
-		sched.submit(task);
-		
+		if(Play.isDev()){
+		    Debug.onInitialize(app);
+		}
 	}
 	
 	@Override

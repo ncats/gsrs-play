@@ -1,5 +1,6 @@
 package ix.core.controllers.search;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,8 @@ import org.apache.lucene.search.Query;
 import ix.core.search.SearchOptions;
 import ix.core.search.SearchOptions.FacetLongRange;
 import ix.core.search.SearchOptions.SearchTermFilter;
+import ix.core.search.SearchResult;
+import ix.core.search.text.TextIndexer;
 import ix.utils.Tuple;
 import ix.utils.Util;
 import play.mvc.Http.Request;
@@ -279,5 +282,12 @@ public class SearchRequest {
      */
     public String getOrderedSetSha1(){
         return getSha1Hash(RequestUniquenessLevel.SET_ORDER_STATS);
+    }
+
+    public SearchResult execute() throws IOException {
+        return SearchFactory.search(this);
+    }
+    public SearchResult execute(TextIndexer t) throws IOException {
+        return SearchFactory.search(t,this);
     }
 }
