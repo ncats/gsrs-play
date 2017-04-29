@@ -25,6 +25,9 @@ public class CronExpressionBuilder implements Serializable {
     public CronExpressionBuilder(){
         
     }
+    public static CronExpressionBuilder builder(){
+        return new CronExpressionBuilder();
+    }
     
     public static CronExpressionBuilder from(String cron){
         String[] toks=cron.split("[ ]");
@@ -110,11 +113,13 @@ public class CronExpressionBuilder implements Serializable {
     
     private CronExpressionBuilder onDayOfWeek(String dow){
         this.dayOfWeek=dow;
+        this.dayOfMonth="?";
         return this;
     }
     
     private CronExpressionBuilder onDayOfMonth(String dom){
         this.dayOfMonth=dom;
+        this.dayOfWeek="?";
         return this;
     }
     

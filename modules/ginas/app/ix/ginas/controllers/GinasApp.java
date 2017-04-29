@@ -204,6 +204,12 @@ public class GinasApp extends App {
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
 
+    
+    public static SubstanceReIndexListener getReindexListener(){
+        return listener;
+    }
+    
+    
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result listGinasUsers(int page, int rows, String sortBy, String order, String filter) {
         List<UserProfile> profiles = Administration.principalsList();

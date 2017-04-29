@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -29,7 +30,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -38,11 +38,9 @@ import org.quartz.utils.ConnectionProvider;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.ResourceReference;
 import ix.core.util.CachedSupplier;
-import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
 import ix.core.util.Unchecked;
 import ix.utils.Global;
@@ -133,9 +131,45 @@ public class SchedulerPlugin extends Plugin {
         return idmaker.getAndIncrement();
     };
     
+    public static class TaskListener{
+        private Double p=null;
+        private String msg = null;
+        
+        public Double getCompletePercentage(){
+            return p;
+        }
+        public String getMessage(){
+            return msg;
+        }
+        
+        public TaskListener progress(double p){
+            this.p=p;
+            return this;
+        }
+        
+        public TaskListener message(String msg){
+            this.msg=msg;
+            return this;
+        }
+        
+        public TaskListener complete(){
+            return progress(100);
+        }
+        
+        public TaskListener start(){
+            return progress(0);
+        }
+        
+        
+        
+    }
+    
     @Entity
     public static class ScheduledTask{
-    	private Runnable r=()->{};
+        
+        
+        
+    	private Consumer<TaskListener> r=(l)->{};
     	
     	private Supplier<Boolean> check = ()->true;
     	
@@ -152,8 +186,10 @@ public class SchedulerPlugin extends Plugin {
 
         private AtomicBoolean isLocked=new AtomicBoolean(false);
         
-        
         private CronExpression cronExp= null;
+        
+        private TaskListener listener = new TaskListener();
+        
         
         @JsonProperty("running")
         public boolean isRunning(){
@@ -161,21 +197,27 @@ public class SchedulerPlugin extends Plugin {
         }
         
         
+        public TaskListener getTaskDetails(){
+            if(this.isRunning())
+            return this.listener;
+            return null;
+        }
+        
         @Id
         public Long id=idSupplier.get();
     	
     	
-    	public ScheduledTask(Runnable r){
+    	public ScheduledTask(Consumer<TaskListener> r){
     		this.r=r;
     	}
     	
-    	public ScheduledTask(Runnable r, CronScheduleBuilder sched){
+    	public ScheduledTask(Consumer<TaskListener> r, CronScheduleBuilder sched){
     		this.r=r;
     		this.sched=sched;
     	}
     	
     	public ScheduledTask runnable(Runnable r){
-    		this.r=r;
+    		this.r=(l)->r.run();
     		return this;
     	}
     	
@@ -244,11 +286,13 @@ public class SchedulerPlugin extends Plugin {
     	    numberOfRuns++;
     	    isRunning.set(true);
             lastStarted=TimeUtil.getCurrentDate();
+            this.listener.start();
             try{
-            this.r.run();
+                this.r.accept(this.listener);
             }finally{
                 lastFinished=TimeUtil.getCurrentDate();
                 isRunning.set(false);
+                this.listener.complete();
             }
             isLocked.set(false);
     	}
@@ -378,8 +422,12 @@ public class SchedulerPlugin extends Plugin {
     	    return submitted.get();
     	}
     	
-    	public static ScheduledTask of(Runnable r){
+    	public static ScheduledTask of(Consumer<TaskListener> r){
             return new ScheduledTask(r);
+        }
+    	
+    	public static ScheduledTask of(Runnable r){
+            return new ScheduledTask((l)->r.run());
         }
     	
     	public static enum CRON_EXAMPLE{

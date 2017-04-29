@@ -1,6 +1,7 @@
 package ix.ginas.exporters;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -13,11 +14,11 @@ import ix.utils.Global;
  */
 @JSONEntity(name = "metadata")
 public class ExportMetaData {
-    
+    private Consumer<Long> totalConsumer=(l)->{};
     
     public String id = UUID.randomUUID().toString();
     
-    public long numRecords;
+    private long numRecords;
     public Long totalRecotds=null;
     
     
@@ -156,7 +157,7 @@ public class ExportMetaData {
 
         ExportMetaData that = (ExportMetaData) o;
 
-        if (numRecords != that.numRecords) return false;
+        if (getNumRecords() != that.getNumRecords()) return false;
         if (publicOnly != that.publicOnly) return false;
         if (!collectionId.equals(that.collectionId)) return false;
         if (originalQuery != null ? !originalQuery.equals(that.originalQuery) : that.originalQuery != null)
@@ -172,7 +173,7 @@ public class ExportMetaData {
 
     @Override
     public int hashCode() {
-        long result = numRecords;
+        long result = getNumRecords();
         result = 31 * result + collectionId.hashCode();
         result = 31 * result + (originalQuery != null ? originalQuery.hashCode() : 0);
         result = 31 * result + (username != null ? username.hashCode() : 0);
@@ -198,5 +199,21 @@ public class ExportMetaData {
     
     public void cancel(){
         this.cancelled=true;
+    }
+
+
+
+    public long getNumRecords() {
+        return numRecords;
+    }
+
+    public void addRecord() {
+        this.numRecords++;
+        totalConsumer.accept(this.numRecords);
+    }
+    
+    public ExportMetaData onTotalChanged(Consumer<Long> total){
+        this.totalConsumer=total;
+        return this;
     }
 }

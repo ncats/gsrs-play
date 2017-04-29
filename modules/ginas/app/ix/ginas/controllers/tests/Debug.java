@@ -8,20 +8,23 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Principal;
-import ix.core.plugins.SchedulerPlugin;
+import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin.ScheduledTask;
-import ix.core.plugins.SchedulerPlugin.ScheduledTask.CRON_EXAMPLE;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.SearchResult;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.TimeUtil;
 import ix.core.util.Unchecked;
+import ix.core.utils.executor.MultiProcessListener;
 import ix.core.utils.executor.ProcessExecutionService;
 import ix.core.utils.executor.ProcessExecutionService.Before;
 import ix.core.utils.executor.ProcessExecutionService.CommonConsumers;
 import ix.core.utils.executor.ProcessExecutionService.CommonStreamSuppliers;
+import ix.core.utils.executor.ProcessListener;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.exporters.ExportMetaData;
 import ix.ginas.exporters.ExportProcess;
@@ -29,6 +32,7 @@ import ix.ginas.exporters.ExportProcessFactory;
 import ix.ginas.models.v1.Substance;
 import ix.test.modelsb.Wat;
 import play.Application;
+import play.Play;
 import play.db.DB;
 
 public class Debug {
@@ -37,7 +41,7 @@ public class Debug {
     public static void onInitialize(Application app){
 
         
-        ScheduledTask.of(() -> {
+        ScheduledTask.of((l) -> {
             System.out.println("Running export");
             try {
                 
@@ -46,7 +50,12 @@ public class Debug {
                 String extension = "gsrs";
                 boolean publicOnlyBool = false;
 
-                ExportMetaData emd = new ExportMetaData(collectionID, null, user, publicOnlyBool, extension);
+                ExportMetaData emd = new ExportMetaData(collectionID, null, user, publicOnlyBool, extension)
+                        .onTotalChanged((c)->{
+                            l.message("Exported " + c + " records");
+                            
+                        });
+                
 
                 LocalDate ld=TimeUtil.getCurrentLocalDate();
                 String date=ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -54,11 +63,15 @@ public class Debug {
                 
                 emd.setDisplayFilename(fname);
                 emd.originalQuery = null;
+                
+                
 
                 ExportProcess p = new ExportProcessFactory().getProcess(emd,
                         ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
 
-                p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)));
+                p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)))
+                 .get();
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -76,8 +89,6 @@ public class Debug {
 //        System.out.println(EntityWrapper.of(mod).getDataSource());
 //        mod.save(EntityWrapper.of(mod).getDataSource());
         sillyTest();
-        
-        
         
     }
     

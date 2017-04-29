@@ -18,6 +18,7 @@ import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.controllers.v1.InstantiatedNamedResource;
 import ix.core.controllers.v1.RouteFactory;
+import ix.core.factories.InitializerFactory;
 import ix.core.models.Principal;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxContext;
@@ -94,6 +95,11 @@ public class Global extends GlobalSettings {
 
 		RouteFactory._registry.get();
 		loadDefaultUsers();
+		
+		InitializerFactory.getInstance(app)
+		                  .getInitializers()
+		                  .forEach(i->i.onStart(app));
+		
 	}
 
 	void loadDefaultUsers() {

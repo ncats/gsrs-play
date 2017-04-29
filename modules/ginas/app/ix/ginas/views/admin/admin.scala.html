@@ -102,9 +102,13 @@
 				  <td>{{state.numberOfRuns}}</td>
 			  </tr>
 			  
-			  <tr ng-if="state.lastDuration">
+			  <tr ng-if="state.lastDurationHuman">
 				  <td><strong>Last Execution Duration</strong></td>
 				  <td>{{state.lastDurationHuman}}</td>
+			  </tr>
+			  <tr ng-if="state.taskDetails">
+				  <td><strong>Message</strong></td>
+				  <td>{{state.taskDetails.message}}</td>
 			  </tr>
 			 
 			  </table>

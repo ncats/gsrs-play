@@ -46,6 +46,7 @@ import ix.core.util.IOUtil;
 import ix.core.util.StreamUtil;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.StreamUtil.ThrowableFunction;
+import ix.core.utils.executor.ProcessExecutionService.EntityStreamSupplier;
 import ix.ginas.models.v1.Substance;
 import ix.test.modelsb.Wat;
 import ix.core.controllers.search.SearchFactory;
@@ -122,17 +123,7 @@ public class ProcessExecutionService {
     	}
     	
     	public default EntityStreamSupplier<T> total(long tot){
-    		EntityStreamSupplier<T> me = this;
-    		return new EntityStreamSupplier<T>(){
-    			@Override
-    			public long getTotal(){
-    				return tot;
-    			}
-				@Override
-				public Stream<T> get() {
-					return me.get();
-				}
-    		};
+    		return total(()->tot);
     	}
     	
     	public default EntityStreamSupplier<T> total(Supplier<Long> tot){
@@ -158,6 +149,22 @@ public class ProcessExecutionService {
 				}
     		};
     	}
+
+
+        public default EntityStreamSupplier<T> limit(long limit){
+            EntityStreamSupplier<T> me = this;
+            return new EntityStreamSupplier<T>(){
+                @Override
+                public long getTotal(){
+                    return Math.min(limit, me.getTotal());
+                }
+                
+                @Override
+                public Stream<T> get() {
+                    return me.get().limit(limit);
+                }
+            };
+        }
     	
     	
     }
@@ -213,7 +220,7 @@ public class ProcessExecutionService {
     /**
      * Deletes cache, etc for faster re-indexing
      */
-    private static void nukeEverything(){
+    public static void nukeEverything(){
     	Application app = Play.application();
         Logger.info("SHUTTING DOWN");
         // Util.debugSpin(3000);

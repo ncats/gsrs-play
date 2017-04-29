@@ -1,5 +1,9 @@
 package ix.core.utils.executor;
 
+import java.util.Arrays;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
+
 /**
  * Listener for process progress.
  */
@@ -7,12 +11,12 @@ public interface ProcessListener {
     /**
      * Starting a new process
      */
-    void newProcess();
+    default void newProcess(){};
 
     /**
      * Finished a process.
      */
-    void doneProcess();
+    default void doneProcess(){};
 
     /**
      * The following object was
@@ -25,7 +29,7 @@ public interface ProcessListener {
      * An error occurred.
      * @param t the {@link Throwable} that caused the error.
      */
-    void error(Throwable t);
+    default void error(Throwable t){};
 
     /**
      * The total number of records that are to be processed.
@@ -36,49 +40,87 @@ public interface ProcessListener {
      *
      * @param total the total number of records to be processed.
      */
-    void totalRecordsToProcess(int total);
+    default void totalRecordsToProcess(int total){};
 
-    void countSkipped(int numSkipped);
+    default void countSkipped(int numSkipped){};
     
     
-    public static ProcessListener doNothingListener(){
-    	return new ProcessListener(){
-			@Override
-			public void newProcess() {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void doneProcess() {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void recordProcessed(Object o) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void error(Throwable t) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void totalRecordsToProcess(int total) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void countSkipped(int numSkipped) {
-				// TODO Auto-generated method stub
-				
-			}
-    		
-    	};
+    /**
+     * Returns {@link ProcessListener} which fires all
+     * events on this listener, as well as any listeners
+     * provided.
+     * @param listeners
+     * @return
+     */
+    default ProcessListener and(ProcessListener ...listeners){
+        ProcessListener[] parr=
+                Stream.concat(Arrays.stream(listeners),Stream.of(this))
+                      .toArray(s-> new ProcessListener[s]);
+        return new MultiProcessListener(parr);
     }
+    
+    /*
+    public default ProcessListener totalListener(Consumer<Integer> l){
+        ProcessListener me = this;
+        return new ProcessListener(){
+            @Override
+            public void newProcess() {
+                me.newProcess();
+            }
+
+            @Override
+            public void doneProcess() {
+                me.doneProcess();
+            }
+
+            @Override
+            public void recordProcessed(Object o) {
+                me.recordProcessed(o);
+            }
+
+            @Override
+            public void error(Throwable t) {
+                me.error(t);
+            }
+
+            @Override
+            public void totalRecordsToProcess(int total) {
+                l.accept(total);
+            }
+
+            @Override
+            public void countSkipped(int numSkipped) {
+                me.countSkipped(numSkipped);
+            }
+            
+        };
+    }
+    */
+    public static ProcessListener doNothingListener(){
+    	return (o)->{};
+    }
+    
+    public static ProcessListener onCountChange(BiConsumer<Integer,Integer> recordNofM){
+        
+        return new ProcessListener(){
+            private int tot=-1;
+            private int soFar=0;
+            
+            @Override
+            public void recordProcessed(Object o) {
+                soFar++;
+                recordNofM.accept(soFar, (tot>=0)?tot:null);
+            }
+            
+            @Override
+            public void totalRecordsToProcess(int tot) {
+                this.tot=tot;
+            }
+            
+        };
+    }
+    
+    
+    
+    
 }

@@ -56,32 +56,43 @@
         	$scope.state=n;
         	if(n.cronSchedule){
         		var t=n.cronSchedule.split(" ");
-        		t[0]="";
+        		t[0]=""; //quartz fix
         		var mod=t.join(" ").trim();
         		n.cronScheduleHuman=prettyCron.toString(mod);
+        		if(n.cronSchedule.indexOf("#")>0){
+        			var nth = n.cronSchedule.split("#")[1].split(" ")[0];
+        			switch(nth){
+        				case "1":
+        					var cr=n.cronScheduleHuman;
+        					cr=cr.replace("on ", "on the first ");
+        					cr=cr + " of the month ";
+        					n.cronScheduleHuman=cr;
+        					break;
+        				case "2":
+        					var cr=n.cronScheduleHuman;
+        					cr=cr.replace("on ", "on the second ");
+        					cr=cr + " of the month ";
+        					n.cronScheduleHuman=cr;
+        					break;
+        				case "3":
+        					var cr=n.cronScheduleHuman;
+        					cr=cr.replace("on ", "on the third ");
+        					cr=cr + " of the month ";
+        					n.cronScheduleHuman=cr;
+        					break;
+        				case "4":
+        					var cr=n.cronScheduleHuman;
+        					cr=cr.replace("on ", "on the forth ");
+        					cr=cr + " of the month ";
+        					n.cronScheduleHuman=cr;
+        					break;
+        			}
+        		}
+        		
         	}
         	if(!n.running && n.lastFinished){
+        		console.log("how");
         		n.lastDurationHuman=humanizeDuration(n.lastFinished-n.lastStarted, { round: true });
-        	}
-        	
-        }
-        
-        
-        
-        
-        $scope.morePreciseHuman=function(t){
-        	if(!t)return "";
-        	
-        	var dt=-(new Date()-(t-0));
-        	if(Math.abs(dt)<5000){
-        		var hdt=humanizeDuration(dt, { round: true });
-        		if(dt<0){
-        			return hdt + " ago";
-        		}else{
-        			return "in " + hdt;
-        		}
-        	}else{
-        		return moment(t)+"";
         	}
         }
         
