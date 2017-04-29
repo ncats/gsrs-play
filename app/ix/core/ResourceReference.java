@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.util.EntityUtils.EntityWrapper;
 import play.Logger;
 
 @JsonSerialize(using = ResourceReference.ResourceReferenceSerializer.class)
@@ -28,7 +29,7 @@ public class ResourceReference <T>{
 	}
 	
 	/**
-	 * The direct serialized JsonNode expected for raw serialization 
+	 * The direct serialized JsonNode expected for raw serialization ('$')
 	 * @return
 	 */
 	public JsonNode rawJson(){
@@ -36,8 +37,7 @@ public class ResourceReference <T>{
 		if(rawObj instanceof JsonNode){
 			return (JsonNode)rawObj;
 		}else{
-			ObjectMapper om = new ObjectMapper();
-			return om.valueToTree(raw.get());
+			return EntityWrapper.of(raw.get()).toFullJsonNode();
 		}
 	}
 	

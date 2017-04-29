@@ -1,7 +1,7 @@
 (function () {
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads', 'diff-match-patch',
+        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads','ginasScheduled', 'diff-match-patch',
         'angularSpinners', 'filterListener', 'validatorListener'
 
     ]).run(function($anchorScroll, $location, $window) {

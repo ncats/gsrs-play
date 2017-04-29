@@ -1,7 +1,6 @@
 (function () {
     var ginasDownloads = angular.module('ginasDownloads', []);
 
-
     ginasDownloads.controller('ExportJobController', function ($scope, $http, $timeout,$uibModal) {
         $scope.state ={};
         $scope.id ={};
@@ -82,11 +81,5 @@
             	if(tf)cb();
             };
     	};
-        
-        
-
-
     });
-
-
 })();

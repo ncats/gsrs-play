@@ -1,8 +1,10 @@
 package ix.ginas.controllers.tests;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,6 +12,7 @@ import ix.core.controllers.search.SearchRequest;
 import ix.core.models.Principal;
 import ix.core.plugins.SchedulerPlugin;
 import ix.core.plugins.SchedulerPlugin.ScheduledTask;
+import ix.core.plugins.SchedulerPlugin.ScheduledTask.CRON_EXAMPLE;
 import ix.core.search.SearchResult;
 import ix.core.util.EntityUtils;
 import ix.core.util.EntityUtils.EntityWrapper;
@@ -34,7 +37,7 @@ public class Debug {
     public static void onInitialize(Application app){
 
         
-        ScheduledTask task = ScheduledTask.of(() -> {
+        ScheduledTask.of(() -> {
             System.out.println("Running export");
             try {
                 
@@ -60,13 +63,11 @@ public class Debug {
                 e.printStackTrace();
             }
         })
-        .dailyAtHourAndMinute(16, 42);
+        .dailyAtHourAndMinute(16, 42)
+        .description("Full Export")
+        .submit();
         
         
-        
-        
-        SchedulerPlugin sched = app.plugin(SchedulerPlugin.class);
-        sched.submit(task);
         
 
 //        Wat mod= new Wat();
@@ -159,6 +160,17 @@ public class Debug {
         }catch(Exception e){
             e.printStackTrace();
         }
+    }
+    
+    
+    public static <T> SearchResult indexedFor(Collection<T> subset) throws IOException{
+        return new SearchRequest.Builder()
+              .top(16)
+              .fdim(10)
+              //.withRequest(request())
+              .subset(subset)
+              .build()
+              .execute();
     }
     
     

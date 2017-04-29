@@ -1,13 +1,10 @@
 package ix.core.controllers.v1;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.Id;
@@ -16,10 +13,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.Experimental;
-import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
-import ix.core.controllers.search.SearchFactory;
-import ix.core.util.CachedSupplier;
+import ix.core.models.Role;
 import ix.core.util.EntityUtils;
 import ix.seqaln.SequenceIndexer.CutoffType;
 import ix.utils.Global;
@@ -344,6 +339,16 @@ public interface InstantiatedNamedResource<I,V> {
 		return new StaticDelegatingNamedResource<I,V>(ef,id,resource);
 	}
 	
+	/**
+	 * Should this resource be accessible to users with the 
+	 * given roles? Default always returns true.
+	 * 
+	 * @param roles
+	 * @return
+	 */
+	default boolean isAccessible(List<Role> roles){
+	    return true;
+	}
 
 
 }

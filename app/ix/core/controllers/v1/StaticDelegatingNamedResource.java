@@ -12,6 +12,7 @@ import java.util.function.Function;
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.models.Role;
 import ix.core.util.CachedSupplier;
 import play.Logger;
 import play.mvc.Result;
@@ -37,16 +38,28 @@ import play.mvc.Result;
  */
 public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedResource<I,V>{
 
-	private ConcurrentHashMap<Operation, Function<Operation, Result>> resultList = new ConcurrentHashMap<>();
+	@Override
+    public boolean isAccessible(List<Role> roles) {
+	    if(adminOnly){
+	        return roles.contains(Role.Admin);
+	    }else{
+	        return InstantiatedNamedResource.super.isAccessible(roles); 
+	    }
+    }
+
+    private ConcurrentHashMap<Operation, Function<Operation, Result>> resultList = new ConcurrentHashMap<>();
 	
 	private Class<? extends EntityFactory> ef;
 	private NamedResource nr;
 	private Class<V> entityType;
+	private boolean adminOnly;
 	
 	public StaticDelegatingNamedResource(Class<? extends EntityFactory> factory, Class<I> idType, Class<V> resource){
 		this.ef=factory;
 		this.nr=factory.getAnnotation(NamedResource.class);
 		this.entityType=resource;
+		this.adminOnly=nr.adminOnly();
+		
 		
 		Arrays.stream(Operations.values())
 			.map(o->o.op().withIdClass(idType))
@@ -62,18 +75,21 @@ public class StaticDelegatingNamedResource<I,V> implements InstantiatedNamedReso
 				}
 			});
 		
-		resultList.computeIfAbsent(Operations.SEARCH_OPERATION.op(), op->{
-			return (opp)->{
-				@SuppressWarnings("rawtypes")
-				List<Argument> args=opp.getArguments();
-				return SearchFactory.searchREST(resource, 
-						(String)args.get(0).getValue(),
-						(int)args.get(1).getValue(),
-						(int)args.get(2).getValue(),
-						(int)args.get(3).getValue())
-						.get(1, TimeUnit.HOURS);
-			};
-		});
+		
+		if(nr.allowSearch()){
+    		resultList.computeIfAbsent(Operations.SEARCH_OPERATION.op(), op->{
+    			return (opp)->{
+    				@SuppressWarnings("rawtypes")
+    				List<Argument> args=opp.getArguments();
+    				return SearchFactory.searchREST(resource, 
+    						(String)args.get(0).getValue(),
+    						(int)args.get(1).getValue(),
+    						(int)args.get(2).getValue(),
+    						(int)args.get(3).getValue())
+    						.get(1, TimeUnit.HOURS);
+    			};
+    		});
+		}
 	}
 	
 	@Override

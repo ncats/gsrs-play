@@ -6,7 +6,9 @@ import static ix.core.search.ArgumentAdapter.getLastIntegerOrElse;
 import static ix.core.search.ArgumentAdapter.getLastStringOrElse;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -35,13 +37,13 @@ import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
+import ix.core.models.Role;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.text.FacetMeta;
-import ix.core.search.text.TextIndexer.Facet;
 import ix.core.search.text.TextIndexer.TermVectors;
 import ix.core.util.CachedSupplier;
 import ix.core.util.EntityUtils;
@@ -118,6 +120,8 @@ public class RouteFactory extends Controller {
                 NamedResource res = (NamedResource) c.getAnnotation(NamedResource.class);
                 Logger.info("+ " + c.getName() + "\n  => " + ctx.context() + ctx.api() + "/" + res.name() + "["
                         + res.type().getName() + "]");
+                
+                
                 register(res.name(), c);
             }
         }
@@ -173,6 +177,7 @@ public class RouteFactory extends Controller {
                     }
                 }
                 catch (Exception ex) {
+                    ex.printStackTrace();
                     Logger.error("Can't access named resource type", ex);
                 }
             }
@@ -180,7 +185,17 @@ public class RouteFactory extends Controller {
 
         @SuppressWarnings("unchecked")
         public <I,V> InstantiatedNamedResource<I,V> getResource(String context) throws NoSuchElementException{
-            return Optional.of(resources.get(context)).get();
+            UserProfile up=UserFetcher.getActingUserProfile(true);
+            List<Role> roles = Optional.ofNullable(up)
+                                    .map(u->u.getRoles())
+                                    .orElse(new ArrayList<Role>());
+            
+            
+            return Optional.ofNullable(resources.get(context))
+                    .filter(nr -> nr.isAccessible(roles))
+                    .orElseThrow(() -> {
+                        return new NoSuchElementException("Unknown resource '" + context + "'");
+                    });
         }
 
         @SuppressWarnings("unchecked")

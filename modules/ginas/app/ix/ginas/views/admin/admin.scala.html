@@ -28,6 +28,124 @@
             </uib-tab-heading>
             @rebuild()
         </uib-tab>
+        
+        <uib-tab select="">
+            <uib-tab-heading>
+                Scheduled Jobs <i class="fa fa-clock-o fa-2x"></i>
+            </uib-tab-heading>
+			<div ng-controller="ScheduledJobsController" ng-init="init()">
+				<div ng-repeat="job in jobs" class="panel panel-default sub-list">
+				    <div class="panel-body list-item">
+				    	<div ng-controller="ScheduledJobController" ng-init="init(job, true)">
+				    	<div class = "row">
+            <div class = "col-md-3">
+                <div class ="row">
+                    <div class = "col-md-8 col-md-offset-1 text-center">
+                          <div ng-if="state.running">
+                                <i class="fa fa-cog fa-5x fa-spin"></i>
+                                <div>Running task ... </div>
+                                <button class="btn" ng-click="cancel()">
+                                	(click to cancel)
+                                </button>
+                          </div>
+                          <div ng-if="!state.running">
+                          	<div ng-if="state.enabled">
+                          		  <i class="fa fa-clock-o fa-5x"></i>
+								  <div><div><strong>Next Run Time</strong></div>
+								  <i>{{moment(state.nextRun)}}</i></div>
+					         </div>
+					         <div ng-if="!state.enabled">
+					         	  <i class="fa fa-pause fa-5x"></i>
+					         	  <div>
+					         	  <div><strong><i>Schedule Disabled</i></strong></div>
+					         	  <i><s>{{moment(state.nextRun)}}</s></i>
+					         	  
+					         	  </div>
+					         </div>
+					                                <button class="btn" ng-click="execute()">
+					                                	(execute now)
+					                                </button>
+                          </div>
+                          
+                          
+                    </div>
+                </div>
+            </div>
+            <div class = "col-md-7">
+            
+            <div class="table-responsive">          
+			  <table class="table">
+			  <tr ng-if="state.description">
+				  <td><strong>Description:</strong></td>
+				  <td>{{state.description}}</td>
+			  </tr>
+			  <tr>
+				  <td><strong>Enabled:</strong></td>
+				  <td>{{state.enabled}}</td>
+			  </tr>
+			  
+			  <tr ng-if="state.cronSchedule">
+				  <td><strong>Cron Schedule:</strong></td>
+				  <td>
+				  	<div>
+				  		<code>{{state.cronSchedule}}</code>
+				  	</div>
+				  	<div>
+				  		<i>
+					  	({{state.cronScheduleHuman}})
+					  	</i>
+				  	</div>
+				  </td>
+			  </tr>
+			  <tr ng-if="state.numberOfRuns">
+				  <td><strong>Number of times run:</strong></td>
+				  <td>{{state.numberOfRuns}}</td>
+			  </tr>
+			  
+			  <tr ng-if="state.lastDuration">
+				  <td><strong>Last Execution Duration</strong></td>
+				  <td>{{state.lastDurationHuman}}</td>
+			  </tr>
+			 
+			  </table>
+			</div>
+                
+            </div>
+            <div class = "col-md-2">
+                <div ng-if="state.lastStarted" class = "row">
+                    <div class = "col-md-12">
+                        Last started: <h6>{{moment(state.lastStarted)}}</h6>
+                    </div>
+                </div>
+                <div ng-if="state.lastFinished" class = "row">
+                    <div class = "col-md-12">
+                        Last ended: <h6>{{moment(state.lastFinished)}}</h6>
+                    </div>
+                </div>
+               
+                <div ng-if="!state.enabled">
+                                <button class="btn" ng-click="enable()">
+                                	(click to enable task)
+                                </button>
+                </div>
+                <div ng-if="state.enabled">
+                                <button class="btn" ng-click="disable()">
+                                	(click to disable task)
+                                </button>
+                </div>
+            </div>
+        </div>
+					    </div>
+				    </div>
+				</div>
+				<div ng-if="!jobs.length">
+					<span>No scheduled tasks</span>
+				</div>
+			</div>
+        </uib-tab>
+        
+        
+        
         <uib-tab select="">
             <uib-tab-heading>
                 Log Files <i class="fa fa-download fa-2x"></i>
