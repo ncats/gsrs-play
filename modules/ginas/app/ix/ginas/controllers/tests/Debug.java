@@ -53,7 +53,6 @@ public class Debug {
                 ExportMetaData emd = new ExportMetaData(collectionID, null, user, publicOnlyBool, extension)
                         .onTotalChanged((c)->{
                             l.message("Exported " + c + " records");
-                            
                         });
                 
 

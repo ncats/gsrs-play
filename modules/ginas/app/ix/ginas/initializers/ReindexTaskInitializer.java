@@ -6,6 +6,7 @@ import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin.ScheduledTask;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.utils.executor.ProcessExecutionService;
+import ix.core.utils.executor.ProcessExecutionService.Before;
 import ix.core.utils.executor.ProcessExecutionService.CommonConsumers;
 import ix.core.utils.executor.ProcessExecutionService.CommonStreamSuppliers;
 import ix.core.utils.executor.ProcessListener;
@@ -28,7 +29,8 @@ public class ReindexTaskInitializer implements Initializer{
                 })
                 .and(GinasApp.getReindexListener())
                 .and(Play.application().plugin(TextIndexerPlugin.class).getIndexer())
-                .and(EntityPersistAdapter.getInstance());
+                .and(EntityPersistAdapter.getInstance().getProcessListener());
+                
                 
                 
                 new ProcessExecutionService(5, 10).buildProcess(Object.class)

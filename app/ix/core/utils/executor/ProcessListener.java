@@ -59,43 +59,6 @@ public interface ProcessListener {
         return new MultiProcessListener(parr);
     }
     
-    /*
-    public default ProcessListener totalListener(Consumer<Integer> l){
-        ProcessListener me = this;
-        return new ProcessListener(){
-            @Override
-            public void newProcess() {
-                me.newProcess();
-            }
-
-            @Override
-            public void doneProcess() {
-                me.doneProcess();
-            }
-
-            @Override
-            public void recordProcessed(Object o) {
-                me.recordProcessed(o);
-            }
-
-            @Override
-            public void error(Throwable t) {
-                me.error(t);
-            }
-
-            @Override
-            public void totalRecordsToProcess(int total) {
-                l.accept(total);
-            }
-
-            @Override
-            public void countSkipped(int numSkipped) {
-                me.countSkipped(numSkipped);
-            }
-            
-        };
-    }
-    */
     public static ProcessListener doNothingListener(){
     	return (o)->{};
     }
@@ -120,6 +83,48 @@ public interface ProcessListener {
         };
     }
     
+    /**
+     * This is here to convert {@link ProcessListenerJava7} to a {@link ProcessListener}.
+     * The only reason to have both is because lambdas and default methods are not allowed
+     * in 
+     * 
+     * @param pl
+     * @return
+     */
+    public static ProcessListener fromJava7Listener(ProcessListenerJava7 pl){
+        return new ProcessListener(){
+            @Override
+            public void newProcess() {
+                pl.newProcess();
+            }
+
+            @Override
+            public void doneProcess() {
+                pl.doneProcess();
+            }
+
+            @Override
+            public void error(Throwable t) {
+                pl.error(t);
+            }
+
+            @Override
+            public void totalRecordsToProcess(int total) {
+                pl.totalRecordsToProcess(total);
+            }
+
+            @Override
+            public void countSkipped(int numSkipped) {
+                pl.countSkipped(numSkipped);
+            }
+
+            @Override
+            public void recordProcessed(Object o) {
+                pl.recordProcessed(o);
+            }
+            
+        };
+    }
     
     
     

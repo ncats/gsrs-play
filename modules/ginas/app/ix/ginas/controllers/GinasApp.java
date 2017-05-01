@@ -2195,7 +2195,7 @@ return F.Promise.<Result>promise( () -> {
                 try {
                     new ProcessExecutionService(5, 10).reindexAll(new MultiProcessListener(listener,
                             Play.application().plugin(TextIndexerPlugin.class).getIndexer(),
-                            EntityPersistAdapter.getInstance()));
+                            EntityPersistAdapter.getInstance().getProcessListener()));
 
                 } catch (Exception e) {
                     e.printStackTrace();
