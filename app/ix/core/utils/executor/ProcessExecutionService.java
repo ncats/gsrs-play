@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.Spliterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -73,8 +74,8 @@ public class ProcessExecutionService {
     }
     
     public static interface EntityStreamSupplier<T> extends Supplier<Stream<T>>{
-    	public default long getTotal(){
-    		return -1;
+    	public default OptionalLong getTotal(){
+    		return OptionalLong.empty();
     	}
     	
     	
@@ -97,7 +98,7 @@ public class ProcessExecutionService {
     		EntityStreamSupplier<T> me = this;
     		return new EntityStreamSupplier<U>(){
     			@Override
-    			public long getTotal(){
+    			public OptionalLong getTotal(){
     				return me.getTotal();
     			}
 				@Override
@@ -111,7 +112,7 @@ public class ProcessExecutionService {
     		EntityStreamSupplier<T> me = this;
     		return new EntityStreamSupplier<T>(){
     			@Override
-    			public long getTotal(){
+    			public OptionalLong getTotal(){
     				return me.getTotal();
     			}
 				@Override
@@ -130,8 +131,10 @@ public class ProcessExecutionService {
     		EntityStreamSupplier<T> me = this;
     		return new EntityStreamSupplier<T>(){
     			@Override
-    			public long getTotal(){
-    				return tot.get();
+    			public OptionalLong getTotal(){
+    			    Long l=tot.get();
+    			    if(l==null)return OptionalLong.empty();
+    			    return OptionalLong.of(l);
     			}
 				@Override
 				public Stream<T> get() {
@@ -155,8 +158,13 @@ public class ProcessExecutionService {
             EntityStreamSupplier<T> me = this;
             return new EntityStreamSupplier<T>(){
                 @Override
-                public long getTotal(){
-                    return Math.min(limit, me.getTotal());
+                public OptionalLong getTotal(){
+                    OptionalLong opl = me.getTotal();
+                    
+                    if(opl.isPresent()){
+                        return OptionalLong.of(Math.min(limit, opl.getAsLong()));
+                    }
+                    return OptionalLong.empty();
                 }
                 
                 @Override
@@ -174,7 +182,7 @@ public class ProcessExecutionService {
 
         listener.newProcess();
     	try(Stream<U> stream = streamSupplier.get()){
-    		long total = streamSupplier.getTotal();
+    		long total = streamSupplier.getTotal().orElse(-1);
     		if(total>=0){
     			listener.totalRecordsToProcess((int) total);
     		}
@@ -213,7 +221,7 @@ public class ProcessExecutionService {
     								.map(o->o.getInstantiated());
     	
     	    	
-    	process(streamSupplier, CommonConsumers.REINDEX_COMPLETE() ,listener);
+    	process(streamSupplier, CommonConsumers.REINDEX_COMPLETE.consumer() ,listener);
     }
     
     
@@ -262,7 +270,7 @@ public class ProcessExecutionService {
 
     public void reindexAll(ProcessListener listener) throws Exception{
     	buildProcess(Object.class)
-    		.consumer(CommonConsumers.REINDEX_FAST())
+    		.consumer(CommonConsumers.REINDEX_FAST.consumer())
     		.streamSupplier(CommonStreamSuppliers.allBackups())
     		.before(ProcessExecutionService::nukeEverything)
     		.listener(listener)
@@ -272,7 +280,7 @@ public class ProcessExecutionService {
     
     
     public class Process<T>{
-        private Consumer<T> consumer = CommonConsumers.doNothing();
+        private Consumer<T> consumer = CommonConsumers.doNothing.consumer();
         private EntityStreamSupplier<T> supplier = CommonStreamSuppliers.doNothing();
         private ProcessListener listener= ProcessListener.doNothingListener();
     	
@@ -291,7 +299,7 @@ public class ProcessExecutionService {
     }
     
     public class ProcessBulder<T>{
-    	private Consumer<T> consumer = CommonConsumers.doNothing();
+    	private Consumer<T> consumer = CommonConsumers.doNothing.consumer();
     	private EntityStreamSupplier<T> supplier = CommonStreamSuppliers.doNothing();
     	private ProcessListener listener = ProcessListener.doNothingListener();
     	
@@ -302,6 +310,11 @@ public class ProcessExecutionService {
     		this.consumer=consumer;
     		return this;
     	}
+    	
+    	public ProcessBulder<T> consumer(CommonConsumers consumer){
+            this.consumer=consumer.consumer();
+            return this;
+        }
     	
     	public ProcessBulder<T> streamSupplier(EntityStreamSupplier<T> supplier){
     		this.supplier=supplier;
@@ -350,6 +363,8 @@ public class ProcessExecutionService {
     			}
     		};
     	}
+    	
+    	
     }
     
     
@@ -357,34 +372,26 @@ public class ProcessExecutionService {
     
     
     
-    public static class CommonConsumers{
-    	public static <T> Consumer<T> REINDEX_FAST(){
-    	    return (t->EntityPersistAdapter.getInstance().deepreindex(t, DO_NOT_DELETE_FIRST));
-    	}
-    		
-        public static <T> Consumer<T> REINDEX_COMPLETE(){
-    		return t->EntityPersistAdapter.getInstance().deepreindex(t, DELETE_FIRST);
-    	};
-    	
-        public static <T> Consumer<T> POST_UPDATES(){
-            return t->EntityPersistAdapter.getInstance().postUpdateBeanDirect(t, null, false);
-    	};
-    	
-        public static <T> Consumer<T> POST_INSERTS(){
-            return t->EntityPersistAdapter.getInstance().postInsertBeanDirect(t);
-    	};
-    	
-        public static <T> Consumer<T> POST_DELETES(){
-    		return t->EntityPersistAdapter.getInstance().postDeleteBeanDirect(t);
-    	}
-    	
-        public static <T> Consumer<T> POST_LOADS(){ 
-            return t->EntityPersistAdapter.getInstance().postLoad(t, null);
-    	}
-
-        public static <T> Consumer<T> doNothing() {
-            return (t)->{};
+    public static enum CommonConsumers{
+    	REINDEX_FAST(t->EntityPersistAdapter.getInstance().deepreindex(t, DO_NOT_DELETE_FIRST)),
+    	REINDEX_COMPLETE(t->EntityPersistAdapter.getInstance().deepreindex(t, DELETE_FIRST)),
+    	POST_UPDATES(t->EntityPersistAdapter.getInstance().postUpdateBeanDirect(t, null, false)),
+    	POST_INSERTS(t->EntityPersistAdapter.getInstance().postInsertBeanDirect(t)),
+    	POST_DELETES(t->EntityPersistAdapter.getInstance().postDeleteBeanDirect(t)),
+    	POST_LOADS(t->EntityPersistAdapter.getInstance().postLoad(t, null)),
+    	doNothing(t->{});
+        
+        
+        private Consumer<?> consumer;
+        CommonConsumers(Consumer<?> t){
+            consumer=t;
         }
+        
+        @SuppressWarnings("unchecked")
+        private <T> Consumer<T> consumer(){
+            return (Consumer<T>) this.consumer;
+        }
+       
     }
     
     public static class CommonStreamSuppliers{

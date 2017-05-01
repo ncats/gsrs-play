@@ -33,8 +33,9 @@ public class ReindexTaskInitializer implements Initializer{
                 
                 
                 
+                
                 new ProcessExecutionService(5, 10).buildProcess(Object.class)
-                        .consumer(CommonConsumers.REINDEX_FAST())
+                        .consumer(CommonConsumers.REINDEX_FAST)
                         .streamSupplier(CommonStreamSuppliers.allBackups())
                         .before(ProcessExecutionService::nukeEverything)
                         .listener(listen)

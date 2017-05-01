@@ -143,7 +143,7 @@ public class Debug {
             new ProcessExecutionService(5,10).buildProcess(Wat.class)
 //                .streamSupplier(CommonStreamSuppliers.allFrom(Wat.class, f->f.query().where().eq("t", "Y4907O6MFD")))
                 .streamSupplier(CommonStreamSuppliers.allFor(Wat.class))
-                .consumer(CommonConsumers.REINDEX_COMPLETE())
+                .consumer(CommonConsumers.REINDEX_COMPLETE)
                 .build()
                 .execute();
             
