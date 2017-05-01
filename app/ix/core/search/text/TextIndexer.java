@@ -1379,11 +1379,11 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
 	public SearchResult range(SearchOptions options, String field, Integer min, Integer max) throws Exception {
 		Query query = NumericRangeQuery.newIntRange(field, min, max, true /* minInclusive? */, true/* maxInclusive? */);
-		return search(new SearchResult(options, null), query, null);
+		return search(new SearchResult(options), query, null);
 	}
 
 	protected SearchResult filter(SearchOptions options, Filter filter) throws Exception {
-		return search(new SearchResult(options, null), new MatchAllDocsQuery(), filter);
+		return search(new SearchResult(options), new MatchAllDocsQuery(), filter);
 	}
 
 	protected SearchResult search(SearchResult searchResult, Query query, Filter filter) throws Exception {

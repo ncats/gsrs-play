@@ -1,7 +1,7 @@
 (function () {
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch',
+        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads', 'diff-match-patch',
         'angularSpinners', 'filterListener', 'validatorListener'
 
     ]).run(function($anchorScroll, $location, $window) {
@@ -717,7 +717,7 @@
         };
 
        // $scope.showprivates = false;
-	//Perpare an export file for download
+	//Prepare an export file for download
         $scope.downloadFile = function (url) {
             if($scope.showprivates){
                 url = url + '&publicOnly=' + (!$scope.showprivates ? 1: 0) ;
@@ -727,7 +727,34 @@
       			var dl = response.data;
 			if(dl){
 				if(dl.isReady){
-					window.location.href=dl.url;
+					
+					var d = new Date();
+					var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
+					var proposedfname="export-" + datestr + "." +  dl.url.split("format=")[1].split("&")[0];
+					
+					
+					$scope.exportData={};
+					if(dl.isCached){
+						console.log(dl.cached);
+						$scope.exportData.cached=dl.cached;
+						$scope.baseurl=baseurl;
+					}
+					
+					$scope.fileNamePrompt(proposedfname, function(fname){
+						
+						
+						var nurl=dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename="+ encodeURIComponent(fname);
+						
+						console.log(nurl);
+						//alert(nurl);
+						$http.get(nurl).then(function(rep){
+							var meta=rep.data;
+							window.location.href=baseurl + "myDownloads/" + meta.id;
+						}, function(rep){
+							$scope.exportUnavailableWarning();
+						});
+					})
+					
 				}else if(dl.isPresent){ //busy
 					$scope.exportUnavailableWarning();
 				}else{ //unknown result set
@@ -746,6 +773,18 @@
                         templateUrl: baseurl + "assets/templates/modals/export-warning.html",
                         scope: $scope
                 });
+	};
+	
+	$scope.fileNamePrompt = function(fname, cb){
+		$scope.exportFname=fname;
+        $scope.modalInstance = $uibModal.open({
+                    templateUrl: baseurl + "assets/templates/modals/filename-prompt.html",
+                    scope: $scope
+            });
+        $scope.mclose=function(fname2){
+        	$scope.close();
+        	cb(fname2);
+        };
 	};
 
 

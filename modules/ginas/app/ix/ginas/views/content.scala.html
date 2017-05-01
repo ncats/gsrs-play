@@ -152,21 +152,23 @@
                 }
             }
  
-            @if(total >= 1 && ctx!=null) {
+            @if(total >= 1) {
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
-                    @if(ctx.hasExactMatches()){
-	                    <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
-	                    @if(ctx.getExactMatches().size()==1){
-	                        <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
-	                    }else{
-	                        <h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
+                	@if(ctxId!=null){
+	                    @if(ctx.hasExactMatches()){
+		                    <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
+		                    @if(ctx.getExactMatches().size()==1){
+		                        <h4>There is one exact (name or code) match for <em>@request().getQueryString("q")</em></h4>
+		                    }else{
+		                        <h4>Here are the exact (name or code) matches for <em>@request().getQueryString("q")</em></h4>
+		                    }
+		                    @for(sub <- ctx.getExactMatches()) {
+		                        @GinasApp.getListContentFor(sub,ctx)
+		                    }
+	                        <div>&nbsp;</div>
+	                        <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
+	                        </div>
 	                    }
-	                    @for(sub <- ctx.getExactMatches()) {
-	                        @GinasApp.getListContentFor(sub,ctx)
-	                    }
-                        <div>&nbsp;</div>
-                        <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
-                        </div>
                     }
                 }
                 <div ng-hide="hideall" class="panel panel-default" id="allResults">
@@ -176,20 +178,26 @@
                             @ix.ginas.views.html.pagination(current, rows, total, pages, searchFlag)(HtmlFormat.empty)
                             </div>
                         </div>
+                         @*Should be more abstract*@
+                         @if(kind.contains("ubstance")){
                         <div class="row">
                             <div class = "col-md-3">
-                                <div class="btn-group">
-                                    <button ng-click="showExport=true" type="button" uib-tooltip="Download Results" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-download" ></i>&nbsp; <span class="caret"></span>
-                                    </button>
-                                    <ul ng-if="showExport" class="dropdown-menu">
-                                        @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
-                                            <li><a href="#" ng-click="downloadFile('@ix.ginas.controllers.routes.GinasApp.generateExportFileUrl(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url')">@fmt.getDisplayName()</a></li>
-                                        }
-                                        <li><input type="checkbox" ng-change="showPriv()"  ng-model="showprivates" id="includePrivateDataCbox">Include Private Data</li>
-                                    </ul>
-
-                                </div>
+                            
+                           
+	                            @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
+	                                <div class="btn-group">
+	                                    <button ng-click="showExport=true" type="button" uib-tooltip="Download Results" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	                                        <i class="fa fa-download" ></i>&nbsp; <span class="caret"></span>
+	                                    </button>
+	                                    <ul ng-if="showExport" class="dropdown-menu">
+	                                        @for(fmt <- ix.ginas.controllers.GinasApp.getAllSubstanceExportFormats()) {
+	                                            <li><a href="#" ng-click="downloadFile('@ix.ginas.controllers.routes.GinasApp.generateExportFileUrl(ix.ncats.controllers.App.getKeyForCurrentRequest(), fmt.getExtension()).url')">@fmt.getDisplayName()</a></li>
+	                                        }
+	                                        <li><input type="checkbox" ng-change="showPriv()"  ng-model="showprivates" id="includePrivateDataCbox">Include Private Data</li>
+	                                    </ul>
+	
+	                                </div>
+	                            }
                             </div>
                             <div class="col-md-7  text-left row">
                                 <div class="col-md-4">
@@ -218,6 +226,7 @@
                                 </form>
                             </div>
                         </div>
+                        }
                     </div>
                     <div class="placeholder-content"> @content </div>
                     <div class="panel-footer">
