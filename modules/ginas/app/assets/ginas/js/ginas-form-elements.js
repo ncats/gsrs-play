@@ -603,10 +603,7 @@
                     scope.path = scope.type;
                 }
                 scope.length = scope.getLength();
-              //  scope.iscollapsed = true;
-            /*    if (scope.length == 0) {
-                    scope.iscollapsed = true;
-                }*/
+            
 
                 $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
                     template = angular.element(html);
@@ -1136,6 +1133,7 @@
                 var modalInstance;
 
                 $scope.close = function () {
+                	
                     $scope.opened= false;
                     //this has a listener in the reference form that applies the reference to the array of the object
                     //might need to check the type before calling it.

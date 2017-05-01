@@ -1,13 +1,16 @@
 <div>
     <div class="modal-header">
         <div class="row">
-            <form-header type="parameters" parent="parent"></form-header>
+            <form-header iscollapsed=iscollapsed  type="parameters" parent="parent"></form-header>
             <a type="button" class="close" ng-click="close()" uib-tooltip="Close" aria-label="Close"><i
                     class="fa fa-times danger"></i></a>
         </div>
     </div>
-    <div class="modal-body">
+    <div class="modal-body row">
+    
+    	<div class="col-md-12" uib-collapse="iscollapsed">
         <parameter-form referenceobj=obj parent=referenceobj ng-cloak></parameter-form>
+        </div>
         <br>
     </div>
     <div class="modal-footer">
