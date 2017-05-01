@@ -1007,6 +1007,8 @@
             $scope.open(url);
         };
         $scope.approveSubstance = function () {
+            var url;
+            $scope.close();
             $scope.updateNav = false;
             var sub = angular.toJson($scope.substance.$$flattenSubstance());
             var keyid = $scope.substance.uuid;
@@ -1019,22 +1021,112 @@
                     }
                 }).then(function (response) {
                     $scope.updateNav = false;
-                    var url = baseurl + "assets/templates/modals/update-success.html";
+                    url = baseurl + "assets/templates/modals/update-success.html";
                     $scope.postRedirect = response.data.uuid;
-                    //$scope.close(url1);
                     $scope.open(url);
                 }, function (response) {
                     if(response.data && response.data.validationMessages){
                         $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
                     }
-                    var url = baseurl + "assets/templates/modals/submission-failure.html";
+                    url = baseurl + "assets/templates/modals/submission-failure.html";
                     $scope.submitting = false;
-                    //$scope.close(url1);
                     $scope.open(url);
                 });
             
             
         };
+
+
+        $scope.submitSubstance = function () {
+            var url;
+            var sub = {};
+            $scope.close();
+            //this should cascade to all forms to check and see if validation is ok
+            //  $scope.$broadcast('show-errors-check-validity');
+            //this is the api error checking
+            //  $scope.checkErrors();
+            $scope.submitting = true;
+            var url1 = baseurl + "assets/templates/modals/submission-loader.html";
+            $scope.open(url1);
+
+            if (_.has($scope.substance, '$$update')) {
+                sub = angular.toJson($scope.substance.$$flattenSubstance());
+                $http.put(baseurl + 'api/v1/substances', sub, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function (response) {
+                    $scope.updateNav = false;
+                    url = baseurl + "assets/templates/modals/update-success.html";
+                    $scope.postRedirect = response.data.uuid;
+                    $scope.close(url1);
+                    $scope.open(url);
+                }, function (response) {
+                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
+                    $scope.close(url1);
+                    $scope.open(url);
+                });
+            } else {
+                sub = angular.toJson($scope.substance.$$flattenSubstance());
+                console.log(sub);
+                $http.post(baseurl + 'api/v1/substances', sub, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function (response) {
+                    console.log(response);
+                    $scope.updateNav = false;
+                    $scope.postRedirect = response.data.uuid;
+                    var url = baseurl + "assets/templates/modals/submission-success.html";
+                    $scope.submitting = false;
+                    $scope.close(url1);
+                    $scope.open(url);
+                }, function (response) {
+                    $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
+                    url = baseurl + "assets/templates/modals/submission-failure.html";
+                    $scope.submitting = false;
+                    $scope.close(url1);
+                    $scope.open(url);
+                });
+            }
+        };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {
