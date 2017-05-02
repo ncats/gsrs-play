@@ -97,22 +97,23 @@ public class ConfigHelper {
     private final static BiFunction<Tuple<String, Class<?>>, Object, Object> PLAY_CONFIG_RESOLVER = ((f, d) -> {
         String key = f.k();
         Class<?> cls = f.v();
-
-        if (Long.class.isAssignableFrom(cls)) {
-            return Play.application().configuration().getLong(key, (Long) d);
-        }
-        if (Boolean.class.isAssignableFrom(cls)) {
-            return Play.application().configuration().getBoolean(key, (Boolean) d);
-        }
-
-        Object o = EntityWrapper.of(Play.application().configuration().asMap())
-                .at(PojoPointer.fromURIPath(key.replace(".", "/"))) // This is a
-                                                                    // silly way
-                .map(e -> (Object) e.getValue()) // ... but it works
-                .orElse(d);
         
-        
-        return o;
+        try{
+            if (Long.class.isAssignableFrom(cls)) {
+                return Play.application().configuration().getLong(key, (Long) d);
+            }
+            if (Boolean.class.isAssignableFrom(cls)) {
+                return Play.application().configuration().getBoolean(key, (Boolean) d);
+            }
+    
+            return EntityWrapper.of(Play.application().configuration().asMap())
+                    .at(PojoPointer.fromURIPath(key.replace(".", "/"))) // This is a
+                                                                        // silly way
+                    .map(e -> (Object) e.getValue()) // ... but it works
+                    .orElse(d);
+        }catch(Exception e){
+            return d;
+        }
 
     });
     public static BiFunction<Tuple<String, Class<?>>, Object, Object> resolver = PLAY_CONFIG_RESOLVER;
