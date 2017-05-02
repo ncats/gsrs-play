@@ -428,8 +428,13 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
     		
+    		WSResponse osess = BrowserSubstanceSearcher.this.session.get(url, timeout);
     		
-    		JsonNode status =  BrowserSubstanceSearcher.this.session.get(url, timeout).asJson();
+    		if(osess.getStatus()>=400){
+    			return osess;
+    		}
+    		
+    		JsonNode status =  osess.asJson();
     		
     		String pingUrl = status.at("/self").asText();
     		
