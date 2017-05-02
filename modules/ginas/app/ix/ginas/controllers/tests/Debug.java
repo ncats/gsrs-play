@@ -41,53 +41,8 @@ public class Debug {
     public static void onInitialize(Application app){
 
         
-        ScheduledTask.of((l) -> {
-            System.out.println("Running export");
-            try {
-                
-                Principal user = new Principal("admin", null);
-                String collectionID = "export-all-gsrs";
-                String extension = "gsrs";
-                boolean publicOnlyBool = false;
-
-                ExportMetaData emd = new ExportMetaData(collectionID, null, user, publicOnlyBool, extension)
-                        .onTotalChanged((c)->{
-                            l.message("Exported " + c + " records");
-                        });
-                
-
-                LocalDate ld=TimeUtil.getCurrentLocalDate();
-                String date=ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
-                String fname = "auto-export-" + date + ".gsrs";
-                
-                emd.setDisplayFilename(fname);
-                emd.originalQuery = null;
-                
-                
-
-                ExportProcess p = new ExportProcessFactory().getProcess(emd,
-                        ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
-
-                p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)))
-                 .get();
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        })
-        .dailyAtHourAndMinute(16, 42)
-        .description("Full Export")
-        .submit();
         
-        
-        
-
-//        Wat mod= new Wat();
-//        mod.id=UUID.randomUUID().toString();
-//        mod.t="t2";
-//        System.out.println(EntityWrapper.of(mod).getDataSource());
-//        mod.save(EntityWrapper.of(mod).getDataSource());
-        sillyTest();
+       // sillyTest();
         
     }
     
