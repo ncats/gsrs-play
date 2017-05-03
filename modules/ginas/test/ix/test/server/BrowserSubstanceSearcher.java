@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import ix.core.util.TimeUtil;
 import ix.test.server.BrowserSession.WrappedWebRequest;
+import ix.test.util.WaitChecker;
 import ix.utils.Tuple;
 import ix.utils.Util;
 import play.libs.ws.WSResponse;
@@ -430,21 +432,37 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     		
     		
     		JsonNode status =  BrowserSubstanceSearcher.this.session.get(url, timeout).asJson();
-    		
+
     		String pingUrl = status.at("/self").asText();
-    		
+    		/*
     		long timeoutTime = System.currentTimeMillis()+10_000;
+            System.out.println("about to spin");
+
+
+
     		while(System.currentTimeMillis()<timeoutTime){
     			if(status.at("/complete").asBoolean()){
     				String dl=status.at("/downloadUrl").asText();
     				return BrowserSubstanceSearcher.this.session.get(dl, timeout);
     			}
-    			System.out.println("Loading:" + pingUrl);
     			status = BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson();
     			
     		}  		
-    		
-    		throw new IllegalStateException("Export timed out");
+    		*/
+            try {
+                Optional<WSResponse> resp =new WaitChecker<>(
+                        ()->BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson(),
+                        n -> n.at("/complete").asBoolean(),
+                        n -> BrowserSubstanceSearcher.this.session.get(n.at("/downloadUrl").asText(), timeout)
+                        ).setMaxNumTries(10)
+//                        .setAwaitTime(1, TimeUnit.SECONDS)  //default is 1 sec
+                        .execute();
+
+                 return resp.orElseThrow( () -> new IllegalStateException("Export timed out"));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
     		
     	}
     	

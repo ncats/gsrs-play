@@ -7,6 +7,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.util.TimeUtil;
+import ix.ginas.exporters.ExportMetaData;
 import ix.utils.Util;
 import play.libs.ws.WS;
 import play.libs.ws.WSRequestHolder;
@@ -163,5 +164,10 @@ public class RestSession extends AbstractSession<Void>{
 
     public ControlledVocab getControlledVocabulary(){
         return new ControlledVocab(getAsJson(API_CV_LIST));
+    }
+
+
+    public MyDownloadsAPI newDownloadAPI(){
+        return new MyDownloadsAPI(this);
     }
 }
