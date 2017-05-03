@@ -430,16 +430,17 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
     		
-    		
-    		JsonNode status =  BrowserSubstanceSearcher.this.session.get(url, timeout).asJson();
+    		WSResponse osess = BrowserSubstanceSearcher.this.session.get(url, timeout);
 
+    		if(osess.getStatus()>=400){
+    			return osess;
+    		}
+
+    		JsonNode status =  osess.asJson();
+    		
     		String pingUrl = status.at("/self").asText();
     		/*
     		long timeoutTime = System.currentTimeMillis()+10_000;
-            System.out.println("about to spin");
-
-
-
     		while(System.currentTimeMillis()<timeoutTime){
     			if(status.at("/complete").asBoolean()){
     				String dl=status.at("/downloadUrl").asText();
