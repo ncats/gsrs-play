@@ -34,6 +34,7 @@ sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.entitywrapper.EntityWrapperTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.exporters.ExportTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.exporters.InMemorySpreadSheetExporterTest"
+sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.exporters.MyDownloadsTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.exporters.StreamingCsvSpreadsheetTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.FunctionalTest"
 sbt.bat -Dtestconfig=conf/ginas.conf -Dconfig.file=modules/ginas/conf/ginas.conf "ginas/testOnly ix.test.history.EditHistoryTest"
