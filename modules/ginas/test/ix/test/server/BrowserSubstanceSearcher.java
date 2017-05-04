@@ -23,7 +23,10 @@ import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import ix.core.util.EntityUtils;
 import ix.core.util.TimeUtil;
+import ix.ginas.exporters.ExportMetaData;
+import ix.ginas.exporters.ExportProcessFactory;
 import ix.test.server.BrowserSession.WrappedWebRequest;
 import ix.test.util.WaitChecker;
 import ix.utils.Tuple;
@@ -424,9 +427,27 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	}
     	
     	public InputStream getInputStream(){
-    		return getWSResponse()
-    			.getBodyAsStream();
+    		return getInputStream(true);
     	}
+        public InputStream getInputStream(boolean forceReDownload){
+            if(!forceReDownload){
+                JsonNode metaData = getMeta();
+                if(metaData.at("/isCached").asBoolean()){
+                    try {
+                        ExportMetaData cached = EntityUtils.getEntityInfoFor(ExportMetaData.class).fromJson(metaData.at("/cached").toString());
+                        return ExportProcessFactory.download(cached.username, cached.getFilename());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            //if we get here either we ar forcing a redownload or something went wrong getting the cached version.
+            return getWSResponse()
+                        .getBodyAsStream();
+
+
+        }
+
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
     		

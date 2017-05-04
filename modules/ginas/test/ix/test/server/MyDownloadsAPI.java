@@ -11,18 +11,21 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by katzelda on 5/2/17.
  */
 public class MyDownloadsAPI {
     private final RestSession session;
+    private final GinasTestServer ts;
 
-    public MyDownloadsAPI(RestSession session) {
+    public MyDownloadsAPI(RestSession session, GinasTestServer ts) {
         if(session.getUser() == null){
             throw new IllegalStateException("must be logged in");
         }
         this.session = session;
+        this.ts = Objects.requireNonNull(ts);
     }
 
     public List<ExportMetaData> getAllDownloads() throws IOException{
@@ -35,5 +38,7 @@ public class MyDownloadsAPI {
     }
 
 
-
+    public File getExportDir() {
+        return ts.getUserExportDir(session.getUser());
+    }
 }

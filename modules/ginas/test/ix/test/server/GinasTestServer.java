@@ -148,8 +148,13 @@ public class GinasTestServer extends ExternalResource{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
 
+    public File getExportRootDir() {
+        return exportDir.getRoot();
+    }
 
-
+    public File getUserExportDir(User u){
+        return new File(getExportRootDir(), u.username);
+    }
 
     public static class User{
     	private final String username;
@@ -303,7 +308,7 @@ public class GinasTestServer extends ExternalResource{
                 return true;
             }
         };
-        defaultRestSession = new RestSession(port){
+        defaultRestSession = new RestSession(this, port){
             @Override
             protected Void doLogout() {
                 //no-op
@@ -394,12 +399,12 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public RestSession newRestSession(User user){
-        RestSession session= new RestSession(user, port);
+        RestSession session= new RestSession(this, user, port);
         sessions.add(session);
         return session;
     }
     public RestSession newRestSession(User user, RestSession.AUTH_TYPE type){
-        RestSession session= new RestSession(user, port, type);
+        RestSession session= new RestSession(this, user, port, type);
         sessions.add(session);
         return session;
     }

@@ -39,16 +39,20 @@ public class RestSession extends AbstractSession<Void>{
     private AUTH_TYPE authType = AUTH_TYPE.NONE;
     Map<String, String> extraHeaders = new HashMap<>();
 
-    public RestSession(int port) {
+    private final GinasTestServer ts;
+
+    public RestSession(GinasTestServer ts, int port) {
         super(port);
+        this.ts = Objects.requireNonNull(ts);
     }
-    public RestSession(GinasTestServer.User user, int port){
-        this(user, port, AUTH_TYPE.USERNAME_PASSWORD);
+    public RestSession(GinasTestServer ts, GinasTestServer.User user, int port){
+        this(ts, user, port, AUTH_TYPE.USERNAME_PASSWORD);
     }
-    public RestSession(GinasTestServer.User user, int port, AUTH_TYPE type) {
+    public RestSession(GinasTestServer ts, GinasTestServer.User user, int port, AUTH_TYPE type) {
         super(user, port);
         Objects.requireNonNull(type);
         this.authType = type;
+        this.ts = Objects.requireNonNull(ts);
     }
 
     public WSRequestHolder createRequestHolder(String path){
@@ -168,6 +172,6 @@ public class RestSession extends AbstractSession<Void>{
 
 
     public MyDownloadsAPI newDownloadAPI(){
-        return new MyDownloadsAPI(this);
+        return new MyDownloadsAPI(this, ts);
     }
 }
