@@ -80,7 +80,7 @@ import ix.utils.Util;
  */
 
 public class PojoDiff {
-	public static ObjectMapper _mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+	public static ObjectMapper _mapper = EntityFactory.EntityMapper.INTERNAL_ENTITY_MAPPER();
 	
 	public static Function<Object, Optional<String>> IDGetter = (o)->{
 		EntityWrapper<?> ew = EntityWrapper.of(o);
@@ -278,7 +278,6 @@ public class PojoDiff {
 	
 	
 	private static ObjectNode mappify(ObjectNode m2){
-		ObjectMapper om=new ObjectMapper();
 		Iterator<String> fields=m2.fieldNames();
 		List<String> fieldNames = new ArrayList<String>();
 		while(fields.hasNext()){

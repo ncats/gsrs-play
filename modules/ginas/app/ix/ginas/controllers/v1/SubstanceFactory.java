@@ -387,9 +387,13 @@ public class SubstanceFactory extends EntityFactory {
 	// silly test
 	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
 		// System.out.println("Dupe chack");
-		String hash = cs.structure.getLychiv4Hash();
+		String hash = cs.structure.getLychiv3Hash();
 		List<Substance> dupeList = new ArrayList<Substance>();
-		dupeList = finder.get().where().eq("structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+		
+		
+		dupeList = finder.get().where().eq("moieties.structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
+		
+		
 		return dupeList;
 	}
 	
