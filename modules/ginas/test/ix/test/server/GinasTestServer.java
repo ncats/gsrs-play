@@ -26,6 +26,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.factories.EntityProcessorFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Document;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -135,6 +136,7 @@ public class GinasTestServer extends ExternalResource{
 
    private Model.Finder<Long, Principal> principleFinder;
 
+    private TemporaryFolder exportDir = new TemporaryFolder();
 
     private Map<String, Object> originalAdditionalConfiguration = new HashMap<>();
     private Map<String, Object> additionalConfiguration = new HashMap<>();
@@ -479,6 +481,10 @@ public class GinasTestServer extends ExternalResource{
     protected void before() throws Throwable {
         testSpecificAdditionalConfiguration.clear();
 
+        exportDir.create();
+        File actualExportDir = exportDir.getRoot();
+        testSpecificAdditionalConfiguration.put("export.path.root", actualExportDir.getAbsolutePath());
+
        if(isOracleDB()){
            //System.out.println("in the Oracle db loop");
            dropOracleDb();
@@ -630,6 +636,8 @@ public class GinasTestServer extends ExternalResource{
     protected void after() {
         stop();
         additionalConfiguration = new HashMap<>(originalAdditionalConfiguration);
+        System.out.println("export dir is " + exportDir.getRoot().getAbsolutePath());
+        exportDir.delete();
     }
 
     /**
