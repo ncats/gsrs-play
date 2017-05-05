@@ -26,6 +26,7 @@ import ix.core.adapters.EntityPersistAdapter;
 import ix.core.factories.EntityProcessorFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Document;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -135,6 +136,7 @@ public class GinasTestServer extends ExternalResource{
 
    private Model.Finder<Long, Principal> principleFinder;
 
+    private TemporaryFolder exportDir = new TemporaryFolder();
 
     private Map<String, Object> originalAdditionalConfiguration = new HashMap<>();
     private Map<String, Object> additionalConfiguration = new HashMap<>();
@@ -146,8 +148,13 @@ public class GinasTestServer extends ExternalResource{
         return new URL(defaultBrowserSession.constructUrlFor("ginas/app"));
     }
 
+    public File getExportRootDir() {
+        return exportDir.getRoot();
+    }
 
-
+    public File getUserExportDir(User u){
+        return new File(getExportRootDir(), u.username);
+    }
 
     public static class User{
     	private final String username;
@@ -301,7 +308,7 @@ public class GinasTestServer extends ExternalResource{
                 return true;
             }
         };
-        defaultRestSession = new RestSession(port){
+        defaultRestSession = new RestSession(this, port){
             @Override
             protected Void doLogout() {
                 //no-op
@@ -392,12 +399,12 @@ public class GinasTestServer extends ExternalResource{
     }
 
     public RestSession newRestSession(User user){
-        RestSession session= new RestSession(user, port);
+        RestSession session= new RestSession(this, user, port);
         sessions.add(session);
         return session;
     }
     public RestSession newRestSession(User user, RestSession.AUTH_TYPE type){
-        RestSession session= new RestSession(user, port, type);
+        RestSession session= new RestSession(this, user, port, type);
         sessions.add(session);
         return session;
     }
@@ -478,6 +485,10 @@ public class GinasTestServer extends ExternalResource{
     @Override
     protected void before() throws Throwable {
         testSpecificAdditionalConfiguration.clear();
+
+        exportDir.create();
+        File actualExportDir = exportDir.getRoot();
+        testSpecificAdditionalConfiguration.put("export.path.root", actualExportDir.getAbsolutePath());
 
        if(isOracleDB()){
            //System.out.println("in the Oracle db loop");
@@ -630,6 +641,8 @@ public class GinasTestServer extends ExternalResource{
     protected void after() {
         stop();
         additionalConfiguration = new HashMap<>(originalAdditionalConfiguration);
+        System.out.println("export dir is " + exportDir.getRoot().getAbsolutePath());
+        exportDir.delete();
     }
 
     /**

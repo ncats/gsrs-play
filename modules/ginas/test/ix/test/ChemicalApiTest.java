@@ -13,8 +13,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -684,6 +686,60 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
         }
    	}
     
+    @Test
+    public void testUpdateSubstanceExactMatch() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            String struct1="Br.[H][C@@]1(CC[N+](C)(C)C1)OC(=O)[C@]([O-])(C2CCCC2)C3=CC=CC=C3";
+            String struct2="CC1=C(C)C=C(C=C1)C2CCCCC2";
+            
+            JsonNode form1 = makeChemicalSubstanceJSON(struct1);
+            
+            ensurePass( api.submitSubstance(form1));
+            
+            Supplier<JsonNode> fetchit= ()->{
+                return api.fetchSubstanceJsonByUuid(form1.at("/uuid").asText());
+            };
+            
+
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
+            SearchResult sresult = searcher.exact(struct1);
+            assertEquals("Should have 1 matches, but found something else",1,sresult.getUuids().size());
+            
+            SearchResult sresult2 = searcher.exact(struct2);
+            assertEquals("Should have 0 matches, but found something else",0,sresult2.getUuids().size());
+            
+            
+            JsonNode fetched = fetchit.get();
+            JsonNode updated = new JsonUtil.JsonNodeBuilder(fetched)
+                                           .set("/structure/molfile", struct2)
+                                           .build();
+            
+            
+            
+            api.updateSubstanceJson(updated);
+            
+            
+            JsonNode updateFetched = fetchit.get();
+            Assert.assertNotEquals(updateFetched.at("/structure/molfile").asText(),
+                                  fetched.at("/structure/molfile").asText());
+            Assert.assertNotEquals(updateFetched.at("/structure/hash").asText(),
+                    fetched.at("/structure/hash").asText());
+            
+
+            SearchResult sresult3 = searcher.exact(struct1);
+            assertEquals("Should have 0 matches, but found something else",0,sresult3.getUuids().size());
+            
+            SearchResult sresult4 = searcher.exact(struct2);
+            assertEquals("Should have 1 matches, but found something else",1,sresult4.getUuids().size());
+            
+
+            
+            
+        }
+    }
+    
     @Test   
    	public void testExactMatchReturnsOnlyExactMatches() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -1117,6 +1173,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
     public static ChemicalSubstance makeChemicalSubstance(String smiles){
     	return new SubstanceBuilder()
     			.asChemical()
+    			.generateNewUUID()
 				.addName(smiles + " name")
     			.setStructure(smiles)
     			.build();
