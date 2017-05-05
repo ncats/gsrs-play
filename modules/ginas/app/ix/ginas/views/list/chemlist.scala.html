@@ -29,7 +29,7 @@
                 }
                 </div>
 
-                <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
+                <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.uuid', '@ctx');">
                     <rendered id = '@chem.structure.id' ctx='@ctx' title="click to enlarge" ></rendered>
                 </div>
                 <div>
@@ -83,5 +83,5 @@
                     </div>
                 </div>
 }{
-        <div class="@chem.approvalID" ng-click="showLarge('@chem.structure.id', '@chem.approvalID')"></div>
+        <div class="@chem.uuid" ng-click="showLarge('@chem.structure.id', '@chem.uuid')"></div>
 }

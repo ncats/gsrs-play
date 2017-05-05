@@ -10,7 +10,7 @@
 				<div class="badge-wrapper">
 					<span class="label label-primary label-offset list-view-badge pull-left">POLYMER</span>
 				</div>
-                <div class = "magnify" ng-click = "showLarge('@chem.polymer.displayStructure.id', '@chem.approvalID');">
+                <div class = "magnify" ng-click = "showLarge('@chem.polymer.displayStructure.id', '@chem.uuid');">
 	                <rendered id = '@chem.polymer.displayStructure.id'>
 	                </rendered>
                 </div>
@@ -33,6 +33,6 @@
 } {
               
 } {
-	<div class="@chem.approvalID" ng-click="showLarge('', '@chem.approvalID')"></div>
+	<div class="@chem.uuid" ng-click="showLarge('', '@chem.uuid')"></div>
 }
 

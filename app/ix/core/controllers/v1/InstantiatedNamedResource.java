@@ -133,9 +133,10 @@ public interface InstantiatedNamedResource<I,V> {
 		return operate(Operations.COUNT_OPERATION.with());
 	}
 
-	default Result stream(String q, int top, int skip){
-		return operate(Operations.STREAM_OPERATION.with(q,top,skip));
+	default Result stream(String field, int top, int skip){
+		return operate(Operations.STREAM_OPERATION.with(field,top,skip));
 	}
+	
 	default Result search(String q, 
             int top, int skip, int fdim){
 		return operate(Operations.SEARCH_OPERATION.with(q,top,skip, fdim));
