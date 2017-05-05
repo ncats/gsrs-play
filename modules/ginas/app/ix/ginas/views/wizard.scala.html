@@ -85,7 +85,7 @@
                         <h2>Unknown substance class: @kind</h2>
                     }
                 }
-                <div ng-if="substance.substanceClass !== 'chemical'">
+                <div ng-if="substance.substanceClass !== 'chemical' && substance.substanceClass !== 'concept'">
                     <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
                     <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
                     <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
