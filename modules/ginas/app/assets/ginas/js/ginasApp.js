@@ -561,11 +561,10 @@
                 break;
             }
 
-            //Todo: this only works on the homepage//
-
-            var search = "q="+$scope.q;
-            $window.location = $window.location.origin + baseurl +"substances?"+ search;
-        //    $window.location.search = "q="+$scope.q;
+            $location.search({});
+            $location.path(".." + baseurl +"substances");
+            $location.search("q",$scope.q);
+            window.location = $location.absUrl();
         };
 
         if (typeof $window.loadjson !== "undefined" &&
