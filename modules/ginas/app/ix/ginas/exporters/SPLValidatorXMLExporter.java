@@ -8,15 +8,21 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import ix.ginas.models.v1.Substance;
 
 public class SPLValidatorXMLExporter implements Exporter<Substance> {
 	private final BufferedWriter out;
+	private static final String PREAMBLE = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<codeList><unii>\n";
+	private static final String POSTAMBLE = "</unii></codeList>";
+	
+	private static AtomicBoolean addedPreamble = new AtomicBoolean(false);
 	 
 	public SPLValidatorXMLExporter(OutputStream out){
 		 Objects.requireNonNull(out);
-	     this.out = new BufferedWriter(new OutputStreamWriter(out));
+	     this.out = new BufferedWriter(new OutputStreamWriter(out));	   
+	     
 	}
 	
 	
@@ -24,14 +30,23 @@ public class SPLValidatorXMLExporter implements Exporter<Substance> {
         this(new BufferedOutputStream(new FileOutputStream(outputFile)));
     }
 	
+	private void addPreambleIfNeeded() throws IOException{
+		if(!addedPreamble.getAndSet(true)){
+			this.out.write(PREAMBLE);
+		}
+	}
+	
+	
 	@Override
 	public void close() throws IOException {
+		addPreambleIfNeeded();
+		out.write(POSTAMBLE);
 		out.close();
 	}
 
 	@Override
 	public void export(Substance obj) throws IOException {
-	
+		addPreambleIfNeeded();
 		if(obj.isPublic() && obj.getApprovalID()!=null && !obj.isDeprecated()){
 		
 			String approvalID = obj.getApprovalIDDisplay();
