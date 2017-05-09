@@ -47,7 +47,7 @@ public class SearchFactory extends EntityFactory {
     		CachedSupplier.of(()->Play.application().plugin(TextIndexerPlugin.class));
    
 
-    static TextIndexer getTextIndexer(){
+    public static TextIndexer getTextIndexer(){
         return textIndexerPlugin.get().getIndexer();
     }
     

@@ -1,8 +1,7 @@
 (function () {
     var ginasDownloads = angular.module('ginasDownloads', []);
 
-
-    ginasDownloads.controller('ExportJobController', function ($scope, $http, $timeout) {
+    ginasDownloads.controller('ExportJobController', function ($scope, $http, $timeout,$uibModal) {
         $scope.state ={};
         $scope.id ={};
         
@@ -52,16 +51,35 @@
         $scope.remove = function () {
         	$scope.monitor = false;
         	
-            $http.get($scope.state.removeUrl)
-                 .then(function (dat) {
-                	 	$scope.visible=false;
-                	 });
+        	
+        	$scope.confirm("Confirm Delete","Are you sure you'd like to delete this export?",function(){
+        		$http.get($scope.state.removeUrl)
+                .then(function (dat) {
+               	 	$scope.visible=false;
+               	 });	
+        	})
+        	
+        	
+            
         };
+        $scope.formatSize = function formatBytes(a,b){
+        	if(0==a)return"0 Bytes";
+        	var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));
+        	return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]
+        }
         
-        
-
-
+        $scope.confirm = function(title, message, cb){
+    		$scope.warnTitle=title;
+    		$scope.warnMessage=message;
+    		
+        	$scope.modalInstance = $uibModal.open({
+                        templateUrl: baseurl + "assets/templates/modals/confirm-modal.html",
+                        scope: $scope
+                });
+            $scope.close=function(tf){
+            	$scope.modalInstance.close();
+            	if(tf)cb();
+            };
+    	};
     });
-
-
 })();

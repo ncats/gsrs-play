@@ -61,6 +61,10 @@
 				  <td><strong>SHA-1</strong></td>
 				  <td>{{state.sha1}}</td>
 			  </tr>
+			  <tr ng-if="state.size">
+				  <td><strong>SIZE</strong></td>
+				  <td>{{formatSize(state.size)}}</td>
+			  </tr>
 			  </table>
 			</div>
                 

@@ -26,6 +26,7 @@ import chemaxon.struc.MolAtom;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import ix.core.GinasProcessingMessage;
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
@@ -67,9 +68,11 @@ import ix.ginas.controllers.viewfinders.ListViewFinder;
 import ix.ginas.controllers.viewfinders.ThumbViewFinder;
 import ix.ginas.exporters.*;
 import ix.ginas.models.v1.*;
-import ix.ginas.utils.reindex.MultiReIndexListener;
-import ix.ginas.utils.reindex.ReIndexListener;
-import ix.ginas.utils.reindex.ReIndexService;
+import ix.core.utils.executor.ProcessExecutionService.CommonStreamSuppliers;
+import ix.core.utils.executor.MultiProcessListener;
+import ix.core.utils.executor.ProcessListener;
+import ix.core.utils.executor.ProcessExecutionService;
+import ix.core.utils.executor.ProcessExecutionService.CommonConsumers;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.DefaultResultRenderer;
 import ix.ncats.controllers.FacetDecorator;
@@ -201,6 +204,12 @@ public class GinasApp extends App {
 
     private static SubstanceReIndexListener listener = new SubstanceReIndexListener();
 
+    
+    public static SubstanceReIndexListener getReindexListener(){
+        return listener;
+    }
+    
+    
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result listGinasUsers(int page, int rows, String sortBy, String order, String filter) {
         List<UserProfile> profiles = Administration.principalsList();
@@ -596,6 +605,7 @@ public class GinasApp extends App {
      */
 
     public static Result generateExportFileUrl(String collectionID, String extension, int publicOnly) {
+    	try{
         ObjectNode on = EntityMapper.FULL_ENTITY_MAPPER().createObjectNode();
         on.put("url", ix.ginas.controllers.routes.GinasApp.export(collectionID, extension, publicOnly).url().toString());
         
@@ -603,7 +613,10 @@ public class GinasApp extends App {
         
         
         boolean publicOnlyBool = publicOnly == 1;
-        ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+        Principal prof = UserFetcher.getActingUser(true);
+        System.out.println("Getting url for:" + prof.username);
+        ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
+        
         String username=emd.username;
         Optional<ExportMetaData> existing= new ExportProcessFactory().getMetaForLatestKey(username, emd.getKey());
         
@@ -624,6 +637,10 @@ public class GinasApp extends App {
             on.put("isReady", false);
         }
         return ok(on);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw new RuntimeException(e);
+    	}
     }
 
     /**
@@ -668,8 +685,9 @@ public class GinasApp extends App {
                 
                 //Dummy version for query
                 
-                
-                ExportMetaData emd=new ExportMetaData(collectionID, null, Authentication.getUser(), publicOnlyBool, extension);
+                Principal prof = UserFetcher.getActingUser(true);
+                System.out.println("User is:" + prof.username);
+                ExportMetaData emd=new ExportMetaData(collectionID, null, prof, publicOnlyBool, extension);
                 
                 String fname=request().getQueryString("filename");
                 String qgen=request().getQueryString("genUrl");
@@ -708,7 +726,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> downloadExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+                String username=UserFetcher.getActingUser(true).username;
                 String filename=request().getQueryString("filename");
                 
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
@@ -733,7 +751,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> cancelExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
                 ExportMetaData data=emeta.get();
                 if(data.isComplete()){
@@ -752,7 +770,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> removeExport(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
                 ExportMetaData data=emeta.get();
                 if(!data.isComplete()){
@@ -779,7 +797,7 @@ public class GinasApp extends App {
             try {
                 String key=request().getQueryString("q");
                 
-                String username=Authentication.getUser().username;
+                String username=UserFetcher.getActingUser(true).username;
                 
                 List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
                 
@@ -819,7 +837,7 @@ public class GinasApp extends App {
     @Dynamic(value = IxDynamicResourceHandler.IS_USER_PRESENT, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static F.Promise<Result> downloadView(String downloadID){
         return F.Promise.promise(() -> {
-            String username=Authentication.getUser().username;
+        	String username=UserFetcher.getActingUser(true).username;
             Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
 
             if(emeta.isPresent()){
@@ -834,7 +852,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> getStatusFor(String downloadID){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 
                 Optional<ExportMetaData>emeta = ExportProcessFactory.getStatusFor(username, downloadID);
 
@@ -853,7 +871,7 @@ public class GinasApp extends App {
     public static F.Promise<Result> listDownloads(){
         return F.Promise.promise(() -> {
             try {
-                String username=Authentication.getUser().username;
+            	String username=UserFetcher.getActingUser(true).username;
                 
                 List<ExportMetaData>list = ExportProcessFactory.getExplicitExportMetaData(username);
                 
@@ -1007,7 +1025,7 @@ public class GinasApp extends App {
         return ok(pis);
     }
 
-    private static Exporter<Substance> getSubstanceExporterFor(String extension, OutputStream pos, boolean publicOnly)
+    public static Exporter<Substance> getSubstanceExporterFor(String extension, OutputStream pos, boolean publicOnly)
             throws IOException {
 
         if (factoryPlugin.get() == null) {
@@ -1732,6 +1750,7 @@ return F.Promise.<Result>promise( () -> {
                     matchingContext.put("atomMaps", amap);
                 }
                 matchingContext.put("similarity", similarity);
+                //Util.debugSpin(100);
                 
                 IxCache.setMatchingContext(this.getContext(), k, matchingContext);
             }
@@ -1782,7 +1801,6 @@ return F.Promise.<Result>promise( () -> {
         sub.setMatchContextFromID(context);
         return sub.getMatchContextPropertyOr("similarity", null);
     }
-    
     
     static public Substance resolve(Relationship rel) {
         Substance relsub = null;
@@ -2175,9 +2193,9 @@ return F.Promise.<Result>promise( () -> {
 
             Runnable r = () -> {
                 try {
-                    new ReIndexService(5, 10).reindexAll(new MultiReIndexListener(listener,
+                    new ProcessExecutionService(5, 10).reindexAll(new MultiProcessListener(listener,
                             Play.application().plugin(TextIndexerPlugin.class).getIndexer(),
-                            EntityPersistAdapter.getInstance()));
+                            EntityPersistAdapter.getInstance().getProcessListener()));
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -2209,118 +2227,6 @@ return F.Promise.<Result>promise( () -> {
         void exportCompleted();
     }
 
-
-    private static class SubstanceReIndexListener implements ReIndexListener {
-
-        /**
-         * Log of index messages so they are saved to file for later examination
-         * in case of failure. Previously logs only written to browser.
-         */
-        private static final Logger.ALogger LOG = Logger.of("index-rebuild");
-
-        private long startTime;
-        private StringBuilder message = new StringBuilder();
-
-        private int totalIndexed = 0;
-
-        private String recordsToIndex = "?";
-
-        private long lastUpdateTime;
-
-        private boolean currentlyRunning = false;
-
-        private int currentRecordsIndexed = 0;
-
-        private int recordsIndexedLastUpdate = 0;
-
-        @Override
-        public void newReindex() {
-            lastUpdateTime = startTime = System.currentTimeMillis();
-            message = new StringBuilder(10_000);
-            totalIndexed = 0;
-            recordsToIndex = "?";
-            currentlyRunning = true;
-            currentRecordsIndexed = 0;
-            recordsIndexedLastUpdate = 0;
-        }
-
-        public StringBuilder getMessage() {
-            return message;
-        }
-
-        public boolean isCurrentlyRunning() {
-            return currentlyRunning;
-        }
-
-        @Override
-        public void doneReindex() {
-            if (!currentlyRunning) {
-                return;
-            }
-            updateMessage();
-            currentlyRunning = false;
-
-            StringBuilder doneMessage = new StringBuilder(100);
-
-            if (currentRecordsIndexed >= totalIndexed) {
-                doneMessage.append("\n\nCompleted Substance reindexing.");
-            } else {
-                doneMessage.append("\n\nError : did not finish indexing all records, only re-indexed ")
-                        .append(currentRecordsIndexed);
-            }
-            doneMessage.append("\nTotal Time:").append((System.currentTimeMillis() - startTime)).append("ms");
-            message.append(doneMessage);
-            LOG.info(doneMessage.toString());
-        }
-
-        @Override
-        public void recordReIndexed(Object o) {
-            currentRecordsIndexed++;
-            if (currentRecordsIndexed % 50 == 0) {
-                updateMessage();
-            }
-        }
-
-        @Override
-        public void totalRecordsToIndex(int total) {
-            recordsToIndex = Integer.toString(total);
-        }
-
-        private void updateMessage() {
-            int numProcessedThisTime = currentRecordsIndexed - recordsIndexedLastUpdate;
-            if (numProcessedThisTime < 1) {
-                return;
-            }
-            long currentTime = System.currentTimeMillis();
-
-            long totalTimeSerializing = currentTime - startTime;
-
-            String toAppend = "\n" + numProcessedThisTime + " more records Processed: " + currentRecordsIndexed + " of "
-                    + recordsToIndex + " in " + ((currentTime - lastUpdateTime)) + "ms (" + totalTimeSerializing
-                    + "ms serializing)";
-            Logger.debug("REINDEXING:" + toAppend);
-            LOG.info(toAppend);
-
-            message.append(toAppend);
-
-            lastUpdateTime = currentTime;
-
-            recordsIndexedLastUpdate = currentRecordsIndexed;
-        }
-
-        @Override
-        public void countSkipped(int numSkipped) {
-            totalIndexed -= numSkipped;
-        }
-
-        @Override
-        public void error(Throwable t) {
-
-            t.printStackTrace();
-
-            LOG.error("error reindexing", t);
-        }
-    }
 
     private static CachedSupplier<Map<String, Integer>> codeSystemOrder = CachedSupplier.of(() -> {
         // Add specific codes to ordered list
@@ -2388,15 +2294,15 @@ return F.Promise.<Result>promise( () -> {
                 .mapToObj(i -> new Site(subunitIndex, i + 1))
                 .collect(ModelUtils.toShorthand());
     }
+    
 
-    // TODO: move to Ginas App
-    // ***************
     public static Result index() {
+    	//sillyTest();
         return ok(ix.ginas.views.html.index.render());
     }
 
     public static Result app() {
-        return ok(ix.ginas.views.html.index.render());
+        return index();
     }
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_REGISTER, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)

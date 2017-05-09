@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import ix.ginas.exporters.SubstanceExporterFactory;
@@ -154,8 +155,8 @@ public class GinasSubstanceExporterFactoryPlugin implements Plugin {
         return list;
     }
 
-    public void submit(Runnable r) {
-        executor.submit(r);
+    public Future<?> submit(Runnable r) {
+        return executor.submit(r);
     }
 
     public boolean isReady() {

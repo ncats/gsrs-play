@@ -16,9 +16,7 @@ import ix.ginas.utils.GinasGlobal;
 public class UniqueCodeGenerator implements EntityProcessor<Substance> {
 	private CodeSequentialGenerator seqGen=null;
 	private String codeSystem;
-	public UniqueCodeGenerator(){
-
-	}
+	public UniqueCodeGenerator(){}
 	
 	
 	public UniqueCodeGenerator(Map m){

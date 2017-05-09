@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,7 +23,12 @@ import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import ix.core.util.EntityUtils;
+import ix.core.util.TimeUtil;
+import ix.ginas.exporters.ExportMetaData;
+import ix.ginas.exporters.ExportProcessFactory;
 import ix.test.server.BrowserSession.WrappedWebRequest;
+import ix.test.util.WaitChecker;
 import ix.utils.Tuple;
 import ix.utils.Util;
 import play.libs.ws.WSResponse;
@@ -421,18 +427,70 @@ public class BrowserSubstanceSearcher implements SubstanceSearcher {
     	}
     	
     	public InputStream getInputStream(){
-    		return getWSResponse()
-    			.getBodyAsStream();
+    		return getInputStream(true);
     	}
+        public InputStream getInputStream(boolean forceReDownload){
+            if(!forceReDownload){
+                JsonNode metaData = getMeta();
+                if(metaData.at("/isCached").asBoolean()){
+                    try {
+                        ExportMetaData cached = EntityUtils.getEntityInfoFor(ExportMetaData.class).fromJson(metaData.at("/cached").toString());
+                        return ExportProcessFactory.download(cached.username, cached.getFilename());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            //if we get here either we ar forcing a redownload or something went wrong getting the cached version.
+            return getWSResponse()
+                        .getBodyAsStream();
+
+
+        }
+
     	public WSResponse getWSResponse(){
     		String url=getMeta().at("/url").asText();
-    		return BrowserSubstanceSearcher.this.session.get(url, timeout);
+    		
+    		WSResponse osess = BrowserSubstanceSearcher.this.session.get(url, timeout);
+
+    		if(osess.getStatus()>=400){
+    			return osess;
+    		}
+
+    		JsonNode status =  osess.asJson();
+    		
+    		String pingUrl = status.at("/self").asText();
+    		/*
+    		long timeoutTime = System.currentTimeMillis()+10_000;
+    		while(System.currentTimeMillis()<timeoutTime){
+    			if(status.at("/complete").asBoolean()){
+    				String dl=status.at("/downloadUrl").asText();
+    				return BrowserSubstanceSearcher.this.session.get(dl, timeout);
+    			}
+    			status = BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson();
+    			
+    		}  		
+    		*/
+            try {
+                Optional<WSResponse> resp =new WaitChecker<>(
+                        ()->BrowserSubstanceSearcher.this.session.get(pingUrl, timeout).asJson(),
+                        n -> n.at("/complete").asBoolean(),
+                        n -> BrowserSubstanceSearcher.this.session.get(n.at("/downloadUrl").asText(), timeout)
+                        ).setMaxNumTries(10)
+//                        .setAwaitTime(1, TimeUnit.SECONDS)  //default is 1 sec
+                        .execute();
+
+                 return resp.orElseThrow( () -> new IllegalStateException("Export timed out"));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+    		
     	}
     	
     	public JsonNode getMeta(){
         	WSResponse resp = BrowserSubstanceSearcher.this.session.get("ginas/app/setExport?id="+key
                     + "&format="+format + "&publicOnly=" + (publicOnly?1:0)
-
                     , timeout);
             return resp.asJson();
         }

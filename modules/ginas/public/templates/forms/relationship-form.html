@@ -53,6 +53,7 @@
                                 </div>
                                 <br/>
                                 <div class="row" ng-if="obj.$details">
+	                                
                                     <div class="col-md-5">
                                         <gsrs-input type="dropdown"
                                                     ng-model="obj.qualification"
@@ -82,6 +83,14 @@
                                                                     type="search">
                                         </substance-chooser-selector>
                                     </div>
+                                    <div class="col-md-6">
+                                    <gsrs-input type="text-box"
+	                                            ng-model="obj.comments"
+	                                            field="comments"
+	                                            formname=form
+	                                            rows = 7 >
+	                                </gsrs-input>
+	                                </div>
                                     <br>
                                     <div class="row">
                             <div class="col-md-12">

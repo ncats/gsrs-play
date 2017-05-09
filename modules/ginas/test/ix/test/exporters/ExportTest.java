@@ -17,7 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,17 +32,18 @@ import ix.AbstractGinasClassServerTest;
 import ix.core.CacheStrategy;
 import ix.core.models.Role;
 import ix.core.plugins.IxCache;
+import ix.core.util.RunOnly;
 import ix.core.util.StopWatch;
 import ix.ginas.controllers.GinasApp;
 import ix.test.builder.SubstanceBuilder;
 import ix.test.query.builder.SimpleQueryBuilder;
 import ix.test.server.BrowserSession;
+import ix.test.server.BrowserSubstanceSearcher;
+import ix.test.server.BrowserSubstanceSearcher.WebExportRequest;
 import ix.test.server.GinasTestServer.User;
 import ix.test.server.RestSession;
 import ix.test.server.SearchResult;
 import ix.test.server.SubstanceLoader;
-import ix.test.server.BrowserSubstanceSearcher;
-import ix.test.server.BrowserSubstanceSearcher.WebExportRequest;
 import ix.test.util.TestUtil;
 import play.mvc.Http;
 
@@ -52,12 +52,15 @@ import play.mvc.Http;
  * Created by katzelda on 9/20/16.
  */
 public class ExportTest  extends AbstractGinasClassServerTest {
-
+	static User u;
 	@Before
 	public void clearCache() {
 		ts.modifyConfig("ix.cache.maxElementsNonEvictable", 10);
 		ts.restart();
 		IxCache.clearCache();
+		restSession = ts.newRestSession(u);
+		session = ts.newBrowserSession(u);
+		searcher = new BrowserSubstanceSearcher(session);
 	}
 
 	static BrowserSession session;
@@ -66,7 +69,7 @@ public class ExportTest  extends AbstractGinasClassServerTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		User u=ts.createAdmin("admin4", "password");
+		u=ts.createAdmin("admin4", "password");
 		restSession = ts.newRestSession(u);
 		session = ts.newBrowserSession(u);
 		SubstanceLoader loader = new SubstanceLoader(session);

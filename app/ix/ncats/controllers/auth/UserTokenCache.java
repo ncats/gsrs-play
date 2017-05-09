@@ -2,6 +2,7 @@ package ix.ncats.controllers.auth;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import ix.core.controllers.UserProfileFactory;
 import ix.core.models.UserProfile;
@@ -86,8 +87,8 @@ public class UserTokenCache{
 	}
 	
 	private void updateUserProfileTokenCache(){
-    	try{
-    		StreamUtil.forIterator(UserProfileFactory.users()).forEach(up->{
+    	try(Stream<UserProfile> stream=UserProfileFactory.userStream()){
+    		stream.forEach(up->{
     			updateUserCache(up);
     		});
 	    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();

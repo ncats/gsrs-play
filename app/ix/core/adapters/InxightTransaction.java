@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import javax.persistence.OptimisticLockException;
@@ -17,7 +16,6 @@ import javax.persistence.RollbackException;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
-import ix.utils.Util;
 
 public class InxightTransaction implements Closeable{
 	private static ConcurrentHashMap<Transaction, InxightTransaction> _instances=

@@ -1,0 +1,17 @@
+<div>
+            <div class="modal-header">
+                <a type="button" class="close"  ng-click="close(false)" uib-tooltip ="Close" aria-label="Close"><i class ="fa fa-times danger"></i></a>
+                <h4 class="modal-title" id="myModalLabelExport">{{warnTitle}}</h4>
+            </div>
+            <div class="modal-body">
+                <div class = "row">   
+                <div class="col-md-12 warn">
+                    <p>{{warnMessage}}</p>
+                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary"  ng-click="close(true)">Ok</button>
+                    <button type="button" class="btn btn-primary"  ng-click="close(false)">Cancel</button>
+                </div>
+            </div>
+        </div>

@@ -1,14 +1,11 @@
 package ix.core.controllers;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 import ix.core.NamedResource;
 import ix.core.UserFetcher;
 import ix.core.chem.ChemCleaner;
-import ix.core.chem.StructureProcessor;
 import ix.core.chem.StructureProcessorTask;
 import ix.core.models.Structure;
 import ix.core.plugins.IxCache;

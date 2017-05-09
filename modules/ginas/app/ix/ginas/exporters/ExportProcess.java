@@ -6,12 +6,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import ix.core.controllers.EntityFactory;
-import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.IOUtil;
 import ix.core.util.TimeUtil;
@@ -50,10 +50,10 @@ public class ExportProcess {
         this.substanceSupplier = Objects.requireNonNull(substanceSupplier);
     }
 
-    public synchronized ExportProcess run(Function<OutputStream, Exporter<Substance>> exporterFunction) throws IOException{
+    public synchronized Future<?> run(Function<OutputStream, Exporter<Substance>> exporterFunction) throws IOException{
         System.out.println("run state = " + currentState);
         if(currentState != State.INITIALIZED){
-            return this;
+            return null;
         }
         if(exporterFunction ==null){
             throw new NullPointerException("exporter function can not be null");
@@ -72,12 +72,12 @@ public class ExportProcess {
             //so we can reference it in the lambda for submit
             //final OutputStream fout = out;
             
-            factoryPlugin.get().submit( ()->{
-                try{
+            Future<?> future=factoryPlugin.get().submit( ()->{
+                try(Stream<Substance> sstream = substanceSupplier.get()){
                     System.out.println("Starting export");
-                    substanceSupplier.get().peek(s -> {
+                    sstream.peek(s -> {
                         Unchecked.ioException( () -> exporter.export(s));
-                        this.metaData.numRecords++;
+                        this.metaData.addRecord();
                     })
                     .anyMatch(m->{
                      return this.metaData.cancelled;   
@@ -92,7 +92,10 @@ public class ExportProcess {
                     
                     
                     try {
-                        metaData.sha1=Util.sha1(this.getOutputFile());
+                    	File f=this.getOutputFile();
+                    	
+                        metaData.sha1=Util.sha1(f);
+                        metaData.size=f.length();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -105,7 +108,9 @@ public class ExportProcess {
                     //IxCache.remove(metaData.getKey());
                 }
             });
-            return this;
+            
+            
+            return future;
         }catch(Throwable t){
             IOUtil.closeQuietly(out);
             currentState = State.ERRORED_OUT;

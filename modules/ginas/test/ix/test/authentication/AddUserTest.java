@@ -1,29 +1,18 @@
 package ix.test.authentication;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
-import ix.AbstractGinasServerTest;
-import ix.AbstractGinasTest;
-import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.UserProfileFactory;
-import ix.core.factories.EntityProcessorFactory;
-import ix.core.models.Principal;
-import ix.core.models.Role;
-import ix.core.util.StreamUtil;
-import ix.test.server.BrowserSession;
-import org.junit.After;
-import org.junit.Before;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.StreamSupport;
-
-import static org.junit.Assert.*;
+import ix.core.controllers.UserProfileFactory;
+import ix.core.models.Principal;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
 
 /**
  * Created by katzelda on 3/3/17.
@@ -66,8 +55,9 @@ public class AddUserTest extends AbstractAddUserTest {
         expected.add(new UserResult("fakeUser", false,null));
         assertEquals(expected, actual);
 
-        assertEquals(1, StreamUtil.forIterator(UserProfileFactory.users()).filter(up -> up.user.username.equals("fakeUser"))
-                                                    .count());
+        try(Stream<UserProfile> users=UserProfileFactory.userStream()){
+        	assertEquals(1, users.filter(up -> up.user.username.equals("fakeUser")).count());
+        }
 
     }
 

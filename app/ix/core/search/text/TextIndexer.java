@@ -128,7 +128,7 @@ import ix.core.search.text.TextIndexer.IxQueryParser;
 import ix.core.util.EntityUtils.EntityInfo;
 import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.EntityUtils.Key;
-import ix.ginas.utils.reindex.ReIndexListener;
+import ix.core.utils.executor.ProcessListener;
 import ix.utils.Global;
 import ix.utils.Tuple;
 import ix.utils.Util;
@@ -138,7 +138,7 @@ import play.Play;
 /**
  * Singleton class that responsible for all entity indexing
  */
-public class TextIndexer implements Closeable, ReIndexListener {
+public class TextIndexer implements Closeable, ProcessListener {
 	private static final String TERM_VEC_PREFIX = "F";
 
     public static final String IX_BASE_PACKAGE = "ix";
@@ -2335,7 +2335,14 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	public void remove(EntityWrapper ew) throws Exception {
 		if (ew.shouldIndex()) {
 			if (ew.hasKey()) {
-				Key key= ew.getKey();
+				remove(ew.getKey());
+			} else {
+				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
+			}
+		}
+	}
+	
+	public void remove(Key key) throws Exception {
 				Tuple<String,String> docKey=key.asLuceneIdTuple();
 				if (DEBUG(2)){
 					Logger.debug("Deleting document " + docKey.k() + "=" + docKey.v() + "...");
@@ -2343,21 +2350,26 @@ public class TextIndexer implements Closeable, ReIndexListener {
 				
 				BooleanQuery q = new BooleanQuery();
 				q.add(new TermQuery(new Term(docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
-				q.add(new TermQuery(new Term(FIELD_KIND, ew.getKind())), BooleanClause.Occur.MUST);
+				q.add(new TermQuery(new Term(FIELD_KIND, key.getKind())), BooleanClause.Occur.MUST);
 				indexWriter.deleteDocuments(q);
 				
 				if(USE_ANALYSIS){ //eliminate 
 					BooleanQuery qa = new BooleanQuery();
 					qa.add(new TermQuery(new Term(ANALYZER_VAL_PREFIX+docKey.k(), docKey.v())), BooleanClause.Occur.MUST);
-					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + ew.getKind())), BooleanClause.Occur.MUST);
+					qa.add(new TermQuery(new Term(FIELD_KIND, ANALYZER_VAL_PREFIX + key.getKind())), BooleanClause.Occur.MUST);
 					indexWriter.deleteDocuments(qa);
 				}
 				markChange();
-				
-			} else {
-				Logger.warn("Entity " + ew.getKind() + "'s Id field is null!");
-			}
-		}
+	}
+	
+	public void removeAllType(EntityInfo<?> ei) throws Exception{
+		TermQuery q = new TermQuery(new Term(FIELD_KIND, ei.getName()));
+		indexWriter.deleteDocuments(q);
+		markChange();
+	}
+	
+	public void removeAllType(Class<?> type) throws Exception{
+		removeAllType(EntityUtils.getEntityInfoFor(type));
 	}
 
 	public void remove(String text) throws Exception {
@@ -2571,7 +2583,7 @@ public class TextIndexer implements Closeable, ReIndexListener {
 	}
 
 	@Override
-	public void newReindex() {
+	public void newProcess() {
 
 		flushDaemon.lockFlush();
         closeAndClear(lookups);
@@ -2592,18 +2604,18 @@ public class TextIndexer implements Closeable, ReIndexListener {
 
     }
 	@Override
-	public void doneReindex() {
+	public void doneProcess() {
 		isReindexing = false;
 	}
 
 	@Override
-	public void recordReIndexed(Object o) {	}
+	public void recordProcessed(Object o) {	}
 
 	@Override
 	public void error(Throwable t) {	}
 
 	@Override
-	public void totalRecordsToIndex(int total) {	}
+	public void totalRecordsToProcess(int total) {	}
 
 	@Override
 	public void countSkipped(int numSkipped) {	}

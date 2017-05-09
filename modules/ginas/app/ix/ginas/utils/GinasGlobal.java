@@ -1,12 +1,18 @@
 package ix.ginas.utils;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import org.quartz.CronScheduleBuilder;
+import org.quartz.SimpleScheduleBuilder;
 
 import ix.core.Experimental;
 import ix.core.auth.UserKeyAuthenticator;
@@ -15,12 +21,18 @@ import ix.core.auth.UserTokenAuthenticator;
 import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Payload;
 import ix.core.models.UserProfile;
+import ix.core.models.Principal;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadProcessor;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.PayloadPlugin.PayloadPersistType;
+import ix.core.plugins.SchedulerPlugin;
+import ix.core.plugins.SchedulerPlugin.ScheduledTask;
+import ix.core.plugins.SchedulerPlugin.ScheduledTask.CRON_EXAMPLE;
 import ix.core.stats.Statistics;
+import ix.ginas.models.v1.Substance;
 import ix.ginas.controllers.GinasApp;
+import ix.ginas.controllers.tests.Debug;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.fda.TrustHeaderAuthenticator;
 import ix.ncats.controllers.auth.Authentication;
@@ -34,6 +46,13 @@ import play.libs.F.Promise;
 import play.mvc.Action;
 import play.mvc.Http;
 import play.mvc.Result;
+import ix.core.utils.executor.ProcessExecutionService;
+import ix.ginas.exporters.ExportMetaData;
+import ix.ginas.exporters.ExportProcess;
+import ix.ginas.exporters.ExportProcessFactory;
+import ix.core.util.*;
+import ix.ginas.controllers.GinasApp;
+
 
 public class GinasGlobal extends Global {
 	Application app;
@@ -211,6 +230,10 @@ public class GinasGlobal extends Global {
 		isRunning=true;
 		
 		loadStartFile();
+		
+		if(Play.isDev()){
+		    Debug.onInitialize(app);
+		}
 	}
 	
 	@Override

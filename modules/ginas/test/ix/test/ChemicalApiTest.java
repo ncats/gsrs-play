@@ -13,8 +13,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -395,6 +397,274 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             assertEquals("Should have 2 results for flex match, but found something else",2,sresult.getUuids().size());
         }
    	}
+
+    @Test   
+   	public void testSpecificFlexMatchWithIonsReturnsParents() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            JsonNode form1 = new SubstanceBuilder()
+        			.asChemical()
+    				.addName("A record name")
+        			.setStructure("\n" + 
+            		" G-SRS   Marvin  05031713042D          \n" + 
+            		"\n" + 
+            		" 53 55  0  0  0  0            999 V2000\n" + 
+            		"   20.9255   -4.4639    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   20.9255   -3.6420    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   20.2131   -3.2319    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   19.4987   -3.6411    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   18.7853   -3.2319    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   18.7853   -2.4053    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   18.0723   -1.9964    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   17.3617   -2.4094    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   17.3617   -3.2314    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   16.6486   -2.0005    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.9380   -3.2402    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.2265   -3.6586    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   14.5125   -3.2423    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   14.5125   -2.4157    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.7973   -2.0066    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.0820   -2.4195    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.0820   -3.2461    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.3731   -3.6585    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.3731   -4.4804    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.6635   -4.8925    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.9458   -4.4789    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.2351   -4.8965    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    9.5212   -4.4801    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.8097   -4.8986    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.8097   -5.7252    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    9.5237   -6.1333    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.2351   -5.7231    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.9504   -6.1320    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.6635   -5.7192    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.0991   -6.1383    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    7.3884   -6.5513    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.5121   -6.8487    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    7.6860   -5.4276    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.8019   -3.6598    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.8019   -4.4817    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.3696   -2.0095    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.6573   -1.5995    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.9595   -2.7219    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   19.4987   -1.9879    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   20.2131   -2.4053    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   20.9233   -1.9888    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   21.6403   -2.4035    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   21.6403   -3.2301    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   22.3520   -1.9924    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   23.0419   -1.5811    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   21.9408   -1.2807    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   22.7632   -2.7041    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    6.4786   -6.7037    0.0000 Na  0  3  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.5670   -1.4409    0.0000 Na  0  3  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   24.0068   -1.8106    0.0000 Na  0  3  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.9380   -2.4135    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.2241   -2.0055    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.7796   -1.2972    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		" 44 47  2  0  0  0  0\n" + 
+            		" 44 46  2  0  0  0  0\n" + 
+            		" 44 45  1  0  0  0  0\n" + 
+            		" 42 44  1  0  0  0  0\n" + 
+            		" 42 43  2  0  0  0  0\n" + 
+            		" 41 42  1  0  0  0  0\n" + 
+            		" 40 41  2  0  0  0  0\n" + 
+            		" 39 40  1  0  0  0  0\n" + 
+            		"  6 39  2  0  0  0  0\n" + 
+            		" 36 53  2  0  0  0  0\n" + 
+            		" 36 38  2  0  0  0  0\n" + 
+            		" 36 37  1  0  0  0  0\n" + 
+            		" 16 36  1  0  0  0  0\n" + 
+            		" 34 35  1  0  0  0  0\n" + 
+            		" 17 34  2  0  0  0  0\n" + 
+            		" 30 33  2  0  0  0  0\n" + 
+            		" 30 32  2  0  0  0  0\n" + 
+            		" 30 31  1  0  0  0  0\n" + 
+            		" 25 30  1  0  0  0  0\n" + 
+            		" 28 29  2  0  0  0  0\n" + 
+            		" 27 28  1  0  0  0  0\n" + 
+            		" 26 27  2  0  0  0  0\n" + 
+            		" 25 26  1  0  0  0  0\n" + 
+            		" 24 25  2  0  0  0  0\n" + 
+            		" 23 24  1  0  0  0  0\n" + 
+            		" 22 23  2  0  0  0  0\n" + 
+            		" 22 27  1  0  0  0  0\n" + 
+            		" 21 22  1  0  0  0  0\n" + 
+            		" 20 21  2  0  0  0  0\n" + 
+            		" 20 29  1  0  0  0  0\n" + 
+            		" 19 20  1  0  0  0  0\n" + 
+            		" 18 19  2  0  0  0  0\n" + 
+            		" 17 18  1  0  0  0  0\n" + 
+            		" 16 17  1  0  0  0  0\n" + 
+            		" 15 16  2  0  0  0  0\n" + 
+            		" 14 15  1  0  0  0  0\n" + 
+            		" 14 52  2  0  0  0  0\n" + 
+            		" 13 14  1  0  0  0  0\n" + 
+            		" 13 34  1  0  0  0  0\n" + 
+            		" 12 13  2  0  0  0  0\n" + 
+            		" 11 12  1  0  0  0  0\n" + 
+            		" 51 11  2  0  0  0  0\n" + 
+            		" 51 52  1  0  0  0  0\n" + 
+            		" 10 51  1  0  0  0  0\n" + 
+            		"  8 10  1  0  0  0  0\n" + 
+            		"  8  9  2  0  0  0  0\n" + 
+            		"  7  8  1  0  0  0  0\n" + 
+            		"  6  7  1  0  0  0  0\n" + 
+            		"  5  6  1  0  0  0  0\n" + 
+            		"  4  5  2  0  0  0  0\n" + 
+            		"  3  4  1  0  0  0  0\n" + 
+            		"  3 40  1  0  0  0  0\n" + 
+            		"  2  3  2  0  0  0  0\n" + 
+            		"  2 43  1  0  0  0  0\n" + 
+            		"  1  2  1  0  0  0  0\n" + 
+            		"M  CHG  6  31  -1  37  -1  45  -1  48   1  49   1  50   1\n" + 
+            		"M  END\n" + 
+            		">  <STEREOCHEMISTRY>\n" + 
+            		"ACHIRAL\n" + 
+            		"\n" + 
+            		">  <OPTICAL_ACTIVITY>\n" + 
+            		"NONE\n" + 
+            		"\n" + 
+            		">  <SMILES>\n" + 
+            		"[Na+].[Na+].[Na+].OC1=CC(=CC2=C1C=CC(NC(=O)NC3=CC=C4C(=C3)C=C(C(\\N=N\\C5=CC=C6C=C(C=CC6=C5)S([O-])(=O)=O)=C4O)S([O-])(=O)=O)=C2)S([O-])(=O)=O\n" + 
+            		"\n" + 
+            		"$$$$")
+        			.buildJson();
+            
+            String q="\n" + 
+            		" G-SRS   Marvin  05031713082D          \n" + 
+            		"\n" + 
+            		" 50 55  0  0  0  0            999 V2000\n" + 
+            		"    8.1846   -5.9078    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.1846   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.8991   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.8991   -7.9703    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    8.1846   -8.3828    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    7.4701   -7.9703    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    7.4701   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    6.7557   -6.7328    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    6.0412   -7.1453    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    5.3267   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    4.6123   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    3.8978   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    3.8978   -5.9078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    4.6123   -5.4953    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    5.3267   -5.9078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    3.1833   -5.4953    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    2.4689   -5.9078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    2.4689   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    3.1834   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    1.7544   -5.4953    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    1.0399   -5.0828    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    2.1669   -4.7808    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    1.3419   -6.2097    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    6.7557   -8.3828    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    6.0412   -8.7953    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    7.1682   -9.0972    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    6.3432   -7.6683    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    9.6135   -8.3828    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.3280   -7.9703    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   10.3280   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"    9.6135   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.0425   -8.3828    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.7570   -7.9703    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   11.7570   -7.1453    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.4715   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.1860   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.9004   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.9004   -5.9078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   13.1860   -5.4953    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.4715   -5.9078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   14.6149   -5.4953    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   14.6149   -4.6703    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.3294   -5.9078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.3294   -6.7328    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   14.6149   -7.1453    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   16.0438   -7.1453    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   16.7583   -7.5578    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   15.6313   -7.8597    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   16.4563   -6.4308    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"   12.4715   -8.3828    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" + 
+            		"  1  2  1  0  0  0  0\n" + 
+            		"  2  3  1  0  0  0  0\n" + 
+            		"  3  4  1  0  0  0  0\n" + 
+            		"  4  5  1  0  0  0  0\n" + 
+            		"  6  5  2  0  0  0  0\n" + 
+            		"  7  6  1  0  0  0  0\n" + 
+            		"  2  7  2  0  0  0  0\n" + 
+            		"  7  8  1  0  0  0  0\n" + 
+            		"  8  9  2  0  0  0  0\n" + 
+            		"  9 10  1  0  0  0  0\n" + 
+            		" 10 11  2  0  0  0  0\n" + 
+            		" 11 12  1  0  0  0  0\n" + 
+            		" 12 13  1  0  0  0  0\n" + 
+            		" 14 13  1  0  0  0  0\n" + 
+            		" 15 14  2  0  0  0  0\n" + 
+            		" 10 15  1  0  0  0  0\n" + 
+            		" 13 16  2  0  0  0  0\n" + 
+            		" 16 17  1  0  0  0  0\n" + 
+            		" 18 17  2  0  0  0  0\n" + 
+            		" 19 18  1  0  0  0  0\n" + 
+            		" 12 19  2  0  0  0  0\n" + 
+            		" 17 20  1  0  0  0  0\n" + 
+            		" 20 21  2  0  0  0  0\n" + 
+            		" 20 22  2  0  0  0  0\n" + 
+            		" 20 23  1  0  0  0  0\n" + 
+            		"  6 24  1  0  0  0  0\n" + 
+            		" 24 25  2  0  0  0  0\n" + 
+            		" 24 26  2  0  0  0  0\n" + 
+            		" 24 27  1  0  0  0  0\n" + 
+            		"  4 28  2  0  0  0  0\n" + 
+            		" 28 29  1  0  0  0  0\n" + 
+            		" 30 29  2  0  0  0  0\n" + 
+            		" 31 30  1  0  0  0  0\n" + 
+            		"  3 31  2  0  0  0  0\n" + 
+            		" 29 32  1  0  0  0  0\n" + 
+            		" 32 33  1  0  0  0  0\n" + 
+            		" 33 34  1  0  0  0  0\n" + 
+            		" 34 35  1  0  0  0  0\n" + 
+            		" 35 36  2  0  0  0  0\n" + 
+            		" 36 37  1  0  0  0  0\n" + 
+            		" 37 38  1  0  0  0  0\n" + 
+            		" 39 38  1  0  0  0  0\n" + 
+            		" 40 39  2  0  0  0  0\n" + 
+            		" 35 40  1  0  0  0  0\n" + 
+            		" 38 41  2  0  0  0  0\n" + 
+            		" 41 42  1  0  0  0  0\n" + 
+            		" 41 43  1  0  0  0  0\n" + 
+            		" 44 43  2  0  0  0  0\n" + 
+            		" 45 44  1  0  0  0  0\n" + 
+            		" 37 45  2  0  0  0  0\n" + 
+            		" 44 46  1  0  0  0  0\n" + 
+            		" 46 47  2  0  0  0  0\n" + 
+            		" 46 48  2  0  0  0  0\n" + 
+            		" 46 49  1  0  0  0  0\n" + 
+            		" 33 50  2  0  0  0  0\n" + 
+            		"M  END\n" + 
+            		">  <STEREOCHEMISTRY>\n" + 
+            		"ACHIRAL\n" + 
+            		"\n" + 
+            		">  <OPTICAL_ACTIVITY>\n" + 
+            		"UNSPECIFIED\n" + 
+            		"\n" + 
+            		">  <STEREOCHEMISTRY_COMMENTS>\n" + 
+            		"Azo bond, Assumed E-isomer\n" + 
+            		"\n" + 
+            		">  <SMILES>\n" + 
+            		"OC1=CC(=CC2=CC(NC(=O)NC3=CC4=CC(=C(\\N=N\\C5=CC=C6C=C(C=CC6=C5)S(O)(=O)=O)C(O)=C4C=C3)S(O)(=O)=O)=CC=C12)S(O)(=O)=O\n" + 
+            		"\n" + 
+            		"$$$$";
+            
+            ensurePass( api.submitSubstance(form1));
+            
+            RestSubstanceSearcher searcher = new RestSubstanceSearcher(session);
+            SearchResult sresult = searcher.flex(searcher.getStructureAsUUID(q));
+            assertEquals("Should have 1 results for flex match, but found something else",1,sresult.getUuids().size());
+        }
+   	}
+    
+    
     @Test
    	public void testBadFlexMatchReturnsNothing() throws Exception {
         //JsonNode entered = parseJsonFile(resource);
@@ -415,6 +685,60 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
             
         }
    	}
+    
+    @Test
+    public void testUpdateSubstanceExactMatch() throws Exception {
+        //JsonNode entered = parseJsonFile(resource);
+        try( RestSession session = ts.newRestSession(ts.getFakeUser1())) {
+            SubstanceAPI api = new SubstanceAPI(session);
+            String struct1="Br.[H][C@@]1(CC[N+](C)(C)C1)OC(=O)[C@]([O-])(C2CCCC2)C3=CC=CC=C3";
+            String struct2="CC1=C(C)C=C(C=C1)C2CCCCC2";
+            
+            JsonNode form1 = makeChemicalSubstanceJSON(struct1);
+            
+            ensurePass( api.submitSubstance(form1));
+            
+            Supplier<JsonNode> fetchit= ()->{
+                return api.fetchSubstanceJsonByUuid(form1.at("/uuid").asText());
+            };
+            
+
+            SubstanceSearcher searcher = new RestSubstanceSearcher(session);
+            SearchResult sresult = searcher.exact(struct1);
+            assertEquals("Should have 1 matches, but found something else",1,sresult.getUuids().size());
+            
+            SearchResult sresult2 = searcher.exact(struct2);
+            assertEquals("Should have 0 matches, but found something else",0,sresult2.getUuids().size());
+            
+            
+            JsonNode fetched = fetchit.get();
+            JsonNode updated = new JsonUtil.JsonNodeBuilder(fetched)
+                                           .set("/structure/molfile", struct2)
+                                           .build();
+            
+            
+            
+            api.updateSubstanceJson(updated);
+            
+            
+            JsonNode updateFetched = fetchit.get();
+            Assert.assertNotEquals(updateFetched.at("/structure/molfile").asText(),
+                                  fetched.at("/structure/molfile").asText());
+            Assert.assertNotEquals(updateFetched.at("/structure/hash").asText(),
+                    fetched.at("/structure/hash").asText());
+            
+
+            SearchResult sresult3 = searcher.exact(struct1);
+            assertEquals("Should have 0 matches, but found something else",0,sresult3.getUuids().size());
+            
+            SearchResult sresult4 = searcher.exact(struct2);
+            assertEquals("Should have 1 matches, but found something else",1,sresult4.getUuids().size());
+            
+
+            
+            
+        }
+    }
     
     @Test   
    	public void testExactMatchReturnsOnlyExactMatches() throws Exception {
@@ -849,6 +1173,7 @@ public class ChemicalApiTest extends AbstractGinasServerTest {
     public static ChemicalSubstance makeChemicalSubstance(String smiles){
     	return new SubstanceBuilder()
     			.asChemical()
+    			.generateNewUUID()
 				.addName(smiles + " name")
     			.setStructure(smiles)
     			.build();

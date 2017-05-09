@@ -3,6 +3,7 @@ package ix.utils;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -27,6 +28,15 @@ public class Tuple<K,V>{
 	public V v(){
 		return v;
 	}
+	
+	
+	public void consume(ThrowableBiConsumer<K,V> c){
+	    c.accept(k, v);
+	}
+	
+	public <T> T map(BiFunction<K,V,T> c){
+        return c.apply(k, v);
+    }
 	
 	
 	public static <K,V> Tuple<K,V> of(K k, V v){
@@ -119,6 +129,18 @@ public class Tuple<K,V>{
 	@Override
 	public String toString(){
 	    return "<" + this.k.toString() + "," + this.v.toString() + ">";
+	}
+	
+	public static interface ThrowableBiConsumer<K,V> extends BiConsumer<K,V>{
+	    public void throwing(K k, V v) throws Exception;
+	    
+	    public default void accept(K k, V v){
+            try {
+                this.throwing(k, v);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
 	}
 	
 }

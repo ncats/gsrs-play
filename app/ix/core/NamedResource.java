@@ -13,4 +13,6 @@ public @interface NamedResource {
     String name ();
     Class type ();
     String description () default "";
+    boolean adminOnly() default false;
+    boolean allowSearch() default true;
 }

@@ -272,7 +272,7 @@
                                     '</div>' + +'</div>');
                         }
                         $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
-                        var delay = 0;
+                        //var delay = 0;
                         var checkStatus;
                         var timer;
 
@@ -282,7 +282,7 @@
 
                         var onDetermined = function () {
 
-                            window.clearInterval(timer);
+                            //window.clearInterval(timer);
                             $('#searching').html('');
                             //$('#loading').modal('hide');
                             if (firststatus.needsReload) {
@@ -313,11 +313,12 @@
                         };
 
                         checkStatus = function () {
+                            /*
                             if (delay == 0) {
                                 window.clearInterval(timer);
                                 delay = 500;
                                 timer = window.setInterval(checkStatus, delay);
-                            }
+                            }*/
                             $.ajax(firststatus.url, {
                                 dataType: 'json',
                             }).done(function (status) {
@@ -325,12 +326,15 @@
                                     onDetermined(status);
                                 } else {
                                     onLoadedMore(status);
+                                    //console.log(status);
+                                    checkStatus();
                                 }
                             }).error(function () {
-                                window.clearInterval(timer);
+                                //window.clearInterval(timer);
                             });
                         };
-                        timer = window.setInterval(checkStatus, delay);
+                        //timer = window.setInterval(checkStatus, delay);
+                        checkStatus();
                     }
                 }
                 }

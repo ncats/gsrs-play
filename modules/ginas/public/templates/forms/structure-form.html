@@ -23,7 +23,7 @@
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
-                            <span><h4>{{::err.messageType}}</h4>
+                            <span style="font-family:monospace"><h4>{{::err.messageType}}</h4>
                                 <span>{{::err.message}}</span>
                                 <div ng-repeat="link in err.links">
                                     <a target = "_blank" href="{{link.href}}">{{::link.text}}</a>

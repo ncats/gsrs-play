@@ -1,4 +1,4 @@
-package ix.ginas.utils.reindex;
+package ix.core.utils.executor;
 
 import ix.core.models.BackupEntity;
 import ix.core.util.CloseableIterator;
@@ -8,5 +8,5 @@ import ix.core.util.CloseableIterator;
  */
 public interface ReindexQuery {
 
-    CloseableIterator<BackupEntity> query(ReIndexListener listener);
+    CloseableIterator<BackupEntity> query(ProcessListener listener);
 }

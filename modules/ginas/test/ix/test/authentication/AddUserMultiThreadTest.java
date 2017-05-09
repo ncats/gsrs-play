@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -73,8 +74,9 @@ public class AddUserMultiThreadTest extends AbstractAddUserTest {
         expected.add(new UserResult("fakeUser", false,null));
         assertEquals(expected, actual);
 
-        assertEquals(1, StreamUtil.forIterator(UserProfileFactory.users()).filter(up -> up.user.username.equals("fakeUser"))
-                .count());
+        try(Stream<UserProfile> users=UserProfileFactory.userStream()){
+        	assertEquals(1, users.filter(up -> up.user.username.equals("fakeUser")).count());
+        }
     }
 
 

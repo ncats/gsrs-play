@@ -308,6 +308,10 @@ public class EntityUtils {
 		public Finder<?,T> getFinder() {
 			return ei.getNativeSpecificFinder();
 		}
+		
+		public Finder<?,T> getFinder(String datasource) {
+			return ei.getNativeSpecificFinder(datasource);
+		}
 
 		public boolean isValidated(){
 			if(!ei.hasValidationField()){
@@ -879,10 +883,17 @@ public class EntityUtils {
 			return this.getValue();
 		}
 
+        public String getDataSource() {
+            return this.ei.datasource;
+        }
+
 		
 	}
 
 	public static class EntityInfo<T> {
+	    
+	    private String datasource=null;
+	    
 		private final Class<T> cls;
 		private final String kind;
 		private final DynamicFacet dyna;
@@ -1111,7 +1122,13 @@ public class EntityUtils {
 				idType = idField.getType();
 
 				if (idField != null) {
-					nativeVerySpecificFinder = CachedSupplier.of(()->new Model.Finder(idType, this.cls));
+					nativeVerySpecificFinder = CachedSupplier.of(()->{
+					    if(this.datasource==null){
+					        return new Model.Finder(idType, this.cls);  
+					    }else{
+					        return new Model.Finder(this.datasource,idType, this.cls);
+					    }
+					});
 				}
 			}
 
@@ -1137,6 +1154,46 @@ public class EntityUtils {
 			isExplicitDeletable=(!cls.isAnnotationPresent(IgnoredModel.class) &&
 					 cls.isAnnotationPresent(SingleParent.class));
 			isExplicitDeletable &= Model.class.isAssignableFrom(cls);
+			
+			
+			if(this.isEntity()){
+    			Map m = new HashMap();
+    			
+    			Map mm=ConfigHelper.getOrDefault("ebean", m);
+    			
+    			mm.forEach((k,v)->{
+    			   List<String> classes= new ArrayList<>();
+    			   if(v instanceof String){
+    			       classes= Arrays.stream(((String) v).split(","))
+    			             .map(s->s.trim())
+    			             .collect(Collectors.toList());
+    			   }else if(v instanceof List){
+    			       classes= ((List<Object>)v).stream()
+    			             .map(o->o.toString().trim())
+    			             .collect(Collectors.toList());
+    			       
+    			                       
+    			   }
+    			    
+    			   Optional<String> p = classes.stream()
+    			           .map(s->s.replace(".*", ""))
+    			           .filter(s->{
+    			               return this.getName().startsWith(s);
+    			          }).findFirst();
+    			   
+    			   if(p.isPresent()){
+    			       if(!k.toString().equals("default")){
+    			           this.datasource=k.toString();
+    			       }
+    			      // System.out.println(this.getName() + ":" + p.get() + "->" + k);
+    			   }else{
+    			       
+    			   }
+
+    			          
+    			   
+    			});
+			}
 
 		}
 
@@ -1191,10 +1248,23 @@ public class EntityUtils {
 		public Model.Finder<Object,?> getFinder() {
 			return (Finder<Object, ?>) this.getInherittedRootEntityInfo().getNativeSpecificFinder();
 		}
+		
+		
+		public Model.Finder<Object,?> getFinder(String datasource) {
+			return (Finder<Object, ?>) this.getInherittedRootEntityInfo().getNativeSpecificFinder(datasource);
+		}
 
 		public Model.Finder<Object,T> getNativeSpecificFinder() {
 			if(this.nativeVerySpecificFinder==null)return null;
 			return (Finder<Object, T>) this.nativeVerySpecificFinder.get();
+		}
+		
+		
+		private Map<String, Model.Finder<Object,T>> findermap = new ConcurrentHashMap<>();
+		
+		public Model.Finder<Object,T> getNativeSpecificFinder(String datasource) {
+			if(this.nativeVerySpecificFinder==null)return null;
+			return findermap.computeIfAbsent(datasource,(k)->new Model.Finder(k, idType, this.cls));
 		}
 
 		public Object formatIdToNative(String id) {
@@ -1409,6 +1479,10 @@ public class EntityUtils {
 			//Object nativeId=formatIdToNative(id);
 			return (T) this.getFinder().byId(id);
 		}
+		
+		public T findById(String id, String datasource) {
+			return (T) this.getFinder(datasource).byId(id);
+		}
 
 		public T fromJson(String oldValue) throws JsonParseException, JsonMappingException, IOException {
 			return EntityMapper.FULL_ENTITY_MAPPER().readValue(oldValue, this.getEntityClass());
@@ -1429,6 +1503,11 @@ public class EntityUtils {
 		public T getInstance() throws Exception{
 			return (T) this.getEntityClass().newInstance();
 		}
+
+        public String getDatasource() {
+           if(this.datasource==null)return "default";
+           return datasource;
+        }
 
 
 
@@ -2364,11 +2443,28 @@ public class EntityUtils {
 		private Object nativeFetch(){
 			return kind.getFinder().byId(this.getIdNative());
 		}
+		
+		/**
+		 * Returns null if not present
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		private Object nativeFetch(String datasource){
+			return kind.getFinder(datasource).byId(this.getIdNative());
+		}
 
 
 		// fetches from finder
 		public Optional<EntityWrapper<?>> fetch() {
+			if(ds!=null)return fetch(ds);
 			Object o=nativeFetch();
+			if(o==null)return Optional.empty();
+			return Optional.of(EntityWrapper.of(o));
+		}
+
+		// fetches from finder
+		public Optional<EntityWrapper<?>> fetch(String datasource) {
+			Object o=nativeFetch(datasource);
 			if(o==null)return Optional.empty();
 			return Optional.of(EntityWrapper.of(o));
 		}
@@ -2447,6 +2543,25 @@ public class EntityUtils {
         
         public EntityFetcher getFetcher(CacheType ct) throws Exception{
             return EntityFetcher.of(this, ct);
+        }
+        
+        public EntityFetcher getFetcher(String datasource) throws Exception{
+        	Key dupe=Key.of(this.getEntityInfo(), this.getIdNative());
+        	dupe.setDefaultDS(datasource);
+        	
+            return EntityFetcher.of(dupe);
+        }
+        
+        public EntityFetcher getFetcher(String datasource,CacheType ct) throws Exception{
+        	Key dupe=Key.of(this.getEntityInfo(), this.getIdNative());
+        	dupe.setDefaultDS(datasource);
+            return EntityFetcher.of(dupe, ct);
+        }
+        
+        
+        private String ds = null;
+        private void setDefaultDS(String datasource){
+        	this.ds=datasource;
         }
 	}
 

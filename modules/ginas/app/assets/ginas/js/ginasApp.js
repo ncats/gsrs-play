@@ -1,7 +1,7 @@
 (function () {
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads', 'diff-match-patch',
+        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads','ginasScheduled', 'diff-match-patch',
         'angularSpinners', 'filterListener', 'validatorListener'
 
     ]).run(function($anchorScroll, $location, $window) {
@@ -561,11 +561,10 @@
                 break;
             }
 
-            //Todo: this only works on the homepage//
-
-            var search = "q="+$scope.q;
-            $window.location = $window.location.origin + baseurl +"substances?"+ search;
-        //    $window.location.search = "q="+$scope.q;
+            $location.search({});
+            $location.path(".." + baseurl +"substances");
+            $location.search("q",$scope.q);
+            window.location = $location.absUrl();
         };
 
         if (typeof $window.loadjson !== "undefined" &&
@@ -734,6 +733,7 @@
 					
 					
 					$scope.exportData={};
+					
 					if(dl.isCached){
 						console.log(dl.cached);
 						$scope.exportData.cached=dl.cached;
@@ -1979,6 +1979,7 @@
 
                 scope.cleanSequence = function () {
                     scope.obj.sequence = subunitParser.cleanSequence(scope.obj.sequence);
+                    scope.obj.$sequence = scope.preformatSeq(subunitParser.cleanSequence(scope.obj.$sequence));
                     scope.parseSubunit();
                 };
 

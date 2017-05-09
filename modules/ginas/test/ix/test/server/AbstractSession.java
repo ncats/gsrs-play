@@ -95,7 +95,6 @@ public abstract class AbstractSession<T> implements Closeable{
     	if(!path.startsWith("/")){
                 sb.append('/');
     	}
-    	
         return sb.append(path)
                  .toString();
                 

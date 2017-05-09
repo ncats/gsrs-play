@@ -19,6 +19,7 @@ import play.mvc.Result;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //@Dynamic(value = "viewUserList", handlerKey = "idg")
 public class Administration extends App {
@@ -44,7 +45,8 @@ public class Administration extends App {
     // Look at this
     public synchronized static List<UserProfile> principalsList() {
         List<Principal> users = PrincipalFactory.all();
-        List<UserProfile> profiles = StreamUtil.forIterator(UserProfileFactory.users()).collect(Collectors.toList());
+        try(Stream<UserProfile> pstream = UserProfileFactory.userStream()){
+        List<UserProfile> profiles = pstream.collect(Collectors.toList());
         
         for (Principal p : users) {
             UserProfile pri = p.getUserProfile();
@@ -57,6 +59,7 @@ public class Administration extends App {
             }
         }
         return profiles;
+        }
     }
 
 

@@ -1,4 +1,4 @@
-package ix.ginas.utils.reindex;
+package ix.core.utils.executor;
 
 import com.avaje.ebean.QueryIterator;
 import ix.core.models.Backup;
@@ -97,7 +97,7 @@ public class ReindexQueryBuilder {
         }
 
         @Override
-        public CloseableIterator<BackupEntity> query(ReIndexListener listener) {
+        public CloseableIterator<BackupEntity> query(ProcessListener listener) {
             return CloseableIterators.wrap(finder.findIterate());
         }
     }
@@ -113,7 +113,7 @@ public class ReindexQueryBuilder {
 
 
         @Override
-        public CloseableIterator<BackupEntity> query(ReIndexListener listener) {
+        public CloseableIterator<BackupEntity> query(ProcessListener listener) {
             Objects.requireNonNull(listener);
 
             return new CloseableIterator<BackupEntity>(){
@@ -125,7 +125,7 @@ public class ReindexQueryBuilder {
                 private Object next;
 
                 {
-                    listener.totalRecordsToIndex(finder.findRowCount());
+                    listener.totalRecordsToProcess(finder.findRowCount());
                     updateNext();
                 }
                 private void updateNext(){
