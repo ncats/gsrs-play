@@ -42,6 +42,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.ResourceReference;
 import ix.core.util.CachedSupplier;
 import ix.core.util.TimeUtil;
+import ix.core.util.Toer;
 import ix.core.util.Unchecked;
 import ix.utils.Global;
 import ix.utils.Tuple;
@@ -106,8 +107,7 @@ public class SchedulerPlugin extends Plugin {
         if (scheduler != null) {
             try {
                 scheduler.shutdown();
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
@@ -165,7 +165,7 @@ public class SchedulerPlugin extends Plugin {
     }
     
     @Entity
-    public static class ScheduledTask{
+    public static class ScheduledTask implements Toer<ScheduledTask>{
         
         
         
