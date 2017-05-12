@@ -4,10 +4,13 @@ import java.util.Set;
 
 import ix.core.initializers.Initializer;
 import ix.core.util.CachedSupplier;
+import ix.utils.Tuple;
 import play.Application;
 
 public class InitializerFactory extends InternalMapEntityResourceFactory<Initializer>{
 	private static InitializerFactory _instance;
+	
+	
 	
 	
 	public InitializerFactory(Application app) {
@@ -18,12 +21,14 @@ public class InitializerFactory extends InternalMapEntityResourceFactory<Initial
 	@Override
 	public void initialize(Application app) {
 		this.getStandardResourceStream(app, "ix.core.initializers")
-			.map(m->(String)m.get("class"))
-			.map(n->CachedSupplier.ofThrowing(()->Class.forName(n).newInstance()))
-			.filter(p->!p.getThrown().isPresent())
-			.map(o->(Initializer)o.get())
-			.forEach(rf->{
-				this.register(Initializer.class, rf, false);
+			.map(m->Tuple.of((String)m.get("class"),m))
+			.map(Tuple.kmap(n->CachedSupplier.ofThrowing(()->Class.forName(n).newInstance())))
+			.filter(p->!p.k().getThrown().isPresent())
+			.map(Tuple.kmap(o->(Initializer)o.get()))
+			.map(t->t.k().initializeWith(t.v()))
+			.forEach(iniz->{
+			    
+				this.register(Initializer.class, (Initializer)iniz, false);
 			});
 	}
 	

@@ -2,7 +2,7 @@
     'use strict';
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin','ginasDownloads','ginasScheduled', 'diff-match-patch',
-        'angularSpinners', 'filterListener', 'validatorListener'
+        'angularSpinners', 'filterListener', 'validatorListener', 'ginasFilter'
 
     ]).run(function($anchorScroll, $location, $window) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
@@ -352,11 +352,13 @@
     });
 
     ginasApp.service('nameFinder', function ($http) {
-        var url = baseurl + "api/v1/substances/search?q=";
+        var url = baseurl + "api/v1/substances/search";
 
         var nameFinder = {
             search: function (query) {
-                var promise = $http.get(url + query + "*", {
+                var promise = $http.get(url,{
+                	params: {"q": "root_names_name:" + query + "*"},
+                }, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -387,15 +389,15 @@
     }]);
 
     ginasApp.service('typeaheadService', function ($http) {
-        var url = baseurl + "api/v1/suggest?q=";
+        var url = baseurl + "api/v1/suggest";
         var suggest = {
             search: function (query) {
-                var promise = $http.get(url + query, {
+                var promise = $http.get(url, {
+                	params:{"q" : query}
+                },{
                     headers: {
                         'Content-Type': 'text/plain'
                     }
-
-
                     ///TODO sort by weight///
                     //TODO search multiple field types//
                 }).then(function (response) {
@@ -410,10 +412,13 @@
     
     ginasApp.service('substanceSearch', function ($http, $q) {
         var options = {};
-        var url = baseurl + "api/v1/substances/search?q=";
+        var url = baseurl + "api/v1/substances/search";
 
         this.load = function (field) {
-            $http.get(url + field.toUpperCase(), {cache: true}, {
+            $http.get(url,{
+            	params:{"q":field.toUpperCase()}
+            	
+            }, {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }

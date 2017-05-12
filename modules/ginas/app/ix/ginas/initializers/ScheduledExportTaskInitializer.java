@@ -2,29 +2,49 @@ package ix.ginas.initializers;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Optional;
 
-import ix.core.adapters.EntityPersistAdapter;
 import ix.core.initializers.Initializer;
 import ix.core.models.Principal;
 import ix.core.plugins.CronExpressionBuilder;
 import ix.core.plugins.SchedulerPlugin.ScheduledTask;
 import ix.core.util.TimeUtil;
 import ix.core.util.Unchecked;
-import ix.core.plugins.TextIndexerPlugin;
 import ix.core.utils.executor.ProcessExecutionService;
-import ix.core.utils.executor.ProcessExecutionService.Before;
-import ix.core.utils.executor.ProcessExecutionService.CommonConsumers;
-import ix.core.utils.executor.ProcessExecutionService.CommonStreamSuppliers;
-import ix.core.utils.executor.ProcessListener;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.exporters.ExportMetaData;
 import ix.ginas.exporters.ExportProcess;
 import ix.ginas.exporters.ExportProcessFactory;
 import ix.ginas.models.v1.Substance;
 import play.Application;
-import play.Play;
 
 public class ScheduledExportTaskInitializer implements Initializer{
+
+
+    private String cron=CronExpressionBuilder.builder()
+            .everyDay()
+            .atHourAndMinute(2, 04)
+            .build();
+    
+    private String username;
+
+    private String name="Full Data Export";
+    
+    private boolean enabled;
+    
+    
+    @Override
+    public Initializer initializeWith(Map<String, ?> m) {
+        username=Optional.ofNullable((String)m.get("username")).orElse("admin");
+        enabled=!((String)(m.get("autorun")+"")).equals("false");
+        cron=Optional.ofNullable((String)m.get("cron"))
+                     .orElse(cron);
+        
+        name=Optional.ofNullable((String)m.get("name"))
+                     .orElse(name);
+        return this;
+    }
 
     @Override
     public void onStart(Application app) {
@@ -34,7 +54,7 @@ public class ScheduledExportTaskInitializer implements Initializer{
             System.out.println("Running export");
             try {
                 
-                Principal user = new Principal("admin", null);
+                Principal user = new Principal(username, null);
                 String collectionID = "export-all-gsrs";
                 String extension = "gsrs";
                 boolean publicOnlyBool = false;
@@ -64,9 +84,10 @@ public class ScheduledExportTaskInitializer implements Initializer{
                 e.printStackTrace();
             }
         })
-        .dailyAtHourAndMinute(3, 10)
-        .description("Full Data Export")
-        .submit();                      //submit to scheduler
+        .atCronTab(cron)
+        ._to(st->(enabled)?st.enable():st.disable())
+        .description(name + " for "+ username)
+        .submit();          //submit to scheduler
         
     }
 
