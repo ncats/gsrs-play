@@ -147,7 +147,7 @@
         var url = baseurl + "api/v1/substances/search";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-           // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
+        	
         	var n = name.replace("\"","");
         	//Needs sanitation
             var searchStr = "root_names_name:\"^" + n + "$\" OR " +

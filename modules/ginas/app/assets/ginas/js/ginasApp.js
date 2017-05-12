@@ -566,7 +566,8 @@
                 break;
             }
 
-            $location.path(".." + baseurl + "substances");
+            $location.search({});
+            $location.path(".." + baseurl +"substances");
             $location.search("q",$scope.q);
             window.location = $location.absUrl();
         };
