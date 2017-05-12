@@ -1831,7 +1831,7 @@
                             element.html(template).show();
                             $compile(element.contents())(scope);
                         });
-                    } else if (scope.acidClass === 'plain') {
+                    } /*else if (scope.acidClass === 'plain') {
 
                         $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template-plain.html").then(function (html) {
                             template = angular.element(html);
@@ -1839,7 +1839,7 @@
                             $compile(element.contents())(scope);
                         });
 
-                    } else{
+                    }*/ else{
                         
                         $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
                             template = angular.element(html);

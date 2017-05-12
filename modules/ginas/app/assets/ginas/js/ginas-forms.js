@@ -492,9 +492,9 @@
             },
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
-                scope.addLink = function (form, path) {
+                scope.addLink = function (form, path, begin) {
                     scope.removeUsed();
-                    scope.addNew(form, path);
+                    scope.addNew(form, path, '', begin);
                 };
 
                 scope.removeUsed = function(){
