@@ -148,8 +148,11 @@
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
            // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
-            var searchStr = "root_names_name:\"^" + name + "$\" OR " +
-                            "root_approvalID:\"^" + name + "$\"";
+        	var n = name.replace("\"","");
+        	//Needs sanitation
+            var searchStr = "root_names_name:\"^" + n + "$\" OR " +
+                            "root_approvalID:\"^" + n + "$\" OR " +
+                            "root_codes_BDNUM:\"^" + n + "$\"";
 
            return $http.get(url,
 				{
