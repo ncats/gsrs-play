@@ -144,14 +144,18 @@
     });
 
     ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances/search?q=";
+        var url = baseurl + "api/v1/substances/search";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
            // return $http.get(url, {params: {"filter": "names.name='" + name + "'"}, cache: true}, {
             var searchStr = "root_names_name:\"^" + name + "$\" OR " +
                             "root_approvalID:\"^" + name + "$\"";
 
-           return $http.get(url + searchStr, {cache: true}, {
+           return $http.get(url,
+				{
+				  params:{"q":searchStr}      	   
+				},
+        		   {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
