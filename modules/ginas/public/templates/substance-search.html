@@ -6,25 +6,23 @@
         </div>
     </a>
     <spinner name="subrefSpinner"><loading></loading><br/></spinner>
-<!--
-    <div class="input-group" ng-show="!referenceobj[field]"  id="{{field}}">
--->
-    <div ng-show="!referenceobj[field]"  id="{{field}}">
+    <div ng-controller="TypeAheadController" ng-init="init('query')" ng-show="!referenceobj[field]"  id="{{field}}">
         <input type="text"
                class="form-control"
-               ng-model= q
+               ng-model="query"
                id="struc-search"
                placeholder="Search ..."
                name="search"
                aria-labelledby="{{field}}-label"
                typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
-               uib-typeahead="r.key as r.key for r in getSuggestions($viewValue)"
+               uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
+               typeahead-on-select="onSelect($item, $model, $label)"
                typeahead-loading="loadingSuggest"
                typeahead-focus-first ="false"
                typeahead-on-select = "selectTypeahead($item, $event);"
                autocomplete="off">
           <span class="input-group-btn">
-        <button class ="btn btn-default" ng-click ="fetch()" uib-tooltip="search for substance" aria-label="Search"><span class="sr-only">Search gsrs</span>
+        <button class ="btn btn-default" ng-click ="$parent.q=query;fetch()" uib-tooltip="search for substance" aria-label="Search"><span class="sr-only">Search gsrs</span>
             <i class="fa fa-search"></i></button>
               </span>
     </div>
