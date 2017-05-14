@@ -249,6 +249,9 @@ public class GinasApp extends App {
     public static Result error(int code, String mesg) {
         return status(code, ix.ginas.views.html.error.render(code, mesg));
     }
+    public static Result warn(int code, String mesg) {
+        return status(code, ix.ginas.views.html.message.render(code, mesg));
+    }
 
     public static Result lastUnicorn(String name) {
         return notFound(ix.ginas.views.html.error.render(404, "Unknown resource: " + request().uri()));

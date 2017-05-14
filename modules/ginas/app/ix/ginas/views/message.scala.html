@@ -1,0 +1,14 @@
+@(code: Int, message: String)
+
+
+@ginas("g-srs", "null") {
+    @menu()
+}{
+@if(flash.containsKey("warning")) {
+            <div class="alert-message warning">
+                <strong>@flash.get("warning")</strong>
+            </div>
+}
+	<h1 class ="danger">@code</h1>
+    <div class = "alert alert-message warning"><h1>@message</h1></div>
+}

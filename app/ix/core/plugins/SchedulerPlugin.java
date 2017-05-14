@@ -373,6 +373,16 @@ public class SchedulerPlugin extends Plugin {
             return this.atCronTab(cex);
         }
     	
+    	public ScheduledTask wrap(Consumer<Runnable> wrapper){
+    	    Consumer<TaskListener> c=r;
+    	    r=(l)->{
+    	        wrapper.accept(()->{
+    	           c.accept(l); 
+    	        });
+    	    };
+            return this;
+        }
+    	
     	/**
     	 * See here for examples:
     	 * 

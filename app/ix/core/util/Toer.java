@@ -2,7 +2,10 @@ package ix.core.util;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import ix.core.util.Conditional.InstantiatedConditional;
 
 /**
  * This is a very simple interface that simply
@@ -70,13 +73,36 @@ public interface Toer<T> {
     }
     
     /**
-     * Creates a stream of this object.
+     * Performs an operation using this object
      * @return
      */
     public default T _do(Consumer<T> c){
         T t= (T)this;
         c.accept(t);
         return t;
+    }
+    
+    /**
+     * Performs an operation using this object,
+     * only if a predicate is matched
+     * @return
+     */
+    public default T _doIf(Predicate<T> pred, Consumer<T> c){
+        T t= (T)this;
+        if(pred.test(t)){
+            c.accept(t);
+        }
+        return t;
+    }
+    
+    /**
+     * Performs a conditional operation
+     * on this object.
+     * @return
+     */
+    public default InstantiatedConditional<T> _if(Predicate<T> pred){
+        T t= (T)this;
+        return Conditional.of(pred).with(t);
     }
     
 }

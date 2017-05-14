@@ -1,16 +1,20 @@
 package ix.core.models;
 
-import javax.persistence.*;
-import be.objectify.deadbolt.core.models.Subject;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import ix.core.controllers.AdminFactory;
-import ix.core.controllers.PrincipalFactory;
-import ix.core.controllers.UserProfileFactory;
-import play.data.validation.Constraints.*;
-
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ix.core.controllers.AdminFactory;
+import ix.core.controllers.UserProfileFactory;
+import play.data.validation.Constraints.Email;
 
 @Entity
 @Table(name="ix_core_principal")
@@ -72,4 +76,5 @@ public class Principal extends IxModel {
     public void delete(){
     	super.delete();
     }
+    
 }

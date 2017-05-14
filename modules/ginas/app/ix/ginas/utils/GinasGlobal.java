@@ -1,37 +1,26 @@
 package ix.ginas.utils;
 
 import java.io.File;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
-import org.quartz.CronScheduleBuilder;
-import org.quartz.SimpleScheduleBuilder;
-
-import ix.core.Experimental;
 import ix.core.auth.UserKeyAuthenticator;
 import ix.core.auth.UserPasswordAuthenticator;
 import ix.core.auth.UserTokenAuthenticator;
 import ix.core.factories.AuthenticatorFactory;
 import ix.core.models.Payload;
 import ix.core.models.UserProfile;
-import ix.core.models.Principal;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadProcessor;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.PayloadPlugin.PayloadPersistType;
-import ix.core.plugins.SchedulerPlugin;
-import ix.core.plugins.SchedulerPlugin.ScheduledTask;
-import ix.core.plugins.SchedulerPlugin.ScheduledTask.CRON_EXAMPLE;
 import ix.core.stats.Statistics;
-import ix.ginas.models.v1.Substance;
 import ix.ginas.controllers.GinasApp;
+import ix.ginas.controllers.GinasAppAdmin;
 import ix.ginas.controllers.tests.Debug;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.fda.TrustHeaderAuthenticator;
@@ -41,17 +30,10 @@ import ix.utils.Global;
 import play.Application;
 import play.Logger;
 import play.Play;
-import play.libs.F.Function0;
 import play.libs.F.Promise;
 import play.mvc.Action;
 import play.mvc.Http;
 import play.mvc.Result;
-import ix.core.utils.executor.ProcessExecutionService;
-import ix.ginas.exporters.ExportMetaData;
-import ix.ginas.exporters.ExportProcess;
-import ix.ginas.exporters.ExportProcessFactory;
-import ix.core.util.*;
-import ix.ginas.controllers.GinasApp;
 
 
 public class GinasGlobal extends Global {
@@ -67,8 +49,9 @@ public class GinasGlobal extends Global {
 	
 	private static Consumer<Http.Request> requestListener =  (r)->{};
 	
-	
 	private static boolean isRunning=false;
+	
+	private static Predicate<Http.Request> intercept=(h)->false;
 
 	
 	private void logHeaders(Http.Request req){
@@ -90,6 +73,11 @@ public class GinasGlobal extends Global {
 		@Override
 		public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
 			requestListener.accept(ctx.request());
+			
+			if(intercept.test(ctx.request())){
+			    return wrapResult(GinasAppAdmin.message(ctx));
+			}
+			
 			
 			Http.Request req = ctx.request();
 			if(showHeaders){
@@ -126,10 +114,9 @@ public class GinasGlobal extends Global {
 				}else{
 					return wrapResult(GinasApp.error(401, "You are not authorized to see this resource. Please contact an administrator to be granted access."));
 				}
-
 			}
 
-			String username = p ==null ? "GUEST" : p.user.username;
+			String username = (p ==null) ? "GUEST" : p.user.username;
 
 			AccessLogger.info("{} {} {} {} \"{}\"", username, req.remoteAddress(),
 					real != null ? real : "", req.method(), req.uri());
@@ -139,19 +126,12 @@ public class GinasGlobal extends Global {
 
 	@Override
 	public Action<?> onRequest(Http.Request request,java.lang.reflect.Method actionMethod) {
-
-		return new LoginWrapper(super.onRequest(request, actionMethod));
+	    return new LoginWrapper(super.onRequest(request, actionMethod));
 	}
 
 
 	public static Promise<Result> wrapResult(final Result r) {
-		return Promise.promise(
-				new Function0<Result>() {
-					public Result apply() {
-						return r;
-					}
-				}
-				);
+		return Promise.promise(()->r);
 	}
 
 	private void loadCV(){
@@ -251,6 +231,38 @@ public class GinasGlobal extends Global {
 		}
 	}
 	
+	
+	/**
+	 * Sets a {@link Predicate} for when requests should be intercepted.
+	 * This is usually done temporarily.
+	 * 
+	 * @param pred
+	 */
+	public static void setInterceptIf(Predicate<Http.Request> pred){
+	    intercept=pred;
+	}
+	
+	/**
+     * Sets a {@link Predicate} for use while running the given {@link Runnable},
+     * and then reset to the original intercept procedure.
+     * This is typically used for temporarily shutting down the server
+     * for a maintenance task. 
+     * 
+     * Note: Behavior is not well-defined if called twice and returned
+     * out-of-order. 
+     * 
+     * @param pred
+     */
+    public static void runWithIntercept(Runnable r, Predicate<Http.Request> pred){
+        Predicate<Http.Request> old =intercept;
+        setInterceptIf(intercept.or(pred));
+        
+        try{
+            r.run();
+        }finally{
+            setInterceptIf(old);
+        }
+    }
 	
 	
 	/**
