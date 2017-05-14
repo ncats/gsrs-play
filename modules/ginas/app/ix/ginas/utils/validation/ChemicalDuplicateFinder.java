@@ -22,7 +22,11 @@ public class ChemicalDuplicateFinder implements DuplicateFinder<Substance> {
          // System.out.println("Dupe chack");
             String hash = cs.structure.getLychiv3Hash();
             
-            dupeList = SubstanceFactory.finder.get().where().eq("structure.properties.term", hash).setMaxRows(max).findList();
+            dupeList = SubstanceFactory.finder.get()
+                                              .where()
+                                              .eq("structure.properties.term", hash)
+                                              .setMaxRows(max)
+                                              .findList();
             
             //
             if(dupeList.size()<max){
