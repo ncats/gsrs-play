@@ -56,6 +56,7 @@ import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
+import ix.ginas.utils.validation.ChemicalDuplicateFinder;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.App.SearcherTask;
@@ -386,15 +387,7 @@ public class SubstanceFactory extends EntityFactory {
 
 	// silly test
 	public static List<Substance> getCollsionChemicalSubstances(int top, int skip, ChemicalSubstance cs) {
-		// System.out.println("Dupe chack");
-		String hash = cs.structure.getLychiv3Hash();
-		List<Substance> dupeList = new ArrayList<Substance>();
-		
-		
-		dupeList = finder.get().where().eq("moieties.structure.properties.term", hash).setFirstRow(skip).setMaxRows(top).findList();
-		
-		
-		return dupeList;
+		return ChemicalDuplicateFinder.instance().findPossibleDuplicatesFor(cs);
 	}
 	
 

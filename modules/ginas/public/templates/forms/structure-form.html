@@ -19,7 +19,7 @@
 
             <div class = "row" ng-repeat="err in structureErrorsArray track by $index">
                 <div class="col-md-12">
-                    <div class="alert alert-{{err.class}} alert-dismissible" role="alert">
+                    <div class="alert {{err.class}} alert-dismissible" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
