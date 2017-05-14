@@ -34,7 +34,7 @@
                     <li ng-class="getClass('admin')"><a ng-href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">
                         Admin</a></li>
                 }
-                <li >
+                <li ng-controller="TypeAheadController">
                     <form class="form-inline main-search" role="search">
                         <div class="input-group" id = "search-bar">
                             <input type="text"
@@ -45,7 +45,8 @@
                             placeholder="Search ..."
                             ng-model = "query"
                             typeahead-popup-template-url="app/assets/templates/elements/suggest-popup.html"
-                            uib-typeahead="r.key as r.key for r in getSuggestions($viewValue)"
+                            uib-typeahead="r.d as r.d for r in getSuggestions($viewValue)"
+                            typeahead-on-select="onSelect($item, $model, $label)"
                             typeahead-loading="loadingSuggest"
                             typeahead-focus-first ="false"
                             autocomplete="off">
@@ -73,10 +74,6 @@
                                         </li>
                                     </ul>
                                 </div>
-                                @*<button class="btn btn-default" alt="Search" id="search" uib-tooltip="Search G-SRS" tooltip-placement="bottom" type="search" aria-label="Search" value="submit">
-                                <span class="sr-only">Search ginas</span>
-                                <span class="fa fa-search"></span>
-                                </button>*@
                             </span>
                         </div>
                         <div ng-cloak ="" ng-show="loadingSuggest">
