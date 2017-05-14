@@ -648,22 +648,33 @@
                             citation: selected.source,
                             documentDate: moment()._d
                         };
+                    	
                         if (scope.obj) {
-                            if (_.isUndefined(scope.obj.references)) {
-                                _.set(scope.obj, 'references', []);
-                            }
-                            scope.obj.references.push(reference.uuid);
+
+                        	if(selected.source){
+	                            if (_.isUndefined(scope.obj.references)) {
+	                                _.set(scope.obj, 'references', []);
+	                            }
+	                            scope.obj.references.push(reference.uuid);
+                        	}
                         }
-                        scope.parent.references.push(reference);
+                        if(selected.source){
+                        	scope.parent.references.push(reference);
+                        }
                         if (selected.value && selected.value.molfile) {
                             molChanger.setMol(selected.value.molfile);
+                        }else if (selected.structure && selected.structure.molfile) {
+                            molChanger.setMol(selected.structure.molfile);
                         }
 
                         if (!_.isUndefined(scope.parent.structure)) {
-                            if (_.isUndefined(scope.parent.structure.references)) {
-                                _.set(scope.parent.structure, 'references', []);
-                            }
-                            scope.parent.structure.references.push(reference.uuid);
+
+                        	if(selected.source){
+	                            if (_.isUndefined(scope.parent.structure.references)) {
+	                                _.set(scope.parent.structure, 'references', []);
+	                            }
+	                            scope.parent.structure.references.push(reference.uuid);
+                        	}
                         }
                     }
                     if (scope.format == "subref") {
