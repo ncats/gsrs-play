@@ -1,39 +1,26 @@
 package ix.core.utils.executor;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Optional;
+import java.util.List;
 import java.util.OptionalLong;
-import java.util.Spliterator;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
-import java.util.stream.Collector;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import com.avaje.ebean.Expression;
 import com.avaje.ebean.ExpressionList;
+import com.avaje.ebean.PagingList;
 import com.avaje.ebean.Query;
-import com.avaje.ebean.QueryIterator;
 
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.models.BackupEntity;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
@@ -41,16 +28,11 @@ import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.EntityFetcher;
 import ix.core.util.BlockingSubmitExecutor;
-import ix.core.util.CloseableIterator;
 import ix.core.util.EntityUtils;
+import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.IOUtil;
 import ix.core.util.StreamUtil;
-import ix.core.util.EntityUtils.EntityWrapper;
 import ix.core.util.StreamUtil.ThrowableFunction;
-import ix.core.utils.executor.ProcessExecutionService.EntityStreamSupplier;
-import ix.ginas.models.v1.Substance;
-import ix.test.modelsb.Wat;
-import ix.core.controllers.search.SearchFactory;
 import play.Application;
 import play.Logger;
 import play.Play;
@@ -86,13 +68,33 @@ public class ProcessExecutionService {
     	public static <T> EntityStreamSupplier<T> ofIterator(Supplier<Iterator<T>> source){
     		return ()->{
     			Iterator<T> ci=source.get();
-    			
-    			
     			Stream<T> stream = StreamUtil.forIterator(ci);
-        		
         		return stream;
     		};
     	}
+    	
+    	//Trying to use paging list for testing
+    	//purposes
+    	public static <T> EntityStreamSupplier<T> ofQuery(Supplier<Query<T>> source){
+    	    
+            return ()->{
+                AtomicInteger ai = new AtomicInteger(0);
+                
+                
+                Query<T> q=source.get();
+                PagingList<T> plist=q.findPagingList(1000);
+                int pcount = plist.getTotalPageCount();
+                
+                Stream<List<T>> stream = StreamUtil.forNullableGenerator(()->{
+                    if(ai.get()>=pcount){
+                        return null;
+                    }
+                    return plist.getPage(ai.getAndIncrement())
+                                .getList();
+                });
+                return stream.flatMap(l->l.stream());
+            };
+        }
     	
     	public default <U> EntityStreamSupplier<U> map(ThrowableFunction<T,U> map){
     		EntityStreamSupplier<T> me = this;
@@ -421,7 +423,7 @@ public class ProcessExecutionService {
     	 */
     	public static <T> EntityStreamSupplier<T> allFor(Class<T> cls){    		
     		Model.Finder<?,?> mfinder = EntityUtils.getEntityInfoFor(cls).getInherittedRootEntityInfo().getFinder();
-    		return EntityStreamSupplier.ofIterator(()->mfinder.findIterate())
+    		return EntityStreamSupplier.ofQuery(()->mfinder)
     								   .total(()->(long)mfinder.findRowCount())
     								   .map(o->(T)o);
     	}
@@ -449,7 +451,7 @@ public class ProcessExecutionService {
         public static <T> EntityStreamSupplier<T> allFromQuery(Class<T> cls, Function<Finder<?,T>,Query<T>> qp){         
             Model.Finder<?,T> mfinder = (Finder<?, T>) EntityUtils.getEntityInfoFor(cls).getInherittedRootEntityInfo().getFinder();
             
-            return EntityStreamSupplier.ofIterator(()->qp.apply(mfinder).findIterate())
+            return EntityStreamSupplier.ofQuery(()->qp.apply(mfinder))
                                        .total(()->(long)mfinder.findRowCount())
                                        .map(o->(T)o);
         }
@@ -488,13 +490,13 @@ public class ProcessExecutionService {
     	 */
     	public static <T> EntityStreamSupplier<T> allFor(Class<T> cls, String datasource){    		
     		Model.Finder<?,?> mfinder = EntityUtils.getEntityInfoFor(cls).getInherittedRootEntityInfo().getFinder(datasource);
-    		return EntityStreamSupplier.ofIterator(()->mfinder.findIterate())
+    		return EntityStreamSupplier.ofQuery(()->mfinder)
     								   .total(()->(long)mfinder.findRowCount())
     								   .map(o->(T)o);
     	}
     	
     	public static <T> EntityStreamSupplier<T> allBackups(){
-    		return EntityStreamSupplier.ofIterator(()->finder.findIterate())
+    		return EntityStreamSupplier.ofQuery(()->finder)
 			        .total((long)finder.findRowCount())
 			        .map(o->(T)o.getInstantiated());
     	}
