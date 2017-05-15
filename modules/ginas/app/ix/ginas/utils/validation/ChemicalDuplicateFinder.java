@@ -1,6 +1,7 @@
 package ix.ginas.utils.validation;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -16,17 +17,17 @@ public class ChemicalDuplicateFinder implements DuplicateFinder<Substance> {
     public List<Substance> findPossibleDuplicatesFor(Substance sub) {
         int max=10;
 
-        List<Substance> dupeList = new ArrayList<Substance>();
+        LinkedHashSet<Substance> dupeList = new LinkedHashSet<Substance>();
         if(sub instanceof ChemicalSubstance){
             ChemicalSubstance cs = (ChemicalSubstance)sub;
          // System.out.println("Dupe chack");
             String hash = cs.structure.getLychiv3Hash();
             
-            dupeList = SubstanceFactory.finder.get()
+            dupeList = new LinkedHashSet<>(SubstanceFactory.finder.get()
                                               .where()
                                               .eq("structure.properties.term", hash)
                                               .setMaxRows(max)
-                                              .findList();
+                                              .findList());
             
             //
             if(dupeList.size()<max){
@@ -36,10 +37,11 @@ public class ChemicalDuplicateFinder implements DuplicateFinder<Substance> {
                                             .eq("moieties.structure.properties.term", hash2)
                                             .setMaxRows(max-dupeList.size())
                                             .findList());
+                
             }
         }
         
-        return dupeList;
+        return new ArrayList<Substance>(dupeList);
     }
     
     public static ChemicalDuplicateFinder instance(){
