@@ -188,6 +188,9 @@ public class StructureProcessor {
         if(!query){
             struc.molfile = mol.toFormat("mol");
         }
+
+        Chem.fixMetals(mol);
+        
         
         MolAtom[] atoms = mol.getAtomArray();
         int stereo = 0, def = 0, charge = 0;
@@ -196,8 +199,13 @@ public class StructureProcessor {
         mol.getGrinv(gi);
         
         for (int i = 0; i < atoms.length; ++i) {
+        
             int chiral = mol.getChirality(i);
             MolAtom atom = mol.getAtom(i);
+            
+            
+            
+            
             
             if (chiral == MolAtom.CHIRALITY_R
                 || chiral == MolAtom.CHIRALITY_S) {
@@ -340,7 +348,7 @@ public class StructureProcessor {
             for (int i = 0; i < frags.length; ++i) {
                 Structure moiety = new Structure ();
                 //System.err.println("+++++++++++++ component "+i+"!");
-                instrument (moiety, null, frags[i], false);
+                instrument (moiety, null, Chem.fixMetals(frags[i]), false);
                 for(Value v:moiety.properties){
                     if(v instanceof Keyword){
                         if(((Keyword)v).label.equals(Structure.H_LyChI_L4)){

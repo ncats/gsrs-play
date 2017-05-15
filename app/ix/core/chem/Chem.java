@@ -38,6 +38,16 @@ public class Chem {
         }
     }
     
+    
+    public static Molecule fixMetals(Molecule m){
+    	for(MolAtom atom:m.getAtomArray()){
+    		if(lychi.ElementData.isMetal(atom.getAtno())){
+            	atom.setImplicitHcount(0);	
+            }
+    	}
+    	return m;
+    }
+    
     /**
      * Generate chemical formula by treating disconnected components
      * separately.
@@ -46,6 +56,8 @@ public class Chem {
         Molecule[] frags = g.cloneMolecule().convertToFrags();
         final Map<String, Integer> formula = new HashMap<String, Integer>();
         for (Molecule m : frags) {
+        	fixMetals(m);
+        	
             String f = m.getFormula();
             Integer c = formula.get(f);
             formula.put(f, c==null ? 1 : (c+1));

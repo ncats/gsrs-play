@@ -854,6 +854,9 @@ public class App extends Authentication {
 		 */
 
 
+        Chem.fixMetals(Jchemical.makeJchemical(chem).getMol());
+		
+
 		ChemicalRenderer render = new NchemicalRenderer ();
 
 		
