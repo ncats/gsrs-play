@@ -110,48 +110,48 @@
             substance.substanceClass = substanceClass;
             switch (substanceClass) {
                 case "chemical":
-                    if(!substance.structure){
-                        substance.structure = {};
-                        _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
-                        substance.moieties = [];
-                    }
+                	if(!substance.structure){
+                		substance.structure = {};
+                		_.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED", display:"UNSPECIFIED"});
+                		substance.moieties = [];
+                	}
                     break;
                 case "protein":
-                    if(!substance.protein){
-                        substance.protein = {};
-                        substance.protein.subunits = [];
-                        substance.protein.glycosylation = {
-                            'CGlycosylationSites': [],
-                            'NGlycosylationSites': [],
-                            'OGlycosylationSites': []
-                        };
-                    }
+                	if(!substance.protein){
+	                    substance.protein = {};
+	                    substance.protein.subunits = [];
+	                    substance.protein.glycosylation = {
+	                        'CGlycosylationSites': [],
+	                        'NGlycosylationSites': [],
+	                        'OGlycosylationSites': []
+	                    };
+                	}
                     break;
                 case "structurallyDiverse":
-                    if(!substance.structurallyDiverse){
-                        substance.structurallyDiverse = {};
-                    }
+                	if(!substance.structurallyDiverse){
+                		substance.structurallyDiverse = {};
+                	}
                     break;
                 case "nucleicAcid":
-                    if(!substance.nucleicAcid){
-                        substance.nucleicAcid = {};
-                        substance.nucleicAcid.subunits = [];
-                    }
+                	if(!substance.nucleicAcid){
+                		substance.nucleicAcid = {};
+                		substance.nucleicAcid.subunits = [];
+                	}
                     break;
                 case "mixture":
-                    if(!substance.mixture){
-                        substance.mixture = {};
-                    }
+                	if(!substance.mixture){
+                		substance.mixture = {};
+                	}
                     break;
                 case "polymer":
-                    if(!substance.polymer){
-                        substance.polymer = {};
-                    }
+                	if(!substance.polymer){
+                		substance.polymer = {};
+                	}
                     break;
                 case "specifiedSubstanceG1":
-                    if(!substance.specifiedSubstance){
-                        substance.specifiedSubstance = {};
-                    }
+                	if(!substance.specifiedSubstance){
+                		substance.specifiedSubstance = {};
+                	}
                     break;
                 default:
                     break;
@@ -162,7 +162,7 @@
             }
             
             if(!substance.access){
-                substance.access = [{value: 'protected', display: 'PROTECTED'}];    
+            	substance.access = [{value: 'protected', display: 'PROTECTED'}];	
             }
             
             return substance;
@@ -357,7 +357,7 @@
         var nameFinder = {
             search: function (query) {
                 var promise = $http.get(url,{
-                    params: {"q": "root_names_name:" + query + "*"},
+                	params: {"q": "root_names_name:" + query + "*"},
                 }, {
                     headers: {
                         'Content-Type': 'text/plain'
@@ -393,7 +393,7 @@
         var suggest = {
             search: function (query, typePriority, ukeys) {
                 var promise = $http.get(url, {
-                    params:{"q" : query}
+                	params:{"q" : query}
                 },{
                     headers: {
                         'Content-Type': 'text/plain'
@@ -401,48 +401,44 @@
                     ///TODO sort by weight///
                     //TODO search multiple field types//
                 }).then(function (response) {
-                    if(!ukeys)ukeys=[];
-                    if(!typePriority)typePriority=function(t){return 0;};
-                    ukeys.length=0;
-                    
-                    var pairs=_.chain(response.data)
-                               .map(function(v,k){
-                                       return {"key":k, "values" : v, "i":typePriority(k)};
-                                   })
-                                   .sortBy("i")
-                                   .filter(function(kv){
-                                       return kv.i>=0;
-                                   })
-                                   .flatMap(function(kvp){
-                                       ukeys.push(kvp.key);
-                                       return _.map(kvp.values, function(v){
-                                           //need to get out the most important part
-                                           //always get the part in first <b> and 
-                                           //extend
-                                           var lim=20;
-                                           var start=0;
-                                           var bef="";
-                                           
-                                           var sindex=v.highlight.indexOf("<b>");
-                                           var eindex=v.highlight.indexOf("</b>")-3;
-                                           if(eindex>lim){
-                                               start=sindex;
-                                               var d=(sindex+lim)-eindex;
-                                               if(d>0){
-                                            	   start=start-d;
-                                               }
-                                           }
-                                           if(start>0){
-                                               bef="...";
-                                           }else{
-                                               start=0;
-                                           }
-                                           
-                                           return {"k":kvp.key,"v":v.key,"d":bef + v.key.substring(start)};
-                                       });
-                                   })
-                                   .value();
-                       
+                	if(!ukeys)ukeys=[];
+                	if(!typePriority)typePriority=function(t){return 0;};
+                	ukeys.length=0;
+                	
+                	var pairs=_.chain(response.data)
+                	           .map(function(v,k){
+                	        	   	return {"key":k, "values" : v, "i":typePriority(k)};
+                	           	})
+                	           	.sortBy("i")
+                	           	.filter(function(kv){
+                	           		return kv.i>=0;
+                	           	})
+                	           	.flatMap(function(kvp){
+                	           		ukeys.push(kvp.key);
+                	           		return _.map(kvp.values, function(v){
+                	           			//need to get out the most important part
+                	           			//always get the part in first <b> and 
+                	           			//extend
+                	           			var lim=20;
+                	           			var start=0;
+                	           			var bef="";
+                	           			
+                	           			var sindex=v.highlight.indexOf("<b>");
+                	           			var eindex=v.highlight.indexOf("</b>")-3;
+                	           			if(eindex>lim){
+                	           				start=sindex-(eindex-lim);
+                	           			}
+                	           			if(start>0){
+                	           				bef="...";
+                	           			}else{
+                	           				start=0;
+                	           			}
+                	           			
+                	           			return {"k":kvp.key,"v":v.key,"d":bef + v.key.substring(start)};
+                	           		});
+                	           	})
+                	           	.value();
+	           		
                     return pairs;
                 });
                 return promise;
@@ -457,8 +453,8 @@
 
         this.load = function (field) {
             $http.get(url,{
-                params:{"q":field.toUpperCase()}
-                
+            	params:{"q":field.toUpperCase()}
+            	
             }, {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
@@ -565,33 +561,33 @@
     ginasApp.controller("TypeAheadController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
             localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
             spinnerService, typeaheadService) {
-        $scope.types=[];
-        
-        $scope.showTypes=["Approval_ID","Display_Name","CAS","Name"];
-        
-        $scope.qmod="query";
-        
-        $scope.init = function(qmod){
-            $scope.qmod=qmod;
-        }
-        
-        $scope.nameFor = function(suggest){
-            if(suggest==="Approval_ID")return "UNII";
-            if(suggest==="Display_Name")return "Preferred Term";
-            return suggest;
-        };
-        
-        
+    	$scope.types=[];
+    	
+    	$scope.showTypes=["Approval_ID","Display_Name","CAS","Name"];
+    	
+    	$scope.qmod="query";
+    	
+    	$scope.init = function(qmod){
+    		$scope.qmod=qmod;
+    	}
+    	
+    	$scope.nameFor = function(suggest){
+    		if(suggest==="Approval_ID")return "UNII";
+    		if(suggest==="Display_Name")return "Preferred Term";
+    		return suggest;
+    	};
+    	
+    	
         $scope.onSelect = function($item, $model, $label ){
-            $scope[$scope.qmod]=$item.v;
+        	$scope[$scope.qmod]=$item.v;
         };
         
         $scope.getSuggestions = function(query){
            var ret = typeaheadService.search(query,function(t){
-               if(t==="Approval_ID" && query.length<3){
-                   return -1;
-               }
-               return $scope.showTypes.indexOf(t);
+        	   if(t==="Approval_ID" && query.length<3){
+        		   return -1;
+        	   }
+        	   return $scope.showTypes.indexOf(t);
            },$scope.types);
             
            return ret;
@@ -601,6 +597,7 @@
 
     ginasApp.controller("GinasController", function ($rootScope, $scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll, $timeout, polymerUtils,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger, toggler, resolver,
+                                                     substanceFactory,
                                                      spinnerService, typeaheadService) {
         $scope.substance = $window.loadjson;
         $scope.updateNav = false;
@@ -685,12 +682,12 @@
         $scope.type = $location.search().type;
         
         if(!$scope.type){
-            $scope.type="Substructure";
+        	$scope.type="Substructure";
         }
         
         $scope.cutoff = $location.search().cutoff-0;
         if(!Number.isFinite($scope.cutoff)){
-            $scope.cutoff=0.8;
+        	$scope.cutoff=0.8;
         }
         
         
@@ -706,9 +703,11 @@
         };
 
         $scope.resolveName = function(name, div){
+        	
+        	$scope.structureSearchResolve=[];
             resolver.resolve(name, 'structureSearchSpinner').then(function (response) {
                 if (response.data.length > 0) {
-                    $scope.structureSearchResolve = response.data;
+                	$scope.structureSearchResolve=_.union($scope.structureSearchResolve, response.data);
                 }
                 $scope.name = null;
                 var template = angular.element('<substance-viewer data=structureSearchResolve parent = substance></substance-viewer>');
@@ -718,6 +717,19 @@
                     $anchorScroll(div);
                 }, 0, false);
             });
+            
+            substanceFactory.getSubstances(name).then(function (response) {
+                var duplicate = [];
+                if (response.data.count > 0) {
+                    _.forEach(response.data.content, function (sub) {
+                        _.set(sub, 'refType', 'duplicate');
+                        $scope.structureSearchResolve.push(sub);
+                    });
+                }
+                return duplicate;
+            });
+            
+            
         };
 
         $scope.toggleGrid = function () {
@@ -741,12 +753,12 @@
             $window.location.pathname = base + newLocation;
         };
 
-        //We can put this here, but it makes it difficult to expand in the future.
-        //The server knows how things can be sorted, we need to either ajax
-        //(which can cause latency problems), or we can have it pre-stored 
-        //server-side, and injected.
+		//We can put this here, but it makes it difficult to expand in the future.
+		//The server knows how things can be sorted, we need to either ajax
+		//(which can cause latency problems), or we can have it pre-stored 
+		//server-side, and injected.
         $scope.sortValues = [
-             {  
+         	{  
                "value":  "default",
                "display": "Relevance"
             },
@@ -774,22 +786,22 @@
                 "value": "$root_lastEdited",
                 "display": "Newest Change"
             }
-                ];
+            	];
             
         var suppliedOrder = _.find($scope.sortValues, {
-            value : $location.search()["order"]
+        	value : $location.search()["order"]
         });
         $scope.selectedSort = suppliedOrder || {value: "Sort By"};
         
         $scope.showDeprecated = $location.search()["showDeprecated"] || "false";
         
         $scope.showDeprecatedChange = function(model) {
-            $location.search("showDeprecated",$scope.showDeprecated);
+    		$location.search("showDeprecated",$scope.showDeprecated);
             window.location = $location.absUrl();
         };
 
         $scope.sortSubstances = function(model) {
-            
+        	
             $location.search("order",$scope.selectedSort.value);
             window.location = $location.absUrl();
         };
@@ -799,76 +811,76 @@
         };
 
        // $scope.showprivates = false;
-    //Prepare an export file for download
+	//Prepare an export file for download
         $scope.downloadFile = function (url) {
             if($scope.showprivates){
                 url = url + '&publicOnly=' + (!$scope.showprivates ? 1: 0) ;
             }
-        $http.get(url)
-          .then(function(response) {
-                  var dl = response.data;
-            if(dl){
-                if(dl.isReady){
-                    
-                    var d = new Date();
-                    var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
-                    var proposedfname="export-" + datestr + "." +  dl.url.split("format=")[1].split("&")[0];
-                    
-                    
-                    $scope.exportData={};
-                    
-                    if(dl.isCached){
-                        console.log(dl.cached);
-                        $scope.exportData.cached=dl.cached;
-                        $scope.baseurl=baseurl;
-                    }
-                    
-                    $scope.fileNamePrompt(proposedfname, function(fname){
-                        
-                        
-                        var nurl=dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename="+ encodeURIComponent(fname);
-                        
-                        console.log(nurl);
-                        //alert(nurl);
-                        $http.get(nurl).then(function(rep){
-                            var meta=rep.data;
-                            window.location.href=baseurl + "myDownloads/" + meta.id;
-                        }, function(rep){
-                            $scope.exportUnavailableWarning();
-                        });
-                    })
-                    
-                }else if(dl.isPresent){ //busy
-                    $scope.exportUnavailableWarning();
-                }else{ //unknown result set
-                    $scope.exportUnavailableWarning();  
-                }
-            }else{
-                $scope.exportUnavailableWarning();
-            }
-        });
+		$http.get(url)
+		  .then(function(response) {
+      			var dl = response.data;
+			if(dl){
+				if(dl.isReady){
+					
+					var d = new Date();
+					var datestr = d.toISOString().split("T")[0] + "_" + d.toTimeString().split(" ")[0].split(":").join("_");
+					var proposedfname="export-" + datestr + "." +  dl.url.split("format=")[1].split("&")[0];
+					
+					
+					$scope.exportData={};
+					
+					if(dl.isCached){
+						console.log(dl.cached);
+						$scope.exportData.cached=dl.cached;
+						$scope.baseurl=baseurl;
+					}
+					
+					$scope.fileNamePrompt(proposedfname, function(fname){
+						
+						
+						var nurl=dl.url + "&genUrl=" + encodeURIComponent(window.location.href) + "&filename="+ encodeURIComponent(fname);
+						
+						console.log(nurl);
+						//alert(nurl);
+						$http.get(nurl).then(function(rep){
+							var meta=rep.data;
+							window.location.href=baseurl + "myDownloads/" + meta.id;
+						}, function(rep){
+							$scope.exportUnavailableWarning();
+						});
+					})
+					
+				}else if(dl.isPresent){ //busy
+					$scope.exportUnavailableWarning();
+				}else{ //unknown result set
+					$scope.exportUnavailableWarning();  
+				}
+			}else{
+				$scope.exportUnavailableWarning();
+			}
+		});
 
 
-        };
+    	};
 
-    $scope.exportUnavailableWarning = function(){
-            $scope.modalInstance = $uibModal.open({
+	$scope.exportUnavailableWarning = function(){
+	        $scope.modalInstance = $uibModal.open({
                         templateUrl: baseurl + "assets/templates/modals/export-warning.html",
                         scope: $scope
                 });
-    };
-    
-    $scope.fileNamePrompt = function(fname, cb){
-        $scope.exportFname=fname;
+	};
+	
+	$scope.fileNamePrompt = function(fname, cb){
+		$scope.exportFname=fname;
         $scope.modalInstance = $uibModal.open({
                     templateUrl: baseurl + "assets/templates/modals/filename-prompt.html",
                     scope: $scope
             });
         $scope.mclose=function(fname2){
-            $scope.close();
-            cb(fname2);
+        	$scope.close();
+        	cb(fname2);
         };
-    };
+	};
 
 
 
@@ -1026,7 +1038,7 @@
             console.log(sub);
             $scope.errorsArray = [];
             $http.post(baseurl + 'api/v1/substances/@validate', sub).then(
-        function success(response) {
+	    function success(response) {
             console.log(response);
                 $scope.validating = false;
                 $scope.errorsArray = $scope.parseErrorArray(response.data.validationMessages);
@@ -1035,17 +1047,17 @@
                 //     callback();
                 // }
             },
-        function failure(response) {
-        var msg = {
-            message:response.data,
-            messageType:"ERROR",
-            error:true
-        };
+	    function failure(response) {
+		var msg = {
+			message:response.data,
+			messageType:"ERROR",
+			error:true
+		};
                 $scope.validating = false;
                 $scope.errorsArray = [msg];
                 $scope.canSubmit = $scope.noErrors();
             }
-        ).finally(function () {
+	    ).finally(function () {
                 $scope.validating = false;
             });
         };
@@ -1350,18 +1362,18 @@
     });
 
     ginasApp.directive('stringToNumber', function() {
-          return {
-            require: 'ngModel',
-            link: function(scope, element, attrs, ngModel) {
-              ngModel.$parsers.push(function(value) {
-                return '' + value;
-              });
-              ngModel.$formatters.push(function(value) {
-                return parseFloat(value);
-              });
-            }
-          };
-        });
+    	  return {
+    	    require: 'ngModel',
+    	    link: function(scope, element, attrs, ngModel) {
+    	      ngModel.$parsers.push(function(value) {
+    	        return '' + value;
+    	      });
+    	      ngModel.$formatters.push(function(value) {
+    	        return parseFloat(value);
+    	      });
+    	    }
+    	  };
+    	});
     
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
@@ -1639,8 +1651,8 @@
                     });
                     
                     var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' 
-                                + _.join(links,",")
-                                + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    			+ _.join(links,",")
+                    			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -1686,8 +1698,8 @@
                     });
                     
                     var templateString = angular.element('<div class ="row reftable"><div class ="col-md-8">' 
-                                + "(" + links.length + ")"
-                                + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    			+ "(" + links.length + ")"
+                    			+ ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -1966,11 +1978,11 @@
             link: function (scope, element, attrs) {
                 var sclass = attrs.subclass;
                 if(_.isUndefined(sclass)){
-                    if (_.has(scope.parent, 'protein')) {
-                        sclass="protein";
-                    }else{
-                        sclass="nucleicAcid";
-                    }
+                	if (_.has(scope.parent, 'protein')) {
+                		sclass="protein";
+                	}else{
+                		sclass="nucleicAcid";
+                	}
                 }
                 scope.numbers = true;
                 scope.edit = true;
@@ -2078,28 +2090,28 @@
                         } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
                             scope.index = scope.index-0+1;
-                            sclass="nucleicAcid";
+							sclass="nucleicAcid";
                         }
                         subunitParser.getResidues(sclass).then(function (){
-                            scope.parseSubunit();
+	                    	scope.parseSubunit();
                             if(_.isUndefined(scope.obj.sequence)) {
                                 scope.edit=true;
                                 scope.startEdit();
                             }
-                         });
+                 		});
                         scope.fastaview = scope.fastaFormat();
                         //scope.parseSubunit();
                     });
                 } else {
-                    subunitParser.getResidues(sclass).then(function (){
-                        scope.parseSubunit();
+                	subunitParser.getResidues(sclass).then(function (){
+	                    scope.parseSubunit();
                         if(_.isUndefined(scope.obj.sequence)) {
                             scope.edit=true;
                             scope.startEdit();
                         }
                         scope.fastaview = scope.fastaFormat();
 
-                     });
+                 	});
                 }
                 scope.edit = false;
             },
@@ -2229,19 +2241,19 @@
                 scope.sketcher = new JSDraw("sketcherForm");
                 scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
-        scope.clean = function (mol){
+		scope.clean = function (mol){
 
-          //remove "mul" from multiple amount
-          mol = mol.replace(/M[ ]*SMT.*mul.*/g,"@")
-               .replace(/\n/g,"|_|")
-               .replace(/[@][|][_][|]/g,"")
-               .replace(/[|][_][|]/g,"\n");
+		  //remove "mul" from multiple amount
+		  mol = mol.replace(/M[ ]*SMT.*mul.*/g,"@")
+			   .replace(/\n/g,"|_|")
+			   .replace(/[@][|][_][|]/g,"")
+			   .replace(/[|][_][|]/g,"\n");
 
-            return mol;
-        };
-        scope.getMol = function(){
-            return scope.clean(scope.sketcher.getMolfile());
-        }
+			return mol;
+		};
+		scope.getMol = function(){
+			return scope.clean(scope.sketcher.getMolfile());
+		}
 
                 scope.sketcher.options.ondatachange = function () {
                     scope.mol = scope.getMol();
@@ -2272,12 +2284,12 @@
                             }
                     }
                 }
-        if(attrs.load){
-            var load=attrs.load;
-             $timeout(function() {
-                scope.sketcher.setMolfile(load);
-            },0);
-        }
+		if(attrs.load){
+			var load=attrs.load;
+		 	$timeout(function() {
+				scope.sketcher.setMolfile(load);
+			},0);
+		}
                 if (structureid) {
                     var url = baseurl + 'api/v1/structures/' + structureid;
                     $http.get( url, {cache: true}).then(function (response) {
@@ -2297,6 +2309,7 @@
                 type: '=',
                 structureid: '=',
                 format: '@',
+                format2: '@',
                 referenceobj: '=',
                 parent: '='
             },
@@ -2360,22 +2373,37 @@
                         return response;
                     });
                 };
+                
+                scope.getFormat = function (fmt) {
+                    var url = baseurl + 'export/' + scope.structureid + '.' + fmt;
+                    return $http.get(url, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (response) {
+                        return response;
+                    });
+                };
+                
+                scope.getExportDisplay = function(fmt){
+                	switch (fmt) {
+	                    case "fas":
+	                            return "FASTA";
+	                    case "mol":
+	                            return "Molfile";
+	                    case "sdf":
+	                            return "SD File";   
+	                    default:
+	                            return "Export";          
+                	}
+                };
 
                 scope.getExport = function () {
-                        switch (scope.format) {
-                                case "fas":
-                                        scope.formatName="FASTA";
-                                        break;
-                                case "mol":
-                                        scope.formatName="Molfile";
-                                        break;        
-                                case "sdf":
-                                        scope.formatName="SD File";
-                                        break;        
-                                default:
-                                        scope.formatName="Export";
-                                        break;                        
-                        }
+                    scope.formatName=scope.getExportDisplay(scope.format);
+                    if(scope.format2){
+                    	scope.formatName2=scope.getExportDisplay(scope.format2);
+                    }
+                    
                     if(_.isUndefined(scope.structureid)){
                         var url = baseurl + 'structure';
                         var mol = molChanger.getMol();
@@ -2389,27 +2417,32 @@
                             scope.open();
                         });
                     }else {
-                        var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
-                        $http.get(url, {
-                            headers: {
-                                'Content-Type': 'text/plain'
-                            }
-                        }).success(function (response) {
-                            scope.exportData = response;
-                            if(scope.format != 'fas') {
-                                url = baseurl + 'export/' + scope.structureid + '.smiles';
-                                $http.get(url, {
-                                    headers: {
-                                        'Content-Type': 'text/plain'
-                                    }
-                                }).success(function (response) {
-                                    scope.exportSmiles = response;
-                                });
-                            }
-//                           var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-                            //                          scope.warnings = JSON.parse(warnHead);
-                            scope.open();
-                        });
+                    	
+	                        var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
+	                        $http.get(url, {
+	                            headers: {
+	                                'Content-Type': 'text/plain'
+	                            }
+	                        }).success(function (response) {
+	                        	if(scope.format2){
+	                        		scope.getFormat(scope.format2).then(function(d){
+	                        			scope.exportData2 = d.data;
+	                        		});
+	                        	}
+	                            scope.exportData = response;
+	                            if(scope.format != 'fas') {
+	                                url = baseurl + 'export/' + scope.structureid + '.smiles';
+	                                $http.get(url, {
+	                                    headers: {
+	                                        'Content-Type': 'text/plain'
+	                                    }
+	                                }).success(function (response) {
+	                                    scope.exportSmiles = response;
+	                                });
+	                            }
+	                            
+	                            scope.open();
+	                        });
                     }
                 };
 
