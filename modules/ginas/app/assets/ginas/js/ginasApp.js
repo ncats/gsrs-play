@@ -1755,7 +1755,7 @@
                     } else {
                         if (scope.field) {
                             if(_.isUndefined(scope.referenceobj[scope.field])){
-                                _.set(scope.referenceobj, scope.field, {});
+                                _.set(scope.referenceobj, scope.field, []);
                             }
                             scope.referenceobj[scope.field].$$displayString = siteList.siteString(scope.referenceobj[scope.field]);
                         } else {
