@@ -1150,6 +1150,7 @@ pre.fixedsize{
 
 .subrefThumb{
     min-width: 150px;
+    max-width: 40%;
  }
 
 .form-div{
