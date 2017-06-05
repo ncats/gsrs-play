@@ -1,0 +1,124 @@
+﻿<!--
+//////////////////////////////////////////////////////////////////////////////////
+//
+JSDraw
+// Copyright Scilligence Corporation, 2009-2015
+// http://www.scilligence.com/
+//
+//////////////////////////////////////////////////////////////////////////////////
+-->
+
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>JSDraw - A Javascript Chemical Structure Editor/Viewer</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" >
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.11.2/dojo/dojo.js"></script>
+<script type="text/javascript" src='Scilligence.JSDraw2.Pro.js'></script>
+<script type="text/javascript" src='Service.aspx'></script>
+<script type="text/javascript" src='Scilligence.JSDraw2.Resources.js'></script>
+
+
+</head>
+<body>
+
+<h2>JSDraw - A Javascript Chemical Structure Editor/Viewer</h2>
+
+<div>
+Please select skin:
+<select onchange='selectSkin()' id='skin'>
+<option value=''>JSDraw2.Skin.reset()</option>
+<option value='red'>JSDraw2.Skin.red()</option>
+<option value='green'>JSDraw2.Skin.green()</option>
+<option value='blue'>JSDraw2.Skin.blue()</option>
+<option value='yellow'>JSDraw2.Skin.yellow()</option>
+</select>
+
+<br />
+<br />
+</div>
+
+<div class='JSDraw' id="test" style="width: 660px; height: 300px;border:1px solid gray" ondatachange='molchange'
+    dataformat='molfile' data='
+ChemJSDraw11140919362D
+
+  6  6  0  0  0  0  0  0  0  0  1 V2000
+    3.5115   -9.3600    0.0000 C   0  0
+    2.1605   -8.5800    0.0000 C   0  0
+    2.1605   -7.0200    0.0000 C   0  0
+    3.5115   -6.2400    0.0000 N   0  0
+    4.8625   -7.0200    0.0000 C   0  0
+    4.8625   -8.5800    0.0000 C   0  0
+  1  2  1  0
+  2  3  2  0
+  3  4  1  0
+  4  5  2  0
+  5  6  1  0
+  6  1  2  0
+M  END'></div>
+
+<script type="text/javascript">
+    var s = window.location + "";
+    var p = s.indexOf('?');
+    var sk = p > 0 ? s.substr(p + 1) : null;
+
+    switch (sk) {
+        case "red":
+            JSDraw2.Skin.red();
+            break;
+        case "green":
+            JSDraw2.Skin.green();
+            break;
+        case "blue":
+            JSDraw2.Skin.blue();
+            break;
+        case "yellow":
+            JSDraw2.Skin.yellow();
+            break;
+    }
+    dojo.byId('skin').value = sk;
+
+    JSDraw.init();
+
+    function selectSkin() {
+        var s = window.location + "";
+        var p = s.indexOf('?');
+        if (p > 0)
+            s = s.substr(0, p);
+        window.location = s + "?" + dojo.byId("skin").value;
+    }
+</script>
+
+
+Example code to change skin:
+<pre style='border: solid 1px gray'>
+    JSDraw2.Skin.red(); // or blue/green/yellow()
+    JSdraw.init();
+</pre>
+
+To customize skin:
+<pre style='border: solid 1px gray'>
+    // customzie skin
+    oln.apply(JSDraw2.Skin.jsdraw = { bkcolor: "", bkimg: "", hovercolor: "" });
+    oln.apply(JSDraw2.Skin.jssdf = { bgcolor: "", headerimg: "", headercolor: "", rowcolor: "" });
+    oln.apply(this.jssdf, JSDraw2.Skin.jsdraw);
+    oln.apply(JSDraw2.Skin.dialog = { bkimg: "", bkcolor: "" });
+
+    // create JSDraw
+    JSDraw.init();
+</pre>
+
+
+
+
+<br />
+<b>License:</b>
+<ul>
+<li>Free for education (<a href='http://www.scilligence.com/web/download.aspx?prod=JSDraw'>Download</a>)</li>
+<li>Please <a href='http://www.scilligence.com/web/contact.aspx'>contact us</a> for commercial licenses</li>
+</ul>    
+
+
+</body>
+</html>

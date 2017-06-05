@@ -1,0 +1,54 @@
+<!--
+//////////////////////////////////////////////////////////////////////////////////
+//
+// JSDraw
+// Copyright 2016,  Scilligence 
+// http://www.scilligence.com/
+//
+//////////////////////////////////////////////////////////////////////////////////
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" >
+<title>HELM Peptide</title>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.11.2/dojo/dojo.js"></script>
+<script type="text/javascript" src='Scilligence.JSDraw2.Pro.js'></script>
+<script type="text/javascript" src='Service.aspx'></script>
+<script type="text/javascript" src='Scilligence.JSDraw2.Resources.js'></script>
+
+</head>
+<body>
+<h2>JSDraw - HELM Peptide</h2>
+
+
+
+  <div id='Div1' dataformat='helm' data="PEPTIDE1{A.C.T.G.C.T.W.G.T.W.E.C.W.C.Q.W}|PEPTIDE2{A.C.T.G.C.T.W.G.T.W.E.Q}$PEPTIDE1,PEPTIDE1,5:R3-14:R3|PEPTIDE2,PEPTIDE1,2:R3-12:R3$$$"></div>
+
+  <script type="text/javascript">
+    dojo.ready(function () {
+    var jsd = new JSDraw("Div1", { width: 900, height: 600, skin: "w8" });
+    });
+  </script>
+
+
+
+  <br />
+  <br />
+  <hr />
+  Copyright 2016,  Scilligence (<a href='http://www.scilligence.com/'>http://www.scilligence.com/</a>)
+  <br />
+  <br />
+  <b>License:</b>
+  <ul>
+    <li>
+      Free for education (<a href='http://www.scilligence.com/web/download.aspx?prod=JSDraw'>Download</a>)
+    </li>
+    <li>
+      Please <a href='http://www.scilligence.com/web/contact.aspx'>contact us</a> for commercial licenses
+    </li>
+  </ul>
+
+</body>
+</html>
