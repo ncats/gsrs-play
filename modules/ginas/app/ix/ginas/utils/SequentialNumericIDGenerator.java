@@ -1,7 +1,7 @@
 package ix.ginas.utils;
 
 
-public abstract class SequentialNumericIDGenerator extends IDGenerator<String>{
+public abstract class SequentialNumericIDGenerator implements IDGenerator<String>{
 
 	private int len;
 	

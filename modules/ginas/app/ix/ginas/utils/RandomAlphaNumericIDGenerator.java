@@ -1,19 +1,25 @@
 package ix.ginas.utils;
 
 import java.util.HashSet;
+import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 
-public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
+public abstract class RandomAlphaNumericIDGenerator implements IDGenerator<String>{
 	private char[] alphabet;
 	private int idLen=9;
 	private boolean check=false;
 	Set<String> recentlyGenerated = new HashSet<String>();
-	
+
+	private final Random random;
 	public RandomAlphaNumericIDGenerator(char[] alphabet, int len, boolean check){
+		this(new Random(), alphabet, len, check);
+	}
+	public RandomAlphaNumericIDGenerator(Random random, char[] alphabet, int len, boolean check){
 		idLen=len;
 		this.check=check;
 		this.alphabet=alphabet;
-		len=this.alphabet.length;	
+		this.random = Objects.requireNonNull(random);
 	}
 	
 	
@@ -26,7 +32,7 @@ public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
 		char[] retid= new char[totalLength];
 		
 		for(int i=0;i<idLen;i++){
-			int k=(int) (Math.random()*alphabet.length);
+			int k=random.nextInt(alphabet.length);
 			retid[i]=alphabet[k];
 			sum+=k;
 		}
