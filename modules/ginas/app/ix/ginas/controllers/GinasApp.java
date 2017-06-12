@@ -1,9 +1,8 @@
 package ix.ginas.controllers;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -90,6 +89,7 @@ import play.data.DynamicForm;
 import play.data.Form;
 import play.db.ebean.Model.Finder;
 import play.libs.F;
+import play.libs.Json;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
@@ -2364,6 +2364,119 @@ return F.Promise.<Result>promise( () -> {
     }
 
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static String getLogFileListAsJson() throws IOException{
+        Path directory = Paths.get(".");
+
+        LogFileWalker visitor = new LogFileWalker(directory);
+
+        Files.walkFileTree(directory, visitor);
+
+        Collections.sort(visitor.fileInfoList);
+        String ret = Json.toJson(visitor.fileInfoList).toString();
+        return ret;
+    }
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static String getLogFileListAsJson(String path) throws IOException{
+        Path directory = Paths.get(path);
+
+        LogFileWalker visitor = new LogFileWalker(directory);
+
+        Files.walkFileTree(directory, visitor);
+
+        Collections.sort(visitor.fileInfoList);
+        String ret = Json.toJson(visitor.fileInfoList).toString();
+        return ret;
+    }
+
+    private static class LogFileWalker extends SimpleFileVisitor<Path> {
+
+
+        private final Path directory;
+
+        List<LogFileInfo> fileInfoList = new ArrayList<>();
+
+        private static CachedSupplier<java.util.function.Predicate<Path>> filter = CachedSupplier.of(()->{
+            Set<String> blackList = new HashSet<String>(Play.application().configuration().getStringList("admin.panel.download.folderBlackList", Collections.emptyList()));
+//            Set<String> whiteList = new HashSet<String>(Play.application().configuration().getStringList("admin.panel.download.folderWhiteList", Collections.emptyList()));
+
+
+            return p -> {
+                String relativePath = GINAS_ROOT.get().relativize(p.normalize().toAbsolutePath()).toString();
+                return !blackList.contains(relativePath);
+
+
+            };
+        });
+
+        public LogFileWalker(Path directory) {
+            this.directory = directory;
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+
+            if(filter.get().test(dir)) {
+                addToFileInfoList(dir);
+                return FileVisitResult.CONTINUE;
+            }
+            return FileVisitResult.SKIP_SIBLINGS;
+        }
+
+        public void addToFileInfoList(Path p) {
+            File f = p.toFile();
+            String relativePath = directory.relativize(p).toString();
+
+            if(relativePath.isEmpty()){
+                return;
+            }
+            LogFileInfo info = new LogFileInfo();
+            info.id = relativePath;
+            info.isDir = f.isDirectory();
+            if(f.isDirectory()) {
+                info.text = relativePath;
+            }else{
+                info.text = relativePath + " ( " + f.length() + " B)";
+            }
+
+            String parentRelativePath = directory.relativize(p.getParent()).toString();
+
+            info.parent = parentRelativePath.isEmpty()? "#" : parentRelativePath;
+
+            fileInfoList.add(info);
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            addToFileInfoList(file);
+            return FileVisitResult.CONTINUE;
+        }
+
+
+    }
+
+    public static class LogFileInfo implements Comparable<LogFileInfo>{
+        public String id;
+        public String parent;
+        public String text;
+        public boolean isDir;
+
+        @Override
+        public int compareTo(LogFileInfo o) {
+            if(isDir && !o.isDir){
+                return -1;
+            }
+            if(o.isDir && !isDir){
+                return 1;
+            }
+
+            return  id.compareTo(o.id);
+
+        }
+    }
+
+
+    @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Map ListLogFiles() {
         Path directory = Paths.get("./logs");
         Map<String, String> fileList = new TreeMap();
@@ -2383,12 +2496,22 @@ return F.Promise.<Result>promise( () -> {
         return fileList;
     }
 
+    private static final CachedSupplier<Path> GINAS_ROOT = CachedSupplier.of(()->Paths.get(".").toAbsolutePath().normalize());
+
     @Dynamic(value = IxDynamicResourceHandler.IS_ADMIN, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result downloadFile(String fName){
         response().setContentType("application/x-download");
         response().setHeader("Content-disposition","attachment; filename=" + fName);
-        File file = new File("./logs/" + fName);
-        return ok(file);
+
+        Path root = new File(".").toPath().toAbsolutePath();
+
+
+        File file = new File(fName);
+        //must be a subdirectory of ginas
+        if(file.toPath().toAbsolutePath().startsWith(GINAS_ROOT.get())) {
+            return ok(file);
+        }
+        return forbidden("not allowed to access file : " + fName);
     }
 
     public static Result createTestChemical(int count){

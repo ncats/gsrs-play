@@ -1,5 +1,5 @@
 @import play.api.Play.current
-@(title: String, kind: String, showSketcher: Boolean = false)(menu: Html)(content: Html)
+@(title: String, kind: String, showSketcher: Boolean = false, includeJsTree: Boolean = false)(menu: Html)(content: Html)
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
@@ -88,6 +88,11 @@
                 });
         </script>
     }
+
+    @if(includeJsTree){
+        <link rel="stylesheet" href='@routes.Assets.at("javascripts/vakata-jstree-a6a0d0d/dist/themes/default/style.min.css")' />
+    }
+
     <script type="text/javascript">
         var session = {
 	        @if(ix.ncats.controllers.auth.Authentication.getUser() != null) {         

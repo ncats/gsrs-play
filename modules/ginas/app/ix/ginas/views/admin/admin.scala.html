@@ -1,8 +1,83 @@
 @import ix.ginas.controllers.GinasApp
 
-@ix.ginas.views.html.ginas("Admin Portal", "null") {
+@ix.ginas.views.html.ginas("Admin Portal", "null", false, true) {
     @ix.ginas.views.html.menu()
 } {
+    @*<script src="/home/katzelda/Downloads/vakata-jstree-a6a0d0d/dist/libs/jsquery.js"></script>*@
+    <script src='@routes.Assets.at("javascripts/vakata-jstree-a6a0d0d/dist/jstree.js")'></script>
+    <script>
+            $(document).ready(function () {
+                $('#jstree_demo_div').jstree({ 'core' : {
+                    'data' :
+                    function(node, cb){
+                        var data = @Html(GinasApp.getLogFileListAsJson());
+
+                        //add href
+                        var i;
+                        for(i=0; i< data.length; i++){
+                            if(data[i].isDir){
+                                data[i].icon = "fa fa-folder-o";
+                                data[i].a_attr = {'href' :"" , 'target' : "_self"};
+                             }else{
+
+                                // is a file add an a_attr
+                                data[i].icon = "fa fa-file-o";
+                                data[i].a_attr = {'href' : "@ix.ginas.controllers.routes.GinasApp.downloadFile("$PLACEHOLDER$")".replace("%24PLACEHOLDER%24",data[i].id),  'target' : "_self"};
+
+                            }
+
+                        }
+                        console.log(data);
+                        cb.call(this, data);
+
+
+
+
+                    }
+
+                } });
+
+                $('#jstree_demo_div').on("changed.jstree", function (e, data) {
+
+                    var i, j;
+
+                    var len = data.selected.length;
+
+                    for(i = 0; i < len; i++) {
+
+                        console.log(data.selected[i] + "  " + data.node);
+                        if(!data.node.original.isDir){
+                            document.location.href =  data.node.a_attr.href;
+                        }
+                    }
+
+
+
+                });
+
+                $('#jstree_demo_div').on("select_node.jstree", function (e, data) {
+
+
+                    console.log(data);
+                    if(data.node.original.isDir){
+                        $(this).jstree('toggle_node', data.selected[0]);
+                    }
+                });
+
+
+
+                $('#jstree_demo_div').on("open_node.jstree", function (e, data) {
+                    console.log("opened " + data.node.id);
+                    data.instance.set_icon(data.node, "fa fa-folder-open-o");
+                });
+
+                $('#jstree_demo_div').on("after_close.jstree", function (e, data) {
+                    console.log("closed " + data.node.id);
+                    data.instance.set_icon(data.node, "fa fa-folder-o");
+                });
+            });
+
+    </script>
     <uib-tabset>
         <uib-tab>
             <uib-tab-heading>
@@ -152,28 +227,17 @@
         
         <uib-tab select="">
             <uib-tab-heading>
-                Log Files <i class="fa fa-download fa-2x"></i>
+                All Files <i class="fa fa-download fa-2x"></i>
             </uib-tab-heading>
-            <p>Click on the log file to download</p>
+            <p>Click on the folder to open/close, Click on file to download</p>
 
-            <div class="row info">
-                <div class="col-md-9">
-                    <table class="table table-striped keyvalue">
-                        <tr><th><strong>File Name</strong></th>
-                            <th><strong>Last Updated Date</strong></th>
-                        <th><strong>File Size (in bytes)</strong></th></tr>
-                        @for(file <- GinasApp.ListLogFiles().keys) {
-                            <tr>
-                                <td><a href="@ix.ginas.controllers.routes.GinasApp.downloadFile(file.toString())" target="_self">@file</a></td>
-                                @defining(GinasApp.ListLogFiles().get(file).toString().split("size")) { case Array(x1, x2) =>
-                                    <td>@x1</td>
-                                    <td>@x2</td>
-                                }
-                            </tr>
-                        }
-                    </table>
+
+
+                    <div id="jstree_demo_div">
+
+
                 </div>
-            </div>
+
         </uib-tab>
     </uib-tabset>
 }
