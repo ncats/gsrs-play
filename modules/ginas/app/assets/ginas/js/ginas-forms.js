@@ -936,7 +936,8 @@
                     scope.parent.structurallyDiverse.part = [];
                     _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                 }
-                if (scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') {
+                if ((scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') ||
+                	(scope.parent.structurallyDiverse.fractionName || scope.parent.structurallyDiverse.fractionMaterialType)) {
                     _.set(scope.parent, '$$diverseType', 'part');
                     _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
                 }

@@ -47,28 +47,29 @@ public class SPLValidatorXMLExporter implements Exporter<Substance> {
 	@Override
 	public void export(Substance obj) throws IOException {
 		addPreambleIfNeeded();
-		if(obj.isPublic() && obj.getApprovalID()!=null && !obj.isDeprecated()){
-		
-			String approvalID = obj.getApprovalIDDisplay();
-			String temp = "<choice><label>$Name</label><value>" +approvalID + "</value></choice>";
-			try{
-				obj.names.stream()
-			        .filter(n->!n.isDeprecated())
-			        .filter(n->n.isDisplayName() || n.preferred)
-			        .filter(n->n.isPublic())
-			        .map(n->n.getName())
-			        .map(n->temp.replace("$Name", encodeXML(n)))
-					.forEach(n->{
-						
-						try {
-							out.write(n);
-							out.write("\n");
-						} catch (IOException e) {
-							throw new IllegalStateException(e);
-						}
-					});
-			}catch(IllegalStateException e){
-				throw new IOException(e.getCause());
+		if(obj.isPublic() && !obj.isDeprecated()){
+			if(obj.getApprovalID()!=null || (obj.getParentSubstanceReference()!=null && obj.getParentSubstanceReference().approvalID!=null)){
+				String approvalID = obj.getApprovalIDDisplay();
+				String temp = "<choice><label>$Name</label><value>" +approvalID + "</value></choice>";
+				try{
+					obj.names.stream()
+				        .filter(n->!n.isDeprecated())
+				        .filter(n->n.isDisplayName() || n.preferred)
+				        .filter(n->n.isPublic())
+				        .map(n->n.getName())
+				        .map(n->temp.replace("$Name", encodeXML(n)))
+						.forEach(n->{
+							
+							try {
+								out.write(n);
+								out.write("\n");
+							} catch (IOException e) {
+								throw new IllegalStateException(e);
+							}
+						});
+				}catch(IllegalStateException e){
+					throw new IOException(e.getCause());
+				}
 			}
 		}
 		

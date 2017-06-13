@@ -49,7 +49,45 @@ public class StructureProcessor {
     }
 
     public static boolean isQuatAmine (MolAtom atom) {
+    	
+    	
+    	
         return atom.getAtno() == 7 && atom.getBondCount() == 4;
+    }
+    
+    /**
+     * Checks if an atom is a quat-amine (4 bonds), and that the nitrogen 
+     * is a stereocenter. This currently works by converting that atom to an
+     * uncharged carbon and testing whether that carbon would be a stereocenter.
+     * 
+     * @param atom
+     * @return
+     */
+    public static boolean isQuatAmineStereoCenter (MolAtom atom) {
+    	if(isQuatAmine(atom)){
+    		 int oamap=atom.getAtomMap();
+    		 
+    		 atom.setAtomMap(99);
+    		
+    		 
+    		 Molecule m = (Molecule)atom.getParent();
+    		 Molecule testm = m.cloneMolecule();
+    		 MolAtom[] atoms = testm.getAtomArray();
+    		 MolAtom matest=null;
+    		 for(int i=0;i<atoms.length;i++){
+    			 if(atoms[i].getAtomMap() == 99){
+    				 matest=atoms[i];
+    				 matest.setAtno(6);
+    				 matest.setCharge(0);
+    			 }
+    		 }
+    		 int[] gi = new int[atoms.length];
+    		 testm.getGrinv(gi);
+    		 atom.setAtomMap(oamap);
+    		 
+    		 return isTetrahedral(matest,gi);
+    	}
+    	return false;
     }
 
     public static boolean isTetrahedral (MolAtom atom, int[] gi) {
@@ -229,7 +267,7 @@ public class StructureProcessor {
                 }
                 
                 boolean tetra = isTetrahedral (atom, gi);
-                if (isQuatAmine (atom) 
+                if (isQuatAmineStereoCenter (atom) 
                     || (pc > 0 && atom.getBondCount() > 2 )
                     || (undef && tetra)) {
                     ++stereo;
@@ -237,9 +275,9 @@ public class StructureProcessor {
                     if (pc > 0) {
                         ++def;
                         atom.setAtomMap(0);
-                    }
-                    else
+                    }else{
                         atom.setAtomMap(3); // unknown
+                    }
                 }
             }
             charge += atoms[i].getCharge();
