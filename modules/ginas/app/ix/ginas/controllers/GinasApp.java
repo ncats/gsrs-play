@@ -2420,7 +2420,7 @@ return F.Promise.<Result>promise( () -> {
                 addToFileInfoList(dir);
                 return FileVisitResult.CONTINUE;
             }
-            return FileVisitResult.SKIP_SIBLINGS;
+            return FileVisitResult.SKIP_SUBTREE;
         }
 
         public void addToFileInfoList(Path p) {
