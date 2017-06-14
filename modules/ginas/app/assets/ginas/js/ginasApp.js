@@ -2303,7 +2303,7 @@
         };
     });
 
-    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
+     ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
         return {
             scope: {
                 type: '=',
