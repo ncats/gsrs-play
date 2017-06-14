@@ -85,7 +85,7 @@ public class ChronicStackDumper implements Initializer{
             }
         })
         .atCronTab(cron)
-                .description("Log all Executing Stack Traces")
+                .description("Log all Executing Stack Traces to " + logFile.getPath())
                 ._to(st -> enabled? st.enable() : st.disable())
         .submit();
     }
