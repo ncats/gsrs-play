@@ -18,7 +18,7 @@
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
                             <li>
-                                <modal-button type= "export" structureid ="'@chem.uuid'" format="sdf" ></modal-button>
+                                <modal-button type= "export" structureid ="'@chem.uuid'" format="mol" format2="sdf" ></modal-button>
                             </li>
                             @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                                 <li>
