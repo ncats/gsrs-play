@@ -603,7 +603,8 @@ public class App extends Authentication {
 						args.add(f);
 				}
 
-				args.add("dep" + query.get("showDeprecated"));
+				String dep = query.getOrDefault("showDeprecated", new String[]{"false"})[0];
+			    args.add("dep" + dep);	
 
 
 
