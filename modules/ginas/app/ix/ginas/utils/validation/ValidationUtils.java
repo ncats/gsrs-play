@@ -1,14 +1,7 @@
 package ix.ginas.utils.validation;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -86,7 +79,7 @@ public class ValidationUtils {
 	
 	
 
-	static List<GinasProcessingMessage> validateAndPrepare(Substance s,
+	static List<GinasProcessingMessage> validateAndPrepare(Substance s, Substance old,
 			GinasProcessingStrategy strat) {
 		long start = System.currentTimeMillis();
 
@@ -213,7 +206,7 @@ public class ValidationUtils {
 						strat));
 				break;
 			case protein:
-				gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s,
+				gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, (ProteinSubstance) old,
 						strat));
 				break;
 			case structurallyDiverse:
@@ -1058,7 +1051,7 @@ public class ValidationUtils {
 	}
 
 	private static List<? extends GinasProcessingMessage> validateAndPrepareProtein(
-			ProteinSubstance cs, GinasProcessingStrategy strat) {
+			ProteinSubstance cs,ProteinSubstance old, GinasProcessingStrategy strat) {
 
 		List<GinasProcessingMessage> gpm = new ArrayList<GinasProcessingMessage>();
 		if (cs.protein == null) {
@@ -1200,8 +1193,46 @@ public class ValidationUtils {
 			}
 			// System.out.println("calc:" + tot);
 		}
-		strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
+		boolean sequenceHasChanged = sequenceHasChanged(cs, old);
+//		System.out.println("SEQUENCE HAS CHANGED ?? " + cs.approvalID + "  " + old.approvalID + " ? " + sequenceHasChanged);
+
+		if(sequenceHasChanged) {
+			strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
+		}
 		return gpm;
+	}
+
+	private static boolean sequenceHasChanged(ProteinSubstance cs, ProteinSubstance old) {
+		if(old ==null){
+			return true;
+		}
+
+		Protein newProtein = cs.protein;
+		Protein oldProtein = old.protein;
+
+		if(oldProtein ==null){
+//			System.out.println("old protein is null");
+			return newProtein !=null;
+		}
+		List<Subunit> newSubs = newProtein.getSubunits();
+		List<Subunit> oldSubs = oldProtein.getSubunits();
+		if(newSubs.size() != oldSubs.size()){
+//			System.out.println("subunit size differs " + newSubs.size() + " " + oldSubs.size());
+//			System.out.println(newSubs);
+//			System.out.println(oldSubs);
+			return true;
+		}
+		int size = newSubs.size();
+		for(int i=0; i< size; i++){
+			Subunit newSub = newSubs.get(i);
+			Subunit oldSub = oldSubs.get(i);
+
+			//handles null
+			if(!Objects.equals(newSub.sequence, oldSub.sequence)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static List<? extends GinasProcessingMessage> validateAndPrepareChemical(

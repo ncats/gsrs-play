@@ -1,15 +1,7 @@
 package ix.ginas.exporters;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -20,6 +12,7 @@ import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.plugins.IxCache;
 import ix.core.util.CachedSupplier;
 import ix.core.util.ConfigHelper;
+import ix.core.util.IOUtil;
 import ix.ginas.controllers.plugins.GinasSubstanceExporterFactoryPlugin;
 import ix.ginas.models.v1.Substance;
 import ix.utils.CallableUtil;
@@ -79,7 +72,11 @@ public class ExportProcessFactory {
     
     private static File getExportMetaDirFor(File parentDir) {
         File metaDirectory = new File(parentDir, "meta");
-        metaDirectory.mkdirs();
+        try {
+            IOUtil.createDirectories(metaDirectory);
+        } catch (IOException e) {
+            throw new UncheckedIOException("error getting or creating export meta directory for " + parentDir.getName(), e);
+        }
         return metaDirectory;
     }
 
@@ -105,7 +102,12 @@ public class ExportProcessFactory {
     public static List<ExportMetaData> getExplicitExportMetaData(String username){
         EntityMapper em = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
         File metaDirectory = getExportMetaDirFor(getExportDirFor(username));
-        return Arrays.stream(metaDirectory.listFiles())
+        File[] files = metaDirectory.listFiles();
+        //null if directory doesn't exist or there's an IO problem
+        if(files ==null){
+            return Collections.emptyList();
+        }
+        return Arrays.stream(files)
                      .filter(f->f.getName().endsWith(".metadata"))
                      .map(f->{
                             try {

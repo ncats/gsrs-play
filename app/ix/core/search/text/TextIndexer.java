@@ -902,9 +902,15 @@ public class TextIndexer implements Closeable, ProcessListener {
 		}
 
 		public void run() {
-			// Don't execute if already shutdown
-			latch.lock();
+
+            if(!latch.tryLock()){
+                //someone else has the lock
+                //we won't wait the schedule deamon
+                //will re-run us soon anyay
+                return;
+            }
 			try {
+                // Don't execute if already shutdown
 				if(isShutDown || isReindexing){
 					return;
 				}

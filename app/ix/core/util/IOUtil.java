@@ -125,4 +125,18 @@ public final class IOUtil {
         }
         return new BufferedOutputStream(new FileOutputStream(outputFile));
     }
+
+    /**
+     * Creates a directory by creating all nonexistent parent directories first.
+     * This method does nothing if the directory is null or already exists.
+     *
+     * @param dir the directory to create.
+     * @throws IOException if there is a problem creating the directory.
+     */
+    public static void createDirectories(File dir) throws IOException{
+        if(dir ==null){
+            return;
+        }
+        Files.createDirectories(dir.toPath());
+    }
 }

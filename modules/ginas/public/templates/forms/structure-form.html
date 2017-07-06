@@ -12,7 +12,7 @@
             <div class="row">
                 <div class="col-md-12 pull-right">
                     <button ng-show="parent.substanceClass=='chemical'"  class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
-                    <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
+                    <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="mol" format2="sdf" ></modal-button>
                     <modal-button class= "pull-right padded" type= "import"></modal-button>
                 </div>
             </div>

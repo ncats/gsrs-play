@@ -1,13 +1,6 @@
 package ix.utils;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.FileVisitResult;
@@ -98,13 +91,17 @@ public class Util {
     }
     
     public static void printAllExecutingStackTraces(){
-    	Thread.getAllStackTraces().entrySet().stream()
-		.filter(e->Arrays.stream(e.getValue()).filter(s->s.getClassName().contains("ix.")).findAny().isPresent())
-		.forEach(c->{
-			for(StackTraceElement ste: c.getValue()){
-				System.out.println(c.getKey() + "\t" + ste.toString());
-			}
-		});
+        printAllExecutingStackTraces(System.out);
+    }
+
+    public static void printAllExecutingStackTraces(PrintStream ps){
+        Thread.getAllStackTraces().entrySet().stream()
+                .filter(e->Arrays.stream(e.getValue()).filter(s->s.getClassName().contains("ix.")).findAny().isPresent())
+                .forEach(c->{
+                    for(StackTraceElement ste: c.getValue()){
+                        ps.println(c.getKey() + "\t" + ste.toString());
+                    }
+                });
     }
     
     public static void printExecutionStackTrace(){

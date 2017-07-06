@@ -222,12 +222,22 @@ public class CronExpressionBuilder implements Serializable {
             break;
         case HOURS:
             this.hours = "0/" + n;
+            everyMonth();
             break;
         case MINUTES:
             this.minutes = "0/" + n;
+
+                    everyHour()
+                            .everyDay()
+                    .everyMonth();
+
             break;
         case SECONDS:
             this.seconds = "0/" + n;
+           everyMinute()
+                    .everyHour()
+            .everyDay()
+                    .everyMonth();
             break;
         default:
             break;
