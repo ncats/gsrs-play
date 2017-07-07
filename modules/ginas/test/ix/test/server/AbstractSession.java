@@ -48,7 +48,9 @@ public abstract class AbstractSession<T> implements Closeable{
         this.user = user;
         this.neverLogout = false;
     }
-
+    public int getPort() {
+        return port;
+    }
     public JsonNode extractJSON(WSResponse wsResponse1){
         Objects.requireNonNull(wsResponse1);
 

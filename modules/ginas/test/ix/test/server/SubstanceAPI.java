@@ -48,7 +48,7 @@ public class SubstanceAPI {
     private static final String API_URL_APPROVE = "ginas/app/api/v1/substances($UUID$)/@approve";
     private static final String API_URL_UPDATE = "ginas/app/api/v1/substances";
 
-    private static final String API_URL_SUBSTANCES_SEARCH = "ginas/app/api/v1/substances/search";
+    private static final String API_URL_SUBSTANCES_SEARCH = "ginas/app/api/v1/substances/searchProteins";
     private static final String API_URL_STRUCTURE_BROWSE = "ginas/app/api/v1/structures";
 
 

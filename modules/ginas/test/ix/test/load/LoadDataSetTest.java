@@ -84,19 +84,19 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
     	assertEquals(1, results2.getUuids().size());
     	String findUUID="445d5a83";
 		assertTrue(
-				"15th page of substructure search should have the same substance every time: looking for \""
+				"15th page of substructure searchProteins should have the same substance every time: looking for \""
 						+ findUUID
 						+ "\" but found \""
 						+ results2.getUuids().toString() + "\"", results2
 						.getUuids().contains(findUUID));
-        assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);        
+        assertTrue("15th page of substructure searchProteins should have no other substances",results2.getUuids().size()==1);
     }
     
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{
     	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);
     	SearchResult resultsFirst =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 3,true);
     	SearchResult resultsLater =searcher.getSubstructureSearch("CC1=CC=CC=C1", 2, 6,true);
-    	assertTrue("6th page on substructure search should have 2 entries", resultsLater.getUuids().size()==2);
+    	assertTrue("6th page on substructure searchProteins should have 2 entries", resultsLater.getUuids().size()==2);
     }
     private void substructureHighlightingShouldShowOnLastPage(BrowserSession session) throws IOException, AssertionError{
     	BrowserSubstanceSearcher searcher = new BrowserSubstanceSearcher(session);

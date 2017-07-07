@@ -5,8 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.util.List;
 
-import ix.test.seqaln.SequenceSearchAPI;
-import ix.test.util.TestNamePrinter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,7 +13,6 @@ import org.junit.Test;
 import ix.AbstractGinasServerTest;
 import ix.test.SubstanceJsonUtil;
 import ix.test.server.BrowserSession;
-import ix.test.server.GinasTestServer;
 import ix.test.server.RestSession;
 import ix.test.server.SubstanceAPI;
 import play.libs.ws.WSResponse;
@@ -46,7 +43,7 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
         SequenceSearchAPI api = new SequenceSearchAPI(session);
 
-        List<SequenceSearchAPI.SearchResult> actual = api.search("CYIQNCPLG", 1);
+        List<SequenceSearchAPI.SearchResult> actual = api.searchProteins("CYIQNCPLG", 1);
         //we can't guess the uuid at the moment because it's randomly generated
 
         assertEquals(1, actual.size());
@@ -65,7 +62,7 @@ public class EndToEndSequenceAlignmentTest extends AbstractGinasServerTest{
 
         SequenceSearchAPI api = new SequenceSearchAPI(session);
                                                                //"CYIQNCPLG"
-        List<SequenceSearchAPI.SearchResult> actual = api.search("CYIQXCPLG", .5);
+        List<SequenceSearchAPI.SearchResult> actual = api.searchProteins("CYIQXCPLG", .5);
         //we can't guess the uuid at the moment because it's randomly generated
 
         assertEquals(1, actual.size());

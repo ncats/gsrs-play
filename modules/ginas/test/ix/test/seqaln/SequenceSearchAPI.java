@@ -32,12 +32,28 @@ public class SequenceSearchAPI extends AbstractGinasTest{
         this.session = session;
     }
 
-    public List<SearchResult> search(String querySequence, double percentIdentity){
+    public List<SearchResult> searchProteins(String querySequence, double percentIdentity){
+        return search(querySequence, percentIdentity, true);
+    }
+
+    public List<SearchResult> searchNucleicAcids(String querySequence, double percentIdentity) {
+        return search(querySequence, percentIdentity, false);
+    }
+
+        public List<SearchResult> search(String querySequence, double percentIdentity, boolean proteins){
         try{
             List<SearchResult> retList = new ArrayList<>();
             List<NameValuePair> params = new ArrayList<>();
             params.add(new NameValuePair("sequence", querySequence));
             params.add(new NameValuePair("identity", String.format("%.2f", percentIdentity)));
+
+            if(proteins) {
+                params.add(new NameValuePair("seqType", "Protein"));
+            }else{
+                params.add(new NameValuePair("seqType", "Nucleic Acid"));
+            }
+
+
             WebRequest request = session.newPostRequest("ginas/app/sequence");
             request.setRequestParameters(params);
 
@@ -55,8 +71,10 @@ public class SequenceSearchAPI extends AbstractGinasTest{
                 String name = anchor.getTextContent();
 
                 //TODO can we assume the order is the same as the order of the previous list?
-                float identity = parsePercentIdentity(identitiesIter.next());
-
+                float identity = Float.NaN;
+                if(identitiesIter.hasNext()) {
+                    identity = parsePercentIdentity(identitiesIter.next());
+                }
                 retList.add( new SearchResult(uuid, name, identity));
             }
 

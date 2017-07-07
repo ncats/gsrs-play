@@ -26,6 +26,12 @@ public class RestSession extends AbstractSession<Void>{
         return new SubstanceAPI(this);
     }
 
+    public BrowserSession newBrowserSession() {
+        return new BrowserSession(getUser(), getPort());
+    }
+
+
+
     public enum AUTH_TYPE{
         USERNAME_PASSWORD,
         USERNAME_KEY,

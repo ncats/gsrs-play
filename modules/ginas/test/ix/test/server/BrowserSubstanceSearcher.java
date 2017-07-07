@@ -35,7 +35,7 @@ import play.libs.ws.WSResponse;
 
 /**
  * Abstracts all the html parsing and ginas specific url knowledge
- * to make a programmatic way to query a running ginas instance to search
+ * to make a programmatic way to query a running ginas instance to searchProteins
  * for substances. This SubstanceSearcher is specifically for browser-piloting.
  *
  * Created by katzelda on 4/5/16.

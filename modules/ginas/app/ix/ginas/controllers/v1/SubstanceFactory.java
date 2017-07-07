@@ -78,6 +78,7 @@ public class SubstanceFactory extends EntityFactory {
 	// Do we still need this?
 	// Yes used in GinasApp
 	static public CachedSupplier<Model.Finder<UUID, ProteinSubstance>> protfinder=Util.finderFor(UUID.class, ProteinSubstance.class);
+	static public CachedSupplier<Model.Finder<UUID, NucleicAcidSubstance>> nucfinder=Util.finderFor(UUID.class, NucleicAcidSubstance.class);
 
 	public static Substance getSubstance(String id) {
 		if (id == null)
