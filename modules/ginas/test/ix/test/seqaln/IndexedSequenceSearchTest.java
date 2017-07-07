@@ -29,27 +29,12 @@ public class IndexedSequenceSearchTest extends AbstractGinasServerTest{
         ){
             SubstanceAPI api = restSession.newSubstanceAPI();
 
-            NucleicAcid na = new NucleicAcid();
-            Subunit seq = new Subunit();
-
-            seq.sequence = "ACGTACGT";
-            na.setSubunits(Arrays.asList(seq));
 
 
-//            Sets all sugars to ribose (should be simpler)
-            Sugar sug= new Sugar();
-            sug.setSugar("R");
-            sug.setSitesShorthand("1_1-1_" + seq.sequence.length());
-            na.setSugars(Collections.singletonList(sug));
-
-//            Sets all Linkages to phosphate (should be simpler)
-            Linkage lin= new Linkage();
-            lin.setLinkage("P");
-            lin.setSitesShorthand("1_1-1_" + ( seq.sequence.length() -1));
-            na.setLinkages(Collections.singletonList(lin));
-
-
-            api.submitSubstance(new SubstanceBuilder().asNucleicAcid().addName("foo").setSubstanceClass(Substance.SubstanceClass.nucleicAcid).setNucleicAcid(na).build());
+            api.submitSubstance(new SubstanceBuilder().asNucleicAcid().addName("foo")
+                    .setSubstanceClass(Substance.SubstanceClass.nucleicAcid)
+                    .addDnaSubunit("ACGTACGT")
+                    .build());
 
 
             try(BrowserSession browserSession = restSession.newBrowserSession()){
@@ -61,4 +46,6 @@ public class IndexedSequenceSearchTest extends AbstractGinasServerTest{
             }
         }
     }
+
+
 }
