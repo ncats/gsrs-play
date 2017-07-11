@@ -2015,13 +2015,12 @@
                     var ret="";
                     if(seq) {
                         seq = seq.replace(/\s/g,"");
-                        ret+="\n";
                         for (var i = 0; i < seq.length; i += 60) {
                             if(i+60 < seq.length)
                             {
                                 ret += seq.substr(i, 60) + "\n";
                             }else{
-                                ret += seq.substr(i, 60) + "*";
+                                ret += seq.substr(i, 60);
                             }
                         }
                     }
