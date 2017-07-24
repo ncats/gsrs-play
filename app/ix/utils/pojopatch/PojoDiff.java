@@ -926,7 +926,13 @@ public class PojoDiff {
 			@Override
 			public Object set(Object instance, Object set) {
 				try{
-					
+					//Note: this should not be necessary,
+					//but in some cases it appears that a deserialization step
+					//forces the values of some strings to become
+					//enums, provided that the string literal found is also found
+					//in an enum. This is a strange error likely built into the
+					//Jackson deserializer. For now, this is an attempt to mitigate that
+					//issue.
 					if(m.getParameterTypes()[0].equals(String.class) && set!=null && !set.getClass().equals(String.class)){
 						set=set.toString();
 					}
