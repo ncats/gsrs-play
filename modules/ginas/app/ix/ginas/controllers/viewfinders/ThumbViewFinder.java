@@ -2,6 +2,7 @@ package ix.ginas.controllers.viewfinders;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
@@ -23,17 +24,19 @@ public class ThumbViewFinder {
         thumbs.put(Substance.class.getName(), (t, ct) -> {
             return ix.ginas.views.html.thumbs.conceptthumb.render((Substance) t);
         });
+        
+        
         thumbs.put(ChemicalSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.chemthumb.render((ChemicalSubstance) t, ct.getId());
+            return ix.ginas.views.html.thumbs.chemthumb.render((ChemicalSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         thumbs.put(ProteinSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.proteinthumb.render((ProteinSubstance) t, ct.getId());
+            return ix.ginas.views.html.thumbs.proteinthumb.render((ProteinSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         thumbs.put(NucleicAcidSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.nucleicacidthumb.render((NucleicAcidSubstance) t, ct.getId());
+            return ix.ginas.views.html.thumbs.nucleicacidthumb.render((NucleicAcidSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         thumbs.put(PolymerSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.thumbs.polymerthumb.render((PolymerSubstance) t, ct.getId());
+            return ix.ginas.views.html.thumbs.polymerthumb.render((PolymerSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         thumbs.put(MixtureSubstance.class.getName(), (t, ct) -> {
             return ix.ginas.views.html.thumbs.mixturethumb.render((MixtureSubstance) t);

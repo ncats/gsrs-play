@@ -2,6 +2,7 @@ package ix.ginas.controllers.viewfinders;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ix.core.search.SearchResultContext;
 import ix.core.util.CachedSupplier;
@@ -23,16 +24,16 @@ public class ListViewFinder {
             return ix.ginas.views.html.list.conceptlist.render((Substance) t);
         });
         list.put(ChemicalSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.chemlist.render((ChemicalSubstance) t, ct.getId());
+            return ix.ginas.views.html.list.chemlist.render((ChemicalSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         list.put(ProteinSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.proteinlist.render((ProteinSubstance) t, ct.getId());
+            return ix.ginas.views.html.list.proteinlist.render((ProteinSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         list.put(NucleicAcidSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.nucleicacidlist.render((NucleicAcidSubstance) t, ct.getId());
+            return ix.ginas.views.html.list.nucleicacidlist.render((NucleicAcidSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         list.put(PolymerSubstance.class.getName(), (t, ct) -> {
-            return ix.ginas.views.html.list.polymerlist.render((PolymerSubstance) t, ct.getId());
+            return ix.ginas.views.html.list.polymerlist.render((PolymerSubstance) t, Optional.ofNullable(ct).map(c->c.getId()).orElse(null));
         });
         list.put(MixtureSubstance.class.getName(), (t, ct) -> {
             return ix.ginas.views.html.list.mixlist.render((MixtureSubstance) t);
