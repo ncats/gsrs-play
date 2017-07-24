@@ -309,8 +309,9 @@ public class PojoDiff {
 			JsonNode o2=arr.get(i);
 			String id=getID(o2);
 			String ind=String.format("%05d", i);
+			String id_ind=String.format("%05d", 0);
 			if(id!=null){
-				mnew.set("$" + id + "_" + ind, o2);
+				mnew.set("$" + id + "_" + id_ind, o2);
 			}else{
 				mnew.set("_" + ind, o2);
 			}
@@ -402,6 +403,8 @@ public class PojoDiff {
     			);
 		List<JsonNode> reorderedDiffs= new ArrayList<JsonNode>();
 		
+		
+		
 		JsonNode normalDiff= JsonDiff.asJson(
 				js1,
 				js2
@@ -446,6 +449,9 @@ public class PojoDiff {
 		canonicalizeDiff(reorderedDiffs);
 		ArrayNode an=(new ObjectMapper()).createArrayNode();
 		an.addAll(reorderedDiffs);
+		for(JsonNode jsn1: an){
+			System.out.println(jsn1.toString());
+		}
 		return an;
 		//return normalDiff;
 	}
