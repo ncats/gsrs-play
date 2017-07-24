@@ -920,10 +920,14 @@ public class PojoDiff {
 			@Override
 			public Object set(Object instance, Object set) {
 				try{
+					
+					if(m.getParameterTypes()[0].equals(String.class) && set!=null && !set.getClass().equals(String.class)){
+						set=set.toString();
+					}
 					m.invoke(instance, set);
 					return null;
 				}catch(Exception e){
-					e.getCause().printStackTrace();
+					e.printStackTrace();
 					System.err.println(instance.getClass() + " set to:" + set + " using " + m);
 					System.err.println(set.getClass());
 					throw new IllegalStateException(e);
