@@ -88,7 +88,7 @@ public class IntegrationTest extends AbstractGinasServerTest {
 
 		ts.modifyConfig("ix.core.entityprocessors", processors);
 		ts.start();
-		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/searchProteins?q=terms_value:BDNUM");
+		JsonNode result = ts.notLoggedInRestSession().getAsJson("ginas/app/api/v1/vocabularies/search?q=terms_value:BDNUM");
 		assertFalse( SubstanceJsonUtil.isLiteralNull(result));
 		assertEquals(1, result.get("total").asInt());
 	}
