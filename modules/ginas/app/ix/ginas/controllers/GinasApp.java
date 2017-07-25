@@ -1094,9 +1094,9 @@ public class GinasApp extends App {
 
     public static Result _sequences(final String seq, final double identity, final int rows, final int page) {
         CutoffType ct = CutoffType.valueOfOrDefault(request().getQueryString("identityType"));
-        String seqType = Optional.ofNullable(request().getQueryString("seqType")).orElse("Protien");
+        String seqType = Optional.ofNullable(request().getQueryString("seqType")).orElse("Protein");
         ResultProcessor processor;
-        if("Protien".equals(seqType)){
+        if("Protein".equals(seqType)){
             processor = new GinasSequenceResultProcessor();
         }else{
             processor = new GinasNucleicSequenceResultProcessor();
