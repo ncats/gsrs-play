@@ -2316,8 +2316,8 @@ return F.Promise.<Result>promise( () -> {
     // ***************
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result sequence(String id) {
-        return ok(ix.ginas.views.html.sequence.render(id));
+    public static Result sequence(String id, String seqType) {
+        return ok(ix.ginas.views.html.sequence.render(id, seqType));
     }
 
     public static Result structuresearch(String q) {

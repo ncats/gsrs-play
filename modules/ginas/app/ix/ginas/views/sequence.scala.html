@@ -1,4 +1,4 @@
-@(id: String)
+@(id: String, seqType: String)
 
     @ginas("Sequence Search", null) {
         @menu()
@@ -45,8 +45,8 @@
                                 <div class="col-md-2">
                                     <label for="identityType">Sequence Type: </label>
                                     <select class="form-control" id="seqType" name="seqType" >
-                                        <option selected="selected" value="Protein">Protein</option>
-                                        <option value="NucleicAcid">Nucleic Acid</option>
+                                        <option @if(seqType.equalsIgnoreCase("protein")){selected="selected"} value="Protein">Protein</option>
+                                        <option @if(seqType.equalsIgnoreCase("nucleicacid")){selected="selected"} value="NucleicAcid">Nucleic Acid</option>
                                     </select>
                                 </div>
                                 <div class="row">
@@ -68,4 +68,3 @@
             </div>
         </div>
     }
-
