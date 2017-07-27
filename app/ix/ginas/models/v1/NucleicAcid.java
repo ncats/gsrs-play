@@ -21,6 +21,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import play.Logger;
 
 @JSONEntity(title = "Nucleic Acid", isFinal = true)
@@ -31,14 +33,14 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	@JSONEntity(title = "Linkages")
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-	List<Linkage> linkages;
+	public List<Linkage> linkages;
 	
 	
 	@OneToOne(cascade=CascadeType.ALL)
 	Modifications modifications;
 	
 	@JSONEntity(title = "Nucleic Acid Type", format = JSONConstants.CV_NUCLEIC_ACID_TYPE)
-	String nucleicAcidType;
+	public String nucleicAcidType;
 	
 	@JSONEntity(title = "Nucleic Acid Subtypes", isUniqueItems = true, format = "table", itemsTitle = "Subtype", itemsFormat = JSONConstants.CV_NUCLEIC_ACID_SUBTYPE)
 	@JsonIgnore
@@ -47,20 +49,20 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	
     @Indexable(facet=true,name="Sequence Origin")
-    String sequenceOrigin;
+    public String sequenceOrigin;
     
     @Indexable(facet=true,name="Sequence Type")
-    String sequenceType;
+    public String sequenceType;
 	
 	@JSONEntity(name = "subunits", title = "Subunits")
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_subunits")
-	List<Subunit> subunits;
+	public List<Subunit> subunits;
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     //@JoinTable(name="ix_ginas_nucleicacid_sugar")
-	List<Sugar> sugars;
+	public List<Sugar> sugars;
 
 	public List<Linkage> getLinkages() {
 		return linkages;
