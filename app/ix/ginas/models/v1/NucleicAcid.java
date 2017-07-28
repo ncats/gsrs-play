@@ -21,8 +21,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import play.Logger;
 
 @JSONEntity(title = "Nucleic Acid", isFinal = true)
@@ -33,7 +31,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	@JSONEntity(title = "Linkages")
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-	public List<Linkage> linkages;
+	List<Linkage> linkages;
 	
 	
 	@JsonIgnore
@@ -41,7 +39,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	Modifications modifications;
 	
 	@JSONEntity(title = "Nucleic Acid Type", format = JSONConstants.CV_NUCLEIC_ACID_TYPE)
-	public String nucleicAcidType;
+	String nucleicAcidType;
 	
 	@JSONEntity(title = "Nucleic Acid Subtypes", isUniqueItems = true, format = "table", itemsTitle = "Subtype", itemsFormat = JSONConstants.CV_NUCLEIC_ACID_SUBTYPE)
 	@JsonIgnore
@@ -50,20 +48,20 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	
     @Indexable(facet=true,name="Sequence Origin")
-    public String sequenceOrigin;
+    String sequenceOrigin;
     
     @Indexable(facet=true,name="Sequence Type")
-    public String sequenceType;
+    String sequenceType;
 	
 	@JSONEntity(name = "subunits", title = "Subunits")
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_subunits")
-	public List<Subunit> subunits;
+	List<Subunit> subunits;
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     //@JoinTable(name="ix_ginas_nucleicacid_sugar")
-	public List<Sugar> sugars;
+	List<Sugar> sugars;
 
 	public List<Linkage> getLinkages() {
 		return linkages;
@@ -71,6 +69,11 @@ public class NucleicAcid extends GinasCommonSubData {
 
 	public void setLinkages(List<Linkage> linkages) {
 		this.linkages = linkages;
+	}
+
+	@JsonIgnore
+	public Modifications getModifications() {
+		return modifications;
 	}
 
 	public void setModifications(Modifications modifications) {
