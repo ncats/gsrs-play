@@ -1459,9 +1459,6 @@
             },
             link: function (scope, element) {
                 if (scope.parent.substanceClass === 'polymer') {
-                    if(!scope.parent.polymer){
-                        scope.parent.polymer={};
-                    }
                     if (_.has(scope.parent.polymer.idealizedStructure)) {
                         _.set(scope.parent, 'structure', scope.parent.polymer.idealizedStructure);
                     } else {
