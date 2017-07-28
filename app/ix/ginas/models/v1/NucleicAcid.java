@@ -34,6 +34,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	List<Linkage> linkages;
 	
 	
+	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
 	Modifications modifications;
 	
@@ -68,10 +69,6 @@ public class NucleicAcid extends GinasCommonSubData {
 
 	public void setLinkages(List<Linkage> linkages) {
 		this.linkages = linkages;
-	}
-
-	public Modifications getModifications() {
-		return modifications;
 	}
 
 	public void setModifications(Modifications modifications) {
