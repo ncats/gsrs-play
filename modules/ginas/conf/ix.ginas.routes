@@ -13,7 +13,7 @@ GET         /substance/:name/v/:version  ix.ginas.controllers.GinasApp.substance
 GET         /substance/:name/edit        ix.ginas.controllers.GinasFactory.edit(name: String, kind: String ?= null)
 GET         /substance/:name/approve     ix.ginas.controllers.GinasApp.approve(name: String)
 GET         /substances                  ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
-GET         /sequence                    ix.ginas.controllers.GinasApp.sequence(id: String ?= null)
+GET         /sequence                    ix.ginas.controllers.GinasApp.sequence(id: String ?= null, seqType: String ?= "protein")
 POST        /sequence			         ix.ginas.controllers.GinasApp.sequenceSearch
 GET         /wizard                      ix.ginas.controllers.GinasApp.wizard(kind: String ?= null)
 POST        /load                        ix.ginas.controllers.GinasLoad.loadJSON

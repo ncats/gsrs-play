@@ -182,8 +182,8 @@ public class GinasFactory extends EntityFactory {
 	 * @deprecated Use {@link GinasApp#sequence(String)} instead
 	 */
 	@Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-	public static Result sequence(String id) {
-		return GinasApp.sequence(id);
+	public static Result sequence(String id, String seqType) {
+		return GinasApp.sequence(id,seqType);
 	}
 
 	/**

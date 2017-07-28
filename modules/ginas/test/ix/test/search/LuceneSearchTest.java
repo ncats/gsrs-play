@@ -304,7 +304,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			JsonNode suggestLater = api.getSuggestPrefixJson(pre2);
 
 			SearchResult r = searcher.nameSearch(name2);
-			assertEquals("Name searchProteins should return 1 result", 1, r.getUuids().size());
+			assertEquals("Name search should return 1 result", 1, r.getUuids().size());
 			
 			assertEquals(1, suggestLater.at("/Name").size());
 			assertEquals(name2, suggestLater.at("/Name/0/key").asText());
@@ -328,7 +328,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 			
 				for (String search : toSearch) {
 					SearchResult r = searcher.nameSearch(search);
-					assertEquals("Pre-reindex Name searchProteins for " + search + " should return 1 result", 1,
+					assertEquals("Pre-reindex Name search for " + search + " should return 1 result", 1,
 							r.getUuids().size());
 				}
 
@@ -336,7 +336,7 @@ public class LuceneSearchTest extends AbstractGinasServerTest {
 
 				for (String search : toSearch) {
 					SearchResult r = searcher.nameSearch(search);
-					assertEquals("Post-reindex Name searchProteins for " + search + " should return 1 result", 1,
+					assertEquals("Post-reindex Name search for " + search + " should return 1 result", 1,
 							r.getUuids().size());
 				}
 

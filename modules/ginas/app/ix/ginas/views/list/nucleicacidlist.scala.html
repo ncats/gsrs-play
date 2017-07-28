@@ -18,9 +18,11 @@
                                 <modal-button type= "export" structureid ="'@nuc.getUuid'" format="fas" ></modal-button>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasApp.sequence(nuc.nucleicAcid.getSubunits().get(0).sequence)" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search">
+                            
+                                <span ng-click="subunitsearch=!subunitsearch" uib-tooltip="Sequence Search" aria-label="Structure Search">
                                     <span class="sr-only">Sequence Search</span>
-                                    <i class="fa fa-search fa-2x success"></i></a>
+                                    <i class="fa fa-search fa-2x success"></i>
+                                </span>
                             </li>
                             @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                                 <li>
@@ -30,16 +32,26 @@
                                 </li>
                             }
                         </ul>
+                        
+                            <div ng-show="subunitsearch">
+                        		@for(subunit <- nuc.nucleicAcid.getSubunits()) {
+                        			<div>
+		                               	<a href="@ix.ginas.controllers.routes.GinasApp.sequence(subunit.uuid.toString(), "nucleicAcid")" target="_self" uib-tooltip="Sequence Subunit @subunit.subunitIndex Search" aria-label="Structure Subunit @subunit.subunitIndex Search">
+	                                    	<span>Subunit <code>@subunit.subunitIndex</code> (@subunit.sequence.length) Similarity Search</span>
+	                                	</a>
+                                	</div>
+                                }
+                            </div>
                     </div>
                 </div>
 } {
-               <div class = "row">
-                    <div class = "col-md-3">
-                        <h5><strong>Subunits:</strong></h5>
-                    </div>
-                    <div class = "col-md-9">
-                        <span class = "badge">@nuc.nucleicAcid.getSubunits().size()</span>
-                    </div>
-                </div>
+<div class = "row">
+    <div class = "col-md-3">
+        <h5><strong>Subunits:</strong></h5>
+    </div>
+    <div class = "col-md-9">
+        <span class = "badge">@nuc.nucleicAcid.getSubunits().size()</span>
+    </div>
+</div>
 } {
 }

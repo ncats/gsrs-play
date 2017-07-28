@@ -1094,9 +1094,9 @@ public class GinasApp extends App {
 
     public static Result _sequences(final String seq, final double identity, final int rows, final int page) {
         CutoffType ct = CutoffType.valueOfOrDefault(request().getQueryString("identityType"));
-        String seqType = Optional.ofNullable(request().getQueryString("seqType")).orElse("Protien");
+        String seqType = Optional.ofNullable(request().getQueryString("seqType")).orElse("Protein");
         ResultProcessor processor;
-        if("Protien".equals(seqType)){
+        if("Protein".equals(seqType)){
             processor = new GinasSequenceResultProcessor();
         }else{
             processor = new GinasNucleicSequenceResultProcessor();
@@ -2316,8 +2316,8 @@ return F.Promise.<Result>promise( () -> {
     // ***************
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result sequence(String id) {
-        return ok(ix.ginas.views.html.sequence.render(id));
+    public static Result sequence(String id, String seqType) {
+        return ok(ix.ginas.views.html.sequence.render(id, seqType));
     }
 
     public static Result structuresearch(String q) {

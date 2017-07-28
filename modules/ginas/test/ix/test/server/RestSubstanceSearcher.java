@@ -40,7 +40,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
     private static final String API_STRUCTURE_SEARCH = BASE_URL + "api/v1/substances/structureSearch";
     
     
-    private static final String API_TEXT_SEARCH = BASE_URL + "api/v1/substances/searchProteins";
+    private static final String API_TEXT_SEARCH = BASE_URL + "api/v1/substances/search";
     private static final String API_SEQUENCE_SEARCH = BASE_URL + "api/v1/substances/sequenceSearch";
     private static final String API_ALL_BROWSE = BASE_URL + "api/v1/substances/sequenceSearch";
 
@@ -439,7 +439,7 @@ public class RestSubstanceSearcher implements SubstanceSearcher{
             JsonNode jsn = req.get()
                     .get(REST_TIMEOUT)
                     .asJson();
-            return searcher.resultsFromFirstResultNode(jsn, ""); //No searchProteins result key for text from rest
+            return searcher.resultsFromFirstResultNode(jsn, ""); //No search result key for text from rest
         }
 
         @Override

@@ -309,8 +309,9 @@ public class PojoDiff {
 			JsonNode o2=arr.get(i);
 			String id=getID(o2);
 			String ind=String.format("%05d", i);
+			String id_ind=String.format("%05d", 0);
 			if(id!=null){
-				mnew.set("$" + id + "_" + ind, o2);
+				mnew.set("$" + id + "_" + id_ind, o2);
 			}else{
 				mnew.set("_" + ind, o2);
 			}
@@ -402,6 +403,8 @@ public class PojoDiff {
     			);
 		List<JsonNode> reorderedDiffs= new ArrayList<JsonNode>();
 		
+		
+		
 		JsonNode normalDiff= JsonDiff.asJson(
 				js1,
 				js2
@@ -446,6 +449,9 @@ public class PojoDiff {
 		canonicalizeDiff(reorderedDiffs);
 		ArrayNode an=(new ObjectMapper()).createArrayNode();
 		an.addAll(reorderedDiffs);
+		for(JsonNode jsn1: an){
+			System.out.println(jsn1.toString());
+		}
 		return an;
 		//return normalDiff;
 	}
@@ -920,10 +926,20 @@ public class PojoDiff {
 			@Override
 			public Object set(Object instance, Object set) {
 				try{
+					//Note: this should not be necessary,
+					//but in some cases it appears that a deserialization step
+					//forces the values of some strings to become
+					//enums, provided that the string literal found is also found
+					//in an enum. This is a strange error likely built into the
+					//Jackson deserializer. For now, this is an attempt to mitigate that
+					//issue.
+					if(m.getParameterTypes()[0].equals(String.class) && set!=null && !set.getClass().equals(String.class)){
+						set=set.toString();
+					}
 					m.invoke(instance, set);
 					return null;
 				}catch(Exception e){
-					e.getCause().printStackTrace();
+					e.printStackTrace();
 					System.err.println(instance.getClass() + " set to:" + set + " using " + m);
 					System.err.println(set.getClass());
 					throw new IllegalStateException(e);
