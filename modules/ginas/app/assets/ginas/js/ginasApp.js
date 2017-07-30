@@ -181,6 +181,8 @@
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
+            
+            substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
             
         };
@@ -649,6 +651,9 @@
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
+            
+            $scope.substance=Substance;
+            
             Substance.$$setSubstance($window.loadjson).then(function(data){
                 _.set(data, '$$update', true);
                 data=data.$$setClass(data.$$getClass());
