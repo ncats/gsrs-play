@@ -206,8 +206,14 @@ public class ValidationUtils {
 						strat));
 				break;
 			case protein:
-				gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, (ProteinSubstance) old,
-						strat));
+				if(old instanceof ProteinSubstance){
+					gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, (ProteinSubstance) old,
+							strat));	
+				}else{
+					gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, null,
+							strat));
+				}
+				
 				break;
 			case structurallyDiverse:
 				gpm.addAll(validateAndPrepareStructurallyDiverse(
