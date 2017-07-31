@@ -56,7 +56,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	@JSONEntity(name = "subunits", title = "Subunits")
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_subunits")
-	List<Subunit> subunits;
+	public List<Subunit> subunits;
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
