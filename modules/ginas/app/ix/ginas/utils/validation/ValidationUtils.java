@@ -1097,6 +1097,22 @@ public class ValidationUtils {
 						break;
 					}
 				}
+				System.out.println("sunit:" + su.sequence);
+				if(su.sequence==null || su.sequence.equals("")){
+					GinasProcessingMessage mes = GinasProcessingMessage
+							.ERROR_MESSAGE(
+									"Protein subunit (at "
+											+ (i + 1)
+											+ " position) has empty sequence. This is not allowed.");
+					
+					gpm.add(mes);
+					strat.processMessage(mes);
+					System.out.println("Added it!");
+					switch (mes.actionType) {
+						case FAIL:
+							return gpm;		
+					}
+				}
 			}
 
 			for (DisulfideLink l : cs.protein.getDisulfideLinks()) {
