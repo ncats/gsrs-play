@@ -181,6 +181,8 @@
             _.forEach(sub, function (value, key) {
                 _.set(substance, key, value);
             });
+            
+            substance.$$setClass(substance.$$getClass());
             return $q.when(expandCV(substance));
             
         };
@@ -649,6 +651,9 @@
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
+            
+            $scope.substance=Substance;
+            
             Substance.$$setSubstance($window.loadjson).then(function(data){
                 _.set(data, '$$update', true);
                 data=data.$$setClass(data.$$getClass());
@@ -2015,13 +2020,12 @@
                     var ret="";
                     if(seq) {
                         seq = seq.replace(/\s/g,"");
-                        ret+="\n";
                         for (var i = 0; i < seq.length; i += 60) {
                             if(i+60 < seq.length)
                             {
                                 ret += seq.substr(i, 60) + "\n";
                             }else{
-                                ret += seq.substr(i, 60) + "*";
+                                ret += seq.substr(i, 60);
                             }
                         }
                     }

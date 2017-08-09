@@ -46,11 +46,7 @@ import ix.core.models.UserProfile;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.search.EntityFetcher;
-import ix.core.search.SearchOptions;
-import ix.core.search.SearchResult;
-import ix.core.search.SearchResultContext;
-import ix.core.search.SearchResultProcessor;
+import ix.core.search.*;
 import ix.core.search.text.TextIndexer;
 import ix.core.search.text.TextIndexer.FV;
 import ix.core.search.text.TextIndexer.Facet;
@@ -463,12 +459,15 @@ public class GinasApp extends App {
         String identType = getFirstOrElse(params.get("identityType"), "SUB");
         String wait = getFirstOrElse(params.get("wait"), null);
 
+        String seqType = getFirstOrElse(params.get("seqType"), "Protein");
+
         if (values != null && values.length > 0) {
             String seq = values[0];
             try {
                 Payload payload = _payload.get().createPayload("Sequence Search", "text/plain", seq);
                 Call call = routes.GinasApp.substances(payload.id.toString(), 16, 1);
                 return redirect(call.url() + "&type=sequence" + "&identity=" + ident + "&identityType=" + identType
+                        + "&seqType="+seqType
                         + ((wait != null) ? "&wait=" + wait : ""));
             } catch (Exception ex) {
                 Logger.error("Sequence search failed", ex);
@@ -1094,14 +1093,16 @@ public class GinasApp extends App {
     }
 
     public static Result _sequences(final String seq, final double identity, final int rows, final int page) {
-        CutoffType ct = CutoffType.GLOBAL;
-        try {
-            ct = CutoffType.valueOf(request().getQueryString("identityType"));
-        } catch (Exception e) {
-            e.printStackTrace();
+        CutoffType ct = CutoffType.valueOfOrDefault(request().getQueryString("identityType"));
+        String seqType = Optional.ofNullable(request().getQueryString("seqType")).orElse("Protein");
+        ResultProcessor processor;
+        if("Protein".equals(seqType)){
+            processor = new GinasSequenceResultProcessor();
+        }else{
+            processor = new GinasNucleicSequenceResultProcessor();
         }
         try {
-            SearchResultContext context = sequence(seq, identity, rows, page, ct, new GinasSequenceResultProcessor());
+            SearchResultContext context = sequence(seq, identity, rows, page, ct, processor);
 
             return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
         } catch (Exception ex) {
@@ -2315,8 +2316,8 @@ return F.Promise.<Result>promise( () -> {
     // ***************
 
     @Dynamic(value = IxDynamicResourceHandler.CAN_SEARCH, handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
-    public static Result sequence(String id) {
-        return ok(ix.ginas.views.html.sequence.render(id));
+    public static Result sequence(String id, String seqType) {
+        return ok(ix.ginas.views.html.sequence.render(id, seqType));
     }
 
     public static Result structuresearch(String q) {
@@ -2547,5 +2548,30 @@ return F.Promise.<Result>promise( () -> {
         //System.out.println("node:" + node);
         return ok(node);
     }
+    public static class GinasNucleicSequenceResultProcessor
+            extends SearchResultProcessor<SequenceIndexer.Result, NucleicAcidSubstance> {
 
+
+        @Override
+        protected NucleicAcidSubstance instrument(SequenceIndexer.Result r) throws Exception {
+
+            List<NucleicAcidSubstance> nucSubstances = SubstanceFactory.nucfinder.get().where()
+                    .eq("nucleicAcid.subunits.uuid", r.id).findList(); // also slow
+            NucleicAcidSubstance nuc = nucSubstances.isEmpty() ? null : nucSubstances.get(0);
+            if (nuc != null) {
+                Key key=EntityWrapper.of(nuc).getKey();
+                Map<String,Object> added = IxCache.getMatchingContext(this.getContext(), key);
+                if(added==null){
+                    added=new HashMap<String,Object>();
+                }
+                List<SequenceIndexer.Result> alignments = (List<SequenceIndexer.Result>)
+                        added.computeIfAbsent("alignments", f->new ArrayList<SequenceIndexer.Result>());
+                alignments.add(r);
+                IxCache.setMatchingContext(this.getContext(), key, added);
+            } else {
+                Logger.warn("Can't retrieve nucleic for subunit " + r.id);
+            }
+            return nuc;
+        }
+    }
 }

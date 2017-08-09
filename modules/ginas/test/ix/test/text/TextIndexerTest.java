@@ -62,7 +62,19 @@ public class TextIndexerTest extends AbstractGinasServerTest{
 	}
 
 
-	
+    @Test
+    public void stringWithStopWord() throws IOException {
+        String value="VITAMIN";
+
+
+        ti.add(EntityWrapper.of(new MySpecialTestClass("id", value+" A")));
+        ti.add(EntityWrapper.of(new MySpecialTestClass("id", value+" B")));
+        ti.add(EntityWrapper.of(new MySpecialTestClass("id", value+" C")));
+
+        SearchResult sr= ti.search("\""+ value+" A\"", 2);
+        assertEquals(1,sr.getCount());
+
+    }
 	@Test
 	public void testIndexEmptyStringField() throws IOException {
 			String value="VALUEIWILLSEARCHFOR";

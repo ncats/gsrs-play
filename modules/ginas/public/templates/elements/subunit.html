@@ -17,9 +17,9 @@
     <div ng-hide="edit" class="row">
         <div class="col-md-12" ng-show=!numbers>
             <span class="pull-left">
-                <pre>&gt;Subunit {{index}}
-                    {{fastaview}}
-                </pre>
+<pre>&gt;SUBUNIT_{{index}}
+{{fastaview}}
+</pre>
        </span></div>
         <div class="col-lg-2 col-md-3 col-sm-3 subunit-chunk" ng-repeat="(index, chunk) in obj.$$subunitDisplay" ng-show=numbers>
             <span class="pull-right count">{{($index)*10 + chunk.length}} </span><br>

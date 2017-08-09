@@ -10,8 +10,12 @@ import ix.ginas.models.v1.Substance;
 
 public class ChemicalSubstanceBuilder extends AbstractSubstanceBuilder<ChemicalSubstance, ChemicalSubstanceBuilder>{
 
+    @Override
+    protected Substance.SubstanceClass getSubstanceClass() {
+        return Substance.SubstanceClass.chemical;
+    }
 
-	@Override
+    @Override
 	protected ChemicalSubstanceBuilder getThis() {
 		return this;
 	}

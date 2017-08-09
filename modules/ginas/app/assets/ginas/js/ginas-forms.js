@@ -217,7 +217,7 @@
           * one site may have the same shorthand notation.
           *
           * If "asmap" is true, the returned object will be an 
-	  * associative array of the shorthand site keys to the 
+      * associative array of the shorthand site keys to the 
           * objects
           *
           */
@@ -257,9 +257,9 @@
                             });
                         }
                 }
-		if(asmap){
-			return factory.sitesAsMap(sites);
-		}
+        if(asmap){
+            return factory.sitesAsMap(sites);
+        }
                 return sites;
         };
 
@@ -288,12 +288,12 @@
 
         factory.markSites = function (sites, mark, gen){
                 var ret=[];
-		var ogen=gen;
-		if(ogen && typeof ogen !== "function"){
-			gen = function(){
-				return ogen;
-			};
-		}
+        var ogen=gen;
+        if(ogen && typeof ogen !== "function"){
+            gen = function(){
+                return ogen;
+            };
+        }
                 if(!gen){
                         gen = function(){
                                 return true;
@@ -310,7 +310,7 @@
                 return ret;
         };
 
-	 /**
+     /**
           * Recalculates the subunit display chunks, used both as a rendering aid,
           * and in some other methods as a quick cache of what sites are modified
           * or otherwise enhanced.
@@ -937,7 +937,7 @@
                     _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                 }
                 if ((scope.parent.structurallyDiverse.part.length > 0 && scope.parent.structurallyDiverse.part[0] != 'WHOLE') ||
-                	(scope.parent.structurallyDiverse.fractionName || scope.parent.structurallyDiverse.fractionMaterialType)) {
+                    (scope.parent.structurallyDiverse.fractionName || scope.parent.structurallyDiverse.fractionMaterialType)) {
                     _.set(scope.parent, '$$diverseType', 'part');
                     _.set(scope, '$$temp', scope.parent.structurallyDiverse.part);
                 }
@@ -1439,7 +1439,7 @@
                         return null;
                     }
                 };
-		scope.$on('removed', function (e) {
+        scope.$on('removed', function (e) {
                     subunitParser.parseSubunits(scope.parent);
                 });
                 scope.$on('changed', function (e) {

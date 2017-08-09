@@ -34,6 +34,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	List<Linkage> linkages;
 	
 	
+	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
 	Modifications modifications;
 	
@@ -55,7 +56,7 @@ public class NucleicAcid extends GinasCommonSubData {
 	@JSONEntity(name = "subunits", title = "Subunits")
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_subunits")
-	List<Subunit> subunits;
+	public List<Subunit> subunits;
 	
 	@JSONEntity(title = "Sugars", isRequired = true)
 	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
@@ -70,6 +71,7 @@ public class NucleicAcid extends GinasCommonSubData {
 		this.linkages = linkages;
 	}
 
+	@JsonIgnore
 	public Modifications getModifications() {
 		return modifications;
 	}

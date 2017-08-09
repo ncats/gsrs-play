@@ -155,6 +155,7 @@
             @if(total >= 1) {
                 @defining(if (ctx!=null) ctx.getId() else null) { ctxId =>
                 	@if(ctxId!=null){
+                	    @if(current==1){
 	                    @if(ctx.hasExactMatches()){
 		                    <div class="specialmatches" ng-init="hideall=true" ng-show="hideall">
 		                    @if(ctx.getExactMatches().size()==1){
@@ -168,6 +169,7 @@
 	                        <div>&nbsp;</div>
 	                        <button class="btn btn-primary" ng-click="hideall=false">Show All Records Matching Search</button>
 	                        </div>
+	                    }
 	                    }
                     }
                 }

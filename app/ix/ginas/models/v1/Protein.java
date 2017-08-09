@@ -148,7 +148,7 @@ public class Protein extends GinasCommonSubData {
 	@OneToOne(cascade = CascadeType.ALL)
 	public Glycosylation glycosylation;
 
-	@JsonView(BeanViews.Internal.class)
+	@JsonIgnore
 	@OneToOne(cascade = CascadeType.ALL)
 	public Modifications modifications;
 

@@ -41,6 +41,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field.Store;
@@ -1175,7 +1176,8 @@ public class TextIndexer implements Closeable, ProcessListener {
 		Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
 		fields.put(FIELD_ID, new KeywordAnalyzer());
 		fields.put(FIELD_KIND, new KeywordAnalyzer());
-		return new PerFieldAnalyzerWrapper(new StandardAnalyzer(LUCENE_VERSION), fields);
+        //dkatzel 2017-08 no stop words
+        return new PerFieldAnalyzerWrapper(new StandardAnalyzer(LUCENE_VERSION, CharArraySet.EMPTY_SET), fields);
 	}
 
 	/**
@@ -1247,17 +1249,26 @@ public class TextIndexer implements Closeable, ProcessListener {
 
 		private static final Pattern ROOT_CONTEXT_ADDER=
 				Pattern.compile("(\\b(?!" + ROOT + ")[^ :]*_[^ :]*[:])");
-		
+
+		//TODO setting the default operation to AND
+        //will make split words on white space act as an && operation not an or
+        //so phrases won't have to be quoted
+
 		protected IxQueryParser(CharStream charStream) {
 			super(charStream);
+//			setDefaultOperator(QueryParser.AND_OPERATOR);
 		}
 		
 		public IxQueryParser(String def) {
             super(def, createIndexAnalyzer());
+
+//            setDefaultOperator(QueryParser.AND_OPERATOR);
         }
 		
 		public IxQueryParser(String string, Analyzer indexAnalyzer) {
 			super(string, indexAnalyzer);
+
+//            setDefaultOperator(QueryParser.AND_OPERATOR);
 		}
 
 		@Override

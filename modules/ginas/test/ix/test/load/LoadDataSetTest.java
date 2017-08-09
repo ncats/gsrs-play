@@ -89,7 +89,7 @@ public class LoadDataSetTest extends AbstractLoadDataSetTest{
 						+ "\" but found \""
 						+ results2.getUuids().toString() + "\"", results2
 						.getUuids().contains(findUUID));
-        assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);        
+        assertTrue("15th page of substructure search should have no other substances",results2.getUuids().size()==1);
     }
     
     private void substructureSearchShouldWaitAndLaterPagesShouldReturn(BrowserSession session) throws IOException, AssertionError{

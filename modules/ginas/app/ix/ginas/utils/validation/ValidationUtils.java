@@ -206,8 +206,14 @@ public class ValidationUtils {
 						strat));
 				break;
 			case protein:
-				gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, (ProteinSubstance) old,
-						strat));
+				if(old instanceof ProteinSubstance){
+					gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, (ProteinSubstance) old,
+							strat));	
+				}else{
+					gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s, null,
+							strat));
+				}
+				
 				break;
 			case structurallyDiverse:
 				gpm.addAll(validateAndPrepareStructurallyDiverse(
@@ -1089,6 +1095,22 @@ public class ValidationUtils {
 						break;
 					default:
 						break;
+					}
+				}
+				System.out.println("sunit:" + su.sequence);
+				if(su.sequence==null || su.sequence.equals("")){
+					GinasProcessingMessage mes = GinasProcessingMessage
+							.ERROR_MESSAGE(
+									"Protein subunit (at "
+											+ (i + 1)
+											+ " position) has empty sequence. This is not allowed.");
+					
+					gpm.add(mes);
+					strat.processMessage(mes);
+					System.out.println("Added it!");
+					switch (mes.actionType) {
+						case FAIL:
+							return gpm;		
 					}
 				}
 			}

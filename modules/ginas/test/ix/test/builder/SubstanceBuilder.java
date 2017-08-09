@@ -20,6 +20,11 @@ public class SubstanceBuilder extends AbstractSubstanceBuilder<Substance, Substa
 
 	private static final ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
 
+	@Override
+	protected Substance.SubstanceClass getSubstanceClass() {
+		return Substance.SubstanceClass.concept;
+	}
+
 	public SubstanceBuilder() {
 	}
 

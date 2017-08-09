@@ -8,6 +8,10 @@ import ix.ginas.models.v1.Substance;
 
 public class ProteinSubstanceBuilder  extends AbstractSubstanceBuilder<ProteinSubstance, ProteinSubstanceBuilder>{
 
+    @Override
+    protected Substance.SubstanceClass getSubstanceClass() {
+        return Substance.SubstanceClass.protein;
+    }
 
     @Override
     protected ProteinSubstanceBuilder getThis() {

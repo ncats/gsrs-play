@@ -27,6 +27,8 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 	
 	public abstract Supplier<S> getSupplier();
 
+	protected abstract Substance.SubstanceClass getSubstanceClass();
+
 	protected abstract T getThis();
 
 
@@ -281,9 +283,12 @@ public abstract class AbstractSubstanceBuilder<S extends Substance, T extends Ab
 			return rr;
 		}
 	}
-	
+
 	public S build(){
-		return afterCreate().apply(getSupplier().get());
+
+	    S s = getSupplier().get();
+	    s.substanceClass = getSubstanceClass();
+	    return afterCreate().apply(s);
 	}
 	
 	public JsonNode buildJson(){
