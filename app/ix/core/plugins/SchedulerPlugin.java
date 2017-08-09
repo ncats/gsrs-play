@@ -10,8 +10,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -181,6 +183,8 @@ public class SchedulerPlugin extends Plugin {
         private Date lastFinished=null;
         private int numberOfRuns=0;
         private boolean enabled=true;
+
+        private FutureTask currentTask=null;
         
         private AtomicBoolean isRunning=new AtomicBoolean(false);
 
@@ -287,9 +291,20 @@ public class SchedulerPlugin extends Plugin {
     	    isRunning.set(true);
             lastStarted=TimeUtil.getCurrentDate();
             this.listener.start();
-            try{
-                this.r.accept(this.listener);
+            try {
+                Callable<Void> callable = () -> {
+                    try {
+                        r.accept(this.listener);
+                        return null;
+                    }catch(Throwable t){
+                        t.printStackTrace();
+                        throw t;
+                }
+            };
+                currentTask = new FutureTask<>(callable);
+                currentTask.run();
             }finally{
+                System.out.println("in runNow finally block");
                 lastFinished=TimeUtil.getCurrentDate();
                 isRunning.set(false);
                 this.listener.complete();
@@ -336,6 +351,17 @@ public class SchedulerPlugin extends Plugin {
                   disable();
                   return ScheduledTask.this;
               });
+        }
+
+        @JsonProperty("@cancel")
+        public ResourceReference<ScheduledTask> getCancelAction () {
+            if(!this.isRunning())return null;
+
+            String uri = Global.getNamespace()+"/scheduledjobs("+id+")/$@cancel";
+            return ResourceReference.of(uri, ()->{
+                cancel();
+                return ScheduledTask.this;
+            });
         }
     	
     	@JsonProperty("@enable")
@@ -471,7 +497,17 @@ public class SchedulerPlugin extends Plugin {
             return this;
             
         }
-        
+
+        public ScheduledTask cancel(){
+            System.out.println("in cancel method");
+            if(currentTask !=null){
+                System.out.println("calling cancel in currentTask");
+                currentTask.cancel(true);
+            }
+            return this;
+
+        }
+
         public ScheduledTask enable(){
             this.enabled=true;
             return this;

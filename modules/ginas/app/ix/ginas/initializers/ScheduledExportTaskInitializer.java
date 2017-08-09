@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import ix.core.initializers.Initializer;
 import ix.core.models.Principal;
@@ -77,8 +80,23 @@ public class ScheduledExportTaskInitializer implements Initializer{
                 ExportProcess p = new ExportProcessFactory().getProcess(emd,
                         ProcessExecutionService.CommonStreamSuppliers.allForDeep(Substance.class));
 
-                p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)))
-                 .get();
+                Future<?> future = p.run(out -> Unchecked.uncheck(() -> GinasApp.getSubstanceExporterFor(extension, out, publicOnlyBool)));
+                boolean stillRunning = true;
+                do{
+                    try{
+                        future.get(3, TimeUnit.SECONDS);
+                        stillRunning=false;
+                    }catch(TimeoutException ignored){
+//                        if(Thread.currentThread().isInterrupted()){
+//                            System.out.println("THREAD WAS INTERRUPTED");
+//                            emd.cancel();
+//                        }
+                    }catch(InterruptedException e){
+                        e.printStackTrace();
+                        System.out.println("got interrupted exception");
+                        emd.cancel();
+                    }
+                }while(stillRunning);
                 
             } catch (Exception e) {
                 e.printStackTrace();

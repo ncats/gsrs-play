@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -49,8 +50,12 @@ public class ExportProcess {
         this.metaData = metaData;
         this.substanceSupplier = Objects.requireNonNull(substanceSupplier);
     }
-
     public synchronized Future<?> run(Function<OutputStream, Exporter<Substance>> exporterFunction) throws IOException{
+        return run(exporterFunction, new AtomicBoolean(false));
+    }
+    public synchronized Future<?> run(Function<OutputStream, Exporter<Substance>> exporterFunction,
+                                      AtomicBoolean cancelledFlag
+                                      ) throws IOException{
         System.out.println("run state = " + currentState);
         if(currentState != State.INITIALIZED){
             return null;
@@ -75,15 +80,23 @@ public class ExportProcess {
             Future<?> future=factoryPlugin.get().submit( ()->{
                 try(Stream<Substance> sstream = substanceSupplier.get()){
                     System.out.println("Starting export");
-                    sstream.peek(s -> {
-                        Unchecked.ioException( () -> exporter.export(s));
-                        this.metaData.addRecord();
-                    })
-                    .anyMatch(m->{
-                     return this.metaData.cancelled;   
-                    });
-                    
+                   sstream
+                            .peek( s -> System.out.println(this.metaData.cancelled))
+
+                            .peek(s -> {
+                                            if(!this.metaData.cancelled){
+                                                Unchecked.ioException( () -> exporter.export(s));
+                                                this.metaData.addRecord();
+                                            }
+
+                                        })
+                            .filter(s -> this.metaData.cancelled)
+                           .peek(s->System.out.println("was cancelled"))
+                            .findFirst();
+
+
                     currentState = State.DONE;
+
                 }catch(Throwable t){
                     t.printStackTrace();
                     currentState = State.ERRORED_OUT;

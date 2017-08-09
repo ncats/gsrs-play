@@ -30,6 +30,7 @@
             
             
             var responsePromise = $http.get(baseurl + "api/v1/scheduledjobs(" + $scope.state.id +")");
+            console.log("response Promise url = " + responsePromise);
             responsePromise.success(function (data, status, headers, config) {
             	if(JSON.stringify(data)!==JSON.stringify($scope.state)){
             		$scope.set(data);
@@ -123,6 +124,13 @@
                 	 console.log("executed");
                 	 $scope.refresh();
                 	 });
+        };
+        $scope.cancel = function () {
+            console.log("cancelled");
+            $http.get($scope.state["@cancel"])
+                .then(function (dat) {
+                    $scope.refresh();
+                });
         };
         
         
