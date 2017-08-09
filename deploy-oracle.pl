@@ -77,7 +77,7 @@ my $daemon = Proc::Daemon->new(
 
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
-
+exit;
 
 my $ua = LWP::UserAgent->new;
 my $startUpURL = "http://localhost:$port/dev/ginas/app/api/v1";
@@ -85,8 +85,8 @@ my $startReq = HTTP::Request->new(GET => $startUpURL);
 my $startResponse;
 my $tries=0;
 do{
-	#wait 10 seconds for ginas to start up...
-  sleep(10);
+	#wait 30 seconds for ginas to start up...
+  sleep(30);
   $startResponse = $ua->request($startReq);
   $tries++;
   print "$tries\n";

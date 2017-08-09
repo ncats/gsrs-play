@@ -204,6 +204,27 @@
                         console.info('Loading complete.');
                     });
                 };
+
+
+                //Child frame
+
+                 function getJson(){
+                    return angular.element(document.body).scope().substance.$$flattenSubstance();
+                 }
+
+                 function setJson(json){
+                 var molChanger=angular.element(document.body).injector().get("molChanger");
+                 var Substance= angular.element(document.body).injector().get("Substance");
+                 var $scope=angular.element(document.body).scope();
+                 console.log($scope);
+                 Substance.$$setSubstance(json)
+                 .then(function (data) {
+                 $scope.substance = data;
+                 if($scope.substance.substanceClass =="chemical"){
+                 molChanger.setMol($scope.substance.structure.molfile);
+                 }
+                 });
+                 }
         </script>
     }
 
