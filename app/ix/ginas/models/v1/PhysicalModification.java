@@ -29,6 +29,6 @@ public class PhysicalModification extends GinasCommonSubData {
         new ArrayList<PhysicalParameter>();
     
     @JSONEntity(title = "Modification Group")
-    String modificationGroup = "1";
+    public String modificationGroup = "1";
     public PhysicalModification () {}
 }

@@ -16,10 +16,10 @@
                 <div class = "row">
                     <div class = "col-md-12">
                         <ul class= "list-inline list-unstyled tools">
-                            <li>
+                            <li class = "col-md-3">
                                 <modal-button type= "export" structureid ="'@prot.uuid'" format="fas" ></modal-button>
                             </li>
-                            <li>
+                            <li class = "col-md-3">
                             
                                 <span ng-click="subunitsearch=!subunitsearch" uib-tooltip="Sequence Search" aria-label="Structure Search">
                                     <span class="sr-only">Sequence Search</span>
@@ -27,11 +27,15 @@
                                 </span>
                             </li>
                             @dynamic(name = IxDynamicResourceHandler.CAN_UPDATE, handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                                <li>
+                                <li class = "col-md-3">
                                     <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))" target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance">
                                         <span class="sr-only">Edit Protein</span>
                                         <i class="fa fa-pencil fa-2x success"></i></a>
                                 </li>
+
+                                <li class = "col-md-3"> <a href="@routes.Assets.at("gsrs2/index.html")#/substance/@prot.getUuid()/names" target="_blank" uib-tooltip="Edit New Form" aria-label="Edit Protein Substance">
+                                    <span class="sr-only">Edit New Form</span>
+                                    <i class="fa fa-link fa-2x success"></i></a></li>
                             }
                         </ul>
                         

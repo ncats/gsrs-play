@@ -61,9 +61,11 @@ public class StructuralModification extends GinasCommonSubData {
     public SubstanceReference molecularFragment;
     
     @JSONEntity(title = "Modified Fragment Role")
-    String moleculareFragmentRole;
+    public String moleculareFragmentRole;
     
     @JSONEntity(title = "Modification Group")
-        String modificationGroup = "1";
+    public String modificationGroup = "1";
+    
+    
     public StructuralModification () {}
 }
