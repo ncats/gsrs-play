@@ -138,7 +138,10 @@ public class SequenceIndexer {
         public int gap () { return Math.abs(i - j); }
         public String toString () { return kmer+"["+i+","+j+"]"; }
         public int compareTo (HSP hsp) {
-            int d = gap () - hsp.gap();
+            int d = hsp.kmer.length() - kmer.length();
+            if (d == 0) {
+                d = gap () - hsp.gap();
+            }
             if (d == 0) {
                 d = i - hsp.i;
             }
@@ -334,7 +337,15 @@ public class SequenceIndexer {
             this.target = target;
         }
 
-
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "query=" + query +
+                    ", id='" + id + '\'' +
+                    ", target=" + target +
+                    ", alignments=" + alignments +
+                    '}';
+        }
     }
 
     static final Result POISON_RESULT = new Result ();
@@ -637,16 +648,32 @@ public class SequenceIndexer {
             for (int i = 0; i < docs.totalHits; ++i) {
                 Document doc = kmerSearcher.doc(docs.scoreDocs[i].doc);
                 final String id = doc.get(FIELD_ID);
+                String seq = getSeq (id);
 
                 List<HSP> hits = hsp.computeIfAbsent(id, k-> new ArrayList<>());
 
                 IndexableField[] pos = doc.getFields(FIELD_POSITION);
+                int maxq=0;
 
                 for (int j = 0; j < pos.length; ++j) {
                     int k = pos[j].numericValue().intValue();
                     for (int l = positions.nextSetBit(0);
                             l >= 0; l = positions.nextSetBit(l+1)) {
-                        hits.add(new HSP (kmer, l, k));
+                        int p = k+kmer.length(), q = l+kmer.length();
+                        StringBuilder km = new StringBuilder (kmer);
+                        while (p < seq.length() && q < query.length()
+                                && seq.charAt(p) ==
+                                Character.toUpperCase(query.charAt(q))) {
+                            km.append(query.charAt(q));
+                            ++p;
+                            ++q;
+                        }
+
+                        if (q >= maxq) {
+                            //System.err.println("** "+(q-l)+" "+km);
+                            hits.add(new HSP (km.toString(), l, k));
+                            maxq = q;
+                        }
                     }
                 }
             }

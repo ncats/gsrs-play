@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 /**
  * A basic class for kmer
  */
-public class Kmers {
+public class Kmers implements Comparator<String> {
     protected ConcurrentMap<String, BitSet> kmers =
         new ConcurrentHashMap<String, BitSet>();
     protected ConcurrentMap<String, Set<String>> neighbors =
@@ -22,10 +22,16 @@ public class Kmers {
             throw new IllegalArgumentException ("Bogus K value "+K);
         this.K = K;
     }
-
+    public int compare (String s1, String s2) {
+        BitSet k1 = kmers.get(s1);
+        BitSet k2 = kmers.get(s2);
+        return k1.nextSetBit(0) - k2.nextSetBit(0);
+    }
     public int size () { return kmers.size(); }
     public Set<String> kmers () {
-        return kmers.keySet();
+        Set<String> ks = new TreeSet<String>(this);
+        ks.addAll(kmers.keySet());
+        return ks;
     }
 
     public BitSet positions (String kmer) {
@@ -54,6 +60,7 @@ public class Kmers {
         return create (seq, 3);
     }
     
+
     public static Kmers create (String seq, int K) {
         Kmers kmers = new Kmers (K);
         char[] chars = seq.toUpperCase().toCharArray();
