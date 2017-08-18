@@ -1279,7 +1279,14 @@ public class TextIndexer implements Closeable, ProcessListener {
 			// add ROOT prefix to all term queries (containing '_') where not
 			// otherwise specified
 			qtext = ROOT_CONTEXT_ADDER.matcher(qtext).replaceAll(ROOT + "_$1");
-			return super.parse(qtext);
+			
+			//If there's an error parsing, it probably needs to have
+			//quotes. Likely this happens from ":" chars
+			try{
+				return super.parse(qtext);
+			}catch(Exception e){
+				return super.parse("\"" + qtext  +"\"");
+			}
 		}
 	}
 
