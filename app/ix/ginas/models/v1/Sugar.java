@@ -11,10 +11,12 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.SingleParent;
 import ix.ginas.models.GinasCommonSubData;
 
 @SuppressWarnings("serial")
 @Entity
+@SingleParent
 @Table(name="ix_ginas_sugar")
 public class Sugar extends GinasCommonSubData {
 	@ManyToOne(cascade = CascadeType.PERSIST)

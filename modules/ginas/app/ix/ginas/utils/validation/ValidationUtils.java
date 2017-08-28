@@ -1097,7 +1097,6 @@ public class ValidationUtils {
 						break;
 					}
 				}
-				System.out.println("sunit:" + su.sequence);
 				if(su.sequence==null || su.sequence.equals("")){
 					GinasProcessingMessage mes = GinasProcessingMessage
 							.ERROR_MESSAGE(
@@ -1107,7 +1106,6 @@ public class ValidationUtils {
 					
 					gpm.add(mes);
 					strat.processMessage(mes);
-					System.out.println("Added it!");
 					switch (mes.actionType) {
 						case FAIL:
 							return gpm;		

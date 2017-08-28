@@ -1187,6 +1187,7 @@ public class EntityFactory extends Controller {
     		   .map(o->EntityWrapper.of(o))
     		   .filter(ew->ew.isExplicitDeletable())
     		   .forEach(ew->{
+    			   System.out.println("Deleting:" +((Model)ew.getValue()) );
     			   Logger.warn("deleting:" + ((Model)ew.getValue()));
     			   ew.delete();
     		   });
