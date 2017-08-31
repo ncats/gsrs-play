@@ -103,9 +103,9 @@ public class SubstanceSpreadsheetExporter implements Exporter<Substance> {
 
 
         DEFAULT_RECIPE_MAP.put(DefaultColumns.CAS, new CodeSystemRecipe("CAS"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.EINES, new CodeSystemRecipe("EC (EINECS)"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.EC, new CodeSystemRecipe("ECHA (EC/EINECS)"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.ITIS, new CodeSystemRecipe("ITIS"));
-        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCBI_TAXOMONY, new CodeSystemRecipe("NCBI TAXONOMY"));
+        DEFAULT_RECIPE_MAP.put(DefaultColumns.NCBI, new CodeSystemRecipe("NCBI TAXONOMY"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.USDA_PLANTS, new CodeSystemRecipe("USDA PLANTS"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.INN, new CodeSystemRecipe("INN"));
         DEFAULT_RECIPE_MAP.put(DefaultColumns.NCI_THESAURUS, new CodeSystemRecipe("NCI_THESAURUS"));
