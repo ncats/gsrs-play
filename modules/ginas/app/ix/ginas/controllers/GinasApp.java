@@ -1441,6 +1441,7 @@ public class GinasApp extends App {
 
     }
 
+    //TODO: put in the same structure pipeline as the other searches
     public static F.Promise<Result> lychimatch(final String query, int rows, int page, boolean exact) {
         try {
             Structure struc2 = StructureProcessor.instrument(query, null, true); // don't
@@ -1455,22 +1456,23 @@ public class GinasApp extends App {
         }
         return F.Promise.promise( () ->internalServerError(ix.ginas.views.html.error.render(500, "Unable to perform flex search: " + query)));
     }
+    
 
     public static F.Promise<Result> substructure(final String query, final int rows, final int page) {
-return F.Promise.<Result>promise( () -> {
-    try {
-        SearchResultContext context = App.substructure(query, rows, page,
-                new StructureSearchResultProcessor());
-        return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
-    } catch (BogusPageException ex) {
-        return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
-    } catch (Exception ex) {
-        ex.printStackTrace();
-        Logger.error("Can't perform substructure search", ex);
-    }
-    return internalServerError(
-            ix.ginas.views.html.error.render(500, "Unable to perform substructure search: " + query));
-});
+		return F.Promise.<Result>promise( () -> {
+		    try {
+		        SearchResultContext context = App.substructure(query, rows, page,
+		                new StructureSearchResultProcessor());
+		        return App.fetchResult(context, rows, page, new SubstanceResultRenderer());
+		    } catch (BogusPageException ex) {
+		        return internalServerError(ix.ginas.views.html.error.render(500, ex.getMessage()));
+		    } catch (Exception ex) {
+		        ex.printStackTrace();
+		        Logger.error("Can't perform substructure search", ex);
+		    }
+		    return internalServerError(
+		            ix.ginas.views.html.error.render(500, "Unable to perform substructure search: " + query));
+		});
     }
 
     /**
@@ -1721,20 +1723,46 @@ return F.Promise.<Result>promise( () -> {
     }
 
     public static class StructureSearchResultProcessor
-            extends SearchResultProcessor<StructureIndexer.Result, ChemicalSubstance> {
+            extends SearchResultProcessor<StructureIndexer.Result, Substance> {
         int index;
         public static EntityInfo<ChemicalSubstance> chemMeta = EntityUtils.getEntityInfoFor(ChemicalSubstance.class);
+        public static EntityInfo<MixtureSubstance> mixMeta = EntityUtils.getEntityInfoFor(MixtureSubstance.class);
 
         public StructureSearchResultProcessor() {
             
         }
-
-        protected ChemicalSubstance instrument(StructureIndexer.Result r) throws Exception {
+        
+        @Override
+    	public Stream<Substance> map(StructureIndexer.Result result) {
+    		try{
+    			Substance r=instrument(result);
+    			if(r==null)return Stream.empty();
+    			
+    			if(ConfigHelper.getBoolean("ix.ginas.structure.search.includeMixtures", false)){
+	    			//add mixture results as well
+	    			List<Substance> mixlist = (List<Substance>)mixMeta.getFinder().where().eq("mixture.components.substance.refuuid", result.getId())
+	    					                            .findList();
+	    			return StreamUtil.with(Stream.of(r))
+	    					         .and(mixlist.stream())
+	    					         .stream();
+    			}else{
+    				return Stream.of(r);
+    			}
+    		}catch(Exception e){
+    			Logger.error("error processing record", e);
+    			return Stream.empty();
+    		}
+    	}
+        
+        protected Substance instrument(StructureIndexer.Result r) throws Exception {
 
             Key k = Key.of(chemMeta, UUID.fromString(r.getId()));
             EntityFetcher<ChemicalSubstance> efetch = k.getFetcher();
-
+            
             ChemicalSubstance chem = efetch.call();
+            
+            
+            
 
             if (chem != null) {
                 Map<String, Object> matchingContext = new HashMap<String,Object>();
