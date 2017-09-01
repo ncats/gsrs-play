@@ -17,7 +17,7 @@ public class SPLValidatorXMLExporter implements Exporter<Substance> {
 	private static final String PREAMBLE = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<codeList><unii>\n";
 	private static final String POSTAMBLE = "</unii></codeList>";
 	
-	private static AtomicBoolean addedPreamble = new AtomicBoolean(false);
+	private AtomicBoolean addedPreamble = new AtomicBoolean(false);
 	 
 	public SPLValidatorXMLExporter(OutputStream out){
 		 Objects.requireNonNull(out);

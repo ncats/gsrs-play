@@ -9,7 +9,6 @@ import gov.nih.ncgc.jchemical.Jchemical;
 import ix.core.GinasProcessingMessage;
 import ix.core.models.Structure;
 
-import lychi.util.ChemUtil;
 
 //All of the code below should be changed to use
 //chemkit eventually
