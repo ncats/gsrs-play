@@ -18,8 +18,14 @@ public class ChemCleaner {
 	 */
 	public static String getCleanMolfile(String mfile) {
 		if(!mfile.contains("M  END"))return mfile;
+		
 		// JSdraw adds this to some S-GROUPS
-		mfile = mfile.replaceAll("M  SPA[^\n]*\n", "");
+		// that aren't always good
+		if(!mfile.contains("MUL")){
+			mfile = mfile.replaceAll("M  SPA[^\n]*\n", "");
+		}
+		
+		
 		mfile = mfile.replaceAll("M  END\n", "");
 		
 		Matcher m = Pattern.compile("M  STY  2 (...) GEN (...) DAT").matcher(mfile);
