@@ -21,6 +21,10 @@ public class FacetDecorator {
         selection = new boolean[facet.size()];
     }
 
+    public Facet getFacet(){
+        return this.facet;
+    }
+    
     public String name () { return facet.getName(); }
     public int size () { return facet.getValues().size(); }
     public String label (int i) {
