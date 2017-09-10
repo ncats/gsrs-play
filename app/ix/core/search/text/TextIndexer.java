@@ -302,8 +302,20 @@ public class TextIndexer implements Closeable, ProcessListener {
                             .filter(f->f.startsWith(finalField))
                             .findAny().isPresent();
                   };
+            }else if(q instanceof BooleanQuery){
+                BooleanQuery bq = (BooleanQuery)q;
+                Set<Term> terms = new HashSet<Term>();
+                bq.extractTerms(terms);
+                
+                List<String> findterms=terms.stream().map(t->t.text().toLowerCase()).collect(Collectors.toList());
+                
+                return (t)->{
+                    return findterms.stream().allMatch(s->t.k().toLowerCase().contains(s));
+                };
+                
             }else{
-                throw new IllegalStateException(q.getClass() + " not supported ");
+                throw new IllegalStateException(q.getClass() + " not supported " + ":" + q.toString());
+                
             }
             String finalField = find.toLowerCase();
             return (t)->{
